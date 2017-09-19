@@ -1,0 +1,10 @@
+var Person := Object new.
+
+Person on: 'greetingFor:' do: {:person ^'Hello, ' + person toString.}.
+Person on: 'introduce' do: {^'Hello.'.}.
+
+var Semicolon := Person new.
+Semicolon on: 'introduce' do: {^'I\'m AnotherTest and I\'m an alcoholoc.'.}.
+
+
+Pen write: (Semicolon greetingFor: 'Everyone') + '. ' + Semicolon introduce, brk.

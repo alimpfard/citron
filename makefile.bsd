@@ -1,0 +1,17 @@
+CFLAGS = -pedantic-errors -std=gnu99 -mtune=native -O2
+OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
+       world.o lexer.o parser.o walker.o citron.o
+
+.SUFFIXES:	.o .c
+
+all:ctr
+
+install: ctr
+	cp ./ctr /usr/bin/ctr
+
+ctr:	$(OBJS)
+	$(CC) $(OBJS) -O2 -rdynamic -lm -o ctr.html
+
+clean:
+	rm -rf ${OBJS} ctr
+	

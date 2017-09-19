@@ -1,0 +1,35 @@
+#Reflect addGlobalVariable: 'StringIO'.
+var StringIO is Object new.
+StringIO on: 'init' do: {
+  my internalBuffer is String new.
+  my position is 0.
+}.
+
+StringIO on: 'write:' do: { :s
+  var str is s toString.
+  my internalBuffer append: str.
+  my position +=: str.
+}.
+
+StringIO on: 'brk' do: {
+  my internalBuffer append: '\n'.
+  my position +=: 1.
+}.
+
+StringIO on: 'read' do: {
+  ^ my internalBuffer.
+}.
+
+
+StringIO on: 'close' do: {
+  my internalBuffer is Nil.
+  my position is Nil.
+  ^Nil.
+}.
+
+StringIO on: 'flush' do: {
+  my internalBuffer is String new.
+}.
+(Reflect objectExists: 'ImportLib') ifTrue: {
+  ImportLib export: StringIO as: 'StringIO'.
+}.

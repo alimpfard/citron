@@ -1,0 +1,3 @@
+t is 'test'.
+var tempFile is File tempFileLike: '/tmp/fdXXXXXX'.
+tempFile write: t.

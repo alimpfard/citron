@@ -1,0 +1,10 @@
+File new: 'extensions/fileutils.ctr', include.
+
+var test is Nil.
+{ test is Queue new. } catch: {:e Pen red write: e, brk. }, run.
+
+ImportLib import: (Array < 'Queue').
+
+test is Queue new.
+
+Pen resetColor write: test, brk.

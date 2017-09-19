@@ -1,0 +1,268 @@
+#
+# Minor Objects
+#
+String on: 'matchesPattern:' do: {:r
+  var res is False.
+  (me containsPattern: r) ifTrue: {
+    var s is me findPattern: r do: { ^''. } options: ''.
+    res is ((s trim) = '').
+  }.
+  ^res.
+}.
+
+# Pair
+#Reflect addGlobalVariable: 'Pair'.
+var Pair is Object new.
+Pair on: 'withKey:andValue:' do: { :k :v
+  my key is k.
+  my value is v.
+  ^me.
+}.
+
+Pair on: 'reverse' do: {
+  var p is Pair withKey: my value andValue: my key.
+  ^p.
+}.
+
+Pair on: 'fromArray:' do: { :arr
+  var self is me.
+  var length is arr count.
+  (length !=: 2) ifTrue: { self error: 'Cannot construct a Pair from an array of length $$length .'. }.
+  me withKey: arr@0 andValue: arr@1.
+  ^me.
+}.
+
+Pair on: 'toArray' do: {
+  var arr is Array < my key; my value.
+  ^arr.
+}.
+
+Pair on: 'toString' do: {
+  ^'<' + my key + ', ' + my value + '>'.
+}.
+Pair on: 'getKey' do: { ^my key. }.
+Pair on: 'getValue' do: { ^my value. }.
+Pair learn: '@k' means: 'getKey'.
+Pair learn: '@v' means: 'getValue'.
+
+# Tuple
+#Reflect addGlobalVariable: 'TupleInternalArray'.
+var TupleInternalArray is Array new.
+TupleInternalArray on: 'new:' do: { :p
+  my parent is p.
+  ^me.
+}.
+TupleInternalArray on: 'add:' do: { :i
+  me push: i.
+  ^me.
+}.
+TupleInternalArray on: 'end' do: { :i
+  my parent construct: me.
+  ^my parent.
+}.
+TupleInternalArray on: 'clear' do: {
+  (me count) to: 0 step: -1 do: { me pop. }.
+}.
+
+Reflect addGlobalVariable: 'Tuple'.
+Tuple is Object new.
+Tuple on: 'begin:' do: { :i
+  my internalArray is TupleInternalArray new: me.
+  my internalArray clear.
+  my internalArray push: i.
+  ^my internalArray.
+}.
+
+Tuple on: 'count' do: { ^my internalArray count. }.
+Tuple on: 'construct:' do: { :a
+  my internalArray is a.
+  ^me.
+}.
+
+Tuple on: 'at:' do: { :i
+  ^my internalArray at: i.
+}.
+Tuple learn: '@' means: 'at:'.
+Tuple learn: '<' means: 'begin:'.
+TupleInternalArray learn: ';' means: 'add:'.
+TupleInternalArray learn: '>' means: 'end'.
+
+Tuple on: 'toString' do: {
+  var s is '('.
+  my internalArray each: { :k :v
+    s append: '$$v'+', '.
+  }.
+  s is s from: 0 length: (s length) - 2.
+  s append: ')'.
+  ^s.
+}.
+
+#
+# Arrays
+#
+
+# Repeat
+Array on: 'repeat:' do: { :i
+  var r is Array new.
+  var self is me.
+  0 to: i step: 1 do: { :j
+    (i = j) break.
+    r is r + self.
+  }.
+  ^r.
+}.
+Array learn: '*' means: 'repeat:'.
+
+# From iterable
+Array on: 'with:count:' do: { :iter :c
+  var arr is Array new.
+  var n is 0.
+  { ^n < c . } whileTrue: {
+    arr push: (iter applyTo: n).
+    n +=: 1.
+  }.
+  ^arr.
+}.
+
+# Each_cons each<int> cons<block:int,Tuple,Array>
+Array on: 'each:cons:' do: { :c :b
+  var count is (me count).
+  var leftOver is (count % c).
+  var self is me.
+  var result is True.
+  var limit is (count - leftOver - c).
+  0 to: limit step: 1 do: { :i
+    (0 > limit) break.
+    var v is (self from: i length: c).
+    var t is Tuple construct: v.
+    result is result & (b applyTo: i and: t and: self).
+  }.
+  (leftOver = 0) ifFalse: {
+    var startIndex is (count - c + 1) max: 0.
+    leftOver is ((c > count) either: (count) or: (1 + leftOver)).
+    Pen write: leftOver, write: startIndex, brk.
+    var t is Tuple construct: ((self from: startIndex length: leftOver) + ((Array < Nil) * (c - leftOver))) .
+    result is result & (b applyTo: startIndex and: t and: self).
+  }.
+  ^result.
+}.
+
+# Shuffle
+Array on: 'shuffle' do: {
+  var len is me count - 1.
+  len - 1 to: 1 step: -1 do: { :i
+          var j is Dice rollWithSides: (i + 1).
+          var swap is (me @ j).
+          me put: (me @ i) at: j.
+          me put: swap at: i.
+  }.
+}.
+
+Array on: 'contains:' do: { :thing
+  var found is False.
+  me each: { :k :v found break. (thing = v) ifTrue: {found is True.}.}.
+  ^found.
+}.
+
+Array on: 'indexOf:' do: { :what
+  var ind is -1.
+  me each: { :i :v (what = v) ifTrue: {ind is i.}, break. }.
+  ^ind.
+}.
+
+#
+# Maps
+#
+
+# Map filter on k|v
+Map on: 'filter:' do: { :bl
+  var newmap is Map new.
+  me each: { :k :v :m
+    (bl applyTo: k and: v and: m) ifTrue: {newmap put: v at: k.}.
+  }.
+  ^newmap.
+}.
+
+# Map from Pair Arrays.
+Map on: 'fromPairs:' do: { :arr
+  var self is me.
+  arr each: { :k :v
+    self put: (v @v) at: (v @k).
+  }.
+}.
+
+# Map to Pairs.
+Map on: 'toPairs' do: {
+  var self is me.
+  var arr is Array new.
+  self each: { :k :v
+    arr push: (Pair withKey: k andValue: v).
+  }.
+  ^arr.
+}.
+
+Map on: 'mergeWith:' do: { :om
+  var self is me.
+  om each: { :k :v
+    self put: v at: k.
+  }.
+  ^me.
+}.
+
+Map on: 'getDocumentationFor:' do: { :topic
+  var origin is me `getDocumentationFor: topic. #`
+  ('mergeWith:' = topic) ifTrue: { origin is 'Generates the union of this map and the provided map and puts it inside this map.'. }.
+  ('toPairs' = topic) ifTrue: { origin is 'Generates an Array of Key-Value pairs from this map.'. }.
+  ('fromPairs:' = topic) ifTrue: { origin is 'Generates a map from an array of Key-Value pairs.'. }.
+  ('filter:' = topic) ifTrue: { origin is 'filters the map based on the return value of the provided block (Params: key, value, map).'. }.
+  ('getDocumentationFor:' = topic) ifTrue: { origin is 'returns the Documentation for the provided topic. '.}.
+  ^origin.
+}.
+
+# Pair from Tuple
+Pair on: 'fromTuple:' do: { :t
+  ((t count) = 2) ifFalse: { me error: 'Pairs can only be constructed from 2Tuples.'.}.
+  me withKey: (t @ 0) andValue: (t @ 1).
+}.
+
+# Pair to Tuple
+Pair on: 'toTuple' do: {
+  var t is Tuple new.
+  t < (me @k) ; (me @v).
+  ^t.
+}.
+
+# Tuple to Pair
+Tuple on: 'toPair' do: {
+  ^(Pair fromTuple: me).
+}.
+
+# Tuple from Pair
+Tuple on: 'fromPair:' do: { :t
+  ^(t toTuple).
+}.
+
+# Queue
+#Reflect addGlobalVariable: 'Queue'.
+var Queue is Array new.
+Queue on: 'enqueue:' do: { :e
+  me push: e.
+}.
+Queue on: 'dequeue' do: {
+  ^(me shift).
+}.
+Queue on: 'toString' do: {^(me serialize toString).}.
+Queue on: 'serialize' do: {
+  var s is me `serialize.#`
+  var x is s indexOf: 'Array'.
+  s is (s from: 0 to: (x - 1)) + 'Queue' + (s from: (x + 5) to: (s length)).
+  ^s toString.
+}.
+
+var Stack is Array.
+(Reflect objectExists: 'ImportLib') ifTrue: {
+  ImportLib export: Queue as: 'Queue'.
+  ImportLib export: Stack as: 'Stack'.
+  ImportLib export: Pair as: 'Pair'.
+  ImportLib export: Tuple as: 'Tuple'.
+}.

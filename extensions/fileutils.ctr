@@ -1,0 +1,63 @@
+{ImportLib noImport.} catch: {:e }, run.
+Object on: 'exec:' do: { :t
+  var self is me.
+  ((t type) !=: (String type)) ifTrue: { self error: 'Can only exec strings.'. }.
+  var tempFile is File tempFileLike: '/tmp/citronXXXXXX'.
+  var p is tempFile path.
+  tempFile write: t, runHere.
+  tempFile close.
+  tempFile delete.
+}.
+
+String on: 'execute' do: { :t
+  me exec: me.
+}.
+
+Reflect addGlobalVariable: 'ImportLib'.
+ImportLib on: 'init' do: {
+  my imports is Map new.
+  me loadExtensions.
+}.
+ImportLib on: 'loadExtensions' do: { :ename
+  var exts is File list: (File extensionsPath) + '/extensions'.
+  exts each: { :k :f
+    (f @ 'type' !=: 'file') continue.
+    var v is f @ 'file'.
+    (v = 'fileutils.ctr') continue.
+    (v from: (v length - 5) to: (v length - 1) = '.ctr') ifTrue: {
+      File new: (File extensionsPath) + '/extensions/' + v, include.
+    }.
+  }.
+}.
+ImportLib on: 'export:as:' do: { :thing :name
+  my imports put: thing at: name.
+}.
+ImportLib init.
+ImportLib on: 'importAll:as:' do: { :things :gnames
+  var fourOhFour is Array new.
+  things each: { :i :name
+    var gname is gnames @ i.
+    var import is (my imports @ name).
+    (import isNil) ifTrue: { fourOhFour push: name. },
+                   ifFalse: {
+                    Reflect addGlobalVariable: gname.
+                    Reflect set: gname to: import.
+                  }.
+  }.
+  (fourOhFour count = 0) ifFalse: {thisBlock error: 'Libraries not found: ' + fourOhFour. }.
+}.
+ImportLib on: 'import:as:' do: { :iname :gname
+  me importAll: (Array < iname) as: (Array < gname).
+}.
+ImportLib on: 'from:import:as:' do: { :fname :iname :gname
+  (File new: fname exists) ifFalse: {thisBlock error: 'No such file $$fname found.'.}.
+  File new: fname, include.
+  me import: iname as: gname.
+}.
+ImportLib on: 'from:import:' do: { :fname :iname :gname
+  (File new: fname exists) ifFalse: {thisBlock error: 'No such file $$fname found.'.}.
+  File new: fname, include.
+  me import: iname as: iname.
+}.
+ImportLib on: 'noImport' do: {thisBlock error: 'No Import.'.}.
+ImportLib on: 'respondTo:' do: { :iname me importAll: (Array < iname) as: (Array < iname). }.

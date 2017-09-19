@@ -1,0 +1,48 @@
+#Reflect addGlobalVariable: 'IntermediateCaseObject'.
+var IntermediateCaseObject is Object new.
+IntermediateCaseObject on: 'init:' do: { :p
+  my parent is p.
+  my cases := Array new.
+  ^me.
+}.
+
+IntermediateCaseObject on: 'put:' do: { :v
+  my cases push: v.
+  ^me.
+}.
+
+IntermediateCaseObject on: 'do:' do: { :blk
+  var caseExists is False.
+  my cases each: {:i:v:a
+    caseExists break.
+    caseExists is (v = my parent).
+    }.
+  caseExists ifTrue: {
+    blk set: 'value' value: my parent.
+    blk run.
+  }.
+  my parent clearCases.
+  ^my parent.
+}.
+
+IntermediateCaseObject on: 'case:' do: { :s
+  me put: s.
+  ^me.
+}.
+
+Object on: 'case:' do: { :s
+  var cases is Nil.
+  (my cases isNil) ifFalse: { cases is IntermediateCaseObject new. cases init: me. }.
+  my cases is cases.
+  my cases put: s.
+  ^my cases.
+}.
+
+Object on: 'clearCases' do: {
+  my cases is Nil.
+}.
+
+Object on: 'singleCase:do:' do: { :s :b
+  var self is me.
+  (me = s) ifTrue: { b set: 'value' value: self. b run. ^self.}, ifFalse: { ^self. }.
+}.

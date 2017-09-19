@@ -1,0 +1,160 @@
+File new: 'extensions/fileutils.ctr', include.
+File new: 'extensions/switchcase.ctr', include.
+File new: 'extensions/collections.ctr', include.
+File new: 'extensions/stringio.ctr', include.
+
+Eval is Object new.
+Eval on: 'init' do: {
+  my end is False.
+  my color is 'resetColor'.
+  my prompt is '>>> '.
+  my args is Array new.
+  my allowedColors is ('red blue magenta cyan yellow green resetColor' split: ' ') join: '|'.
+  my evalQueue is Queue new.
+  ^me.
+}.
+Eval on: 'end' do: { my end is True. }.
+Eval on: 'break' do: { my end break. }.
+Eval on: 'allowedColors' do: { ^my allowedColors. }.
+Eval on: 'isAllowedColor:' do: { :c
+  ^(c containsPattern: my allowedColors).
+}.
+Eval on: 'setColor:' do: { :c
+  (me isAllowedColor: c) ifFalse: { thisBlock error: 'value $$c' + ' is not an allowed color.'. }.
+  my color is c.
+}.
+Eval on: 'setPrompt:' do: { :p my prompt is p. }.
+Eval on: 'setArgs:' do: { :a my args := a. }.
+Eval on: 'color' do: { ^my color. }.
+Eval on: 'prompt' do: { ^my prompt. }.
+Eval on: 'shiftArgs' do: { ^(my args shift). }.
+Eval on: 'argCount' do: { ^(my args count). }.
+Eval on: 'onlyRelevantArgs' do: { my args do shift shift done. }. #get rid of ./ctr eval
+Eval on: 'evaluate:' do: { :str
+  { 1 times: { str execute. }. } catch: { :e
+    # try to recover from some small errors.
+      Pen red write: e, brk.
+      # get rid of the trash.
+      Broom sweep.
+  }, run.
+}.
+Eval on: 'evaluateFile:' do: { :fl
+  { File new: fl, include. } catch: { :e
+    # try to recover from some small errors.
+      Pen red write: e, brk.
+      # get rid of the trash.
+      Broom sweep.
+  }, run.
+}.
+Eval on: 'enqueue:' do: { :str
+  my evalQueue enqueue: str.
+}.
+Eval on: 'queueHasItem' do: {
+  ^(my evalQueue count !=: 0).
+}.
+Eval on: 'dequeue' do: { ^my evalQueue dequeue. }.
+Eval init.
+Eval setArgs: (Array with: {:i ^Program argument: i. } count: (Program argCount)).
+Eval onlyRelevantArgs.
+
+
+#arguments that were not consumed
+var args is Array new.
+
+#global vars for evaler
+var ra is Nil.
+var rb is Nil.
+var rc is Nil.
+var rd is Nil.
+var re is Nil.
+var rf is Nil.
+
+# parse arguments
+{ ^(Eval argCount > 0). } whileTrue: {
+    # get an option
+    var opt is Eval shiftArgs.
+    args push: opt.
+    # when passed -h, show help, then exit.
+    opt singleCase: '-h' do: {
+        args pop. #consume option.
+        Pen green write: 'Citron Evaluator.\n', resetColor.
+        var P is Pen new.
+        P on: 'indent:write:' do: {:i :w Pen write: (((Array < '\t') * i) join: ''). Pen write: w. }.
+        P indent: 1 write: 'Eval mode help:', brk.
+        P cyan indent: 1 write: 'Eval namespace', resetColor brk.
+        P magenta indent: 2 write: '[Eval] setPrompt: [String] ', resetColor write: '-- Sets the prompt.', brk.
+        P magenta indent: 2 write: '[Eval] setColor: [String] ', resetColor write: '-- sets the color of the output.', brk.
+        P magenta indent: 2 write: '[Eval] end ', resetColor write: '-- Ends the eval.', brk.
+        P indent: 1 write: 'Evaluates expressions in a single context.', brk.
+        P indent: 1 write: 'Since all expressions are in single lines, pragma oneLineExpressions is active,', brk.
+        P indent: 1 write: 'Hence ending expressions with a dot (.) is not required.', brk.
+        P indent: 1 write: 'All the args that were not consumed are in the variable `args`.', brk.
+        P cyan indent: 1 write: 'Program arguments\n',
+          resetColor indent: 2 write: '-p : set the prompt\n',
+          indent: 2 write: '-c : set the result color\n',
+          indent: 2 write: '-h : show this help\n',
+          indent: 2 write: '-f : evaluate file. many can be passed, evals in passed order\n',
+          indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
+          magenta indent: 1 write: 'Any other option will be ignored.', brk.
+        P red write: 'new Global variables cannot be introduced.', brk.
+        P resetColor.
+        Program exit.
+    # when passed -p, get the next arg, and set the prompt to that.
+    }, singleCase: '-p' do: {
+        args pop. #consume option..
+        var value is Eval shiftArgs.
+        (value isNil) ifTrue: { thisBlock error: '-p requires an arg.'. }.
+        Eval setPrompt: value.
+    # when passed -c, get the next arg, and set the result color to that.
+    }, singleCase: '-c' do: {
+        args pop. #consume option.
+        var value is Eval shiftArgs.
+        (value isNil) ifTrue: { thisBlock error: '-c requires an arg, valid arguments are: \n\t' + (((Eval allowedColors) split: '|') join: '\n\t'). }.
+        Eval setColor: value.
+    }, singleCase: '-f' do: {
+        args pop. #consume option.
+        var file is Eval shiftArgs.
+        (file isNil) ifTrue: { thisBlock error: '-f requires a file name.'. }.
+        Eval enqueue: file.
+    }, singleCase: '-e' do: {
+        args pop. #consume option..
+        var value is Eval shiftArgs.
+        (value isNil) ifTrue: { thisBlock error: '-e requires an argument.'. }.
+        { ^(Eval argCount > 0). } whileTrue: { args push: Eval shiftArgs. }. #consume all other arguments.
+        Eval evaluate: value.
+        Program exit.
+    }. # do not consume any other option.
+}.
+
+Pen := Pen new.
+Pen on: 'resetBuffer' do: { my buffer := ''.  my header := ''. }.
+Pen on: 'write:' do: { :bytes my buffer append: bytes. }.
+Pen on: 'brk' do: { my buffer append: '\n'. }.
+Pen on: '>' do: { :bytes my buffer append: bytes. }.
+Pen on: 'writeHeader:' do: { :bytes my header append: bytes. }.
+Pen on: 'flush' do: { me `write: my header, `write: '\n', `write: my buffer, resetBuffer. }.
+Pen resetBuffer.
+Pen write: 'Start CTR Storm Server v1', brk.
+Pen flush.
+? := Pen.
+
+
+var InputOutput is Object new.
+InputOutput on: 'initWithHost:port:' do: { :h :p
+  my requestBuffer is Queue new.
+  Request serverOption: 'minidle' is: 1, serverOption: 'maxidle' is: 2.
+  Request host:h listen:p pid:'evalserver.pid' callback: {
+    Pen resetBuffer.
+  	Pen writeHeader: 'Content-type: text/html\n'.
+  	var name is Request get: 'code'.
+  	{
+  		Eval evaluate: name.
+  	} catch: { :e
+  		Pen write: 'An error has occurred.', brk.
+  		Pen write: e, brk.
+  	}, run.
+  	Pen flush.
+  }.
+}.
+
+InputOutput initWithHost: 'localhost' port:4000.

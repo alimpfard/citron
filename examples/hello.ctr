@@ -1,0 +1,10 @@
+var Butler := Object new.
+Butler on: 'greet:' do: { :name
+	Pen write: 'Welcome ' + name.
+}.
+var james := Butler new.
+james greet: 'visitor'.
+
+(Reflect objectExists: 'ImportLib') ifTrue: {
+	ImportLib export: james as: 'james'.
+}.

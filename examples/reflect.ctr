@@ -1,0 +1,11 @@
+var Nen is Pen new.
+Nen on: 'init' do: {
+  my lol is Nil.
+  me on: 'write:' do: { :s me `write: s, brk. }.#`
+}.
+Nen init.
+var x is Reflect getMethodsOf: Nen.
+Nen write: x, brk.
+Nen write: (Reflect getPropertiesOf: Nen), brk.
+
+(Reflect objectExists: 'ImportLib') ifTrue: { ImportLib export: Nen as: 'ReflectTest'. }.

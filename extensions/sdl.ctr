@@ -1,0 +1,26 @@
+Reflect addGlobalVariable: 'SDLEventTypes'.
+SDLEventTypes is (Map new).
+SDLEventTypes put: 0 at: 'noEvent'.
+SDLEventTypes put: 1 at: 'activeEvent'.
+SDLEventTypes put: 2 at: 'keyDown'.
+SDLEventTypes put: 3 at: 'keyUp'.
+SDLEventTypes put: 4 at: 'mouseMotion'.
+SDLEventTypes put: 5 at: 'mouseButtonDown'.
+SDLEventTypes put: 6 at: 'mouseButtonUp'.
+SDLEventTypes put: 7 at: 'joyAxisMotion'.
+SDLEventTypes put: 8 at: 'joyBallMotion'.
+SDLEventTypes put: 9 at: 'joyHatMotion'.
+SDLEventTypes put: 10 at: 'joyButtonDown'.
+SDLEventTypes put: 11 at: 'joyButtonUp'.
+SDLEventTypes put: 12 at: 'quit'.
+SDLEventTypes put: 13 at: 'syswmEvent'.
+# SDLEventTypes put: 14 at: 'event_reserveda'.
+# SDLEventTypes put: 15 at: 'event_reservedb'.
+SDLEventTypes put: 16 at: 'videoResize'.
+SDLEventTypes put: 17 at: 'videoExpose'.
+
+SDLEventTypes on: 'respondTo:' do: { :type ^me at: type. }.
+
+#(Reflect objectExists: 'ImportLib') ifTrue: {
+#  ImportLib export: SDLEventTypes as: 'SDLEventTypes'.
+#}.

@@ -174,6 +174,7 @@ struct ctr_object {
 		unsigned int sticky: 1;
 		unsigned int chainMode: 1;
 		unsigned int remote: 1;
+		unsigned int shared: 1;
 	} info;
 	struct ctr_object* link;
 	union uvalue {
@@ -362,6 +363,7 @@ void        ctr_internal_object_add_property(ctr_object* owner, ctr_object* key,
 ctr_object* ctr_internal_cast2bool( ctr_object* o );
 ctr_object* ctr_internal_cast2number(ctr_object* o);
 ctr_object* ctr_internal_create_object(int type);
+ctr_object* ctr_internal_create_mapped_object(int type, int shared);
 ctr_object* ctr_internal_cast2string( ctr_object* o );
 void*       ctr_internal_plugin_find( ctr_object* key );
 ctr_object* ctr_find(ctr_object* key);
@@ -741,6 +743,8 @@ ctr_object* ctr_reflect_set_to(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_cb_ac(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_cb_add_param(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_fn_copy(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_share_memory(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_link_to(ctr_object* myself, ctr_argument* argumentList);
 /**
  * Fiber Co-Processing Interface
  */
@@ -787,8 +791,10 @@ void ctr_gc_internal_collect();
 
 
 void* ctr_heap_allocate( size_t size );
+void* ctr_heap_allocate_shared( size_t size );
 void* ctr_heap_allocate_tracked( size_t size );
 void  ctr_heap_free( void* ptr );
+void  ctr_heap_free_shared( void* ptr );
 void  ctr_heap_free_rest();
 void* ctr_heap_reallocate(void* oldptr, size_t size );
 size_t ctr_heap_get_latest_tracking_id();

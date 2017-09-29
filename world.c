@@ -972,6 +972,7 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("version"), &ctr_give_version);
 
     ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Reflect"), CtrStdReflect, 0);
+    CtrStdReflect->info.sticky = 1;
 
     // Fiber
     ctr_fiber_begin_init();

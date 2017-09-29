@@ -264,4 +264,6 @@
 #define CTR_DICT_CODEGEN_ARRAY_NEW_PUSH          "Array ← "
 //#define CTR_DEBUG_HIDING                         0
 #define CTR_DICT_EXT_PATH                        "extensionsPath"
+#ifndef CTR_STD_EXTENSION_PATH
 #define CTR_STD_EXTENSION_PATH                   "."
+#endif

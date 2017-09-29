@@ -1,5 +1,5 @@
 #test array product
-a := Array < 1 ; 2 ; 3.
+a is Array < 1 ; 2 ; 3.
 Pen write: a product, brk.#6
 Pen write: (Array < 2 ; 4 ; 8) product, brk. #64
 Pen write: (Array < -2 ; 10) product, brk. #-20

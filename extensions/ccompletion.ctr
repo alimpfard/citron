@@ -10,4 +10,4 @@ C on: 'printProperties:' do: { :objName
   Pen brk.
 }.
 
-(Reflect objectExists: 'ImportLib') ifTrue: { ImportLib export: C as: 'CodeCompletion'. }.
+(Reflect objectExists: 'ImportLib') ifTrue: { ImportLib export: C as: 'CodeCompletion' namespace: 'Extensions'. }.

@@ -4,8 +4,9 @@
 #include "dictionary.h"
 #include <inttypes.h>
 #include <stdlib.h>
+#include <string.h>
 
-#define CTR_VERSION "0.0.3"
+#define CTR_VERSION "0.0.4b"
 
 /**
  * Define the Citron tokens
@@ -101,7 +102,7 @@
 #define CTR_SECPRO_NO_FILE_READ 4
 #define CTR_SECPRO_NO_INCLUDE 8
 #define CTR_SECPRO_COUNTDOWN 16
-#define CTR_SECPRO_EVAL 32
+#define CTR_SECPRO_EVAL 0 //32 to enable
 #define CTR_SECPRO_FORK 64
 
 #define CTR_ANSI_COLOR_RED     "\x1b[31m"
@@ -381,9 +382,9 @@ void ctr_close_context();
 /**
  * Global Scoping variables
  */
-ctr_object* ctr_contexts[300];
+ctr_object* ctr_contexts[1000];
 int ctr_context_id;
-ctr_tnode* ctr_callstack[300];
+ctr_tnode* ctr_callstack[1000]; //That should be enough... right?
 uint8_t ctr_callstack_index;
 
 /**
@@ -531,6 +532,7 @@ ctr_object* ctr_string_randomize_bytes(ctr_object* myself, ctr_argument* argumen
  * Block Interface
  */
 ctr_object* ctr_block_runIt(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_block_run_variadic(ctr_object* myself, int count, ...);
 ctr_object* ctr_block_set(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_error(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_catch(ctr_object* myself, ctr_argument* argumentList);
@@ -734,6 +736,20 @@ ctr_object* ctr_reflect_dump_context(ctr_object* myself, ctr_argument* argumentL
 ctr_object* ctr_reflect_find_obj(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_new(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_set_to(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_cb_ac(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_cb_add_param(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_fn_copy(ctr_object* myself, ctr_argument* argumentList);
+/**
+ * Fiber Co-Processing Interface
+ */
+ctr_object* ctr_fiber_spawn(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_fiber_yield(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_fiber_join_all(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_fiber_tostring(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_fiber_yielded(ctr_object* myself, ctr_argument* argumentList);
+void ctr_fiber_begin_init(void);
+
+
 /**
  * Global Garbage Collector variables
  */

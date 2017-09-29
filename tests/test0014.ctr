@@ -1,24 +1,24 @@
-Greeter := Object new.
+Greeter is Object new.
 Greeter on: 'make' do: {
-	var gr := Object new.
+	var gr is Object new.
 	gr on: 'setName:' do: { :aname
-		my name := aname.
+		my name is aname.
 	}.
 	gr on: 'greet' do: {
 		Pen write: my name.
 	}.
 	^gr.
 }.
-a := Greeter make.
-b := Greeter make.
+a is Greeter make.
+b is Greeter make.
 a setName: 'ONE'.
 b setName: 'TWO'.
 a greet.
 b greet.
-c := a new.
+c is a new.
 c setName: 'THREE'.
 c greet.
-d := a new.
+d is a new.
 d setName: 'FOUR'.
 d greet.
 c greet.

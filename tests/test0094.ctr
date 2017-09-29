@@ -1,10 +1,10 @@
 #Test recursion
-f := { :x
-	var result := 0.
+f is { :x
+	var result is 0.
 	(x = 1) ifTrue: {
-		result := 1.
+		result is 1.
 	}, else: {
-		result := x * (f applyTo: (x - 1)).
+		result is x * (f applyTo: (x - 1)).
 	}.
 	^ result.
 }.

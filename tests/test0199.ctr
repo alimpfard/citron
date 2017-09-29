@@ -1,22 +1,22 @@
 #Like test 10 but with continous GC (mode 4) to test for GC regressions.
 Broom mode: 4.
 
-Animal := Object new.
+Animal is Object new.
 Animal on: 'make' do: {
-	var animal := Object new.
+	var animal is Object new.
 	animal on: 'makeSound' do: {
 		Pen write: my sound.
 	}.
 	^animal.
 }.
-Cat := Object new.
+Cat is Object new.
 Cat on: 'make' do: {
-	var cat := Animal make.
+	var cat is Animal make.
 	cat on: 'init' do: {
-		my sound := 'meow!'.
+		my sound is 'meow!'.
 	}.
 	cat init.
 	^cat.
 }.
-tom := Cat make.
+tom is Cat make.
 tom makeSound.

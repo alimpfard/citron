@@ -1,13 +1,13 @@
 #File operations should not leak memory
 
-usedMemory1 := 0.
-usedMemory2 := 0.
-usedMemory3 := 0.
-usedMemory4 := 0.
+usedMemory1 is 0.
+usedMemory2 is 0.
+usedMemory3 is 0.
+usedMemory4 is 0.
 
 Broom mode: 0.
 
-f := File new: '/tmp/none.txt'.
+f is File new: '/tmp/none.txt'.
 f open: 'r+'.
 
 

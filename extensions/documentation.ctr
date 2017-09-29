@@ -7,7 +7,7 @@ Documentation on: 'getFor:' do: { :obj
     reported is (reported isNil) either: 'Stub' or: reported.
     docs put: reported at: v.
     }.
-  var _docs is Documentation lookup: (obj type).
+  var _docs is me lookup: (obj type).
   docs mergeWith: _docs.
   var doc is ''.
   docs each: { :k :v :map
@@ -88,5 +88,5 @@ Documentation on: 'lookup:' do: { :type
   ^doc.
 }.
 (Reflect objectExists: 'ImportLib') ifTrue: {
-  ImportLib export: Documentation as: 'Documentation'.
+  ImportLib export: Documentation as: 'Documentation' namespace: 'Extensions'.
 }.

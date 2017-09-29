@@ -2,10 +2,10 @@
 #not useful but should not be problematic.
 #Number
 Pen write: 'Number:'.
-a := Number + Number + 1.
-a := Number - 2.
-a := Number * 2.
-a := Number / 2.
+a is Number + Number + 1.
+a is Number - 2.
+a is Number * 2.
+a is Number / 2.
 Pen write: a.
 Pen brk.
 #String
@@ -31,7 +31,7 @@ Pen write: (Array push: 999).
 Pen write: Array count.
 Pen write: Array shift.
 Pen write: (Array join: ',').
-f := Array new.
+f is Array new.
 Pen write: f count. #starts with 0 again...
 Pen brk.
 #Map

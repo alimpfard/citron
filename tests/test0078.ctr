@@ -1,5 +1,5 @@
 #Test whether we can include files.
-myVar := 123.
+myVar is 123.
 Pen write: 'Start include test', brk.
 (File new: 'tests/test0077.ctr') include.
 Pen brk write: 'End include test', brk.

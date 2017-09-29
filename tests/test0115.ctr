@@ -17,7 +17,7 @@
 #invalid assign version
 {
 	thisBlock error: 'Dont fail.'.
-	unknown := 122.
+	unknown is 122.
 } catch: {
 	Pen write: 'Caught!'.
 }, run.

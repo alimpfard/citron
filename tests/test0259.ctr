@@ -1,12 +1,12 @@
-os := (Shell call: 'uname').
-file := Nil.
+os is (Shell call: 'uname').
+file is Nil.
 
 ((os indexOf: 'Linux') > -1) ifTrue: {
-	file := '/var/log/syslog'.
+	file is '/var/log/syslog'.
 }.
 
 ((os indexOf: 'OpenBSD') > -1) ifTrue: {
-	file := '/var/log/messages'.
+	file is '/var/log/messages'.
 }.
 
 (file isNil) ifTrue: {
@@ -14,30 +14,30 @@ file := Nil.
 	Program exit.
 }.
 
-key := '--Citron-->0'.
+key is '--Citron-->0'.
 Program log: key.
-str := (Shell tail: file).
+str is (Shell tail: file).
 ((str indexOf: key) > -1) ifTrue: {
 	Pen write: 'OK'.
 }.
 
-key := '--Citron-->1'.
+key is '--Citron-->1'.
 Program warning: key.
-str := (Shell tail: file).
+str is (Shell tail: file).
 ((str indexOf: key) > -1) ifTrue: {
 	Pen write: 'OK'.
 }.
 
-key := '--Citron-->2'.
+key is '--Citron-->2'.
 Program error: key.
-str := (Shell tail: file).
+str is (Shell tail: file).
 ((str indexOf: key) > -1) ifTrue: {
 	Pen write: 'OK'.
 }.
 
-key := '--Citron-->3'.
+key is '--Citron-->3'.
 Program alert: key.
-str := (Shell tail: file).
+str is (Shell tail: file).
 ((str indexOf: key) > -1) ifTrue: {
 	Pen write: 'OK'.
 }.

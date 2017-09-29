@@ -1,6 +1,6 @@
 #NOAST
 #Test parser error
-o := Object new.
+o is Object new.
 o on: 'test' do: {
-	my := 123.
+	my is 123.
 }.

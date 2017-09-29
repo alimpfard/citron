@@ -1,8 +1,8 @@
-numbers := '1,2,3' split: ','.
+numbers is '1,2,3' split: ','.
 Pen write: 'I got: ' + numbers count + ' numbers.' ,brk.
 3 times: { :i Pen write: 'number #' + i + ':' + (numbers at: i), brk.}.
-beverages := 'Tea Or Coffee Or Milk Or Orange Juice Or Water'.
-beverages := beverages split: ' Or '.
+beverages is 'Tea Or Coffee Or Milk Or Orange Juice Or Water'.
+beverages is beverages split: ' Or '.
 Pen write: 'We serve', brk.
 (beverages count) times: { :i Pen write: '->' + (beverages at: i), brk. }.
 Pen write: (beverages join: ','), brk.

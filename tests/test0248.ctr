@@ -1,6 +1,6 @@
 #everyday use case and can we use the alias 'serialize' ?
 
-a := (Array < (
+a is (Array < (
 	(Map new)
 		put: 'domain' at: 'mywebsite.com',
 		put: (Array <
@@ -20,12 +20,12 @@ a := (Array < (
 Pen write: a type, brk.
 Pen write: a, brk.
 
-var b := a eval.
+var b is a eval.
 Pen write: b @ 0 @ 'pages' @ 1 @ 'body', brk.
 
-var c := b @ 0.
-var d := c serialize.
+var c is b @ 0.
+var d is c serialize.
 Pen write: d type, brk.
 
-var e := d eval.
+var e is d eval.
 Pen write: e @ 'pages' @ 0, brk.

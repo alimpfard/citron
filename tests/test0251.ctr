@@ -1,12 +1,12 @@
 #Can we use the unicode return arrow instead of the ascii one?
 
 Number on: 'describe' do: {
-	var text := Nil.
+	var text is Nil.
 	( me = 0 ) ifTrue: {
-		text := 'zero'.
+		text is 'zero'.
 	}.
 	( me = 1 ) ifTrue: {
-		text := 'one'.
+		text is 'one'.
 	}.
 	↑ text.
 }.

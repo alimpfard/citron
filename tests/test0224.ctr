@@ -1,5 +1,5 @@
-x := 6.
-who := 'Devil'.
+x is 6.
+who is 'Devil'.
 ?>{$$the} <?.
 Pen write: '\$$number of the $$who i$: $$x$$x$$x !!!!', brk.
 

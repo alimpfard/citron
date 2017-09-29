@@ -31,5 +31,5 @@ StringIO on: 'flush' do: {
   my internalBuffer is String new.
 }.
 (Reflect objectExists: 'ImportLib') ifTrue: {
-  ImportLib export: StringIO as: 'StringIO'.
+  ImportLib export: StringIO as: 'StringIO' namespace: 'Extensions'.
 }.

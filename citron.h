@@ -384,9 +384,9 @@ void ctr_close_context();
 /**
  * Global Scoping variables
  */
-ctr_object* ctr_contexts[1000];
+ctr_object* ctr_contexts[10000];
 int ctr_context_id;
-ctr_tnode* ctr_callstack[1000]; //That should be enough... right?
+ctr_tnode* ctr_callstack[10000]; //That should be enough... right?
 uint8_t ctr_callstack_index;
 
 /**

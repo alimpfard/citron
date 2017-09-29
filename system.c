@@ -1102,7 +1102,6 @@ ctr_object* ctr_command_message(ctr_object* myself, ctr_argument* argumentList) 
  * and passed the message that has been received.
  */
 ctr_object* ctr_command_listen(ctr_object* myself, ctr_argument* argumentList) {
-    ctr_object* program;
     ctr_object* answer;
     ctr_resource* r;
     ctr_argument* newArgumentList;
@@ -1110,9 +1109,9 @@ ctr_object* ctr_command_listen(ctr_object* myself, ctr_argument* argumentList) {
     ctr_size sz;
     FILE* fd;
     char* blob;
-    program = myself;
     q = 0;
-    r = program->value.rvalue;
+    r = myself->value.rvalue;
+    if(r == NULL) {CtrStdFlow = ctr_build_string_from_cstring("The main program is not allowed to halt."); return CtrStdFlow;}
     if (r->type == 3) q = 2;
     fd = *((FILE**)r->ptr + q);
     sz = 0;

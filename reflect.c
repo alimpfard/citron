@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "citron.h"
 
 
@@ -203,6 +204,15 @@ ctr_object* ctr_reflect_fn_copy(ctr_object* myself, ctr_argument* argumentList) 
   ctr_object* prop = ctr_internal_object_find_property(argumentList->object, name, CTR_CATEGORY_PRIVATE_PROPERTY);
   if(prop != NULL) ctr_internal_object_add_property(newblk, name, prop, CTR_CATEGORY_PRIVATE_PROPERTY);
   return newblk;
+}
+ctr_object* ctr_reflect_share_memory(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* shared = ctr_internal_create_mapped_object(CTR_OBJECT_TYPE_OTOBJECT, 1);
+  shared->link = CtrStdObject;
+  return shared;
+}
+ctr_object* ctr_reflect_link_to(ctr_object* myself, ctr_argument* argumentList) {
+  argumentList->object->link = argumentList->next->object;
+  return argumentList->object;
 }
 
 // ctr_object* ctr_reflect_obj_hp(ctr_object* myself, ctr_argument* argumentList) {

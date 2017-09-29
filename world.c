@@ -420,7 +420,7 @@ ctr_object* ctr_internal_cast2bool( ctr_object* o ) {
  */
 void ctr_open_context() {
     ctr_object* context;
-    if (ctr_context_id >= 9999) {
+    if (ctr_context_id >= 99999) {
         CtrStdFlow = ctr_build_string_from_cstring( "Too many nested calls." );
         CtrStdFlow->info.sticky = 1;
     }

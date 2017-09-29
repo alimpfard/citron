@@ -245,5 +245,6 @@ void ctr_fiber_begin_init() {
   ctr_internal_create_func(CtrStdFiber, ctr_build_string_from_cstring("waitForAll"), &ctr_fiber_join_all);
   ctr_internal_object_add_property(CtrStdFiber, ctr_build_string_from_cstring("fiberId"), ctr_build_number_from_float(-1), CTR_CATEGORY_PRIVATE_PROPERTY);
   CtrStdFiber->info.sticky = 1;
+  
   ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Fiber"), CtrStdFiber, 0);
 }

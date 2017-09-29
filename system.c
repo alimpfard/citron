@@ -314,6 +314,7 @@ void ctr_gc_sweep( int all ) {
     while(currentObject) {
         ctr_gc_object_counter ++;
         if ( ( currentObject->info.mark==0 && currentObject->info.sticky==0 ) || all){
+            void (*free_heap_maybe_shared)(void*) = currentObject->info.shared==0?&ctr_heap_free:&ctr_heap_free_shared;
             ctr_gc_dust_counter ++;
             /* remove from linked list */
             if (previousObject) {
@@ -337,7 +338,7 @@ void ctr_gc_sweep( int all ) {
                 mapItem = currentObject->methods->head;
                 while(mapItem) {
                     tmp = mapItem->next;
-                    ctr_heap_free( mapItem );
+                    free_heap_maybe_shared( mapItem );
                     mapItem = tmp;
                 }
             }
@@ -345,30 +346,30 @@ void ctr_gc_sweep( int all ) {
                 mapItem = currentObject->properties->head;
                 while(mapItem) {
                     tmp = mapItem->next;
-                    ctr_heap_free( mapItem );
+                    free_heap_maybe_shared( mapItem );
                     mapItem = tmp;
                 }
             }
-            ctr_heap_free( currentObject->methods );
-            ctr_heap_free( currentObject->properties );
+            free_heap_maybe_shared( currentObject->methods );
+            free_heap_maybe_shared( currentObject->properties );
             switch (currentObject->info.type) {
                 case CTR_OBJECT_TYPE_OTSTRING:
                     if (currentObject->value.svalue != NULL) {
                         if (currentObject->value.svalue->vlen > 0) {
-                            ctr_heap_free( currentObject->value.svalue->value );
+                            free_heap_maybe_shared( currentObject->value.svalue->value );
                         }
-                        ctr_heap_free( currentObject->value.svalue );
+                        free_heap_maybe_shared( currentObject->value.svalue );
                     }
                     break;
                 case CTR_OBJECT_TYPE_OTARRAY:
-                    ctr_heap_free( currentObject->value.avalue->elements );
-                    ctr_heap_free( currentObject->value.avalue );
+                    free_heap_maybe_shared( currentObject->value.avalue->elements );
+                    free_heap_maybe_shared( currentObject->value.avalue );
                     break;
                 case CTR_OBJECT_TYPE_OTEX:
-                    if (currentObject->value.rvalue != NULL) ctr_heap_free( currentObject->value.rvalue );
+                    if (currentObject->value.rvalue != NULL) free_heap_maybe_shared( currentObject->value.rvalue );
                     break;
             }
-            ctr_heap_free( currentObject );
+            free_heap_maybe_shared( currentObject );
             currentObject = nextObject;
         } else {
             ctr_gc_kept_counter ++;
@@ -1335,13 +1336,13 @@ ctr_object* ctr_dice_rand(ctr_object* myself, ctr_argument* argumentList) {
 /**
  * [Clock] wait
  *
- * Waits X seconds.
+ * Waits X useconds.
  */
 ctr_object* ctr_clock_wait(ctr_object* myself, ctr_argument* argumentList) {
     ctr_check_permission( CTR_SECPRO_COUNTDOWN );
     ctr_object* arg = ctr_internal_cast2number(argumentList->object);
     int n = (int) arg->value.nvalue;
-    sleep(n);
+    usleep(n);
     return myself;
 }
 

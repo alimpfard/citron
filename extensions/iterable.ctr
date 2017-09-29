@@ -1,0 +1,24 @@
+var Iterable is Object new.
+
+Iterable on: 'yield:' do: {:value
+  my self serve: value.
+  my self listen: {:msg Pen write: msg, brk.}.
+}.
+
+Iterable on: 'init:' do: {:block
+  my shared is Nil.
+  var yielder is Object new.
+  var self is me.
+  yielder on: 'yield:' do: {:val self yield: val.}.
+  my self is Program new: {:c
+    {^True.} whileTrue: { (block set: 'yielder' value: yielder) run. }.
+  }.
+}.
+
+Iterable on: 'next' do: {
+  my self message: 'run'.
+  var res is Object fromComputer: 'localhost'.
+  ^res.
+}.
+
+ImportLib export: Iterable as: 'Iterable' namespace: 'Extensions'.

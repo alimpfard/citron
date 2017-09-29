@@ -1,11 +1,11 @@
 #Test Simplified OOP - basic override
-Animal := Object new.
+Animal is Object new.
 Animal on: 'makeSound' do: {
 	Pen write: '?'.
 }.
-Cat := Animal new.
+Cat is Animal new.
 Cat on: 'makeSound' do: {
 	Pen write: 'meow!'.
 }.
-Tom := Cat new.
+Tom is Cat new.
 Tom makeSound.

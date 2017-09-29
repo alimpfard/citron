@@ -1,1 +1,1 @@
-q := (File list: 'nonexistant').
+q is (File list: 'nonexistant').

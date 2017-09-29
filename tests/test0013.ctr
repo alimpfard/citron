@@ -1,12 +1,12 @@
 #Test Simplified OOP - not allowed to send `message from the outside!
-Animal := Object new.
+Animal is Object new.
 Animal on: 'makeSound' do: {
 	Pen write: '?'.
 }.
-Cat := Animal new.
+Cat is Animal new.
 Cat on: 'makeSound' do: {
 	Pen write: 'meow!'.
 	me `makeSound. #call makeSound on parent.
 }.
-Tom := Cat new.
+Tom is Cat new.
 Tom `makeSound.

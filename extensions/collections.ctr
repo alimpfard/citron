@@ -164,6 +164,58 @@ Array on: 'contains:' do: { :thing
   ^found.
 }.
 
+Array on: 'isSubsetOf:' do: { :things
+  var return is True.
+  ((things count) < (me count)) ifTrue: {return is False.}.
+  return ifTrue: {
+    var i is 0. var j is 0.
+    var arr1 is Array new.
+    me each: {:i :v arr1 unshift: v.}.
+    var arr2 is Array new.
+    things each: {:i :v arr2 unshift: v.}.
+    arr1 sort.
+    arr2 sort.
+    {^return & (i < (arr1 count)) & (j < (arr2 count)).} whileTrue: {
+      ((arr2 @ j) < (arr1 @ i)) do ifTrue: { j +=: 1. }, ifFalse: {
+        ((arr2 @ j) = (arr1 @ i)) do ifTrue: {i +=: 1. j +=: 1.}, ifFalse: {return is False.} done.
+      }.
+    }.
+  }.
+  ^return.
+}.
+
+Array on: 'from:to:skip:' do: {:f :t :s
+  var newArr is Array new.
+  f is (f isNil) either: 0 or: f.
+  t is (t isNil) either: (me count) or: t.
+  f to: (t - 1) step: s do: { :i
+    newArr unshift: (me @ i).
+  }.
+  ^newArr.
+}.
+
+# var ArrayChunks is Object new.
+# ArrayChunks on: 'init:size:' do: { :p :n
+#   my start is 0.
+#   my index is 0.
+#   my parent is p.
+#   my size is n.
+# }.
+# ArrayChunks on: 'nextChunk' do: {
+#   var n is my size.
+#   Pen write: (my index), brk.
+#   var stop is (my parent from: my index to: Nil skip: n) count.
+#   (stop = 0) ifTrue: {thisBlock error: 'end Of Chunks.'.}.
+#   var start is my start.
+#   my start +=: stop.
+#   my index +=: 1.
+#   ^(my parent from: start length: stop).
+#   }.
+# Array on: 'chunkify:' do: { :n
+#   var chunks is ArrayChunks new.
+#   chunks init: me size: n.
+#   ^chunks.
+# }.
 Array on: 'indexOf:' do: { :what
   var ind is -1.
   me each: { :i :v (what = v) ifTrue: {ind is i.}, break. }.
@@ -259,10 +311,43 @@ Queue on: 'serialize' do: {
   ^s toString.
 }.
 
+Array on: 'filter:' do: {:cond
+  var q is Array new.
+  me each: {:i:v:a var x is (cond applyTo: i and: v and: a). x ifTrue: {q push: v.}.}.
+  ^q.
+}.
+
+Array on: 'vfilter:' do: {:cond
+  var q is Array new.
+  me each: {:i:v:a var x is (cond applyTo: v). x ifTrue: {q push: v.}.}.
+  ^q.
+}.
+
 var Stack is Array.
+
+var LRArray is Array new.
+LRArray on: 'init:' do: {:max
+  my max is max.
+}.
+LRArray on: 'push:' do: {:thing
+  var self is me.
+  ((me count) = (my max)) ifTrue: {
+    self shift.
+  }.
+  ^me `push: thing.
+}.
+LRArray on: 'unshift:' do: {:thing
+  var self is me.
+  ((me count) = (my max)) ifTrue: {
+    self pop.
+  }.
+  ^me `unshift: thing.
+}.
+
 (Reflect objectExists: 'ImportLib') ifTrue: {
-  ImportLib export: Queue as: 'Queue'.
-  ImportLib export: Stack as: 'Stack'.
-  ImportLib export: Pair as: 'Pair'.
-  ImportLib export: Tuple as: 'Tuple'.
+  ImportLib export: Queue as: 'Queue' namespace: 'Extensions'.
+  ImportLib export: Stack as: 'Stack' namespace: 'Extensions'.
+  ImportLib export: Pair as: 'Pair' namespace: 'Extensions'.
+  ImportLib export: Tuple as: 'Tuple' namespace: 'Extensions'.
+  ImportLib export: LRArray as: 'LRArray' namespace: 'Extensions'.
 }.

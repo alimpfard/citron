@@ -1,10 +1,10 @@
 #Test error handling thru mute should not have
 #side effects
-a := 0.
+a is 0.
 {
 	Pen write: 'Block 1.\n'.
 	thisBlock error: 'Err'.
-	a := 1.
+	a is 1.
 } catch: {
 	Pen write: 'Catch Block.\n'.
 	Pen write: 'a = ' + a, brk. #a should be 0!

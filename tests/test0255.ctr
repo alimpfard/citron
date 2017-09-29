@@ -1,11 +1,11 @@
 #Can we fork?
 
-q := Program new: { :p
+q is Program new: { :p
 	Pen write: 'I am the Child process', brk.
 	{ ^ True. } whileTrue: {
-		var word := Nil.
+		var word is Nil.
 		p listen: { :m
-			word := m.
+			word is m.
 			Pen write: 'Child received: ' + m, brk.
 			p message: 'thanks for ' + m.
 		}.

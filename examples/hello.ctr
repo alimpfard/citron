@@ -1,8 +1,8 @@
-var Butler := Object new.
+var Butler is Object new.
 Butler on: 'greet:' do: { :name
 	Pen write: 'Welcome ' + name.
 }.
-var james := Butler new.
+var james is Butler new.
 james greet: 'visitor'.
 
 (Reflect objectExists: 'ImportLib') ifTrue: {

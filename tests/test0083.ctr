@@ -1,15 +1,15 @@
 
-Animal := Object new.
+Animal is Object new.
 Animal on: 'eat' do: {
 	Pen write: 'munch! munch!'.
 }.
 
-Cat := Animal new.
+Cat is Animal new.
 Cat on: 'eat' do: {
 	Pen write: 'meow', brk.
 	me `eat.
 }.
 
 
-blackCat := Cat new.
+blackCat is Cat new.
 blackCat eat.

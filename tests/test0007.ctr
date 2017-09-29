@@ -1,10 +1,10 @@
-Cat := Object new.
+Cat is Object new.
 Cat on: 'make' do: {
-	var cat := Object new.
+	var cat is Object new.
 	cat on: 'meow' do: {
 		Pen write: 'meow!'.
 	}.
 	^cat.
 }.
-cat := Cat make.
+cat is Cat make.
 cat meow.

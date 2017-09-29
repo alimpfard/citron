@@ -17,10 +17,10 @@
 
 Program flush.
 
-Application := Object new.
+Application is Object new.
 Application on: 'run' do: {
 	{ ^True. } whileTrue: {
-		var event := Program waitForInput.
+		var event is Program waitForInput.
 		listeners each: { :key :action
 			(key = event) ifTrue: {
 				action run.
@@ -29,7 +29,7 @@ Application on: 'run' do: {
 	}.
 }.
 
-listeners := Map new.
+listeners is Map new.
 listeners put: { Pen write: 'CLICKED!', brk. Program flush. } at: 'clicked knop'.
 
 Application run.

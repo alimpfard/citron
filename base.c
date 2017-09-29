@@ -396,8 +396,8 @@ ctr_object* ctr_object_send2remote(ctr_object* myself, ctr_argument* argumentLis
     memset(&serv_addr, '0', sizeof(serv_addr));
     server = gethostbyname2(ip,AF_INET6);
     if (server == NULL) {
-        fprintf(stderr, "ERROR, no such host\n");
-        exit(0);
+        CtrStdFlow = ctr_build_string_from_cstring("ERROR : No such host found.");
+        return CtrStdFlow;
     }
     memset((char *) &serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin6_flowinfo = 0;
@@ -2792,6 +2792,22 @@ ctr_object* ctr_block_runIt(ctr_object* myself, ctr_argument* argumentList) {
     return result;
 }
 
+ctr_object* ctr_block_run_variadic(ctr_object* myself, int count, ...) {
+  if (count < 1) return ctr_block_runIt(myself, NULL);
+  ctr_argument* argumentList = ctr_heap_allocate(sizeof(ctr_argument));
+  ctr_argument* pass = argumentList;
+  va_list ap;
+  va_start(ap, count);
+  for (size_t i = 0; i < count; i++) {
+    pass->object = va_arg(ap, ctr_object*);
+    pass->next = ctr_heap_allocate(sizeof(ctr_argument));
+    pass = pass->next;
+  }
+  va_end(ap);
+  ctr_object* result = ctr_block_runIt(myself, argumentList);
+  ctr_heap_free(argumentList);
+  return result;
+}
 /**
  * [Block] set: [name] value: [object]
  *

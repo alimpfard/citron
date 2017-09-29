@@ -1,10 +1,10 @@
 #test assignment to my... testtesttest
-a := Object new.
+a is Object new.
 a on: 'init' do: {
-	var v := 'test'.
-	my value := v.
-	my value2 := my value.
-	var x := my value2.
+	var v is 'test'.
+	my value is v.
+	my value2 is my value.
+	var x is my value2.
 	Pen write: x.
 	Pen write: my value.
 	Pen write: my value2.

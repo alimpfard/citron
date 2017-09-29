@@ -1,34 +1,34 @@
 Slurp ls dick lol: 'test'.
 Pen write: (Slurp obtain), brk.
 
-var dick := Object new.
+var dick is Object new.
 
 dick on: 'new:' do: { :size
-  me := dick new.
-  my size := size.
+  me is dick new.
+  my size is size.
   ^me.
 }.
 
 dick on: 'grow' do: {
-  my size := my size + 20.
+  my size is my size + 20.
 }.
 
 dick on: 'shrink' do: {
-  my size := my size - 20.
+  my size is my size - 20.
 }.
 
 dick on: 'getSize' do: {
   ^my size.
 }.
 
-var SomeonesDick := dick new: 10.
+var SomeonesDick is dick new: 10.
 Pen write: (SomeonesDick getSize), write: '\n'.
 SomeonesDick grow.
 Pen write: (SomeonesDick getSize) toString, write: '\n'.
 SomeonesDick shrink.
 Pen write: (SomeonesDick getSize) toString, write: '\n'.
 
-var newDick := SomeonesDick new: 0.
+var newDick is SomeonesDick new: 0.
 newDick on: 'construct:' do: { :s
   ^newDick new: s.
 }
@@ -41,7 +41,7 @@ Broom sweep.
 Pen write: 'Collected ' + Broom dust toString + ' Objects', brk.
 Pen green.
 
-child := Program new: { :program
+child is Program new: { :program
   newDick grow.
   Pen write: 'child :: newDick`s size after growing in child: ', write: newDick getSize, brk.
   {^True.} whileTrue: {program listen: {:m Pen write: m, brk. (m = 'End') ifTrue: {break.}.}.}.

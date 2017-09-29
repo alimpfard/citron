@@ -276,6 +276,8 @@ ctr_object* CtrStdFlow;
 ctr_object* CtrStdBreak;
 ctr_object* CtrStdContinue;
 ctr_object* CtrStdExit;
+ctr_object* CtrStdReflect;
+ctr_object* CtrStdFiber;
 ctr_object* ctr_first_object;
 
 /**

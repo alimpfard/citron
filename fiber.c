@@ -201,11 +201,11 @@ ctr_object* ctr_fiber_yielded(ctr_object* myself, ctr_argument* argumentList);
 void ctr_fiber_begin_init(void);
 
 
-ctr_object* CTR_FIBER_CONTROLLER; //Namespace for all fibers, conatining all the relevant functions
+ctr_object* CtrStdFiber; //Namespace for all fibers, conatining all the relevant functions
 
 ctr_object* ctr_fiber_create(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* ctrl = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
-  ctrl->link = CTR_FIBER_CONTROLLER;
+  ctrl->link = CtrStdFiber;
   return ctrl;
 }
 ctr_object* ctr_fiber_spawn(ctr_object* myself, ctr_argument* argumentList) {
@@ -236,14 +236,14 @@ ctr_object* ctr_fiber_yielded(ctr_object* myself, ctr_argument* argumentList) {
 void ctr_fiber_begin_init() {
   initFibers();
 
-  CTR_FIBER_CONTROLLER = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
-  ctr_internal_create_func(CTR_FIBER_CONTROLLER, ctr_build_string_from_cstring("toString"), &ctr_fiber_tostring);
-  ctr_internal_create_func(CTR_FIBER_CONTROLLER, ctr_build_string_from_cstring("new:"), &ctr_fiber_spawn);
-  ctr_internal_create_func(CTR_FIBER_CONTROLLER, ctr_build_string_from_cstring("yield:"), &ctr_fiber_yield); //with value
-  ctr_internal_create_func(CTR_FIBER_CONTROLLER, ctr_build_string_from_cstring("yield"), &ctr_fiber_yield); //without value
-  ctr_internal_create_func(CTR_FIBER_CONTROLLER, ctr_build_string_from_cstring("yielded"), &ctr_fiber_yielded);
-  ctr_internal_create_func(CTR_FIBER_CONTROLLER, ctr_build_string_from_cstring("waitForAll"), &ctr_fiber_join_all);
-  ctr_internal_object_add_property(CTR_FIBER_CONTROLLER, ctr_build_string_from_cstring("fiberId"), ctr_build_number_from_float(-1), CTR_CATEGORY_PRIVATE_PROPERTY);
-
-  ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Fiber"), CTR_FIBER_CONTROLLER, 0);
+  CtrStdFiber = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+  ctr_internal_create_func(CtrStdFiber, ctr_build_string_from_cstring("toString"), &ctr_fiber_tostring);
+  ctr_internal_create_func(CtrStdFiber, ctr_build_string_from_cstring("new:"), &ctr_fiber_spawn);
+  ctr_internal_create_func(CtrStdFiber, ctr_build_string_from_cstring("yield:"), &ctr_fiber_yield); //with value
+  ctr_internal_create_func(CtrStdFiber, ctr_build_string_from_cstring("yield"), &ctr_fiber_yield); //without value
+  ctr_internal_create_func(CtrStdFiber, ctr_build_string_from_cstring("yielded"), &ctr_fiber_yielded);
+  ctr_internal_create_func(CtrStdFiber, ctr_build_string_from_cstring("waitForAll"), &ctr_fiber_join_all);
+  ctr_internal_object_add_property(CtrStdFiber, ctr_build_string_from_cstring("fiberId"), ctr_build_number_from_float(-1), CTR_CATEGORY_PRIVATE_PROPERTY);
+  CtrStdFiber->info.sticky = 1;
+  ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Fiber"), CtrStdFiber, 0);
 }

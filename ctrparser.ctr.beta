@@ -1,4 +1,4 @@
-var CtrParser is Object new.
+ var CtrParser is Object new.
 var CtrLexer is Object new.
 var CtrTokDesc is Map new.
 var CtrTok is Map new.
@@ -361,7 +361,7 @@ CtrParser on: 'createNode:' do: { :type
   ^node.
 }.
 
-CtrParser on: 'cparseMessage:' { :mode
+CtrParser on: 'cparseMessage:' do: { :mode
   var msgpartlen is 0.
   var m is CtrTNode new.
   var t is -1.
@@ -484,6 +484,8 @@ CtrParser on: 'cparsePOpen' do: {
 }.
 
 CtrParser on: 'cparseBlock' do: {
+  var previousListItem is Nil.
+  var previousCodeListItem is Nil.
   {CtrLexer token.} catch: {:e}, run.
   var r is me createNode: (CtrASTRev @ 'CTR_AST_NODE').
   r initType: (CtrASTRev @ 'CTR_AST_NODE_CODEBLOCK').
@@ -506,14 +508,46 @@ CtrParser on: 'cparseBlock' do: {
     var paramItem is me createNode: (CtrASTRev @ 'CTR_AST_NODE').
     var s is CtrLexer tokenValue.
     paramItem value: s.
-    
+    paramListItem node: paramItem.
+    var f is (first = 1).
+    f ifTrue: {
+      paramList nodes: paramListItem.
+      previousListItem is paramListItem.
+      first is 0.
+    }, ifFalse: {
+      previousListItem next: paramListItem.
+      previousListItem is paramListItem.
+    }.
+    {CtrLexer token.} catch: {:e t is e.}, run.
   }.
+  first is 1.
+  {^((first = 1) | (t = (CtrASTRev @ 'CTR_TOKEN_DOT'))).} whileTrue: {
+    var codeListItem is CtrTListItem new.
+    var codeNode is (me createNode: (CtrASTRev @ 'CTR_AST_NODE')).
+    (first = 1) ifTrue: { CtrLexer putBack. }.
+    {CtrLexer token.} catch: {:e t is e.}, run.
+    (t = (CtrASTRev @ 'CTR_TOKEN_BLOCKCLOSE')) break.
+    CtrLexer putBack.
+    (t = (CtrASTRev @ 'CTR_TOKEN_RET')) ifFalse: {codeNode is (me parseRet).}, ifTrue: {codeNode is (me parseExpr: 0).}.
+    codeListItem nodes: codeNode.
+    var f is (first = 1).
+    f ifTrue: { codeList nodes: codeListItem. previousCodeListItem is codeListItem. first is 0. },
+      ifFalse: { previousCodeListItem next: codeListItem. previousCodeListItem is codeListItem. }.
+    {CtrLexer token.} catch: {:e t is e.}, run.
+    (t = (CtrASTRev @ 'CTR_TOKEN_DOT')) ifFalse: {me emitError: t hint: 'Expected a dot (.).\n'.}.
+  }.
+  thisBlock error: r.
 }.
+
+#CTRparseString
 
 
 
 CtrLexer init.
-CtrLexer load: 'Pen write: \'test test\', brk.'.
+CtrLexer load: 'Pen write: test, red brk.\n#comment test\n?>Verbatim test<?.\n'.
+CtrParser init.
+CtrParser cparseMessages.
+Pen red. ?>
 {CtrLexer token.} catch: {:e Pen write: (CtrTokDesc @ (CtrTok @ e)), brk.}, run.
 {CtrLexer token.} catch: {:e Pen write: (CtrTokDesc @ (CtrTok @ e)), brk.}, run.
 {CtrLexer token.} catch: {:e Pen write: (CtrTokDesc @ (CtrTok @ e)), brk.}, run.
@@ -526,3 +560,4 @@ CtrLexer load: 'Pen write: \'test test\', brk.'.
 {CtrLexer token.} catch: {:e Pen write: (CtrTokDesc @ (CtrTok @ e)), brk.}, run.
 {CtrLexer token.} catch: {:e Pen write: (CtrTokDesc @ (CtrTok @ e)), brk.}, run.
 {CtrLexer token.} catch: {:e Pen write: (CtrTokDesc @ (CtrTok @ e)), brk.}, run.
+<?. Pen resetColor.

@@ -1,12 +1,12 @@
-a := Object new.
-x := 0.
+a is Object new.
+x is 0.
 a on: 'test1' do: {
-	x := 123.
+	x is 123.
 }.
 a test1.
 #x should still be 0.
 Pen write: x.
-b := Object new.
+b is Object new.
 b on: 'test2' do: {
 	#x should be 123... dyn scope
 	Pen write: x.

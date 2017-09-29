@@ -2,5 +2,5 @@
 Array on: '<' do: {
 	Pen write: 'Blaaaa', brk.
 }.
-q := 'x := Array < 1'.
+q is 'x is Array < 1'.
 q eval.

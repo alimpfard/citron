@@ -1,5 +1,5 @@
-str := 'a' paddingLeft: 10.
+str is 'a' paddingLeft: 10.
 Pen write: '| $$str |', brk.
-str := 'a' paddingRight: 10.
+str is 'a' paddingRight: 10.
 Pen write: '| $$str |', brk.
 

@@ -1,4 +1,4 @@
 #NOAST
 #Test parser error
-var :=.
+var is.
 

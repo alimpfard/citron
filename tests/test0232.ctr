@@ -1,5 +1,5 @@
 #Test Slurp Object
-x := Slurp new.
+x is Slurp new.
 x + 3.
 Pen write: (x obtain), brk.
 x echo: 'Hello world'.

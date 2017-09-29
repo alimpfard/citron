@@ -1,2 +1,2 @@
 #Test invalid left hand assignment with Nil
-Nil := True.
+Nil is True.

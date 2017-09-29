@@ -1,6 +1,6 @@
 #Test boolean nor
-motive := False.
-opportunity := False.
+motive is False.
+opportunity is False.
 Pen write: (motive ! opportunity).
 Pen write: (motive not & opportunity not).
 #Test boolean equality messages

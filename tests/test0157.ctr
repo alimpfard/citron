@@ -1,27 +1,27 @@
 #Sending generic messages should not leak memory.
 
-usedMemory1 := 0.
-usedMemory2 := 0.
-usedMemory3 := 0.
-usedMemory4 := 0.
+usedMemory1 is 0.
+usedMemory2 is 0.
+usedMemory3 is 0.
+usedMemory4 is 0.
 
 Broom mode: 0.
 
-f := Object new.
+f is Object new.
 f blah.
 
 Broom sweep.
-usedMemory1 := Broom keptAlloc.
+usedMemory1 is Broom keptAlloc.
 #Pen write: usedMemory1, brk.
 
 f blah.
 Broom sweep.
-usedMemory2 := Broom keptAlloc.
+usedMemory2 is Broom keptAlloc.
 #Pen write: usedMemory2, brk.
 
 f blah.
 Broom sweep.
-usedMemory3 := Broom keptAlloc.
+usedMemory3 is Broom keptAlloc.
 #Pen write: usedMemory3, brk.
 
 #memory counters need to be equal!

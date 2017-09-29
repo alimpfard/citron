@@ -2,7 +2,7 @@
 
 Pen write: Program pid isNil, brk.
 
-q := Program new: { :x
+q is Program new: { :x
 	Pen write: x pid isNil, brk.
 }.
 

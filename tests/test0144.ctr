@@ -2,12 +2,12 @@
 #Test stacktrace if we send a message to a non-existing
 #object property.
 
-CoffeeGrounds := Object new.
+CoffeeGrounds is Object new.
 CoffeeGrounds on: 'extract' do: { ^ 'coffee'. }.
 
-CoffeeMachine := Object new.
+CoffeeMachine is Object new.
 CoffeeMachine on: 'init' do: {
-	my coffeegrounds := CoffeeGrounds new.
+	my coffeegrounds is CoffeeGrounds new.
 }.
 CoffeeMachine on: 'new' do: {
 	^ CoffeeMachine `new init.
@@ -16,7 +16,7 @@ CoffeeMachine on: 'new' do: {
 CoffeeMachine on: 'makeTea' do: {	^ (my tealeaves extract). }. #tealeaves is not defined!
 CoffeeMachine on: 'makeCoffee' do: { ^ (my coffeegrounds extract). }.
 
-coffeeDream := CoffeeMachine new.
+coffeeDream is CoffeeMachine new.
 
 Pen write:
 	coffeeDream 

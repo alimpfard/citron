@@ -1,7 +1,7 @@
- animal := Object new. 
+ animal is Object new. 
  
  animal on: 'name:' do: { :n
-my name := n.
+my name is n.
 }. 
 
 
@@ -11,7 +11,7 @@ animal on: 'name' do: {
 ^ name.
 }.
 
-cat := animal new.
+cat is animal new.
  
  cat name: 'Diva'. 
  

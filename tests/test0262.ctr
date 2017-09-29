@@ -1,12 +1,12 @@
 #Can we use sockets?
-port := 1000 + (Dice rollWithSides: 6000).
+port is 1000 + (Dice rollWithSides: 6000).
 Program port: port.
 
-server := Program new: {
+server is Program new: {
 	
 	Program connectionLimit: 3.
 	
-	var remoteObject := Object new.
+	var remoteObject is Object new.
 	
 	remoteObject on: 'test' do: {
 		^ 'test 1.\n'.
@@ -24,15 +24,15 @@ server := Program new: {
 
 }.
 
-pid := server pid.
-x := Nil.
+pid is server pid.
+x is Nil.
 
 #wait until server's up...
 Clock wait: 1.
 
 {
-	var a := Object fromComputer: '::1'.
-	x :=
+	var a is Object fromComputer: '::1'.
+	x is
 		( a test ) + 
 		( a test2: 'A' ) +
 		( a test3: 'B' and: 'C' ).

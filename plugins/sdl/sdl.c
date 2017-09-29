@@ -370,9 +370,53 @@ ctr_object* ctr_sdl_surface_unlock(ctr_object* myself, ctr_argument* argumentLis
   SDL_Surface* surface = get_sdl_surface_ptr(myself);
 
 }
+#endif
+#ifdef NEW
+void ctr_sdl_put_pixel(SDL_Surface *surface, int x, int y, uint32_t pixel)
+{
+    int bpp = surface->format->BytesPerPixel;
+    /* Here p is the address to the pixel we want to set */
+    Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
+
+    switch(bpp) {
+    case 1:
+        *p = pixel;
+        break;
+
+    case 2:
+        *(Uint16 *)p = pixel;
+        break;
+
+    case 3:
+        if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
+            p[0] = (pixel >> 16) & 0xff;
+            p[1] = (pixel >> 8) & 0xff;
+            p[2] = pixel & 0xff;
+        } else {
+            p[0] = pixel & 0xff;
+            p[1] = (pixel >> 8) & 0xff;
+            p[2] = (pixel >> 16) & 0xff;
+        }
+        break;
+
+    case 4:
+        *(Uint32 *)p = pixel;
+        break;
+    }
+}
 ctr_object* ctr_sdl_surface_set_pixel(ctr_object* myself, ctr_argument* argumentList) {
   SDL_Surface* surface = get_sdl_surface_ptr(myself);
-
+  int x, y;
+  x = argumentList->object->value.nvalue;
+  y = argumentList->next->object->value.nvalue;
+  ctr_object* color_ = argumentList->next->next->object;
+  int r,g,b;
+  r = ctr_internal_object_find_property(color_, ctr_build_string_from_cstring("red"), CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue;
+  g = ctr_internal_object_find_property(color_, ctr_build_string_from_cstring("green"), CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue;
+  b = ctr_internal_object_find_property(color_, ctr_build_string_from_cstring("blue"), CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue;
+  uint32_t color = SDL_MapRGB(surface->format, r, g, b);
+  ctr_sdl_put_pixel(surface, x, y, color);
+  return myself;
 }
 #endif
 /**
@@ -516,6 +560,7 @@ void begin() {
   ctr_internal_create_func(sdlObject, ctr_build_string_from_cstring( "fillRect:withColor:" ), &ctr_sdl_surface_fill );
   ctr_internal_create_func(sdlObject, ctr_build_string_from_cstring( "update" ), &ctr_sdl_surface_update );
   ctr_internal_create_func(sdlObject, ctr_build_string_from_cstring( "set:to:" ), &ctr_sdl_set_prop);
+  ctr_internal_create_func(sdlObject, ctr_build_string_from_cstring( "setPixelWithX:andY:toColor:" ), &ctr_sdl_surface_set_pixel);
   ctr_internal_create_func(sdlObject, ctr_build_string_from_cstring( "newRectWithX:andY:andW:andH:" ), &ctr_sdl_rect_make );
 
   //event

@@ -1,6 +1,6 @@
 #Can we add hours to a clock using simple language?
 
-clock := Clock
+clock is Clock
 	new zone: 'Europe/Amsterdam',
 	year: 2017, month: 7, day: 13,
 	hour: 18, minute: 0, second: 0.

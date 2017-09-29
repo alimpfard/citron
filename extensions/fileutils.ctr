@@ -1,6 +1,5 @@
-{ImportLib noImport.} catch: {:e }, run.
 Object on: 'exec:' do: { :t
-  var self is me.
+  var self is thisBlock.
   ((t type) !=: (String type)) ifTrue: { self error: 'Can only exec strings.'. }.
   var tempFile is File tempFileLike: '/tmp/citronXXXXXX'.
   var p is tempFile path.
@@ -29,19 +28,42 @@ ImportLib on: 'loadExtensions' do: { :ename
     }.
   }.
 }.
-ImportLib on: 'export:as:' do: { :thing :name
-  my imports put: thing at: name.
+ImportLib on: 'export:as:namespace:requires:' do: { :thing :name :namespace :imports
+  ((my imports @ namespace) isNil) ifTrue: ({my imports put: (Map new) at: namespace.} set: 'imports' value: my imports).
+  var ns is my imports @ namespace.
+  ns put: (Map new put: thing at: ':provides:', put: imports at: ':requires:') at: name.
+  my imports put: ns at: namespace.
+}.
+ImportLib on: 'export:as:namespace:' do: { :thing :name :namespace
+  me export: thing as: name namespace: namespace requires: (Array new).
 }.
 ImportLib init.
+ImportLib on: 'importAll:' do: {:things
+  things each: {:i :qname
+    var name is (qname from: ((qname lastIndexOf: ':') + 1) to: (qname length)).
+    ImportLib import: qname as: name.
+  }.
+}.
 ImportLib on: 'importAll:as:' do: { :things :gnames
   var fourOhFour is Array new.
   things each: { :i :name
     var gname is gnames @ i.
-    var import is (my imports @ name).
+    var aux is name.
+    var namespace is my imports.
+    ((var ind is name lastIndexOf: ':') !=: -1) ifTrue: ({
+      var ns is name from: 0 length: (ind).
+      aux is name from: (ind + 1) to: (name length).
+      namespace is (my imports @ ns).
+    } set: 'imports' value: my imports).
+    var import is (namespace @ aux).
     (import isNil) ifTrue: { fourOhFour push: name. },
                    ifFalse: {
+                    var imps is (import @ ':requires:').
+                    (imps count !=: 0) ifTrue: {
+                      ImportLib importAll: imps.
+                    }.
                     Reflect addGlobalVariable: gname.
-                    Reflect set: gname to: import.
+                    Reflect set: gname to: (import @ ':provides:').
                   }.
   }.
   (fourOhFour count = 0) ifFalse: {thisBlock error: 'Libraries not found: ' + fourOhFour. }.
@@ -60,4 +82,5 @@ ImportLib on: 'from:import:' do: { :fname :iname :gname
   me import: iname as: iname.
 }.
 ImportLib on: 'noImport' do: {thisBlock error: 'No Import.'.}.
-ImportLib on: 'respondTo:' do: { :iname me importAll: (Array < iname) as: (Array < iname). }.
+ImportLib on: 'respondTo:' do: { :iname var nsname is 'Extensions:$$iname'. me importAll: (Array new < nsname) as: (Array new < iname). }.
+ImportLib on: 'respondTo:and:' do: { :nname :iname (iname split: ',') each: {:i :iname var nsname is 'Extensions:$$nname$$iname'. me importAll: (Array new < nsname) as: (Array new < iname).}. }.

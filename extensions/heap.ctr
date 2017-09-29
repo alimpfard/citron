@@ -1,0 +1,170 @@
+var Heap is Object new.
+
+Heap on: 'init' do: {my heap is Array new.}.
+
+Heap on: 'heapify:' do: { :a
+  var arr is a copy.
+  var size is arr count.
+  ((size / 2) floor) to: -1 step: -1 do: { :root
+    var root_val is arr at: root.
+    var child is (2 * root) + 1.
+    {^child < size. } whileTrue: {
+      ((child < (size - 1)) & ((arr at: child) > (arr at: (child + 1)))) ifTrue: {child +=: 1.}.
+      (root_val <=: (arr at: child)) break.
+      l put: (l at: child) at: (l at: (((child - 1) / 2) floor)).
+      child is (2 * child) + 1.
+    }.
+    arr put: root_val at: (((child - 1) / 2) floor).
+  }.
+  my heap is arr.
+}.
+
+Heap on: 'push:' do: { :e
+  my heap push: e.
+  me siftDownFrom: 0 to: (my heap count - 1).
+}.
+
+Heap on: 'pop' do: {
+  var lastlt is (my heap pop).
+  (my heap count > 0) ifTrue: {
+    var reti is (my heap at: 0).
+    my heap put: lastlt at: 0.
+    me siftUpFrom: 0.
+    lastlt is reti.
+  }.
+  ^lastlt.
+}.
+
+Heap on: 'replace:' do: { :e
+  var reti is my heap at: 0.
+  my heap put: e at: 0.
+  me siftUpFrom: 0.
+  ^reti.
+}.
+
+Heap on: 'pushAndPop:' do: { :e
+  ((my heap count > 0) & ((my heap at: 0) > e)) ifTrue: {
+    var t is my heap at: 0.
+    my heap put: e at: 0.
+    e is t.
+    me siftUpFrom: 0.
+  }.
+  ^e.
+}.
+
+Heap on: 'popMax' do: {
+  var lastlt is my heap pop.
+  (my heap count > 0) ifTrue: {
+    var reti is my heap at: 0.
+    my heap put: lastlt at: 0.
+    me siftUpMaxFrom: 0.
+    lastlt is reti.
+  }.
+  ^lastlt.
+}.
+
+Heap on: 'replaceMax:' do: { :e
+  var reti is my heap at: 0.
+  my heap put: e at: 0.
+  me siftUpMaxFrom: 0.
+  ^reti.
+}.
+
+
+
+Heap on: 'siftUpFrom:' do: { :f
+  var endpos is my heap count.
+  var startpos is f.
+  var newi is my heap at: f.
+  var cpos is (2 * f) + 1.
+  {^cpos < endpos.} whileTrue: {
+    var rightpos is cpos + 1.
+    ((rightpos < cpos) & (((my heap at: rightpos) < (my heap at: cpos)) neg)) ifTrue: {cpos is rightpos.}.
+    my heap put: (my heap at: cpos) at: f.
+    f is cpos.
+    cpos is (2 * f) + 1.
+  }.
+  my heap put: newi at: f.
+  me siftDownFrom: startpos to: f.
+}.
+
+Heap on: 'siftDownMaxFrom:to:' do: { :s :pos
+  var newi is my heap at: pos.
+  {^pos > s.} whileTrue: {
+    var parentpos is ((pos - 1) / 2) floor.
+    var parent is my heap at: parentpos.
+    (parent < newi) ifTrue: {
+      heap put: parent at: parentpos.
+      pos is parentpos.
+    }, continue.
+    True break.
+  }.
+  heap put: newi at: pos.
+}.
+
+Heap on: 'siftUpMaxFrom:' do: { :pos
+  var endpos is my heap count.
+  var startpos is pos.
+  var newi is heap at: pos.
+  var childpos is (2 * pos) + 1.
+  {^childpos < endpos.} whileTrue: {
+    var rightpos is childpos + 1.
+    ((rightpos < endpos) & ((my heap at: rightpos) >=: (my heap at: childpos))) ifTrue: {childpos is rightpos.}.
+    my heap put: (my heap at: childpos) at: pos.
+    pos is childpos.
+  }.
+  my heap put: newi at: pos.
+  me siftDownMaxFrom: startpos to: pos.
+}.
+
+Heap on: 'siftDownFrom:to:' do: { :startpos :pos
+  var newi is my heap at: pos.
+  {^pos > startpos.} whileTrue: {
+    var parentpos is ((pos - 1) / 2) floor.
+    var parent is my heap at: parentpos.
+    (newi < parent) ifTrue: {
+      my heap put: parent at: pos.
+      pos is parentpos.
+    }, continue.
+    True break.
+  }.
+  my heap put: newi at: pos.
+}.
+
+# Heap on: 'internMessage:arguments:' do: { :m :a ^(my heap message: m arguments: a).}.
+#
+# Heap on: 'merge:key:reverse:' do: { :iters :key :reverse
+#   var h is Heap new.
+#   var hAppend is {:thing h internMessage:'push:' arguments:(Array new < thing).}.
+#   var heapify is Nil.
+#   var heappop is Nil.
+#   var heapreplace is Nil.
+#   var direction is 0.
+#   reverse ifTrue: {
+#     heapify is {:arr ^me heapifyMax: arr.}.
+#     heappop is { ^me popMax. }.
+#     heapreplace is { :thing ^me replaceMax: thing. }.
+#     direction is -1.
+#   }, ifFalse: {
+#     heapify is {:arr ^me heapify: arr.}.
+#     heappop is { ^me pop. }.
+#     heapreplace is { :thing ^me replace: thing. }.
+#     direction is 1.
+#   }.
+#   (Key isNil) ifTrue: {
+#     iters each: { :order :it
+#       {
+#         var next is {^iter next.}.
+#         hAppend applyTo: (Array new < (next run) ; order * direction ; next).
+#       } catch: {}, run.
+#     }.
+#     heapify applyTo: h.
+#     {^(h internMessage: count)}
+#   }, ifFalse: {}.
+# }.
+# Heap on: 'merge:key:' do: { :iters :key ^me merge: iters key: key reverse: False.}.
+# Heap on: 'merge:reverse:' do: { :iters :reverse ^me merge: iters key: Nil reverse: reverse. }.
+# Heap on: 'merge:' do: { :iters ^me merge: iters key: Nil reverse: False. }.
+
+
+ImportLib export: Heap as: 'Heap' namespace: 'Extensions'.

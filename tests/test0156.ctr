@@ -1,9 +1,9 @@
 #NOAST
 #Test too many contexts open
 
-j := 1.
+j is 1.
 
-func := {
+func is {
 
 	Pen write: 'Nested call #' + j, brk.
 	j +=: 1.

@@ -1,13 +1,13 @@
 #String operations should not leak memory
 
-usedMemory1 := 0.
-usedMemory2 := 0.
-usedMemory3 := 0.
-usedMemory4 := 0.
+usedMemory1 is 0.
+usedMemory2 is 0.
+usedMemory3 is 0.
+usedMemory4 is 0.
 
 Broom mode: 0.
 
-txt := 'Word Salad'.
+txt is 'Word Salad'.
 Pen write: 'last index of ord = ' + ( txt lastIndexOf: 'ord' ), brk.
 Pen write: 'index of ord = ' + ( txt indexOf: 'ord' ), brk.
 Pen write: 'index of ad = ' + ( txt indexOf: 'ad' ), brk.
@@ -20,10 +20,10 @@ Pen write: 'txt does not equal Ceasar Salad = ' + ( txt !=: 'Ceasar Salad' ), br
 
 Broom sweep.
 
-usedMemory1 := Broom keptAlloc.
+usedMemory1 is Broom keptAlloc.
 #Pen write: usedMemory1, brk.
 
-txt := 'Word Salad'.
+txt is 'Word Salad'.
 Pen write: 'last index of ord = ' + ( txt lastIndexOf: 'ord' ), brk.
 Pen write: 'index of ord = ' + ( txt indexOf: 'ord' ), brk.
 Pen write: 'index of ad = ' + ( txt indexOf: 'ad' ), brk.
@@ -35,10 +35,10 @@ Pen write: 'txt does not equal Word Salad = ' + ( txt !=: 'Word Salad' ), brk.
 Pen write: 'txt does not equal Ceasar Salad = ' + ( txt !=: 'Ceasar Salad' ), brk.
 
 Broom sweep.
-usedMemory2 := Broom keptAlloc.
+usedMemory2 is Broom keptAlloc.
 #Pen write: usedMemory2, brk.
 
-txt := 'Word Salad'.
+txt is 'Word Salad'.
 Pen write: 'last index of ord = ' + ( txt lastIndexOf: 'ord' ), brk.
 Pen write: 'index of ord = ' + ( txt indexOf: 'ord' ), brk.
 Pen write: 'index of ad = ' + ( txt indexOf: 'ad' ), brk.
@@ -50,7 +50,7 @@ Pen write: 'txt does not equal Word Salad = ' + ( txt !=: 'Word Salad' ), brk.
 Pen write: 'txt does not equal Ceasar Salad = ' + ( txt !=: 'Ceasar Salad' ), brk.
 
 Broom sweep.
-usedMemory3 := Broom keptAlloc.
+usedMemory3 is Broom keptAlloc.
 #Pen write: usedMemory3, brk.
 
 #memory counters need to be equal!

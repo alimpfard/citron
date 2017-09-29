@@ -1,5 +1,5 @@
 # Proper parse error with line number
-a := '
+a is '
  line number 4... '.
 Pen write: 'testje.ctr' + grep: 'Shell'.
 

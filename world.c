@@ -309,35 +309,39 @@ char* ctr_internal_memmem(char* haystack, long hlen, char* needle, long nlen, in
  * Creates an object.
  */
 ctr_object* ctr_internal_create_object(int type) {
-    ctr_object* o;
-    o = ctr_heap_allocate(sizeof(ctr_object));
-    o->properties = ctr_heap_allocate(sizeof(ctr_map));
-    o->methods = ctr_heap_allocate(sizeof(ctr_map));
-    o->properties->size = 0;
-    o->methods->size = 0;
-    o->properties->head = NULL;
-    o->methods->head = NULL;
-    o->info.type = type;
-    o->info.sticky = 0;
-    o->info.mark = 0;
-    o->info.remote = 0;
-    if (type==CTR_OBJECT_TYPE_OTBOOL) o->value.bvalue = 0;
-    if (type==CTR_OBJECT_TYPE_OTNUMBER) o->value.nvalue = 0;
-    if (type==CTR_OBJECT_TYPE_OTSTRING) {
-        o->value.svalue = ctr_heap_allocate(sizeof(ctr_string));
-        o->value.svalue->value = "";
-        o->value.svalue->vlen = 0;
-    }
-    o->gnext = NULL;
-    if (ctr_first_object == NULL) {
-        ctr_first_object = o;
-    } else {
-        o->gnext = ctr_first_object;
-        ctr_first_object = o;
-    }
-    return o;
+  return ctr_internal_create_mapped_object(type, 0);
 }
 
+ctr_object* ctr_internal_create_mapped_object(int type, int shared) {
+  ctr_object* o;
+  o = shared==1?ctr_heap_allocate_shared(sizeof(ctr_object)):ctr_heap_allocate(sizeof(ctr_object));
+  o->properties = shared==1?ctr_heap_allocate_shared(sizeof(ctr_map)):ctr_heap_allocate(sizeof(ctr_map));
+  o->methods = shared==1?ctr_heap_allocate_shared(sizeof(ctr_map)):ctr_heap_allocate(sizeof(ctr_map));
+  o->properties->size = 0;
+  o->methods->size = 0;
+  o->properties->head = NULL;
+  o->methods->head = NULL;
+  o->info.type = type;
+  o->info.sticky = 0;
+  o->info.mark = 0;
+  o->info.remote = 0;
+  o->info.shared = shared;
+  if (type==CTR_OBJECT_TYPE_OTBOOL) o->value.bvalue = 0;
+  if (type==CTR_OBJECT_TYPE_OTNUMBER) o->value.nvalue = 0;
+  if (type==CTR_OBJECT_TYPE_OTSTRING) {
+      o->value.svalue = shared==1?ctr_heap_allocate_shared(sizeof(ctr_string)):ctr_heap_allocate(sizeof(ctr_string));
+      o->value.svalue->value = "";
+      o->value.svalue->vlen = 0;
+  }
+  o->gnext = NULL;
+  if (ctr_first_object == NULL) {
+      ctr_first_object = o;
+  } else {
+      o->gnext = ctr_first_object;
+      ctr_first_object = o;
+  }
+  return o;
+}
 /**
  * @internal
  *
@@ -969,6 +973,8 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("argumentListOf:"), &ctr_reflect_cb_ac);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("addArgumentTo:named:"), &ctr_reflect_cb_add_param);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("copyBlock:"), &ctr_reflect_fn_copy);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("newSharedObject"), &ctr_reflect_share_memory);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("link:to:"), &ctr_reflect_link_to);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("version"), &ctr_give_version);
 
     ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Reflect"), CtrStdReflect, 0);

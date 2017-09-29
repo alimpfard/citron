@@ -2500,10 +2500,6 @@ ctr_object* ctr_string_hash_with_key( ctr_object* myself, ctr_argument* argument
  * [String] eval
  *
  * Evaluates the contents of the string as code.
- * In contrast to other languages, an eval statement can only
- * execute a very limited set of messages. Typically only Array and
- * Map building can be performed using eval. Using eval in Citron can
- * therefore be considered 'safe'.
  *
  * Usage:
  *
@@ -2805,6 +2801,11 @@ ctr_object* ctr_block_run_variadic(ctr_object* myself, int count, ...) {
   }
   va_end(ap);
   ctr_object* result = ctr_block_runIt(myself, argumentList);
+  pass = argumentList;
+  while(pass->next != NULL||pass->object != NULL) {
+    if(pass->object != NULL) ctr_heap_free(pass->object);
+    pass = pass->next;
+  }
   ctr_heap_free(argumentList);
   return result;
 }
@@ -2828,7 +2829,7 @@ ctr_object* ctr_block_run_variadic(ctr_object* myself, int count, ...) {
  * Similarly, you could use this technique to create a block that returns a
  * block that applies a formula (for instance simple multiplication) and then set the
  * multiplier to use in the formula. This way, you could create a block
- * building 'formula blocks'. This is how you implement use closures
+ * building 'formula blocks'. This is how you implement & use closures
  * in Citron.
  */
 ctr_object* ctr_block_set(ctr_object* myself, ctr_argument* argumentList) {

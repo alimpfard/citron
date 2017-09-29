@@ -5,6 +5,7 @@
 #include <stdarg.h>
 #include <math.h>
 #include <stdint.h>
+#include <sys/mman.h>
 #include "citron.h"
 
 /**
@@ -77,6 +78,43 @@ void* ctr_heap_allocate( size_t size ) {
     return slice_of_memory;
 }
 
+void* create_shared_memory(size_t size) {
+  // Our memory buffer will be readable and writable:
+  int protection = PROT_READ | PROT_WRITE;
+  int visibility = MAP_ANONYMOUS | MAP_SHARED;
+  return mmap(NULL, size, protection, visibility, 0, 0);
+}
+void* ctr_heap_allocate_shared( size_t size ) {
+
+  void* slice_of_memory;
+  size_t* block_width;
+  int q = sizeof( size_t );
+  size += q;
+
+  /* Check whether we can afford to allocate this much */
+  ctr_gc_alloc += size;
+
+  if (ctr_gc_memlimit < ctr_gc_alloc) {
+      printf( "Out of memory. Failed to allocate %lu bytes.\n", size );
+      exit(1);
+  }
+
+  /* Perform allocation and check result */
+  slice_of_memory = create_shared_memory( size );
+
+  if ( slice_of_memory == NULL ) {
+      printf( "Out of memory. Failed to allocate %lu bytes (malloc failed). \n", size );
+      exit(1);
+  }
+
+  /* Store the width of the memory block in the slice itself so we can always find it */
+  block_width = (size_t*) slice_of_memory;
+  *(block_width) = size;
+  /* Now move the new memory pointer behind the blockwidth */
+  slice_of_memory = (void*) ((char*) slice_of_memory + q);
+
+  return slice_of_memory;
+}
 
 /**
  * Allocates memory on heap and tracks it for clean-up when
@@ -156,7 +194,20 @@ void ctr_heap_free( void* ptr ) {
     free( ptr );
     ctr_gc_alloc -= size;
 }
+void ctr_heap_free_shared( void* ptr ) {
 
+    size_t* block_width;
+    int q = sizeof( size_t );
+    size_t size;
+
+    /* find the correct size of this memory block and move pointer back */
+    ptr = (void*) ((char*) ptr - q);
+    block_width = (size_t*) ptr;
+    size = *(block_width);
+
+    munmap( ptr, size ); //so god help me
+    ctr_gc_alloc -= size;
+}
 /**
  * Memory Management Adjust Memory Block Size (re-allocation)
  * Re-allocates Memory Block.

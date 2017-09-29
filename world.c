@@ -956,24 +956,24 @@ void ctr_initialize_world() {
     CtrStdGC->link = CtrStdObject;
     CtrStdGC->info.sticky = 1;
 
-    ctr_object* reflect = ctr_reflect_new(CtrStdObject, NULL);
+    CtrStdReflect = ctr_reflect_new(CtrStdObject, NULL);
 
-    ctr_internal_create_func(reflect, ctr_build_string_from_cstring("addGlobalVariable:"), &ctr_reflect_add_glob);
-    ctr_internal_create_func(reflect, ctr_build_string_from_cstring("addLocalVariable:"), &ctr_reflect_add_local);
-    ctr_internal_create_func(reflect, ctr_build_string_from_cstring("addPrivateVariable:"), &ctr_reflect_add_my);
-    ctr_internal_create_func(reflect, ctr_build_string_from_cstring("set:to:"), &ctr_reflect_set_to);
-    ctr_internal_create_func(reflect, ctr_build_string_from_cstring("getContext"), &ctr_reflect_dump_context);
-    ctr_internal_create_func(reflect, ctr_build_string_from_cstring("getMethodsOf:"), &ctr_reflect_dump_context_spec);
-    ctr_internal_create_func(reflect, ctr_build_string_from_cstring("getPropertiesOf:"), &ctr_reflect_dump_context_spec_prop);
-    ctr_internal_create_func(reflect, ctr_build_string_from_cstring("getObject:"), &ctr_reflect_find_obj);
-    ctr_internal_create_func(reflect, ctr_build_string_from_cstring("argumentListOf:"), &ctr_reflect_cb_ac);
-    ctr_internal_create_func(reflect, ctr_build_string_from_cstring("addArgumentTo:named:"), &ctr_reflect_cb_add_param);
-    ctr_internal_create_func(reflect, ctr_build_string_from_cstring("copyBlock:"), &ctr_reflect_fn_copy);
-    ctr_internal_create_func(reflect, ctr_build_string_from_cstring("version"), &ctr_give_version);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("addGlobalVariable:"), &ctr_reflect_add_glob);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("addLocalVariable:"), &ctr_reflect_add_local);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("addPrivateVariable:"), &ctr_reflect_add_my);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("set:to:"), &ctr_reflect_set_to);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("getContext"), &ctr_reflect_dump_context);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("getMethodsOf:"), &ctr_reflect_dump_context_spec);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("getPropertiesOf:"), &ctr_reflect_dump_context_spec_prop);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("getObject:"), &ctr_reflect_find_obj);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("argumentListOf:"), &ctr_reflect_cb_ac);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("addArgumentTo:named:"), &ctr_reflect_cb_add_param);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("copyBlock:"), &ctr_reflect_fn_copy);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("version"), &ctr_give_version);
 
-    ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Reflect"), reflect, 0);
+    ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Reflect"), CtrStdReflect, 0);
 
-    // Fiber 
+    // Fiber
     ctr_fiber_begin_init();
 
     /* Other objects */

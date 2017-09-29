@@ -6,8 +6,8 @@ Pen write: 'Continue for-loop, No - before 6 and up.', brk.
 	Pen write: '-'.
 }.
 
-x := 0.
-xIsLessThan10 := { ^( x < 10 ). }.
+x is 0.
+xIsLessThan10 is { ^( x < 10 ). }.
 #0-4
 Pen brk.
 Pen write: 'Continue while-true, No --> before 5 and up.', brk.
@@ -53,7 +53,7 @@ Pen write: 'Test Array each-loop: 0, ... ,2', brk.
 }.
 
 Pen write: 'Test Map each-loop: c only', brk.
-m := Map new.
+m is Map new.
 m put: 'first' at: 'a', put: 'second' at: 'b', put: 'third' at: 'c'.
 m each: { :k :v
 	(k !=: 'c') continue.

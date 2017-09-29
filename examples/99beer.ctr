@@ -1,13 +1,13 @@
 #99 Bottles of beer song
 
 Number on: 'bottles' do: {
-	var phrase := 'no more bottles of beer'.
-	var n := me.
+	var phrase is 'no more bottles of beer'.
+	var n is me.
 	(me = 1) ifTrue: {
-		phrase := '1 bottle of beer'.
+		phrase is '1 bottle of beer'.
 	}.
 	(me > 1) ifTrue: {
-		phrase := (n + ' bottles of beer').
+		phrase is (n + ' bottles of beer').
 	}.
 	^phrase.
 }.

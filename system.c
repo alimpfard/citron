@@ -1281,6 +1281,7 @@ ctr_object* ctr_command_accept(ctr_object* myself, ctr_argument* argumentList ) 
         read( connfd, &lengthBuff, sizeof(size_t));
         dataBuff = ctr_heap_allocate( lengthBuff + 1 );
         read(connfd, dataBuff, lengthBuff);
+        printf("%s\n", dataBuff);
         stringObj = ctr_build_string_from_cstring(dataBuff);
         messageDescriptorArray = ctr_string_eval( stringObj, NULL );
         messageSelector = ctr_array_shift( messageDescriptorArray, NULL );

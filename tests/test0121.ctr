@@ -1,4 +1,4 @@
 #Test String append message
-x := 'Append this'.
-y := 'to a String'.
+x is 'Append this'.
+y is 'to a String'.
 Pen write: ('' append: x, append: ' ', append: y).

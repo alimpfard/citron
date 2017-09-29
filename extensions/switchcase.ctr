@@ -2,7 +2,7 @@
 var IntermediateCaseObject is Object new.
 IntermediateCaseObject on: 'init:' do: { :p
   my parent is p.
-  my cases := Array new.
+  my cases is Array new.
   ^me.
 }.
 

@@ -39,7 +39,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 .br
 <?.
 
-files := Array <
+files is Array <
 			'../base.c' ;
 			'../collections.c' ;
 			'../file.c' ;
@@ -49,18 +49,18 @@ files := Array <
 
 
 files each: { :index :file
-	var f := File new: file.
-	var str := f read.
-	var commentBlocks := str split: '/**'.
+	var f is File new: file.
+	var str is f read.
+	var commentBlocks is str split: '/**'.
 	commentBlocks shift.
 
 	(commentBlocks count) times: {
-		var comment := commentBlocks shift.
-		var lines   := comment split: '\n'.
+		var comment is commentBlocks shift.
+		var lines   is comment split: '\n'.
 		lines count > 3 ifTrue: {
 
 			#print the headline
-			var headline := lines @ 1.
+			var headline is lines @ 1.
 
 			Pen write: '.BR.BR.BR', brk brk.
 
@@ -71,14 +71,14 @@ files each: { :index :file
 
 				#print the rest
 				Pen write: '.nf', brk.
-				var line := ''.
-				var n := 2.
+				var line is ''.
+				var n is 2.
 				{
-					line := lines at: n.
+					line is lines at: n.
 					^ ((line indexOf: '*/') = -1).
 				}
 				whileTrue: {
-						line := line replace: '\\' with: '\\\\'.
+						line is line replace: '\\' with: '\\\\'.
 						Pen write: '    '+(line skip: 2), brk.
 						n +=: 1.
 				}.

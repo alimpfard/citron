@@ -1,7 +1,7 @@
 #Test String Object (530-1-1021212130)
 Pen write: (' a a a   ' lastIndexOf: 'a'). #5
 Pen write: (' trees ' indexOf: 'ee'). #3
-h := 'can you find the needle in the haystack?'.
+h is 'can you find the needle in the haystack?'.
 Pen write: (h indexOf: 'can'). #0
 Pen write: (h indexOf: ''). #-1
 Pen write: ('' indexOf: 'a'). #-1

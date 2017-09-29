@@ -1,7 +1,16 @@
-#!/usr/bin/env ./ctr
+#!/usr/bin/env ctr
+##/usr/local/bin/ctr
+
+contextPurity is False. #This is not a pure context, since objects are mutated in-between evaluations. so disallowing purely functional things.
+
+Pen green. ?>Project Citron : The Programming Language (V<?. Pen write:(Reflect version) + ')' ,resetColor brk.
+
+Pen write: 'Extensions at: ' + (File extensionsPath), brk.
+
 File new: (File extensionsPath) + '/extensions/fileutils.ctr', include.
 
 ImportLib Queue.
+ImportLib LRArray.
 
 Eval is Object new.
 Eval on: 'init' do: {
@@ -12,6 +21,7 @@ Eval on: 'init' do: {
   my allowedColors is ('red blue magenta cyan yellow green resetColor' split: ' ') join: '|'.
   my evalQueue is Queue new.
   my globalvars is False.
+  my history is LRArray new init: 100.
   ^me.
 }.
 Eval on: 'end' do: { my end is True. }.
@@ -55,6 +65,7 @@ Eval on: 'queueHasItem' do: {
 }.
 Eval on: 'dequeue' do: { ^my evalQueue dequeue. }.
 Eval on: 'setGlobalVars:' do: { :t my globalvars is t. }.
+Eval on: 'globalvars' do: {^my globalvars. }.
 Eval on: 'handleGlobalVars:' do: { :inp
   var repl is inp.
   (my globalvars) ifTrue: {
@@ -64,6 +75,13 @@ Eval on: 'handleGlobalVars:' do: { :inp
     #Pen write: repl, brk.
     ^repl.
 }.
+Eval on: 'pushHist:' do: {:h
+  my history push: h.
+}.
+Eval on: 'executeLast:' do: {:n
+  ^me evaluate: (my history @ n).
+}.
+Eval on: 'getHistory' do: {^my history.}.
 Eval init.
 Eval setArgs: (Array with: {:i ^Program argument: i. } count: (Program argCount)).
 Eval onlyRelevantArgs.
@@ -78,6 +96,7 @@ var rc is Nil.
 var rd is Nil.
 var re is Nil.
 var rf is Nil.
+
 
 # parse arguments
 { ^(Eval argCount > 0). } whileTrue: {
@@ -94,6 +113,8 @@ var rf is Nil.
         P cyan indent: 1 write: 'Eval namespace', resetColor brk.
         P magenta indent: 2 write: '[Eval] setPrompt: [String] ', resetColor write: '-- Sets the prompt.', brk.
         P magenta indent: 2 write: '[Eval] setColor: [String] ', resetColor write: '-- sets the color of the output.', brk.
+        P magenta indent: 2 write: '[Eval] getHistory ', resetColor write: '-- returns the 100 last commands.', brk.
+        P magenta indent: 2 write: '[Eval] executeLast: [Number] ', resetColor write: '-- evaluates the Nth element of the history list.', brk.
         P magenta indent: 2 write: '[Eval] end ', resetColor write: '-- Ends the eval.', brk.
         P indent: 1 write: 'Evaluates expressions in a single context.', brk.
         P indent: 1 write: 'Since all expressions are in single lines, pragma oneLineExpressions is active,', brk.
@@ -105,7 +126,8 @@ var rf is Nil.
           indent: 2 write: '-h : show this help\n',
           indent: 2 write: '-f : evaluate file. many can be passed, evals in passed order\n',
           indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
-          magenta indent: 1 write: 'Any other option will be ignored.', brk.
+          indent: 2 write: '--global-vars : variables in a single line are global, but this leaks a minute amount of memory.\n',
+          magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
         P red write: 'new Global variables can be created using Reflection.', brk.
         P resetColor.
         Program exit.
@@ -131,6 +153,11 @@ var rf is Nil.
         var value is Eval shiftArgs.
         (value isNil) ifTrue: { thisBlock error: '-e requires an argument.'. }.
         { ^(Eval argCount > 0). } whileTrue: { args push: Eval shiftArgs. }. #consume all other arguments.
+        # if it doesn`t end in a dot, add it.
+        ((value at: (value length - 1)) !=: '.') ifTrue: {
+            value append: '.'.
+        }.
+        value is Eval handleGlobalVars: value.
         Eval evaluate: value.
         Program exit.
     }, singleCase: '--global-vars' do: {
@@ -143,8 +170,9 @@ var rf is Nil.
 run with '-h' to read the eval mode help.
 local variables will not be reflected upon,
 so to get new global variables, use <?. Pen green.
-?>Reflect addGlobalVariable: 'name'
-<?. Pen resetColor.
+(Eval globalvars) do ifFalse: {
+    Pen write: 'Reflect addGlobalVariable: \'name\'', brk.
+}, ifTrue: {Pen write: 'var name is value', brk.} done. Pen resetColor.
 
 { ^False. } whileFalse: {
   # break the repl when `end` is True.
@@ -156,8 +184,9 @@ so to get new global variables, use <?. Pen green.
     Eval queueHasItem continue.
     Pen cyan write: (Eval prompt), resetColor.
 
-    # get input, get rid of the trailing \n
+    # get input, get rid of the trailing \n. If empty, don't bother evaluating.
     var inp is (Program waitForInput) trim.
+    (inp = '') continue.
 
     # if it doesn`t end in a dot, add it.
     ((inp at: (inp length - 1)) !=: '.') ifTrue: {
@@ -170,6 +199,7 @@ so to get new global variables, use <?. Pen green.
     inp is 'Pen $$eval_color' + '.\n' + inp + '\nPen resetColor.'.
     #Pen write: inp, brk.
     Eval evaluate: inp.
-    Broom sweep.
+    Eval pushHist: inp.
+    #Broom sweep. #Keep the darn pointers in memory
     Pen brk.
 }.

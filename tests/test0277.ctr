@@ -1,9 +1,9 @@
-var Person := Object new.
+var Person is Object new.
 
 Person on: 'greetingFor:' do: {:person ^'Hello, ' + person toString.}.
 Person on: 'introduce' do: {^'Hello.'.}.
 
-var Semicolon := Person new.
+var Semicolon is Person new.
 Semicolon on: 'introduce' do: {^'I\'m AnotherTest and I\'m an alcoholoc.'.}.
 
 

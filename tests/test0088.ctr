@@ -1,14 +1,14 @@
 #Test scope, common scenarios
-santaLaugh := 'ho'.
-laugh := ''.
-3 times: { laugh := laugh + santaLaugh. }.
+santaLaugh is 'ho'.
+laugh is ''.
+3 times: { laugh is laugh + santaLaugh. }.
 Pen write: laugh, brk.
 
-locked := False.
-security := True.
-security ifTrue: { locked := True. }.
+locked is False.
+security is True.
+security ifTrue: { locked is True. }.
 Pen write: locked, brk.
 
-n := 7.
-(True) ifTrue: { n := 9. }.
+n is 7.
+(True) ifTrue: { n is 9. }.
 Pen write: n.

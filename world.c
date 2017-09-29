@@ -28,7 +28,7 @@ char* ctr_internal_readf(char* file_name, uint64_t* total_size) {
     FILE* fp;
     fp = fopen(file_name,"r");
     if( fp == NULL ) {
-        printf("Error while opening the file.\n");
+        printf("Error while opening the file (%s).\n", file_name);
         exit(1);
     }
     prev = ftell(fp);
@@ -420,7 +420,7 @@ ctr_object* ctr_internal_cast2bool( ctr_object* o ) {
  */
 void ctr_open_context() {
     ctr_object* context;
-    if (ctr_context_id >= 299) {
+    if (ctr_context_id >= 9999) {
         CtrStdFlow = ctr_build_string_from_cstring( "Too many nested calls." );
         CtrStdFlow->info.sticky = 1;
     }
@@ -553,6 +553,10 @@ void ctr_set(ctr_object* key, ctr_object* object) {
         return;
     }
     ctr_internal_object_set_property(context, key, object, 0);
+}
+
+ctr_object* ctr_give_version(ctr_object* myself, ctr_argument* argumentList) {
+    return ctr_build_string_from_cstring(CTR_VERSION);
 }
 
 /**
@@ -962,8 +966,15 @@ void ctr_initialize_world() {
     ctr_internal_create_func(reflect, ctr_build_string_from_cstring("getMethodsOf:"), &ctr_reflect_dump_context_spec);
     ctr_internal_create_func(reflect, ctr_build_string_from_cstring("getPropertiesOf:"), &ctr_reflect_dump_context_spec_prop);
     ctr_internal_create_func(reflect, ctr_build_string_from_cstring("getObject:"), &ctr_reflect_find_obj);
+    ctr_internal_create_func(reflect, ctr_build_string_from_cstring("argumentListOf:"), &ctr_reflect_cb_ac);
+    ctr_internal_create_func(reflect, ctr_build_string_from_cstring("addArgumentTo:named:"), &ctr_reflect_cb_add_param);
+    ctr_internal_create_func(reflect, ctr_build_string_from_cstring("copyBlock:"), &ctr_reflect_fn_copy);
+    ctr_internal_create_func(reflect, ctr_build_string_from_cstring("version"), &ctr_give_version);
 
     ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Reflect"), reflect, 0);
+
+    // Fiber 
+    ctr_fiber_begin_init();
 
     /* Other objects */
     CtrStdBreak = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);

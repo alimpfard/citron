@@ -1,61 +1,61 @@
 #Map operations should not leak memory
 
-usedMemory1 := 0.
-usedMemory2 := 0.
-usedMemory3 := 0.
-usedMemory4 := 0.
+usedMemory1 is 0.
+usedMemory2 is 0.
+usedMemory3 is 0.
+usedMemory4 is 0.
 
 Broom mode: 0.
 
-palette := Map new.
+palette is Map new.
 palette 
 	put: '#F00' at: 'red',
 	put: '#0F0' at: 'green',
 	put: '#00F' at: 'blue'.
 Pen write: 'number of RGB codes in palette: ' + ( palette count ), brk.
 Pen write: 'RGB code of green is: ' + ( palette @ 'green' ), brk.
-colors := ''.
+colors is ''.
 ( palette each: { :name :code
-		colors := colors + ( name + ':' + code ).
+		colors is colors + ( name + ':' + code ).
 } ).
 Pen write: 'All colors in palette: ' + colors, brk.
 
 Broom sweep.
-usedMemory1 := Broom keptAlloc.
+usedMemory1 is Broom keptAlloc.
 #Pen write: usedMemory1, brk.
 
-palette := Map new.
+palette is Map new.
 palette 
 	put: '#F00' at: 'red',
 	put: '#0F0' at: 'green',
 	put: '#00F' at: 'blue'.
 Pen write: 'number of RGB codes in palette: ' + ( palette count ), brk.
 Pen write: 'RGB code of green is: ' + ( palette @ 'green' ), brk.
-colors := ''.
+colors is ''.
 ( palette each: { :name :code
-		colors := colors + ( name + ':' + code ).
+		colors is colors + ( name + ':' + code ).
 } ).
 Pen write: 'All colors in palette: ' + colors, brk.
 
 Broom sweep.
-usedMemory2 := Broom keptAlloc.
+usedMemory2 is Broom keptAlloc.
 #Pen write: usedMemory2, brk.
-palette := Map new.
+palette is Map new.
 palette 
 	put: '#F00' at: 'red',
 	put: '#0F0' at: 'green',
 	put: '#00F' at: 'blue'.
 Pen write: 'number of RGB codes in palette: ' + ( palette count ), brk.
 Pen write: 'RGB code of green is: ' + ( palette @ 'green' ), brk.
-colors := ''.
+colors is ''.
 ( palette each: { :name :code
-		colors := colors + ( name + ':' + code ).
+		colors is colors + ( name + ':' + code ).
 } ).
 Pen write: 'All colors in palette: ' + colors, brk.
 
 
 Broom sweep.
-usedMemory3 := Broom keptAlloc.
+usedMemory3 is Broom keptAlloc.
 #Pen write: usedMemory3, brk.
 
 #memory counters need to be equal!

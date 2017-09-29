@@ -4,22 +4,22 @@ Boolean learn: 'alsWaar:'
 Pen learn: 'schrijf:'
 	means: 'write:'.
 Pen learn: 'nieuweRegel' means: 'brk'.
-Potlood := Pen.
+Potlood is Pen.
 
 Object learn: 'nieuw' means: 'new'.
 Object learn: 'antwoord:met:' means: 'on:do:'.
 
 
 #Dutch code here!
-Verteller := Object nieuw.
+Verteller is Object nieuw.
 Verteller antwoord: 'schrijf:' met: { :wat
-	var x := 2.
+	var x is 2.
 	( x > 1 ) alsWaar: {
 		Potlood schrijf: wat, nieuweRegel.
 	}.
 }.
 Verteller on: 'vertel' do: {
-	my taal := 'Nederlands'.
+	my taal is 'Nederlands'.
 	me schrijf: 'Het ' + my taal + ' is een mooie taal.'.
 }.
 

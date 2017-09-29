@@ -1,14 +1,14 @@
-$ := Object new.
+$ is Object new.
 
 $ on: 'respondTo:' do: { :x
 	
-	var operation := x @ 0.
-	var valuta    := x @ 1.
-	var money     := x skip: 2.
-	var amount    := 0.
+	var operation is x @ 0.
+	var valuta    is x @ 1.
+	var money     is x skip: 2.
+	var amount    is 0.
 		
 	( operation = '+' ) ifTrue: {
-		( valuta = '£' ) ifTrue: { amount := 1.28 * money. }.
+		( valuta = '£' ) ifTrue: { amount is 1.28 * money. }.
 	}.
 	
 	^ amount.
@@ -16,28 +16,28 @@ $ on: 'respondTo:' do: { :x
 
 
 
-x := $ +£20.
+x is $ +£20.
 
 Pen write: x, brk.
 
 
-Fruit := Object new.
+Fruit is Object new.
 
 Fruit on: 'new' do: {
-	var f := me `new.
+	var f is me `new.
 	f apples: 0.
 	f oranges: 0.
 	^ f.
 }.
 
-Fruit on: 'apples:' do: { :a my apples := a. }.
-Fruit on: 'oranges:' do: { :p my oranges := p. }.
+Fruit on: 'apples:' do: { :a my apples is a. }.
+Fruit on: 'oranges:' do: { :p my oranges is p. }.
 Fruit on: 'apples' do: { ^ my apples. }.
 Fruit on: 'oranges' do: { ^ my oranges. }.
 
 Fruit on: '+' do: { :f
 	
-	var n := Fruit new.
+	var n is Fruit new.
 	
 	n apples: (f apples + my apples).
 	n oranges:  (f oranges  + my oranges).

@@ -1,12 +1,12 @@
 #test assignment to my, same as 32 but with objects
-x := Object new.
-x on: 'set:' do: { :v my val := v. }.
+x is Object new.
+x on: 'set:' do: { :v my val is v. }.
 x on: 'get' do: { ^ my val. }.
-a := Object new.
+a is Object new.
 a on: 'init' do: {
-	var y := x new.
+	var y is x new.
 	y set: 123.
-	var q := x new.
+	var q is x new.
 	q set: 666.
 	Pen write: (y get) , write: (q get).
 }.

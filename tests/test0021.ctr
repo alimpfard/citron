@@ -2,9 +2,9 @@
 (9 < 2) ifTrue: { Pen write: 'My logic fails'. }.
 Pen write: (-2 + 6).
 Pen write: (-3 - -3).
-TrueIsNice := 3.
+TrueIsNice is 3.
 Pen write: TrueIsNice.
-FalseIsBad := 'Not true!'.
+FalseIsBad is 'Not true!'.
 Pen write: FalseIsBad.
-NilIsEmpty := 'Yep'.
+NilIsEmpty is 'Yep'.
 Pen write: NilIsEmpty.

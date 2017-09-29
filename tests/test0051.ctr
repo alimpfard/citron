@@ -1,10 +1,10 @@
-x := Object new.
+x is Object new.
 x on: 'getA' do: {
-	my a := 2.
-	a := 1.
+	my a is 2.
+	a is 1.
 	Pen write: a.
 	Pen write: my a.
 }.
-a := 3.
+a is 3.
 x getA.
 Pen write: a. #121, dynamic scope

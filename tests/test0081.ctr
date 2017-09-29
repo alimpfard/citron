@@ -1,7 +1,7 @@
 #tests whether we can use arrays as keys in maps
-map1 := Map new.
-key1 := Array new.
-key2 := Array new.
+map1 is Map new.
+key1 is Array new.
+key2 is Array new.
 
 #key1 push: 1.
 
@@ -17,14 +17,14 @@ Pen
 	write: ' and ' + (map1 at: key2), brk.
 
 #now with our toString override (we extend without using basedOn here):
-KeyeableArray := Array new.
+KeyeableArray is Array new.
 KeyeableArray on: 'toString' do: {
 	^ (me count) toString.
 }.
 
-map2 := Map new.
-key1 := KeyeableArray new.
-key2 := KeyeableArray new.
+map2 is Map new.
+key1 is KeyeableArray new.
+key2 is KeyeableArray new.
 
 key1 push: 1.
 

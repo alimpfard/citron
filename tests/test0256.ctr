@@ -1,7 +1,7 @@
 #Can we fork multiple childs and send them messages?
-children := Array new.
+children is Array new.
 5 times: { :i
-	var q := Program new: { :pro
+	var q is Program new: { :pro
 		Clock wait: 1.
 		pro listen: { :message
 			Pen write: 'Child says: ' + message, brk.

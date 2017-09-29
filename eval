@@ -2,11 +2,6 @@
 ##/usr/local/bin/ctr
 
 contextPurity is False. #This is not a pure context, since objects are mutated in-between evaluations. so disallowing purely functional things.
-
-Pen green. ?>Project Citron : The Programming Language (V<?. Pen write:(Reflect version) + ')' ,resetColor brk.
-
-Pen write: 'Extensions at: ' + (File extensionsPath), brk.
-
 File new: (File extensionsPath) + '/extensions/fileutils.ctr', include.
 
 ImportLib Queue.
@@ -165,7 +160,7 @@ var rf is Nil.
         Eval setGlobalVars: True.
     }. # do not consume any other option.
 }.
-
+Pen green. ?>Project Citron : The Programming Language (V<?. Pen write:(Reflect version) + ')' ,resetColor brk.
 ?>Eval Mode, parameters related to eval are in the Eval namespace.
 run with '-h' to read the eval mode help.
 local variables will not be reflected upon,

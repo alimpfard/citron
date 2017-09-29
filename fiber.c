@@ -104,7 +104,7 @@ ctr_object* FIBER_YIELDED = NULL; //to pass values around
  	{
  		if ( numFibers == 0 ) return;
 
- 		// Saved the state so call the next fiber
+ 		// Saved the state to call the next fiber
  		currentFiber = (currentFiber + 1) % numFibers;
 
  		LF_DEBUG_OUT( "Switching to fiber %d.", currentFiber );
@@ -119,7 +119,7 @@ ctr_object* FIBER_YIELDED = NULL; //to pass values around
  			// Free the "current" fiber's stack
  			free( fiberList[currentFiber].context.uc_stack.ss_sp );
 
- 			// Swap the last fiber with the current, now empty, entry
+ 			// Swap the last fiber with the current, now empty the entry
  			-- numFibers;
  			if ( currentFiber != numFibers )
  			{
@@ -189,6 +189,12 @@ ctr_object* FIBER_YIELDED = NULL; //to pass values around
 
  	return LF_NOERROR;
  }
+
+ int yieldNTimes(int n) {
+   while(--n!=0) {
+     fiberYield();
+   }
+ }
  /*
   * //Done
   */
@@ -213,7 +219,7 @@ ctr_object* ctr_fiber_spawn(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* blk = argumentList->object;
   if(blk == NULL || blk->info.type != CTR_OBJECT_TYPE_OTBLOCK) {CtrStdFlow = ctr_build_string_from_cstring("Fiber's spawning requires a block."); return myself;}
   int fiber = spawnFiber(argumentList->object);
-  ctr_internal_object_add_property(fiberObj, ctr_build_string_from_cstring("fiberId"), ctr_build_number_from_float(fiber), CTR_CATEGORY_PRIVATE_PROPERTY);
+  //ctr_internal_object_add_property(fiberObj, ctr_build_string_from_cstring("fiberId"), ctr_build_number_from_float(fiber), CTR_CATEGORY_PRIVATE_PROPERTY);
   return fiberObj;
 }
 ctr_object* ctr_fiber_yield(ctr_object* myself, ctr_argument* argumentList) {
@@ -224,6 +230,9 @@ ctr_object* ctr_fiber_yield(ctr_object* myself, ctr_argument* argumentList) {
 }
 ctr_object* ctr_fiber_join_all(ctr_object* myself, ctr_argument* argumentList) {
   return ctr_build_bool(waitForAllFibers());
+}
+ctr_object* ctr_fiber_join_times(ctr_object* myself, ctr_argument* argumentList) {
+  return ctr_build_bool(yieldNTimes((int)ctr_internal_cast2number(argumentList->object)->value.nvalue));
 }
 ctr_object* ctr_fiber_tostring(ctr_object* myself, ctr_argument* argumentList) {
   return ctr_build_string_from_cstring("[Fiber]");
@@ -242,9 +251,10 @@ void ctr_fiber_begin_init() {
   ctr_internal_create_func(CtrStdFiber, ctr_build_string_from_cstring("yield:"), &ctr_fiber_yield); //with value
   ctr_internal_create_func(CtrStdFiber, ctr_build_string_from_cstring("yield"), &ctr_fiber_yield); //without value
   ctr_internal_create_func(CtrStdFiber, ctr_build_string_from_cstring("yielded"), &ctr_fiber_yielded);
+  ctr_internal_create_func(CtrStdFiber, ctr_build_string_from_cstring("yieldTimes:"), &ctr_fiber_join_times);
   ctr_internal_create_func(CtrStdFiber, ctr_build_string_from_cstring("waitForAll"), &ctr_fiber_join_all);
   ctr_internal_object_add_property(CtrStdFiber, ctr_build_string_from_cstring("fiberId"), ctr_build_number_from_float(-1), CTR_CATEGORY_PRIVATE_PROPERTY);
   CtrStdFiber->info.sticky = 1;
-  
+
   ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Fiber"), CtrStdFiber, 0);
 }

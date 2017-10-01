@@ -584,6 +584,7 @@ void ctr_initialize_world() {
     /* Object */
     CtrStdObject = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( CTR_DICT_NEW ), &ctr_object_make );
+    ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( "cnew:" ), &ctr_object_ctor );
 #ifdef CTR_DEBUG_HIDING
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( CTR_DICT_NEW_HIDING ), &ctr_object_make_hiding );
 #endif //CTR_DEBUG_HIDING

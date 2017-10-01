@@ -403,6 +403,7 @@ ctr_object* ctr_nil_to_boolean(ctr_object* myself, ctr_argument* argumentList);
  * Object Interface
  */
 ctr_object* ctr_object_make(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_object_ctor(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_make_hiding(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_equals(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_on_do(ctr_object* myself, ctr_argument* argumentList);

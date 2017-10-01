@@ -84,6 +84,23 @@ ctr_object* ctr_object_make(ctr_object* myself, ctr_argument* argumentList) {
     return objectInstance;
 }
 /**
+ * Object cnew: [Block]
+ *
+ * Object constructor with some initial parameters.
+ * Object is passed to the block as me/my
+ */
+ctr_object* ctr_object_ctor(ctr_object* myself, ctr_argument* argumentList) {
+    ctr_object* objectInstance = NULL;
+    objectInstance = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
+    objectInstance->link = myself;
+    if(argumentList->object->info.type == CTR_OBJECT_TYPE_OTBLOCK) {
+      ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
+      ctr_block_run(argumentList->object, args, objectInstance);
+      ctr_heap_free(args);
+    }
+    return objectInstance;
+}
+/**
  * [Object] new hiding:
  *
  * Creates a new Object hiding some parameters.
@@ -2683,7 +2700,7 @@ ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object*
             parameter = parameterList->node;
         }
     }
-    if (my) ctr_assign_value_to_local_by_ref(ctr_build_string_from_cstring( ctr_clex_keyword_me ), my ); /* me should always point to object, otherwise you have to store me in self and cant use in if */
+    if (my) ctr_assign_value_to_local_by_ref(ctr_build_string_from_cstring( ctr_clex_keyword_me ), my ); /* me should always point to object, otherwise you have to store me in self and can't use in if */
     ctr_assign_value_to_local(ctr_build_string_from_cstring( "thisBlock" ), myself ); /* otherwise running block may get gc'ed. */
     result = ctr_cwlk_run(codeBlockPart2);
     if (result == NULL) {

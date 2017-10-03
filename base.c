@@ -2613,6 +2613,31 @@ ctr_object* ctr_string_quotes_escape(ctr_object* myself, ctr_argument* argumentL
     ctr_heap_free( str );
     return answer;
 }
+ctr_object* ctr_string_dquotes_escape(ctr_object* myself, ctr_argument* argumentList) {
+    ctr_object* answer;
+    char* str;
+    ctr_size len;
+    ctr_size i;
+    ctr_size j;
+    len = myself->value.svalue->vlen;
+    for( i = 0; i < myself->value.svalue->vlen; i++ ) {
+        if ( *(myself->value.svalue->value + i) == '"' ) {
+            len++;
+        }
+    }
+    str = ctr_heap_allocate( len + 1 );
+    j = 0;
+    for( i = 0; i < myself->value.svalue->vlen; i++ ) {
+        if ( *(myself->value.svalue->value + i) == '"' ) {
+            str[j+i] = '\\';
+            j++;
+        }
+        str[j+i] = *(myself->value.svalue->value + i);
+    }
+    answer = ctr_build_string_from_cstring( str );
+    ctr_heap_free( str );
+    return answer;
+}
 
 /**
  * [String] randomizeBytesWithLength: [Number].
@@ -2685,13 +2710,30 @@ ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object*
     ctr_tlistitem* parameterList = codeBlockPart1->nodes;
     ctr_tnode* parameter;
     ctr_object* a;
+    int was_vararg;
     ctr_open_context();
     if (parameterList && parameterList->node) {
         parameter = parameterList->node;
         while(1) {
             if (parameter && argList->object) {
+              was_vararg = (strncmp(parameter->value, "*", 1) == 0);
+              if (parameterList->next) {
                 a = argList->object;
                 ctr_assign_value_to_local(ctr_build_string(parameter->value, parameter->vlen), a);
+              } else if (!parameterList->next && was_vararg) {
+                ctr_object* arr = ctr_array_new(CtrStdArray, NULL);
+                ctr_argument* arglist__ = ctr_heap_allocate(sizeof(ctr_argument*));
+                while (argList->next) {
+                  arglist__->object = argList->object;
+                  ctr_array_push(arr, arglist__);
+                  argList = argList->next;
+                }
+                ctr_heap_free(arglist__);
+                ctr_assign_value_to_local(ctr_build_string(parameter->value+1, parameter->vlen-1), arr);
+              } else if (!was_vararg){
+                a = argList->object;
+                ctr_assign_value_to_local(ctr_build_string(parameter->value, parameter->vlen), a);
+              }
             }
             if (!argList->next) break;
             argList = argList->next;

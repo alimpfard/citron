@@ -33,8 +33,8 @@ void ctr_cli_read_args(int argc, char* argv[]) {
         ctr_cli_welcome();
         exit(0);
     }
-    ctr_mode_input_file = (char*) ctr_heap_allocate_tracked( sizeof( char ) * 255 );
-    strncpy(ctr_mode_input_file, argv[1], 254);
+      ctr_mode_input_file = (char*) ctr_heap_allocate_tracked( sizeof( char ) * 255 );
+      strncpy(ctr_mode_input_file, argv[1], 254);
 }
 
 /**
@@ -70,13 +70,17 @@ int main(int argc, char* argv[]) {
     ctr_clex_keyword_me = CTR_DICT_ME;
     ctr_clex_keyword_my = CTR_DICT_MY;
     ctr_clex_keyword_var = CTR_DICT_VAR;
+    ctr_clex_keyword_const = CTR_DICT_CONST;
     ctr_clex_keyword_my_len = strlen( ctr_clex_keyword_my );
     ctr_clex_keyword_var_len = strlen( ctr_clex_keyword_var );
-    prg = ctr_internal_readf(ctr_mode_input_file, &program_text_size);
-    program = ctr_cparse_parse(prg, ctr_mode_input_file);
-    //ctr_internal_debug_tree(program,1); /*-- for debugging */
-    ctr_initialize_world();
-    ctr_cwlk_run(program);
+    ctr_clex_keyword_const_len = strlen( ctr_clex_keyword_const );
+    if (ctr_mode_input_file != NULL) {
+      prg = ctr_internal_readf(ctr_mode_input_file, &program_text_size);
+      program = ctr_cparse_parse(prg, ctr_mode_input_file);
+      //ctr_internal_debug_tree(program,1); /*-- for debugging */
+      ctr_initialize_world();
+      ctr_cwlk_run(program);
+    }
     ctr_gc_sweep(1);
     ctr_heap_free( prg );
     ctr_heap_free_rest();

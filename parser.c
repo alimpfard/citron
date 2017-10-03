@@ -336,6 +336,15 @@ ctr_tnode* ctr_cparse_ref() {
         r->modifier = 2;
         r->vlen = ctr_clex_tok_value_length();
     }
+    // if (strncmp(ctr_clex_keyword_const, tmp, ctr_clex_keyword_const_len) == 0 && r->vlen == ctr_clex_keyword_const_len) {
+    //   int t = ctr_clex_tok();
+    //   if (t != CTR_TOKEN_REF) {
+    //     ctr_cparse_emit_error_unexpected(t, "'const' must always be followed by a single reference/property\n");
+    //   }
+    //   tmp = ctr_clex_tok_value();
+    //   r->modifier = 3;
+    //   r->vlen = ctr_clex_tok_value_length();
+    // }
     r->value = ctr_heap_allocate_tracked( r->vlen );
     memcpy(r->value, tmp, r->vlen);
     return r;

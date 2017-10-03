@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CTR_VERSION "0.0.4b"
+#define CTR_VERSION "0.0.4.2a"
 
 /**
  * Define the Citron tokens
@@ -296,6 +296,7 @@ char** ctr_argv;
  * Mode of Operation
  */
 char* ctr_mode_input_file;
+char* ctr_mode_interactive;
 
 
 /**
@@ -311,6 +312,9 @@ char*   ctr_clex_tok_describe( int token );
 char*   ctr_clex_keyword_var;
 char*   ctr_clex_keyword_me;
 char*   ctr_clex_keyword_my;
+char*   ctr_clex_keyword_const; //maybe to `force`?
+
+ctr_size ctr_clex_keyword_const_len;
 ctr_size ctr_clex_keyword_my_len;
 ctr_size ctr_clex_keyword_var_len;
 
@@ -372,6 +376,7 @@ ctr_object* ctr_assign_value(ctr_object* key, ctr_object* val);
 ctr_object* ctr_assign_value_to_my(ctr_object* key, ctr_object* val);
 ctr_object* ctr_assign_value_to_local(ctr_object* key, ctr_object* val);
 ctr_object* ctr_assign_value_to_local_by_ref(ctr_object* key, ctr_object* val);
+ctr_object* ctr_const_assign_value(ctr_object* key, ctr_object* o, ctr_object* context);
 char*       ctr_internal_readf(char* file_name, uint64_t* size_allocated);
 void        ctr_internal_debug_tree(ctr_tnode* ti, int indent);
 ctr_object* ctr_send_message(ctr_object* receiver, char* message, long len, ctr_argument* argumentList);
@@ -528,6 +533,7 @@ ctr_object* ctr_string_hash_with_key(ctr_object* myself, ctr_argument* argumentL
 ctr_object* ctr_string_to_string( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_string_eval( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_string_quotes_escape( ctr_object* myself, ctr_argument* argumentList );
+ctr_object* ctr_string_dquotes_escape( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_string_characters( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_string_to_byte_array( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_string_append_byte(ctr_object* myself, ctr_argument* argumentList );
@@ -739,6 +745,7 @@ ctr_object* ctr_reflect_dump_context_spec_prop(ctr_object* myself, ctr_argument*
 ctr_object* ctr_reflect_dump_context_spec(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_dump_context(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_find_obj(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_find_obj_ex(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_new(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_set_to(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_cb_ac(ctr_object* myself, ctr_argument* argumentList);

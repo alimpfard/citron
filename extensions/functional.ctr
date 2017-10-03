@@ -3,64 +3,7 @@
 
   # TODO :: Actually fix scoping first
 
-
-  # var PatternMatchLock is Object new.
-  # PatternMatchLock on: 'acquire' do: {^True.}.
-  # #x;_ -> (List Object) < x ; ...
-  # #x   -> (Object type) x
-  # #_   -> Wildcard
-  # var PatternMatch is Object new.
-  # PatternMatch on: 'decomposeString:forType:' do: { :str :type
-  #   var ret is Nil.
-  #   ((type = 'Object') | (type = 'Block')) ifTrue: {
-  #     thisBlock error: 'Pattern matching unknown objects is futile. cannot match $$type against $$str'.
-  #   }.
-  #   (type = 'Number') ifTrue: {
-  #     (str containsPattern: '^[^\s\W]+$') ifTrue: {ret is {:x ^True.}.}, else:{
-  #       (str containsPattern: '^_$') ifTrue: {
-  #         ret is True.
-  #       }.
-  #     }.
-  #   }, else: {
-  #       ((type = 'String') | (type = 'Array')) ifTrue: {
-  #         var matchmap is Map new.
-  #         var dec is str split: ';'. #TODO:Find a better alternative
-  #         var out is Array new.
-  #         dec each: {:i :v
-  #           (v containsPattern: '^_$') ifTrue: {out push: Nil.}, else: {
-  #             (v containsPattern: '^\'([^\\\']|\\\')+\'$') ifTrue: {
-  #               out push: {:x var r is (x str) containsPattern: (v from: 1 to: (v length - 1)). (r) ifTrue: {x inc: (v length - 2).}. ^r.}.
-  #             }, else:{
-  #               (v containsPattern: '^[^\s\W]+$') ifTrue: {
-  #                 ((matchmap @ v) isNil) ifTrue: {matchmap put: {:x x inc. ^True.} at: v. out push: (matchmap @ v).}, else: {
-  #                   out push: {:x x end. ^Nil.}.
-  #                 }.
-  #               }, else: {
-  #                 thisBlock error: 'Could not decompose matcher: Unknown descriptor: $$v'.
-  #               }.
-  #             }.
-  #           }.
-  #         }.
-  #         ret is out .
-  #       }, else: {
-  #         (type = 'Map') ifTrue: {
-  #           thisBlock error: 'ERR_NOT_IMPL'.
-  #         }.
-  #       }.
-  #   }.
-  #   (ret isNil) ifTrue: {thisBlock error: 'could not match $$str against datatype $$type'.}.
-  #   ^ret.
-  # }.
-  # Number on: 'fmatch:' do: { :pattern
-  #   var ret is pattern.
-  #   {
-  #     ((pattern acquire) = pattern) ifFalse: {thisBlock error: pattern.}.
-  #     var decomposition is PatternMatch decomposeString: pattern forType: 'Number'.
-  #     ret is decomposition.
-  #   } catch: {:err ret is err.}, run.
-  #   Pen write: ret, brk.
-  #   ^ret.
-  # }.
+  
 
 
   Array on: 'fmap:' do: { :f

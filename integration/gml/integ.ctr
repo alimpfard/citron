@@ -1,0 +1,15 @@
+File new: (File extensionsPath) + '/extensions/fileutils.ctr', include.
+
+ImportLib Queue.
+
+{^True.} whileTrue: {
+    (File new: 'o.txt', exists) ifTrue: {
+        var s is File new: 'o.txt', read trim.
+        (s !=: '') ifTrue: {
+            File new: 'o.txt', delete.
+            var x is s eval.
+            File new: 'i.txt', write: ('"' + (x serialize) + '"'), end.
+        }.
+    }.
+    Broom sweep.
+}.

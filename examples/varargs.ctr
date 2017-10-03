@@ -1,0 +1,17 @@
+var x is {:a :*b 
+    # a will get one arg, the rest will get sucked up into b
+    Pen write: 'a: $$a', write: ', b: $$b', brk.
+}.
+
+var y is {:a :*b :c #Here `*b' will be a single name, NOT a vararg
+    Pen write: 'a: $$a', write: ', *b: $$*b', write: ', c: $$c', brk.
+}.
+
+x applyTo: 1 and: 2 and: 3.
+y applyTo: 1 and: 2 and: 3.
+
+
+?>x contains arguments: <?.
+Pen write: (Reflect argumentListOf: x), brk.
+?>y contains arguments: <?.
+Pen write: (Reflect argumentListOf: y), brk.

@@ -971,6 +971,7 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("getMethodsOf:"), &ctr_reflect_dump_context_spec);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("getPropertiesOf:"), &ctr_reflect_dump_context_spec_prop);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("getObject:"), &ctr_reflect_find_obj);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("objectExists:"), &ctr_reflect_find_obj_ex);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("argumentListOf:"), &ctr_reflect_cb_ac);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("addArgumentTo:named:"), &ctr_reflect_cb_add_param);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("copyBlock:"), &ctr_reflect_fn_copy);
@@ -1150,6 +1151,17 @@ ctr_object* ctr_assign_value(ctr_object* key, ctr_object* o) {
     return object;
 }
 
+ctr_object* ctr_const_assign_value(ctr_object* key, ctr_object* o, ctr_object* context) {
+    if (CtrStdFlow) return CtrStdNil;
+    ctr_open_context();
+    ctr_object* object = o;
+    key->info.sticky = 0;
+    ctr_set(key, object);
+    ctr_internal_object_add_property(ctr_contexts[ctr_context_id], ctr_build_string_from_cstring("context"), context, 0);
+    context = ctr_contexts[ctr_context_id];
+    ctr_close_context();
+    return context;
+}
 
 /**
  * @internal

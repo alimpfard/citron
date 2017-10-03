@@ -90,7 +90,7 @@ void ctr_internal_debug_tree(ctr_tnode* ti, int indent) {
  * to meet the dependency.
  *
  * To install a plugin, copy the plugin folder to the mods folder
- * in the working directory of your script.
+ * in the extensions directory of the interpreter.
  *
  * So, for instance, to install the 'Coffee Percolator Plugin',
  * we copy the libctrpercolator.so in folder mods/percolator/,
@@ -110,14 +110,14 @@ void* ctr_internal_plugin_find(ctr_object* key) {
     ctr_object* modNameObject = ctr_internal_cast2string(key);
     void* handle;
     char  pathNameMod[1024];
-    char* modName;;
+    char* modName;
     char* modNameLow;
     plugin_init_func init_plugin;
     char* realPathModName = NULL;
     modName = ctr_heap_allocate_cstring( modNameObject );
     modNameLow = modName;
     for ( ; *modNameLow; ++modNameLow) *modNameLow = tolower(*modNameLow);
-    snprintf(pathNameMod, 1024,"mods/%s/libctr%s.so", modName, modName);
+    snprintf(pathNameMod, 1024, (CTR_STD_EXTENSION_PATH"/mods/%s/libctr%s.so"), modName, modName);
     ctr_heap_free( modName );
     realPathModName = realpath(pathNameMod, NULL);
     if (access(realPathModName, F_OK) == -1) return NULL;

@@ -158,7 +158,7 @@ ctr_object* ctr_reflect_cb_ac(ctr_object* myself, ctr_argument* argumentList) {
     return arglist;
   }
   while((param = parameterList->node) != NULL) {
-    args->object = ctr_build_string(param->value, param->vlen);
+    args->object = (parameterList->next == NULL && *(param->value) == '*') ? ctr_build_string(param->value+1, param->vlen-1) : ctr_build_string(param->value, param->vlen);
     ctr_send_message(arglist, "push:", 5, args);
     parameterList = parameterList->next;
     if(parameterList == NULL) break;
@@ -213,6 +213,13 @@ ctr_object* ctr_reflect_share_memory(ctr_object* myself, ctr_argument* argumentL
 ctr_object* ctr_reflect_link_to(ctr_object* myself, ctr_argument* argumentList) {
   argumentList->object->link = argumentList->next->object;
   return argumentList->object;
+}
+
+ctr_object* ctr_reflect_find_obj_ex(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* maybefound = ctr_reflect_find_obj(myself, argumentList);
+  CtrStdFlow = NULL;
+  if(maybefound == CtrStdNil) return ctr_build_bool(0);
+  return ctr_build_bool(1);
 }
 
 // ctr_object* ctr_reflect_obj_hp(ctr_object* myself, ctr_argument* argumentList) {

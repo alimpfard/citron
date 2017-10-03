@@ -1,6 +1,7 @@
 #define CTR_DICT_VAR             "var"
 #define CTR_DICT_ME              "me"
 #define CTR_DICT_MY              "my"
+#define CTR_DICT_CONST           "const"
 #define CTR_DICT_NEW             "new"
 #define CTR_DICT_NEW_HIDING      "hiding:"
 #define CTR_DICT_NEW_ARG         "new:"

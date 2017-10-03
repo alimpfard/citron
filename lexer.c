@@ -36,7 +36,7 @@ char* ctr_clex_desc_tok_chain = ",";
 char* ctr_clex_desc_tok_booleanyes = "True";
 char* ctr_clex_desc_tok_booleanno = "False";
 char* ctr_clex_desc_tok_nil = "Nil";
-char* ctr_clex_desc_tok_assignment = ":=";
+char* ctr_clex_desc_tok_assignment = ":=";  //derp
 char* ctr_clex_desc_tok_ret = "^";
 char* ctr_clex_desc_tok_ret_unicode = "↑";
 char* ctr_clex_desc_tok_fin = "end of program";

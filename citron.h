@@ -177,6 +177,7 @@ struct ctr_object {
 		unsigned int shared: 1;
 	} info;
 	struct ctr_object* link;
+	int lex_scope;
 	union uvalue {
 		ctr_bool bvalue;
 		ctr_number nvalue;
@@ -479,6 +480,8 @@ ctr_object* ctr_number_sqrt(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_tan(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_atan(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_log(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_number_shr(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_number_shl(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_pow(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_min(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_max(ctr_object* myself, ctr_argument* argumentList);

@@ -7,6 +7,62 @@ File new: (File extensionsPath) + '/extensions/fileutils.ctr', include.
 ImportLib Queue.
 ImportLib LRArray.
 
+# Preprocessor is Object cnew: {my code is ''. my buffer is ''. my result is ''.}.
+# Preprocessor on: 'load:' do: {:str my code is str.}.
+# Preprocessor on: 'emit:' do: {:str my result append: str.}.
+# Preprocessor on: 'emitbuf:' do: {:str my buffer append: str.}.
+# Preprocessor on: 'process' do: {
+#   var chars is my code characters.
+#   var in_directive is False.
+#   var self is me.
+#   chars each: {:i:char
+#     ((i < ((chars count) - 1)) & (char = '%') & ((chars @ (i + 1)) = '}')) do ifTrue: {in_directive is False. self beginproc.}, continue done.
+#     ((i < ((chars count) - 1)) & (char = '%') & ((chars @ (i + 1)) = '{')) do ifTrue: {in_directive is True.}, continue done.
+#     in_directive do ifTrue: {self emitbuf: char.}, continue done.
+#     self emit: char.
+#   }.
+#   ^result.
+# }.
+# Preprocessor on: 'beginproc' do: {
+#   my buffer is (my buffer from: 2 to: (my buffer length)) trim.
+#   Pen write: (my buffer), brk.
+#   var self is me.
+#   # var ? is Pen.
+#   # Pen is Pen new.
+#   # Pen on: 'write:' do: {:s self emit: s.}.
+#   # Pen on: 'brk' do: {self emit: '\n'.}.
+#   # Pen on: 'respondTo:' do: {:s}.
+#   # Pen learn: 'respondTo:and:' means: 'respondTo:'.
+#   # Pen learn: 'respondTo:and:and:' means: 'respondTo:'.
+#   # -> {Code $$scope_var}
+#   me handleDirectives.
+#   #my buffer eval.
+#   Pen write: my buffer, brk.
+#   # Pen is ?.
+#   Broom sweep.
+#   my buffer is ''.
+# }.
+# Preprocessor on: 'handleDirectives' do: {
+#   var buf is ''.
+#   var to_exec is ''.
+#   var in_inject is False.
+#   var o_bl is 0.
+#   var skip is 0.
+#   my buffer characters each: {:i:char:chars
+#     Pen green write: ('skip:$$skip char:$$char obl:$$o_bl inject:$$in_inject'), resetColor brk.
+#     (skip > 0) do ifTrue: {skip -=: 1.}, continue done.
+#     ((i < ((chars count) - 2)) & (char = '-') & ((chars @ (i + 1)) = '>') & ((chars @ (i + 2)) = '{')) do ifTrue: {in_inject is True. o_bl +=: 1. skip is 2.}, continue done.
+#     (char = '{') ifTrue: {o_bl +=: 1.}.
+#     (char = '}') ifTrue: {o_bl -=: 1.}.
+#     (o_bl = 0) ifTrue: {in_inject is False. 'buf is Preprocessor transform: buf.'. to_exec append: buf. buf is ''.}.
+#     in_inject do ifTrue: {buf append: char.}, continue done.
+#     to_exec append: char.
+#   }.
+#   my buffer is to_exec.
+# }.
+# Preprocessor on: 'transform:' do: {:blk Pen red write: blk, resetColor brk.
+#   ^blk.
+# }.
 Eval is Object new.
 Eval on: 'init' do: {
   my end is False.
@@ -40,6 +96,7 @@ Eval on: 'evaluate:' do: { :str
   { str execute. } catch: { :e
     # try to recover from some small errors.
       Pen red write: e, brk.
+      thisBlock error: e.
       # get rid of the trash.
       Broom sweep.
   }, run.
@@ -77,6 +134,7 @@ Eval on: 'executeLast:' do: {:n
   ^me evaluate: (my history @ n).
 }.
 Eval on: 'getHistory' do: {^my history.}.
+
 Eval init.
 Eval setArgs: (Array with: {:i ^Program argument: i. } count: (Program argCount)).
 Eval onlyRelevantArgs.

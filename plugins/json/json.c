@@ -192,5 +192,5 @@ void begin() {
   ctr_object* jans = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
   ctr_internal_create_func(jans, ctr_build_string_from_cstring("parse:genericType:"), &ctr_json_parse);
   ctr_internal_create_func(jans, ctr_build_string_from_cstring("serialize:"), &ctr_json_serialize);
-  ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Jansson"), jans, 0);
+  ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("JSON"), jans, 0);
 }

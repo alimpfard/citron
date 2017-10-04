@@ -164,9 +164,7 @@ ctr_object* ctr_cwlk_assignment(ctr_tnode* node) {
     } else if (assignee->modifier == 2) {
         result = ctr_assign_value_to_local(ctr_build_string(assignee->value, assignee->vlen), x);
     } else if (assignee->modifier == 3) {
-      ctr_open_context();
-        result = ctr_assign_value(ctr_build_string(assignee->value, assignee->vlen), x);  //Handle constexpr's
-      ctr_close_context();
+        result = ctr_assign_value(ctr_build_string(assignee->value, assignee->vlen), x);  //Handle lexical scoping
     } else {
         result = ctr_assign_value(ctr_build_string(assignee->value, assignee->vlen), x);
     }

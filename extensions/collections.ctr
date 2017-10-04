@@ -124,6 +124,14 @@ Array on: 'with:count:' do: { :iter :c
   ^arr.
 }.
 
+Array on: 'reverse' do: {
+  me each: {:i:v:a
+    var tmp is a at: ((a count - i) - 1).
+    a put: v at: ((a count - i) - 1).
+    a put: tmp at: i.
+  }.
+}.
+
 # Each_cons each<int> cons<block:int,Tuple,Array>
 Array on: 'each:cons:' do: { :c :b
   var count is (me count).
@@ -334,15 +342,93 @@ LRArray on: 'push:' do: {:thing
   ((me count) = (my max)) ifTrue: {
     self shift.
   }.
-  ^me `push: thing.
+  ^me `push: thing. #`
 }.
 LRArray on: 'unshift:' do: {:thing
   var self is me.
   ((me count) = (my max)) ifTrue: {
     self pop.
   }.
-  ^me `unshift: thing.
+  ^me `unshift: thing.#`
 }.
+
+Array on: 'toBoolean' do: {
+  ^((me count) !=: 0).
+}.
+var HeapQueue is Object new.
+HeapQueue on: 'heap:push:' do: {:heap:item
+  heap push: item.
+  me _siftdown: heap from: 0 to: (heap count - 1).
+}.
+HeapQueue on: 'heappop:' do: {:heap
+  var lastlt is heap pop.
+  var ret is Nil.
+  var self is me.
+  heap ifTrue: {
+    ret is heap @ 0.
+    heap put: lastlt at: 0.
+    self _siftup: heap from: 0.
+  }.
+  (ret isNil) ifTrue: {ret is lastlt.}.
+  ^ret.
+}.
+HeapQueue on: 'heap:replace:' do: {:heap:item
+  var ret is heap @ 0.
+  heap put: item at: 0.
+  me _siftup: heap from: 0.
+  ^ret.
+}.
+HeapQueue on: 'heap:poppush:' do: {:heap:item
+  var self is me.
+  (heap & ((heap @ 0) < item)) ifTrue: {
+    var tmp is heap @ 0.
+    heap put: item at: 0.
+    item is tmp.
+    self _siftup: heap from: 0.
+  }.
+  ^item.
+}.
+HeapQueue on: 'heapify:' do: {:x
+  var n is x count.
+  var self is me.
+  ((n / 2) floor) to: 0 step: -1 do: {:i
+    self _siftup: x from: 0.
+  }.
+}.
+
+HeapQueue on: '_siftdown:from:to:' do: {:heap:startpos:pos
+  var newitem is heap @ pos.
+  {^pos > startpos.} whileTrue: {
+    var parentpos is (pos - 1) shiftRight: 2.
+    var parent is heap @ parentpos.
+    (newitem < parent) ifTrue: {
+      heap put: parent at: pos.
+      pos is parentpos.
+    }, continue.
+    True break.
+  }.
+  heap put: newitem at: pos.
+}.
+
+HeapQueue on: '_siftup:from:' do: {:heap:pos
+  var endpos is heap count.
+  var startpos is pos.
+  var newitem is heap @ pos.
+  var childpos is (pos * 2) + 1.
+  {^childpos < endpos.} whileTrue: {
+    var rightpos is childpos + 1.
+    ((rightpos < endpos)) ifTrue: {
+      (((heap @ childpos) < (heap @ rightpos)) not) ifTrue: {childpos is rightpos.}.
+    }.
+    heap put: (heap @ childpos) at: pos.
+    pos is childpos.
+    childpos is (pos * 2) + 1.
+  }.
+  heap put: newitem at: pos.
+  me _siftdown: heap from: startpos to: pos.
+}.
+
+
 
 (Reflect objectExists: 'ImportLib') ifTrue: {
   ImportLib export: Queue as: 'Queue' namespace: 'Extensions'.
@@ -350,4 +436,5 @@ LRArray on: 'unshift:' do: {:thing
   ImportLib export: Pair as: 'Pair' namespace: 'Extensions'.
   ImportLib export: Tuple as: 'Tuple' namespace: 'Extensions'.
   ImportLib export: LRArray as: 'LRArray' namespace: 'Extensions'.
+  ImportLib export: HeapQueue as: 'HeapQueue' namespace: 'Extensions'.
 }.

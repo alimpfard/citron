@@ -1421,6 +1421,21 @@ ctr_object* ctr_number_log(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 /**
+ * [Number] shiftRight: [Number]
+ *  Only with integers
+ */
+ctr_object* ctr_number_shr(ctr_object* myself, ctr_argument* argumentList) {
+    return ctr_build_number_from_float((((int)(myself->value.nvalue)) >> (int)((ctr_internal_cast2number(argumentList->object))->value.nvalue)));
+}
+
+/**
+ * [Number] shiftLeft: [Number]
+ *
+ */
+ctr_object* ctr_number_shl(ctr_object* myself, ctr_argument* argumentList) {
+    return ctr_build_number_from_float((((int)(myself->value.nvalue)) << (int)((ctr_internal_cast2number(argumentList->object))->value.nvalue)));
+}
+/**
  * [Number] toByte
  *
  * Converts a number to a single byte.

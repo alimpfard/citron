@@ -1,0 +1,6 @@
+Pen write: 'test', brk.
+%{
+    5 times: {:i 
+        -> {Pen write: i, brk.}
+    }.
+}%

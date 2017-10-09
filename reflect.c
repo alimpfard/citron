@@ -222,6 +222,32 @@ ctr_object* ctr_reflect_find_obj_ex(ctr_object* myself, ctr_argument* argumentLi
   return ctr_build_bool(1);
 }
 
+int ctr_reflect_is_linked_to_(ctr_argument* argumentList) {
+  if (argumentList->object->link == NULL) return 0;
+  ctr_object* link = argumentList->object->link;
+  argumentList->object = link;
+  return (link == argumentList->next->object) || ctr_reflect_is_linked_to_(argumentList);
+}
+ctr_object* ctr_reflect_is_linked_to(ctr_object* myself, ctr_argument* argumentList) {
+  return ctr_build_bool(ctr_reflect_is_linked_to_(argumentList));
+}
+ctr_object* ctr_reflect_child_of(ctr_object* myself, ctr_argument* argumentList) {
+  return ctr_build_bool(argumentList->object->link == argumentList->next->object);
+}
+ctr_object* ctr_reflect_generate_inheritance_tree(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* parent = argumentList->object;
+  ctr_object* arr = ctr_array_new(CtrStdArray, NULL);
+  ctr_argument* newarg = ctr_heap_allocate(sizeof(ctr_argument));
+  while(parent != NULL) {
+    newarg->object = (parent->lexical_name==NULL?parent:parent->lexical_name);
+    ctr_array_push(arr, newarg);
+    if (parent == parent->link) goto cleanup;
+    parent = parent->link;
+  }
+  cleanup:
+  ctr_heap_free(newarg);
+  return arr;
+}
 // ctr_object* ctr_reflect_obj_hp(ctr_object* myself, ctr_argument* argumentList) {
 //     ctr_object* object = argumentList->object;
 //     return ctr_internal_cast2string(object->);

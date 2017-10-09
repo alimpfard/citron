@@ -85,10 +85,65 @@ int main(int argc, char* argv[]) {
     ctr_heap_free( prg );
     ctr_heap_free_rest();
     //For memory profiling
-    if ( ctr_gc_alloc != 0 ) {
+    if ( ctr_gc_alloc != 0 && CTR_LOG_WARNINGS&1 == 1) {
         printf( "[WARNING] Citron has detected an internal memory leak of: %" PRIu64 " bytes.\n", ctr_gc_alloc );
         exit(1);
     }
     exit(0);
     return 0;
+}
+void initialize(int extensions) {
+    //pragma rules
+    ctr_code_pragma o = { .type = 't', .value = 0 },
+                    f = { .type = 'o', .value = 0 },
+                    r = { .type = 't', .value = 0 };
+    oneLineExpressions = &o;
+    flexibleConstructs = &f;
+    regexLineCheck = &r;
+
+    ctr_gc_mode = 1; /* default GC mode: activate GC */
+    ctr_gc_memlimit = 8388608;
+    ctr_callstack_index = 0;
+    ctr_source_map_head = NULL;
+    ctr_source_mapping = 0;
+    CtrStdFlow = NULL;
+    ctr_command_security_profile = 0;
+    ctr_command_tick = 0;
+    ctr_source_mapping = 1;
+    ctr_clex_keyword_me = CTR_DICT_ME;
+    ctr_clex_keyword_my = CTR_DICT_MY;
+    ctr_clex_keyword_var = CTR_DICT_VAR;
+    ctr_clex_keyword_const = CTR_DICT_CONST;
+    ctr_clex_keyword_my_len = strlen( ctr_clex_keyword_my );
+    ctr_clex_keyword_var_len = strlen( ctr_clex_keyword_var );
+    ctr_clex_keyword_const_len = strlen( ctr_clex_keyword_const );
+    ctr_mode_input_file = ctr_heap_allocate(sizeof(char)*4);
+    memcpy(ctr_mode_input_file, "lib", 3);
+    *(ctr_mode_input_file+3) = '\0';
+    ctr_initialize_world();
+    if(extensions) {
+      ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
+      args->object = ctr_build_string_from_cstring(CTR_STD_EXTENSION_PATH "/extensions/fileutils.ctr");
+      ctr_object* futi = ctr_send_message(CtrStdFile, "new:", 4, args);
+      ctr_send_message(futi, "include", 7, NULL);
+      ctr_heap_free(args);
+    }
+}
+
+char* execute_string(char* prg) {
+    ctr_object* str = ctr_build_string_from_cstring(prg);
+    str = ctr_send_message(str, "eval", 4, NULL);
+    //ctr_internal_object_set_property(CtrStdWorld, ctr_build_string_from_cstring("_"), str, 0);
+    if (CtrStdFlow != NULL) {str = CtrStdFlow; CtrStdFlow = NULL;}
+    char* msg = ctr_internal_cast2string(str)->value.svalue->value;
+    return msg;
+}
+
+char* execute_string_len(char* prg, int length) {
+    ctr_object* str = ctr_build_string(prg, length);
+    str = ctr_send_message(str, "eval", 4, NULL);
+    //ctr_internal_object_set_property(CtrStdWorld, ctr_build_string_from_cstring("_"), str, 0);
+    if (CtrStdFlow != NULL) {str = CtrStdFlow; CtrStdFlow = NULL;}
+    char* msg = ctr_internal_cast2string(str)->value.svalue->value;
+    return msg;
 }

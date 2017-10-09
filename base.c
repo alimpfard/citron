@@ -94,9 +94,9 @@ ctr_object* ctr_object_ctor(ctr_object* myself, ctr_argument* argumentList) {
     objectInstance = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
     objectInstance->link = myself;
     if(argumentList->object->info.type == CTR_OBJECT_TYPE_OTBLOCK) {
-      ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
-      ctr_block_run(argumentList->object, args, objectInstance);
-      ctr_heap_free(args);
+        ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
+        ctr_block_run(argumentList->object, args, objectInstance);
+        ctr_heap_free(args);
     }
     return objectInstance;
 }
@@ -1639,6 +1639,154 @@ ctr_object* ctr_string_append(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 /**
+ * [String] formatObjects: [Array].
+ *
+ * Creates a string with the template format and the specified objects
+ *
+ * Usage:
+ *
+ * fmt := 'Hello, %s! %d is a number!'
+ * str := fmt formatObjects: (Array new < 'World', 23).
+ */
+ int ctr_str_count_substr(char *str, char* substr, int overlap) {
+  if (strlen(substr) == 0) return -1; // forbid empty substr
+
+  int count = 0;
+  int increment = overlap ? 1 : strlen(substr);
+  for (char* s = (char*)str; (s = strstr(s, substr)); s += increment)
+    ++count;
+  return count;
+}
+ctr_object* ctr_string_format(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* objects = argumentList->object;
+  int specified_count = ctr_array_count(objects,NULL)->value.nvalue;
+  int specifier_count = ctr_str_count_substr(myself->value.svalue->value, "%", 1); //allowing overlap skips a strlen
+  int wefoold = ctr_str_count_substr(myself->value.svalue->value, "%%", 0);
+  specifier_count = specifier_count - wefoold*2;
+  if (specifier_count == 0) return myself; //if no specifier, just spit the format string back out
+  if (specifier_count != specified_count) {
+    CtrStdFlow = ctr_build_string_from_cstring("Format string specifier count differs from what was passed.");
+    return myself;
+  }
+  int len = myself->value.svalue->vlen;
+  char* buf = ctr_heap_allocate(sizeof(char)*len); //Eh. Why is the user passing a format string without any specifiers, but we haven't returned?
+  char* fmt = myself->value.svalue->value;
+  ctr_object* buffer = ctr_build_empty_string();
+  char c=*fmt;
+  int specnum = -1;
+  int fmtct = 0;
+  ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
+  for (int i = 0; i<len; i++,c=*(fmt+i)) {
+    if(c == '%') {
+      if (i > len-2) {
+        CtrStdFlow = ctr_build_string_from_cstring("Malformed format string.");
+        return myself;
+      }
+      if (fmtct) {
+        args->object = ctr_build_string(buf, fmtct);
+        ctr_string_append(buffer, args);
+        fmtct = 0;
+      }
+      specnum++;
+      c=*(fmt+1+(i++));
+      if (c == 's') {
+        args->object = ctr_build_number_from_float(specnum);
+        args->object = ctr_send_message(ctr_array_get(objects, args), "toString", 8, NULL);
+        ctr_string_append(buffer, args);
+        continue;
+       }
+      if (c == 'd') {
+        args->object = ctr_build_number_from_float(specnum);
+        args->object = ctr_send_message(ctr_array_get(objects, args), "toNumber", 8, NULL);
+        ctr_string_append(buffer, args);
+        continue;
+       }
+      if (c == '%') {
+        args->object = ctr_build_string_from_cstring("%");
+        ctr_string_append(buffer, args);
+        specnum--;
+       }
+    } else buf[fmtct++] = c;
+  }
+  if (fmtct) {
+    args->object = ctr_build_string(buf, fmtct);
+    ctr_string_append(buffer, args);
+    fmtct = 0;
+  }
+  ctr_heap_free(args);
+  ctr_heap_free(buf);
+  return buffer;
+}
+
+/**
+ * [String] formatMap: [Map]
+ *
+ * format a format string based off a map
+ *
+ * e.g.
+ *  format := 'this \'%{string}\' contains some wierd %{shit}.'.
+ *  fmtd := format formatMap: (Map new put: 'shit' at: 'shit', put: format at: 'string').
+ *  # 'this \'this \'%{string}\' contains some wierd %{shit}.\' contains some weird shit.'
+ *
+ */
+ ctr_object* ctr_string_format_map(ctr_object* myself, ctr_argument* argumentList) {
+   ctr_object* objects = argumentList->object;
+   int specifier_count = ctr_str_count_substr(myself->value.svalue->value, "%{", 0); //doesn't make sense to overlap
+   if (specifier_count == 0) return myself; //if no specifier, just spit the format string back out
+   int len = myself->value.svalue->vlen;
+   char* buf = ctr_heap_allocate(sizeof(char)*len); //Eh. Why is the user passing a format string without any specifiers, but we haven't returned?
+   char* fmt = myself->value.svalue->value;
+   ctr_object* buffer = ctr_build_empty_string();
+   char c=*fmt;
+   int in_spec = 0;
+   int fmtct = 0;
+   int interpolate = 0;
+   ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
+   for (int i = 0; i<len; i++,c=*(fmt+i)) {
+     //buf has already been cleared, and fmtct set to 0, so we'll use buf for spec
+     if (in_spec) {
+       if (c == '}') {
+         in_spec = 0; //set to zero and allow interpolation
+         interpolate = 1;
+       } else
+         buf[fmtct++] = c;
+       continue;
+     }
+     if (interpolate) {
+       args->object = ctr_build_string(buf, fmtct);
+       args->object = ctr_map_get(objects, args);
+       args->object = ctr_send_message(args->object, "toString", 8, NULL);
+       ctr_string_append(buffer, args);
+       interpolate = 0;
+       fmtct = 0;
+       i--;
+       continue;
+     }
+     if(c == '%' && (c=*(fmt+1+(i++))) == '{') {
+       if (fmtct) {
+         args->object = ctr_build_string(buf, fmtct);
+         ctr_string_append(buffer, args);
+         fmtct = 0;
+       }
+       in_spec = 1;
+     } else buf[fmtct++] = c;
+   }
+   if (fmtct) {
+     args->object = ctr_build_string(buf, fmtct);
+     if (interpolate) {
+       args->object = ctr_map_get(objects, args);
+       args->object = ctr_send_message(args->object, "toString", 8, NULL);
+       interpolate = 0;
+     }
+     ctr_string_append(buffer, args);
+     fmtct = 0;
+   }
+   ctr_heap_free(args);
+   ctr_heap_free(buf);
+   return buffer;
+ }
+
+/**
  * [String] from: [position] to: [destination]
  *
  * Returns a portion of a string defined by from-to values.
@@ -2706,6 +2854,7 @@ ctr_object* ctr_build_block(ctr_tnode* node) {
     ctr_object* codeBlockObject = ctr_internal_create_object(CTR_OBJECT_TYPE_OTBLOCK);
     codeBlockObject->value.block = node;
     codeBlockObject->link = CtrStdBlock;
+    //codeBlockObject->lex_scope = ctr_context_id;
     return codeBlockObject;
 }
 
@@ -2731,24 +2880,24 @@ ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object*
         parameter = parameterList->node;
         while(1) {
             if (parameter && argList->object) {
-              was_vararg = (strncmp(parameter->value, "*", 1) == 0);
-              if (parameterList->next) {
-                a = argList->object;
-                ctr_assign_value_to_local(ctr_build_string(parameter->value, parameter->vlen), a);
-              } else if (!parameterList->next && was_vararg) {
-                ctr_object* arr = ctr_array_new(CtrStdArray, NULL);
-                ctr_argument* arglist__ = ctr_heap_allocate(sizeof(ctr_argument*));
-                while (argList->next) {
-                  arglist__->object = argList->object;
-                  ctr_array_push(arr, arglist__);
-                  argList = argList->next;
+                was_vararg = (strncmp(parameter->value, "*", 1) == 0);
+                if (parameterList->next) {
+                    a = argList->object;
+                    ctr_assign_value_to_local(ctr_build_string(parameter->value, parameter->vlen), a);
+                } else if (!parameterList->next && was_vararg) {
+                    ctr_object* arr = ctr_array_new(CtrStdArray, NULL);
+                    ctr_argument* arglist__ = ctr_heap_allocate(sizeof(ctr_argument*));
+                    while (argList->next) {
+                        arglist__->object = argList->object;
+                        ctr_array_push(arr, arglist__);
+                        argList = argList->next;
+                    }
+                    ctr_heap_free(arglist__);
+                    ctr_assign_value_to_local(ctr_build_string(parameter->value+1, parameter->vlen-1), arr);
+                } else if (!was_vararg){
+                    a = argList->object;
+                    ctr_assign_value_to_local(ctr_build_string(parameter->value, parameter->vlen), a);
                 }
-                ctr_heap_free(arglist__);
-                ctr_assign_value_to_local(ctr_build_string(parameter->value+1, parameter->vlen-1), arr);
-              } else if (!was_vararg){
-                a = argList->object;
-                ctr_assign_value_to_local(ctr_build_string(parameter->value, parameter->vlen), a);
-              }
             }
             if (!argList->next) break;
             argList = argList->next;
@@ -2863,25 +3012,25 @@ ctr_object* ctr_block_runIt(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 ctr_object* ctr_block_run_variadic(ctr_object* myself, int count, ...) {
-  if (count < 1) return ctr_block_runIt(myself, NULL);
-  ctr_argument* argumentList = ctr_heap_allocate(sizeof(ctr_argument));
-  ctr_argument* pass = argumentList;
-  va_list ap;
-  va_start(ap, count);
-  for (size_t i = 0; i < count; i++) {
-    pass->object = va_arg(ap, ctr_object*);
-    pass->next = ctr_heap_allocate(sizeof(ctr_argument));
-    pass = pass->next;
-  }
-  va_end(ap);
-  ctr_object* result = ctr_block_runIt(myself, argumentList);
-  pass = argumentList;
-  while(pass->next != NULL||pass->object != NULL) {
-    if(pass->object != NULL) ctr_heap_free(pass->object);
-    pass = pass->next;
-  }
-  ctr_heap_free(argumentList);
-  return result;
+    if (count < 1) return ctr_block_runIt(myself, NULL);
+    ctr_argument* argumentList = ctr_heap_allocate(sizeof(ctr_argument));
+    ctr_argument* pass = argumentList;
+    va_list ap;
+    va_start(ap, count);
+    for (size_t i = 0; i < count; i++) {
+        pass->object = va_arg(ap, ctr_object*);
+        pass->next = ctr_heap_allocate(sizeof(ctr_argument));
+        pass = pass->next;
+    }
+    va_end(ap);
+    ctr_object* result = ctr_block_runIt(myself, argumentList);
+    pass = argumentList;
+    while(pass->next != NULL||pass->object != NULL) {
+        if(pass->object != NULL) ctr_heap_free(pass->object);
+        pass = pass->next;
+    }
+    ctr_heap_free(argumentList);
+    return result;
 }
 /**
  * [Block] set: [name] value: [object]

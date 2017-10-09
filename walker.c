@@ -211,6 +211,12 @@ ctr_object* ctr_cwlk_expr(ctr_tnode* node, char* wasReturn) {
             }
             if (node->modifier == 1) {
                 result = ctr_find_in_my(ctr_build_string(node->value, node->vlen));
+            } else if (node->modifier == 3){
+                // printf("Hit mod 3, evaluating\n");
+                result = ctr_find(ctr_build_string(node->value, node->vlen));
+                ctr_object* tmp = ctr_heap_allocate_tracked(sizeof(ctr_object));
+                *tmp = *result;
+                result = tmp;
             } else {
                 result = ctr_find(ctr_build_string(node->value, node->vlen));
             }

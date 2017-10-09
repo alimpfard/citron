@@ -583,7 +583,11 @@ ctr_object* ctr_array_to_string( ctr_object* myself, ctr_argument* argumentList 
     }
     for(i=myself->value.avalue->tail; i<myself->value.avalue->head; i++) {
         arrayElement = *( myself->value.avalue->elements + i );
-        if ( arrayElement->info.type == CTR_OBJECT_TYPE_OTBOOL || arrayElement->info.type == CTR_OBJECT_TYPE_OTNUMBER
+        if (arrayElement == myself) {
+          newArgumentList->object = ctr_build_string_from_cstring("':selfReference:'");
+          string = ctr_string_append( string, newArgumentList );
+        }
+        else if ( arrayElement->info.type == CTR_OBJECT_TYPE_OTBOOL || arrayElement->info.type == CTR_OBJECT_TYPE_OTNUMBER
                 || arrayElement->info.type == CTR_OBJECT_TYPE_OTNIL ) {
             newArgumentList->object = arrayElement;
             string = ctr_string_append( string, newArgumentList );
@@ -833,7 +837,11 @@ ctr_object* ctr_map_to_string( ctr_object* myself, ctr_argument* argumentList) {
     while( mapItem ) {
         newArgumentList->object = ctr_build_string_from_cstring( CTR_DICT_CODEGEN_MAP_PUT );
         ctr_string_append( string, newArgumentList );
-        if ( mapItem->value->info.type == CTR_OBJECT_TYPE_OTBOOL || mapItem->value->info.type == CTR_OBJECT_TYPE_OTNUMBER
+        if (mapItem->value == myself) {
+          newArgumentList->object = ctr_build_string_from_cstring("':selfReference:'");
+          ctr_string_append( string, newArgumentList );
+        }
+        else if ( mapItem->value->info.type == CTR_OBJECT_TYPE_OTBOOL || mapItem->value->info.type == CTR_OBJECT_TYPE_OTNUMBER
                 || mapItem->value->info.type == CTR_OBJECT_TYPE_OTNIL
            ) {
             newArgumentList->object = mapItem->value;

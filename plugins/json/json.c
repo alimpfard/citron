@@ -1,6 +1,32 @@
 #include "../../citron.h"
 #include "jansson.h"
 
+ctr_object* ctr_string_dquotes_escape(ctr_object* myself, ctr_argument* argumentList) {
+    ctr_object* answer;
+    char* str;
+    ctr_size len;
+    ctr_size i;
+    ctr_size j;
+    len = myself->value.svalue->vlen;
+    for( i = 0; i < myself->value.svalue->vlen; i++ ) {
+        if ( *(myself->value.svalue->value + i) == '"' ) {
+            len++;
+        }
+    }
+    str = ctr_heap_allocate( len + 1 );
+    j = 0;
+    for( i = 0; i < myself->value.svalue->vlen; i++ ) {
+        if ( *(myself->value.svalue->value + i) == '"' ) {
+            str[j+i] = '\\';
+            j++;
+        }
+        str[j+i] = *(myself->value.svalue->value + i);
+    }
+    answer = ctr_build_string_from_cstring( str );
+    ctr_heap_free( str );
+    return answer;
+}
+
 ctr_object* ctr_json_create_object(json_t* root, ctr_object* gt) {
     switch(json_typeof(root)) {
         case JSON_OBJECT: {
@@ -77,7 +103,7 @@ ctr_object* ctr_json_parse (ctr_object* myself, ctr_argument* argumentList) {
   ctr_heap_free(jso);
   if(root) {
     ctr_object* obj = ctr_json_create_object(root, argumentList->next->object);
-    obj->link = argumentList->next->object;
+    if(!obj->link) obj->link = argumentList->next->object;
     return obj;
   } else return CtrStdNil;
 }
@@ -190,6 +216,7 @@ ctr_object* ctr_json_serialize(ctr_object* myself, ctr_argument* argumentList) {
 
 void begin() {
   ctr_object* jans = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
+  jans->link = CtrStdObject;
   ctr_internal_create_func(jans, ctr_build_string_from_cstring("parse:genericType:"), &ctr_json_parse);
   ctr_internal_create_func(jans, ctr_build_string_from_cstring("serialize:"), &ctr_json_serialize);
   ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("JSON"), jans, 0);

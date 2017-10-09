@@ -93,6 +93,8 @@
 #define CTR_DICT_SPLIT	         "split:"
 #define CTR_DICT_SKIP            "skip:"
 #define CTR_DICT_APPEND          "append:"
+#define CTR_DICT_STRFMT          "formatObjects:"
+#define CTR_DICT_STRFMTMAP       "formatMap:"
 #define CTR_DICT_TO_NUMBER       "toNumber"
 #define CTR_DICT_FIND_PATTERN_DO "findPattern:do:"
 #define CTR_DICT_STRING          "String"
@@ -265,6 +267,3 @@
 #define CTR_DICT_CODEGEN_ARRAY_NEW_PUSH          "Array ← "
 //#define CTR_DEBUG_HIDING                         0
 #define CTR_DICT_EXT_PATH                        "extensionsPath"
-#ifndef CTR_STD_EXTENSION_PATH
-#define CTR_STD_EXTENSION_PATH                   "."
-#endif

@@ -231,6 +231,7 @@ void ctr_internal_object_delete_property(ctr_object* owner, ctr_object* key, int
  * Adds a property to an object.
  */
 void ctr_internal_object_add_property(ctr_object* owner, ctr_object* key, ctr_object* value, int m) {
+    value->lexical_name = key;
     ctr_mapitem* new_item = ctr_heap_allocate(sizeof(ctr_mapitem));
     ctr_mapitem* current_head = NULL;
     new_item->key = key;
@@ -556,11 +557,16 @@ void ctr_set(ctr_object* key, ctr_object* object) {
         ctr_heap_free( key_name );
         return;
     }
+    object->lexical_name = key;
     ctr_internal_object_set_property(context, key, object, 0);
 }
 
 ctr_object* ctr_give_version(ctr_object* myself, ctr_argument* argumentList) {
     return ctr_build_string_from_cstring(CTR_VERSION);
+}
+
+ctr_object* ctr_object_destruct(ctr_object* object, ctr_argument* nothing) {
+  return CtrStdNil;
 }
 
 /**
@@ -607,6 +613,7 @@ void ctr_initialize_world() {
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( CTR_DICT_TONUMBER ), &ctr_object_to_number );
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( CTR_DICT_TOBOOL ), &ctr_object_to_boolean );
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( "fromComputer:" ), &ctr_command_remote );
+    ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( "destruct" ), &ctr_object_destruct );
 
     ctr_internal_object_add_property( CtrStdWorld, ctr_build_string_from_cstring( CTR_DICT_OBJECT ), CtrStdObject, 0 );
     CtrStdObject->link = NULL;
@@ -728,6 +735,8 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_HASH_WITH_KEY ), &ctr_string_hash_with_key );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_EVAL ), &ctr_string_eval );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_TOSTRING), &ctr_string_to_string );
+    ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_STRFMT ), &ctr_string_format );
+    ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_STRFMTMAP ), &ctr_string_format_map );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_ESCAPE_QUOTES ),&ctr_string_quotes_escape );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_CHARACTERS ),&ctr_string_characters );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_TO_BYTE_ARRAY ),&ctr_string_to_byte_array );
@@ -977,6 +986,9 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("copyBlock:"), &ctr_reflect_fn_copy);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("newSharedObject"), &ctr_reflect_share_memory);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("link:to:"), &ctr_reflect_link_to);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("isObject:linkedTo:"), &ctr_reflect_is_linked_to);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("isObject:childOf:"), &ctr_reflect_child_of);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("generateLinkTree:"), &ctr_reflect_generate_inheritance_tree);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("version"), &ctr_give_version);
 
     ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Reflect"), CtrStdReflect, 0);
@@ -1067,7 +1079,7 @@ ctr_object* ctr_send_message(ctr_object* receiverObject, char* message, long vle
     if (!methodObject) {
         argCounter = argumentList;
         argCount = 0;
-        while(argCounter->next && argCount < 4) {
+        while(argCounter && argCounter->next && argCount < 4) {
             argCounter = argCounter->next;
             argCount ++;
         }

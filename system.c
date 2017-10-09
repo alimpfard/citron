@@ -314,6 +314,7 @@ void ctr_gc_sweep( int all ) {
     while(currentObject) {
         ctr_gc_object_counter ++;
         if ( ( currentObject->info.mark==0 && currentObject->info.sticky==0 ) || all){
+            // if (currentObject->info.type == CTR_OBJECT_TYPE_OTEX) ctr_send_message(currentObject, "destruct", 8, NULL);
             void (*free_heap_maybe_shared)(void*) = currentObject->info.shared==0?&ctr_heap_free:&ctr_heap_free_shared;
             ctr_gc_dust_counter ++;
             /* remove from linked list */

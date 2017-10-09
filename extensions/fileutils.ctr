@@ -55,15 +55,15 @@ ImportLib on: 'importAll:as:' do: { :things :gnames
       aux is name from: (ind + 1) to: (name length).
       namespace is (my imports @ ns).
     } set: 'imports' value: my imports).
-    var import is (namespace @ aux).
-    (import isNil) ifTrue: { fourOhFour push: name. },
+    var ImportLib is (namespace @ aux).
+    (ImportLib isNil) ifTrue: { fourOhFour push: name. },
                    ifFalse: {
-                    var imps is (import @ ':requires:').
+                    var imps is (ImportLib @ ':requires:').
                     (imps count !=: 0) ifTrue: {
                       ImportLib importAll: imps.
                     }.
                     Reflect addGlobalVariable: gname.
-                    Reflect set: gname to: (import @ ':provides:').
+                    Reflect set: gname to: (ImportLib @ ':provides:').
                   }.
   }.
   (fourOhFour count = 0) ifFalse: {thisBlock error: 'Libraries not found: ' + fourOhFour. }.
@@ -81,6 +81,7 @@ ImportLib on: 'from:import:' do: { :fname :iname :gname
   File new: fname, include.
   me import: iname as: iname.
 }.
-ImportLib on: 'noImport' do: {thisBlock error: 'No Import.'.}.
+ImportLib on: 'noImport' do: {thisBlock error: 'No ImportLib.'.}.
 ImportLib on: 'respondTo:' do: { :iname var nsname is 'Extensions:$$iname'. me importAll: (Array new < nsname) as: (Array new < iname). }.
 ImportLib on: 'respondTo:and:' do: { :nname :iname (iname split: ',') each: {:i :iname var nsname is 'Extensions:$$nname$$iname'. me importAll: (Array new < nsname) as: (Array new < iname).}. }.
+var importas is {:oname:iname ImportLib import: 'Extensions:$$oname' as: iname.}.

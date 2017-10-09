@@ -1,13 +1,17 @@
 #ifndef CTR_H_GUARD
 #define CTR_H_GUARD
 
+#ifndef CTR_STD_EXTENSION_PATH
+#define CTR_STD_EXTENSION_PATH                   "."
+#endif
+
 #include "dictionary.h"
 #include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define CTR_VERSION "0.0.4.2a"
-
+#define CTR_VERSION "0.0.5.4"
+#define CTR_LOG_WARNINGS 0//2 to enable
 /**
  * Define the Citron tokens
  */
@@ -177,7 +181,8 @@ struct ctr_object {
 		unsigned int shared: 1;
 	} info;
 	struct ctr_object* link;
-	int lex_scope;
+	//int lex_scope;
+	struct ctr_object* lexical_name;
 	union uvalue {
 		ctr_bool bvalue;
 		ctr_number nvalue;
@@ -534,6 +539,8 @@ ctr_object* ctr_string_contains_pattern(ctr_object* myself, ctr_argument* argume
 ctr_object* ctr_string_contains(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_hash_with_key(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_to_string( ctr_object* myself, ctr_argument* argumentList );
+ctr_object* ctr_string_format( ctr_object* myself, ctr_argument* argumentList );
+ctr_object* ctr_string_format_map( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_string_eval( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_string_quotes_escape( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_string_dquotes_escape( ctr_object* myself, ctr_argument* argumentList );
@@ -756,6 +763,9 @@ ctr_object* ctr_reflect_cb_add_param(ctr_object* myself, ctr_argument* argumentL
 ctr_object* ctr_reflect_fn_copy(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_share_memory(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_link_to(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_child_of(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_is_linked_to(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_generate_inheritance_tree(ctr_object* myself, ctr_argument* argumentList);
 /**
  * Fiber Co-Processing Interface
  */
@@ -811,6 +821,7 @@ void* ctr_heap_reallocate(void* oldptr, size_t size );
 size_t ctr_heap_get_latest_tracking_id();
 void* ctr_heap_reallocate_tracked(size_t tracking_id, size_t size );
 char* ctr_heap_allocate_cstring( ctr_object* o );
+char* ctr_heap_allocate_cstring_shared( ctr_object* o );
 
 
 uint8_t  ctr_accept_n_connections;

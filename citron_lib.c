@@ -17,7 +17,7 @@
  * Initialize the world. MUST be called first.
  *
  */
-void initialize() {
+static void initialize() {
     //pragma rules
     ctr_code_pragma o = { .type = 't', .value = 0 },
                     f = { .type = 'o', .value = 0 },
@@ -38,12 +38,14 @@ void initialize() {
     ctr_clex_keyword_me = CTR_DICT_ME;
     ctr_clex_keyword_my = CTR_DICT_MY;
     ctr_clex_keyword_var = CTR_DICT_VAR;
+    ctr_clex_keyword_const = CTR_DICT_CONST;
     ctr_clex_keyword_my_len = strlen( ctr_clex_keyword_my );
     ctr_clex_keyword_var_len = strlen( ctr_clex_keyword_var );
+    ctr_clex_keyword_const_len = strlen( ctr_clex_keyword_const );
     ctr_initialize_world();
 }
 
-int execute_string(char* prg) {
+static int execute_string(char* prg) {
     ctr_tnode* program;
     program = ctr_cparse_parse(prg, ctr_mode_input_file);
     ctr_cwlk_run(program);

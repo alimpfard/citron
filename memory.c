@@ -278,3 +278,17 @@ char* ctr_heap_allocate_cstring( ctr_object* stringObject ) {
 
     return cstring;
 }
+char* ctr_heap_allocate_cstring_shared( ctr_object* stringObject ) {
+    char*    cstring;
+    char*    stringBytes;
+    ctr_size length;
+
+    stringBytes = stringObject->value.svalue->value;
+    length      = stringObject->value.svalue->vlen;
+    cstring     = ctr_heap_allocate_shared( ( length + 1 ) * sizeof( char ) );
+
+    strncpy( cstring, stringBytes, length );
+    cstring[length] = '\0';
+
+    return cstring;
+}

@@ -30,6 +30,8 @@ char* ctr_clex_desc_tok_paropen = "(";
 char* ctr_clex_desc_tok_parclose = ")";
 char* ctr_clex_desc_tok_blockopen = "{";
 char* ctr_clex_desc_tok_blockclose = "}";
+char* ctr_clex_desc_tok_tupopen = "[";
+char* ctr_clex_desc_tok_tupclose = "]";
 char* ctr_clex_desc_tok_colon = ":";
 char* ctr_clex_desc_tok_dot = ".";
 char* ctr_clex_desc_tok_chain = ",";
@@ -154,6 +156,12 @@ char* ctr_clex_tok_describe(int token)
         case CTR_TOKEN_REF:
             description = ctr_clex_desc_tok_ref;
             break;
+        case CTR_TOKEN_TUPOPEN:
+            description = ctr_clex_desc_tok_tupopen;
+            break;
+        case CTR_TOKEN_TUPCLOSE:
+            description = ctr_clex_desc_tok_tupclose;
+            break;
         default:
             description = ctr_clex_desc_tok_unknown;
     }
@@ -253,7 +261,7 @@ int ctr_clex_tok() {
     pragma_mode  = 0;
 
     /* a little state machine to handle string interpolation, */
-    /* i.e. transforms ' $$x ' into: '' + x + ''. */
+    /* i.e. transforms ' $$x ' into: ' ' + x + ' '. */
     switch( ctr_string_interpolation ) {
         case 1:
             presetToken = CTR_TOKEN_QUOTE;
@@ -308,6 +316,8 @@ int ctr_clex_tok() {
     if (ctr_code == ctr_eofcode) { return CTR_TOKEN_FIN; }
     if (c == '(') { ctr_code++; return CTR_TOKEN_PAROPEN; }
     if (c == ')') { ctr_code++; return CTR_TOKEN_PARCLOSE; }
+    if (c == '[') { ctr_code++; return CTR_TOKEN_TUPOPEN; }
+    if (c == ']') { ctr_code++; return CTR_TOKEN_TUPCLOSE; }
     if (c == '{') { ctr_code++; return CTR_TOKEN_BLOCKOPEN; }
     if (c == '}') { ctr_code++; return CTR_TOKEN_BLOCKCLOSE; }
     if (c == '.') { ctr_code++; return CTR_TOKEN_DOT; }
@@ -396,6 +406,8 @@ int ctr_clex_tok() {
                 c != '#' &&
                 c != '(' &&
                 c != ')' &&
+                c != '[' &&
+                c != ']' &&
                 c != '{' &&
                 c != '}' &&
                 c !='.'  &&

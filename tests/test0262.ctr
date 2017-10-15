@@ -3,23 +3,23 @@ port is 1000 + (Dice rollWithSides: 6000).
 Program port: port.
 
 server is Program new: {
-	
+
 	Program connectionLimit: 3.
-	
+
 	var remoteObject is Object new.
-	
+
 	remoteObject on: 'test' do: {
-		^ 'test 1.\n'.
+		^ JSON serialize: me.
 	}.
-	
+
 	remoteObject on: 'test2:' do: { :message
 		^ ('test 2: ' + message + ',' + message + '.\n').
 	}.
-	
+
 	remoteObject on: 'test3:and:' do: { :var1 :var2
 		^ ('test 3: ' + var1 + ',' + var2 + '.\n').
 	}.
-	
+
 	Program serve: remoteObject.
 
 }.
@@ -28,14 +28,12 @@ pid is server pid.
 x is Nil.
 
 #wait until server's up...
-Clock wait: 1.
+Clock wait: 1000000.
 
 {
-	var a is Object fromComputer: '::1'.
+	var a is Object fromComputer: '::1' port: port.
 	x is
-		( a test ) + 
-		( a test2: 'A' ) +
-		( a test3: 'B' and: 'C' ).
+		( a test ).
 
 } catch: { :e
 	Pen write: e, brk.
@@ -45,4 +43,4 @@ Clock wait: 1.
 }, run.
 
 Pen write: 'I received from remote object (server): \n' + x, brk.
-server join.
+#server join.

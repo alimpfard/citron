@@ -838,6 +838,21 @@ ctr_object* ctr_command_input(ctr_object* myself, ctr_argument* argumentList) {
     ctr_object* str = ctr_build_string_from_cstring( content );
     ctr_heap_free( content );
     return str;
+
+}
+
+ctr_object* ctr_command_set_INT_handler(ctr_object* myself, ctr_argument* argumentList) {
+  if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTBLOCK) {printf("Expected a block to handle interrupts with.\n"); exit(1);}
+  ctr_global_interrupt_handler = argumentList->object;
+  return myself;
+}
+
+void ctr_int_handler(int signal) {
+  if (ctr_global_interrupt_handler != NULL) {
+    ctr_block_runIt(ctr_global_interrupt_handler, NULL);
+  } else {
+    exit(1);
+  }
 }
 
 /**
@@ -1196,7 +1211,7 @@ ctr_object* ctr_command_crit(ctr_object* myself, ctr_argument* argumentList ) {
 
 
 /**
- * Object fromComputer: [String]
+ * Object fromComputer: [String] [port: [Number] [inet6: [Boolean]]]
  *
  * Creates a remote object from the server specified by the
  * ip address.
@@ -1206,12 +1221,27 @@ ctr_object* ctr_command_remote(ctr_object* myself, ctr_argument* argumentList ) 
     ctr_object* remoteObj = ctr_internal_create_object( CTR_OBJECT_TYPE_OTOBJECT );
     remoteObj->link = CtrStdObject;
     remoteObj->info.remote = 1;
+    ctr_object *port, *inet6;
+    if (argumentList->next) port=argumentList->next->object; else port=ctr_build_number_from_float(-1);
+    if (argumentList->next&&argumentList->next->next) inet6=argumentList->next->next->object; else inet6=ctr_build_bool(1);
     ctr_internal_object_set_property(
             remoteObj,
             ctr_build_string_from_cstring("@"),
             ctr_internal_cast2string(
                 argumentList->object
                 ),
+            CTR_CATEGORY_PRIVATE_PROPERTY
+            );
+    ctr_internal_object_set_property(
+            remoteObj,
+            ctr_build_string_from_cstring(":"),
+            ctr_internal_cast2number(port),
+            CTR_CATEGORY_PRIVATE_PROPERTY
+            );
+    ctr_internal_object_set_property(
+            remoteObj,
+            ctr_build_string_from_cstring("%"),
+            ctr_internal_cast2bool(inet6),
             CTR_CATEGORY_PRIVATE_PROPERTY
             );
     return remoteObj;
@@ -1279,13 +1309,19 @@ ctr_object* ctr_command_accept(ctr_object* myself, ctr_argument* argumentList ) 
     {
         x++;
         connfd = accept(listenfd, (struct sockaddr*)NULL ,NULL); // accept awaiting request
-        read( connfd, &lengthBuff, sizeof(size_t));
+        //read( connfd, &lengthBuff, sizeof(size_t));
+        //printf("%d", lengthBuff);
+        lengthBuff = 3000*sizeof(size_t);
         dataBuff = ctr_heap_allocate( lengthBuff + 1 );
         read(connfd, dataBuff, lengthBuff);
-        printf("%s\n", dataBuff);
-        stringObj = ctr_build_string_from_cstring(dataBuff);
+        //printf("%s\n", dataBuff);
+        stringObj = ctr_build_string_from_cstring(dataBuff);  //TODO:  JSON?
         messageDescriptorArray = ctr_string_eval( stringObj, NULL );
-        messageSelector = ctr_array_shift( messageDescriptorArray, NULL );
+        if (messageDescriptorArray->info.type == CTR_OBJECT_TYPE_OTARRAY) {
+          messageSelector = ctr_array_shift( messageDescriptorArray, NULL );
+        } else {
+          messageSelector = ctr_internal_cast2string(messageDescriptorArray);
+        }
         callArgument = ctr_heap_allocate( sizeof(ctr_argument) );
         callArgument->object = messageSelector;
         callArgument->next = ctr_heap_allocate( sizeof(ctr_argument) );
@@ -1293,7 +1329,7 @@ ctr_object* ctr_command_accept(ctr_object* myself, ctr_argument* argumentList ) 
         answerObj = ctr_internal_cast2string(
                 ctr_object_message( responder, callArgument )
                 );
-        write( connfd, (size_t*) &answerObj->value.svalue->vlen, sizeof(size_t) );
+        //write( connfd, (size_t*) &answerObj->value.svalue->vlen, sizeof(size_t) );
         write( connfd, answerObj->value.svalue->value, answerObj->value.svalue->vlen);
         ctr_heap_free(dataBuff);
         ctr_heap_free(callArgument->next);
@@ -1335,7 +1371,7 @@ ctr_object* ctr_dice_rand(ctr_object* myself, ctr_argument* argumentList) {
 
 
 /**
- * [Clock] wait
+ * [Clock] wait: [Number]
  *
  * Waits X useconds.
  */
@@ -1838,6 +1874,55 @@ ctr_object* ctr_clock_new( ctr_object* myself, ctr_argument* argumentList ) {
 }
 
 /**
+ * [Clock] processorClock
+ *
+ * returns the number of processor ticks since the beginning of this program.
+ * Note that this will be reset depending on the processor
+ */
+ctr_object* ctr_clock_processor_time( ctr_object* myself, ctr_argument* argumentList ) {
+    ctr_object* ptime = ctr_build_number_from_float((double) clock());
+    return ptime;
+}
+
+/**
+ * [Clock] ticksPerSecond
+ *
+ * returns the count of processor ticks in a second
+ */
+ctr_object* ctr_clock_processor_ticks_ps( ctr_object* myself, ctr_argument* argumentList ) {
+    ctr_object* tps = ctr_build_number_from_float((double) CLOCKS_PER_SEC);
+    return tps;
+}
+
+/**
+ * [Clock] timeExecutionOf: [Block]
+ *
+ * How long does the execution of the block take? (returns in cpu ticks)
+ */
+ctr_object* ctr_clock_time_exec( ctr_object* myself, ctr_argument* argumentList ) {
+    ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
+    long int init = clock();
+    ctr_block_runIt(argumentList->object, args);
+    long int end = clock();
+    ctr_heap_free(args);
+    return ctr_build_number_from_float((end-init));
+}
+
+/**
+ * [Clock] executionSeconds: [Block]
+ *
+ * How long does the execution of the block take? (returns in seconds)
+ */
+ctr_object* ctr_clock_time_exec_s( ctr_object* myself, ctr_argument* argumentList ) {
+    ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
+    long int init = clock();
+    ctr_block_runIt(argumentList->object, args);
+    long int end = clock();
+    ctr_heap_free(args);
+    return ctr_build_number_from_float((((double)(end-init))/(double)CLOCKS_PER_SEC));
+}
+
+/**
  * [Pen] write: [String]
  *
  * Writes string to console.
@@ -1904,3 +1989,29 @@ ctr_object* ctr_console_line(ctr_object* myself, ctr_argument* argumentList) {
     fwrite( line, sizeof(char), strlen(line), stdout);
     return myself;
 }
+
+#ifdef forLinux
+ctr_object* ctr_console_clear(ctr_object* myself, ctr_argument* argumentList) {
+    char* line = "\033[H\033[J";
+    fwrite( line, sizeof(char), strlen(line), stdout);
+    return myself;
+}
+
+ctr_object* ctr_console_clear_line(ctr_object* myself, ctr_argument* argumentList) {
+    char* line = "\033[2K\r";
+    fwrite( line, sizeof(char), strlen(line), stdout);
+    return myself;
+}
+#else
+ctr_object* ctr_console_clear(ctr_object* myself, ctr_argument* argumentList) {
+    char* line = "";
+    fwrite( line, sizeof(char), strlen(line), stdout);
+    return myself;
+}
+
+ctr_object* ctr_console_clear_line(ctr_object* myself, ctr_argument* argumentList) {
+    char* line = "";
+    fwrite( line, sizeof(char), strlen(line), stdout);
+    return myself;
+}
+#endif

@@ -30,6 +30,8 @@
 #define CTR_TOKEN_NIL 14
 #define CTR_TOKEN_ASSIGNMENT 15
 #define CTR_TOKEN_RET 16
+#define CTR_TOKEN_TUPOPEN 17
+#define CTR_TOKEN_TUPCLOSE 18
 #define CTR_TOKEN_FIN 99
 //
 //
@@ -64,6 +66,7 @@
 #define CTR_AST_NODE_LTRNUM 58
 #define CTR_AST_NODE_CODEBLOCK 59
 #define CTR_AST_NODE_RETURNFROMBLOCK 60
+#define CTR_AST_NODE_IMMUTABLE 61
 #define CTR_AST_NODE_PARAMLIST 76
 #define CTR_AST_NODE_INSTRLIST 77
 #define CTR_AST_NODE_ENDOFPROGRAM 79
@@ -209,6 +212,7 @@ typedef struct ctr_resource ctr_resource;
  * Array Structure
  */
 struct ctr_collection {
+	int immutable: 1;
 	ctr_size length;
 	ctr_size head;
 	ctr_size tail;
@@ -416,6 +420,7 @@ ctr_object* ctr_nil_to_boolean(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_make(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_ctor(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_make_hiding(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_object_swap(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_equals(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_on_do(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_respond(ctr_object* myself, ctr_argument* argumentList);
@@ -492,6 +497,10 @@ ctr_object* ctr_number_min(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_max(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_odd(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_even(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_number_xor(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_number_or(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_number_and(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_number_uint_binrep(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_to_string(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_to_boolean(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_between(ctr_object* myself, ctr_argument* argumentList);
@@ -570,6 +579,7 @@ ctr_object* ctr_array_new(ctr_object* myclass, ctr_argument* argumentList);
 ctr_object* ctr_array_new_and_push(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_type(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_push(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_push_imm(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_unshift(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_shift(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_count(ctr_object* myself, ctr_argument* argumentList);
@@ -589,6 +599,8 @@ ctr_object* ctr_array_to_string(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_fill(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_column(ctr_object* myself, ctr_argument* argumentList);
 
+ctr_object* ctr_build_immutable(ctr_tnode* node);
+
 /**
  * HashMap Interface
  */
@@ -598,6 +610,7 @@ ctr_object* ctr_map_put(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_get(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_count(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_each(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_map_flip(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_to_string(ctr_object* myself, ctr_argument* argumentList);
 
 /**
@@ -614,6 +627,8 @@ ctr_object* ctr_console_cyan(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_console_reset(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_console_tab(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_console_line(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_console_clear(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_console_clear_line(ctr_object* myself, ctr_argument* argumentList);
 
 /**
  * File Interface
@@ -651,6 +666,8 @@ ctr_object* ctr_command_num_of_args(ctr_object* myself, ctr_argument* argumentLi
 ctr_object* ctr_command_waitforinput(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_command_getc(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_command_input(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_command_set_INT_handler(ctr_object* myself, ctr_argument* argumentList);
+void ctr_int_handler(int signal);
 ctr_object* ctr_command_get_env(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_command_set_env(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_command_exit(ctr_object* myself, ctr_argument* argumentList);
@@ -681,6 +698,7 @@ uint8_t ctr_command_security_profile;
 uint64_t ctr_command_tick;
 uint64_t ctr_command_maxtick;
 ctr_object* (*ctr_secpro_eval_whitelist[64])(ctr_object*, ctr_argument*);
+ctr_object* ctr_global_interrupt_handler;
 
 /**
  * Clock Interface
@@ -714,6 +732,10 @@ ctr_object* ctr_clock_to_string( ctr_object* myself, ctr_argument* argumentList 
 ctr_object* ctr_clock_format( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_clock_add( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_clock_subtract( ctr_object* myself, ctr_argument* argumentList );
+ctr_object* ctr_clock_processor_time( ctr_object* myself, ctr_argument* argumentList );
+ctr_object* ctr_clock_processor_ticks_ps( ctr_object* myself, ctr_argument* argumentList );
+ctr_object* ctr_clock_time_exec( ctr_object* myself, ctr_argument* argumentList );
+ctr_object* ctr_clock_time_exec_s( ctr_object* myself, ctr_argument* argumentList );
 void ctr_clock_init( ctr_object* clock );
 
 /**

@@ -200,6 +200,49 @@ ctr_tlistitem* ctr_cparse_messages(ctr_tnode* r, int mode) {
 
 
 /**
+ * CTRParserTuple
+ *
+ * Generates a node to represent an immutable array (tuple)
+ */
+ctr_tnode* ctr_cparse_tuple() {
+  ctr_tnode* r;
+  ctr_tlistitem* codeBlockPart1;
+  ctr_tnode* paramList;
+  ctr_tlistitem* previousListItem;
+  int t;
+  ctr_clex_tok(); //eat the [
+  r = ctr_cparse_create_node( CTR_AST_NODE );
+  r->type = CTR_AST_NODE_IMMUTABLE;
+  codeBlockPart1 = (ctr_tlistitem*) ctr_heap_allocate_tracked( sizeof(ctr_tlistitem) );
+  r->nodes = codeBlockPart1;
+  paramList = ctr_cparse_create_node( CTR_AST_NODE );
+  codeBlockPart1->node = paramList;
+  paramList->type = CTR_AST_NODE_PARAMLIST;
+
+  t = ctr_clex_tok();
+  ctr_clex_putback();
+  if (t == CTR_TOKEN_TUPCLOSE) {
+    ctr_clex_tok(); //eat the ending ]
+    return r;
+  }
+  else {
+    ctr_tlistitem* paramListItem = (ctr_tlistitem*) ctr_heap_allocate_tracked( sizeof(ctr_tlistitem) );
+    paramList->nodes = paramListItem;
+    paramListItem->node = ctr_cparse_expr(CTR_AST_NODE_IMMUTABLE);
+    previousListItem = paramListItem;
+  }
+  while((t = ctr_clex_tok()) == CTR_TOKEN_CHAIN) {
+      /* okay we have new parameter, load it */
+      ctr_tlistitem* paramListItem = (ctr_tlistitem*) ctr_heap_allocate_tracked( sizeof(ctr_tlistitem) );
+      paramListItem->node = ctr_cparse_expr(CTR_AST_NODE_IMMUTABLE);
+      previousListItem->next = paramListItem;
+      previousListItem = paramListItem;
+  }
+  if (t != CTR_TOKEN_TUPCLOSE) ctr_cparse_emit_error_unexpected(t, "Expected ].");
+  return r;
+}
+
+/**
  * CTRParserPOpen
  *
  * Generates a set of nested nodes.
@@ -466,6 +509,8 @@ ctr_tnode* ctr_cparse_receiver() {
             return ctr_cparse_block();
         case CTR_TOKEN_PAROPEN:
             return ctr_cparse_popen();
+        case CTR_TOKEN_TUPOPEN:
+            return ctr_cparse_tuple();
         default:
             /* This function always exits, so return a dummy value. */
             ctr_cparse_emit_error_unexpected( t, "Expected a message recipient.\n" );
@@ -523,11 +568,11 @@ ctr_tnode* ctr_cparse_expr(int mode) {
     } else if (
             t2 != CTR_TOKEN_DOT &&
             t2 != CTR_TOKEN_PARCLOSE &&
-            t2 != CTR_TOKEN_CHAIN
+            (t2 != CTR_TOKEN_CHAIN && mode != CTR_AST_NODE_IMMUTABLE)
             ) {
         e = ctr_cparse_create_node( CTR_AST_NODE );
         e->type = CTR_AST_NODE_EXPRMESSAGE;
-        nodes = ctr_cparse_messages(r, mode);
+        nodes = ctr_cparse_messages(r, mode == CTR_AST_NODE_IMMUTABLE?0:mode);
         if (nodes == NULL) {
             ctr_clex_tok();
             ctr_clex_putback();

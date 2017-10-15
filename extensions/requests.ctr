@@ -1,0 +1,59 @@
+var HTTPRequest is Object new.
+var Request is Object new.
+
+HTTPRequest on: 'initWith:host:' do: {:r:h my remote is r. my host is h.}.
+HTTPRequest on: 'get:headers:' do: {:path:conts
+  my remote isNil ifTrue: {thisBlock error: 'Cannot get from nothing.'.}.
+  var headerstr is 'GET $$path HTTP/1.1\r\nHost: ' + my host + '\r\n'.
+  conts each: {:k:v
+    headerstr append: ('%s: %s\r\n' formatObjects: (Array ← k ; v)).
+  }.
+  headerstr append: '\r\n\r\n'.
+  Pen write: '"' + headerstr + '"', brk.
+  ^my remote message: headerstr arguments: Array.
+}.
+HTTPRequest on: 'post:values:' do: {:path:conts
+  my remote isNil ifTrue: {thisBlock error: 'Cannot get from nothing.'.}.
+  var headerstr is 'POST $$path HTTP/1.1\r\nHost: ' + my host + '\r\n'.
+  var str is ''.
+  conts each: {:k:v
+    str append: ('%s=%s&' formatObjects: (Array new < (k toString htmlEscape) ; (v toString htmlEscape))).
+  }.
+  str length !=: 0, ifTrue: {str is str from: 0 length: (str length - 1).}.
+  headerstr append: '$$str \r\n\r\n'.
+  Pen write: headerstr, brk.
+  ^my remote message: headerstr arguments: Array.
+}.
+HTTPRequest on: 'type' do: {^'Request'.}.
+HTTPRequest on: 'toString' do: {^'<Request: %s>' formatObjects: (Array new < my host).}.
+
+HTTPRequest on: 'connect:inet6:' do: {:haddr:i6
+  var http is False.
+  haddr containsPattern: '^http(s?)://', ifTrue: {
+    http is True.
+    haddr is haddr skipUntil: '://'.
+  }.
+  var host is haddr split: ':'.
+  var ret is Nil.
+  ((host count) = 2) ifTrue: {
+    Pen write: ('%s: %d' formatObjects: (host take: 2)).
+    ret is Object fromComputer: (host @ 0) port: (host @ 1) inet6: i6.
+  }, else: {
+    ((host count) = 1) ifTrue: {
+      Pen write: ('%s: 80' formatObjects: (host take: 1)).
+      ret is Object fromComputer: (host @ 0) port: 80 inet6: i6.
+    }, else: {
+      thisBlock error: (
+        'Invalid address %s (Incorrect host/port: %s)' formatObjects: (Array ← haddr ; host)
+      ).
+    }.
+  }.
+  ^me new initWith: ret host: ((http either: 'http://' or: '') + (host @ 0)).
+}.
+HTTPRequest on: 'connect:' do: {:host ^me connect: host inet6: False.}.
+
+
+
+Reflect objectExists: 'ImportLib', ifTrue: {
+  ImportLib export: HTTPRequest as: 'HTTPRequest' namespace: 'Extensions' requires: (Array).
+}.

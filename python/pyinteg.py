@@ -3,7 +3,7 @@ from ctypes import cdll, c_char_p, RTLD_GLOBAL
 import ctypes
 
 ctr = ctypes.CDLL('./libctr.so', mode = RTLD_GLOBAL)
-ctr.initialize(1)
+ctr.initialize(0)
 ctr.execute_string.argtypes = [c_char_p]
 ctr.execute_string.restype = c_char_p
 def ctr_exec(string):

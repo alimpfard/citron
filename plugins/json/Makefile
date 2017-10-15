@@ -10,5 +10,7 @@ ctrjson:
 	cc -shared -o libctrjson.so json.o libjansson.a
 	cp -f libctrjson.so ../../mods/json
 
-clearctr: rm -f *.o *.so *.a
-clearlibjansson: cd jansson && make clear
+clearctr: 
+	rm -f *.o *.so *.a
+clearlibjansson: 
+	cd jansson && make clear

@@ -230,6 +230,9 @@ ctr_object* ctr_cwlk_expr(ctr_tnode* node, char* wasReturn) {
         case CTR_AST_NODE_EXPRASSIGNMENT:
             result = ctr_cwlk_assignment(node);
             break;
+        case CTR_AST_NODE_IMMUTABLE:
+            result = ctr_build_immutable(node);
+            break;
         case CTR_AST_NODE_RETURNFROMBLOCK:
             result = ctr_cwlk_return(node);
             *wasReturn = 1;

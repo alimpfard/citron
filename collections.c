@@ -33,6 +33,7 @@ ctr_object* ctr_array_new(ctr_object* myclass, ctr_argument* argumentList) {
     ctr_object* s = ctr_internal_create_object(CTR_OBJECT_TYPE_OTARRAY);
     s->link = myclass;
     s->value.avalue = (ctr_collection*) ctr_heap_allocate(sizeof(ctr_collection));
+    s->value.avalue->immutable = 0;
     s->value.avalue->length = 1;
     s->value.avalue->elements = (ctr_object**) ctr_heap_allocate(sizeof(ctr_object*)*1);
     s->value.avalue->head = 0;
@@ -61,6 +62,10 @@ ctr_object* ctr_array_type(ctr_object* myself, ctr_argument* argumentList) {
  * numbers push: 3.
  */
 ctr_object* ctr_array_push(ctr_object* myself, ctr_argument* argumentList) {
+  if (myself->value.avalue->immutable) {
+    CtrStdFlow = ctr_build_string_from_cstring("Cannot change immutable array's structure");
+    return myself;
+  }
     ctr_object* pushValue;
     if (myself->value.avalue->length <= (myself->value.avalue->head + 1)) {
         myself->value.avalue->length = myself->value.avalue->length * 3;
@@ -73,7 +78,19 @@ ctr_object* ctr_array_push(ctr_object* myself, ctr_argument* argumentList) {
     myself->value.avalue->head++;
     return myself;
 }
-
+ctr_object* ctr_array_push_imm(ctr_object* myself, ctr_argument* argumentList) {
+    ctr_object* pushValue;
+    if (myself->value.avalue->length <= (myself->value.avalue->head + 1)) {
+        myself->value.avalue->length = myself->value.avalue->length * 3;
+        myself->value.avalue->elements = (ctr_object**) ctr_heap_reallocate(myself->value.avalue->elements,
+                (sizeof(ctr_object*) * (myself->value.avalue->length))
+                );
+    }
+    pushValue = argumentList->object;
+    *(myself->value.avalue->elements + myself->value.avalue->head) = pushValue;
+    myself->value.avalue->head++;
+    return myself;
+}
 /**
  * [Array] min
  *
@@ -203,22 +220,29 @@ ctr_object* ctr_array_map(ctr_object* myself, ctr_argument* argumentList) {
         CtrStdFlow->info.sticky = 1;
     }
     block->info.sticky = 1;
+    ctr_argument* arguments = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    ctr_argument* argument2 = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    ctr_argument* argument3 = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+
+    if (!myself->value.avalue->immutable)
+      argument3 = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+
     for(i = myself->value.avalue->tail; i < myself->value.avalue->head; i++) {
-        ctr_argument* arguments = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
-        ctr_argument* argument2 = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
-        ctr_argument* argument3 = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
         arguments->object = ctr_build_number_from_float((double) i);
         argument2->object = *(myself->value.avalue->elements + i);
-        argument3->object = myself;
+        if (!myself->value.avalue->immutable)
+          argument3->object = myself;
         arguments->next = argument2;
-        argument2->next = argument3;
+        if (!myself->value.avalue->immutable)
+          argument2->next = argument3;
         ctr_block_run(block, arguments, NULL);
-        ctr_heap_free( arguments );
-        ctr_heap_free( argument2 );
-        ctr_heap_free( argument3 );
         if (CtrStdFlow == CtrStdContinue) CtrStdFlow = NULL;
         if (CtrStdFlow) break;
     }
+    ctr_heap_free( arguments );
+    ctr_heap_free( argument2 );
+    if (!myself->value.avalue->immutable)
+      ctr_heap_free( argument3 );
     if (CtrStdFlow == CtrStdBreak) CtrStdFlow = NULL; /* consume break */
     block->info.mark = 0;
     block->info.sticky = 0;
@@ -266,6 +290,10 @@ ctr_object* ctr_array_new_and_push(ctr_object* myclass, ctr_argument* argumentLi
  * a unshift: 3. #now contains: 3,1
  */
 ctr_object* ctr_array_unshift(ctr_object* myself, ctr_argument* argumentList) {
+  if (myself->value.avalue->immutable) {
+    CtrStdFlow = ctr_build_string_from_cstring("Cannot change immutable array's structure");
+    return myself;
+  }
     ctr_object* pushValue = argumentList->object;
     if (myself->value.avalue->tail > 0) {
         myself->value.avalue->tail--;
@@ -338,7 +366,9 @@ ctr_object* ctr_array_get(ctr_object* myself, ctr_argument* argumentList) {
     ctr_object* getIndex = argumentList->object;
     int i;
     if (getIndex->info.type != CTR_OBJECT_TYPE_OTNUMBER) {
-        printf("Index must be number.\n"); exit(1);
+        //printf("Index must be number.\n"); exit(1);
+        CtrStdFlow = ctr_build_string_from_cstring("Array index must be a number.");
+        return CtrStdNil;
     }
     i = (int) getIndex->value.nvalue;
     if (myself->value.avalue->head <= (i + myself->value.avalue->tail) || i < 0) {
@@ -360,7 +390,7 @@ ctr_object* ctr_array_get(ctr_object* myself, ctr_argument* argumentList) {
  *
  * Puts a value in the array at the specified index.
  * Array will be automatically expanded if the index is higher than
- * the maximum index of the array.
+ * the maximum index of the array, unless the array is immutable
  *
  * Usage:
  *
@@ -385,6 +415,10 @@ ctr_object* ctr_array_put(ctr_object* myself, ctr_argument* argumentList) {
     tail = (ctr_size) myself->value.avalue->tail;
     putIndexNumber = (ctr_size) putIndex->value.nvalue;
     if (head <= putIndexNumber) {
+      if (myself->value.avalue->immutable) {
+        CtrStdFlow = ctr_build_string_from_cstring("Cannot change immutable array's structure");
+        return myself;
+      }
         ctr_size j;
         for(j = head; j <= putIndexNumber; j++) {
             ctr_argument* argument;
@@ -412,6 +446,10 @@ ctr_object* ctr_array_put(ctr_object* myself, ctr_argument* argumentList) {
  * Pops off the last element of the array.
  */
 ctr_object* ctr_array_pop(ctr_object* myself, ctr_argument* argumentList) {
+  if (myself->value.avalue->immutable) {
+    CtrStdFlow = ctr_build_string_from_cstring("Cannot change immutable array's structure");
+    return myself;
+  }
     if (myself->value.avalue->tail >= myself->value.avalue->head) {
         return CtrStdNil;
     }
@@ -425,6 +463,10 @@ ctr_object* ctr_array_pop(ctr_object* myself, ctr_argument* argumentList) {
  * Shifts off the first element of the array.
  */
 ctr_object* ctr_array_shift(ctr_object* myself, ctr_argument* argumentList) {
+  if (myself->value.avalue->immutable) {
+    CtrStdFlow = ctr_build_string_from_cstring("Cannot change immutable array's structure");
+    return myself;
+  }
     ctr_object* shiftedOff;
     if (myself->value.avalue->tail >= myself->value.avalue->head) {
         return CtrStdNil;
@@ -785,10 +827,10 @@ ctr_object* ctr_map_each(ctr_object* myself, ctr_argument* argumentList) {
     }
     block->info.sticky = 1;
     m = myself->properties->head;
+    ctr_argument* arguments = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    ctr_argument* argument2 = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    ctr_argument* argument3 = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
     while(m && !CtrStdFlow) {
-        ctr_argument* arguments = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
-        ctr_argument* argument2 = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
-        ctr_argument* argument3 = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
         arguments->object = m->key;
         argument2->object = m->value;
         argument3->object = myself;
@@ -797,14 +839,37 @@ ctr_object* ctr_map_each(ctr_object* myself, ctr_argument* argumentList) {
         ctr_block_run(block, arguments, NULL);
         if (CtrStdFlow == CtrStdContinue) CtrStdFlow = NULL;
         m = m->next;
-        ctr_heap_free( arguments );
-        ctr_heap_free( argument2 );
-        ctr_heap_free( argument3 );
     }
+    ctr_heap_free( arguments );
+    ctr_heap_free( argument2 );
+    ctr_heap_free( argument3 );
     if (CtrStdFlow == CtrStdBreak) CtrStdFlow = NULL;
     block->info.mark = 0;
     block->info.sticky = 0;
     return myself;
+}
+
+/**
+ * [Map] flip
+ *
+ * flips the keys and the values of the map. (same-value keys will be overwritten)
+ */
+ctr_object* ctr_map_flip(ctr_object* myself, ctr_argument* argumentList) {
+    ctr_mapitem* m;
+    m = myself->properties->head;
+    ctr_object* map_new = ctr_map_new(CtrStdMap, NULL);
+    ctr_argument* arguments = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    ctr_argument* argument2 = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    while(m) {
+        arguments->object = m->key;
+        argument2->object = m->value;
+        arguments->next = argument2;
+        ctr_map_put(map_new, arguments);
+        m = m->next;
+    }
+    ctr_heap_free( arguments );
+    ctr_heap_free( argument2 );
+    return map_new;
 }
 
 /**
@@ -827,6 +892,19 @@ ctr_object* ctr_map_each(ctr_object* myself, ctr_argument* argumentList) {
  *
  * You can also use the alias 'serialize'.
  */
+ /**
+  * [Map] serialize
+  *
+  * Alias for [Map] toString.
+  * A toString message, sometimes implicitly send by other messages like
+  * 'Pen write:' will give you a serialized version of the Map or Array.
+  * This is far more useful than a 'dumb' textual description of the object like
+  * 'array' or 'object'. However, when working with very large Maps or Arrays
+  * accidentally dumping the entire contents can be annoying, in this case you can
+  * override the toString behaviour but you don't have to remap the original, you
+  * can just use this alias. Also, this alias can be used if you want to make
+  * the serialization more explicit.
+  */
 ctr_object* ctr_map_to_string( ctr_object* myself, ctr_argument* argumentList) {
     ctr_object*  string;
     ctr_mapitem* mapItem;
@@ -893,15 +971,20 @@ ctr_object* ctr_map_to_string( ctr_object* myself, ctr_argument* argumentList) {
 }
 
 /**
- * [Map] serialize
- *
- * Alias for [Map] toString.
- * A toString message, sometimes implicitly send by other messages like
- * 'Pen write:' will give you a serialized version of the Map or Array.
- * This is far more useful than a 'dumb' textual description of the object like
- * 'array' or 'object'. However, when working with very large Maps or Arrays
- * accidentally dumping the entire contents can be annoying, in this case you can
- * override the toString behaviour but you don't have to remap the original, you
- * can just use this alias. Also, this alias can be used if you want to make
- * the serialization more explicit.
+ * Tuple
  */
+// ctr_object* ctr_tuple_new (ctr_object* myclass, ctr_argument* argumentList) {
+//     ctr_object* s = ctr_internal_create_object(CTR_OBJECT_TYPE_OTARRAY);
+//     s->link = myclass;
+//     s->value.avalue = (ctr_collection*) ctr_heap_allocate(sizeof(ctr_collection));
+//     s->value.avalue->immutable = 1;
+//     s->value.avalue->length = 1;
+//     s->value.avalue->elements = (ctr_object**) ctr_heap_allocate(sizeof(ctr_object*)*1);
+//     s->value.avalue->head = 0;
+//     s->value.avalue->tail = 0;
+//     return s;
+// } //Treat as array, except immutable
+// ctr_object* ctr_tuple_new_and_put(ctr_object* myclass, ctr_argument* argumentList) {
+//     ctr_object* s = ctr_array_new(myclass, NULL);
+//     return ctr_tuple_push(s, argumentList);
+// }

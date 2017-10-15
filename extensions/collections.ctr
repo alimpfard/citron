@@ -10,6 +10,17 @@ String on: 'matchesPattern:' do: {:r
   ^res.
 }.
 
+String on: 'bisectToLength:' do: {:len
+  var arr is Array new.
+  me characters each: len cons: {:i:s arr push: s.}.
+  ^arr.
+}.
+
+String on: 'skipUntil:' do: {:str
+  var index is me indexOf: str.
+  ^me from: (index + (str length)) to: (me length).
+}.
+
 # Pair
 #Reflect addGlobalVariable: 'Pair'.
 var Pair is Object new.
@@ -331,6 +342,15 @@ Array on: 'vfilter:' do: {:cond
   ^q.
 }.
 
+Array on: 'take:' do: {:count
+  var arr is Array new.
+  var self is me.
+  count times: {:i
+    arr push: (self @ i).
+  }.
+  ^arr.
+}.
+
 var Stack is Array.
 
 var LRArray is Array new.
@@ -428,6 +448,11 @@ HeapQueue on: '_siftup:from:' do: {:heap:pos
   me _siftdown: heap from: startpos to: pos.
 }.
 
+# var CSV is Object new.
+# CSV on: 'parse:' do: {:str
+#   str is str toString.
+#
+# }.
 
 
 (Reflect objectExists: 'ImportLib') ifTrue: {

@@ -122,6 +122,75 @@ ctr_object* ctr_object_make_hiding(ctr_object* myself, ctr_argument* argumentLis
 }
 
 /**
+ * Object swapRefs: [Object]
+ *
+ * swap two objects with each other.
+ * Effectively 'xchg %ra, %rb'
+ */
+ctr_object* ctr_object_swap(ctr_object* myself, ctr_argument* argumentList) {
+  if (argumentList == NULL || argumentList->object == NULL) {
+  CtrStdFlow = ctr_build_string_from_cstring("Cannot swap with Effectively nothing.");
+  return CtrStdNil;
+  }
+  //LONG AF
+  if (
+     myself == CtrStdObject
+  || myself == CtrStdBlock
+  || myself == CtrStdString
+  || myself == CtrStdNumber
+  || myself == CtrStdBool
+  || myself == CtrStdConsole
+  || myself == CtrStdNil
+  || myself == CtrStdGC
+  || myself == CtrStdMap
+  || myself == CtrStdArray
+  || myself == CtrStdFile
+  || myself == CtrStdSystem
+  || myself == CtrStdDice
+  || myself == CtrStdCommand
+  || myself == CtrStdSlurp
+  || myself == CtrStdShell
+  || myself == CtrStdClock
+  || myself == CtrStdFlow
+  || myself == CtrStdBreak
+  || myself == CtrStdContinue
+  || myself == CtrStdExit
+  || myself == CtrStdReflect
+  || myself == CtrStdFiber
+  || argumentList->object == CtrStdObject
+  || argumentList->object == CtrStdBlock
+  || argumentList->object == CtrStdString
+  || argumentList->object == CtrStdNumber
+  || argumentList->object == CtrStdBool
+  || argumentList->object == CtrStdConsole
+  || argumentList->object == CtrStdNil
+  || argumentList->object == CtrStdGC
+  || argumentList->object == CtrStdMap
+  || argumentList->object == CtrStdArray
+  || argumentList->object == CtrStdFile
+  || argumentList->object == CtrStdSystem
+  || argumentList->object == CtrStdDice
+  || argumentList->object == CtrStdCommand
+  || argumentList->object == CtrStdSlurp
+  || argumentList->object == CtrStdShell
+  || argumentList->object == CtrStdClock
+  || argumentList->object == CtrStdFlow
+  || argumentList->object == CtrStdBreak
+  || argumentList->object == CtrStdContinue
+  || argumentList->object == CtrStdExit
+  || argumentList->object == CtrStdReflect
+  || argumentList->object == CtrStdFiber
+  ) {
+  CtrStdFlow = ctr_build_string_from_cstring("Cannot swap literals/language constants.");
+  return CtrStdNil;
+  }
+  ctr_object tmp = *myself;
+  *myself = *(argumentList->object);
+  *(argumentList->object) = tmp;
+  return myself;
+}
+
+/**
  * [Object] type
  *
  * Returns a string representation of the type of object.
@@ -386,52 +455,100 @@ ctr_object* ctr_sock_error( int fd, int want2close ) {
     }
     return CtrStdNil;
 }
+union ctr_socket_addr_inet {
+  struct sockaddr_in serv_addr;
+  struct sockaddr_in6 serv_addr6;
+};
 
 ctr_object* ctr_object_send2remote(ctr_object* myself, ctr_argument* argumentList) {
     char* ip;
     int sockfd = 0, n = 0;
     char* responseBuff;
     size_t responseLength;
-    struct sockaddr_in6 serv_addr;
+    int inet_family_is_v6 = 1;
     ctr_object* answer;
     ctr_object* messageObj;
     ctr_object* ipObj;
+    ctr_object* portObj;
+    ipObj = ctr_internal_object_find_property(
+      myself,
+      ctr_build_string_from_cstring("%"),
+      CTR_CATEGORY_PRIVATE_PROPERTY
+    );
+    if (ipObj!=NULL) {
+      inet_family_is_v6 = (int)(ipObj->value.bvalue);
+      ipObj = NULL; //restore to initial state.
+    }
+    union ctr_socket_addr_inet serv_addr;
     struct hostent *server;
+    uint16_t port;
     ipObj = ctr_internal_object_find_property(
             myself,
             ctr_build_string_from_cstring("@"),
             CTR_CATEGORY_PRIVATE_PROPERTY
             );
+    portObj = ctr_internal_object_find_property(
+            myself,
+            ctr_build_string_from_cstring(":"),
+            CTR_CATEGORY_PRIVATE_PROPERTY
+            );
     if (ipObj == NULL) return CtrStdNil;
     ipObj = ctr_internal_cast2string(ipObj);
     ip = ctr_heap_allocate_cstring(ipObj);
+    if (portObj == NULL || portObj->value.nvalue == -1) port = ctr_default_port;
+    else port = (uint16_t)portObj->value.nvalue;
     answer = ctr_build_empty_string();
     messageObj = ctr_internal_cast2string(
             argumentList->object
             );
-    if((sockfd = socket(AF_INET6, SOCK_STREAM, 0)) < 0) return ctr_sock_error( sockfd, 0 );
+    if (inet_family_is_v6) {
+      if((sockfd = socket(AF_INET6, SOCK_STREAM, 0)) < 0) return ctr_sock_error( sockfd, 0 );
+    }
+    else {
+      if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) return ctr_sock_error( sockfd, 0 );
+    }
+    printf("socketfd %d\n", sockfd);
     memset(&serv_addr, '0', sizeof(serv_addr));
-    server = gethostbyname2(ip,AF_INET6);
+    if (inet_family_is_v6)
+      server = gethostbyname2(ip,AF_INET6);
+    else
+      server = gethostbyname2(ip,AF_INET);
     if (server == NULL) {
         CtrStdFlow = ctr_build_string_from_cstring("ERROR : No such host found.");
         return CtrStdFlow;
     }
     memset((char *) &serv_addr, 0, sizeof(serv_addr));
-    serv_addr.sin6_flowinfo = 0;
-    serv_addr.sin6_family = AF_INET6;
-    memmove((char *) &serv_addr.sin6_addr.s6_addr, (char *) server->h_addr, server->h_length);
-    serv_addr.sin6_port = htons(ctr_default_port);
+    if (inet_family_is_v6) {
+      serv_addr.serv_addr6.sin6_flowinfo = 0;
+      serv_addr.serv_addr6.sin6_family = AF_INET6;
+      memmove((char *) &serv_addr.serv_addr6.sin6_addr.s6_addr, (char *) server->h_addr, server->h_length);
+      serv_addr.serv_addr6.sin6_port = htons(port);
+      // printf ("%s", inet_ntoa(serv_addr.serv_addr6.sin6_addr));
+    } else {
+      serv_addr.serv_addr.sin_family = AF_INET;
+      memmove((char *) &serv_addr.serv_addr.sin_addr.s_addr, (char *) server->h_addr, server->h_length);
+      serv_addr.serv_addr.sin_port = htons(port);
+      printf ("%s", inet_ntoa(serv_addr.serv_addr.sin_addr));
+    }
     int c = 0;
-    c = connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+    if (inet_family_is_v6)
+    c = connect(sockfd, (struct sockaddr *)&(serv_addr.serv_addr6), sizeof(serv_addr.serv_addr6));
+    else
+    c = connect(sockfd, (struct sockaddr *)&(serv_addr.serv_addr), sizeof(serv_addr.serv_addr));
+    printf("conn %d\n", c);
     if ( c != 0 ) return ctr_sock_error( sockfd, 1 );
-    c = send(sockfd, (size_t*) &messageObj->value.svalue->vlen, sizeof(size_t), 0);
-    if ( c < 0 ) ctr_sock_error( sockfd, 1 );
+    //c = send(sockfd, (size_t*) &messageObj->value.svalue->vlen, sizeof(size_t), 0);
+    //if ( c < 0 ) ctr_sock_error( sockfd, 1 );
+    //printf("%s\n", messageObj->value.svalue->value);
     c = send(sockfd, messageObj->value.svalue->value, messageObj->value.svalue->vlen, 0);
+    printf("send %d\n", c);
     if ( c < 0 ) ctr_sock_error( sockfd, 1 );
-    n = read(sockfd, (size_t*) &responseLength, sizeof(responseLength));
-    if ( n == 0 ) ctr_sock_error( sockfd, 1 );
+    //n = read(sockfd, (size_t*) &responseLength, sizeof(responseLength));
+    //if ( n == 0 ) ctr_sock_error( sockfd, 1 );
+    responseLength = 3000*sizeof(size_t);
     responseBuff = ctr_heap_allocate( responseLength + 1 );
     n = read(sockfd, responseBuff, responseLength);
+    printf("read %d\n", n);
     if ( n == 0 ) ctr_sock_error( sockfd, 1 );
     answer = ctr_build_string_from_cstring( responseBuff );
     shutdown(sockfd, SHUT_RDWR);
@@ -449,7 +566,7 @@ ctr_object* ctr_object_send2remote(ctr_object* myself, ctr_argument* argumentLis
  * [Object] respondTo: [String] with: [String]
  * [Object] respondTo: [String] with: [String] and: [String]
  *
- * Default respond-to implemention, does nothing.
+ * Default respond-to implementation, does nothing.
  */
 ctr_object* ctr_object_respond(ctr_object* myself, ctr_argument* argumentList) {
     if (myself->info.remote == 0) return myself;
@@ -1030,7 +1147,7 @@ ctr_object* ctr_number_times(ctr_object* myself, ctr_argument* argumentList) {
     ctr_argument* arguments;
     int t;
     int i;
-    if (block->info.type != CTR_OBJECT_TYPE_OTBLOCK) { printf("Expected code block."); exit(1); }
+    if (block->info.type != CTR_OBJECT_TYPE_OTBLOCK) { CtrStdFlow = ctr_build_string_from_cstring("Expected code block."); return myself; }
     block->info.sticky = 1;
     t = myself->value.nvalue;
     arguments = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
@@ -1435,6 +1552,30 @@ ctr_object* ctr_number_shr(ctr_object* myself, ctr_argument* argumentList) {
 ctr_object* ctr_number_shl(ctr_object* myself, ctr_argument* argumentList) {
     return ctr_build_number_from_float((((int)(myself->value.nvalue)) << (int)((ctr_internal_cast2number(argumentList->object))->value.nvalue)));
 }
+
+/**
+ * [Number] logicalOr: [Number]
+ *
+ */
+ctr_object* ctr_number_or(ctr_object* myself, ctr_argument* argumentList) {
+    return ctr_build_number_from_float((((int)(myself->value.nvalue)) | (int)((ctr_internal_cast2number(argumentList->object))->value.nvalue)));
+}
+
+/**
+ * [Number] logicalAnd: [Number]
+ *
+ */
+ctr_object* ctr_number_and(ctr_object* myself, ctr_argument* argumentList) {
+    return ctr_build_number_from_float((((int)(myself->value.nvalue)) & (int)((ctr_internal_cast2number(argumentList->object))->value.nvalue)));
+}
+
+/**
+ * [Number] logicalXor: [Number]
+ *
+ */
+ctr_object* ctr_number_xor(ctr_object* myself, ctr_argument* argumentList) {
+    return ctr_build_number_from_float((((int)(myself->value.nvalue)) ^ (int)((ctr_internal_cast2number(argumentList->object))->value.nvalue)));
+}
 /**
  * [Number] toByte
  *
@@ -1446,6 +1587,21 @@ ctr_object* ctr_number_to_byte(ctr_object* myself, ctr_argument* argumentList) {
     str->value.svalue->vlen = 1;
     *(str->value.svalue->value) = (uint8_t) myself->value.nvalue;
     return str;
+}
+char* bitrep(unsigned int v, int s) {
+  char* buf = ctr_heap_allocate(sizeof(char)*(s+1));
+  int i; // for C89 compatability
+  for(i = s; i >= 0; i--)
+    *(buf+i) = ('0' + ((v >> i) & 1));
+  return buf;
+}
+ctr_object* ctr_number_uint_binrep(ctr_object* myself, ctr_argument* argumentList) {
+  int bsize = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  unsigned int value = ctr_internal_cast2number(myself)->value.nvalue;
+  char* buf = bitrep(value, bsize);
+  ctr_object* str = ctr_build_string(buf, bsize);
+  ctr_heap_free(buf);
+  return str;
 }
 
 /**
@@ -2831,6 +2987,45 @@ ctr_object* ctr_string_randomize_bytes(ctr_object* myself, ctr_argument* argumen
     return answer;
 }
 
+
+/**
+ * Tuple
+ *
+ * Literal:
+ *
+ * [ item , item , ... ] or []
+ *
+ * Examples:
+ *
+ * [ 1 , 2 , 3 ]
+ * []
+ *
+ */
+ctr_object* ctr_build_immutable(ctr_tnode* node) {
+  ctr_object* tupleobj = ctr_internal_create_object(CTR_OBJECT_TYPE_OTARRAY);
+  tupleobj->link = CtrStdArray;
+  tupleobj->value.avalue = (ctr_collection*) ctr_heap_allocate(sizeof(ctr_collection));
+  tupleobj->value.avalue->immutable = 1;
+  tupleobj->value.avalue->length = 1;
+  tupleobj->value.avalue->elements = (ctr_object**) ctr_heap_allocate(sizeof(ctr_object*)*1);
+  tupleobj->value.avalue->head = 0;
+  tupleobj->value.avalue->tail = 0;
+  ctr_object* result;
+  ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
+  ctr_tlistitem* items = node->nodes->node->nodes;
+
+  char* wasReturn = ctr_heap_allocate(sizeof(char));
+  while (items && items->node) {
+    result = ctr_cwlk_expr(items->node, wasReturn);
+    args->object = result;
+    ctr_array_push_imm(tupleobj, args);
+    if (!items->next) break;
+    items = items->next;
+  }
+  ctr_heap_free(wasReturn);
+  ctr_heap_free(args);
+  return tupleobj;
+}
 
 /**
  * Block

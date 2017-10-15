@@ -1,0 +1,8 @@
+POST /149v5mv1 HTTP/1.1
+DICKHERE<<<
+Content-Disposition: form-data; name="upload"; filename="test"
+Content-Type: text/plain
+lol
+#RAD
+
+DICKHERE<<<

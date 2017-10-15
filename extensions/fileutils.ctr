@@ -82,6 +82,6 @@ ImportLib on: 'from:import:' do: { :fname :iname :gname
   me import: iname as: iname.
 }.
 ImportLib on: 'noImport' do: {thisBlock error: 'No ImportLib.'.}.
-ImportLib on: 'respondTo:' do: { :iname var nsname is 'Extensions:$$iname'. me importAll: (Array new < nsname) as: (Array new < iname). }.
-ImportLib on: 'respondTo:and:' do: { :nname :iname (iname split: ',') each: {:i :iname var nsname is 'Extensions:$$nname$$iname'. me importAll: (Array new < nsname) as: (Array new < iname).}. }.
+ImportLib on: 'respondTo:' do: { :iname var nsname is 'Extensions:$$iname'. me importAll: (Array new < nsname) as: (Array new < iname). ^Reflect getObject: iname.}.
+ImportLib on: 'respondTo:and:' do: { :nname :iname (iname split: ',') each: {:i :iname var nsname is 'Extensions:$$nname$$iname'. me importAll: (Array new < nsname) as: (Array new < iname).}. ^Reflect getObject: iname.}.
 var importas is {:oname:iname ImportLib import: 'Extensions:$$oname' as: iname.}.

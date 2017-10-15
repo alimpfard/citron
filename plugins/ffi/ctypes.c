@@ -67,6 +67,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(void) {
 //Unsigned Int 8
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(uint8) {
   ctr_heap_free(myself->value.rvalue->ptr); //Free our resource, leave the rest to the GC
+  myself->value.rvalue->ptr = NULL;
 	return myself;
 }
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(uint8) {
@@ -86,6 +87,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(uint8) {
 //Signed Int 8
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(sint8) {
   ctr_heap_free(myself->value.rvalue->ptr); //Free our resource, leave the rest to the GC
+  myself->value.rvalue->ptr = NULL;
 	return myself;
 }
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(sint8) {
@@ -104,6 +106,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(sint8) {
 //Unsigned Int 16
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(uint16) {
   ctr_heap_free(myself->value.rvalue->ptr); //Free our resource, leave the rest to the GC
+  myself->value.rvalue->ptr = NULL;
 	return myself;
 }
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(uint16) {
@@ -122,6 +125,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(uint16) {
 //Signed Int 16
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(sint16) {
   ctr_heap_free(myself->value.rvalue->ptr); //Free our resource, leave the rest to the GC
+  myself->value.rvalue->ptr = NULL;
 	return myself;
 }
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(sint16) {
@@ -140,6 +144,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(sint16) {
 //Unsigned Int 32
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(uint32) {
   ctr_heap_free(myself->value.rvalue->ptr); //Free our resource, leave the rest to the GC
+  myself->value.rvalue->ptr = NULL;
 	return myself;
 }
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(uint32) {
@@ -158,6 +163,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(uint32) {
 //Signed Int 32
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(sint32) {
   ctr_heap_free(myself->value.rvalue->ptr); //Free our resource, leave the rest to the GC
+  myself->value.rvalue->ptr = NULL;
 	return myself;
 }
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(sint32) {
@@ -176,6 +182,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(sint32) {
 //Unsigned Int 64
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(uint64) {
   ctr_heap_free(myself->value.rvalue->ptr); //Free our resource, leave the rest to the GC
+  myself->value.rvalue->ptr = NULL;
 	return myself;
 }
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(uint64) {
@@ -194,6 +201,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(uint64) {
 //Signed Int 64
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(sint64) {
   ctr_heap_free(myself->value.rvalue->ptr); //Free our resource, leave the rest to the GC
+  myself->value.rvalue->ptr = NULL;
 	return myself;
 }
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(sint64) {
@@ -212,6 +220,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(sint64) {
 //Float
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(float) {
   ctr_heap_free(myself->value.rvalue->ptr); //Free our resource, leave the rest to the GC
+  myself->value.rvalue->ptr = NULL;
 	return myself;
 }
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(float) {
@@ -230,6 +239,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(float) {
 //Double
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(double) {
   ctr_heap_free(myself->value.rvalue->ptr); //Free our resource, leave the rest to the GC
+  myself->value.rvalue->ptr = NULL;
 	return myself;
 }
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(double) {
@@ -248,6 +258,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(double) {
 //Unsigned Char
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(uchar) {
   ctr_heap_free(myself->value.rvalue->ptr); //Free our resource, leave the rest to the GC
+  myself->value.rvalue->ptr = NULL;
 	return myself;
 }
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(uchar) {
@@ -266,6 +277,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(uchar) {
 //Signed Char
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(schar) {
   ctr_heap_free(myself->value.rvalue->ptr); //Free our resource, leave the rest to the GC
+  myself->value.rvalue->ptr = NULL;
 	return myself;
 }
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(schar) {
@@ -284,6 +296,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(schar) {
 //Unsigned Short
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(ushort) {
   ctr_heap_free(myself->value.rvalue->ptr); //Free our resource, leave the rest to the GC
+  myself->value.rvalue->ptr = NULL;
 	return myself;
 }
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(ushort) {
@@ -302,6 +315,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(ushort) {
 //Signed Short
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(sshort) {
   ctr_heap_free(myself->value.rvalue->ptr); //Free our resource, leave the rest to the GC
+  myself->value.rvalue->ptr = NULL;
 	return myself;
 }
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(sshort) {
@@ -320,6 +334,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(sshort) {
 //Unsigned Int
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(uint) {
   ctr_heap_free(myself->value.rvalue->ptr); //Free our resource, leave the rest to the GC
+  myself->value.rvalue->ptr = NULL;
 	return myself;
 }
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(uint) {
@@ -338,6 +353,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(uint) {
 //Signed Int
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(sint) {
   ctr_heap_free(myself->value.rvalue->ptr); //Free our resource, leave the rest to the GC
+  myself->value.rvalue->ptr = NULL;
 	return myself;
 }
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(sint) {
@@ -356,6 +372,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(sint) {
 //Unsigned Long
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(ulong) {
   ctr_heap_free(myself->value.rvalue->ptr); //Free our resource, leave the rest to the GC
+  myself->value.rvalue->ptr = NULL;
 	return myself;
 }
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(ulong) {
@@ -374,6 +391,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(ulong) {
 //Signed Long
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(slong) {
   ctr_heap_free(myself->value.rvalue->ptr); //Free our resource, leave the rest to the GC
+  myself->value.rvalue->ptr = NULL;
 	return myself;
 }
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(slong) {
@@ -392,6 +410,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(slong) {
 //Long Double
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(longdouble) {
   ctr_heap_free(myself->value.rvalue->ptr); //Free our resource, leave the rest to the GC
+  myself->value.rvalue->ptr = NULL;
 	return myself;
 }
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(longdouble) { //OUCH, too big for literal citron number. consider bigger number?
@@ -439,6 +458,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_STR(pointer) {
 
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(dynamic_lib) {
   dlclose(myself->value.rvalue->ptr); //close the handle
+  myself->value.rvalue->ptr = NULL;
 	return myself;
 }
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(dynamic_lib) {
@@ -562,6 +582,7 @@ ctr_object* ctr_ctypes_convert_ffi_type_to_citron(ffi_arg* value, ctr_ctype type
 }
 CTR_CT_FFI_BIND(cif_destruct) {//free the cif
   ctr_heap_free(myself->value.rvalue->ptr); //Free the cif, the resource will be collected by the GC
+  myself->value.rvalue->ptr = NULL;
   return myself;
 }
 CTR_CT_FFI_BIND(cif_new) { //^External CIF ptr
@@ -675,6 +696,7 @@ CTR_CT_FFI_BIND(buf_from_str) {
 CTR_CT_FFI_BIND(free) {
   if ((argumentList->object->info.type) != CTR_OBJECT_TYPE_OTEX) {CtrStdFlow = ctr_build_string_from_cstring("Can only free resources."); return CtrStdNil;}
   ctr_heap_free(argumentList->object->value.rvalue->ptr);
+  argumentList->object->value.rvalue->ptr = NULL;
   return myself;
 }
 void begin() {

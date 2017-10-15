@@ -1,13 +1,12 @@
-Broom setMemoryLimit: 100000.
-window is SDL new.
+Broom setMemoryLimit: 100000000.
+prot is SDL new.
 w is 1280.
 h is 720.
-window do
+window is prot
  set: 'windowName' to: 'Razavi = Douchebag',
  set: 'windowHeight' to: h,
  set: 'windowWidth' to: w,
- init
-done.
+ init.
 
 go is 0.
 eT is SDLEventTypes.
@@ -16,8 +15,8 @@ bg is SDL loadBMP: 'examples/sdl/rabid.bmp'.
 razavi is SDL loadBMP: 'examples/sdl/razavi.bmp'.
 quit is eT quit.
 keydown is eT keyDown.
-rect is SDL newRectWithX: h andY: 0 andW: 500 andH: 546.
-otherRect is SDL newRectWithX: 0 andY: 0 andW: 500 andH: 546.
+#rect is SDL newRectWithX: h andY: 0 andW: 500 andH: 546.
+#otherRect is SDL newRectWithX: 0 andY: 0 andW: 500 andH: 546.
 nit is h.
 var c is (Color red: 255 green: 255 blue: 255 alpha: 255).
 eh is 0.
@@ -36,9 +35,9 @@ eh is 0.
         Broom sweep.
     }.
     window fillRect: Nil withColor: c.
-    window blit: (((eh % 2) = 0) either: razavi or: bg) fromRect: otherRect toRect: rect.
-    rect setX: (w / 4) + (go sin * 300) + (((eh % 2) = 0) either: 0 or: -70).
-    rect setY: (h / 4) + (go cos * 300) + (((eh % 2) = 0) either: 0 or: -40).
+    window blit: (((eh % 2) = 0) either: razavi or: bg).
+    #rect setX: (w / 4) + (go sin * 300) + (((eh % 2) = 0) either: 0 or: -70).
+    #rect setY: (h / 4) + (go cos * 300) + (((eh % 2) = 0) either: 0 or: -40).
     window update.
     go +=: 0.001.
     eh +=: 1.

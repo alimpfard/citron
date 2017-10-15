@@ -1,7 +1,7 @@
 all: comp link copy
 
 comp:
-	cc -c sdl.c -Wall -Werror -fPIC -g3 -o sdl.o `sdl-config --cflags --libs`
+	cc -c sdl.c -Wall -Werror -D CTR_STD_EXTENSION_PATH='"/usr/local/share/Citron"' -fPIC -g3 -o sdl.o `sdl-config --cflags --libs`
 
 link:
 	cc -shared -o libctrsdl.so sdl.o `sdl-config --cflags --libs`

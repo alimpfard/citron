@@ -1,0 +1,7 @@
+var i is 0.
+{^True.} whileTrue: {
+    ((i +=: 1) = 10) break.
+    var map is JSON parse: (File new: 'generated (1).json', read) genericType: Map.
+    var x is JSON serialize: map.
+    x length. #Force evaluation, string length adds nothing to the time.
+}.

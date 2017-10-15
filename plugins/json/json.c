@@ -122,8 +122,10 @@ ctr_object* ctr_json_serialize_(ctr_object* object) {
       newArgumentList = ctr_heap_allocate( sizeof( ctr_argument ) );
       newArgumentList->object = ctr_build_string_from_cstring( "[" );
       string = ctr_string_append( string, newArgumentList );
-      for(i=object->value.avalue->tail; i<object->value.avalue->head; i++) {
-          arrayElement = *( object->value.avalue->elements + i );
+      int size = ctr_array_count(object, NULL)->value.nvalue;
+      for(i=0; i<size; i++) {
+          newArgumentList->object = ctr_build_number_from_float(i);
+          arrayElement = ctr_array_get(object, newArgumentList);
           if ( arrayElement->info.type == CTR_OBJECT_TYPE_OTBOOL || arrayElement->info.type == CTR_OBJECT_TYPE_OTNUMBER
                   || arrayElement->info.type == CTR_OBJECT_TYPE_OTNIL ) {
               newArgumentList->object = ctr_json_serialize_(arrayElement);
@@ -136,12 +138,12 @@ ctr_object* ctr_json_serialize_(ctr_object* object) {
               newArgumentList->object = ctr_build_string_from_cstring("\"");
               string = ctr_string_append( string, newArgumentList );
           } else {
-              newArgumentList->object = ctr_build_string_from_cstring("(");
-              ctr_string_append( string, newArgumentList );
+              //newArgumentList->object = ctr_build_string_from_cstring("(");
+              //ctr_string_append( string, newArgumentList );
               newArgumentList->object = ctr_json_serialize_(arrayElement);
               string = ctr_string_append( string, newArgumentList );
-              newArgumentList->object = ctr_build_string_from_cstring(")");
-              ctr_string_append( string, newArgumentList );
+              //newArgumentList->object = ctr_build_string_from_cstring(")");
+              //ctr_string_append( string, newArgumentList );
           }
           if (  (i + 1 )<object->value.avalue->head ) {
               newArgumentList->object = ctr_build_string_from_cstring(", ");

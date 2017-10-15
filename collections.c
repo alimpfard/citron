@@ -398,7 +398,10 @@ ctr_object* ctr_array_get(ctr_object* myself, ctr_argument* argumentList) {
  * fruits put: 'apples' at: 5.
  */
 ctr_object* ctr_array_put(ctr_object* myself, ctr_argument* argumentList) {
-
+  if (myself->value.avalue->immutable) {
+    CtrStdFlow = ctr_build_string_from_cstring("Cannot change immutable array's structure");
+    return myself;
+  }
     ctr_object* putValue = argumentList->object;
     ctr_object* putIndex = ctr_internal_cast2number(argumentList->next->object);
     ctr_size putIndexNumber;
@@ -617,10 +620,10 @@ ctr_object* ctr_array_to_string( ctr_object* myself, ctr_argument* argumentList 
     ctr_object* string = ctr_build_empty_string();
     newArgumentList = ctr_heap_allocate( sizeof( ctr_argument ) );
     if ( myself->value.avalue->tail == myself->value.avalue->head ) {
-        newArgumentList->object = ctr_build_string_from_cstring( CTR_DICT_CODEGEN_ARRAY_NEW );
+        newArgumentList->object = ctr_build_string_from_cstring( myself->value.avalue->immutable?"[]":CTR_DICT_CODEGEN_ARRAY_NEW );
         string = ctr_string_append( string, newArgumentList );
     } else {
-        newArgumentList->object = ctr_build_string_from_cstring( CTR_DICT_CODEGEN_ARRAY_NEW_PUSH );
+        newArgumentList->object = ctr_build_string_from_cstring( myself->value.avalue->immutable?"[":CTR_DICT_CODEGEN_ARRAY_NEW_PUSH );
         string = ctr_string_append( string, newArgumentList );
     }
     for(i=myself->value.avalue->tail; i<myself->value.avalue->head; i++) {
@@ -649,9 +652,13 @@ ctr_object* ctr_array_to_string( ctr_object* myself, ctr_argument* argumentList 
             ctr_string_append( string, newArgumentList );
         }
         if (  (i + 1 )<myself->value.avalue->head ) {
-            newArgumentList->object = ctr_build_string_from_cstring(" ; ");
+            newArgumentList->object = ctr_build_string_from_cstring(myself->value.avalue->immutable?", ":" ; ");
             string = ctr_string_append( string, newArgumentList );
         }
+    }
+    if (myself->value.avalue->immutable) {
+      newArgumentList->object = ctr_build_string_from_cstring("]");
+      string = ctr_string_append( string, newArgumentList );
     }
     ctr_heap_free( newArgumentList );
     return string;

@@ -594,6 +594,9 @@ void ctr_initialize_world() {
     CtrStdObject = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( CTR_DICT_NEW ), &ctr_object_make );
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( "cnew:" ), &ctr_object_ctor );
+    ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( "genAccessors:" ), &ctr_object_attr_accessor );
+    ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( "genReader:" ), &ctr_object_attr_reader );
+    ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( "genWriter:" ), &ctr_object_attr_writer );
 #ifdef CTR_DEBUG_HIDING
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( CTR_DICT_NEW_HIDING ), &ctr_object_make_hiding );
 #endif //CTR_DEBUG_HIDING
@@ -725,6 +728,8 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_LEFT_TRIM ), &ctr_string_ltrim );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_RIGHT_TRIM ), &ctr_string_rtrim );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_HTML_ESCAPE ), &ctr_string_html_escape );
+    ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( "countOf:" ), &ctr_string_count_of );
+    ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( "sliceFrom:length:" ), &ctr_string_slice );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_AT ), &ctr_string_at );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_AT_SYMBOL ), &ctr_string_at );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_BYTE_AT ), &ctr_string_byte_at );
@@ -743,6 +748,7 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_TOBOOL ), &ctr_string_to_boolean );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_FIND_PATTERN_DO ), &ctr_string_find_pattern_do );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_FIND_PATTERN_DO_OPTIONS ), &ctr_string_find_pattern_options_do );
+    ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( "isRegexPCRE" ), &ctr_string_is_regex_pcre );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_CONTAINS_PATTERN ), &ctr_string_contains_pattern );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_HASH_WITH_KEY ), &ctr_string_hash_with_key );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_EVAL ), &ctr_string_eval );
@@ -757,6 +763,7 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( "paddingLeft:" ),&ctr_string_padding_left );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( "paddingRight:" ),&ctr_string_padding_right );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( "randomizeBytesWithLength:" ),&ctr_string_randomize_bytes );
+    ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( "reverse" ),&ctr_string_reverse );
     ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring( CTR_DICT_STRING ), CtrStdString, 0 );
     CtrStdString->link = CtrStdObject;
     CtrStdString->info.sticky = 1;
@@ -785,6 +792,11 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( CTR_DICT_TYPE ), &ctr_array_type );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( CTR_DICT_PUSH ), &ctr_array_push );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( CTR_DICT_PUSH_SYMBOL ), &ctr_array_push );
+    ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "fmap:" ), &ctr_array_fmap );
+    ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "imap:" ), &ctr_array_imap );
+    ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "foldl:accumulator:" ), &ctr_array_foldl );
+    ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "filter:" ), &ctr_array_filter );
+    ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "reverse" ), &ctr_array_reverse );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( CTR_DICT_UNSHIFT ), &ctr_array_unshift );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( CTR_DICT_SHIFT ), &ctr_array_shift );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( CTR_DICT_COUNT ), &ctr_array_count );

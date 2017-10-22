@@ -7,7 +7,12 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <time.h>
+
+#ifdef POSIXRE
 #include <regex.h>
+#else
+#include <pcre.h>
+#endif
 #include <errno.h>
 
 #include <sys/socket.h>
@@ -99,6 +104,80 @@ ctr_object* ctr_object_ctor(ctr_object* myself, ctr_argument* argumentList) {
         ctr_heap_free(args);
     }
     return objectInstance;
+}
+
+/**
+ * Object genAccessors: [String]
+ *
+ * generate reader/writer methods for property.
+ * creates the property is it doesn't exist
+ */
+ctr_object* ctr_object_attr_accessor(ctr_object* myself, ctr_argument* argumentList) {
+    ctr_object* name = ctr_internal_cast2string(argumentList->object);
+    ctr_object* property = ctr_internal_object_find_property(myself, name, 0);
+    if (property == NULL)
+      ctr_internal_object_set_property(myself, name, CtrStdNil, 0);
+
+    ctr_argument* arglist = ctr_heap_allocate(sizeof(ctr_argument));
+    arglist->next = ctr_heap_allocate(sizeof(ctr_argument));
+    char* mname = ctr_heap_allocate(sizeof(char)*512);
+    sprintf(mname, "{:x my %.*s is x.}", name->value.svalue->vlen, name->value.svalue->value);
+    arglist->object = ctr_build_string_from_cstring(":");
+    arglist->object = ctr_string_concat(name, arglist);
+    arglist->next->object = ctr_string_eval(ctr_build_string_from_cstring(mname), NULL);
+    ctr_object_on_do(myself, arglist);
+    sprintf(mname, "{^my %.*s.}", name->value.svalue->vlen, name->value.svalue->value);
+    arglist->object = name;
+    arglist->next->object = ctr_string_eval(ctr_build_string_from_cstring(mname), NULL);
+    ctr_object_on_do(myself, arglist);
+    ctr_heap_free(arglist->next);
+    ctr_heap_free(arglist);
+    ctr_heap_free(mname);
+    return myself;
+}
+/**
+ * Object genReader: [String]
+ *
+ * generate reader method for property.
+ * creates the property is it doesn't exist
+ */
+ctr_object* ctr_object_attr_reader(ctr_object* myself, ctr_argument* argumentList) {
+    ctr_object* name = ctr_internal_cast2string(argumentList->object);
+    ctr_object* property = ctr_internal_object_find_property(myself, name, 0);
+    if (property == NULL)
+      ctr_internal_object_set_property(myself, name, CtrStdNil, 0);
+    ctr_argument* arglist = ctr_heap_allocate(sizeof(ctr_argument));
+    arglist->next = ctr_heap_allocate(sizeof(ctr_argument));
+    char* mname = ctr_heap_allocate(sizeof(char)*512);
+    sprintf(mname, "{^my %.*s.}", name->value.svalue->vlen, name->value.svalue->value);
+    arglist->object = ctr_build_string_from_cstring(":");
+    arglist->object = ctr_string_concat(name, arglist);
+    arglist->next->object = ctr_string_eval(ctr_build_string_from_cstring(mname), NULL);
+    ctr_object_on_do(myself, arglist);
+    ctr_heap_free(arglist->next);
+    ctr_heap_free(arglist);
+    ctr_heap_free(mname);
+    return myself;
+}
+/**
+ * Object genWriter: [String]
+ *
+ * generate writer method for property.
+ * does not create the property is it doesn't exist
+ */
+ctr_object* ctr_object_attr_writer(ctr_object* myself, ctr_argument* argumentList) {
+    ctr_object* name = ctr_internal_cast2string(argumentList->object);
+    ctr_argument* arglist = ctr_heap_allocate(sizeof(ctr_argument));
+    arglist->next = ctr_heap_allocate(sizeof(ctr_argument));
+    char* mname = ctr_heap_allocate(sizeof(char)*512);
+    sprintf(mname, "{:x my %.*s is x.}", name->value.svalue->vlen, name->value.svalue->value);
+    arglist->object = name;
+    arglist->next->object = ctr_string_eval(ctr_build_string_from_cstring(mname), NULL);
+    ctr_object_on_do(myself, arglist);
+    ctr_heap_free(arglist->next);
+    ctr_heap_free(arglist);
+    ctr_heap_free(mname);
+    return myself;
 }
 /**
  * [Object] new hiding:
@@ -2038,6 +2117,33 @@ ctr_object* ctr_string_skip(ctr_object* myself, ctr_argument* argumentList) {
     return result;
 }
 
+/**
+ * [String] sliceFrom: [number] length: [number]
+ *
+ * slice a string from,length and return the sliced. modifies string
+ */
+ int str_cut(char *str, int l, int begin, int len) {
+    if (len < 0) len = l - begin;
+    if (begin + len > l) len = l - begin;
+    memmove(str + begin, str + begin + len, l - len + 1);
+    return len;
+}
+ctr_object* ctr_string_slice(ctr_object* myself, ctr_argument* argumentList) {
+    ctr_argument* argument;
+    ctr_object* result;
+    if (myself->value.svalue->vlen < argumentList->object->value.nvalue) return ctr_build_empty_string();
+    argument = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    argument->object = argumentList->object;
+    argument->next = ctr_heap_allocate(sizeof(ctr_argument));
+    argument->next->object = argumentList->next->object;
+    result = ctr_string_from_length(myself, argument);
+    ctr_heap_free( argument->next );
+    ctr_heap_free( argument );
+    long a,b;
+    str_cut(myself->value.svalue->value, myself->value.svalue->vlen, (a=getBytesUtf8(myself->value.svalue->value, 0, argumentList->object->value.nvalue)), (b=getBytesUtf8(myself->value.svalue->value, a, argumentList->next->object->value.nvalue)));
+    myself->value.svalue->vlen -= b;
+    return result;
+}
 
 /**
  * [String] at: [position]
@@ -2277,7 +2383,7 @@ ctr_object* ctr_string_replace_with(ctr_object* myself, ctr_argument* argumentLi
 /**
  * [String] findPattern: [String] do: [Block] options: [String].
  *
- * Matches the POSIX regular expression in the first argument against
+ * Matches the POSIX or PCRE (depending on the #defines) regular expression in the first argument against
  * the string and executes the specified block on every match passing
  * an array containing the matches.
  *
@@ -2296,6 +2402,7 @@ ctr_object* ctr_string_replace_with(ctr_object* myself, ctr_argument* argumentLi
  * passed to the block as arguments. You can also use this feature to replace
  * parts of the string, simply return the replacement string in your block.
  */
+ #ifdef POSIXRE
 ctr_object* ctr_string_find_pattern_options_do( ctr_object* myself, ctr_argument* argumentList ) {
     regex_t pattern;
     int reti;
@@ -2378,6 +2485,95 @@ ctr_object* ctr_string_find_pattern_options_do( ctr_object* myself, ctr_argument
     regfree( &pattern );
     return newString;
 }
+#else
+ctr_object* ctr_string_find_pattern_options_do( ctr_object* myself, ctr_argument* argumentList ) { //pattern, blk, options: {!=Ignore, n=newline, i=CI}
+    pcre* pattern;
+    int reti;
+    int regex_error_offset = 0;
+    int regex_count = 0;
+    size_t n = 255;
+    size_t i = 0;
+    int first = 1;
+    int matches[255];
+    char* needle = ctr_heap_allocate_cstring( argumentList->object );
+    char* options = ctr_heap_allocate_cstring( argumentList->next->next->object );
+    const char* err = ctr_heap_allocate_tracked(500*sizeof(char));
+
+    uint8_t olen = strlen( options );
+    uint8_t p = 0;
+    uint8_t flagIgnore = 0;
+    uint8_t flagNewLine = 0;
+    uint8_t flagCI = 0;
+    for ( p = 0; p < olen; p ++ ) {
+        if ( options[p] == '!' ) {
+            flagIgnore = 1;
+        }
+        if ( options[p] == 'n' ) {
+            flagNewLine = 1;
+        }
+        if ( options[p] == 'i' ) {
+            flagCI = 1;
+        }
+    }
+    ctr_object* block = argumentList->next->object;
+    int eflags = PCRE_EXTENDED;
+    if (flagNewLine) eflags |= PCRE_MULTILINE;
+    if (flagCI) eflags |= PCRE_MULTILINE;
+    pattern = pcre_compile(needle, eflags, &err, &regex_error_offset, NULL);
+    if ( pattern == NULL ) {
+        CtrStdFlow = ctr_build_string_from_cstring( err );
+        return CtrStdNil;
+    }
+    char* haystack = ctr_heap_allocate_cstring(myself);
+    size_t offset = 0;
+    ctr_object* newString = ctr_build_empty_string();
+    while( (regex_count > 0 || first) && !flagIgnore ) {
+      if (first) first = 0;
+        regex_count = pcre_exec(pattern, NULL, haystack + offset , myself->value.svalue->vlen - offset, 0, 0, matches, n );
+        if ( regex_count <= 0 ) break;
+        ctr_argument* blockArguments;
+        blockArguments = ctr_heap_allocate( sizeof( ctr_argument ) );
+        ctr_argument* arrayConstructorArgument;
+        arrayConstructorArgument = ctr_heap_allocate( sizeof( ctr_argument ) );
+        blockArguments->object = ctr_array_new( CtrStdArray, arrayConstructorArgument );
+        for( i = 0; i < regex_count; i ++ ) {
+            ctr_argument* group;
+            group = ctr_heap_allocate( sizeof( ctr_argument ) );
+            size_t len = (matches[2*i+1] - matches[2*i]);
+            char* tmp = ctr_heap_allocate( len + 1 );
+            memcpy( tmp, haystack + offset + matches[2*i], len );
+            group->object = ctr_build_string_from_cstring( tmp );
+            ctr_array_push( blockArguments->object, group );
+            ctr_heap_free( group );
+            ctr_heap_free( tmp );
+        }
+        if (matches[0] != -1) {
+            ctr_argument* arg = ctr_heap_allocate( sizeof( ctr_argument ) );
+            arg->object = ctr_build_string( haystack + offset, matches[1] - matches[0]);
+            ctr_string_append( newString, arg );
+            offset += matches[1] - matches[0];
+            ctr_heap_free( arg );
+        }
+        ctr_object* replacement = ctr_block_run( block, blockArguments, block );
+        ctr_argument* arg = ctr_heap_allocate( sizeof( ctr_argument ) );
+        arg->object = replacement;
+        ctr_string_append( newString, arg );
+        ctr_heap_free( arg );
+        ctr_heap_free(blockArguments);
+        ctr_heap_free(arrayConstructorArgument);
+    }
+    ctr_argument* arg = ctr_heap_allocate( sizeof( ctr_argument ) );
+    arg->object = ctr_build_string( haystack + offset, strlen( haystack + offset ) );
+    ctr_string_append( newString, arg );
+    ctr_heap_free( arg );
+    // ctr_heap_free( (void*)err );
+    ctr_heap_free( needle );
+    ctr_heap_free( haystack );
+    ctr_heap_free( options );
+    pcre_free( pattern );
+    return newString;
+}
+#endif
 
 /**
  * [String] findPattern: [String] do: [Block].
@@ -2418,6 +2614,7 @@ ctr_object* ctr_string_contains( ctr_object* myself, ctr_argument* argumentList 
  * var match := 'Hello World' containsPattern: '[:space:]'.
  * #match will be True because there is a space in 'Hello World'
  */
+#ifdef POSIXRE
 ctr_object* ctr_string_contains_pattern( ctr_object* myself, ctr_argument* argumentList ) {
     regex_t pattern;
     int regex_error = 0;
@@ -2447,7 +2644,63 @@ ctr_object* ctr_string_contains_pattern( ctr_object* myself, ctr_argument* argum
     ctr_heap_free( haystack );
     return answer;
 }
+#else
+ctr_object* ctr_string_contains_pattern( ctr_object* myself, ctr_argument* argumentList ) {
+    pcre* pattern;
+    int regex_error = 0;
+    int result = 0;
+    char* error_message = ctr_heap_allocate( 255 );
+    char* needle = ctr_heap_allocate_cstring( argumentList->object );
+    char* haystack = ctr_heap_allocate_cstring(myself);
+    ctr_object* answer;
+    pattern = pcre_compile(needle, PCRE_EXTENDED, &error_message, &regex_error, NULL);
+    if ( !pattern ) {
+        CtrStdFlow = ctr_build_string_from_cstring( error_message );
+        answer = CtrStdNil;
+    } else {
+        result = pcre_exec(pattern, NULL, haystack , myself->value.svalue->vlen, 0, 0, NULL, 0 );
+        if ( !result ) {
+            answer = ctr_build_bool( 1 );
+        } else if ( result == PCRE_ERROR_NOMATCH ) {
+            answer = ctr_build_bool( 0 );
+        } else {
+            CtrStdFlow = ctr_build_string_from_cstring( error_message );
+            answer = CtrStdNil;
+        }
+    }
+    pcre_free( pattern );
+    free( error_message );
+    ctr_heap_free( needle );
+    ctr_heap_free( haystack );
+    return answer;
+}
+#endif
 
+ctr_object* ctr_string_is_regex_pcre(ctr_object* myself, ctr_argument* argumentList) {
+  int ispcre =
+  #ifndef POSIXRE
+  1
+  #else
+  0
+  #endif
+  ;
+  return ctr_build_bool(ispcre);
+}
+
+ctr_object* ctr_string_count_of(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* sub_o = ctr_internal_cast2string(argumentList->object);
+  char* sub = ctr_heap_allocate_cstring(sub_o);
+  char* p = myself->value.svalue->value;
+  int t = myself->value.svalue->vlen;
+  int total=0, i=0, sublen=ctr_string_length(sub_o,NULL)->value.nvalue;
+  while ( t>i && (p=strstr(p, sub)) != NULL ) {
+    total++;
+    p+=sublen;
+    i+=sublen;
+  }
+  ctr_heap_free(sub);
+  return ctr_build_number_from_float(total);
+}
 /**
  * [String] trim
  *
@@ -2985,6 +3238,24 @@ ctr_object* ctr_string_randomize_bytes(ctr_object* myself, ctr_argument* argumen
     ctr_heap_free(newBuffer);
     ctr_heap_free(buffer);
     return answer;
+}
+
+/**
+ * [String] reverse
+ *
+ * reverse the string
+ */
+ctr_object* ctr_string_reverse(ctr_object* myself, ctr_argument* argumentList) {
+    ctr_object* newString = ctr_build_empty_string();
+    size_t i = ctr_string_length(myself,NULL)->value.nvalue;
+    ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
+    for (;i>0;i--) {
+      args->object = ctr_build_number_from_float(i-1);
+      args->object = ctr_string_at(myself, args);
+      ctr_string_append(newString, args);
+    }
+    ctr_heap_free(args);
+    return newString;
 }
 
 

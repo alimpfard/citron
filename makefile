@@ -13,11 +13,11 @@ install: ctr
 	cp ./ctr /usr/bin/ctr
 
 ctr:	$(OBJS)
-	$(CC) $(OBJS) -rdynamic -lm -ldl -lbsd -o ctr
+	$(CC) $(OBJS) -rdynamic -lm -ldl -lbsd -lpcre -o ctr
 
 libctr: CFLAGS := $(CFLAGS) -fPIC -D CTR_STD_EXTENSION_PATH='".."'
 libctr: $(OBJS)
-	$(CC) $(OBJS) -shared -export-dynamic -fPIC -ldl -lbsd -o python/libctr.so
+	$(CC) $(OBJS) -shared -export-dynamic -fPIC -ldl -lbsd -lpcre -o python/libctr.so
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<

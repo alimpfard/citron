@@ -269,6 +269,7 @@ arc4random_uniform(u_int32_t upper_bound)
  * GarbageCollector Marker
  */
 void ctr_gc_mark(ctr_object* object) {
+  if (object->info.mark) return;
     ctr_object* el;
     ctr_mapitem* item;
     ctr_object* o;

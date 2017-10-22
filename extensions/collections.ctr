@@ -330,17 +330,6 @@ Queue on: 'serialize' do: {
   ^s toString.
 }.
 
-Array on: 'filter:' do: {:cond
-  var q is Array new.
-  me each: {:i:v:a var x is (cond applyTo: i and: v and: a). x ifTrue: {q push: v.}.}.
-  ^q.
-}.
-
-Array on: 'vfilter:' do: {:cond
-  var q is Array new.
-  me each: {:i:v:a var x is (cond applyTo: v). x ifTrue: {q push: v.}.}.
-  ^q.
-}.
 
 Array on: 'take:' do: {:count
   var arr is Array new.

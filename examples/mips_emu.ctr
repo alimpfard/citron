@@ -1,6 +1,25 @@
+Broom memoryLimit: 1024 * 1024 * 1024.
+
+var debug is {:blk DEBUG ifTrue: {blk run.}.}.
+
+var QAHELP is 's/$register>/value :: set register to value
+p/<register> :: print the contents of register <register>
+a+<number> :: print the disassembly of instructions from the current PC for <number> lines
+a-<number> :: print the disassembly of instructions from the current PC minus number for <number> lines
+break<pc> :: break on PC = <pc>
+b<pc> :: alias for break
+unbreak<pc> :: unbreak on <pc>
+ub<pc> :: alias for unbreak
+step :: step the instruction
+s :: step
+<blank> :: step
+continue :: step until the end or a break
+c :: continue
+q :: quit'.
+
 var ConstantReg is Object new.
 ConstantReg on: 'init:' do: {:value my value is value.}.
-ConstantReg on: 'set:' do: {^me.}.
+ConstantReg on: 'set:' do: {}.
 ConstantReg on: 'get' do: {^my value.}.
 ConstantReg on: 'toString' do: {^'const: ' + my value toString.}.
 var Register is Object cnew: {my value is 0.}.
@@ -13,20 +32,59 @@ RegFile put: (Register new init) at: 32. #program counter
 31 times: {:i
   RegFile put: (Register new init) at: (i + 1).
 }.
-'zero|at|v0|v1|a0|a1|a2|a3|t0|t1|t2|t3|t4|t5|t6|t7|s0|s1|s2|s3|s4|s5|s6|s7|t8|t9|k0|k1|gp|sp|s8|fp|ra' split: '|' each: {:i:v
-  RegFile put: (RegFile @ i) at: v.
+'zero|at|v0|v1|a0|a1|a2|a3|t0|t1|t2|t3|t4|t5|t6|t7|s0|s1|s2|s3|s4|s5|s6|s7|t8|t9|k0|k1|gp|sp|s8|fp|ra' split: '|', each: {:i:v
+  RegFile put: (RegFile at: i) at: v.
+}.
+
+var MemoryBlock is Array new.
+
+MemoryBlock on: 'init' do: {
+  var self is me.
+  my bp is 0.
+  64 * 1024 times: {:i self put: 0 at: i.}. #64 KB of accessible memory. for now
+}.
+MemoryBlock on: 'absForBase:offset:' do: {:base:offset
+  ^(base toNumber) + (offset toNumber).
+}.
+MemoryBlock on: 'getBase:offset:' do: {:base:offset
+  ^me at: (me absForBase: base offset: offset).
+}.
+MemoryBlock on: 'setBase:offset:value:' do: {:base:offset:value
+  me put: value at: (me absForBase: base offset: offset).
+}.
+MemoryBlock on: 'allocate:' do: {:size #bytes
+  (size + my bp > (32 * 1024)) ifTrue: {var bp is my bp. thisBlock error: 'cannot allocate $$size bytes from $$bp'.}.
+  my bp +=: size.
+  ^my bp - size.
 }.
 
 #Funcs
-var jump is {my machine nextJump: my jump.}.
 var noop is {}.
+var jump is {my machine nextJump: my jump.}.
 var add is  {my machine setReg: my destintaion to: ((my machine getReg: my operand0) + (my machine getReg: my operand1)).}.
 var addi is {my machine setReg: my destintaion to: (my immediate toNumber + (my machine getReg: my operand0)).}.
 var xor is  {my machine setReg: my destintaion to: ((my machine getReg: my operand0) logicalXor: (my machine getReg: my operand1)).}.
 var ori is  {my machine setReg: my destintaion to: (my immediate toNumber logicalOr: (my machine getReg: my operand0)).}.
 var beq is  {var immediate is my immediate. var machine is my machine. ((my machine getReg: my operand0) = (my machine getReg: my destintaion)) ifTrue: {machine nextJump: immediate.}.}.
+var bgez is {var immediate is my immediate. var machine is my machine. ((my machine getReg: my operand0) >=: (my machine getReg: my destintaion)) ifTrue: {machine nextJump: immediate.}.}.
+var bgezal is {var immediate is my immediate. var machine is my machine. ((my machine getReg: my operand0) = (my machine getReg: my destintaion)) ifTrue: {machine nextJump: immediate. machine setReg: 31 to: (machine PC + 1).}.}.
+var bgtz is {var immediate is my immediate. var machine is my machine. ((my machine getReg: my operand0) > (my machine getReg: my destintaion)) ifTrue: {machine nextJump: immediate.}.}.
+var blez is {var immediate is my immediate. var machine is my machine. ((my machine getReg: my operand0) <=: (my machine getReg: my destintaion)) ifTrue: {machine nextJump: immediate.}.}.
+var bltz is {var immediate is my immediate. var machine is my machine. ((my machine getReg: my operand0) < (my machine getReg: my destintaion)) ifTrue: {machine nextJump: immediate.}.}.
+var bltzal is {var immediate is my immediate. var machine is my machine. ((my machine getReg: my operand0) < (my machine getReg: my destintaion)) ifTrue: {machine nextJump: immediate. machine setReg: 31 to: (machine PC + 1).}.}.
+var bne is {var immediate is my immediate. var machine is my machine. ((my machine getReg: my operand0) !=: (my machine getReg: my destintaion)) ifTrue: {machine nextJump: immediate.}.}.
+var jal is {my machine setReg: 31 to: (me PC + 1). my machine nextJump: my jump.}.
+# var jr is {}.
+var and is  {my machine setReg: my destintaion to: ((my machine getReg: my operand0) logicalAnd: (my machine getReg: my operand1)).}.
+var andi is {my machine setReg: my destintaion to: (my immediate toNumber logicalAnd: (my machine getReg: my operand0)).}.
+#--Memory--
+var lbu is {my machine setReg: my destintaion to: (my machine getBytes: 1 base: (my immediate toNumber) offset: (my machine getReg: my operand0)).}.
+var sb is {my machine setBytes: 1 base: (my immediate toNumber) offset: (my machine getReg: my operand0) value: (my machine getReg: my destintaion).}.
+var lw is {my machine setReg: my destintaion to: (my machine getBytes: 32 base: (my immediate toNumber) offset: (my machine getReg: my operand0)).}.
+var sw is {my machine setBytes: 32 base: (my immediate toNumber) offset: (my machine getReg: my operand0) value: (my machine getReg: my destintaion).}.
+var li is noop.
 #-----
-#32-Bit instructions    #op         #func
+#32-Bit instructions     #op        #func
 var tnoop is '00000000000000000000000000000000'.
 var jumpb is Array new < '000010' ; ''.
 var noopb is Array new < '000000' ; '000000'.
@@ -34,85 +92,34 @@ var addb  is Array new < '000000' ; '100000'.
 var addib is Array new < '001000' ; ''.
 var xorb  is Array new < '000000' ; '100110'.
 var orib  is Array new < '001101' ; ''.
-var beqb  is Array new < '000010' ; ''.
+var beqb  is Array new < '000100' ; ''.
+var lwb   is Array new < '100011' ; ''.
+var lbub  is Array new < '100100' ; ''.
+var swb   is Array new < '101011' ; ''.
+var sbb   is Array new < '101000' ; ''.
+var lib is tnoop.
 #-----
 
-var MIPSAbstractMachine is Object cnew:         {my regfile is RegFile. my regfile at: 32, set: -1. my ploc is 0. my labels is Map new.}.
-MIPSAbstractMachine on: 'setParseLocation:' do: {:loc my ploc is loc.}.
-MIPSAbstractMachine on: 'setReg:to:'        do: {:reg:value my regfile at: reg, set: value. }.
-MIPSAbstractMachine on: 'getReg:'           do: {:reg ^my regfile at: reg, get.}.
-MIPSAbstractMachine on: 'load:'             do: {:prg my program is MIPSIntructions decode: prg machine: me.}.
-MIPSAbstractMachine on: 'assemble:'         do: {:prg ^MIPSIntructions assemble: prg forMachine: me.}.
-MIPSAbstractMachine on: 'addLabel:'         do: {:label my labels put: my ploc at: label.}.
-MIPSAbstractMachine on: 'getLabel:'         do: {:label ^my labels @ label.}.
-MIPSAbstractMachine on: 'step'              do: {
-  me incPC.
-  me execute_current_instr.
-}.
-MIPSAbstractMachine on: 'runTillExit'       do: {
-  var self is me.
-  {^self PC < (self getSrc count).} whileTrue: {self step. Broom sweep.}.
-}.
-MIPSAbstractMachine on: 'stepGraphical'     do: {
-  me incPC.
-  me execute_current_instr_g.
-}.
-MIPSAbstractMachine on: 'getSrc' do: {
-  var instrs is Array new.
-  my program each: {:i:v
-    instrs push: (v src).
-  }.
-  ^instrs.
-}.
-
-MIPSAbstractMachine on: 'execute_current_instr' do: {
-  my program at: (me PC), run.
-}.
-MIPSAbstractMachine on: 'execute_current_instr_g' do: {
-  (((me PC) = (me PC toNumber)) & (me PC < (my program count))) ifTrue: {
-    var instr is my program at: (me PC).
-    var src is instr src.
-    var regset is Map new.
-    src findPattern: '\\$([[:digit:]]{1,2})' do: {:things
-      regset put: Nil at: (things at: 1).
-    }.
-    var regs is ''.
-    var self is me.
-    regset each: {:k regs append: '$' + k + ': ' + (self getReg: k) + ' '.}.
-    Pen write: '-> ' + (me PC) + ' ' + (src) + '\t' + regs.
-    instr run.
-    regs is ''.
-    regset each: {:k regs append: '$' + k + ': ' + (self getReg: k) + ' '.}.
-    (regs length) ifTrue: {Pen write: '=> ' + regs, brk.}, else: {Pen brk.}.
-  }.
-}.
-MIPSAbstractMachine on: 'nextJump:' do: {:label
-  me setPC: (my labels @ label - 1).
-}.
-MIPSAbstractMachine on: 'incPC' do: {
-  my regfile at: 32, set: (my regfile at: 32, get + 1).
-}.
-MIPSAbstractMachine on: 'setPC:' do: {:v
-  my regfile at: 32, set: v.
-}.
-MIPSAbstractMachine on: 'PC' do: {
-  ^my regfile at: 32, get.
-}.
 var MIPSIntructions is Map new
   put: add at: 'add',
   put: addi at: 'addi',
-  put: noop at: 'addiu',
-  put: noop at: 'addu',
-  put: noop at: 'and',
-  put: noop at: 'andi',
+  put: addi at: 'addiu',
+  put: add at: 'addu',
+  put: and at: 'and',
+  put: andi at: 'andi',
   put: noop at: 'or',
   put: ori at: 'ori',
   put: xor at: 'xor',
   put: beq at: 'beq',
-  put: noop at: 'bne',
+  put: bne at: 'bne',
   put: jump at: 'j',
-  put: noop at: 'jal',
-  put: noop at: 'jr'.
+  put: jal at: 'jal',
+  put: noop at: 'jr',
+  put: lbu at: 'lbu',
+  put: sb at: 'sb',
+  put: lw at: 'lw',
+  put: sw at: 'sw',
+  put: li at: 'li'.
   #TODO: Finish instructions
 
 var MIPSIntructionBits is Map new
@@ -129,14 +136,202 @@ var MIPSIntructionBits is Map new
     put: noopb at: 'bne',
     put: jumpb at: 'j',
     put: noopb at: 'jal',
-    put: noopb at: 'jr'.
+    put: noopb at: 'jr',
+    put: lbub at: 'lbu',
+    put: sbb at: 'sb',
+    put: lwb at: 'lw',
+    put: swb at: 'sw',
+    put: lib at: 'li'.
     #TODO: Finish instructions
 
 var MIPSOpsToInstrs is MIPSIntructionBits flip.
 
+var MIPSAbstractMachine is Object cnew:         {
+  my dirtyregs is Array new.
+  my regfile is RegFile.
+  my regfile at: 32, set: -1. my ploc is 0.
+  my labels is Map new.
+  my asmlabels is Map new.
+  my memory is MemoryBlock new init.
+  my data is Map new.
+}.
+MIPSAbstractMachine on: 'setParseLocation:' do: {:loc my ploc is loc. my mloc is loc + (32 * 1024).}.
+MIPSAbstractMachine on: 'setReg:to:'        do: {:reg:value my dirtyregs push: [reg, (me getReg: reg)]. my regfile at: reg, set: value. }.
+MIPSAbstractMachine on: 'getReg:'           do: {:reg ^my regfile at: reg, get.}.
+MIPSAbstractMachine on: 'load:'             do: {:prg my program is MIPSIntructions decode: prg machine: me.}.
+MIPSAbstractMachine on: 'assemble:'         do: {:prg ^MIPSIntructions assemble: prg forMachine: me.}.
+MIPSAbstractMachine on: 'addLabel:'         do: {:label my labels put: my ploc at: label. my asmlabels put: my mloc at: label.}.
+MIPSAbstractMachine on: 'addWord:length:'   do: {:name:len my data put: [4, (my memory allocate: (len * 4))] at: name.}.
+MIPSAbstractMachine on: 'getLabel:'         do: {:label var result is my labels @ label. result isNil ifTrue: {result is my data @ label.}. ^result.}.
+MIPSAbstractMachine on: 'getLabelAsm:'      do: {:label var result is my asmlabels @ label. result isNil ifTrue: {result is my data @ label @ 1.}. ^result.}.
+MIPSAbstractMachine on: 'dereference:'      do: {:reg ^my memory at: (me getReg: reg).}.
+MIPSAbstractMachine on: 'step'              do: {
+  me incPC.
+  ^me execute_current_instr.
+}.
+MIPSAbstractMachine on: 'getBytes:base:offset:' do: {:c:base:oreg
+  var addr is my memory absForBase: base offset: oreg.
+  var arr is my memory from: addr length: c.
+  var ret is ''.
+  debug applyTo: {Pen write: '$$c bytes from $$addr', brk.}.
+  arr each: {:i:v ret append: (v toBits: 8).}.
+  ^MIPSIntructions bitsToSigned: ret.
+}.
+MIPSAbstractMachine on: 'setBytes:base:offset:value:' do: {:c:base:oreg:val
+  var addr is my memory absForBase: base offset: oreg.
+  var memory is my memory.
+  val is val toBits: 32.
+  debug applyTo: {Pen write: '$$c bytes from $$addr', brk.}.
+  var $0 is MIPSIntructions bitsToSigned: (val from: 0 to: 8).
+  var $1 is MIPSIntructions bitsToSigned: (val from: 8 to: 16).
+  var $2 is MIPSIntructions bitsToSigned: (val from: 16 to: 24).
+  var $3 is MIPSIntructions bitsToSigned: (val from: 24 to: 32).
+  c min: 4, max: 1, times: {:i 'memory put: $%{off} at: (addr + %{off})' formatMap: (Map new put: i at: 'off'), eval.}.
+}.
+MIPSAbstractMachine on: 'rawMemoryFrom:count:' do: {:b:c
+  ^my memory from: b length: c.
+}.
+MIPSAbstractMachine on: 'runTillExit'       do: {
+  var self is me.
+  var step is -1.
+  Pen green write: ((step +=: 1) toString paddingRight: 3), resetColor.
+  {^(self step @ 1).} whileTrue: {Pen green write: ((step +=: 1) toString paddingRight: 3), resetColor.}.
+  Broom sweep.
+  Pen magenta write: ('Program terminated in %d steps.' formatObjects: [(step - 1)]), resetColor brk.
+}.
+MIPSAbstractMachine on: 'runQASession' do: {
+  var self is me.
+  var q is ''.
+  var last_q is q.
+  {Pen cyan write: '>>> ', resetColor. ^((q is Program waitForInput trim)). q containsPattern: '^$', ifFalse: {last_q is q.}, else: {q is last_q.}. } whileTrue: {
+    (q = 'q') ifTrue: {Program exit.}.
+    (q containsPattern: '^s/.*?/\\d+') ifTrue: {
+      var reg is 0.
+      var value is 0.
+      q findPattern: '^s\\/(\\w+)\\/(\\d+)' do: {:parts
+        reg is parts @ 1.
+        (reg toNumber toString = reg) ifTrue: {reg is reg toNumber.}.
+        value is parts @ 2 toNumber.
+        self setReg: reg to: value.
+        Pen magenta write: 'set $$reg to $$value', resetColor brk.
+      }.
+    }.
+    (q containsPattern: '^p/.*?') ifTrue: {
+      var reg is 0.
+      var value is 0.
+      q findPattern: '^p\\/(\\w+)' do: {:parts
+        reg is parts @ 1.
+        (reg toNumber toString = reg) ifTrue: {reg is reg toNumber.}.
+        Pen magenta write: ('$%s: %s' formatObjects: [reg,(self getReg: reg)]), resetColor brk.
+      }.
+    }.
+    (q containsPattern: '^a([+-])(\\d*)') ifTrue: {
+      q findPattern: '^a([+-])(\\d*)' do: {:parts
+        var st is (self PC + ((parts @ 1 = '-') either: ((parts @ 2 toNumber) * -1) or: 1)).
+        var en is (((parts @ 1 = '-') either: 0 or: ((parts @ 2 toNumber)))) toNumber.
+          Pen write: 'from $$st assemble $$en instruction(s)', brk.
+          var ass is self assemble: (program from: st length: en).
+          Pen write: '\t' + (ass join: '\n\t'), brk.
+      }.
+    }.
+    (q containsPattern: '^(b|break)\\s*(\\d+)') ifTrue: {
+      q findPattern: '^(b|break)\\s*(\\d+)' do: {:parts
+        var where is parts @ 2 toNumber.
+        Pen magenta write: 'break on pc $$where', resetColor brk.
+        breaks put: True at: where.
+      }.
+    }.
+    (q containsPattern: '^(ub|unbreak)\\s*(\\d+)') ifTrue: {
+      q findPattern: '^(ub|ubreak)\\s*(\\d+)' do: {:parts
+        var where is parts @ 2 toNumber.
+        Pen magenta write: 'clear break on pc $$where', resetColor brk.
+        breaks put: Nil at: where.
+      }.
+    }.
+    (q containsPattern: '^(pm)\\s*(\\d+):(\\d+)') ifTrue: {
+      q findPattern: '^(pm)\\s*(\\d+):(\\d+)' do: {:parts
+        var where is parts @ 2 toNumber.
+        var c is parts @ 3 toNumber.
+        Pen magenta write: 'printing $$c bytes of memory from $$where', resetColor brk.
+        var ret is Array new.
+        self rawMemoryFrom: where count: c, each: {:i:v ret push: '$$i ' + (v toBits: 8) + ' ($$v' + ')'.}.
+        Pen write: (ret join: '\n'), brk.
+      }.
+    }.
+    (q containsPattern: '^h(elp)?') ifTrue: {Pen write: QAHELP, brk.}.
+    (q containsPattern: '^c|continue$') ifTrue: {_continue is True. True break.}.
+    (q containsPattern: '^s(tep)?$') break.
+  }.
+}.
+MIPSAbstractMachine on: 'interactiveRun'   do: {
+  var self is me.
+  var step is -1.
+  var program is me getSrc.
+  var breaks := Map new.
+  var _continue is False.
+  Pen green write: ((step +=: 1) toString paddingRight: 3), resetColor.
+  {^(self stepGraphical @ 1).} whileTrue: {
+    breaks at: self PC, isNil ifFalse: {_continue is False.}.
+    _continue ifFalse: {self runQASession.}.
+    Pen green write: ((step +=: 1) toString paddingRight: 3), resetColor.
+    }.
+  Broom sweep.
+  Pen magenta write: ('Program terminated in %d steps.' formatObjects: [step]), resetColor brk.
+}.
+MIPSAbstractMachine on: 'stepGraphical'     do: {
+  me incPC.
+  ^me execute_current_instr_g.
+}.
+MIPSAbstractMachine on: 'getSrc' do: {
+  var instrs is Array new.
+  my program each: {:i:v
+    instrs push: (v src).
+  }.
+  ^instrs.
+}.
+
+MIPSAbstractMachine on: 'execute_current_instr' do: {
+  var step is False.
+  (step is (((me PC) = (me PC toNumber)) & (me PC < (my program count)))) ifTrue: {
+    var instr is my program at: (me PC), run.
+  }.
+  ^[me,step].
+}.
+MIPSAbstractMachine on: 'execute_current_instr_g' do: {
+  var step is False.
+  var dirtyregs is my dirtyregs.
+  (step is (((me PC) = (me PC toNumber)) & (me PC < (my program count)))) ifTrue: {
+    var instr is my program at: (me PC).
+    var src is instr src.
+    var regs is ''.
+    var self is me.
+    instr run.
+    var regs is Array new.
+    Pen write: (src paddingRight: 16), write: ''.
+    dirtyregs count times: {
+      var reg is dirtyregs pop.
+      regs push: ('$' + (reg @ 0) + (': [%d -> %d]' formatObjects: [(reg @ 1), (me getReg: (reg @ 0))])).
+    }.
+    regs count > 0 ifTrue: {Pen write: '=> ' + (regs join: ', '), brk.}, else: {Pen brk.}.
+  }.
+  ^[me,step].
+}.
+MIPSAbstractMachine on: 'nextJump:' do: {:label
+  me setPC: (my labels @ label - 1).
+}.
+MIPSAbstractMachine on: 'incPC' do: {
+  my regfile at: 32, set: (my regfile at: 32, get + 1).
+}.
+MIPSAbstractMachine on: 'setPC:' do: {:v
+  my regfile at: 32, set: v.
+}.
+MIPSAbstractMachine on: 'PC' do: {
+  ^my regfile at: 32, get.
+}.
+
 MIPSIntructions on: 'decode:machine:' do: {:instrs:machine
-  #instrs is instrs findPattern: '\#.*[[:space:]]' do: {^'\\n'.}, #Ignore comments
-  #                 findPattern: '[[:space:]]+' do: {^' '.}. #Ignore repeated whitespace
+  #instrs is instrs findPattern: '\#.*\\s' do: {^'\\n'.}, #Ignore comments
+  #                 findPattern: '\\s+' do: {^' '.}. #Ignore repeated whitespace
   var self is me.
   var code is instrs split: '\n'.
   var dec is Array new.
@@ -155,7 +350,9 @@ MIPSIntructions on: 'assemble:forMachine:' do: {:instrs:machine
   code each: {:i:v
     (v trim = '') continue.
     machine setParseLocation: i.
-    dec push: (MIPSIntructions assembleInstr: (v trim) forMachine: machine).
+    var instr is (MIPSIntructions assembleInstr: (v trim) forMachine: machine).
+    instr each: {:i:v dec push: v.}.
+    ((instr type) !=: 'Array') ifTrue: {dec push: instr.}.
     #Pen red write: v, green write: (dec @ i), resetColor brk.
   }.
   ^dec.
@@ -165,7 +362,7 @@ var RFormat is Object new.
 RFormat on: 'emit:op0:op1:dst:' do: {:op:o0:o1:dst
   var opf is MIPSIntructions at: op.
   opf isNil ifTrue: {opf is noop.}, else: {
-    opf is opf set: 'operand0' value: o0, set: 'operand1' value: o1, set: 'destintaion' value: dst.
+    opf is (Reflect copyBlock: opf) set: 'operand0' value: o0, set: 'operand1' value: o1, set: 'destintaion' value: dst.
   }.
   ^opf.
 }.
@@ -174,7 +371,7 @@ var IFormat is Object new.
 IFormat on: 'emit:op0:immediate:dst:' do: {:op:o0:o1:dst
   var opf is MIPSIntructions at: op.
   opf isNil ifTrue: {opf is noop.}, else: {
-    opf is opf set: 'operand0' value: o0, set: 'immediate' value: o1, set: 'destintaion' value: dst.
+    opf is (Reflect copyBlock: opf) set: 'operand0' value: o0, set: 'immediate' value: o1, set: 'destintaion' value: dst.
   }.
   ^opf.
 }.
@@ -199,10 +396,10 @@ RFormat on: 'emitBits:op0:op1:dst:' do: {:op:o0:o1:dst #
 IFormat on: 'emitBits:op0:immediate:dst:machine:' do: {:op:o0:oimm:dst:machine
   var opf is MIPSIntructionBits at: op.
   opf isNil ifTrue: {opf is tnoop.}, else: {
-    #Pen write: '--> $$dst'.
-    (oimm toNumber toString = oimm) ifFalse: {oimm is machine getLabel: oimm.}.
-    #Pen write: ' $$dst', brk.
-      opf is (opf @ 0) + (o0 toNumber toBits: 5) + (dst toNumber toBits: 5) + (oimm toNumber toBits: 16).
+    debug applyTo: {Pen write: '--> $$oimm'.}.
+    (oimm toNumber toString = oimm) ifFalse: {oimm is machine getLabelAsm: oimm.}.
+    debug applyTo: {Pen write: ' $$oimm', brk.}.
+    opf is (opf @ 0) + (o0 toNumber toBits: 5) + (dst toNumber toBits: 5) + (oimm toNumber toBits: 16).
   }.
   ^opf.
 }.
@@ -211,8 +408,7 @@ JFormat on: 'emitBits:label:machine:' do: {:op:dst:machine
   var opf is MIPSIntructionBits at: op.
   opf isNil ifTrue: {opf is tnoop.}, else: {
     #Pen write: '--> $$dst'.
-    (dst toNumber toString = dst) ifFalse: {dst is machine getLabel: dst.}.
-    #Pen write: ' $$dst', brk.
+    (dst toNumber toString = dst) ifFalse: {dst is machine getLabelAsm: dst.}.
     dst is (dst toNumber toBits: 32).
     dst is dst from: 4 to: 30.
     opf is (opf @ 0) + dst.
@@ -229,7 +425,7 @@ MIPSIntructions on: 'instrFor:machine:' do: {:command:machine
   var oimm is ''.
   var label is Nil.
   var iregregex is '\\$([(zero)(at)(v0)(v1)(a0)(a1)(a2)(a3)(t0)(t1)(t2)(t3)(t4)(t5)(t6)(t7)(s0)(s1)(s2)(s3)(s4)(s5)(s6)(s7)(t8)(t9)(k0)(k1)(gp)(sp)(s8)(fp)(ra)[:digit:]])'.
-  var idataregex is '(([[:alnum:]])+)'.
+  var idataregex is '((\\w)+)'.
   command findPattern: idataregex + ':' do: {:parts #J-Format (op label)
     label is parts @ 1.
     Pen write: 'label $$label', brk.
@@ -237,7 +433,7 @@ MIPSIntructions on: 'instrFor:machine:' do: {:command:machine
     command is '#label...'.
     ^''.
   }.
-  command findPattern: '([[:alnum:]]+)[[:blank:]]+' + iregregex + '[[:blank:]]*,[[:blank:]]*' + iregregex + '[[:blank:]]*,[[:blank:]]*' + iregregex do: {:parts #R-Format
+  command findPattern: '(\\w+)\\s+' + iregregex + '\\s*,\\s*' + iregregex + '\\s*,\\s*' + iregregex do: {:parts #R-Format
     op is parts @ 1.
     reg_dest is parts @ 2.
     reg_op0 is parts @ 3.
@@ -246,16 +442,16 @@ MIPSIntructions on: 'instrFor:machine:' do: {:command:machine
     ret is RFormat emit: op op0: reg_op0 op1: reg_op1 dst: reg_dest.
     ^''.
   }.
-  command findPattern: '([[:alnum:]]+)[[:blank:]]+' + iregregex + '[[:blank:]]*,[[:blank:]]*' + idataregex + '[[:blank:]]*[(][[:blank:]]*' + iregregex + '[[:blank:]]*[)]' do: {:parts #I-Format (op $reg, base($offset))
+  command findPattern: '(\\w+)\\s+' + iregregex + '\\s*,\\s*' + idataregex + '\\s*[(]\\s*' + iregregex + '\\s*[)]' do: {:parts #I-Format (op $reg, base($offset))
     op is parts @ 1.
     reg_dest is parts @ 2.
     oimm is parts @ 3.
-    reg_op0 is parts @ 4.
+    reg_op0 is parts @ 5.
     Pen write: ('$$op :: dest=$$reg_dest offset=$$reg_op0 base=$$oimm'), brk.
     ret is IFormat emit: op op0: reg_op0 immediate: (oimm) dst: reg_dest.
     ^''.
   }.
-  command findPattern: '([[:alnum:]]+)[[:blank:]]+' + iregregex + '[[:blank:]]*,[[:blank:]]*' + iregregex + '[[:blank:]]*,[[:blank:]]*' + idataregex do: {:parts #I-Format (op $src, $dst, oimm)
+  command findPattern: '(\\w+)\\s+' + iregregex + '\\s*,\\s*' + iregregex + '\\s*,\\s*' + idataregex do: {:parts #I-Format (op $src, $dst, oimm)
     op is parts @ 1.
     reg_dest is parts @ 2.
     oimm is parts @ 4.
@@ -264,7 +460,7 @@ MIPSIntructions on: 'instrFor:machine:' do: {:command:machine
     ret is IFormat emit: op op0: reg_op0 immediate: (oimm) dst: reg_dest.
     ^''.
   }.
-  command findPattern: '([[:alnum:]]+)[[:blank:]]+' + idataregex do: {:parts #J-Format (op label)
+  command findPattern: '(\\w+)\\s+' + idataregex do: {:parts #J-Format (op label)
     op is parts @ 1.
     oimm is parts @ 2.
     Pen write: ('$$op :: dest=$$oimm'), brk.
@@ -285,7 +481,7 @@ MIPSIntructions on: 'assembleInstr:forMachine:' do: {:command:machine
   var oimm is ''.
   var label is Nil.
   var iregregex is '\\$([(zero)(at)(v0)(v1)(a0)(a1)(a2)(a3)(t0)(t1)(t2)(t3)(t4)(t5)(t6)(t7)(s0)(s1)(s2)(s3)(s4)(s5)(s6)(s7)(t8)(t9)(k0)(k1)(gp)(sp)(s8)(fp)(ra)[:digit:]])'.
-  var idataregex is '(([[:alnum:]])+)'.
+  var idataregex is '((\\w)+)'.
   command findPattern: idataregex + ':' do: {:parts #J-Format (op label)
     label is parts @ 1.
     Pen write: 'label $$label', brk.
@@ -293,7 +489,7 @@ MIPSIntructions on: 'assembleInstr:forMachine:' do: {:command:machine
     command is '#label...'.
     ^''.
   }.
-  command findPattern: '([[:alnum:]]+)[[:blank:]]+' + iregregex + '[[:blank:]]*,[[:blank:]]*' + iregregex + '[[:blank:]]*,[[:blank:]]*' + iregregex do: {:parts #R-Format
+  command findPattern: '(\\w+)\\s+' + iregregex + '\\s*,\\s*' + iregregex + '\\s*,\\s*' + iregregex do: {:parts #R-Format
     op is parts @ 1.
     reg_dest is parts @ 2.
     reg_op0 is parts @ 3.
@@ -302,16 +498,17 @@ MIPSIntructions on: 'assembleInstr:forMachine:' do: {:command:machine
     ret is RFormat emitBits: op op0: reg_op0 op1: reg_op1 dst: reg_dest.
     ^''.
   }.
-  command findPattern: '([[:alnum:]]+)[[:blank:]]+' + iregregex + '[[:blank:]]*,[[:blank:]]*' + idataregex + '[[:blank:]]*[(][[:blank:]]*' + iregregex + '[[:blank:]]*[)]' do: {:parts #I-Format (op $reg, base($offset))
+  command findPattern: '(\\w+)\\s+' + iregregex + '\\s*,\\s*' + idataregex + '\\s*[(]\\s*' + iregregex + '\\s*[)]' do: {:parts #I-Format (op $reg, base($offset))
+    debug applyTo: {Pen write: parts, brk.}.
     op is parts @ 1.
     reg_dest is parts @ 2.
     oimm is parts @ 3.
-    reg_op0 is parts @ 4.
+    reg_op0 is parts @ 5.
     Pen write: ('$$op :: dest=$$reg_dest offset=$$reg_op0 base=$$oimm'), brk.
     ret is IFormat emitBits: op op0: reg_op0 immediate: oimm dst: reg_dest machine: machine.
     ^''.
   }.
-  command findPattern: '([[:alnum:]]+)[[:blank:]]+' + iregregex + '[[:blank:]]*,[[:blank:]]*' + iregregex + '[[:blank:]]*,[[:blank:]]*' + idataregex do: {:parts #I-Format (op $src, $dst, oimm)
+  command findPattern: '(\\w+)\\s+' + iregregex + '\\s*,\\s*' + iregregex + '\\s*,\\s*' + idataregex do: {:parts #I-Format (op $src, $dst, oimm)
     op is parts @ 1.
     reg_dest is parts @ 2.
     oimm is parts @ 4.
@@ -320,7 +517,7 @@ MIPSIntructions on: 'assembleInstr:forMachine:' do: {:command:machine
     ret is IFormat emitBits: op op0: reg_op0 immediate: oimm dst: reg_dest machine: machine.
     ^''.
   }.
-  command findPattern: '([[:alnum:]]+)[[:blank:]]+' + idataregex do: {:parts #J-Format (op label)
+  command findPattern: '(\\w+)\\s+' + idataregex do: {:parts #J-Format (op label)
     op is parts @ 1.
     oimm is parts @ 2.
     Pen write: ('$$op :: dest=$$oimm'), brk.
@@ -379,12 +576,23 @@ MIPSIntructions on: 'bitsToUnsigned:' do: {:str
   }.
   ^i.
 }.
+MIPSIntructions on: 'bitsToUnsignedReverse:' do: {:str
+  var i is 0.
+  var len is str length.
+  str characters each: {:p:v
+    (v !=: '1') continue.
+    v is 2 toPowerOf: (len - p - 1).
+    i +=: v.
+  }.
+  ^i.
+}.
 MIPSIntructions on: 'splitBitsToInstr:' do: {:split
   var f is split @ 'func'.
   f isNil ifTrue: {f is ''.}.
   var entry is Array new < (split @ 'op') ; f.
   f is split @ 'format'.
   var ret is '#noop'.
+  # Pen write: entry, brk.
   (f = 'r') ifTrue: {
     entry is MIPSOpsToInstrs at: entry.
     entry isNil ifFalse: {
@@ -399,12 +607,12 @@ MIPSIntructions on: 'splitBitsToInstr:' do: {:split
   (f = 'i') ifTrue: {
     entry is MIPSOpsToInstrs at: entry.
     entry isNil ifFalse: {
-      var ops is Array new
-        push: entry,
-        push: (MIPSIntructions bitsToUnsigned: (split @ 'odst')),
-        push: (MIPSIntructions bitsToUnsigned: (split @ 'o0')),
-        push: (MIPSIntructions bitsToUnsigned: (split @ 'oimm')).
-      ret is '%s $%d, $%d, %s' formatObjects: ops.
+      var ops is Map new
+        put: entry at: 'op',
+        put: (MIPSIntructions bitsToUnsigned: (split @ 'odst')) at: 'dest',
+        put: (MIPSIntructions bitsToUnsigned: (split @ 'o0')) at: 'operand',
+        put: (MIPSIntructions bitsToUnsigned: (split @ 'oimm')) at: 'immediate'.
+      ret is ((entry containsPattern: '(s|l)(w|h|ui|hu|bu)') either: '%{op} $%{dest}, %{immediate}($%{operand})' or: '%{op} $%{dest}, $%{operand}, %{immediate}') formatMap: ops.
     }.
   }.
   (f = 'j') ifTrue: {
@@ -412,7 +620,7 @@ MIPSIntructions on: 'splitBitsToInstr:' do: {:split
     entry isNil ifFalse: {
       var ops is Array new
         push: entry,
-        push: (MIPSIntructions bitsToUnsigned: (split @ 'odst')).
+        push: (MIPSIntructions bitsToUnsignedReverse: (split @ 'o0')).
       ret is '%s %s' formatObjects: ops.
     }.
   }.
@@ -420,32 +628,56 @@ MIPSIntructions on: 'splitBitsToInstr:' do: {:split
 }.
 MIPSIntructions on: 'disassemble:' do: {:str
   var format is 'i'.
-  var op is str from: 0 to: 6, toNumber.
+  var op is MIPSIntructions bitsToUnsignedReverse: (str from: 0 to: 6).
   op = 0 ifTrue: {format is 'r'.}.
   (op = 2) | (op = 3) | (op = 26) ifTrue: {format is 'j'.}.
   ^me splitBitsToInstr: (me splitBits: str format: format).
 }.
-# var masm is 'init:\nsw $4,0($0)\nori $4,$0,40\nxor $2,$2,$2\nmain:\nbeq $2,$4,exit\naddi $2,$2,10\nadd $3,$2,$2\nj main\nexit:'.
-# Pen green write: masm, resetColor brk.
-# Pen red write: '\nParsed:\n', resetColor.
+var masm is 'ori $5,$0,256
+sw $5, 0($0)
+xor $5,$5,$5
+lw $5, 0($0)
+andi $4,$4,10
+ori $4,$0,40
+xor $2,$2,$2
+main:
+beq $2,$4,exit
+addi $2,$2,10
+add $3,$2,$2
+j main
+exit:'.#And she supported multiline strings like normal ones
+# 'li $t0, 0'.
+MIPSAbstractMachine addWord: 'X' length: 12.
+MIPSAbstractMachine addWord: 'Y' length: 12.
+
+DEBUG is False.
+
+Pen green write: masm, resetColor brk.
+Pen red write: '\nParsed:\n', resetColor.
 # var ass is MIPSAbstractMachine assemble: masm.
-# MIPSAbstractMachine load: masm.
-# Pen red write: '\nExec:\n', resetColor.
-# Pen write: (MIPSAbstractMachine getSrc join: '\n'), brk.
-# MIPSAbstractMachine runTillExit.
-# 50 times: {MIPSAbstractMachine stepGraphical.}.
+# Pen write: (ass join: '\n'), brk.
+MIPSAbstractMachine load: masm.
+Pen red write: '\nExec:\n', resetColor.
+## Pen write: (MIPSAbstractMachine getSrc join: '\n'), brk.
+MIPSAbstractMachine interactiveRun.
+## 50 times: {MIPSAbstractMachine stepGraphical.}.
 # Pen write: '$2: ' + (MIPSAbstractMachine getReg: '2') + '\n$3: ' + (MIPSAbstractMachine getReg: '3'), brk.
-var ass is
-'00000000000000000000000000000000
-00000000000000000000000000000000
-00110100000001000001010000000000
-00000001000010000100000000100110
-00000000000000000000000000000000
-00001000100010000000000000000000
-00100001000010000101000000000000
-00000001000010001100000000100000
-00001000000000000000000000000000
-00000000000000000000000000000000'
-  split: '\n'.
-Pen red write: 'disassembling ' + (ass join: ','), resetColor brk.
-ass each: {:i:instr Pen write: (MIPSIntructions disassemble: instr), brk.}.
+
+#> Uncomment for disassembly
+# var ass is
+# '00000000000000000000000000000000
+# 00000001000010000100000000100110
+# 00110100000110000001010000000000
+# 10101100000110000000110000000000
+# 00000000000000000000000000000000
+# 00010011000010000000000000000000
+# 10001101000001000000000000000000
+# 10001101000101000000000000000000
+# 00100010100001001100000000000000
+# 10101101000001000000000000000000
+# 00100001000010000010000000000000
+# 00001000000000000100000000000000
+# 00000000000000000000000000000000'
+#   split: '\n'.
+# Pen red write: 'disassembling ' + (ass join: ','), resetColor brk.
+# ass each: {:i:instr Pen write: (MIPSIntructions disassemble: instr), brk.}.

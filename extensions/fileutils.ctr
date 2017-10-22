@@ -18,11 +18,10 @@ ImportLib on: 'init' do: {
   me loadExtensions.
 }.
 ImportLib on: 'loadExtensions' do: { :ename
-  var exts is File list: (File extensionsPath) + '/extensions'.
+  var exts is File list: (File extensionsPath) + '/extensions', filter: {:i:v ^(v is (v @ 'file') split: '.') count > 1 & (v @ -1 = 'ctr').}.
   exts each: { :k :f
-    (f @ 'type' !=: 'file') continue.
+    ((f @ 'type' !=: 'file') | (f @ 'file' = 'fileutils.ctr')) continue.
     var v is f @ 'file'.
-    (v = 'fileutils.ctr') continue.
     (v from: (v length - 5) to: (v length - 1) = '.ctr') ifTrue: {
       File new: (File extensionsPath) + '/extensions/' + v, include.
     }.

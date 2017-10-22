@@ -145,7 +145,7 @@ ctr_object* ctr_json_serialize_(ctr_object* object) {
               //newArgumentList->object = ctr_build_string_from_cstring(")");
               //ctr_string_append( string, newArgumentList );
           }
-          if (  (i + 1 )<object->value.avalue->head ) {
+          if (  (i + 1)<object->value.avalue->head ) {
               newArgumentList->object = ctr_build_string_from_cstring(", ");
               string = ctr_string_append( string, newArgumentList );
           }

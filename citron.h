@@ -1,16 +1,17 @@
-#ifndef CTR_H_GUARD
-#define CTR_H_GUARD
-
 #ifndef CTR_STD_EXTENSION_PATH
 #define CTR_STD_EXTENSION_PATH                   "."
 #endif
+
+#ifndef CTR_H_GUARD
+#define CTR_H_GUARD
+
 
 #include "dictionary.h"
 #include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define CTR_VERSION "0.0.5.4"
+#define CTR_VERSION "0.0.5.8"
 #define CTR_LOG_WARNINGS 0//2 to enable
 /**
  * Define the Citron tokens
@@ -419,6 +420,9 @@ ctr_object* ctr_nil_to_boolean(ctr_object* myself, ctr_argument* argumentList);
  */
 ctr_object* ctr_object_make(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_ctor(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_object_attr_accessor(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_object_attr_reader(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_object_attr_writer(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_make_hiding(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_swap(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_equals(ctr_object* myself, ctr_argument* argumentList);
@@ -529,6 +533,8 @@ ctr_object* ctr_string_rtrim(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_padding_left(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_padding_right(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_html_escape(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_count_of(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_slice(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_at(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_byte_at(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_index_of(ctr_object* myself, ctr_argument* argumentList);
@@ -544,6 +550,7 @@ ctr_object* ctr_string_to_lower1st(ctr_object* myself, ctr_argument* argumentLis
 ctr_object* ctr_string_to_upper1st(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_find_pattern_do(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_find_pattern_options_do(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_is_regex_pcre(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_contains_pattern(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_contains(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_hash_with_key(ctr_object* myself, ctr_argument* argumentList);
@@ -557,6 +564,7 @@ ctr_object* ctr_string_characters( ctr_object* myself, ctr_argument* argumentLis
 ctr_object* ctr_string_to_byte_array( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_string_append_byte(ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_string_randomize_bytes(ctr_object* myself, ctr_argument* argumentList );
+ctr_object* ctr_string_reverse(ctr_object* myself, ctr_argument* argumentList);
 
 /**
  * Block Interface
@@ -578,8 +586,13 @@ ctr_object* ctr_block_to_string(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_new(ctr_object* myclass, ctr_argument* argumentList);
 ctr_object* ctr_array_new_and_push(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_type(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_fmap(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_imap(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_foldl(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_filter(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_push(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_push_imm(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_reverse(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_unshift(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_shift(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_count(ctr_object* myself, ctr_argument* argumentList);
@@ -848,5 +861,7 @@ char* ctr_heap_allocate_cstring_shared( ctr_object* o );
 
 uint8_t  ctr_accept_n_connections;
 uint16_t ctr_default_port;
+
+#include "citron_ensure.h"
 
 #endif //CTR_H_GUARD

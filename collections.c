@@ -310,6 +310,22 @@ ctr_object* ctr_array_unshift(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 /**
+ * [Array] reverse
+ */
+ctr_object* ctr_array_reverse(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* newArr = ctr_array_new(CtrStdArray, NULL);
+  int i = ctr_array_count(myself, NULL)->value.nvalue;
+  ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
+  for (;i>0;i--) {
+    args->object = ctr_build_number_from_float(i-1);
+    args->object = ctr_array_get(myself, args);
+    ctr_array_push(newArr, args);
+  }
+  ctr_heap_free(args);
+  return newArr;
+}
+
+/**
  * [Array] join: [Glue].
  *
  * Joins the elements of an array together in a string
@@ -371,6 +387,7 @@ ctr_object* ctr_array_get(ctr_object* myself, ctr_argument* argumentList) {
         return CtrStdNil;
     }
     i = (int) getIndex->value.nvalue;
+    if (i<0) i += myself->value.avalue->head - myself->value.avalue->tail;
     if (myself->value.avalue->head <= (i + myself->value.avalue->tail) || i < 0) {
         CtrStdFlow = ctr_build_string_from_cstring("Index out of bounds.");
         CtrStdFlow->info.sticky = 1;
@@ -528,31 +545,152 @@ ctr_object* ctr_array_from_length(ctr_object* myself, ctr_argument* argumentList
 ctr_object* ctr_array_add(ctr_object* myself, ctr_argument* argumentList) {
     ctr_object* otherArray = argumentList->object;
     ctr_object* newArray = ctr_array_new(CtrStdArray, NULL);
+    ctr_argument* pushArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    ctr_argument* elnumArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
     int i;
     for(i = myself->value.avalue->tail; i<myself->value.avalue->head; i++) {
-        ctr_argument* pushArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
-        ctr_argument* elnumArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
         ctr_object* elnum = ctr_build_number_from_float((ctr_number) i);
         elnumArg->object = elnum;
         pushArg->object = ctr_array_get(myself, elnumArg);
         ctr_array_push(newArray, pushArg);
-        ctr_heap_free( elnumArg );
-        ctr_heap_free( pushArg );
     }
     if (otherArray->info.type == CTR_OBJECT_TYPE_OTARRAY) {
         for(i = otherArray->value.avalue->tail; i<otherArray->value.avalue->head; i++) {
-            ctr_argument* pushArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
-            ctr_argument* elnumArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
             ctr_object* elnum = ctr_build_number_from_float((ctr_number) i);
             elnumArg->object = elnum;
             pushArg->object = ctr_array_get(otherArray, elnumArg);
             ctr_array_push(newArray, pushArg);
-            ctr_heap_free( elnumArg );
-            ctr_heap_free( pushArg );
         }
+        ctr_heap_free( elnumArg );
+        ctr_heap_free( pushArg );
     }
     return newArray;
 }
+
+/**
+ * Array fmap: [Block]
+ *
+ * Maps a function over the block. this function should accept a single value.
+ *
+ * [1,2,3,4] fmap: {:v ^v + 1.}. #=> Array new < 2 ; 3 ; 4 ; 5
+ */
+ctr_object* ctr_array_fmap(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* func = argumentList->object;
+  CTR_ENSURE_TYPE_BLOCK(func);
+
+  ctr_object* newArray = ctr_array_new(CtrStdArray, NULL);
+  ctr_argument* pushArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+  ctr_argument* elnumArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+  int i;
+  for(i = myself->value.avalue->tail; i<myself->value.avalue->head; i++) {
+      ctr_object* elnum = ctr_build_number_from_float((ctr_number) i);
+      elnumArg->object = elnum;
+      pushArg->object = ctr_array_get(myself, elnumArg);
+      pushArg->object = ctr_block_run(func, pushArg, func);
+      ctr_array_push(newArray, pushArg);
+  }
+  ctr_heap_free(elnumArg);
+  ctr_heap_free(pushArg);
+  return newArray;
+}
+
+/**
+ * Array imap: [Block]
+ *
+ * Maps a function over the block. this function should accept an index and a value.
+ *
+ * [1,2,3,4] imap: {:i:v ^v + i.}. #=> Array new < 1 ; 3 ; 5 ; 7
+ */
+ctr_object* ctr_array_imap(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* func = argumentList->object;
+  CTR_ENSURE_TYPE_BLOCK(func);
+
+  ctr_object* newArray = ctr_array_new(CtrStdArray, NULL);
+  ctr_argument* pushArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+  pushArg->next = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+  ctr_argument* elnumArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+  int i;
+  for(i = myself->value.avalue->tail; i<myself->value.avalue->head; i++) {
+      ctr_object* elnum = ctr_build_number_from_float((ctr_number) i);
+      elnumArg->object = elnum;
+      pushArg->next->object = ctr_array_get(myself, elnumArg);
+      pushArg->object = elnumArg->object;
+      pushArg->object = ctr_block_run(func, pushArg, func);
+      ctr_array_push(newArray, pushArg);
+  }
+  ctr_heap_free(elnumArg);
+  ctr_heap_free(pushArg->next);
+  ctr_heap_free(pushArg);
+  return newArray;
+}
+
+/**
+ * Array foldl: [Block]
+ *
+ * reduces an array according to a block (which takes an accumulator and the value, and returns the next acc) from the left (index 0)
+ *
+ * ([1,2,3,4]) foldl: {:acc:v ^acc + v.}. #=> Equivalent to ([1,2,3,4]) sum.
+ */
+ ctr_object* ctr_array_foldl(ctr_object* myself, ctr_argument* argumentList) {
+   ctr_object* func = argumentList->object;
+   CTR_ENSURE_TYPE_BLOCK(func);
+
+   ctr_object* accumulator = argumentList->next->object;
+   ctr_argument* elnumArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+   ctr_argument* accArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+   accArg->next = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+   accArg->object = accumulator;
+   int i;
+   for(i = myself->value.avalue->tail; i<myself->value.avalue->head; i++) {
+       ctr_object* elnum = ctr_build_number_from_float((ctr_number) i);
+       elnumArg->object = elnum;
+       accArg->next->object = ctr_array_get(myself, elnumArg);
+       accArg->object = ctr_block_run(func, accArg, func);
+   }
+   accumulator = accArg->object;
+   ctr_heap_free(elnumArg);
+   ctr_heap_free(accArg->next);
+   ctr_heap_free(accArg);
+   return accumulator;
+ }
+
+/**
+ * [Array] filter: [Block]
+ *
+ * Include the element iff block returns True for the element
+ */
+ /**
+  * Array foldl: [Block]
+  *
+  * reduces an array according to a block (which takes an accumulator and the value, and returns the next acc) from the left (index 0)
+  *
+  * ([1,2,3,4]) foldl: {:acc:v ^acc + v.}. #=> Equivalent to ([1,2,3,4]) sum.
+  */
+  ctr_object* ctr_array_filter(ctr_object* myself, ctr_argument* argumentList) {
+    ctr_object* func = argumentList->object;
+    CTR_ENSURE_TYPE_BLOCK(func);
+
+    ctr_object* newArray = ctr_array_new(CtrStdArray, NULL);
+    ctr_argument* elnumArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    ctr_argument* accArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    accArg->next = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    int i;
+    for(i = myself->value.avalue->tail; i<myself->value.avalue->head; i++) {
+        ctr_object* elnum = ctr_build_number_from_float((ctr_number) i);
+        elnumArg->object = elnum;
+        accArg->next->object = ctr_array_get(myself, elnumArg);
+        accArg->object = elnum;
+        if (ctr_internal_cast2bool(ctr_block_run(func, accArg, func))->value.bvalue) {
+          accArg->object = accArg->next->object;
+          accArg->next->object = NULL;
+          ctr_array_push(newArray, accArg);
+        }
+    }
+    ctr_heap_free(elnumArg);
+    ctr_heap_free(accArg->next);
+    ctr_heap_free(accArg);
+    return newArray;
+  }
 
 /**
  * @internal

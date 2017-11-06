@@ -551,15 +551,15 @@ void begin() {
   ctr_internal_create_func(CTypes, ctr_build_string_from_cstring("uint64"),     &ctr_ctype_uint64_create);
   ctr_internal_create_func(CTypes, ctr_build_string_from_cstring("char"),       &ctr_ctype_char_create);
 
-  ctr_internal_create_func(CTypes, ctr_build_string_from_cstring("int[]:"),        &ctr_ctype_intarr_create);
-  ctr_internal_create_func(CTypes, ctr_build_string_from_cstring("int16[]:"),      &ctr_ctype_int16arr_create);
-  ctr_internal_create_func(CTypes, ctr_build_string_from_cstring("int32[]:"),      &ctr_ctype_int32arr_create);
-  ctr_internal_create_func(CTypes, ctr_build_string_from_cstring("int64[]:"),      &ctr_ctype_int64arr_create);
-  ctr_internal_create_func(CTypes, ctr_build_string_from_cstring("uint[]:"),       &ctr_ctype_uinttarr_create);
-  ctr_internal_create_func(CTypes, ctr_build_string_from_cstring("uint16[]:"),     &ctr_ctype_uint16arr_create);
-  ctr_internal_create_func(CTypes, ctr_build_string_from_cstring("uint32[]:"),     &ctr_ctype_uint32arr_create);
-  ctr_internal_create_func(CTypes, ctr_build_string_from_cstring("uint64[]:"),     &ctr_ctype_uint64arr_create);
-  ctr_internal_create_func(CTypes, ctr_build_string_from_cstring("char[]:"),       &ctr_ctype_chararr_create);
+  ctr_internal_create_func(CTypes, ctr_build_string_from_cstring("intarr:"),    &ctr_ctype_intarr_create);
+  ctr_internal_create_func(CTypes, ctr_build_string_from_cstring("int16arr:"),  &ctr_ctype_int16arr_create);
+  ctr_internal_create_func(CTypes, ctr_build_string_from_cstring("int32arr:"),  &ctr_ctype_int32arr_create);
+  ctr_internal_create_func(CTypes, ctr_build_string_from_cstring("int64arr:"),  &ctr_ctype_int64arr_create);
+  ctr_internal_create_func(CTypes, ctr_build_string_from_cstring("uintarr:"),   &ctr_ctype_uinttarr_create);
+  ctr_internal_create_func(CTypes, ctr_build_string_from_cstring("uint16arr:"), &ctr_ctype_uint16arr_create);
+  ctr_internal_create_func(CTypes, ctr_build_string_from_cstring("uint32arr:"), &ctr_ctype_uint32arr_create);
+  ctr_internal_create_func(CTypes, ctr_build_string_from_cstring("uint64arr:"), &ctr_ctype_uint64arr_create);
+  ctr_internal_create_func(CTypes, ctr_build_string_from_cstring("chararr:"),   &ctr_ctype_chararr_create);
 
   ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("CTypes"), CTypes, 0);
 

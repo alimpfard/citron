@@ -14,7 +14,7 @@ ctr_object* ctr_reflect_add_glob (ctr_object* myself, ctr_argument* argumentList
     instance->link = CtrStdObject;
     instance->info.sticky = 0;
     ctr_internal_object_add_property(CtrStdWorld, ctr_internal_cast2string(argumentList->object), instance, 0);
-    return CtrStdNil;
+    return instance;
 }
 
 ctr_object* ctr_reflect_add_local (ctr_object* myself, ctr_argument* argumentList) {
@@ -167,6 +167,107 @@ ctr_object* ctr_reflect_cb_ac(ctr_object* myself, ctr_argument* argumentList) {
   return arglist;
 }
 
+ctr_object* ctr_reflect_unparse(ctr_object* arr, int type) {
+  int args = ctr_invoke_variadic(arr, &ctr_array_count, 0)->value.nvalue;
+  if (args < 1) return ctr_build_empty_string();
+  switch (type) {
+    case CTR_AST_NODE_EXPRMESSAGE:
+    case CTR_AST_NODE_KWMESSAGE:
+    case CTR_AST_NODE_UNAMESSAGE:
+    case CTR_AST_NODE_BINMESSAGE:
+    {
+      ctr_object* fmt = ctr_invoke_variadic(arr, &ctr_array_get, 1, ctr_build_number_from_float(0)); // receiver
+      if (args > 1) {
+        ctr_invoke_variadic(fmt, &ctr_string_append, 1, ctr_build_string_from_cstring(" message: '"));
+        ctr_object* msg = ctr_invoke_variadic(arr, &ctr_array_get, 1, ctr_build_number_from_float(1));
+        ctr_invoke_variadic(fmt, &ctr_string_append, 1, ctr_invoke_variadic(msg, &ctr_array_get, 1, ctr_build_number_from_float(0))); // message name
+        ctr_invoke_variadic(fmt, &ctr_string_append, 1, ctr_build_string_from_cstring("' arguments: ("));
+        ctr_invoke_variadic(fmt, &ctr_string_append, 1, ctr_invoke_variadic(msg, &ctr_array_get, 1, ctr_build_number_from_float(1))); // args
+        ctr_invoke_variadic(fmt, &ctr_string_append, 1, ctr_build_string_from_cstring(")"));
+      }
+      return fmt;
+    }
+    //
+    case CTR_AST_NODE_LTRNIL:
+    case CTR_AST_NODE_LTRNUM:
+    case CTR_AST_NODE_LTRSTRING:
+    case CTR_AST_NODE_LTRBOOLTRUE:
+    case CTR_AST_NODE_LTRBOOLFALSE:
+    case CTR_AST_NODE_REFERENCE:
+    return ctr_invoke_variadic(arr, &ctr_array_get, 1, ctr_build_number_from_float(0));
+    //
+    case CTR_AST_NODE_EXPRASSIGNMENT:
+    return ctr_invoke_variadic(arr, &ctr_array_join, 1, ctr_build_string_from_cstring(" is "));
+    //
+    case CTR_AST_NODE_NESTED:
+    case CTR_AST_NODE_RETURNFROMBLOCK:
+    return ctr_invoke_variadic(arr, &ctr_array_join, 1, ctr_build_empty_string());
+    //
+    default:
+    printf("%d\n", type);
+    return ctr_internal_cast2string(arr);
+  }
+}
+
+ctr_object* ctr_reflect_serialize_expr_(ctr_tnode* expr_node, ctr_argument* burrowed, int i);
+ctr_object* ctr_reflect_serialize_expr(ctr_tnode* expr_node, ctr_argument* b) {
+  return ctr_reflect_serialize_expr_(expr_node, b, 0);
+}
+ctr_object* ctr_reflect_serialize_expr_(ctr_tnode* expr_node, ctr_argument* burrowed, int i) {
+  ctr_object* ser = ctr_array_new(CtrStdArray, NULL);
+  ctr_tlistitem* nodes = expr_node->nodes;
+  ctr_tnode* node;
+  while (nodes && (node = nodes->node) != NULL) {
+    if (nodes == NULL) break;
+    if (node->value) {
+      burrowed->object = ctr_build_string(node->value, node->vlen);
+      if (node->type == CTR_AST_NODE_EXPRMESSAGE || node->type == CTR_AST_NODE_KWMESSAGE || node->type == CTR_AST_NODE_BINMESSAGE || node->type == CTR_AST_NODE_UNAMESSAGE) {
+        ctr_object* arr = ctr_array_new(CtrStdArray, NULL);
+        ctr_object* ps = ctr_array_new(CtrStdArray, NULL);
+        ctr_array_push(arr, burrowed);
+        burrowed->object = ctr_reflect_serialize_expr_(node, burrowed, 1);
+        ctr_array_push(ps, burrowed);
+        burrowed->object = ps;
+        ctr_array_push(arr, burrowed);
+        arr->value.avalue->immutable=1;
+        burrowed->object = arr;
+      }
+    }
+    else             burrowed->object = ctr_reflect_serialize_expr_(node, burrowed, 1);
+    ctr_array_push(ser, burrowed);
+    nodes = nodes->next;
+  }
+  ser->value.avalue->immutable=1;
+  return ctr_reflect_unparse(ser, expr_node->type);
+}
+
+ctr_object* ctr_reflect_cb_ic(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_tnode* obj = argumentList->object->value.block;
+  if(obj == NULL) return CtrStdNil;
+  ctr_tlistitem* parameterList = obj->nodes->next->node->nodes;
+  ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
+  args->object = CtrStdNil;
+  ctr_object* arglist = ctr_array_new(CtrStdArray, NULL);
+  if (parameterList == NULL) {
+    ctr_heap_free(args);
+    return arglist;
+  }
+  ctr_tnode* param = parameterList->node;
+  if(param == NULL) {
+    ctr_heap_free(args);
+    return arglist;
+  }
+  while((param = parameterList->node) != NULL) {
+    if (param->value) args->object = ctr_build_string(param->value, param->vlen);
+    else              args->object = ctr_reflect_serialize_expr(param, args);
+    ctr_send_message(arglist, "push:", 5, args);
+    parameterList = parameterList->next;
+    if(parameterList == NULL) break;
+  }
+  ctr_heap_free(args);
+  return arglist;
+}
+
 ctr_object* ctr_reflect_cb_add_param(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* obj = argumentList->object;
   ctr_tlistitem* parameterList = obj->value.block->nodes->node->nodes;
@@ -248,24 +349,237 @@ ctr_object* ctr_reflect_generate_inheritance_tree(ctr_object* myself, ctr_argume
   ctr_heap_free(newarg);
   return arr;
 }
-// ctr_object* ctr_reflect_obj_hp(ctr_object* myself, ctr_argument* argumentList) {
-//     ctr_object* object = argumentList->object;
-//     return ctr_internal_cast2string(object->);
-// }
 
-// void begin() {
-//     ctr_object* reflect = ctr_reflect_new(CtrStdObject, NULL);
-//
-//     ctr_internal_create_func(reflect, ctr_build_string_from_cstring("addGlobalVariable:"), &ctr_reflect_add_glob);
-//     ctr_internal_create_func(reflect, ctr_build_string_from_cstring("addLocalVariable:"), &ctr_reflect_add_local);
-//     ctr_internal_create_func(reflect, ctr_build_string_from_cstring("addPrivateVariable:"), &ctr_reflect_add_my);
-//     ctr_internal_create_func(reflect, ctr_build_string_from_cstring("set:to:"), &ctr_reflect_set_to);
-//     ctr_internal_create_func(reflect, ctr_build_string_from_cstring("getContext"), &ctr_reflect_dump_context);
-//     ctr_internal_create_func(reflect, ctr_build_string_from_cstring("getMethodsOf:"), &ctr_reflect_dump_context_spec);
-//     ctr_internal_create_func(reflect, ctr_build_string_from_cstring("getPropertiesOf:"), &ctr_reflect_dump_context_spec_prop);
-//     ctr_internal_create_func(reflect, ctr_build_string_from_cstring("getObject:"), &ctr_reflect_find_obj);
-//     ctr_internal_create_func(reflect, ctr_build_string_from_cstring("objectExists:"), &ctr_reflect_extst_obj);
-//     ctr_internal_create_func(reflect, ctr_build_string_from_cstring("argumentListOf:"), &ctr_reflect_cb_ac);
-//
-//     ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Reflect"), reflect, 0);
-// }
+ctr_object* ctr_reflect_type_descriptor_print(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* type_descriptor = ctr_build_string_from_cstring("Nil");
+  if (argumentList->object == NULL) return type_descriptor;
+  ctr_object* object = ctr_is_primitive(argumentList->object)?argumentList->object:ctr_reflect_describe_type(myself, argumentList);
+
+  switch (object->info.type) {
+    case CTR_OBJECT_TYPE_OTNIL:
+        type_descriptor = ctr_build_string_from_cstring("Nil");
+        break;
+    case CTR_OBJECT_TYPE_OTBOOL:
+        type_descriptor = ctr_build_string_from_cstring("Boolean");
+        break;
+    case CTR_OBJECT_TYPE_OTNUMBER:
+        type_descriptor = ctr_build_string_from_cstring("Number");
+        break;
+    case CTR_OBJECT_TYPE_OTSTRING:
+        type_descriptor = ctr_build_string_from_cstring("String");
+        break;
+    case CTR_OBJECT_TYPE_OTBLOCK:
+        type_descriptor = ctr_build_string_from_cstring("Block");
+        break;
+    case CTR_OBJECT_TYPE_OTNATFUNC:
+        type_descriptor = ctr_build_string_from_cstring("[NativeFunction]");
+        break;
+
+    case CTR_OBJECT_TYPE_OTOBJECT:
+        type_descriptor = ctr_send_message(object, "type", 4, NULL);
+        //TODO: Implement
+        break;
+    case CTR_OBJECT_TYPE_OTARRAY:
+        //List ds, generate a list of content types
+        type_descriptor = ctr_array_new(CtrStdArray, NULL);
+        int i = 0;
+        int c = ctr_array_count(object, NULL)->value.nvalue;
+        ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+        for(;i<c;i++) {
+          arg->object = ctr_build_number_from_float(i);
+          arg->object = ctr_array_get(object, arg);
+          arg->object = ctr_reflect_type_descriptor_print(myself, arg);
+          ctr_array_push(type_descriptor, arg);
+        }
+        ctr_heap_free(arg);
+        type_descriptor->value.avalue->immutable = 1;
+        type_descriptor = ctr_internal_cast2string(type_descriptor);
+        break;
+    case CTR_OBJECT_TYPE_OTMISC:
+    case CTR_OBJECT_TYPE_OTEX:
+        //Is not data, just return Nil
+        break;
+  }
+
+  return type_descriptor;
+}
+
+ctr_object* ctr_reflect_get_primitive_link(ctr_object* object) {
+  ctr_object* parent = object;
+  while(parent!=NULL) {
+    if (ctr_is_primitive(parent)) break;
+      parent = parent->link;
+  }
+  return parent;
+}
+
+ctr_object* ctr_reflect_describe_type(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* object = argumentList->object;
+  ctr_object* link = object->link;
+  ctr_object* type_descriptor = CtrStdNil;
+  ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+
+  switch (object->info.type) {
+    case CTR_OBJECT_TYPE_OTNIL:
+    case CTR_OBJECT_TYPE_OTBOOL:
+    case CTR_OBJECT_TYPE_OTNUMBER:
+    case CTR_OBJECT_TYPE_OTSTRING:
+    case CTR_OBJECT_TYPE_OTBLOCK:
+    case CTR_OBJECT_TYPE_OTNATFUNC:
+        //No Data structure, just primitive, return primitive link
+        type_descriptor = ctr_reflect_get_primitive_link(object);
+        arg->object = type_descriptor;
+        type_descriptor = ctr_reflect_type_descriptor_print(myself, arg);
+
+        break;
+    case CTR_OBJECT_TYPE_OTOBJECT:
+        //Map ds, generate a map of content types.
+        ctr_reflect_map_type_descriptor = ctr_string_eval(
+          ctr_build_string_from_cstring("{:kv ^[(kv @ 0), (Reflect typeOf: kv @ 1)].}"),
+          NULL
+        );
+        arg->object = ctr_reflect_map_type_descriptor;
+        type_descriptor = ctr_map_kvmap(object, arg);
+        break;
+    case CTR_OBJECT_TYPE_OTARRAY:
+        //List ds, generate a list of content types
+        type_descriptor = ctr_array_new(CtrStdArray, NULL);
+        int i = 0;
+        int c = ctr_array_count(object, NULL)->value.nvalue;
+        ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+        for(;i<c;i++) {
+          arg->object = ctr_build_number_from_float(i);
+          arg->object = ctr_array_get(object, arg);
+          arg->object = ctr_reflect_describe_type(myself, arg);
+          ctr_array_push(type_descriptor, arg);
+        }
+        type_descriptor->value.avalue->immutable = 1;
+        break;
+    case CTR_OBJECT_TYPE_OTMISC:
+    case CTR_OBJECT_TYPE_OTEX:
+        //Is not data, just return Nil
+        break;
+  }
+
+  ctr_heap_free(arg);
+  return type_descriptor;
+}
+ctr_object* ctr_reflect_describe_value(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* object = argumentList->object;
+  ctr_object* link = object->link;
+  ctr_object* type_descriptor = CtrStdNil;
+  ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+
+  switch (object->info.type) {
+    case CTR_OBJECT_TYPE_OTOBJECT:
+        //Map ds, generate a list of content values.
+        ctr_reflect_map_type_descriptor = ctr_string_eval(
+          ctr_build_string_from_cstring("{:kv ^[(kv @ 0), (kv @ 1)].}"),
+          NULL
+        );
+        arg->object = ctr_reflect_map_type_descriptor;
+        type_descriptor = ctr_map_kvlist(object, arg);
+        break;
+    default:
+        type_descriptor = object;
+        break;
+  }
+  ctr_heap_free(arg);
+  return type_descriptor;
+}
+
+ctr_object* ctr_reflect_describe_type_pretty(ctr_object* myself, ctr_argument* argumentList) {
+  if (argumentList->object->info.type == CTR_OBJECT_TYPE_OTSTRING) {
+    ctr_object* desc = ctr_build_string_from_cstring("String(length=");
+    argumentList->object = ctr_internal_cast2string(ctr_build_number_from_float(argumentList->object->value.svalue->vlen));
+    ctr_string_append(desc, argumentList);
+    argumentList->object = ctr_build_string_from_cstring(")");
+    ctr_string_append(desc, argumentList);
+    return desc;
+  }
+  else return ctr_reflect_describe_type(myself, argumentList);
+}
+
+int ctr_reflect_is_valid_ctor(ctr_object* candidate) {
+  ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+  arg->next = ctr_heap_allocate(sizeof(ctr_argument));
+  arg->object = candidate;
+  arg->next = CtrStdReflect_cons;
+  if (!ctr_reflect_child_of(CtrStdReflect, arg)->value.bvalue) return 0;
+  return 1; //TODO: Implement actual method
+}
+
+int ctr_reflect_check_bind_valid(ctr_object* from, ctr_object* to) {
+  ctr_argument* argumentList = ctr_heap_allocate(sizeof(ctr_argument));
+  argumentList->object = to;
+  ctr_object* to_type = ctr_reflect_describe_type(CtrStdReflect, argumentList);
+  argumentList->object = from;
+  ctr_object* from_type = ctr_reflect_describe_type(CtrStdReflect, argumentList);
+  if (!(ctr_internal_object_is_constructible_(from_type, to_type, to->info.raw))) {
+    CtrStdFlow = ctr_build_string_from_cstring("Cannot bind object of type ");
+    argumentList->object = from;
+    from_type = ctr_reflect_describe_type_pretty(CtrStdReflect, argumentList);
+    argumentList->object = ctr_internal_cast2string(from_type);
+    ctr_string_append(CtrStdFlow, argumentList);
+    argumentList->object = ctr_build_string_from_cstring(" to object of type ");
+    ctr_string_append(CtrStdFlow, argumentList);
+    argumentList->object = ctr_build_string_from_cstring("String");
+    argumentList->next = ctr_heap_allocate(sizeof(ctr_argument));
+    argumentList->next->object = ctr_build_string_from_cstring("Binding");
+
+    argumentList->object = ctr_string_replace_with(ctr_internal_cast2string(to_type), argumentList);
+    ctr_heap_free(argumentList->next);
+    ctr_string_append(CtrStdFlow, argumentList);
+    argumentList->object = ctr_build_string_from_cstring(".");
+    ctr_string_append(CtrStdFlow, argumentList);
+    ctr_heap_free(argumentList);
+    return 0;
+  }
+  ctr_heap_free(argumentList);
+  return 1;
+}
+
+ctr_object* ctr_reflect_bind(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* from = argumentList->object;
+  ctr_object* to   = argumentList->next->object;
+  //if(!ctr_reflect_check_bind_valid(from, to)) {
+  //  return CtrStdNil;
+  //}
+  ctr_argument* arg2 = ctr_heap_allocate(sizeof(ctr_argument));
+  arg2->object = to;
+  ctr_send_message(from, "unpack:", 7, arg2);
+  ctr_heap_free(arg2);
+  return myself;
+}
+
+ctr_object* ctr_reflect_cons_of(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* ins = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
+  ins->link = myself;
+  ctr_internal_object_set_property(ins, ctr_build_string_from_cstring("value"), argumentList->object, 0);
+  return ins;
+}
+
+ctr_object* ctr_reflect_try_serialize_block(ctr_object* myself, ctr_argument* argumentList) {
+  if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTBLOCK) {
+    CtrStdFlow = ctr_build_string_from_cstring("can only serialize code blocks.");
+    return CtrStdNil;
+  }
+  ctr_object* obj = argumentList->object;
+  // ctr_tnode* block = argumentList->object->value.block;
+  argumentList->object = ctr_reflect_cb_ac(myself, argumentList);
+  ctr_object* mp = ctr_map_new(CtrStdMap, NULL);
+  ctr_object* params = argumentList->object; //Serialized the args
+  ctr_invoke_variadic(mp, &ctr_map_put, 2, params, ctr_build_string_from_cstring("arguments"));
+  argumentList->object = obj;
+  ctr_object* instrs = ctr_reflect_cb_ic(myself, argumentList);
+  ctr_invoke_variadic(mp, &ctr_map_put, 2, instrs, ctr_build_string_from_cstring("instructions"));
+  return mp;
+}
+
+///Trash v
+ctr_object* ctr_reflect_cons_value(ctr_object* myself, ctr_argument* argumentList) {
+  return ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("value"), 0);
+}
+ctr_object* ctr_reflect_cons_str(ctr_object* myself, ctr_argument* argumentList) {
+  return ctr_internal_cast2string(ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("value"), 0));
+}

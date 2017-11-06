@@ -1,0 +1,5 @@
+x is Map new put: 'test' at: 'key', put: 123 at: '123'.
+x is x kvmap: {:kv ^kv reverse.}.
+
+Pen write: x, brk.
+

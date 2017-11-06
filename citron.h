@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CTR_VERSION "0.0.5.8"
+#define CTR_VERSION "0.0.5.9"
 #define CTR_LOG_WARNINGS 0//2 to enable
 /**
  * Define the Citron tokens
@@ -183,6 +183,7 @@ struct ctr_object {
 		unsigned int chainMode: 1;
 		unsigned int remote: 1;
 		unsigned int shared: 1;
+		unsigned int raw: 1;
 	} info;
 	struct ctr_object* link;
 	//int lex_scope;
@@ -277,6 +278,7 @@ ctr_object* CtrStdNil;
 ctr_object* CtrStdGC;
 ctr_object* CtrStdMap;
 ctr_object* CtrStdArray;
+ctr_object* CtrStdIter;
 ctr_object* CtrStdFile;
 ctr_object* CtrStdSystem;
 ctr_object* CtrStdDice;
@@ -289,6 +291,7 @@ ctr_object* CtrStdBreak;
 ctr_object* CtrStdContinue;
 ctr_object* CtrStdExit;
 ctr_object* CtrStdReflect;
+ctr_object* CtrStdReflect_cons;
 ctr_object* CtrStdFiber;
 ctr_object* ctr_first_object;
 
@@ -391,7 +394,12 @@ ctr_object* ctr_const_assign_value(ctr_object* key, ctr_object* o, ctr_object* c
 char*       ctr_internal_readf(char* file_name, uint64_t* size_allocated);
 void        ctr_internal_debug_tree(ctr_tnode* ti, int indent);
 ctr_object* ctr_send_message(ctr_object* receiver, char* message, long len, ctr_argument* argumentList);
+ctr_object* ctr_send_message_variadic(ctr_object* myself, char* message, int msglen, int count, ...) ;
+ctr_object* ctr_invoke_variadic(ctr_object* myself, ctr_object* *fun(ctr_object*,ctr_argument*), int count, ...);
+ctr_object* ctr_allocate_argumentList (int count, ...);
+void ctr_free_argumentList (ctr_argument* argumentList);
 void ctr_internal_create_func(ctr_object* o, ctr_object* key, ctr_object* (*func)( ctr_object*, ctr_argument* ) );
+int ctr_is_primitive(ctr_object* object);
 
 /**
  * Scoping functions
@@ -414,12 +422,14 @@ ctr_object* ctr_nil_is_nil(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_nil_to_string(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_nil_to_number(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_nil_to_boolean(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_nil_assign(ctr_object* myself, ctr_argument* argumentList);
 
 /**
  * Object Interface
  */
 ctr_object* ctr_object_make(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_ctor(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_object_assign(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_attr_accessor(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_attr_reader(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_attr_writer(ctr_object* myself, ctr_argument* argumentList);
@@ -462,6 +472,7 @@ ctr_object* ctr_bool_flip(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_bool_either_or(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_bool_break(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_bool_continue(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_bool_assign(ctr_object* myself, ctr_argument* argumentList);
 
 /**
  * Number Interface
@@ -514,6 +525,7 @@ ctr_object* ctr_number_negative(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_to_byte(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_qualify(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_respond_to(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_number_assign(ctr_object* myself, ctr_argument* argumentList);
 
 
 /**
@@ -525,6 +537,7 @@ ctr_object* ctr_string_fromto(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_from_length(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_concat(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_append(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_multiply(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_eq(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_neq(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_trim(ctr_object* myself, ctr_argument* argumentList);
@@ -563,8 +576,12 @@ ctr_object* ctr_string_dquotes_escape( ctr_object* myself, ctr_argument* argumen
 ctr_object* ctr_string_characters( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_string_to_byte_array( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_string_append_byte(ctr_object* myself, ctr_argument* argumentList );
+ctr_object* ctr_string_csub( ctr_object* myself, ctr_argument* argumentList );
+ctr_object* ctr_string_cadd( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_string_randomize_bytes(ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_string_reverse(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_is_ctor(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_assign(ctr_object* myself, ctr_argument* argumentList);
 
 /**
  * Block Interface
@@ -579,11 +596,13 @@ ctr_object* ctr_block_while_false(ctr_object* myself, ctr_argument* argumentList
 ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object* my);
 ctr_object* ctr_block_times(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_to_string(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_block_assign(ctr_object* myself, ctr_argument* argumentList);
 
 /**
  * Array Interface
  */
 ctr_object* ctr_array_new(ctr_object* myclass, ctr_argument* argumentList);
+ctr_object* ctr_array_copy(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_new_and_push(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_type(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_fmap(ctr_object* myself, ctr_argument* argumentList);
@@ -598,19 +617,28 @@ ctr_object* ctr_array_shift(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_count(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_join(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_pop(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_index(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_contains(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_get(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_sort(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_put(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_from_length(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_head(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_tail(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_init(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_last(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_add(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_map(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_min(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_max(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_sum(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_product(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_multiply(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_to_string(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_fill(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_column(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_assign(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_intersperse(ctr_object* myself, ctr_argument* argumentList);
 
 ctr_object* ctr_build_immutable(ctr_tnode* node);
 
@@ -623,8 +651,30 @@ ctr_object* ctr_map_put(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_get(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_count(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_each(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_map_kvmap(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_map_kvlist(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_flip(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_map_assign(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_to_string(ctr_object* myself, ctr_argument* argumentList);
+
+ctr_object* ctr_iter_range;
+ctr_object* ctr_iter_urange;
+
+ctr_object* ctr_iterator_make(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_iterator_set_seed(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_iterator_set_func(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_iterator_make_range(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_iterator_make_uncapped_range(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_iterator_next(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_iterator_each(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_iterator_fmap(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_iterator_count(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_iterator_take(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_iterator_takewhile(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_iterator_end(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_iterator_end_check(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_iterator_to_array(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_iterator_skip(ctr_object* myself, ctr_argument* argumentList);
 
 /**
  * Console Interface
@@ -783,6 +833,8 @@ void ctr_gc_sweep( int all );
 /**
  * Language Reflection Interface
  */
+static ctr_object* ctr_reflect_map_type_descriptor __attribute__((unused));
+
 ctr_object* ctr_reflect_add_glob(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_add_local(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_add_my(ctr_object* myself, ctr_argument* argumentList);
@@ -801,6 +853,16 @@ ctr_object* ctr_reflect_link_to(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_child_of(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_is_linked_to(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_generate_inheritance_tree(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_get_primitive_link(ctr_object* object);
+ctr_object* ctr_reflect_describe_type(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_describe_value(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_type_descriptor_print(ctr_object* myself, ctr_argument* argumentList);
+int ctr_reflect_check_bind_valid(ctr_object* from, ctr_object* to);
+ctr_object* ctr_reflect_bind(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_cons_of(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_try_serialize_block(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_cons_value(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_cons_str(ctr_object* myself, ctr_argument* argumentList);
 /**
  * Fiber Co-Processing Interface
  */

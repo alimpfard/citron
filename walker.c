@@ -81,6 +81,7 @@ ctr_object* ctr_cwlk_message(ctr_tnode* paramNode) {
         case CTR_AST_NODE_LTRNUM:
             r = ctr_build_number_from_string(receiverNode->value, receiverNode->vlen);
             break;
+        case CTR_AST_NODE_IMMUTABLE:
         case CTR_AST_NODE_NESTED:
             r = ctr_cwlk_expr(receiverNode, &wasReturn);
             break;
@@ -88,7 +89,7 @@ ctr_object* ctr_cwlk_message(ctr_tnode* paramNode) {
             r = ctr_build_block(receiverNode);
             break;
         default:
-            printf("Cannot send message to receiver of type: %d \n", receiverNode->type);
+            printf("Cannot send messages to receiver of type: %d \n", receiverNode->type);
             break;
     }
     while(li->next) {

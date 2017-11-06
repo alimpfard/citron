@@ -42,6 +42,22 @@ ctr_object* ctr_array_new(ctr_object* myclass, ctr_argument* argumentList) {
 }
 
 /**
+ * [Array] copy
+ *
+ * shallow copy of the array
+ **/
+ctr_object* ctr_array_copy(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* arr = ctr_array_new(CtrStdArray, NULL);
+  ctr_argument* pushArg = ctr_heap_allocate(sizeof(ctr_argument));
+  for(int i=0; i<myself->value.avalue->length; i++) {
+    pushArg->object = *(myself->value.avalue->elements+i);
+    ctr_array_push(arr, pushArg);
+  }
+  ctr_heap_free(pushArg);
+  return arr;
+}
+
+/**
  * [Array] type
  *
  * Returns the string 'Array'.
@@ -147,7 +163,7 @@ ctr_object* ctr_array_max(ctr_object* myself, ctr_argument* argumentList) {
  * [Array] sum
  *
  * Takes the sum of an array. This message will calculate the
- * sum of the numerical elements in the array.
+ * sum of the elements in the array.
  *
  * Usage:
  *
@@ -158,14 +174,18 @@ ctr_object* ctr_array_max(ctr_object* myself, ctr_argument* argumentList) {
  * it's value will be 6.
  */
 ctr_object* ctr_array_sum(ctr_object* myself, ctr_argument* argumentList) {
-    double sum = 0;
+    ctr_object* sum;
     ctr_object* el;
     size_t i = 0;
     for(i = 0; i < myself->value.avalue->head; i++) {
+        if (!i) {
+          sum = *myself->value.avalue->elements;
+          continue;
+        }
         el = *(myself->value.avalue->elements + i);
-        sum += ctr_internal_cast2number(el)->value.nvalue;
+        sum = ctr_send_message_variadic(sum, "+", 1, 1, el);
     }
-    return ctr_build_number_from_float(sum);
+    return (sum);
 }
 
 /**
@@ -185,15 +205,86 @@ ctr_object* ctr_array_sum(ctr_object* myself, ctr_argument* argumentList) {
  * ( 2 * 4 * 8 = 64 ) will be stored in p.
  */
 ctr_object* ctr_array_product(ctr_object* myself, ctr_argument* argumentList) {
-    double product = 1;
-    ctr_object* el;
-    size_t i = 0;
-    for(i = 0; i < myself->value.avalue->head; i++) {
-        el = *(myself->value.avalue->elements + i);
-        product *= ctr_internal_cast2number(el)->value.nvalue;
-    }
-    return ctr_build_number_from_float(product);
+  ctr_object* prod;
+  ctr_object* el;
+  size_t i = 0;
+  for(i = 0; i < myself->value.avalue->head; i++) {
+      if (!i) {
+        prod = *myself->value.avalue->elements;
+        continue;
+      }
+      el = *(myself->value.avalue->elements + i);
+      prod = ctr_send_message_variadic(prod, "*", 1, 1, el);
+  }
+  return (prod);
 }
+
+/**
+ * [Array] * [o:Number | Array]
+ *
+ * Repeats the array o times if o is a number, and generates an array multiplication
+ * for myself and o if o is an array
+ */
+ctr_object* ctr_array_multiply(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* mand = argumentList->object;
+  if (mand->info.type == CTR_OBJECT_TYPE_OTNUMBER) {
+    int rep = (int)mand->value.nvalue;
+    if (rep == 0) return ctr_array_new(CtrStdArray, NULL);
+    else if (rep == 1) return myself;
+    else {
+      rep--;
+      ctr_object* newArr = ctr_array_new(CtrStdArray, NULL);
+      ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+      for (;rep>=0;rep--) {
+        arg->object = myself;
+        newArr = ctr_array_add(newArr, arg);
+      }
+      ctr_heap_free(arg);
+      return newArr;
+    }
+  }
+  if (mand->info.type == CTR_OBJECT_TYPE_OTARRAY) {
+    ctr_object* newArr = ctr_array_new(CtrStdArray, NULL);
+    ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
+    for(int i=myself->value.avalue->tail; i<myself->value.avalue->head; i++) {
+      ctr_object* elem0 = *(myself->value.avalue->elements+i);
+      for (int j=mand->value.avalue->tail; j<mand->value.avalue->head; j++) {
+        ctr_object* lst = ctr_array_new(CtrStdArray, NULL);
+        args->object = elem0;
+        ctr_array_push(lst, args);
+        args->object = *(mand->value.avalue->elements+j);
+        ctr_array_push(lst, args);
+        lst->value.avalue->immutable = 1;
+        args->object = lst;
+        ctr_array_push(newArr, args);
+      }
+    }
+    ctr_heap_free(args);
+    return newArr;
+  }
+}
+
+/**
+ * [Array] intersperse: [o: Object]
+ *
+ * places an 'o' between all array elements
+ * returns an array
+ **/
+ ctr_object* ctr_array_intersperse(ctr_object* myself, ctr_argument* argumentList) {
+   ctr_object* newArr = ctr_array_new(CtrStdArray, NULL);
+   size_t i = 0;
+   ctr_argument* pushArg = ctr_heap_allocate(sizeof(ctr_argument));
+   for(i = 0; i < myself->value.avalue->head; i++) {
+       pushArg->object = *(myself->value.avalue->elements + i);
+       newArr = ctr_array_push(newArr, pushArg);
+       if (i<myself->value.avalue->head-1) {
+         pushArg->object = argumentList->object;
+         newArr = ctr_array_push(newArr, pushArg);
+     }
+   }
+   ctr_heap_free(pushArg);
+   return newArr;
+ }
 
 /**
  * [Array] map: [Block].
@@ -397,6 +488,41 @@ ctr_object* ctr_array_get(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 /**
+ * [Array] indexOf: [Object]
+ *
+ * Returns the index of the first occurence of object
+ * -1 if not found
+ */
+ctr_object* ctr_array_index(ctr_object* myself, ctr_argument* argumentList) {
+  int i;
+  ctr_object* o;
+  ctr_object* needle = argumentList->object;
+  for(i=myself->value.avalue->tail; i<myself->value.avalue->head; i++) {
+      o = *( myself->value.avalue->elements + i );
+      if (ctr_internal_object_is_equal(o, needle))
+        return ctr_build_number_from_float(i);
+  }
+  return ctr_build_number_from_float(-1);
+}
+
+/**
+ * [Array] contains: [Object]
+ *
+ * Returns whether the array contains the object or not
+ */
+ctr_object* ctr_array_contains(ctr_object* myself, ctr_argument* argumentList) {
+  int i;
+  ctr_object* o;
+  ctr_object* needle = argumentList->object;
+  for(i=myself->value.avalue->tail; i<myself->value.avalue->head; i++) {
+      o = *( myself->value.avalue->elements + i );
+      if (ctr_internal_object_is_equal(o, needle))
+        return ctr_build_bool(1);
+  }
+  return ctr_build_bool(0);
+}
+
+/**
  * [Array] @ [Index]
  *
  * Alias for [Array] at: [Index]
@@ -537,6 +663,76 @@ ctr_object* ctr_array_from_length(ctr_object* myself, ctr_argument* argumentList
 }
 
 /**
+ * [Array] head
+ * see also (tail, init, last)
+ *
+ * returns the first element of the array
+ * Does generate exceptions when array is empty
+ */
+ctr_object* ctr_array_head(ctr_object* myself, ctr_argument* argumentList) {
+    return ctr_send_message_variadic(myself, "at:", 3, 1, ctr_build_number_from_float(0));
+}
+
+/**
+ * [Array] tail
+ * see also (head, init, last)
+ *
+ * returns all of the array sans the first element
+ * Does not generate exceptions when array is empty
+ */
+ctr_object* ctr_array_tail(ctr_object* myself, ctr_argument* argumentList) {
+    ctr_object* arr = ctr_array_new(CtrStdArray, NULL);
+    if (myself->value.avalue->head == myself->value.avalue->tail)
+      return arr;
+    else {
+      ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+      for(int i=1; i<myself->value.avalue->head - myself->value.avalue->tail; i++) {
+        arg->object = ctr_build_number_from_float(i);
+        arg->object = ctr_send_message(myself, "at:", 3, arg);
+        ctr_send_message(arr, "push:", 5, arg);
+      }
+      ctr_heap_free(arg);
+    }
+    arr->value.avalue->immutable = myself->value.avalue->immutable;
+    return arr;
+}
+
+/**
+ * [Array] init
+ * see also (head, tail, last)
+ *
+ * returns all of the array sans the last element
+ * Does not generate exceptions when array is empty
+ */
+ctr_object* ctr_array_init(ctr_object* myself, ctr_argument* argumentList) {
+    ctr_object* arr = ctr_array_new(CtrStdArray, NULL);
+    if (myself->value.avalue->head == myself->value.avalue->tail)
+      return arr;
+    else {
+      ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+      for(int i=0; i<myself->value.avalue->head - myself->value.avalue->tail-1; i++) {
+        arg->object = ctr_build_number_from_float(i);
+        arg->object = ctr_send_message(myself, "at:", 3, arg);
+        ctr_send_message(arr, "push:", 5, arg);
+      }
+      ctr_heap_free(arg);
+    }
+    arr->value.avalue->immutable = myself->value.avalue->immutable;
+    return arr;
+}
+
+/**
+ * [Array] last
+ * see also (head, tail, init)
+ *
+ * returns all of the array sans the last element
+ * Does generate exceptions when array is empty
+ */
+ctr_object* ctr_array_last(ctr_object* myself, ctr_argument* argumentList) {
+    return ctr_send_message_variadic(myself, "at:", 3, 1, ctr_build_number_from_float(myself->value.avalue->head-myself->value.avalue->tail-1));
+}
+
+/**
  * [Array] + [Array]
  *
  * Returns a new array, containing elements of itself and the other
@@ -659,13 +855,6 @@ ctr_object* ctr_array_imap(ctr_object* myself, ctr_argument* argumentList) {
  *
  * Include the element iff block returns True for the element
  */
- /**
-  * Array foldl: [Block]
-  *
-  * reduces an array according to a block (which takes an accumulator and the value, and returns the next acc) from the left (index 0)
-  *
-  * ([1,2,3,4]) foldl: {:acc:v ^acc + v.}. #=> Equivalent to ([1,2,3,4]) sum.
-  */
   ctr_object* ctr_array_filter(ctr_object* myself, ctr_argument* argumentList) {
     ctr_object* func = argumentList->object;
     CTR_ENSURE_TYPE_BLOCK(func);
@@ -690,6 +879,64 @@ ctr_object* ctr_array_imap(ctr_object* myself, ctr_argument* argumentList) {
     ctr_heap_free(accArg->next);
     ctr_heap_free(accArg);
     return newArray;
+  }
+
+  /**
+   * [Array] unpack: [Array:{Ref:string}]
+   * Element-wise assign
+   */
+
+  ctr_object* ctr_array_assign(ctr_object* myself, ctr_argument* argumentList) {
+    ctr_object* to = argumentList->object;
+    if (!ctr_reflect_check_bind_valid(myself, to)) return CtrStdNil;
+
+    ctr_argument* elnumArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    ctr_argument* accArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    int i;
+    if (to->info.type == CTR_OBJECT_TYPE_OTARRAY) {
+      int other;
+      int saw_catch_all = 0;
+      for(other=(i = to->value.avalue->tail); i<to->value.avalue->head; other++,i++) {
+          ctr_object* elnum = ctr_build_number_from_float((ctr_number) i);
+          elnumArg->object = elnum;
+          ctr_object* to_elem;
+          accArg->object = ctr_array_get(to, elnumArg);
+          if (
+            accArg->object->info.type == CTR_OBJECT_TYPE_OTSTRING &&
+            ctr_internal_object_is_equal(
+              ctr_build_string_from_cstring("*"),
+              ctr_send_message_variadic(accArg->object, "at:", 3, 1, ctr_build_number_from_float(0))
+            )) {
+            //We got a catch-all *var
+            if (saw_catch_all) {
+              ctr_object* cc = ctr_build_string_from_cstring("Pattern (");
+              ctr_send_message_variadic(cc, "append:", 7, 1, to);
+              ctr_send_message_variadic(cc, "append:", 7, 1, ctr_build_string_from_cstring(") cannot contain two starred names."));
+              CtrStdFlow = cc;
+              goto clear;
+            }
+            saw_catch_all=1;
+            accArg->object = ctr_send_message_variadic(accArg->object, "skip:", 5, 1, ctr_build_number_from_float(1)); //skip the '*'
+            accArg->object->info.raw = 1;
+            int skip = ctr_array_count(myself, NULL)->value.nvalue - to->value.avalue->head-i;
+            to_elem = ctr_send_message_variadic(myself, "from:length:", 12, 2, ctr_build_number_from_float(other-to->value.avalue->tail), ctr_build_number_from_float(skip+other-to->value.avalue->tail+1));
+            to_elem->value.avalue->immutable = myself->value.avalue->immutable;
+            other+=skip+other-to->value.avalue->tail;
+          } else {
+            elnumArg->object = ctr_build_number_from_float(other);
+            to_elem = ctr_array_get(myself, elnumArg);
+          }
+          ctr_send_message(to_elem, "unpack:", 7, accArg);
+      }
+    } else if (to->info.type == CTR_OBJECT_TYPE_OTSTRING) {
+      if (ctr_internal_object_is_equal(argumentList->object, ctr_build_string_from_cstring("_")) || ctr_internal_object_is_equal(argumentList->object, ctr_build_empty_string()))
+        goto clear;
+      ctr_internal_object_add_property(ctr_contexts[ctr_context_id], to, myself, 0);
+    }
+    clear:
+    ctr_heap_free(elnumArg);
+    ctr_heap_free(accArg);
+    return myself;
   }
 
 /**
@@ -758,7 +1005,7 @@ ctr_object* ctr_array_to_string( ctr_object* myself, ctr_argument* argumentList 
     ctr_object* string = ctr_build_empty_string();
     newArgumentList = ctr_heap_allocate( sizeof( ctr_argument ) );
     if ( myself->value.avalue->tail == myself->value.avalue->head ) {
-        newArgumentList->object = ctr_build_string_from_cstring( myself->value.avalue->immutable?"[]":CTR_DICT_CODEGEN_ARRAY_NEW );
+        newArgumentList->object = ctr_build_string_from_cstring( myself->value.avalue->immutable?"[":CTR_DICT_CODEGEN_ARRAY_NEW );
         string = ctr_string_append( string, newArgumentList );
     } else {
         newArgumentList->object = ctr_build_string_from_cstring( myself->value.avalue->immutable?"[":CTR_DICT_CODEGEN_ARRAY_NEW_PUSH );
@@ -781,6 +1028,9 @@ ctr_object* ctr_array_to_string( ctr_object* myself, ctr_argument* argumentList 
             string = ctr_string_append( string, newArgumentList );
             newArgumentList->object = ctr_build_string_from_cstring("'");
             string = ctr_string_append( string, newArgumentList );
+        } else if (arrayElement->info.type == CTR_OBJECT_TYPE_OTARRAY && arrayElement->value.avalue->immutable) {
+          newArgumentList->object = arrayElement;
+          string = ctr_string_append( string, newArgumentList );
         } else {
             newArgumentList->object = ctr_build_string_from_cstring("(");
             ctr_string_append( string, newArgumentList );
@@ -995,6 +1245,122 @@ ctr_object* ctr_map_each(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 /**
+ * [Map] kvmap: [Block]
+ *
+ * Iterates over the map, passing a tuple of [key, value] to the specified block.
+ * And constructs a new Map based off the returned kv-tuple
+ * Note that within an each/map block, 'me' and 'my' refer to the collection.
+ */
+ctr_object* ctr_map_kvmap(ctr_object* myself, ctr_argument* argumentList) {
+    ctr_object* block = argumentList->object;
+    ctr_mapitem* m;
+    if (block->info.type != CTR_OBJECT_TYPE_OTBLOCK) {
+        CtrStdFlow = ctr_build_string_from_cstring("Expected Block.");
+        CtrStdFlow->info.sticky = 1;
+        return myself;
+    }
+    block->info.sticky = 1;
+    m = myself->properties->head;
+    ctr_argument* arguments = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    arguments->next = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    ctr_argument* larguments = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    ctr_object* kvtup = ctr_array_new(CtrStdArray, NULL);
+    ctr_object* newmap = ctr_map_new(CtrStdMap, NULL);
+    while(m) {
+        arguments->object = m->key;
+        arguments->next->object = ctr_build_number_from_float(0);
+        ctr_array_put(kvtup, arguments);
+
+        arguments->object = m->value;
+        arguments->next->object = ctr_build_number_from_float(1);
+        ctr_array_put(kvtup, arguments);
+
+        arguments->object = kvtup;
+        arguments->object = ctr_block_run(block, arguments, NULL);
+        if (arguments->object->info.type != CTR_OBJECT_TYPE_OTARRAY) {
+          CtrStdFlow = ctr_build_string_from_cstring("kvmap block must only return a 2-tuple or nothing.");
+          return CtrStdNil;
+        }
+        if (arguments->object == myself) {
+          arguments->object = m->key;
+          arguments->next->object = m->value;
+        } else {
+          ctr_object* ret = arguments->object;
+          larguments->object = ctr_build_number_from_float(1);
+          arguments->object = ctr_array_get(ret, larguments);
+          larguments->object = ctr_build_number_from_float(0);
+          arguments->next->object = ctr_array_get(ret, larguments);
+        }
+        ctr_map_put(newmap, arguments);
+        m = m->next;
+    }
+    kvtup->info.mark = 1;
+    ctr_heap_free( arguments->next );
+    ctr_heap_free( arguments );
+    ctr_heap_free( larguments );
+    block->info.mark = 0;
+    block->info.sticky = 0;
+    return newmap;
+}
+
+/**
+ * [Map] kvlist: [Block]
+ *
+ * Iterates over the map, passing a tuple of [key, value] to the specified block.
+ * And constructs a new list based off the returned kv-tuple
+ * Note that within an each/map block, 'me' and 'my' refer to the collection.
+ */
+ctr_object* ctr_map_kvlist(ctr_object* myself, ctr_argument* argumentList) {
+    ctr_object* block = argumentList->object;
+    ctr_mapitem* m;
+    if (block->info.type != CTR_OBJECT_TYPE_OTBLOCK) {
+        CtrStdFlow = ctr_build_string_from_cstring("Expected Block.");
+        CtrStdFlow->info.sticky = 1;
+        return myself;
+    }
+    block->info.sticky = 1;
+    m = myself->properties->head;
+    ctr_argument* arguments = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    arguments->next = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    ctr_argument* larguments = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    ctr_object* kvtup = ctr_array_new(CtrStdArray, NULL);
+    ctr_object* list = ctr_array_new(CtrStdArray, NULL);
+    while(m) {
+        arguments->object = m->key;
+        arguments->next->object = ctr_build_number_from_float(0);
+        ctr_array_put(kvtup, arguments);
+
+        arguments->object = m->value;
+        arguments->next->object = ctr_build_number_from_float(1);
+        ctr_array_put(kvtup, arguments);
+
+        arguments->object = kvtup;
+        arguments->object = ctr_block_run(block, arguments, NULL);
+        if (arguments->object->info.type != CTR_OBJECT_TYPE_OTARRAY) {
+          CtrStdFlow = ctr_build_string_from_cstring("kvmap block must only return a 2-tuple or nothing.");
+          return CtrStdNil;
+        }
+        if (arguments->object == myself) {
+          ctr_object* lst = ctr_array_new(CtrStdArray, NULL);
+          arguments->object = m->key;
+          ctr_array_push(lst, arguments);
+          arguments->object = m->value;
+          ctr_array_push(lst, arguments);
+          arguments->object = lst;
+        }
+        ctr_array_push(list, arguments);
+        m = m->next;
+    }
+    kvtup->info.mark = 1;
+    ctr_heap_free( arguments->next );
+    ctr_heap_free( arguments );
+    ctr_heap_free( larguments );
+    block->info.mark = 0;
+    block->info.sticky = 0;
+    return list;
+}
+
+/**
  * [Map] flip
  *
  * flips the keys and the values of the map. (same-value keys will be overwritten)
@@ -1116,20 +1482,358 @@ ctr_object* ctr_map_to_string( ctr_object* myself, ctr_argument* argumentList) {
 }
 
 /**
- * Tuple
+ * [Map] unpack: [Map:{Ref:string}]
+ * Key-wise assign
  */
-// ctr_object* ctr_tuple_new (ctr_object* myclass, ctr_argument* argumentList) {
-//     ctr_object* s = ctr_internal_create_object(CTR_OBJECT_TYPE_OTARRAY);
-//     s->link = myclass;
-//     s->value.avalue = (ctr_collection*) ctr_heap_allocate(sizeof(ctr_collection));
-//     s->value.avalue->immutable = 1;
-//     s->value.avalue->length = 1;
-//     s->value.avalue->elements = (ctr_object**) ctr_heap_allocate(sizeof(ctr_object*)*1);
-//     s->value.avalue->head = 0;
-//     s->value.avalue->tail = 0;
-//     return s;
-// } //Treat as array, except immutable
-// ctr_object* ctr_tuple_new_and_put(ctr_object* myclass, ctr_argument* argumentList) {
-//     ctr_object* s = ctr_array_new(myclass, NULL);
-//     return ctr_tuple_push(s, argumentList);
-// }
+
+ctr_object* ctr_map_assign(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* to = argumentList->object;
+  if(!ctr_reflect_check_bind_valid(myself, to)) return CtrStdNil;
+
+  ctr_mapitem* mapItem;
+  ctr_argument* newArgumentList;
+  mapItem = myself->properties->head;
+  newArgumentList = ctr_heap_allocate( sizeof( ctr_argument ) );
+  while( mapItem ) {
+      if (mapItem->value == myself) {
+        CtrStdFlow = ctr_build_string_from_cstring("Assign cannot have selfReference.");
+        return myself;
+      }
+      ctr_object* value;
+      if(!(value = ctr_internal_object_find_property(to, mapItem->key, 0))) {mapItem = mapItem->next; continue;}
+      value->info.raw = 1;
+      if (!ctr_reflect_check_bind_valid(mapItem->value, value)) {
+        // CtrStdFlow = NULL; //get rid of the error, and bind the result back to the name
+        newArgumentList->object = mapItem->key;
+        ctr_send_message(mapItem->value, "unpack:", 7, newArgumentList);
+        value->info.raw = 0;
+      } else {
+        //Is a valid binding, so bind those
+        newArgumentList->object = value;
+        ctr_send_message(mapItem->value, "unpack:", 7, newArgumentList);
+      }
+      mapItem = mapItem->next;
+  }
+  ctr_heap_free( newArgumentList );
+  return myself;
+}
+
+/**
+ * Iterator
+ *
+ * Iterator (range), an object that supports next and current,
+ * and steps through some values before (optionally) reaching an end
+ */
+
+struct ctr_iters_type {
+  ctr_object** ctr_iterator_range_func;
+  ctr_object** ctr_iterator_uncapped_range_func;
+};
+struct ctr_iters_type ctr_iterators = {&ctr_iter_range, &ctr_iter_urange};
+
+ctr_object* ctr_iterator_make(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* instance = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
+  instance->link = myself;
+  return instance;
+}
+
+/**
+ * @internal
+ *
+ * Iterator set seed
+ */
+ctr_object* ctr_iterator_set_seed(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_internal_object_set_property(
+    myself,
+    ctr_build_string_from_cstring("seed"),
+    argumentList->object,
+    CTR_CATEGORY_PRIVATE_PROPERTY
+  );
+  return myself;
+}
+/**
+ * @internal
+ *
+ * Iterator set function
+ */
+ctr_object* ctr_iterator_set_func_(ctr_object* myself, ctr_object* function, ctr_object* end, ctr_object* step) {
+  ctr_object* func = ctr_invoke_variadic(CtrStdReflect, &ctr_reflect_fn_copy, 1, function);
+
+  ctr_internal_object_set_property(
+    myself,
+    ctr_build_string_from_cstring("func"),
+    func,
+    CTR_CATEGORY_PRIVATE_PROPERTY
+  );
+  if (end)
+  ctr_internal_object_set_property(
+    func,
+    ctr_build_string_from_cstring("end_value"),
+    end,
+    CTR_CATEGORY_PRIVATE_PROPERTY
+  );
+  if (step)
+  ctr_internal_object_set_property(
+    func,
+    ctr_build_string_from_cstring("step"),
+    step,
+    CTR_CATEGORY_PRIVATE_PROPERTY
+  );
+  ctr_internal_object_set_property(
+    func,
+    ctr_build_string_from_cstring("iterator"),
+    myself,
+    CTR_CATEGORY_PRIVATE_PROPERTY
+  );
+  return myself;
+}
+
+/**
+ * [Iterator] setFunc: [f:Block]
+ *
+ * sets the iterator step function.
+ */
+ctr_object* ctr_iterator_set_func(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* func = ctr_reflect_fn_copy(CtrStdReflect, argumentList);
+
+  ctr_internal_object_set_property(
+    myself,
+    ctr_build_string_from_cstring("func"),
+    func,
+    CTR_CATEGORY_PRIVATE_PROPERTY
+  );
+  ctr_internal_object_set_property(
+    func,
+    ctr_build_string_from_cstring("iterator"),
+    myself,
+    CTR_CATEGORY_PRIVATE_PROPERTY
+  );
+  return myself;
+}
+
+/**
+ * [Iterator] rangeFrom: [f:Number] to: [t:Number] step: [s:Number]
+ *
+ * makes a range iterator in range [f,t] with steps of s
+ *
+ */
+ctr_object* ctr_iterator_make_range(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_argument* argo = argumentList;
+
+  ctr_object* instance = ctr_iterator_make(myself, NULL);
+  argo->object = ctr_invoke_variadic(argo->object, &ctr_number_minus, 1, argo->next->next->object);
+  ctr_iterator_set_seed (instance, argo);
+  argo->object = *ctr_iterators.ctr_iterator_range_func;
+  ctr_iterator_set_func_ (instance, argo->object, argo->next->object, argo->next->next->object);
+
+  return instance;
+}
+
+/**
+ * [Iterator] rangeFrom: [f:(supports +)] step: [s:(supports +)]
+ *
+ * makes a range iterator in range [f,inf) with steps of s
+ * works on all objects that support the message '+'
+ */
+ctr_object* ctr_iterator_make_uncapped_range(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_argument* argo = argumentList;
+
+  ctr_object* instance = ctr_iterator_make(myself, NULL);
+  ctr_iterator_set_seed (instance, argo);
+  argo->object = *ctr_iterators.ctr_iterator_uncapped_range_func;
+  ctr_iterator_set_func_ (instance, argo->object, NULL, argo->next->object);
+
+  return instance;
+}
+
+/**
+ * [Iterator] next
+ *
+ * gives the next value or throws an exception (to signal the end of the iterator)
+ */
+ctr_object* ctr_iterator_next(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* iter = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("func"), 0);
+  ctr_object* seed = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("seed"), 0);
+  if (!(iter&&seed)) {
+    CtrStdFlow = ctr_build_string_from_cstring("Invalid iterator.");
+    return myself;
+  }
+  seed = ctr_block_run_variadic(iter, 1, seed);
+  ctr_internal_object_set_property(myself, ctr_build_string_from_cstring("seed"), seed, 0);
+  return seed;
+}
+
+/**
+ * [Iterator] each: [Block<value>]
+ *
+ * Runs the block for each value in the iterator while stepping through it
+ */
+ctr_object* ctr_iterator_each(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* value;
+  ctr_object* dothis = argumentList->object;
+  ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+  while (1) {
+    value = ctr_iterator_next(myself, NULL);
+    if (CtrStdFlow) break;
+    arg->object = value;
+    ctr_block_runIt(dothis, arg);
+  }
+  CtrStdFlow = NULL;
+  return myself;
+}
+
+/**
+ * [Iterator] fmap: [b:Block<value>]
+ * Equivalent to [Array] fmap: [Block<value>]
+ *
+ * transforms the iterator with the block to an array
+ */
+ctr_object* ctr_iterator_fmap(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* value;
+  ctr_object* dothis = argumentList->object;
+  ctr_object* ret = ctr_array_new(CtrStdArray, NULL);
+  ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+  while (1) {
+    value = ctr_iterator_next(myself, NULL);
+    if (CtrStdFlow) break;
+    arg->object = value;
+    arg->object = ctr_block_runIt(dothis, arg);
+    ctr_array_push(ret, arg);
+  }
+  CtrStdFlow = NULL;
+  ctr_heap_free(arg);
+  return ret;
+}
+
+/**
+ * [Iterator] count
+ *
+ * Steps through the iterator until it ends and returns the count.
+ * resets the state of the iterator
+ */
+ctr_object* ctr_iterator_count(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* ret = ctr_build_number_from_float(0);
+  ctr_object* seed = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("seed"), 0);
+  ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+  arg->object = ctr_build_number_from_float(1);
+  while (1) {
+   ctr_iterator_next(myself, NULL);
+   if (CtrStdFlow) break;
+   ret = ctr_number_add(ret, arg);
+  }
+  CtrStdFlow = NULL;
+  arg->object = seed;
+  ctr_iterator_set_seed(myself, arg);
+  ctr_heap_free(arg);
+  return ret;
+}
+
+/**
+ * [Iterator] take: [t:Number]
+ *
+ * takes at most <t> number of elements from the Iterator
+ */
+ctr_object* ctr_iterator_take(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* value;
+  int count = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  ctr_object* ret = ctr_array_new(CtrStdArray, NULL);
+  ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+  while (count--) {
+    value = ctr_iterator_next(myself, NULL);
+    if (CtrStdFlow) break;
+    arg->object = value;
+    ctr_array_push(ret, arg);
+  }
+  CtrStdFlow = NULL;
+  ctr_heap_free(arg);
+  return ret;
+}
+
+/**
+ * [Iterator] takeWhile: [predicate:Block]
+ *
+ * takes values as long as predicate returns true.
+ */
+ctr_object* ctr_iterator_takewhile(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* value;
+  ctr_object* pred = argumentList->object;
+  ctr_object* last_seed = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("seed"), 0);
+  ctr_object* ret = ctr_array_new(CtrStdArray, NULL);
+  ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+  while(1) {
+    if (value) last_seed = value;
+    value = ctr_iterator_next(myself, NULL);
+    if (CtrStdFlow) break;
+    arg->object = value;
+    if(!ctr_block_runIt(pred, arg)->value.bvalue) {
+      ctr_internal_object_set_property(myself, ctr_build_string_from_cstring("seed"), last_seed, 0);
+      break;
+    }
+    ctr_array_push(ret, arg);
+  }
+  CtrStdFlow = NULL;
+  ctr_heap_free(arg);
+  return ret;
+}
+
+/**
+ * [Iterator] endBlock
+ *
+ * returns a block that throws an IteratorEndException.
+ */
+ctr_object* ctr_iterator_end(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* iterend = ctr_string_eval(ctr_build_string_from_cstring("{thisBlock error: 'IteratorEndException'.}"), NULL);
+  return iterend;
+}
+
+/**
+ * [Iterator] endIf: [clause:Block]
+ *
+ * ends the Iterator if clause returns True
+ */
+ctr_object* ctr_iterator_end_check(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* clause = (ctr_block_run(argumentList->object, NULL, myself));
+  if (CtrStdFlow) {
+    return myself;
+  }
+  if (ctr_internal_cast2bool(clause)->value.bvalue)
+    CtrStdFlow = ctr_build_string_from_cstring("IteratorEndException");
+  return myself;
+}
+
+/* Array interface to iterator */
+/**
+ * [Iterator] toArray
+ *
+ * Collects all of the iterator values into an array
+ */
+ ctr_object* ctr_iterator_to_array(ctr_object* myself, ctr_argument* argumentList) {
+   ctr_object* value;
+   ctr_object* ret = ctr_array_new(CtrStdArray, NULL);
+   ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+   while (1) {
+     value = ctr_iterator_next(myself, NULL);
+     if (CtrStdFlow) break;
+     arg->object = value;
+     ctr_array_push(ret, arg);
+   }
+   CtrStdFlow = NULL;
+   ctr_heap_free(arg);
+   return ret;
+ }
+
+/**
+ * [Iterator] skip: [n:Number]
+ *
+ * skips n iterations and returns the nth value
+ * does not reset the evaluation. (iterator will advance to index n)
+ */
+ ctr_object* ctr_iterator_skip(ctr_object* myself, ctr_argument* argumentList) {
+   int i = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+   ctr_object* value = NULL;
+   for(;i>0;i--) {
+     if(CtrStdFlow) break;
+     value = ctr_iterator_next(myself, NULL);
+   }
+   return value?value:ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("seed"), 0);
+ }

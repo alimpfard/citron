@@ -63,8 +63,8 @@ var noop is {}.
 var jump is {my machine nextJump: my jump.}.
 var add is  {my machine setReg: my destintaion to: ((my machine getReg: my operand0) + (my machine getReg: my operand1)).}.
 var addi is {my machine setReg: my destintaion to: (my immediate toNumber + (my machine getReg: my operand0)).}.
-var xor is  {my machine setReg: my destintaion to: ((my machine getReg: my operand0) logicalXor: (my machine getReg: my operand1)).}.
-var ori is  {my machine setReg: my destintaion to: (my immediate toNumber logicalOr: (my machine getReg: my operand0)).}.
+var xor is  {my machine setReg: my destintaion to: ((my machine getReg: my operand0) integerXor: (my machine getReg: my operand1)).}.
+var ori is  {my machine setReg: my destintaion to: (my immediate toNumber integerOr: (my machine getReg: my operand0)).}.
 var beq is  {var immediate is my immediate. var machine is my machine. ((my machine getReg: my operand0) = (my machine getReg: my destintaion)) ifTrue: {machine nextJump: immediate.}.}.
 var bgez is {var immediate is my immediate. var machine is my machine. ((my machine getReg: my operand0) >=: (my machine getReg: my destintaion)) ifTrue: {machine nextJump: immediate.}.}.
 var bgezal is {var immediate is my immediate. var machine is my machine. ((my machine getReg: my operand0) = (my machine getReg: my destintaion)) ifTrue: {machine nextJump: immediate. machine setReg: 31 to: (machine PC + 1).}.}.
@@ -74,9 +74,9 @@ var bltz is {var immediate is my immediate. var machine is my machine. ((my mach
 var bltzal is {var immediate is my immediate. var machine is my machine. ((my machine getReg: my operand0) < (my machine getReg: my destintaion)) ifTrue: {machine nextJump: immediate. machine setReg: 31 to: (machine PC + 1).}.}.
 var bne is {var immediate is my immediate. var machine is my machine. ((my machine getReg: my operand0) !=: (my machine getReg: my destintaion)) ifTrue: {machine nextJump: immediate.}.}.
 var jal is {my machine setReg: 31 to: (me PC + 1). my machine nextJump: my jump.}.
-# var jr is {}.
-var and is  {my machine setReg: my destintaion to: ((my machine getReg: my operand0) logicalAnd: (my machine getReg: my operand1)).}.
-var andi is {my machine setReg: my destintaion to: (my immediate toNumber logicalAnd: (my machine getReg: my operand0)).}.
+var jr is {my machine nextPC: (my machine getReg: my destintaion).}.
+var and is  {my machine setReg: my destintaion to: ((my machine getReg: my operand0) integerAnd: (my machine getReg: my operand1)).}.
+var andi is {my machine setReg: my destintaion to: (my immediate toNumber integerAnd: (my machine getReg: my operand0)).}.
 #--Memory--
 var lbu is {my machine setReg: my destintaion to: (my machine getBytes: 1 base: (my immediate toNumber) offset: (my machine getReg: my operand0)).}.
 var sb is {my machine setBytes: 1 base: (my immediate toNumber) offset: (my machine getReg: my operand0) value: (my machine getReg: my destintaion).}.
@@ -114,7 +114,7 @@ var MIPSIntructions is Map new
   put: bne at: 'bne',
   put: jump at: 'j',
   put: jal at: 'jal',
-  put: noop at: 'jr',
+  put: jr at: 'jr',
   put: lbu at: 'lbu',
   put: sb at: 'sb',
   put: lw at: 'lw',
@@ -155,17 +155,17 @@ var MIPSAbstractMachine is Object cnew:         {
   my memory is MemoryBlock new init.
   my data is Map new.
 }.
-MIPSAbstractMachine on: 'setParseLocation:' do: {:loc my ploc is loc. my mloc is loc + (32 * 1024).}.
-MIPSAbstractMachine on: 'setReg:to:'        do: {:reg:value my dirtyregs push: [reg, (me getReg: reg)]. my regfile at: reg, set: value. }.
-MIPSAbstractMachine on: 'getReg:'           do: {:reg ^my regfile at: reg, get.}.
-MIPSAbstractMachine on: 'load:'             do: {:prg my program is MIPSIntructions decode: prg machine: me.}.
-MIPSAbstractMachine on: 'assemble:'         do: {:prg ^MIPSIntructions assemble: prg forMachine: me.}.
-MIPSAbstractMachine on: 'addLabel:'         do: {:label my labels put: my ploc at: label. my asmlabels put: my mloc at: label.}.
-MIPSAbstractMachine on: 'addWord:length:'   do: {:name:len my data put: [4, (my memory allocate: (len * 4))] at: name.}.
-MIPSAbstractMachine on: 'getLabel:'         do: {:label var result is my labels @ label. result isNil ifTrue: {result is my data @ label.}. ^result.}.
-MIPSAbstractMachine on: 'getLabelAsm:'      do: {:label var result is my asmlabels @ label. result isNil ifTrue: {result is my data @ label @ 1.}. ^result.}.
-MIPSAbstractMachine on: 'dereference:'      do: {:reg ^my memory at: (me getReg: reg).}.
-MIPSAbstractMachine on: 'step'              do: {
+MIPSAbstractMachine on: 'setParseLocation:'  do: {:loc my ploc is loc. my mloc is (8 * loc) + (32 * 1024).}.
+MIPSAbstractMachine on: 'setReg:to:'         do: {:reg:value my dirtyregs push: [reg, (me getReg: reg)]. my regfile at: reg, set: value. }.
+MIPSAbstractMachine on: 'getReg:'            do: {:reg ^my regfile at: reg, get.}.
+MIPSAbstractMachine on: 'load:'              do: {:prg my program is MIPSIntructions decode: prg machine: me.}.
+MIPSAbstractMachine on: 'assemble:'          do: {:prg ^MIPSIntructions assemble: prg forMachine: me.}.
+MIPSAbstractMachine on: 'addPDLabel:'        do: {:label my labels put: my ploc at: label. my asmlabels put: my mloc at: label.}.
+MIPSAbstractMachine on: 'addWord:length:'    do: {:name:len my data put: [4, (my memory allocate: (len * 4))] at: name.}.
+MIPSAbstractMachine on: 'getLabel:'          do: {:label var result is my labels @ label. result isNil ifTrue: {result is my data @ label.}. ^result.}. #0 pseudodirect, 1 pc-relative
+MIPSAbstractMachine on: 'getLabelAsm:mode:'  do: {:label:d var result is my asmlabels @ label. result isNil ifTrue: {result is my data @ label @ 1.}. d = 1 ifTrue: {result is (my mloc - result) from: 0 length: 16.}. ^result.}.
+MIPSAbstractMachine on: 'dereference:'       do: {:reg ^my memory at: (me getReg: reg).}.
+MIPSAbstractMachine on: 'step'               do: {
   me incPC.
   ^me execute_current_instr.
 }.
@@ -319,6 +319,9 @@ MIPSAbstractMachine on: 'execute_current_instr_g' do: {
 MIPSAbstractMachine on: 'nextJump:' do: {:label
   me setPC: (my labels @ label - 1).
 }.
+MIPSAbstractMachine on: 'nextPC:' do: {:pc
+  me setPC: (pc - 1).
+}.
 MIPSAbstractMachine on: 'incPC' do: {
   my regfile at: 32, set: (my regfile at: 32, get + 1).
 }.
@@ -388,7 +391,7 @@ JFormat on: 'emit:label:' do: {:op:dst
 RFormat on: 'emitBits:op0:op1:dst:' do: {:op:o0:o1:dst #
   var opf is MIPSIntructionBits at: op.
   opf isNil ifTrue: {opf is tnoop.}, else: { #Handle shift amount
-    opf is (opf @ 0) + (o0 toNumber toBits: 5) + (o1 toNumber toBits: 5) + (dst toNumber toBits: 5) + (0 toBits: 5) + (opf @ 1).
+    opf is (opf @ 0) + (o0 toNumber toBits: 5, reverse) + (o1 toNumber toBits: 5, reverse) + (dst toNumber toBits: 5, reverse) + (0 toBits: 5, reverse) + (opf @ 1 reverse).
   }.
   ^opf.
 }.
@@ -397,9 +400,9 @@ IFormat on: 'emitBits:op0:immediate:dst:machine:' do: {:op:o0:oimm:dst:machine
   var opf is MIPSIntructionBits at: op.
   opf isNil ifTrue: {opf is tnoop.}, else: {
     debug applyTo: {Pen write: '--> $$oimm'.}.
-    (oimm toNumber toString = oimm) ifFalse: {oimm is machine getLabelAsm: oimm.}.
+    (oimm toNumber toString = oimm) ifFalse: {oimm is machine getLabelAsm: oimm mode: (op = 'beq' toNumber).}.
     debug applyTo: {Pen write: ' $$oimm', brk.}.
-    opf is (opf @ 0) + (o0 toNumber toBits: 5) + (dst toNumber toBits: 5) + (oimm toNumber toBits: 16).
+    opf is (opf @ 0) + (o0 toNumber toBits: 5, reverse) + (dst toNumber toBits: 5, reverse) + (oimm toNumber toBits: 16, reverse).
   }.
   ^opf.
 }.
@@ -408,10 +411,10 @@ JFormat on: 'emitBits:label:machine:' do: {:op:dst:machine
   var opf is MIPSIntructionBits at: op.
   opf isNil ifTrue: {opf is tnoop.}, else: {
     #Pen write: '--> $$dst'.
-    (dst toNumber toString = dst) ifFalse: {dst is machine getLabelAsm: dst.}.
+    (dst toNumber toString = dst) ifFalse: {dst is machine getLabelAsm: dst mode: 0.}.
     dst is (dst toNumber toBits: 32).
     dst is dst from: 4 to: 30.
-    opf is (opf @ 0) + dst.
+    opf is (opf @ 0) + (dst reverse).
   }.
   ^opf.
 }.
@@ -429,7 +432,7 @@ MIPSIntructions on: 'instrFor:machine:' do: {:command:machine
   command findPattern: idataregex + ':' do: {:parts #J-Format (op label)
     label is parts @ 1.
     Pen write: 'label $$label', brk.
-    machine addLabel: label.
+    machine addPDLabel: label.
     command is '#label...'.
     ^''.
   }.
@@ -485,8 +488,15 @@ MIPSIntructions on: 'assembleInstr:forMachine:' do: {:command:machine
   command findPattern: idataregex + ':' do: {:parts #J-Format (op label)
     label is parts @ 1.
     Pen write: 'label $$label', brk.
-    machine addLabel: label.
+    machine addPDLabel: label.
     command is '#label...'.
+    ^''.
+  }.
+  command findPattern: '(jr)\\s+' + iregregex do: {:parts
+    op is parts @ 1.
+    reg_dest is parts @ 2.
+    Pen write: ('$$op :: dest=$$reg_dest operand0=$0 operand1=$0'), brk.
+    ret is RFormat emitBits: op op0: '0' op1: '0' dst: reg_dest.
     ^''.
   }.
   command findPattern: '(\\w+)\\s+' + iregregex + '\\s*,\\s*' + iregregex + '\\s*,\\s*' + iregregex do: {:parts #R-Format
@@ -633,19 +643,40 @@ MIPSIntructions on: 'disassemble:' do: {:str
   (op = 2) | (op = 3) | (op = 26) ifTrue: {format is 'j'.}.
   ^me splitBitsToInstr: (me splitBits: str format: format).
 }.
-var masm is 'ori $5,$0,256
+var masm is
+#main:
+#        ori  $5, $0, 30
+#        ori  $6, $0, 5
+#        jal  procedure_mult
+#    procedure_mult:
+#            beq  $6, $0, iret0
+#            addi $6, $6, -1
+#            sw   $7, 0($sp)
+#            or   $7, $0, $5
+#        mult:
+#            beq  $6, $0, iret
+#            add  $5, $5, $7
+#            addi $6, $6, -1
+#            j mult
+#        iret:
+#            lw   $7, 0($sp)
+#            jr   $ra
+#        iret0:
+#            xor  $5, $5, $5
+#            jr   $ra'
+'ori $5,$0,256
 sw $5, 0($0)
 xor $5,$5,$5
 lw $5, 0($0)
 andi $4,$4,10
-ori $4,$0,40
-xor $2,$2,$2
-main:
-beq $2,$4,exit
-addi $2,$2,10
-add $3,$2,$2
-j main
-exit:'.#And she supported multiline strings like normal ones
+ ori $4,$0,40
+ xor $2,$2,$2
+ main:
+ beq $2,$4,exit
+ addi $2,$2,10
+ add $3,$2,$2
+ j main
+ exit:'.#And she supported multiline strings like normal ones
 # 'li $t0, 0'.
 MIPSAbstractMachine addWord: 'X' length: 12.
 MIPSAbstractMachine addWord: 'Y' length: 12.
@@ -654,8 +685,8 @@ DEBUG is False.
 
 Pen green write: masm, resetColor brk.
 Pen red write: '\nParsed:\n', resetColor.
-# var ass is MIPSAbstractMachine assemble: masm.
-# Pen write: (ass join: '\n'), brk.
+var ass is MIPSAbstractMachine assemble: masm.
+Pen write: (ass join: '\n'), brk.
 MIPSAbstractMachine load: masm.
 Pen red write: '\nExec:\n', resetColor.
 ## Pen write: (MIPSAbstractMachine getSrc join: '\n'), brk.

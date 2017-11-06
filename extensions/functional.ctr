@@ -2,9 +2,8 @@
   Broom mode: 0.
 
   # TODO :: Actually fix scoping first
-
-  
-
+  Reflect addGlobalVariable: '$'.
+  $ is {:x:f ^f " x.}.
 
   Array on: 'fmap:' do: { :f
     var newarr is Array new.

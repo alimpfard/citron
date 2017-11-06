@@ -122,7 +122,6 @@ Array on: 'repeat:' do: { :i
   }.
   ^r.
 }.
-Array learn: '*' means: 'repeat:'.
 
 # From iterable
 Array on: 'with:count:' do: { :iter :c

@@ -77,6 +77,28 @@ ctr_object* ctr_nil_to_boolean(ctr_object* myself, ctr_argument* ctr_argumentLis
 }
 
 /**
+ * [Nil] unpack: [Ref:string]
+ * Assigns Nil into Ref
+ */
+
+ctr_object* ctr_nil_assign(ctr_object* myself, ctr_argument* argumentList) { if (!ctr_reflect_check_bind_valid(myself, argumentList->object)) return CtrStdNil;
+  if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTSTRING) {
+    CtrStdFlow = ctr_build_string_from_cstring("Nil cannot be constructed by ");
+    ctr_string_append(CtrStdFlow, argumentList);
+    return myself;
+  }
+  if (ctr_internal_object_is_equal(argumentList->object, ctr_build_string_from_cstring("_")) || ctr_internal_object_is_equal(argumentList->object, ctr_build_empty_string()))
+    return myself;
+  ctr_internal_object_set_property(
+    ctr_contexts[ctr_context_id],
+    ctr_internal_cast2string(argumentList->object),
+    CtrStdNil,
+    0
+  );
+  return myself;
+}
+
+/**
  * Object
  *
  * This is the base object, the parent of all other objects.
@@ -179,6 +201,20 @@ ctr_object* ctr_object_attr_writer(ctr_object* myself, ctr_argument* argumentLis
     ctr_heap_free(mname);
     return myself;
 }
+
+/**
+ * [Object] unpack: [Object:{Ref*}]
+ * Element-wise object assign
+ */
+
+ctr_object* ctr_object_assign(ctr_object* myself, ctr_argument* argumentList) { if (!ctr_reflect_check_bind_valid(myself, argumentList->object)) return CtrStdNil;
+  ctr_object* oldlink = myself->link;
+  myself->link = CtrStdMap; //cast to map
+  ctr_map_assign(myself, argumentList);
+  myself->link = oldlink; //cast back to whatever we were
+  return myself;
+}
+
 /**
  * [Object] new hiding:
  *
@@ -727,6 +763,23 @@ ctr_object* ctr_build_bool(int truth) {
 }
 
 /**
+ * [Boolean] unpack: [String:Ref]
+ * Assign ref to boolean
+ */
+
+ctr_object* ctr_bool_assign(ctr_object* myself, ctr_argument* argumentList) { if (!ctr_reflect_check_bind_valid(myself, argumentList->object)) return CtrStdNil;
+  if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTSTRING) {
+    CtrStdFlow = ctr_build_string_from_cstring("Boolean cannot be constructed by ");
+    ctr_string_append(CtrStdFlow, argumentList);
+    return myself;
+  }
+  if (ctr_internal_object_is_equal(argumentList->object, ctr_build_string_from_cstring("_")) || ctr_internal_object_is_equal(argumentList->object, ctr_build_empty_string()))
+    return myself;
+  ctr_internal_object_add_property(ctr_contexts[ctr_context_id], argumentList->object, myself, 0);
+  return myself;
+}
+
+/**
  * [Boolean] = [other]
  *
  * Tests whether the other object (as a boolean) has the
@@ -898,13 +951,21 @@ ctr_object* ctr_bool_flip(ctr_object* myself, ctr_argument* argumentList) {
  *
  * Returns argument #1 if boolean value is True and argument #2 otherwise.
  *
+ * If either object is a block, it will be executed and its result returned if
+ * it is supposed to be returned.
+ *
  * Usage:
  * Pen write: 'the coin lands on: ' + (Boolean flip either: 'head' or: 'tail').
+ * Pen write: 'the coin lands on: ' + (Boolean flip either: {^'head' * 10000.} or: 'tail').
  */
 ctr_object* ctr_bool_either_or(ctr_object* myself, ctr_argument* argumentList) {
     if (myself->value.bvalue) {
+        if (argumentList->object->info.type == CTR_OBJECT_TYPE_OTBLOCK)
+        return ctr_block_runIt(argumentList->object, NULL);
         return argumentList->object;
     } else {
+        if (argumentList->next->object->info.type == CTR_OBJECT_TYPE_OTBLOCK)
+        return ctr_block_runIt(argumentList->next->object, NULL);
         return argumentList->next->object;
     }
 }
@@ -997,6 +1058,23 @@ ctr_object* ctr_build_number(char* n) {
     numberObject->value.nvalue = atof(n);
     numberObject->link = CtrStdNumber;
     return numberObject;
+}
+
+/**
+ * [Number] unpack: [String:Ref]
+ * Assign ref to number
+ */
+
+ctr_object* ctr_number_assign(ctr_object* myself, ctr_argument* argumentList) { if (!ctr_reflect_check_bind_valid(myself, argumentList->object)) return CtrStdNil;
+  if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTSTRING) {
+    CtrStdFlow = ctr_build_string_from_cstring("Number cannot be constructed by ");
+    ctr_string_append(CtrStdFlow, argumentList);
+    return myself;
+  }
+  if (ctr_internal_object_is_equal(argumentList->object, ctr_build_string_from_cstring("_")) || ctr_internal_object_is_equal(argumentList->object, ctr_build_empty_string()))
+    return myself;
+  ctr_internal_object_add_property(ctr_contexts[ctr_context_id], argumentList->object, myself, 0);
+  return myself;
 }
 
 /**
@@ -1475,6 +1553,14 @@ ctr_object* ctr_number_to_step_do(ctr_object* myself, ctr_argument* argumentList
 }
 
 /**
+ * [Number] to: [number] step: [step]
+ *
+ */
+ctr_object* ctr_number_to_step(ctr_object* myself, ctr_argument* argumentList) {
+    return ctr_invoke_variadic(CtrStdIter, &ctr_iterator_make_range, 3, myself, argumentList->object, argumentList->next->object);
+}
+
+/**
  * [Number] floor
  *
  * Gives the largest integer less than the recipient.
@@ -1633,7 +1719,7 @@ ctr_object* ctr_number_shl(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 /**
- * [Number] logicalOr: [Number]
+ * [Number] integerOr: [Number]
  *
  */
 ctr_object* ctr_number_or(ctr_object* myself, ctr_argument* argumentList) {
@@ -1641,7 +1727,7 @@ ctr_object* ctr_number_or(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 /**
- * [Number] logicalAnd: [Number]
+ * [Number] integerAnd: [Number]
  *
  */
 ctr_object* ctr_number_and(ctr_object* myself, ctr_argument* argumentList) {
@@ -1649,7 +1735,7 @@ ctr_object* ctr_number_and(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 /**
- * [Number] logicalXor: [Number]
+ * [Number] integerXor: [Number]
  *
  */
 ctr_object* ctr_number_xor(ctr_object* myself, ctr_argument* argumentList) {
@@ -1742,6 +1828,45 @@ ctr_object* ctr_build_string(char* stringValue, long size) {
     stringObject->value.svalue->vlen = size;
     stringObject->link = CtrStdString;
     return stringObject;
+}
+
+/**
+ * [String] isConstructible: [Object]
+ *
+ * returns whether object is constructible from string
+ */
+ctr_object* ctr_string_is_ctor(ctr_object* myself, ctr_argument* argumentList) {
+  if (argumentList->object->info.type == CTR_OBJECT_TYPE_OTARRAY) {
+    ctr_object* myarr = ctr_string_characters(myself, NULL);
+    return ctr_build_bool(ctr_internal_object_is_constructible_(myarr, argumentList->object, argumentList->object->info.raw));
+  }
+
+  if (argumentList->object->info.type == CTR_OBJECT_TYPE_OTSTRING)
+    return ctr_build_bool(ctr_internal_object_is_constructible_(myself, argumentList->object, argumentList->object->info.raw));
+
+  return ctr_build_bool(0);
+}
+
+/**
+ * [String] unpack: [String:Ref]
+ * Assign ref to string
+ */
+
+ctr_object* ctr_string_assign(ctr_object* myself, ctr_argument* argumentList) {
+  if (argumentList->object->info.type == CTR_OBJECT_TYPE_OTARRAY) {
+    ctr_object* myarr = ctr_string_characters(myself, NULL);
+    return ctr_array_assign(myarr, argumentList);
+  }
+  if (!ctr_reflect_check_bind_valid(myself, argumentList->object)) return CtrStdNil;
+  if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTSTRING) {
+    CtrStdFlow = ctr_build_string_from_cstring("String cannot be constructed by ");
+    ctr_string_append(CtrStdFlow, argumentList);
+    return myself;
+  }
+  if (ctr_internal_object_is_equal(argumentList->object, ctr_build_string_from_cstring("_")) || ctr_internal_object_is_equal(argumentList->object, ctr_build_empty_string()))
+    return myself;
+  ctr_internal_object_add_property(ctr_contexts[ctr_context_id], argumentList->object, myself, 0);
+  return myself;
 }
 
 /**
@@ -1874,6 +1999,22 @@ ctr_object* ctr_string_append(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 /**
+ * [String] multiply: [Number].
+ *
+ * Appends the specified string to itself as many times as [Number]
+ * alias: *
+ */
+ctr_object* ctr_string_multiply(ctr_object* myself, ctr_argument* argumentList) {
+    ctr_object* new = ctr_build_empty_string();
+    ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+    arg->object=myself;
+    for (int i=0; i<ctr_internal_cast2number(argumentList->object)->value.nvalue; i++)
+      ctr_string_append(new, arg);
+    ctr_heap_free(arg);
+    return new;
+}
+
+/**
  * [String] formatObjects: [Array].
  *
  * Creates a string with the template format and the specified objects
@@ -1899,8 +2040,8 @@ ctr_object* ctr_string_format(ctr_object* myself, ctr_argument* argumentList) {
   int wefoold = ctr_str_count_substr(myself->value.svalue->value, "%%", 0);
   specifier_count = specifier_count - wefoold*2;
   if (specifier_count == 0) return myself; //if no specifier, just spit the format string back out
-  if (specifier_count != specified_count) {
-    CtrStdFlow = ctr_build_string_from_cstring("Format string specifier count differs from what was passed.");
+  if (specifier_count > specified_count) {
+    CtrStdFlow = ctr_build_string_from_cstring("Format string requires more objects than was passed.");
     return myself;
   }
   int len = myself->value.svalue->vlen;
@@ -1936,6 +2077,12 @@ ctr_object* ctr_string_format(ctr_object* myself, ctr_argument* argumentList) {
         ctr_string_append(buffer, args);
         continue;
        }
+      if (c == 'b') {
+          args->object = ctr_build_number_from_float(specnum);
+          args->object = ctr_number_uint_binrep(ctr_send_message(ctr_array_get(objects, args), "toNumber", 8, NULL), NULL);
+          ctr_string_append(buffer, args);
+          continue;
+      }
       if (c == '%') {
         args->object = ctr_build_string_from_cstring("%");
         ctr_string_append(buffer, args);
@@ -2463,15 +2610,12 @@ ctr_object* ctr_string_find_pattern_options_do( ctr_object* myself, ctr_argument
         if (matches[0].rm_eo != -1) {
             ctr_argument* arg = ctr_heap_allocate( sizeof( ctr_argument ) );
             arg->object = ctr_build_string( haystack + offset, matches[0].rm_so );
+            ctr_object* replacement = ctr_block_run( block, blockArguments, block );
+            arg->object = replacement==block?arg->object:replacement;
             ctr_string_append( newString, arg );
             offset += matches[0].rm_eo;
             ctr_heap_free( arg );
         }
-        ctr_object* replacement = ctr_block_run( block, blockArguments, block );
-        ctr_argument* arg = ctr_heap_allocate( sizeof( ctr_argument ) );
-        arg->object = replacement;
-        ctr_string_append( newString, arg );
-        ctr_heap_free( arg );
         ctr_heap_free(blockArguments);
         ctr_heap_free(arrayConstructorArgument);
     }
@@ -2550,21 +2694,20 @@ ctr_object* ctr_string_find_pattern_options_do( ctr_object* myself, ctr_argument
         if (matches[0] != -1) {
             ctr_argument* arg = ctr_heap_allocate( sizeof( ctr_argument ) );
             arg->object = ctr_build_string( haystack + offset, matches[1] - matches[0]);
+            // printf("%s\n", arg->object->value.svalue->value);
+            ctr_object* replacement = ctr_block_run( block, blockArguments, block );
+            arg->object = replacement==block?arg->object:replacement;
             ctr_string_append( newString, arg );
             offset += matches[1] - matches[0];
             ctr_heap_free( arg );
         }
-        ctr_object* replacement = ctr_block_run( block, blockArguments, block );
-        ctr_argument* arg = ctr_heap_allocate( sizeof( ctr_argument ) );
-        arg->object = replacement;
-        ctr_string_append( newString, arg );
-        ctr_heap_free( arg );
         ctr_heap_free(blockArguments);
         ctr_heap_free(arrayConstructorArgument);
     }
     ctr_argument* arg = ctr_heap_allocate( sizeof( ctr_argument ) );
     arg->object = ctr_build_string( haystack + offset, strlen( haystack + offset ) );
     ctr_string_append( newString, arg );
+    // printf("-> %s\n", newString->value.svalue->value);
     ctr_heap_free( arg );
     // ctr_heap_free( (void*)err );
     ctr_heap_free( needle );
@@ -2977,6 +3120,60 @@ ctr_object* ctr_string_append_byte( ctr_object* myself, ctr_argument* argumentLi
 }
 
 /**
+ * [String(length=1)] charSub: [Number | String(length=1)]
+ *
+ * works on the underlaying character.
+ */
+ctr_object* ctr_string_csub( ctr_object* myself, ctr_argument* argumentList ) {
+    int v = argumentList->object->info.type == CTR_OBJECT_TYPE_OTSTRING;
+    if (!v && argumentList->object->info.type != CTR_OBJECT_TYPE_OTNUMBER) {
+      CtrStdFlow = ctr_build_string_from_cstring("string minus expects character or number.");
+      return myself;
+    }
+    if (ctr_string_length(myself, NULL)->value.nvalue > 1
+    || v && ctr_string_length(argumentList->object, NULL)->value.nvalue > 1) {
+      CtrStdFlow = ctr_build_string_from_cstring("underlaying string for '-' must be one character only.");
+      return myself;
+    }
+
+    return ctr_invoke_variadic(
+      ctr_build_string_from_cstring(""), &ctr_string_append_byte,
+      1, ctr_build_number_from_float(ctr_invoke_variadic(
+        myself, &ctr_string_byte_at, 1, ctr_build_number_from_float(0)
+      )->value.nvalue - (v?ctr_invoke_variadic(
+        argumentList->object, &ctr_string_byte_at, 1, ctr_build_number_from_float(0)
+      )->value.nvalue:argumentList->object->value.nvalue))
+    );
+}
+
+/**
+ * [String(length=1)] charAdd: [Number | String(length=1)]
+ *
+ * works on the underlaying character.
+ */
+ctr_object* ctr_string_cadd( ctr_object* myself, ctr_argument* argumentList ) {
+    int v = argumentList->object->info.type == CTR_OBJECT_TYPE_OTSTRING;
+    if (!v && argumentList->object->info.type != CTR_OBJECT_TYPE_OTNUMBER) {
+      CtrStdFlow = ctr_build_string_from_cstring("string minus expects character or number.");
+      return myself;
+    }
+    if (ctr_string_length(myself, NULL)->value.nvalue > 1
+    || v && ctr_string_length(argumentList->object, NULL)->value.nvalue > 1) {
+      CtrStdFlow = ctr_build_string_from_cstring("underlaying string for '-' must be one character only.");
+      return myself;
+    }
+
+    return ctr_invoke_variadic(
+      ctr_build_string_from_cstring(""), &ctr_string_append_byte,
+      1, ctr_build_number_from_float(ctr_invoke_variadic(
+        myself, &ctr_string_byte_at, 1, ctr_build_number_from_float(0)
+      )->value.nvalue + (v?ctr_invoke_variadic(
+        argumentList->object, &ctr_string_byte_at, 1, ctr_build_number_from_float(0)
+      )->value.nvalue:argumentList->object->value.nvalue))
+    );
+}
+
+/**
  * [String] htmlEscape
  *
  * Escapes HTML chars.
@@ -3288,11 +3485,13 @@ ctr_object* ctr_build_immutable(ctr_tnode* node) {
   char* wasReturn = ctr_heap_allocate(sizeof(char));
   while (items && items->node) {
     result = ctr_cwlk_expr(items->node, wasReturn);
+    result->info.raw = 1;
     args->object = result;
     ctr_array_push_imm(tupleobj, args);
     if (!items->next) break;
     items = items->next;
   }
+  tupleobj->info.raw = 1;
   ctr_heap_free(wasReturn);
   ctr_heap_free(args);
   return tupleobj;
@@ -3322,6 +3521,23 @@ ctr_object* ctr_build_block(ctr_tnode* node) {
     codeBlockObject->link = CtrStdBlock;
     //codeBlockObject->lex_scope = ctr_context_id;
     return codeBlockObject;
+}
+
+/**
+ * [Block] unpack: [String:Ref]
+ * Assign ref to block
+ */
+
+ctr_object* ctr_block_assign(ctr_object* myself, ctr_argument* argumentList) { if (!ctr_reflect_check_bind_valid(myself, argumentList->object)) return CtrStdNil;
+  if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTSTRING) {
+    CtrStdFlow = ctr_build_string_from_cstring("Block cannot be constructed by ");
+    ctr_string_append(CtrStdFlow, argumentList);
+    return myself;
+  }
+  if (ctr_internal_object_is_equal(argumentList->object, ctr_build_string_from_cstring("_")) || ctr_internal_object_is_equal(argumentList->object, ctr_build_empty_string()))
+    return myself;
+  ctr_internal_object_add_property(ctr_contexts[ctr_context_id], argumentList->object, myself, 0);
+  return myself;
 }
 
 /**
@@ -3491,12 +3707,90 @@ ctr_object* ctr_block_run_variadic(ctr_object* myself, int count, ...) {
     va_end(ap);
     ctr_object* result = ctr_block_runIt(myself, argumentList);
     pass = argumentList;
-    while(pass->next != NULL||pass->object != NULL) {
-        if(pass->object != NULL) ctr_heap_free(pass->object);
+    while(pass->next != NULL) {
+        ctr_argument* prev = pass;
         pass = pass->next;
+        if(prev != NULL) ctr_heap_free(prev);
     }
-    ctr_heap_free(argumentList);
+    // ctr_heap_free(argumentList);
     return result;
+}
+
+ctr_object* ctr_send_message_variadic(ctr_object* myself, char* message, int msglen, int count, ...) {
+    if (count < 1) return ctr_send_message(myself, message, msglen, NULL);
+    ctr_argument* argumentList = ctr_heap_allocate(sizeof(ctr_argument));
+    ctr_argument* pass = argumentList;
+    va_list ap;
+    va_start(ap, count);
+    for (size_t i = 0; i < count; i++) {
+        pass->object = va_arg(ap, ctr_object*);
+        if (i != count-1) {
+          pass->next = ctr_heap_allocate(sizeof(ctr_argument));
+          pass = pass->next;
+      }
+    }
+    va_end(ap);
+    ctr_object* result = ctr_send_message(myself, message, msglen, argumentList);
+    pass = argumentList;
+    while(pass->next != NULL) {
+        ctr_argument* prev = pass;
+        pass = pass->next;
+        if(prev != NULL) ctr_heap_free(prev);
+    }
+    // ctr_heap_free(argumentList);
+    return result;
+}
+
+ctr_object* ctr_invoke_variadic(ctr_object* myself, ctr_object* *fun(ctr_object*,ctr_argument*), int count, ...) {
+    if (count < 1) return fun(myself, NULL);
+    ctr_argument* argumentList = ctr_heap_allocate(sizeof(ctr_argument));
+    ctr_argument* pass = argumentList;
+    va_list ap;
+    va_start(ap, count);
+    for (size_t i = 0; i < count; i++) {
+        pass->object = va_arg(ap, ctr_object*);
+        if (i != count-1) {
+          pass->next = ctr_heap_allocate(sizeof(ctr_argument));
+          pass = pass->next;
+      }
+    }
+    va_end(ap);
+    ctr_object* result = fun(myself, argumentList);
+    pass = argumentList;
+    while(pass->next != NULL) {
+        ctr_argument* prev = pass;
+        pass = pass->next;
+        if(prev != NULL) ctr_heap_free(prev);
+    }
+    // ctr_heap_free(argumentList);
+    return result;
+}
+
+ctr_object* ctr_allocate_argumentList (int count, ...) {
+    if (count < 1) return NULL;
+    ctr_argument* argumentList = ctr_heap_allocate(sizeof(ctr_argument));
+    ctr_argument* pass = argumentList;
+    va_list ap;
+    va_start(ap, count);
+    for (size_t i = 0; i < count; i++) {
+        pass->object = va_arg(ap, ctr_object*);
+        if (i != count-1) {
+          pass->next = ctr_heap_allocate(sizeof(ctr_argument));
+          pass = pass->next;
+      }
+    }
+    va_end(ap);
+    return argumentList;
+}
+
+void ctr_free_argumentList(ctr_argument* argumentList) {
+  ctr_argument* pass;
+  pass = argumentList;
+  while(pass->next != NULL) {
+      ctr_argument* prev = pass;
+      pass = pass->next;
+      if(prev != NULL) ctr_heap_free(prev);
+  }
 }
 /**
  * [Block] set: [name] value: [object]
@@ -3582,4 +3876,26 @@ ctr_object* ctr_block_catch(ctr_object* myself, ctr_argument* argumentList) {
  */
 ctr_object* ctr_block_to_string(ctr_object* myself, ctr_argument* argumentList) {
     return ctr_build_string_from_cstring( "[Block]" );
+}
+
+int ctr_is_primitive(ctr_object* object) {
+  return object == CtrStdObject
+      || object == CtrStdBlock
+      || object == CtrStdString
+      || object == CtrStdNumber
+      || object == CtrStdBool
+      || object == CtrStdConsole
+      || object == CtrStdNil
+      || object == CtrStdGC
+      || object == CtrStdMap
+      || object == CtrStdArray
+      || object == CtrStdFile
+      || object == CtrStdSystem
+      || object == CtrStdDice
+      || object == CtrStdCommand
+      || object == CtrStdSlurp
+      || object == CtrStdShell
+      || object == CtrStdClock
+      || object == CtrStdReflect
+      || object == CtrStdFiber;
 }

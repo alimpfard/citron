@@ -1,0 +1,5 @@
+{ 
+    var ra is [1, '2'].
+    ra unpack: ['a', ['b']].
+    Pen write: '$$a $$b', brk.
+} run.

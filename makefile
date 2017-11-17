@@ -1,9 +1,9 @@
 CFLAGS = -Wall -Wextra -Wno-unused-parameter -mtune=native -g3 -D forLinux
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
-       world.o lexer.o parser.o walker.o reflect.o fiber.o citron.o
+       world.o lexer.o parser.o walker.o reflect.o fiber.o importlib.o citron.o
 
 LOBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
-        world.o lexer.o parser.o walker.o reflect.o fiber.o citron_lib.o
+        world.o lexer.o parser.o walker.o reflect.o fiber.o importlib.o citron_lib.o
 
 .SUFFIXES:	.o .c
 

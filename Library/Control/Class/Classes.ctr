@@ -1,0 +1,11 @@
+# import main.
+
+var Classes is Map new.
+Classes on: 'new:contract:' do: {:name :contract
+  me at: name, isNil ifFalse: {thisBlock error: 'Redefintion of existing class $$name'.}.
+  me put: (Class new init: contract) at: name.
+}.
+
+Classes on: 'respondTo:' do: {:name ^me at: name.}.
+
+import export: Classes as: 'Classes'.

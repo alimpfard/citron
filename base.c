@@ -120,11 +120,10 @@ ctr_object* ctr_object_ctor(ctr_object* myself, ctr_argument* argumentList) {
     ctr_object* objectInstance = NULL;
     objectInstance = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
     objectInstance->link = myself;
-    if(argumentList->object->info.type == CTR_OBJECT_TYPE_OTBLOCK) {
-        ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
-        ctr_block_run(argumentList->object, args, objectInstance);
-        ctr_heap_free(args);
-    }
+    CTR_ENSURE_TYPE_BLOCK(argumentList->object);
+    ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
+    ctr_block_run(argumentList->object, args, objectInstance);
+    ctr_heap_free(args);
     return objectInstance;
 }
 
@@ -135,6 +134,7 @@ ctr_object* ctr_object_ctor(ctr_object* myself, ctr_argument* argumentList) {
  * creates the property is it doesn't exist
  */
 ctr_object* ctr_object_attr_accessor(ctr_object* myself, ctr_argument* argumentList) {
+  if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTARRAY) {
     ctr_object* name = ctr_internal_cast2string(argumentList->object);
     ctr_object* property = ctr_internal_object_find_property(myself, name, 0);
     if (property == NULL)
@@ -156,6 +156,19 @@ ctr_object* ctr_object_attr_accessor(ctr_object* myself, ctr_argument* argumentL
     ctr_heap_free(arglist);
     ctr_heap_free(mname);
     return myself;
+  } else {
+    ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
+    ctr_argument* elnumArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    int i;
+    for(i = argumentList->object->value.avalue->tail; i<argumentList->object->value.avalue->head; i++) {
+        elnumArg->object = ctr_build_number_from_float((ctr_number) i);
+        args->object = ctr_array_get(argumentList->object, elnumArg);
+        ctr_object_attr_accessor(myself, args);
+    }
+    ctr_heap_free(elnumArg);
+    ctr_heap_free(args);
+    return myself;
+  }
 }
 /**
  * Object genReader: [String]
@@ -164,6 +177,7 @@ ctr_object* ctr_object_attr_accessor(ctr_object* myself, ctr_argument* argumentL
  * creates the property is it doesn't exist
  */
 ctr_object* ctr_object_attr_reader(ctr_object* myself, ctr_argument* argumentList) {
+    if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTARRAY) {
     ctr_object* name = ctr_internal_cast2string(argumentList->object);
     ctr_object* property = ctr_internal_object_find_property(myself, name, 0);
     if (property == NULL)
@@ -180,6 +194,19 @@ ctr_object* ctr_object_attr_reader(ctr_object* myself, ctr_argument* argumentLis
     ctr_heap_free(arglist);
     ctr_heap_free(mname);
     return myself;
+  } else {
+    ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
+    ctr_argument* elnumArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    int i;
+    for(i = argumentList->object->value.avalue->tail; i<argumentList->object->value.avalue->head; i++) {
+        elnumArg->object = ctr_build_number_from_float((ctr_number) i);
+        args->object = ctr_array_get(argumentList->object, elnumArg);
+        ctr_object_attr_reader(myself, args);
+    }
+    ctr_heap_free(elnumArg);
+    ctr_heap_free(args);
+    return myself;
+  }
 }
 /**
  * Object genWriter: [String]
@@ -188,6 +215,7 @@ ctr_object* ctr_object_attr_reader(ctr_object* myself, ctr_argument* argumentLis
  * does not create the property is it doesn't exist
  */
 ctr_object* ctr_object_attr_writer(ctr_object* myself, ctr_argument* argumentList) {
+    if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTARRAY) {
     ctr_object* name = ctr_internal_cast2string(argumentList->object);
     ctr_argument* arglist = ctr_heap_allocate(sizeof(ctr_argument));
     arglist->next = ctr_heap_allocate(sizeof(ctr_argument));
@@ -200,6 +228,19 @@ ctr_object* ctr_object_attr_writer(ctr_object* myself, ctr_argument* argumentLis
     ctr_heap_free(arglist);
     ctr_heap_free(mname);
     return myself;
+  } else {
+    ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
+    ctr_argument* elnumArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    int i;
+    for(i = argumentList->object->value.avalue->tail; i<argumentList->object->value.avalue->head; i++) {
+        elnumArg->object = ctr_build_number_from_float((ctr_number) i);
+        args->object = ctr_array_get(argumentList->object, elnumArg);
+        ctr_object_attr_writer(myself, args);
+    }
+    ctr_heap_free(elnumArg);
+    ctr_heap_free(args);
+    return myself;
+  }
 }
 
 /**
@@ -875,6 +916,8 @@ ctr_object* ctr_bool_if_true(ctr_object* myself, ctr_argument* argumentList) {
         arguments->object = myself;
         result = ctr_block_run(codeBlock, arguments, NULL);
         ctr_heap_free( arguments );
+        if(result != codeBlock)
+          ctr_internal_next_return = 1;
         return result;
     }
     if (CtrStdFlow == CtrStdBreak) CtrStdFlow = NULL; /* consume break */
@@ -900,11 +943,24 @@ ctr_object* ctr_bool_if_false(ctr_object* myself, ctr_argument* argumentList) {
         ctr_argument* arguments = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
         arguments->object = myself;
         result = ctr_block_run(codeBlock, arguments, NULL);
+        if(result != codeBlock)
+          ctr_internal_next_return = 1;
         ctr_heap_free( arguments );
         return result;
     }
     if (CtrStdFlow == CtrStdBreak) CtrStdFlow = NULL; /* consume break */
     return myself;
+}
+
+/**
+ * [b:Object] or: [Block|Object]
+ *
+ * Evaluates and returns the block if b evaluates to false, else returns b
+ */
+
+ctr_object* ctr_object_elvis_op(ctr_object* myself, ctr_argument* argumentList) {
+  if(ctr_send_message(myself, "toBoolean", 9, NULL)->value.bvalue) return myself;
+  return argumentList->object->info.type == CTR_OBJECT_TYPE_OTBLOCK ? ctr_block_runIt(argumentList->object, NULL) : argumentList->object;
 }
 
 /**
@@ -3514,13 +3570,58 @@ ctr_object* ctr_build_immutable(ctr_tnode* node) {
  * { :a :b ^ a + b. } applyTo: 1 and: 2.
  * { :a :b :c ^ a + b + c. } applyTo: 1 and: 2 and: 3.
  *
+ * to enable context auto-capture,
+ * qualify captures with the 'const' modifier
  */
 ctr_object* ctr_build_block(ctr_tnode* node) {
     ctr_object* codeBlockObject = ctr_internal_create_object(CTR_OBJECT_TYPE_OTBLOCK);
     codeBlockObject->value.block = node;
     codeBlockObject->link = CtrStdBlock;
+    //if(node->modifier == 1) {
+      //TODO: traverse block and capture all existing 'const' refs.
+      ctr_capture_refs(node, codeBlockObject);
+    //}
     //codeBlockObject->lex_scope = ctr_context_id;
     return codeBlockObject;
+}
+
+/**
+ * Captures all const qualified values and adds them to private space
+ */
+void ctr_capture_refs(ctr_tnode* ti, ctr_object* block) {
+  ctr_tlistitem* li;
+  ctr_tnode* t;
+  // if (indent>20) exit(1);
+  li = ti->nodes;
+  if(!li) return;
+  t = li->node;
+  while(1) {
+      int i;
+      // for (i=0; i<indent; i++) printf(" ");
+      // str = ctr_heap_allocate( 40 * sizeof( char ) );
+      switch (t->type) {
+          case CTR_AST_NODE_REFERENCE:
+            if (t->modifier == 3) {
+              ctr_object* key = ctr_build_string_from_cstring(t->value);
+              ctr_internal_object_add_property(block, key, ctr_find(key), 0);
+            } break;
+
+          case CTR_AST_NODE_LTRNUM:
+          case CTR_AST_NODE_CODEBLOCK:
+          case CTR_AST_NODE_PARAMLIST:
+          case CTR_AST_NODE_ENDOFPROGRAM:
+          case CTR_AST_NODE_LTRSTRING:
+          case CTR_AST_NODE_LTRBOOLFALSE:
+          case CTR_AST_NODE_LTRBOOLTRUE:
+          case CTR_AST_NODE_LTRNIL:
+          default:
+            ctr_capture_refs(t, block);
+
+      }
+      if (!li->next) break;
+      li = li->next;
+      t = li->node;
+  }
 }
 
 /**
@@ -3560,7 +3661,7 @@ ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object*
     ctr_open_context();
     if (parameterList && parameterList->node) {
         parameter = parameterList->node;
-        while(1) {
+        while(argList) {
             if (parameter && argList->object) {
                 was_vararg = (strncmp(parameter->value, "*", 1) == 0);
                 if (parameterList->next) {
@@ -3595,6 +3696,75 @@ ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object*
         if (my) result = my; else result = myself;
     }
     ctr_close_context();
+    if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak && CtrStdFlow != CtrStdContinue) {
+        ctr_object* catchBlock = ctr_internal_create_object( CTR_OBJECT_TYPE_OTBLOCK );
+        catchBlock = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring( "catch" ), 0);
+        if (catchBlock != NULL) {
+            ctr_argument* a = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+            a->object = CtrStdFlow;
+            CtrStdFlow = NULL;
+            ctr_block_run(catchBlock, a, my);
+            ctr_heap_free( a );
+            result = myself;
+        }
+    }
+    return result;
+}
+
+/**
+ * @internal
+ *
+ * Run a block in the current context
+ */
+ctr_object* ctr_block_run_here(ctr_object* myself, ctr_argument* argList, ctr_object* my) {
+    ctr_object* result;
+    ctr_tnode* node = myself->value.block;
+    ctr_tlistitem* codeBlockParts = node->nodes;
+    ctr_tnode* codeBlockPart1 = codeBlockParts->node;
+    ctr_tnode* codeBlockPart2 = codeBlockParts->next->node;
+    ctr_tlistitem* parameterList = codeBlockPart1->nodes;
+    ctr_tnode* parameter;
+    ctr_object* a;
+    int was_vararg;
+    int last_context = ctr_context_id;
+    // ctr_open_context();
+    if (parameterList && parameterList->node) {
+        parameter = parameterList->node;
+        while(argList) {
+            if (parameter && argList->object) {
+                was_vararg = (strncmp(parameter->value, "*", 1) == 0);
+                if (parameterList->next) {
+                    a = argList->object;
+                    ctr_assign_value_to_local(ctr_build_string(parameter->value, parameter->vlen), a);
+                } else if (!parameterList->next && was_vararg) {
+                    ctr_object* arr = ctr_array_new(CtrStdArray, NULL);
+                    ctr_argument* arglist__ = ctr_heap_allocate(sizeof(ctr_argument*));
+                    while (argList->next) {
+                        arglist__->object = argList->object;
+                        ctr_array_push(arr, arglist__);
+                        argList = argList->next;
+                    }
+                    ctr_heap_free(arglist__);
+                    ctr_assign_value_to_local(ctr_build_string(parameter->value+1, parameter->vlen-1), arr);
+                } else if (!was_vararg){
+                    a = argList->object;
+                    ctr_assign_value_to_local(ctr_build_string(parameter->value, parameter->vlen), a);
+                }
+            }
+            if (!argList->next) break;
+            argList = argList->next;
+            if (!parameterList->next) break;
+            parameterList = parameterList->next;
+            parameter = parameterList->node;
+        }
+    }
+    if (my) ctr_assign_value_to_local_by_ref(ctr_build_string_from_cstring( ctr_clex_keyword_me ), my ); /* me should always point to object, otherwise you have to store me in self and can't use in if */
+    ctr_assign_value_to_local(ctr_build_string_from_cstring( "thisBlock" ), myself ); /* otherwise running block may get gc'ed. */
+    result = ctr_cwlk_run(codeBlockPart2);
+    if (result == NULL) {
+        if (my) result = my; else result = myself;
+    }
+    // ctr_close_context();
     if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak && CtrStdFlow != CtrStdContinue) {
         ctr_object* catchBlock = ctr_internal_create_object( CTR_OBJECT_TYPE_OTBLOCK );
         catchBlock = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring( "catch" ), 0);
@@ -3741,7 +3911,7 @@ ctr_object* ctr_send_message_variadic(ctr_object* myself, char* message, int msg
     return result;
 }
 
-ctr_object* ctr_invoke_variadic(ctr_object* myself, ctr_object* *fun(ctr_object*,ctr_argument*), int count, ...) {
+ctr_object* ctr_invoke_variadic(ctr_object* myself, ctr_object * (*fun)(ctr_object *, ctr_argument *), int count, ...) {
     if (count < 1) return fun(myself, NULL);
     ctr_argument* argumentList = ctr_heap_allocate(sizeof(ctr_argument));
     ctr_argument* pass = argumentList;
@@ -3766,7 +3936,7 @@ ctr_object* ctr_invoke_variadic(ctr_object* myself, ctr_object* *fun(ctr_object*
     return result;
 }
 
-ctr_object* ctr_allocate_argumentList (int count, ...) {
+ctr_argument* ctr_allocate_argumentList (int count, ...) {
     if (count < 1) return NULL;
     ctr_argument* argumentList = ctr_heap_allocate(sizeof(ctr_argument));
     ctr_argument* pass = argumentList;
@@ -3898,4 +4068,62 @@ int ctr_is_primitive(ctr_object* object) {
       || object == CtrStdClock
       || object == CtrStdReflect
       || object == CtrStdFiber;
+}
+
+
+//Stack-trace
+ctr_object* ctr_get_stack_trace() {
+  char trace[1024 * 1024]; //LOTS of bytes
+  int line;
+  char* currentProgram;
+  ctr_source_map* mapItem;
+  ctr_tnode* stackNode;
+
+  for (int i = ctr_callstack_index; i > 0; i--) {
+      sprintf(trace, "#%d ", i);
+      stackNode = ctr_callstack[i-1];
+      snprintf(trace, stackNode->vlen, "%s", stackNode->value);
+      mapItem = ctr_source_map_head;
+      line = -1;
+      while(mapItem) {
+          if (line == -1 && mapItem->node == stackNode) {
+              line = mapItem->line;
+          }
+          if (line > -1 && mapItem->node->type == CTR_AST_NODE_PROGRAM) {
+              currentProgram = mapItem->node->value;
+              sprintf(trace, " (%s: %d)", currentProgram, line+1);
+              break;
+          }
+          mapItem = mapItem->next;
+      }
+      sprintf(trace, "\n");
+  }
+  return ctr_build_string_from_cstring(trace);
+}
+
+void ctr_print_stack_trace() {
+  int line;
+  char* currentProgram;
+  ctr_source_map* mapItem;
+  ctr_tnode* stackNode;
+
+  for (int i = ctr_callstack_index; i > 0; i--) {
+      printf("#%d ", i);
+      stackNode = ctr_callstack[i-1];
+      fwrite(stackNode->value, sizeof(char), stackNode->vlen, stdout);
+      mapItem = ctr_source_map_head;
+      line = -1;
+      while(mapItem) {
+          if (line == -1 && mapItem->node == stackNode) {
+              line = mapItem->line;
+          }
+          if (line > -1 && mapItem->node->type == CTR_AST_NODE_PROGRAM) {
+              currentProgram = mapItem->node->value;
+              printf(" (%s: %d)", currentProgram, line+1);
+              break;
+          }
+          mapItem = mapItem->next;
+      }
+      printf("\n");
+  }
 }

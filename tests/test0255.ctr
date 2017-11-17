@@ -12,7 +12,7 @@ q is Program new: { :p
 		( word = 'stop' ) break.
 	}.
 	Pen write: 'Child sleeps 4 sec, wait for it...', brk.
-	Clock wait: 2.
+	Clock wait: (JSON parse: '2e9' genericType: Object).
 	Pen write: 1, brk.
 	Clock wait: 1.
 	Pen write: 1, brk.

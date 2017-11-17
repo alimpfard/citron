@@ -1,0 +1,48 @@
+var List is Array new.
+
+List on: 'uncons' do: {
+  ^[(me head), (me tail)].
+}.
+
+List on: 'null' do: {
+  ^(me count > 0).
+}.
+
+List on: 'length' do: {
+  ^me count.
+}.
+
+List on: 'map:' do: {:function
+  ^me fmap: function.
+}.
+
+List on: 'intercalate:' do: {:elem ^me intersperse: elem, join: ''.}.
+
+List on: 'flatten' do: {
+  ^me foldl: {:acc:x ^acc + x.} accumulator: (Array new).
+}.
+
+List on: 'transpose' do: {
+  var out is [].
+  (me filter: {:i:v ^v null not toBoolean.}, null) ifFalse: {out is [(me map: {:v ^v head.}, flatten)] + (me map: {:v ^me tail.}, transpose).}.
+  ^out.
+}.
+
+List on: 'subsequences' do: {
+  #TODO: Later
+}.
+
+List on: 'permutations' do: {
+  #TODO: Later
+}.
+
+List on: 'concat' do: {
+  (me length = 0) ifTrue: {thisBlock error: 'Concat on empty list'.}.
+  ^(me skip: 1) foldl: {:acc:x ^acc + x.} accumulator: (me at: 0).
+}.
+
+List on: 'concatMap:' do: {:func
+  ^me fmap: func, concat.
+}.
+
+import export: List as: 'List'.

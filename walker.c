@@ -54,7 +54,7 @@ ctr_object* ctr_cwlk_message(ctr_tnode* paramNode) {
             if (CtrStdFlow == NULL) {
                 ctr_callstack[ctr_callstack_index++] = receiverNode;
             }
-            if (receiverNode->modifier == 1) {
+            if (receiverNode->modifier == 1 || receiverNode->modifier == 3) {
                 r = ctr_find_in_my(recipientName);
             } else {
                 r = ctr_find(recipientName);
@@ -182,11 +182,6 @@ ctr_object* ctr_cwlk_assignment(ctr_tnode* node) {
  */
 ctr_object* ctr_cwlk_expr(ctr_tnode* node, char* wasReturn) {
     ctr_object* result;
-    uint8_t i;
-    int line;
-    char* currentProgram = "?";
-    ctr_tnode* stackNode;
-    ctr_source_map* mapItem;
     switch (node->type) {
         case CTR_AST_NODE_LTRSTRING:
             result = ctr_build_string(node->value, node->vlen);
@@ -210,17 +205,10 @@ ctr_object* ctr_cwlk_expr(ctr_tnode* node, char* wasReturn) {
             if (CtrStdFlow == NULL) {
                 ctr_callstack[ctr_callstack_index++] = node;
             }
-            if (node->modifier == 1) {
+            if (node->modifier == 1 || node->modifier == 3) {
                 result = ctr_find_in_my(ctr_build_string(node->value, node->vlen));
-            } else if (node->modifier == 3){
-                // printf("Hit mod 3, evaluating\n");
+            } else
                 result = ctr_find(ctr_build_string(node->value, node->vlen));
-                ctr_object* tmp = ctr_heap_allocate_tracked(sizeof(ctr_object));
-                *tmp = *result;
-                result = tmp;
-            } else {
-                result = ctr_find(ctr_build_string(node->value, node->vlen));
-            }
             if (CtrStdFlow == NULL) {
                 ctr_callstack_index--;
             }
@@ -248,25 +236,7 @@ ctr_object* ctr_cwlk_expr(ctr_tnode* node, char* wasReturn) {
                     fwrite(CtrStdFlow->value.svalue->value, sizeof(char), CtrStdFlow->value.svalue->vlen, stdout);
                     printf("\n");
                 }
-                for ( i = ctr_callstack_index; i > 0; i--) {
-                    printf("#%d ", i);
-                    stackNode = ctr_callstack[i-1];
-                    fwrite(stackNode->value, sizeof(char), stackNode->vlen, stdout);
-                    mapItem = ctr_source_map_head;
-                    line = -1;
-                    while(mapItem) {
-                        if (line == -1 && mapItem->node == stackNode) {
-                            line = mapItem->line;
-                        }
-                        if (line > -1 && mapItem->node->type == CTR_AST_NODE_PROGRAM) {
-                            currentProgram = mapItem->node->value;
-                            printf(" (%s: %d)", currentProgram, line+1);
-                            break;
-                        }
-                        mapItem = mapItem->next;
-                    }
-                    printf("\n");
-                }
+                fputs(ctr_get_stack_trace()->value.svalue->value, stdout);
             }
             result = ctr_build_nil();
             break;
@@ -296,6 +266,10 @@ ctr_object* ctr_cwlk_run(ctr_tnode* program) {
         }
         wasReturn = 0;
         result = ctr_cwlk_expr(node, &wasReturn);
+        if (ctr_internal_next_return) {
+          ctr_internal_next_return = 0;
+          break;
+        }
         if ( wasReturn ) {
             break;
         }

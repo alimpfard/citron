@@ -1,5 +1,0 @@
-require('cmock')
-mock_out = ENV.fetch('MOCK_OUT', './build/test/mocks')
-mock_prefix = ENV.fetch('MOCK_PREFIX', 'mock_')
-cmock = CMock.new({:plugins => [:ignore, :return_thru_ptr], :mock_prefix => mock_prefix, :mock_path => mock_out})
-cmock.setup_mocks(ARGV[0])

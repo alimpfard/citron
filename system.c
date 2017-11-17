@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <time.h>
+#include <errno.h>
 #include <sys/wait.h>
 #include <syslog.h>
 #include <signal.h>
@@ -269,7 +270,7 @@ arc4random_uniform(u_int32_t upper_bound)
  * GarbageCollector Marker
  */
 void ctr_gc_mark(ctr_object* object) {
-  if (object->info.mark) return;
+  if (object->info.mark) return; //return if already marked
     ctr_object* el;
     ctr_mapitem* item;
     ctr_object* o;
@@ -416,6 +417,58 @@ void  ctr_gc_internal_collect() {
  */
 ctr_object* ctr_gc_collect (ctr_object* myself, ctr_argument* argumentList) {
     ctr_gc_internal_collect(); /* calls internal because automatic GC has to use this function as well and requires low overhead. */
+    return myself;
+}
+
+ctr_object* ctr_gc_sweep_this( ctr_object* myself, ctr_argument* argumentList ) {
+    int all = 0;
+    ctr_object* previousObject = NULL;
+    ctr_object* currentObject = argumentList->object;
+    ctr_object* nextObject = NULL;
+    ctr_mapitem* mapItem = NULL;
+    ctr_mapitem* tmp = NULL;
+    while(currentObject) {
+        ctr_gc_object_counter ++;
+            void (*free_heap_maybe_shared)(void*) = currentObject->info.shared==0?&ctr_heap_free:&ctr_heap_free_shared;
+            ctr_gc_dust_counter ++;
+            if (currentObject->methods->head) {
+                mapItem = currentObject->methods->head;
+                while(mapItem) {
+                    tmp = mapItem->next;
+                    free_heap_maybe_shared( mapItem );
+                    mapItem = tmp;
+                }
+            }
+            if (currentObject->properties->head) {
+                mapItem = currentObject->properties->head;
+                while(mapItem) {
+                    tmp = mapItem->next;
+                    free_heap_maybe_shared( mapItem );
+                    mapItem = tmp;
+                }
+            }
+            free_heap_maybe_shared( currentObject->methods );
+            free_heap_maybe_shared( currentObject->properties );
+            switch (currentObject->info.type) {
+                case CTR_OBJECT_TYPE_OTSTRING:
+                    if (currentObject->value.svalue != NULL) {
+                        if (currentObject->value.svalue->vlen > 0) {
+                            free_heap_maybe_shared( currentObject->value.svalue->value );
+                        }
+                        free_heap_maybe_shared( currentObject->value.svalue );
+                    }
+                    break;
+                case CTR_OBJECT_TYPE_OTARRAY:
+                    free_heap_maybe_shared( currentObject->value.avalue->elements );
+                    free_heap_maybe_shared( currentObject->value.avalue );
+                    break;
+                case CTR_OBJECT_TYPE_OTEX:
+                    if (currentObject->value.rvalue != NULL) free_heap_maybe_shared( currentObject->value.rvalue );
+                    break;
+            }
+            free_heap_maybe_shared( currentObject );
+            currentObject = nextObject;
+    }
     return myself;
 }
 
@@ -755,6 +808,31 @@ ctr_object* ctr_command_set_env(ctr_object* myself, ctr_argument* argumentList) 
 }
 
 /**
+ * Program changeDirectory: [path:String]
+ *
+ * chdir to path, returns the past directory on success
+ */
+ctr_object* ctr_command_chdir(ctr_object* myself, ctr_argument* argumentList) {
+  CTR_ENSURE_TYPE_STRING(argumentList->object);
+  char* path = ctr_heap_allocate_cstring(argumentList->object);
+  char* curpath = realpath(".", NULL);
+  if(!curpath) {
+    CtrStdFlow = ctr_build_string_from_cstring("Could not extends real path of current directory");
+    return CtrStdNil;
+  }
+  ctr_object* lpath = ctr_build_string_from_cstring(curpath);
+  free(curpath);
+  if(chdir(path)==0) {
+    ctr_heap_free(path);
+    return lpath;
+  }
+  ctr_object* err = ctr_build_string_from_cstring("Error occurred while changing directory: ");
+  ctr_invoke_variadic(err, &ctr_string_append, 1, ctr_build_string_from_cstring(strerror(errno)));
+  CtrStdFlow = err;
+  return CtrStdNil;
+}
+
+/**
  * [Program] waitForInput
  *
  * Ask a question on the command-line, resumes program
@@ -848,9 +926,10 @@ ctr_object* ctr_command_set_INT_handler(ctr_object* myself, ctr_argument* argume
   return myself;
 }
 
-void ctr_int_handler(int signal) {
+void ctr_int_handler(int isig) {
+  printf("%i\n", isig);
   if (ctr_global_interrupt_handler != NULL) {
-    ctr_block_runIt(ctr_global_interrupt_handler, NULL);
+    ctr_invoke_variadic(ctr_global_interrupt_handler, &ctr_block_runIt, 1, ctr_build_number_from_float(isig));
   } else {
     exit(1);
   }

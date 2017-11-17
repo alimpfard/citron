@@ -821,11 +821,11 @@ ctr_object* ctr_array_imap(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 /**
- * Array foldl: [Block]
+ * Array foldl: [Block] accumulator: [Object]
  *
  * reduces an array according to a block (which takes an accumulator and the value, and returns the next acc) from the left (index 0)
  *
- * ([1,2,3,4]) foldl: {:acc:v ^acc + v.}. #=> Equivalent to ([1,2,3,4]) sum.
+ * ([1,2,3,4]) foldl: {:acc:v ^acc + v.} accumulator: 0. #=> Equivalent to ([1,2,3,4]) sum.
  */
  ctr_object* ctr_array_foldl(ctr_object* myself, ctr_argument* argumentList) {
    ctr_object* func = argumentList->object;

@@ -1,0 +1,36 @@
+import on: 'searchPaths' do: {^my searchPaths.}.
+import on: 'export:as:' do: {:object:name
+  Reflect addGlobalVariable: name.
+  Reflect set: name to: object.
+}.
+import on: 'require-parent' do: {
+  me message: '..' arguments: [].
+}.
+import on: 'respondTo:' do: {:name
+  var file is Nil.
+  var path is Nil.
+  var is_dir is False.
+  my searchPaths each: {:i:v
+  # Pen write: v, brk.
+    file isNil not break.
+    (var f is File new: (v + '/$$name' + '.ctr')) exists ifTrue: {
+      (File typeOf: (f realPath), = 'file') ifTrue: {
+        path is File new: v, realPath.
+        file is f.
+      }.
+    }.
+    (var f is File new: (v + '/$$name')) exists ifTrue: {
+      (File typeOf: (v + '/$$name'), = 'folder') ifTrue: {
+        path is f realPath.
+        file is File new: (path + '/main.ctr').
+        is_dir is True.
+      }.
+    }.
+  }.
+  file isNil ifTrue: {
+    thisBlock error: ('Could not find neither a package, nor a standalone file representing $$name in the search paths: \n%s' formatObjects: [(my searchPaths fmap: {:p ^p + ' aka (' + (File new: p, realPath) + ')'.}, join: '\n')]).
+  }.
+  var oldp is Program changeDirectory: path.
+  file include.
+  Program changeDirectory: oldp.
+}.

@@ -42,6 +42,7 @@ static void initialize() {
     ctr_clex_keyword_my_len = strlen( ctr_clex_keyword_my );
     ctr_clex_keyword_var_len = strlen( ctr_clex_keyword_var );
     ctr_clex_keyword_const_len = strlen( ctr_clex_keyword_const );
+    ctr_internal_next_return = 0;
     ctr_initialize_world();
 }
 

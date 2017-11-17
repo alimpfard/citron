@@ -269,84 +269,90 @@ ctr_tnode* ctr_cparse_popen() {
  *
  * Generates a set of AST nodes to represent a block of code.
  */
-ctr_tnode* ctr_cparse_block() {
-    ctr_tnode* r;
-    ctr_tlistitem* codeBlockPart1;
-    ctr_tlistitem* codeBlockPart2;
-    ctr_tnode* paramList;
-    ctr_tnode* codeList;
-    ctr_tlistitem* previousListItem;
-    ctr_tlistitem* previousCodeListItem;
-    int t;
-    int first;
-    ctr_clex_tok();
-    r = ctr_cparse_create_node( CTR_AST_NODE );
-    r->type = CTR_AST_NODE_CODEBLOCK;
-    codeBlockPart1 = (ctr_tlistitem*) ctr_heap_allocate_tracked( sizeof(ctr_tlistitem) );
-    r->nodes = codeBlockPart1;
-    codeBlockPart2 = (ctr_tlistitem*) ctr_heap_allocate_tracked( sizeof(ctr_tlistitem) );
-    r->nodes->next = codeBlockPart2;
-    paramList = ctr_cparse_create_node( CTR_AST_NODE );
-    codeList  = ctr_cparse_create_node( CTR_AST_NODE );
-    codeBlockPart1->node = paramList;
-    codeBlockPart2->node = codeList;
-    paramList->type = CTR_AST_NODE_PARAMLIST;
-    codeList->type = CTR_AST_NODE_INSTRLIST;
-    t = ctr_clex_tok();
-    first = 1;
-    while(t == CTR_TOKEN_COLON) {
-        /* okay we have new parameter, load it */
-        t = ctr_clex_tok();
-        ctr_tlistitem* paramListItem = (ctr_tlistitem*) ctr_heap_allocate_tracked( sizeof(ctr_tlistitem) );
-        ctr_tnode* paramItem = ctr_cparse_create_node( CTR_AST_NODE );
-        long l = ctr_clex_tok_value_length();
-        paramItem->value = ctr_heap_allocate_tracked( sizeof( char ) * l );
-        memcpy(paramItem->value, ctr_clex_tok_value(), l);
-        paramItem->vlen = l;
-        paramListItem->node = paramItem;
-        if (first) {
-            paramList->nodes = paramListItem;
-            previousListItem = paramListItem;
-            first = 0;
-        } else {
-            previousListItem->next = paramListItem;
-            previousListItem = paramListItem;
-        }
-        t = ctr_clex_tok();
-    }
-    first = 1;
-    while((first || t == CTR_TOKEN_DOT)) {
-        ctr_tlistitem* codeListItem;
-        ctr_tnode* codeNode;
-        if (first) {
-            ctr_clex_putback();
-        }
-        t = ctr_clex_tok();
-        if (t == CTR_TOKEN_BLOCKCLOSE) break;
-        ctr_clex_putback();
-        codeListItem = (ctr_tlistitem*) ctr_heap_allocate_tracked( sizeof(ctr_tlistitem) );
-        codeNode = ctr_cparse_create_node( CTR_AST_NODE );
-        if (t == CTR_TOKEN_RET) {
-            codeNode = ctr_cparse_ret();
-        } else {
-            codeNode = ctr_cparse_expr(0);
-        }
-        codeListItem->node = codeNode;
-        if (first) {
-            codeList->nodes = codeListItem;
-            previousCodeListItem = codeListItem;
-            first = 0;
-        } else {
-            previousCodeListItem->next = codeListItem;
-            previousCodeListItem = codeListItem;
-        }
-        t = ctr_clex_tok();
-        if (t != CTR_TOKEN_DOT) {
-            ctr_cparse_emit_error_unexpected( t, "Expected a dot (.).\n" );
-        }
-    }
-    return r;
+ ctr_tnode* ctr_cparse_block_(int autocap);
+ ctr_tnode* ctr_cparse_block() {
+   return ctr_cparse_block_(0);
+ }
+ctr_tnode* ctr_cparse_block_(int autocap) {
+  ctr_tnode* r;
+  ctr_tlistitem* codeBlockPart1;
+  ctr_tlistitem* codeBlockPart2;
+  ctr_tnode* paramList;
+  ctr_tnode* codeList;
+  ctr_tlistitem* previousListItem;
+  ctr_tlistitem* previousCodeListItem;
+  int t;
+  int first;
+  ctr_clex_tok();
+  r = ctr_cparse_create_node( CTR_AST_NODE );
+  r->type = CTR_AST_NODE_CODEBLOCK;
+  codeBlockPart1 = (ctr_tlistitem*) ctr_heap_allocate_tracked( sizeof(ctr_tlistitem) );
+  r->nodes = codeBlockPart1;
+  codeBlockPart2 = (ctr_tlistitem*) ctr_heap_allocate_tracked( sizeof(ctr_tlistitem) );
+  r->nodes->next = codeBlockPart2;
+  paramList = ctr_cparse_create_node( CTR_AST_NODE );
+  codeList  = ctr_cparse_create_node( CTR_AST_NODE );
+  codeBlockPart1->node = paramList;
+  codeBlockPart2->node = codeList;
+  paramList->type = CTR_AST_NODE_PARAMLIST;
+  codeList->type = CTR_AST_NODE_INSTRLIST;
+  t = ctr_clex_tok();
+  first = 1;
+  while(t == CTR_TOKEN_COLON) {
+      /* okay we have new parameter, load it */
+      t = ctr_clex_tok();
+      ctr_tlistitem* paramListItem = (ctr_tlistitem*) ctr_heap_allocate_tracked( sizeof(ctr_tlistitem) );
+      ctr_tnode* paramItem = ctr_cparse_create_node( CTR_AST_NODE );
+      long l = ctr_clex_tok_value_length();
+      paramItem->value = ctr_heap_allocate_tracked( sizeof( char ) * l );
+      memcpy(paramItem->value, ctr_clex_tok_value(), l);
+      paramItem->vlen = l;
+      paramListItem->node = paramItem;
+      if (first) {
+          paramList->nodes = paramListItem;
+          previousListItem = paramListItem;
+          first = 0;
+      } else {
+          previousListItem->next = paramListItem;
+          previousListItem = paramListItem;
+      }
+      t = ctr_clex_tok();
+  }
+  first = 1;
+  while((first || t == CTR_TOKEN_DOT)) {
+      ctr_tlistitem* codeListItem;
+      ctr_tnode* codeNode;
+      if (first) {
+          ctr_clex_putback();
+      }
+      t = ctr_clex_tok();
+      if (t == CTR_TOKEN_BLOCKCLOSE) break;
+      ctr_clex_putback();
+      codeListItem = (ctr_tlistitem*) ctr_heap_allocate_tracked( sizeof(ctr_tlistitem) );
+      codeNode = ctr_cparse_create_node( CTR_AST_NODE );
+      if (t == CTR_TOKEN_RET) {
+          codeNode = ctr_cparse_ret();
+      } else {
+          codeNode = ctr_cparse_expr(0);
+      }
+      codeListItem->node = codeNode;
+      if (first) {
+          codeList->nodes = codeListItem;
+          previousCodeListItem = codeListItem;
+          first = 0;
+      } else {
+          previousCodeListItem->next = codeListItem;
+          previousCodeListItem = codeListItem;
+      }
+      t = ctr_clex_tok();
+      if (t != CTR_TOKEN_DOT) {
+          ctr_cparse_emit_error_unexpected( t, "Expected a dot (.).\n" );
+      }
+  }
+  r->modifier = /*CTR_MODIFIER_AUTOCAPTURE + */autocap == 1;
+  return r;
 }
+
 
 /**
  * CTRParserReference

@@ -1,4 +1,4 @@
-var x is {:a :*b 
+var x is {:a :*b
     # a will get one arg, the rest will get sucked up into b
     Pen write: 'a: $$a', write: ', b: $$b', brk.
 }.

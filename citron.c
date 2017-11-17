@@ -74,6 +74,7 @@ int main(int argc, char* argv[]) {
     ctr_clex_keyword_my_len = strlen( ctr_clex_keyword_my );
     ctr_clex_keyword_var_len = strlen( ctr_clex_keyword_var );
     ctr_clex_keyword_const_len = strlen( ctr_clex_keyword_const );
+    ctr_internal_next_return = 0;
     if (ctr_mode_input_file != NULL) {
       prg = ctr_internal_readf(ctr_mode_input_file, &program_text_size);
       program = ctr_cparse_parse(prg, ctr_mode_input_file);
@@ -102,7 +103,7 @@ void initialize(int extensions) {
     regexLineCheck = &r;
 
     ctr_gc_mode = 1; /* default GC mode: activate GC */
-    ctr_gc_memlimit = 8388608;
+    ctr_gc_memlimit = 32 * 1024 * 1024; // 32 MB
     ctr_callstack_index = 0;
     ctr_source_map_head = NULL;
     ctr_source_mapping = 0;

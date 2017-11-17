@@ -98,6 +98,24 @@ ctr_object* ctr_file_path(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 /**
+ * [File] realPath
+ *
+ * Returns the real path of a file. The file object will respond to this
+ * message by returning a string object describing the absolute path to the
+ * recipient.
+ */
+ctr_object* ctr_file_rpath(ctr_object* myself, ctr_argument* argumentList) {
+    ctr_object* path = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring( "path" ), 0);
+    if (path == NULL) return CtrStdNil;
+    char* cpath = ctr_heap_allocate_cstring(path);
+    char* rpath = realpath(cpath, NULL);
+    path = ctr_build_string_from_cstring(rpath);
+    free(rpath);
+    ctr_heap_free(cpath);
+    return path;
+}
+
+/**
  * [File] read
  *
  * Reads contents of a file. Send this message to a file to read the entire contents in
@@ -673,4 +691,43 @@ ctr_object* ctr_file_list(ctr_object* myself, ctr_argument* argumentList) {
     ctr_heap_free(addArgumentList);
     ctr_heap_free(pathValue);
     return fileList;
+}
+
+ctr_object* ctr_file_type(ctr_object* myself, ctr_argument* argumentList) {
+  char* path = ctr_heap_allocate_cstring(argumentList->object);
+  struct stat stats;
+  char* value;
+  if(lstat(path, &stats)==0) {
+    switch (stats.st_mode&S_IFMT) {
+      case S_IFSOCK:
+        value = "socket";
+        goto ret;
+      case S_IFLNK:
+        value = "symbolic link";
+        goto ret;
+      case S_IFREG:
+        value = "file";
+        goto ret;
+      case S_IFBLK:
+        value = "block device";
+        goto ret;
+      case S_IFDIR:
+        value = "folder";
+        goto ret;
+      case S_IFCHR:
+        value = "character device";
+        goto ret;
+      case S_IFIFO:
+        value = "named pipe";
+        goto ret;
+      default:
+        value = "other";
+        goto ret;
+    }
+  }
+  ctr_heap_free(path);
+  return CtrStdNil;
+  ret:
+  ctr_heap_free(path);
+  return ctr_build_string_from_cstring(value);
 }

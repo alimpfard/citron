@@ -97,7 +97,7 @@ var lwb   is Array new < '100011' ; ''.
 var lbub  is Array new < '100100' ; ''.
 var swb   is Array new < '101011' ; ''.
 var sbb   is Array new < '101000' ; ''.
-var lib is tnoop.
+var lib   is tnoop.
 #-----
 
 var MIPSIntructions is Map new

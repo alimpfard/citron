@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include "SDL.h"
 
-#define NEW true
+#define NEW 1
 
 #define CTR_SDL_TYPE_BASE 2
 
@@ -256,6 +256,43 @@ ctr_object* ctr_sdl_rect_alterh(ctr_object* myself, ctr_argument* argumentList) 
    return instance;
  }
 
+ ctr_object* ctr_sdl_color_make_rgba(ctr_object* myself, ctr_argument* argumentList) {
+   if(argumentList->object->info.type != CTR_OBJECT_TYPE_OTARRAY) goto err_not_arr;
+   if(ctr_array_count(argumentList->object, NULL)->value.nvalue != 4) goto err_not_enough;
+   ctr_object *r,*g,*b,*a;
+   r = ctr_array_head(argumentList->object, NULL);
+   g = ctr_invoke_variadic(argumentList->object, &ctr_array_get, 1, ctr_build_number_from_float(1));
+   b = ctr_invoke_variadic(argumentList->object, &ctr_array_get, 1, ctr_build_number_from_float(2));
+   a = ctr_invoke_variadic(argumentList->object, &ctr_array_get, 1, ctr_build_number_from_float(3));
+
+   return ctr_invoke_variadic(myself, &ctr_sdl_color_make, 4, r,g,b,a);
+
+   err_not_arr:
+   CtrStdFlow = ctr_build_string_from_cstring("Expected an array of RGBA values");
+   return myself;
+   err_not_enough:
+   CtrStdFlow = ctr_build_string_from_cstring("Expected an array of 4 values for RGBA");
+   return myself;
+ }
+
+ ctr_object* ctr_sdl_color_make_rgb(ctr_object* myself, ctr_argument* argumentList) {
+   if(argumentList->object->info.type != CTR_OBJECT_TYPE_OTARRAY) goto err_not_arr;
+   if(ctr_array_count(argumentList->object, NULL)->value.nvalue != 3) goto err_not_enough;
+   ctr_object *r,*g,*b;
+   r = ctr_array_head(argumentList->object, NULL);
+   g = ctr_invoke_variadic(argumentList->object, &ctr_array_get, 1, ctr_build_number_from_float(1));
+   b = ctr_invoke_variadic(argumentList->object, &ctr_array_get, 1, ctr_build_number_from_float(2));
+
+   return ctr_invoke_variadic(myself, &ctr_sdl_color_make, 4, r,g,b,ctr_build_number_from_float(255));
+
+   err_not_arr:
+   CtrStdFlow = ctr_build_string_from_cstring("Expected an array of RGB values");
+   return myself;
+   err_not_enough:
+   CtrStdFlow = ctr_build_string_from_cstring("Expected an array of 3 values for RGB");
+   return myself;
+ }
+
  ctr_object* ctr_sdl_color_set(ctr_object* myself, ctr_argument* argumentList) {
    ctr_object *prop = ctr_internal_cast2string(argumentList->object), *val = ctr_internal_cast2number(argumentList->next->object);
    if (prop==NULL||val==NULL) {
@@ -267,6 +304,18 @@ ctr_object* ctr_sdl_rect_alterh(ctr_object* myself, ctr_argument* argumentList) 
  }
  ctr_object* ctr_sdl_color_get(ctr_object* myself, ctr_argument* argumentList) {
    return ctr_internal_object_find_property(myself, ctr_internal_cast2string(argumentList->object), CTR_CATEGORY_PRIVATE_PROPERTY);
+ }
+ ctr_object* ctr_sdl_color_to_string(ctr_object* myself, ctr_argument* argumentList) {
+   char str[512];
+
+   int r,g,b,a;
+   r = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("red"), CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue;
+   g = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("green"), CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue;
+   b = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("blue"), CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue;
+   a = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("alpha"), CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue;
+
+   sprintf(str, "RGBA[%i,%i,%i,%i]", r,g,b,a);
+   return ctr_build_string_from_cstring(str);
  }
  #endif
 
@@ -281,7 +330,7 @@ ctr_object* ctr_sdl_surface_loadBMP(ctr_object* myself, ctr_argument* argumentLi
   instance->link = CtrStdSdl_surface;
   char* loc = ctr_heap_allocate_cstring (argumentList->object);
   if(access(loc, F_OK) == -1) {
-    CtrStdFlow = ctr_build_string_from_cstring("specified file does not exist.");
+    CtrStdFlow = ctr_build_string_from_cstring("specified file does not exist or cannot be accessed.");
     ctr_heap_free(loc);
     return CtrStdExit;
   }
@@ -309,6 +358,7 @@ ctr_object* ctr_sdl_surface_display_format(ctr_object* myself, ctr_argument* arg
 ctr_object* ctr_sdl_surface_blit(ctr_object* myself, ctr_argument* argumentList) {
   SDL_Surface* on = get_sdl_surface_ptr(myself);
   SDL_Surface* what = get_sdl_surface_ptr(argumentList->object);
+  printf("blit\n");
   SDL_BlitSurface(what, NULL, on, NULL);
   return myself;
 }
@@ -558,12 +608,16 @@ void begin() {
   #ifdef NEW
   //Color
   ctr_internal_create_func(CtrStdColor, ctr_build_string_from_cstring( "red:green:blue:alpha:" ), &ctr_sdl_color_make);
+  ctr_internal_create_func(CtrStdColor, ctr_build_string_from_cstring( "rgba:" ), &ctr_sdl_color_make_rgba);
+  ctr_internal_create_func(CtrStdColor, ctr_build_string_from_cstring( "rgb:" ), &ctr_sdl_color_make_rgb);
   ctr_internal_create_func(CtrStdColor, ctr_build_string_from_cstring( "get:" ), &ctr_sdl_color_get);
   ctr_internal_create_func(CtrStdColor, ctr_build_string_from_cstring( "set:to:" ), &ctr_sdl_color_set);
+  ctr_internal_create_func(CtrStdColor, ctr_build_string_from_cstring( "toString" ), &ctr_sdl_color_to_string);
 
   ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring( "Color" ), CtrStdColor, 0);
   #endif
   ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring( "SDLEvent" ), CtrStdSdl_evt, 0);
+  ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring( "SDLSurface" ), CtrStdSdl_surface, 0);
 	ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring( "SDL" ), CtrStdSdl, 0);
 
   //types

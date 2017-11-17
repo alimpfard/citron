@@ -1,0 +1,6 @@
+Classes new: 'Functor' contract: {:obj
+  #apply:, compose:
+  var terms is ['apply:', 'compose:'].
+  ^(Reflect getMethodsOf: obj) filter: {:i:v ^terms contains: v.}, count = (terms count).
+}.
+Classes Functor classify: CodeBlock.

@@ -1,0 +1,3 @@
+Reflect addGlobalVariable: 'Test'.
+Test is Object new.
+Test on: 'woot' do: {Pen write: 'Test woot\'d', brk. ^'Woot'.}.

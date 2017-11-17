@@ -8,6 +8,8 @@
 #include <sys/mman.h>
 #include "citron.h"
 
+#define LIMIT_MEM 1
+
 /**
  * Heap Object, represents dynamic memory.
  */
@@ -56,8 +58,9 @@ void* ctr_heap_allocate( size_t size ) {
     /* Check whether we can afford to allocate this much */
     ctr_gc_alloc += size;
 
-    if (ctr_gc_memlimit < ctr_gc_alloc) {
+    if (LIMIT_MEM && ctr_gc_memlimit < ctr_gc_alloc) {
         printf( "Out of memory. Failed to allocate %lu bytes.\n", size );
+        ctr_print_stack_trace();
         exit(1);
     }
 
@@ -94,8 +97,9 @@ void* ctr_heap_allocate_shared( size_t size ) {
   /* Check whether we can afford to allocate this much */
   ctr_gc_alloc += size;
 
-  if (ctr_gc_memlimit < ctr_gc_alloc) {
+  if (LIMIT_MEM && ctr_gc_memlimit < ctr_gc_alloc) {
       printf( "Out of memory. Failed to allocate %lu bytes.\n", size );
+      ctr_print_stack_trace();
       exit(1);
   }
 

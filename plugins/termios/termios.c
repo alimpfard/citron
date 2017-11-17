@@ -12,15 +12,17 @@ ctr_object* ctr_termios_make(ctr_object* myself, ctr_argument* argumentList) {
 
 ctr_object* ctr_termios_nc(ctr_object* myself, ctr_argument* argumentList) {
   options.c_lflag |= ICANON;
+  tcsetattr(*stdin, &options);
   return CtrStdNil;
 }
 ctr_object* ctr_termios_c(ctr_object* myself, ctr_argument* argumentList) {
   options.c_lflag &= ~ICANON;
+  tcsetattr(*stdin, &options);
   return CtrStdNil;
 }
 
 void begin() {
-  if(tcgetattr(stdin, &options) < 0) {
+  if(tcgetattr(*stdin, &options) < 0) {
         //perror("stdin");
         return;
   }

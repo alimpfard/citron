@@ -1,0 +1,15 @@
+import require-parent.
+
+CodeBlock learn: '$' means: 'apply:'.
+CodeBlock learn: ';' means: 'compose:'.
+
+import export: {:b:a ^a + b.} as: '+'.
+import export: {:b:a ^a - b.} as: '-'.
+import export: {:b:a ^a * b.} as: '*'.
+import export: {:b:a ^a / b.} as: '/'.
+import export: {:b:a ^a < b.} as: '<'.
+import export: {:b:a ^a <=: b.} as: '<='.
+import export: {:b:a ^a > b.} as: '>'.
+import export: {:b:a ^a >=: b.} as: '>='.
+import export: {:b:a ^a = b.} as: '=='.
+import export: {:b:a ^a !=: b.} as: '!='.

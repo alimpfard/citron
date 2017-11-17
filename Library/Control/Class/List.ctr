@@ -1,0 +1,8 @@
+Classes new: 'List' contract: {:obj
+  var terms is ['length', 'at:', 'push:', 'pop', 'join:'].
+  ^(Reflect getMethodsOf: obj) filter: {:i:v ^terms contains: v.}, count = (terms count).
+}.
+
+Array learn: 'length' means: 'count'.
+
+Classes List classify: Array.

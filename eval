@@ -17,6 +17,7 @@ Eval on: 'init' do: {
   my evalQueue is Queue new.
   my globalvars is False.
   my history is LRArray new init: 100.
+  my commands is Nil.
   ^me.
 }.
 Eval on: 'end' do: { my end is True. }.
@@ -36,15 +37,28 @@ Eval on: 'prompt' do: { ^my prompt. }.
 Eval on: 'shiftArgs' do: { ^(my args shift). }.
 Eval on: 'argCount' do: { ^(my args count). }.
 Eval on: 'onlyRelevantArgs' do: { my args do shift shift done. }. #get rid of ./ctr eval
+
+Eval on: 'Commands' do: {
+  my commands is my commands or: {
+    ^Map new
+      put: {:args Eval end.} at: 'q',
+      put: {:args ^Reflect strTypeOf: (args eval).} at: 't'.
+  }.
+  ^my commands.
+}.
+
+Eval on: 'doMeta:' do: {:str
+  ^(Eval Commands at: (str at: 0)) applyTo: (str skip: 1, trim).
+}.
+
 Eval on: 'evaluate:' do: { :str
   var x is Nil.
-  { x is str eval toString. } catch: { :e
-    # try to recover from some small errors.
-      x is e.
-      # get rid of the trash.
-      # Broom sweep.
-  }, run.
-  ^x = '[Object]' either: '' or: x.
+  (str at: 0, = ':')
+    either:
+      ({ ^x is Eval doMeta: (str skip: 1). } catch: {:e x is e.})
+    or:
+      ({ ^x is str eval toString. } catch: {:e x is e.}).
+  ^(x containsPattern: '\\[\\w+\\]') either: '' or: x.
 }.
 Eval on: 'evaluateFile:' do: { :fl
   { File new: fl, include. } catch: { :e

@@ -1,0 +1,25 @@
+var Class is Object new.
+Class on: 'init:' do: {:contract
+  my subclasses is Array new.
+  my contract is contract.
+}.
+
+Class on: 'classify:' do: {:cat
+  my contract applyTo: cat, ifFalse: {thisBlock error: 'Object does not satisfy the terms of the contract.'.}.
+  my subclasses push: cat.
+}.
+
+Class on: 'cast:' do: {:obj
+  var self is False.
+  ((self is my subclasses contains: obj) | (my subclasses contains: (var link is Reflect primitiveLinkOf: obj))) ifFalse: {
+    my contract applyTo: obj, ifFalse: {thisBlock error: 'Object does not satisfy the terms of the contract.'.}.
+  }.
+  ^obj.
+}.
+
+# Class on: 'respondTo:' do: {:a ^my subclasses at: a.}.
+
+import export: Class as: 'Class'.
+import Classes.
+import Functor.
+import List.

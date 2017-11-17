@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CTR_VERSION "0.0.5.9"
+#define CTR_VERSION "0.0.6"
 #define CTR_LOG_WARNINGS 0//2 to enable
 /**
  * Define the Citron tokens
@@ -22,17 +22,18 @@
 #define CTR_TOKEN_PAROPEN 4
 #define CTR_TOKEN_PARCLOSE 5
 #define CTR_TOKEN_BLOCKOPEN 6
-#define CTR_TOKEN_BLOCKCLOSE 7
-#define CTR_TOKEN_COLON 8
-#define CTR_TOKEN_DOT 9
-#define CTR_TOKEN_CHAIN 10
-#define CTR_TOKEN_BOOLEANYES 12
-#define CTR_TOKEN_BOOLEANNO 13
-#define CTR_TOKEN_NIL 14
-#define CTR_TOKEN_ASSIGNMENT 15
-#define CTR_TOKEN_RET 16
-#define CTR_TOKEN_TUPOPEN 17
-#define CTR_TOKEN_TUPCLOSE 18
+#define CTR_TOKEN_BLOCKOPEN_AUTOCAPTURE 7
+#define CTR_TOKEN_BLOCKCLOSE 8
+#define CTR_TOKEN_COLON 9
+#define CTR_TOKEN_DOT 10
+#define CTR_TOKEN_CHAIN 11
+#define CTR_TOKEN_BOOLEANYES 13
+#define CTR_TOKEN_BOOLEANNO 14
+#define CTR_TOKEN_NIL 15
+#define CTR_TOKEN_ASSIGNMENT 16
+#define CTR_TOKEN_RET 17
+#define CTR_TOKEN_TUPOPEN 18
+#define CTR_TOKEN_TUPCLOSE 19
 #define CTR_TOKEN_FIN 99
 //
 //
@@ -264,6 +265,10 @@ struct ctr_code_pragma {
 typedef struct ctr_code_pragma ctr_code_pragma;
 
 
+int CTR_CCOMP_SIMULATION; //in compiler simulation mode
+ctr_object* ctr_ccomp_get_stub(ctr_object*(*nfunc)(ctr_object*,ctr_argument*), ctr_object* receiver, ctr_argument* args); //stub generator lookup table
+ctr_argument* CtrCompilerStub; //returned object in case of stub error
+
 /**
  * Core Objects
  */
@@ -294,6 +299,8 @@ ctr_object* CtrStdReflect;
 ctr_object* CtrStdReflect_cons;
 ctr_object* CtrStdFiber;
 ctr_object* ctr_first_object;
+
+int ctr_internal_next_return;
 
 /**
  * Hashkey
@@ -393,13 +400,17 @@ ctr_object* ctr_assign_value_to_local_by_ref(ctr_object* key, ctr_object* val);
 ctr_object* ctr_const_assign_value(ctr_object* key, ctr_object* o, ctr_object* context);
 char*       ctr_internal_readf(char* file_name, uint64_t* size_allocated);
 void        ctr_internal_debug_tree(ctr_tnode* ti, int indent);
+void 		ctr_capture_refs(ctr_tnode* ti, ctr_object* block);
+ctr_object* ctr_get_responder(ctr_object* receiverObject, char* message, long vlen);
 ctr_object* ctr_send_message(ctr_object* receiver, char* message, long len, ctr_argument* argumentList);
 ctr_object* ctr_send_message_variadic(ctr_object* myself, char* message, int msglen, int count, ...) ;
-ctr_object* ctr_invoke_variadic(ctr_object* myself, ctr_object* *fun(ctr_object*,ctr_argument*), int count, ...);
-ctr_object* ctr_allocate_argumentList (int count, ...);
+ctr_object* ctr_invoke_variadic(ctr_object* myself, ctr_object * (*fun)(ctr_object *, ctr_argument *), int count, ...);
+ctr_argument* ctr_allocate_argumentList (int count, ...);
 void ctr_free_argumentList (ctr_argument* argumentList);
 void ctr_internal_create_func(ctr_object* o, ctr_object* key, ctr_object* (*func)( ctr_object*, ctr_argument* ) );
 int ctr_is_primitive(ctr_object* object);
+ctr_object* ctr_get_stack_trace();
+void ctr_print_stack_trace();
 
 /**
  * Scoping functions
@@ -444,6 +455,7 @@ ctr_object* ctr_object_myself(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_do(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_done(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_message(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_object_elvis_op(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_if_false(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_if_true(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_learn_meaning(ctr_object* myself, ctr_argument* ctr_argumentList);
@@ -451,8 +463,8 @@ ctr_object* ctr_object_to_string(ctr_object* myself, ctr_argument* ctr_argumentL
 ctr_object* ctr_object_to_number(ctr_object* myself, ctr_argument* ctr_argumentList);
 ctr_object* ctr_object_to_boolean(ctr_object* myself, ctr_argument* ctr_argumentList);
 ctr_object* ctr_object_remote(ctr_object* myself, ctr_argument* ctr_argumentList);
-ctr_object* ctr_object_respond_and(ctr_object* myseld, ctr_argument* ctr_argumentList);
-ctr_object* ctr_object_respond_and_and(ctr_object* myseld, ctr_argument* ctr_argumentList);
+ctr_object* ctr_object_respond_and(ctr_object* myself, ctr_argument* ctr_argumentList);
+ctr_object* ctr_object_respond_and_and(ctr_object* myself, ctr_argument* ctr_argumentList);
 
 /**
  * Boolean Interface
@@ -594,6 +606,7 @@ ctr_object* ctr_block_catch(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_while_true(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_while_false(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object* my);
+ctr_object* ctr_block_run_here(ctr_object* myself, ctr_argument* argList, ctr_object* my);
 ctr_object* ctr_block_times(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_to_string(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_assign(ctr_object* myself, ctr_argument* argumentList);
@@ -601,7 +614,7 @@ ctr_object* ctr_block_assign(ctr_object* myself, ctr_argument* argumentList);
 /**
  * Array Interface
  */
-ctr_object* ctr_array_new(ctr_object* myclass, ctr_argument* argumentList);
+ctr_object* ctr_array_new(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_copy(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_new_and_push(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_type(ctr_object* myself, ctr_argument* argumentList);
@@ -698,6 +711,7 @@ ctr_object* ctr_console_clear_line(ctr_object* myself, ctr_argument* argumentLis
  */
 ctr_object* ctr_file_new(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_path(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_file_rpath(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_read(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_write(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_append(ctr_object* myself, ctr_argument* argumentList);
@@ -717,6 +731,7 @@ ctr_object* ctr_file_descriptor(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_lock_generic(ctr_object* myself, ctr_argument* argumentList, int lock);
 ctr_object* ctr_file_lock(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_unlock(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_file_type(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_list(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_tmp(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_stdext_path(ctr_object* myself, ctr_argument* argumentList);
@@ -754,6 +769,7 @@ ctr_object* ctr_command_accept(ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_command_accept_number(ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_command_remote(ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_command_default_port(ctr_object* myself, ctr_argument* argumentList );
+ctr_object* ctr_command_chdir(ctr_object* myself, ctr_argument* argumentList);
 
 
 void ctr_check_permission( uint8_t operationID );
@@ -863,6 +879,14 @@ ctr_object* ctr_reflect_cons_of(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_try_serialize_block(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_cons_value(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_cons_str(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_get_first_link(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_get_responder(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_run_for_object(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_run_for_object_ctx(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_closure_of(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_get_primitive(ctr_object* myself, ctr_argument* argumentList);
+// ctr_object* ctr_reflect_dump_function(ctr_object* myself, ctr_argument* argumentList);
+
 /**
  * Fiber Co-Processing Interface
  */
@@ -873,6 +897,10 @@ ctr_object* ctr_fiber_tostring(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_fiber_yielded(ctr_object* myself, ctr_argument* argumentList);
 void ctr_fiber_begin_init(void);
 
+/** ImportLib **/
+ctr_object* CtrStdImportLib;
+ctr_object* CtrStdImportLib_SearchPaths;
+ctr_object* ctr_importlib_begin(ctr_object* myself, ctr_argument* argumentList);
 
 /**
  * Global Garbage Collector variables
@@ -906,6 +934,7 @@ ctr_object* ctr_build_bool(int truth);
 ctr_object* ctr_build_nil();
 ctr_object* ctr_build_string_from_cstring( char* str );
 void ctr_gc_internal_collect();
+ctr_object* ctr_gc_sweep_this( ctr_object* myself, ctr_argument* argumentList );
 
 
 void* ctr_heap_allocate( size_t size );
@@ -925,5 +954,6 @@ uint8_t  ctr_accept_n_connections;
 uint16_t ctr_default_port;
 
 #include "citron_ensure.h"
+#include "citron_conv.h"
 
 #endif //CTR_H_GUARD

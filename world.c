@@ -144,7 +144,8 @@ int ctr_internal_object_is_constructible_(ctr_object* object1, ctr_object* objec
     }
     if (object1->info.type == CTR_OBJECT_TYPE_OTARRAY && object2->info.type == CTR_OBJECT_TYPE_OTARRAY) {
         int count = ctr_array_count(object2, NULL)->value.nvalue;
-        if (ctr_array_count(object1, NULL)->value.nvalue < count) return 0; //It requires more parameters than object1 can provide
+        ctr_object* last = ctr_array_last(object1, NULL);
+        if (ctr_array_count(object1, NULL)->value.nvalue < count && !(last->info.type == CTR_OBJECT_TYPE_OTSTRING)) return 0; //It requires more parameters than object1 can provide, and we don't have a catch-all binding
         int i = 1;
         ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
         ctr_argument* elnu = ctr_heap_allocate(sizeof(ctr_argument));
@@ -692,6 +693,7 @@ ctr_object* ctr_object_destruct(ctr_object* object, ctr_argument* nothing) {
  */
 void ctr_initialize_world() {
     signal(SIGINT, ctr_int_handler);
+    signal(SIGHUP, ctr_int_handler);
 
     int i;
     srand((unsigned)time(NULL));
@@ -725,6 +727,7 @@ void ctr_initialize_world() {
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( CTR_DICT_MYSELF ), &ctr_object_myself );
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( CTR_DICT_DO ), &ctr_object_do );
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( CTR_DICT_DONE ), &ctr_object_done );
+    ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( "or:" ), &ctr_object_elvis_op );
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( CTR_DICT_IFFALSE ), &ctr_object_if_false );
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( CTR_DICT_IFTRUE ), &ctr_object_if_true );
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( CTR_DICT_MESSAGEARGS), &ctr_object_message );
@@ -897,6 +900,9 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdBlock, ctr_build_string_from_cstring( CTR_DICT_APPLY_TO ), &ctr_block_runIt );
     ctr_internal_create_func(CtrStdBlock, ctr_build_string_from_cstring( CTR_DICT_APPLY_TO_AND ), &ctr_block_runIt );
     ctr_internal_create_func(CtrStdBlock, ctr_build_string_from_cstring( CTR_DICT_APPLY_TO_AND_AND ), &ctr_block_runIt );
+    ctr_internal_create_func(CtrStdBlock, ctr_build_string_from_cstring( CTR_DICT_APPLY_TO_AND_AND ), &ctr_block_runIt );
+    ctr_internal_create_func(CtrStdBlock, ctr_build_string_from_cstring( CTR_DICT_APPLY_TO_AND_AND "and:" ), &ctr_block_runIt );
+    ctr_internal_create_func(CtrStdBlock, ctr_build_string_from_cstring( CTR_DICT_APPLY_TO_AND_AND "and:and:" ), &ctr_block_runIt );
     ctr_internal_create_func(CtrStdBlock, ctr_build_string_from_cstring( CTR_DICT_SET_VALUE ), &ctr_block_set );
     ctr_internal_create_func(CtrStdBlock, ctr_build_string_from_cstring( CTR_DICT_ERROR ), &ctr_block_error );
     ctr_internal_create_func(CtrStdBlock, ctr_build_string_from_cstring( CTR_DICT_CATCH ), &ctr_block_catch );
@@ -1032,6 +1038,7 @@ void ctr_initialize_world() {
     CtrStdFile->value.rvalue = NULL;
     ctr_internal_create_func(CtrStdFile, ctr_build_string_from_cstring( CTR_DICT_NEW_ARG ), &ctr_file_new );
     ctr_internal_create_func(CtrStdFile, ctr_build_string_from_cstring( CTR_DICT_PATH ), &ctr_file_path );
+    ctr_internal_create_func(CtrStdFile, ctr_build_string_from_cstring( "realPath" ), &ctr_file_rpath );
     ctr_internal_create_func(CtrStdFile, ctr_build_string_from_cstring( CTR_DICT_EXT_PATH ), &ctr_file_stdext_path );
     ctr_internal_create_func(CtrStdFile, ctr_build_string_from_cstring( CTR_DICT_READ ), &ctr_file_read );
     ctr_internal_create_func(CtrStdFile, ctr_build_string_from_cstring( CTR_DICT_WRITE ), &ctr_file_write );
@@ -1051,6 +1058,7 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdFile, ctr_build_string_from_cstring( CTR_DICT_LOCK ), &ctr_file_lock );
     ctr_internal_create_func(CtrStdFile, ctr_build_string_from_cstring( CTR_DICT_UNLOCK ), &ctr_file_unlock );
     ctr_internal_create_func(CtrStdFile, ctr_build_string_from_cstring( CTR_DICT_LIST ), &ctr_file_list );
+    ctr_internal_create_func(CtrStdFile, ctr_build_string_from_cstring( "typeOf:" ), &ctr_file_type );
     ctr_internal_create_func(CtrStdFile, ctr_build_string_from_cstring( CTR_DICT_TMPFILE ), &ctr_file_tmp );
     ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring( CTR_DICT_FILE ), CtrStdFile, 0);
     CtrStdFile->link = CtrStdObject;
@@ -1086,6 +1094,7 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdCommand, ctr_build_string_from_cstring( CTR_DICT_SERVE ), &ctr_command_accept );
     ctr_internal_create_func(CtrStdCommand, ctr_build_string_from_cstring( CTR_DICT_CONN_LIMIT ), &ctr_command_accept_number );
     ctr_internal_create_func(CtrStdCommand, ctr_build_string_from_cstring( CTR_DICT_PORT ), &ctr_command_default_port );
+    ctr_internal_create_func(CtrStdCommand, ctr_build_string_from_cstring( "changeDirectory:" ), &ctr_command_chdir );
     ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring( CTR_DICT_PROGRAM ), CtrStdCommand, 0 );
     CtrStdCommand->link = CtrStdObject;
     CtrStdCommand->info.sticky = 1;
@@ -1157,6 +1166,7 @@ void ctr_initialize_world() {
     /* Broom */
     CtrStdGC = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
     ctr_internal_create_func(CtrStdGC, ctr_build_string_from_cstring( CTR_DICT_SWEEP ), &ctr_gc_collect );
+    ctr_internal_create_func(CtrStdGC, ctr_build_string_from_cstring( CTR_DICT_SWEEP ":"), &ctr_gc_sweep_this );
     ctr_internal_create_func(CtrStdGC, ctr_build_string_from_cstring( CTR_DICT_DUST ), &ctr_gc_dust );
     ctr_internal_create_func(CtrStdGC, ctr_build_string_from_cstring( CTR_DICT_OBJECT_COUNT ), &ctr_gc_object_count );
     ctr_internal_create_func(CtrStdGC, ctr_build_string_from_cstring( CTR_DICT_KEPT_COUNT ), &ctr_gc_kept_count );
@@ -1184,13 +1194,18 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("copyBlock:"), &ctr_reflect_fn_copy);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("newSharedObject"), &ctr_reflect_share_memory);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("link:to:"), &ctr_reflect_link_to);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("parentOf:"), &ctr_reflect_get_first_link);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("isObject:linkedTo:"), &ctr_reflect_is_linked_to);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("isObject:childOf:"), &ctr_reflect_child_of);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("generateLinkTree:"), &ctr_reflect_generate_inheritance_tree);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("typeOf:"), &ctr_reflect_describe_type);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("strTypeOf:"), &ctr_reflect_type_descriptor_print);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("unpack:to:"), &ctr_reflect_bind);
-    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("unparseBlock:"), &ctr_reflect_try_serialize_block);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("getResponder:ofObject:"), &ctr_reflect_get_responder);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("closure:of:"), &ctr_reflect_closure_of);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("run:forObject:arguments:"), &ctr_reflect_run_for_object);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("runHere:forObject:arguments:"), &ctr_reflect_run_for_object_ctx);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("primitiveLinkOf:"), &ctr_reflect_get_primitive);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("version"), &ctr_give_version);
 
     ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Reflect"), CtrStdReflect, 0);
@@ -1205,6 +1220,9 @@ void ctr_initialize_world() {
 
     ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("%ctor"), CtrStdReflect_cons, 0);
     CtrStdReflect_cons->info.sticky = 1;
+
+    // importlib
+    CtrStdImportLib = ctr_importlib_begin(CtrStdObject, NULL);
 
     // Fiber
     ctr_fiber_begin_init();
@@ -1240,6 +1258,34 @@ void ctr_initialize_world() {
     ctr_accept_n_connections = 0;
 }
 
+ctr_object* ctr_get_responder(ctr_object* receiverObject, char* message, long vlen) {
+  ctr_object* methodObject;
+  ctr_object* searchObject;
+  methodObject = NULL;
+  searchObject = receiverObject;
+  int toParent = 0;
+  ctr_object* me;
+  ctr_object* msg = NULL;
+  if (vlen > 1 && message[0] == '`') {
+      me = ctr_internal_object_find_property(ctr_contexts[ctr_context_id], ctr_build_string_from_cstring( ctr_clex_keyword_me ), 0);
+      if (searchObject == me) {
+          toParent = 1;
+          message = message + 1;
+          vlen--;
+      }
+  }
+  msg = ctr_build_string(message, vlen);
+  msg->info.sticky = 1; /* prevent message from being swept, no need to free(), GC will do */
+  while(!methodObject) {
+      methodObject = ctr_internal_object_find_property(searchObject, msg, 1);
+      if (methodObject && toParent) { toParent = 0; methodObject = NULL; }
+      if (methodObject) break;
+      if (!searchObject->link) break;
+      searchObject = searchObject->link;
+  }
+  return methodObject;
+}
+
 /**
  * @internal
  *
@@ -1259,7 +1305,7 @@ ctr_object* ctr_send_message(ctr_object* receiverObject, char* message, long vle
     ctr_argument* mesgArgument;
     ctr_object* result;
     ctr_object* (*funct)(ctr_object* receiverObject, ctr_argument* argumentList);
-    ctr_object* msg = NULL;
+    ctr_object* msg = ctr_build_string(message, vlen);
     int argCount;
     if (CtrStdFlow != NULL) return CtrStdNil; /* Error mode, ignore subsequent messages until resolved. */
     if ( ctr_command_security_profile & CTR_SECPRO_COUNTDOWN ) {
@@ -1269,26 +1315,20 @@ ctr_object* ctr_send_message(ctr_object* receiverObject, char* message, long vle
         }
         ctr_command_tick += 1;
     }
-    methodObject = NULL;
-    searchObject = receiverObject;
-    if (vlen > 1 && message[0] == '`') {
-        me = ctr_internal_object_find_property(ctr_contexts[ctr_context_id], ctr_build_string_from_cstring( ctr_clex_keyword_me ), 0);
-        if (searchObject == me) {
-            toParent = 1;
-            message = message + 1;
-            vlen--;
-        }
-    }
-    msg = ctr_build_string(message, vlen);
-    msg->info.sticky = 1; /* prevent message from being swept, no need to free(), GC will do */
-    while(!methodObject) {
-        methodObject = ctr_internal_object_find_property(searchObject, msg, 1);
-        if (methodObject && toParent) { toParent = 0; methodObject = NULL; }
-        if (methodObject) break;
-        if (!searchObject->link) break;
-        searchObject = searchObject->link;
-    }
+    methodObject = ctr_get_responder(receiverObject, message, vlen);
     if (!methodObject) {
+      if(strcmp(message, "respondTo:") == 0) {
+        // printf("Requested message to catch-all in:\n");
+        // ctr_print_stack_trace();
+        return receiverObject;
+      }
+      #ifdef COMP
+        if (CTR_CCOMP_SIMULATION) {
+          CtrCompilerStub->object = receiverObject;
+          return NULL; //If in compiler simulation mode,
+                      //return null and set the CtrCompilerStub to the object <We don't have this method>
+        }
+        #endif
         argCounter = argumentList;
         argCount = 0;
         while(argCounter && argCounter->next && argCount < 4) {
@@ -1312,6 +1352,11 @@ ctr_object* ctr_send_message(ctr_object* receiverObject, char* message, long vle
     }
     if (methodObject->info.type == CTR_OBJECT_TYPE_OTNATFUNC) {
         funct = methodObject->value.fvalue;
+        #ifdef COMP
+        if(CTR_CCOMP_SIMULATION) {
+          return ctr_ccomp_get_stub(funct, receiverObject, argumentList); //return a stub object with the correct type
+        }
+        #endif
         if ( ctr_command_security_profile & CTR_SECPRO_EVAL ) {
             messageApproved = 0;
             for ( i = 0; i < 15; i ++ ) {
@@ -1336,7 +1381,7 @@ ctr_object* ctr_send_message(ctr_object* receiverObject, char* message, long vle
     }
     if (msg) msg->info.sticky = 0;
     if (receiverObject->info.chainMode == 1) return receiverObject;
-    return result;
+    return result; //Normally cascade down to native functions, so get the return type
 }
 
 

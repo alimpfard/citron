@@ -43,8 +43,8 @@ void ctr_cli_read_args(int argc, char* argv[]) {
  *
  */
 int main(int argc, char* argv[]) {
-    char* prg;
-    ctr_tnode* program;
+    volatile char* prg;
+    volatile ctr_tnode* program;
     uint64_t program_text_size = 0;
 
     //pragma rules
@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
     ctr_heap_free( prg );
     ctr_heap_free_rest();
     //For memory profiling
-    if ( ctr_gc_alloc != 0 && CTR_LOG_WARNINGS&1 == 1) {
+    if ( ctr_gc_alloc != 0 && (CTR_LOG_WARNINGS&1) == 1) {
         printf( "[WARNING] Citron has detected an internal memory leak of: %" PRIu64 " bytes.\n", ctr_gc_alloc );
         exit(1);
     }
@@ -126,14 +126,14 @@ void initialize(int extensions) {
       ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
       args->object = ctr_build_string_from_cstring(CTR_STD_EXTENSION_PATH "/extensions/fileutils.ctr");
       ctr_object* futi = ctr_send_message(CtrStdFile, "new:", 4, args);
-      ctr_send_message(futi, "include", 7, NULL);
       ctr_heap_free(args);
+      ctr_file_include(futi, NULL);
     }
 }
 
 char* execute_string(char* prg) {
     ctr_object* str = ctr_build_string_from_cstring(prg);
-    str = ctr_send_message(str, "eval", 4, NULL);
+    str = ctr_string_eval(str, NULL);
     //ctr_internal_object_set_property(CtrStdWorld, ctr_build_string_from_cstring("_"), str, 0);
     if (CtrStdFlow != NULL) {str = CtrStdFlow; CtrStdFlow = NULL;}
     char* msg = ctr_internal_cast2string(str)->value.svalue->value;
@@ -142,7 +142,7 @@ char* execute_string(char* prg) {
 
 char* execute_string_len(char* prg, int length) {
     ctr_object* str = ctr_build_string(prg, length);
-    str = ctr_send_message(str, "eval", 4, NULL);
+    str = ctr_string_eval(str, NULL);
     //ctr_internal_object_set_property(CtrStdWorld, ctr_build_string_from_cstring("_"), str, 0);
     if (CtrStdFlow != NULL) {str = CtrStdFlow; CtrStdFlow = NULL;}
     char* msg = ctr_internal_cast2string(str)->value.svalue->value;

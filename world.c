@@ -570,7 +570,7 @@ void ctr_close_context() {
  * Tries to locate a variable in the current context or one
  * of the contexts beneath.
  */
-ctr_object* ctr_find(ctr_object* key) {
+ctr_object* ctr_find_(ctr_object* key, int noerror) {
     int i = ctr_context_id;
     ctr_object* foundObject = NULL;
     if (CtrStdFlow) return CtrStdNil;
@@ -584,6 +584,7 @@ ctr_object* ctr_find(ctr_object* key) {
         foundObject = ctr_internal_object_find_property(CtrStdWorld, key, 0);
     }
     if (foundObject == NULL) {
+        if (noerror) return NULL;
         char* key_name;
         char* message;
         char* full_message;
@@ -602,6 +603,7 @@ ctr_object* ctr_find(ctr_object* key) {
     }
     return foundObject;
 }
+ctr_object* ctr_find(ctr_object* key) {return ctr_find_(key, 0);}
 
 /**
  * @internal
@@ -1091,6 +1093,7 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdCommand, ctr_build_string_from_cstring( CTR_DICT_ALERT ), &ctr_command_crit );
     ctr_internal_create_func(CtrStdCommand, ctr_build_string_from_cstring( CTR_DICT_ERROR ), &ctr_command_err );
     ctr_internal_create_func(CtrStdCommand, ctr_build_string_from_cstring( CTR_DICT_PID ), &ctr_command_pid );
+    ctr_internal_create_func(CtrStdCommand, ctr_build_string_from_cstring( "signal:" ), &ctr_command_sig );
     ctr_internal_create_func(CtrStdCommand, ctr_build_string_from_cstring( CTR_DICT_SERVE ), &ctr_command_accept );
     ctr_internal_create_func(CtrStdCommand, ctr_build_string_from_cstring( CTR_DICT_CONN_LIMIT ), &ctr_command_accept_number );
     ctr_internal_create_func(CtrStdCommand, ctr_build_string_from_cstring( CTR_DICT_PORT ), &ctr_command_default_port );
@@ -1328,7 +1331,7 @@ ctr_object* ctr_send_message(ctr_object* receiverObject, char* message, long vle
           return NULL; //If in compiler simulation mode,
                       //return null and set the CtrCompilerStub to the object <We don't have this method>
         }
-        #endif
+      #endif
         argCounter = argumentList;
         argCount = 0;
         while(argCounter && argCounter->next && argCount < 4) {
@@ -1367,6 +1370,7 @@ ctr_object* ctr_send_message(ctr_object* receiverObject, char* message, long vle
             }
             if ( !messageApproved ) {
                 printf( "Native message not allowed in eval %s.\n", msg->value.svalue->value );
+                ctr_print_stack_trace();
                 exit(1);
             }
         }
@@ -1375,6 +1379,7 @@ ctr_object* ctr_send_message(ctr_object* receiverObject, char* message, long vle
     if (methodObject->info.type == CTR_OBJECT_TYPE_OTBLOCK ) {
         if ( ctr_command_security_profile & CTR_SECPRO_EVAL ) {
             printf( "Custom message not allowed in eval.\n" );
+            ctr_print_stack_trace();
             exit(1);
         }
         result = ctr_block_run(methodObject, argumentList, receiverObject);

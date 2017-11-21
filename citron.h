@@ -391,6 +391,7 @@ ctr_object* ctr_internal_create_object(int type);
 ctr_object* ctr_internal_create_mapped_object(int type, int shared);
 ctr_object* ctr_internal_cast2string( ctr_object* o );
 void*       ctr_internal_plugin_find( ctr_object* key );
+ctr_object* ctr_find_(ctr_object* key, int noerror);
 ctr_object* ctr_find(ctr_object* key);
 ctr_object* ctr_find_in_my(ctr_object* key);
 ctr_object* ctr_assign_value(ctr_object* key, ctr_object* val);
@@ -739,13 +740,14 @@ ctr_object* ctr_file_stdext_path(ctr_object* myself, ctr_argument* argumentList)
 /**
  * Command Object Interface
  */
+void ctr_int_handler(int signal);
+ctr_object* ctr_signal_map;
 ctr_object* ctr_command_argument(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_command_num_of_args(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_command_waitforinput(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_command_getc(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_command_input(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_command_set_INT_handler(ctr_object* myself, ctr_argument* argumentList);
-void ctr_int_handler(int signal);
 ctr_object* ctr_command_get_env(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_command_set_env(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_command_exit(ctr_object* myself, ctr_argument* argumentList);
@@ -765,6 +767,8 @@ ctr_object* ctr_command_warn(ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_command_err(ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_command_crit(ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_command_pid(ctr_object* myself, ctr_argument* argumentList );
+ctr_object* ctr_command_sig(ctr_object* myself, ctr_argument* argumentList );
+ctr_object* ctr_command_sigmap(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_command_accept(ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_command_accept_number(ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_command_remote(ctr_object* myself, ctr_argument* argumentList );
@@ -926,6 +930,7 @@ ctr_object* ctr_dice_rand(ctr_object* myself, ctr_argument* argumentList);
  */
 ctr_object* ctr_build_empty_string();
 ctr_object* ctr_build_string(char* object, long vlen);
+ctr_object* ctr_build_string_from_cformat(char* format, int count, ...);
 ctr_object* ctr_build_block(ctr_tnode* node);
 ctr_object* ctr_build_number(char* object);
 ctr_object* ctr_build_number_from_string(char* fixedStr, ctr_size strLength);

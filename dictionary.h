@@ -55,7 +55,7 @@
 #define CTR_DICT_LESS   	     "<"
 #define CTR_DICT_LESS_OR_EQUAL   "<=:"
 #define CTR_DICT_UNEQUALS        "!=:"
-#define CTR_DICT_MODULO          "%"
+#define CTR_DICT_MODULO          "mod:"
 #define CTR_DICT_FACTORIAL       "factorial"
 #define CTR_DICT_FLOOR           "floor"
 #define CTR_DICT_CEIL            "ceil"

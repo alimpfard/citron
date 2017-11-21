@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stropts.h>
 #include <ctype.h>
 #include <stdarg.h>
 #include <math.h>
@@ -9,6 +10,7 @@
 #include <time.h>
 #include <errno.h>
 #include <sys/wait.h>
+#include <sys/ioctl.h>
 #include <syslog.h>
 #include <signal.h>
 
@@ -1143,7 +1145,7 @@ ctr_object* ctr_command_fork(ctr_object* myself, ctr_argument* argumentList) {
         fclose(*((FILE**)rs->ptr + 2));
         ctr_heap_free( newArgumentList );
         ctr_heap_free( ps);
-        CtrStdFlow = CtrStdExit;
+        //CtrStdFlow = CtrStdExit;
         return CtrStdNil;
     } else {
         ctr_internal_object_set_property(
@@ -1208,13 +1210,32 @@ ctr_object* ctr_command_listen(ctr_object* myself, ctr_argument* argumentList) {
     char* blob;
     q = 0;
     r = myself->value.rvalue;
-    if(r == NULL) {CtrStdFlow = ctr_build_string_from_cstring("The main program is not allowed to halt."); return CtrStdFlow;}
+    if(r == NULL) {CtrStdFlow = ctr_build_string_from_cstring("The main program is not allowed to wait for messages."); return CtrStdFlow;}
     if (r->type == 3) q = 2;
     fd = *((FILE**)r->ptr + q);
     sz = 0;
-    fread(&sz, sizeof(ctr_size), 1, fd);
+    int* szptr = &sz;
+    ssize_t szcp = sizeof(ctr_size);
+    ssize_t readp;
+    while((readp=read( fileno(fd), szptr, szcp )) < szcp) {
+      if(readp==-1) {
+        perror("Error occurred while reading pipe");
+        continue;
+      }
+      szcp -= readp;
+      szptr += readp;
+    }
     blob = ctr_heap_allocate( sz );
-    fread( blob, 1, sz, fd );
+    char* blobptr = blob;
+    szcp = sz;
+    while((readp=read( fileno(fd), blobptr, szcp )) < szcp) {
+      if(readp==-1) {
+        perror("Error occurred while reading pipe");
+        continue;
+      }
+      szcp -= readp;
+      blobptr += readp;
+    }
     newArgumentList = ctr_heap_allocate( sizeof(ctr_argument) );
     newArgumentList->object = ctr_build_string( blob, sz );
     answer = ctr_block_runIt( argumentList->object, newArgumentList );
@@ -1258,6 +1279,25 @@ ctr_object* ctr_command_pid(ctr_object* myself, ctr_argument* argumentList ) {
             );
     if (pidObject == NULL) return CtrStdNil;
     return ctr_internal_cast2number( pidObject );
+}
+
+ctr_object* ctr_command_sig(ctr_object* myself, ctr_argument* argumentList) {
+  int sig = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  ctr_object* pid_o = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("pid"), 0);
+  if(!pid_o) {
+    CtrStdFlow = ctr_build_string_from_cstring("Cannot send a signal to a non-program object");
+    return CtrStdNil;
+  }
+  int pid = pid_o->value.nvalue;
+  if(kill(pid,sig) != 0) {
+    CtrStdFlow = ctr_build_string_from_cstring(strerror(errno));
+    return myself;
+  }
+  return myself;
+}
+
+ctr_object* ctr_command_sigmap(ctr_object* myself, ctr_argument* argumentList) {
+  return myself; //TODO: Implement
 }
 
 ctr_object* ctr_command_log_generic(ctr_object* myself, ctr_argument* argumentList, int level) {

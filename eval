@@ -18,9 +18,10 @@ Eval on: 'init' do: {
   my globalvars is False.
   my history is LRArray new init: 100.
   my commands is Nil.
+  me genReader: 'eServer'.
   ^me.
 }.
-Eval on: 'end' do: { my end is True. }.
+Eval on: 'end' do: { my end is True. me joinEvalServer. }.
 Eval on: 'break' do: { my end ifTrue: {Broom sweep.}. my end break. }.
 Eval on: 'allowedColors' do: { ^my allowedColors. }.
 Eval on: 'isAllowedColor:' do: { :c
@@ -37,6 +38,42 @@ Eval on: 'prompt' do: { ^my prompt. }.
 Eval on: 'shiftArgs' do: { ^(my args shift). }.
 Eval on: 'argCount' do: { ^(my args count). }.
 Eval on: 'onlyRelevantArgs' do: { my args do shift shift done. }. #get rid of ./ctr eval
+
+Eval on: 'startEvalServer' do: {
+  var port is 5000 + (Dice rollWithSides: 1000).
+
+  var EvalServer is Object new.
+  EvalServer on: 'evaluate:' do: {:str
+      ^str eval.
+  }.
+
+  my eServer is Program new: {:p
+      p port: port.
+      p serve: EvalServer.
+  }.
+
+  ^port.
+}.
+
+Eval on: 'startEvalServerOnPort:' do: {:port
+
+  var EvalServer is Object new.
+  EvalServer on: 'evaluate:' do: {:str
+      ^str eval.
+  }.
+
+  my eServer is Program new: {:p
+      p port: port.
+      p serve: EvalServer.
+  }.
+
+  ^port.
+}.
+
+Eval on: 'joinEvalServer' do: {
+  my eServer ifFalse: {^False.}.
+  my eServer join.
+}.
 
 Eval on: 'Commands' do: {
   my commands is my commands or: {
@@ -55,9 +92,10 @@ Eval on: 'evaluate:' do: { :str
   var x is Nil.
   (str at: 0, = ':')
     either:
-      ({ ^x is Eval doMeta: (str skip: 1). } catch: {:e x is e.})
+      ({ ^x is Eval doMeta: (str skip: 1). } catch: {:e Pen red write: 'Uncaught exception occurred: ', brk. x is e.})
     or:
-      ({ ^x is str eval toString. } catch: {:e x is e.}).
+      ({ ^x is str eval toString. } catch: {:e Pen red write: 'Uncaught exception occurred: ', brk. x is e.}).
+    Pen resetColor.
   ^(x containsPattern: '\\[\\w+\\]') either: '' or: x.
 }.
 Eval on: 'evaluateFile:' do: { :fl
@@ -80,11 +118,11 @@ Eval on: 'globalvars' do: {^my globalvars. }.
 Eval on: 'handleGlobalVars:' do: { :inp
   var repl is inp.
   (my globalvars) ifTrue: {
-    repl is inp findPattern: '^\\s*var\\s+\\b(.*)\\b\\s+(is|:=)\\s+(.*?)\\.'
-               do: { :name var n is '\'' + (name @ 1) + '\''. var r is (name @ 3). var s is 'Reflect addGlobalVariable: $$n'+'.\nReflect set: $$n to: $$r'+'.'. ^s.}.
+    inp findPattern: '^\\s*\\bvar\\s+\\b(.*)\\b'
+                 do: { :name var n is name at: 1. Reflect addGlobalVariable: n. }.
     }.
     #Pen write: repl, brk.
-    ^repl.
+    ^inp.
 }.
 Eval on: 'pushHist:' do: {:h
   my history push: h.
@@ -120,13 +158,15 @@ var rf is Nil.
         args pop. #consume option.
         Pen green write: 'Citron Evaluator.\n', resetColor.
         var P is Pen new.
-        P on: 'indent:write:' do: {:i :w Pen write: (((Array < '\t') * i) join: ''). Pen write: w. }.
+        P on: 'indent:write:' do: {:i :w Pen write: (((Array < '  ') * i) join: ''). Pen write: w. }.
         P indent: 1 write: 'Eval mode help:', brk.
         P cyan indent: 1 write: 'Eval namespace', resetColor brk.
         P magenta indent: 2 write: '[Eval] setPrompt: [String] ', resetColor write: '-- Sets the prompt.', brk.
         P magenta indent: 2 write: '[Eval] setColor: [String] ', resetColor write: '-- sets the color of the output.', brk.
         P magenta indent: 2 write: '[Eval] getHistory ', resetColor write: '-- returns the 100 last commands.', brk.
         P magenta indent: 2 write: '[Eval] executeLast: [Number] ', resetColor write: '-- evaluates the Nth element of the history list.', brk.
+        P magenta indent: 2 write: '[Eval] startEvalServer ', resetColor write: '-- starts an eval server in the background. returns the port.', brk.
+        P magenta indent: 2 write: '[Eval] startEvalServerOnPort: [Number] ', resetColor write: '-- same as startEvalServer, with the port specified.', brk.
         P magenta indent: 2 write: '[Eval] end ', resetColor write: '-- Ends the eval.', brk.
         P indent: 1 write: 'Evaluates expressions in a single context.', brk.
         P indent: 1 write: 'Since all expressions are in single lines, pragma oneLineExpressions is active,', brk.
@@ -165,10 +205,8 @@ var rf is Nil.
         var value is Eval shiftArgs.
         (value isNil) ifTrue: { thisBlock error: '-e requires an argument.'. }.
         { ^(Eval argCount > 0). } whileTrue: { args push: Eval shiftArgs. }. #consume all other arguments.
-        # if it doesn`t end in a dot, add it.
-        ((value at: (value length - 1)) = '.') ifTrue: {
-            value sliceFrom:0 to: (value length - 1).
-        }.
+        # if it ends in a dot, delete it.
+        value findPattern: '(.*)\\.' do: {:p value is p at: 1.}.
         value is Eval handleGlobalVars: value.
         Pen write: (Eval evaluate: value).
         Program exit.
@@ -180,11 +218,11 @@ var rf is Nil.
 Pen green. ?>Project Citron : The Programming Language (V<?. Pen write:(Reflect version) + ')' ,resetColor brk.
 ?>Eval Mode, parameters related to eval are in the Eval namespace.
 run with '-h' to read the eval mode help.
-local variables will not be reflected upon,
-so to get new global variables, use <?. Pen green.
+<?.
 (Eval globalvars) do ifFalse: {
+    Pen write: 'local variables will not be reflected upon,\nso to get new global variables, use '. Pen green.
     Pen write: 'Reflect addGlobalVariable: \'name\'', brk.
-}, ifTrue: {Pen write: 'var name is value', brk.} done. Pen resetColor.
+} done.
 
 { ^False. } whileFalse: {
   # break the repl when `end` is True.
@@ -200,16 +238,15 @@ so to get new global variables, use <?. Pen green.
     var inp is (Program waitForInput) trim.
     (inp = '') continue.
 
-    # if it doesn`t end in a dot, add it.
-    ((inp at: (inp length - 1)) = '.') ifTrue: {
-        inp sliceFrom: 0 to: (inp length - 1).
-    }.
+    # if it ends in a dot, get rid of it.
+    inp findPattern: '(.*)\\.' do: {:p inp is p at: 1.}.
+
     inp is Eval handleGlobalVars: inp.
 
     # Syntactic errors will not be passed to the eval. # TODO: handle that.
     #Pen write: inp, brk.
-    Pen write: (Eval evaluate: inp).
+    Pen write: (var ret is Eval evaluate: inp).
     Eval pushHist: inp.
     #Broom sweep. #Keep the darn pointers in memory
-    Pen brk.
+    ret length > 0 ifTrue: { Pen brk. }.
 }.

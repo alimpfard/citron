@@ -1441,14 +1441,14 @@ ctr_object* ctr_number_div(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 /**
- * [Number] % [modulo]
+ * [Number] mod: [modulo]
  *
  * Returns the modulo of the number. This message will return a new
  * object representing the modulo of the recipient.
  *
  * Usage:
  *
- * x := 11 % 3. #x will now be 2
+ * x := 11 mod: 3. #x will now be 2
  *
  * Use this message to apply the operation of division to the
  * object itself instead of generating a new one.
@@ -1884,6 +1884,20 @@ ctr_object* ctr_build_string(char* stringValue, long size) {
     stringObject->value.svalue->vlen = size;
     stringObject->link = CtrStdString;
     return stringObject;
+}
+
+ctr_object* ctr_build_string_from_cformat(char* format, int count, ...) { //TODO: Infer count from format
+  va_list ap;
+  va_start(ap, count);
+  for (size_t i = 0; i < count; i++)
+    va_arg(ap, ctr_object*);
+  int len = vsprintf(NULL, format, ap);
+  char* buf = malloc(len*sizeof(char));
+  vsprintf(buf, format, ap);
+  va_end(ap);
+  ctr_object* fmt = ctr_build_string(buf, len);
+  free(buf);
+  return fmt;
 }
 
 /**
@@ -2610,9 +2624,9 @@ ctr_object* ctr_string_find_pattern_options_do( ctr_object* myself, ctr_argument
     regex_t pattern;
     int reti;
     int regex_error = 0;
-    size_t n = 255;
+    size_t n = 511;
     size_t i = 0;
-    regmatch_t matches[255];
+    regmatch_t matches[511];
     char* needle = ctr_heap_allocate_cstring( argumentList->object );
     char* options = ctr_heap_allocate_cstring( argumentList->next->next->object );
     uint8_t olen = strlen( options );
@@ -2643,39 +2657,37 @@ ctr_object* ctr_string_find_pattern_options_do( ctr_object* myself, ctr_argument
     char* haystack = ctr_heap_allocate_cstring(myself);
     size_t offset = 0;
     ctr_object* newString = ctr_build_empty_string();
-    while( !regex_error && !flagIgnore ) {
+    ctr_argument* arg = ctr_heap_allocate( sizeof( ctr_argument ) );
+    ctr_argument* blockArguments;
+    ctr_argument* arrayConstructorArgument;
+    arrayConstructorArgument = ctr_heap_allocate( sizeof( ctr_argument ) );
+    blockArguments = ctr_heap_allocate( sizeof( ctr_argument ) );
+    ctr_argument* group;
+    group = ctr_heap_allocate( sizeof( ctr_argument ) );
+    while( 1 ) {
         regex_error = regexec(&pattern, haystack + offset , n, matches, 0 );
-        if ( regex_error ) break;
-        ctr_argument* blockArguments;
-        blockArguments = ctr_heap_allocate( sizeof( ctr_argument ) );
-        ctr_argument* arrayConstructorArgument;
-        arrayConstructorArgument = ctr_heap_allocate( sizeof( ctr_argument ) );
+        if ( regex_error != 0 ) break;
         blockArguments->object = ctr_array_new( CtrStdArray, arrayConstructorArgument );
         for( i = 0; i < n; i ++ ) {
             if ( matches[i].rm_so == -1 ) break;
-            ctr_argument* group;
-            group = ctr_heap_allocate( sizeof( ctr_argument ) );
             size_t len = (matches[i].rm_eo - matches[i].rm_so);
             char* tmp = ctr_heap_allocate( len + 1 );
             memcpy( tmp, haystack + offset + matches[i].rm_so, len );
             group->object = ctr_build_string_from_cstring( tmp );
             ctr_array_push( blockArguments->object, group );
-            ctr_heap_free( group );
             ctr_heap_free( tmp );
         }
         if (matches[0].rm_eo != -1) {
-            ctr_argument* arg = ctr_heap_allocate( sizeof( ctr_argument ) );
             arg->object = ctr_build_string( haystack + offset, matches[0].rm_so );
             ctr_object* replacement = ctr_block_run( block, blockArguments, block );
             arg->object = replacement==block?arg->object:replacement;
             ctr_string_append( newString, arg );
             offset += matches[0].rm_eo;
-            ctr_heap_free( arg );
         }
-        ctr_heap_free(blockArguments);
-        ctr_heap_free(arrayConstructorArgument);
     }
-    ctr_argument* arg = ctr_heap_allocate( sizeof( ctr_argument ) );
+    ctr_heap_free( group );
+    ctr_heap_free(blockArguments);
+    ctr_heap_free(arrayConstructorArgument);
     arg->object = ctr_build_string( haystack + offset, strlen( haystack + offset ) );
     ctr_string_append( newString, arg );
     ctr_heap_free( arg );
@@ -2691,13 +2703,13 @@ ctr_object* ctr_string_find_pattern_options_do( ctr_object* myself, ctr_argument
     int reti;
     int regex_error_offset = 0;
     int regex_count = 0;
-    size_t n = 255;
+    size_t n = 511;
     size_t i = 0;
     int first = 1;
-    int matches[255];
+    int matches[511];
     char* needle = ctr_heap_allocate_cstring( argumentList->object );
     char* options = ctr_heap_allocate_cstring( argumentList->next->next->object );
-    const char* err = ctr_heap_allocate_tracked(500*sizeof(char));
+    const char* err;
 
     uint8_t olen = strlen( options );
     uint8_t p = 0;
@@ -2727,40 +2739,35 @@ ctr_object* ctr_string_find_pattern_options_do( ctr_object* myself, ctr_argument
     char* haystack = ctr_heap_allocate_cstring(myself);
     size_t offset = 0;
     ctr_object* newString = ctr_build_empty_string();
+    ctr_argument* blockArguments;
+    ctr_argument* group;
+    blockArguments = ctr_heap_allocate( sizeof( ctr_argument ) );
+    ctr_argument* arg = ctr_heap_allocate( sizeof( ctr_argument ) );
+    group = ctr_heap_allocate( sizeof( ctr_argument ) );
     while( (regex_count > 0 || first) && !flagIgnore ) {
       if (first) first = 0;
-        regex_count = pcre_exec(pattern, NULL, haystack + offset , myself->value.svalue->vlen - offset, 0, 0, matches, n );
-        if ( regex_count <= 0 ) break;
-        ctr_argument* blockArguments;
-        blockArguments = ctr_heap_allocate( sizeof( ctr_argument ) );
-        ctr_argument* arrayConstructorArgument;
-        arrayConstructorArgument = ctr_heap_allocate( sizeof( ctr_argument ) );
-        blockArguments->object = ctr_array_new( CtrStdArray, arrayConstructorArgument );
-        for( i = 0; i < regex_count; i ++ ) {
-            ctr_argument* group;
-            group = ctr_heap_allocate( sizeof( ctr_argument ) );
-            size_t len = (matches[2*i+1] - matches[2*i]);
-            char* tmp = ctr_heap_allocate( len + 1 );
-            memcpy( tmp, haystack + offset + matches[2*i], len );
-            group->object = ctr_build_string_from_cstring( tmp );
-            ctr_array_push( blockArguments->object, group );
-            ctr_heap_free( group );
-            ctr_heap_free( tmp );
-        }
-        if (matches[0] != -1) {
-            ctr_argument* arg = ctr_heap_allocate( sizeof( ctr_argument ) );
-            arg->object = ctr_build_string( haystack + offset, matches[1] - matches[0]);
-            // printf("%s\n", arg->object->value.svalue->value);
-            ctr_object* replacement = ctr_block_run( block, blockArguments, block );
-            arg->object = replacement==block?arg->object:replacement;
-            ctr_string_append( newString, arg );
-            offset += matches[1] - matches[0];
-            ctr_heap_free( arg );
-        }
-        ctr_heap_free(blockArguments);
-        ctr_heap_free(arrayConstructorArgument);
+      regex_count = pcre_exec(pattern, NULL, haystack + offset , myself->value.svalue->vlen - offset, 0, 0, matches, n );
+      if ( regex_count <= 0 ) break;
+      blockArguments->object = ctr_array_new( CtrStdArray, NULL );
+      for( i = 0; i < regex_count; i ++ ) {
+          size_t len = (matches[2*i+1] - matches[2*i]);
+          char* tmp = ctr_heap_allocate( len + 1 );
+          memcpy( tmp, haystack + offset + matches[2*i], len );
+          group->object = ctr_build_string_from_cstring( tmp );
+          ctr_array_push( blockArguments->object, group );
+          ctr_heap_free( tmp );
+      }
+      if (matches[0] != -1) {
+          arg->object = ctr_build_string( haystack + offset, matches[1] - matches[0]);
+          // ctr_array_unshift(blockArguments->object, arg);
+          ctr_object* replacement = ctr_block_run( block, blockArguments, block );
+          arg->object = replacement==block?arg->object:replacement;
+          ctr_string_append( newString, arg );
+          offset += matches[1];
+      } else break;
     }
-    ctr_argument* arg = ctr_heap_allocate( sizeof( ctr_argument ) );
+    ctr_heap_free( group );
+    ctr_heap_free(blockArguments);
     arg->object = ctr_build_string( haystack + offset, strlen( haystack + offset ) );
     ctr_string_append( newString, arg );
     // printf("-> %s\n", newString->value.svalue->value);
@@ -3586,9 +3593,15 @@ ctr_object* ctr_build_block(ctr_tnode* node) {
 }
 
 /**
+ * @internal
+ *
  * Captures all const qualified values and adds them to private space
+ * If a nested block requires a capture, it will be added right now, and ignored
+ * if the binding cannot be found at the time
  */
-void ctr_capture_refs(ctr_tnode* ti, ctr_object* block) {
+void ctr_capture_refs_(ctr_tnode* ti, ctr_object* block, int noerror);
+void ctr_capture_refs(ctr_tnode* ti, ctr_object* block) {ctr_capture_refs_(ti,block,0);}
+void ctr_capture_refs_(ctr_tnode* ti, ctr_object* block, int noerror) {
   ctr_tlistitem* li;
   ctr_tnode* t;
   // if (indent>20) exit(1);
@@ -3603,11 +3616,17 @@ void ctr_capture_refs(ctr_tnode* ti, ctr_object* block) {
           case CTR_AST_NODE_REFERENCE:
             if (t->modifier == 3) {
               ctr_object* key = ctr_build_string_from_cstring(t->value);
-              ctr_internal_object_add_property(block, key, ctr_find(key), 0);
+              if(!!ctr_internal_object_find_property(block, key, 0)) return;
+              ctr_object* value = ctr_find_(key, noerror);
+              if(value)
+                ctr_internal_object_add_property(block, key, value, 0);
             } break;
 
-          case CTR_AST_NODE_LTRNUM:
           case CTR_AST_NODE_CODEBLOCK:
+            ctr_capture_refs_(t, block, 1); //capture all that we can
+            break;
+
+          case CTR_AST_NODE_LTRNUM:
           case CTR_AST_NODE_PARAMLIST:
           case CTR_AST_NODE_ENDOFPROGRAM:
           case CTR_AST_NODE_LTRSTRING:
@@ -3615,7 +3634,7 @@ void ctr_capture_refs(ctr_tnode* ti, ctr_object* block) {
           case CTR_AST_NODE_LTRBOOLTRUE:
           case CTR_AST_NODE_LTRNIL:
           default:
-            ctr_capture_refs(t, block);
+            ctr_capture_refs_(t, block, noerror);
 
       }
       if (!li->next) break;
@@ -3647,6 +3666,9 @@ ctr_object* ctr_block_assign(ctr_object* myself, ctr_argument* argumentList) { i
  * Runs a block of code using the specified object as a parameter.
  * If you run a block using the messages 'run' or 'applyTo:', me/my will
  * refer to the block itself instead of the containing object.
+ *
+ * the passed 'my' will be respected first,
+ * and if lookup fails, it will be swapped for the block itself
  */
 ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object* my) {
     ctr_object* result;
@@ -3691,6 +3713,14 @@ ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object*
     }
     if (my) ctr_assign_value_to_local_by_ref(ctr_build_string_from_cstring( ctr_clex_keyword_me ), my ); /* me should always point to object, otherwise you have to store me in self and can't use in if */
     ctr_assign_value_to_local(ctr_build_string_from_cstring( "thisBlock" ), myself ); /* otherwise running block may get gc'ed. */
+    int p = myself->properties->size - 1;
+    struct ctr_mapitem* head;
+    head = myself->properties->head;
+    while(p>-1) {
+        ctr_assign_value_to_my(head->key, head->value);
+        head = head->next;
+        p--;
+    }
     result = ctr_cwlk_run(codeBlockPart2);
     if (result == NULL) {
         if (my) result = my; else result = myself;
@@ -3984,6 +4014,11 @@ void ctr_free_argumentList(ctr_argument* argumentList) {
  * multiplier to use in the formula. This way, you could create a block
  * building 'formula blocks'. This is how you implement & use closures
  * in Citron.
+ *
+ * There is no need to capture values with this message if you don't require the
+ * name of the variable to be anything specific.
+ * In such circumstances, you may use the automatic capture qualifier `const`
+ * to capture the value directly where it is needed.
  */
 ctr_object* ctr_block_set(ctr_object* myself, ctr_argument* argumentList) {
     ctr_object* key = ctr_internal_cast2string(argumentList->object);

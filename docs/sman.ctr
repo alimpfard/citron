@@ -7,18 +7,23 @@
 
 # Start: ctr sman.ctr > ctr.1 ;mandoc -O style=ctrstyle.css -Thtml ctr.1 > docs.html ;mandoc -a ctr.1
 
-Broom memoryLimit: 4000000.
-Broom mode: 4.
+Broom memoryLimit: 1024 * 1024 * 128.
 
 ?>
 .\" Manpage for ctr.
-.TH man 1 "1 June 2017" "1.0" "CTR man page"
+.TH man 1 <?.
+Pen write: ('"%s" "%s"' formatObjects: [(Clock new format: '%d %B %Y'), (Reflect version)]).
+?> "CTR man page"
 .SH NAME
 ctr \- run a Citron program
+.PP
+citron \- interface to citron eval
 .SH SYNOPSIS
 ctr [PROGRAM]
+.PP
+citron [arguments]
 .SH DESCRIPTION
-Citron\*R is general purpose programming language for UNIX\*R-like operating systems.
+Citron is general purpose programming language for UNIX\-like operating systems.
 .SH REFERENCE MANUAL
 Citron has 5 literals:
 .RS 4
@@ -37,59 +42,22 @@ Citron has 5 literals:
 .RE
 The following messages are part of the Core API of the Citron Programming Language:
 .br
+.PP
+.SS
 <?.
 
-files is Array <
-			'../base.c' ;
-			'../collections.c' ;
-			'../file.c' ;
-			'../system.c' ;
-			'../plugins/sdl/sdl.c' ;
-			'../plugins/request/request.c'.
-
-
-files each: { :index :file
-	var f is File new: file.
+['../base.c', '../collections.c', '../file.c', '../system.c', '../reflect.c', '../fiber.c'] fmap: {:v
+	var f is File new: v.
 	var str is f read.
-	var commentBlocks is str split: '/**'.
-	commentBlocks shift.
-
-	(commentBlocks count) times: {
-		var comment is commentBlocks shift.
-		var lines   is comment split: '\n'.
-		lines count > 3 ifTrue: {
-
-			#print the headline
-			var headline is lines @ 1.
-
-			Pen write: '.BR.BR.BR', brk brk.
-
-			((headline indexOf: '@internal') = -1) ifTrue: {
-
-				Pen write: '.B ' + (headline skip: 3), brk.
-
-
-				#print the rest
-				Pen write: '.nf', brk.
-				var line is ''.
-				var n is 2.
-				{
-					line is lines at: n.
-					^ ((line indexOf: '*/') = -1).
-				}
-				whileTrue: {
-						line is line replace: '\\' with: '\\\\'.
-						Pen write: '    '+(line skip: 2), brk.
-						n +=: 1.
-				}.
-				Pen write: '.fi', brk.
-			}.
+	f close.
+	str findPattern: '(?s)/\\*\\*(.*?)\\*/' do: {:p
+		(p at: 0, contains: '@internal') ifFalse: {
+			Pen write: '.B '.
+			Pen write: (p at: 1, split: '\n', fmap: {:s ^s skip: 2.}, join: '\n', trim), brk.
+			Pen write: '.BR' + ('\n\n.PP\n.SS'), brk.
 		}.
 	}.
-	file close.
 }.
-
-
 
 ?>
 .SH BUGS
@@ -99,3 +67,5 @@ is still considered 'alpha' stage and cannot be expected to be reliable.
 
 .SH AUTHOR
 AnotherTest and the Citron Community (Nil)
+.PP
+devanothertest@gmail.com

@@ -1,0 +1,7 @@
+var o is Object new.
+50 times: {:i
+    o on: 'test$$i' do: {^const i + 100.}.
+}.
+
+Pen write: (o test49), brk.
+

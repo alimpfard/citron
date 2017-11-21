@@ -1,0 +1,22 @@
+#TODO: Finish this
+var CCompilerOnDemand is Object new.
+CCompilerOnDemand on: 'initWithOptions:' do: {:opts
+  my opts is opts.
+}.
+
+CCompilerOnDemand on: 'init' do: {
+  my opts is Map new
+    put: (Program env: 'CC') at: 'CC', put: (Program env: 'CFLAGS') at: 'CFLAGS', put: (Program env: 'LDFLAGS') at: 'LDFLAGS',
+    put: (File extensionsPath + '/Library/CCOD/include') at: 'citron_include',
+    put: '%{CC} -fPIC -rdynamic %{CFLAGS} -c %{CTR_CCOD_CSRCFILE} -o %{CTR_CCOD_COFILE}' at: 'compile_command_fmt',
+    put: '%{CC} -shared -o %{CTR_CCOD_EXEC_FILE} %{CTR_CCOD_COFILE} %{LDFLAGS}' at: 'link_command_fmt'.
+}.
+
+CCompilerOnDemand on: 'set:value:' do: {:opt :val my opts put: val at: opt.}.
+CCompilerOnDemand on: 'compile' do: {
+  var fmt is my opts at: 'compile_command_fmt'.
+  var temp_dir_fmt is ((Program env: 'TMPPREFIX') or: (Program env: 'TMP')) + '/ctrccodXXXXXX'.
+  var temp_file_fmt is 'ctrccodXXXXXX'.
+
+  var compile_commad is fmt formatMap: my opts, formatMap: (Map new put: '')
+}.

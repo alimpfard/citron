@@ -184,7 +184,7 @@ void ctr_heap_free_rest() {
  *
  * @return void
  */
-void ctr_heap_free( void* ptr ) {
+__attribute__((optimize(0))) void ctr_heap_free( void* ptr ) {
 
     size_t* block_width;
     int q = sizeof( size_t );
@@ -198,7 +198,7 @@ void ctr_heap_free( void* ptr ) {
     free( ptr );
     ctr_gc_alloc -= size;
 }
-void ctr_heap_free_shared( void* ptr ) {
+__attribute__((optimize(0))) void ctr_heap_free_shared( void* ptr ) {
 
     size_t* block_width;
     int q = sizeof( size_t );

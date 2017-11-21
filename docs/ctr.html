@@ -1,0 +1,1312 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+ "http://www.w3.org/TR/html4/loose.dtd">
+<html><head>
+<title>Citron man page</title>
+<meta name="generator" content="roffit-0.8">
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+<style type="text/css">
+div.level0 {
+ padding-left: 2em;
+}
+
+div.level1 {
+ padding-left: 4em;
+}
+
+div.level2 {
+ padding-left: 6em;
+}
+
+span.emphasis {
+ font-style: italic;
+}
+
+span.bold {
+ font-weight: bold;
+}
+
+span.manpage {
+ font-weight: bold;
+}
+
+h2.nroffsh {
+ background-color: #e0e0e0;
+}
+
+h3.nroffsh {
+ background-color: #eeeded;
+}
+span.nroffip {
+ font-weight: bold;
+ font-size: 120%;
+ font-family: monospace;
+}
+
+p.roffit {
+ text-align: center;
+ font-size: 80%;
+}
+</style>
+</head><body>
+<h1>Citron man page</h1>
+
+<div class="level0"></div>
+<div class="level0"></div><h2 class="nroffsh" id="NAME">NAME</h2>
+<div class="level0">ctr - run a Citron program <p/>citron - interface to citron eval </div><h2 class="nroffsh" id="SYNOPSIS">SYNOPSIS</h2>
+<div class="level0">ctr [PROGRAM] <p/>citron [arguments] </div><h2 class="nroffsh" id="DESCRIPTION">DESCRIPTION</h2>
+<div class="level0">Citron is general purpose programming language for UNIX-like operating systems. </div><h2 class="nroffsh" id="REFERENCE">REFERENCE MANUAL</h2>
+<div class="level0">Citron has 5 literals: </div>
+<div class="level1"><br>- Nil <br>- Booleans (True, False) <br>- Numbers (1, -2, 3.5) <br>- Strings 'All Strings are UTF8!' <br>- Code Blocks { parameters code } <br></div>
+<div class="level1"></div>
+<div class="level0">The following messages are part of the Core API of the Citron Programming Language: <br><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Nil</span> </div>
+<div class="level0">&nbsp;Nil represents 'nothing' or NULL in other languages. &nbsp;Any object property that has not been assigned a value &nbsp;will contain Nil. Unlike some other programming languages &nbsp;Citron has no concept of 'undefined' or isset, Nil is actually the &nbsp;same as 'undefined' or not set. </div>
+<div class="level0">&nbsp;Literal: </div>
+<div class="level0">&nbsp;Nil <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Nil] isNil</span> </div>
+<div class="level0">&nbsp;Nil always answers this message with a boolean object 'True'. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Nil] toString</span> </div>
+<div class="level0">&nbsp;Returns the string representation of Nil: 'Nil'. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Nil] toNumber</span> </div>
+<div class="level0">&nbsp;Returns the numerical representation of Nil: 0. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Nil] toBoolean</span> </div>
+<div class="level0">&nbsp;Returns the boolean representation of Nil: False. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Nil] unpack: [Ref:string]</span> &nbsp;Assigns Nil into Ref <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Object</span> </div>
+<div class="level0">&nbsp;This is the base object, the parent of all other objects. &nbsp;It contains essential object oriented programming features. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Object cnew: [Block]</span> </div>
+<div class="level0">&nbsp;Object constructor with some initial parameters. &nbsp;Object is passed to the block as me/my <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Object genAccessors: [String]</span> </div>
+<div class="level0">&nbsp;generate reader/writer methods for property. &nbsp;creates the property is it doesn't exist <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Object genReader: [String]</span> </div>
+<div class="level0">&nbsp;generate reader method for property. &nbsp;creates the property is it doesn't exist <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Object genWriter: [String]</span> </div>
+<div class="level0">&nbsp;generate writer method for property. &nbsp;does not create the property is it doesn't exist <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Object] unpack: [Object:{Ref*}]</span> &nbsp;Element-wise object assign <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Object] new hiding:</span> </div>
+<div class="level0">&nbsp;Creates a new Object hiding some parameters. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Object swapRefs: [Object]</span> </div>
+<div class="level0">&nbsp;swap two objects with each other. &nbsp;Effectively 'xchg %ra, %rb' <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Object] type</span> </div>
+<div class="level0">&nbsp;Returns a string representation of the type of object. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Object] toString</span> </div>
+<div class="level0">&nbsp;Returns a string representation of a generic object. &nbsp;This string representation will be: </div>
+<div class="level0">&nbsp;[Object] <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Object] toNumber</span> </div>
+<div class="level0">&nbsp;Returns a numerical representation of the object. This basic behavior, part &nbsp;of any object will just return 1. Other objects typically override this &nbsp;behavior with more useful implementations. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Object] toBoolean</span> </div>
+<div class="level0">&nbsp;Returns a boolean representation of the object. This basic behavior, part &nbsp;of any object will just return True. Other objects typically override this &nbsp;behavior with more useful implementations. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Object] equals: [other]</span> </div>
+<div class="level0">&nbsp;Tests whether the current instance is the same as &nbsp;the argument. </div>
+<div class="level0">&nbsp;Alias: = </div>
+<div class="level0">&nbsp;Usage: &nbsp;object equals: other <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Object] myself</span> </div>
+<div class="level0">&nbsp;Returns the object itself. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Object] learn: [String] means: [String].</span> </div>
+<div class="level0">&nbsp;Teaches any object to repsond to the first specified message just like &nbsp;it would upon receiving the second. This allows you to map existing &nbsp;responses to new messages. You can use this to translate messages into your native &nbsp;language. After mapping, sending the alias message will be just as fast &nbsp;as sending the original message. You can use this to create programs &nbsp;in your native language without sacrficing performance. Of course the mapping itself &nbsp;has a cost, but the mapped calls will be 'toll-free'. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;#in this example we'll map a message to a Dutch word: </div>
+<div class="level0">&nbsp;Boolean learn: 'alsWaar:' &nbsp;        means: 'ifTrue:'. </div>
+<div class="level0">&nbsp;(2 &gt; 1) alsWaar: { &nbsp;  Pen write: 'alsWaar means ifTrue in Dutch'. &nbsp;} <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Object] do</span> </div>
+<div class="level0">&nbsp;Activates 'chain mode'. If chain mode is active, all messages will &nbsp;return the recipient object regardless of their return signature. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;a := Array &lt; 'hello' ; 'world' ; True ; Nil ; 666. &nbsp;a do pop shift unshift: 'hi', push: 999, done. </div>
+<div class="level0">&nbsp;Because of 'chain mode' you can do 'a do pop shift' etc, instead of </div>
+<div class="level0">&nbsp;a pop. &nbsp;a shift. &nbsp;etc.. </div>
+<div class="level0">&nbsp;The 'do' message tells the object to always return itself and disgard &nbsp;the original return value until the message 'done' has been received. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Object] done</span> </div>
+<div class="level0">&nbsp;Deactivates 'chain mode'. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Object] message: [String] arguments: [Array]</span> </div>
+<div class="level0">&nbsp;Sends a custom or 'dynamic' message to an object. This takes a string containing &nbsp;the message to be send to the object and an array listing the arguments at the &nbsp;correct indexes. If the array fails to provide the correct indexes this will &nbsp;generate an out-of-bounds error coming from the Array object. If something other &nbsp;than an Array is provided an error will be thrown as well. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;var str := 'write:'. &nbsp;Pen message: 'write:' arguments: (Array &lt; 'Hello World'). </div>
+<div class="level0">&nbsp;This will print the string 'Hello world' on the screen using a dynamically &nbsp;crafted message. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Object] on: [String] do: [Block]</span> </div>
+<div class="level0">&nbsp;Makes the object respond to a new kind of message. &nbsp;Use the semicolons to indicate the positions of the arguments to be &nbsp;passed. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;object on: 'greet' do: { ... }. &nbsp;object on: 'between:and:' do: { ... }. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Object] respondTo: [String]</span> </div>
+<div class="level0">&nbsp;Variations: </div>
+<div class="level0">&nbsp;[Object] respondTo: [String] with: [String] &nbsp;[Object] respondTo: [String] with: [String] and: [String] </div>
+<div class="level0">&nbsp;Default respond-to implementation, does nothing. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Object] isNil</span> </div>
+<div class="level0">&nbsp;Default isNil implementation. </div>
+<div class="level0">&nbsp;Always returns boolean object False. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Boolean</span> </div>
+<div class="level0">&nbsp;Literal: </div>
+<div class="level0">&nbsp;True &nbsp;False <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Boolean] unpack: [String:Ref]</span> &nbsp;Assign ref to boolean <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Boolean] = [other]</span> </div>
+<div class="level0">&nbsp;Tests whether the other object (as a boolean) has the &nbsp;same value (boolean state True or False) as the current one. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;(True = False) ifFalse: { Pen write: 'This is not True!'. }. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Boolean] != [other]</span> </div>
+<div class="level0">&nbsp;Tests whether the other object (as a boolean) has the &nbsp;same value (boolean state True or False) as the current one. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;(True != False) ifTrue: { Pen write: 'This is not True!'. }. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Boolean] toString</span> </div>
+<div class="level0">&nbsp;Simple cast function. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Boolean] break</span> </div>
+<div class="level0">&nbsp;Breaks out of the current block and bubbles up to the parent block if &nbsp;the value of the receiver equals boolean True. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;(iteration &gt; 10) break. #breaks out of loop after 10 iterations <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Boolean] continue</span> </div>
+<div class="level0">&nbsp;Skips the remainder of the current block in a loop, continues to the next &nbsp;iteration. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;(iteration &gt; 10) continue. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Boolean] ifTrue: [block]</span> </div>
+<div class="level0">&nbsp;Executes a block of code if the value of the boolean &nbsp;object is True. </div>
+<div class="level0">&nbsp;Usage: &nbsp;(some expression) ifTrue: { ... }. </div>
+<div class="level0">&nbsp;You can also use ifFalse and ifTrue with other objects because the &nbsp;Object instance also responds to these messages. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Boolean] ifFalse: [block]</span> </div>
+<div class="level0">&nbsp;Executes a block of code if the value of the boolean &nbsp;object is True. </div>
+<div class="level0">&nbsp;Usage: &nbsp;(some expression) ifFalse: { ... }. </div>
+<div class="level0">&nbsp;You can also use ifFalse and ifTrue with other objects because the &nbsp;Object instance also responds to these messages. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[b:Object] or: [Block|Object]</span> </div>
+<div class="level0">&nbsp;Evaluates and returns the block if b evaluates to false, else returns b <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Boolean] not</span> </div>
+<div class="level0">&nbsp;Returns the opposite of the current value. </div>
+<div class="level0">&nbsp;Usage: &nbsp;True := False not. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Boolean] flip</span> </div>
+<div class="level0">&nbsp;'Flips a coin'. Returns a random boolean value True or False. </div>
+<div class="level0">&nbsp;Usage: &nbsp;coinLandsOn := (Boolean flip). <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Boolean] either: [this] or: [that]</span> </div>
+<div class="level0">&nbsp;Returns argument #1 if boolean value is True and argument #2 otherwise. </div>
+<div class="level0">&nbsp;If either object is a block, it will be executed and its result returned if &nbsp;it is supposed to be returned. </div>
+<div class="level0">&nbsp;Usage: &nbsp;Pen write: 'the coin lands on: ' + (Boolean flip either: 'head' or: 'tail'). &nbsp;Pen write: 'the coin lands on: ' + (Boolean flip either: {^'head' * 10000.} or: 'tail'). <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Boolean] & [other]</span> </div>
+<div class="level0">&nbsp;Returns True if both the object value is True and the &nbsp;argument is True as well. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;a & b <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Boolean] ! [other]</span> </div>
+<div class="level0">&nbsp;Returns True if the object value is False and the &nbsp;argument is False as well. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;a ! b <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Boolean] | [other]</span> </div>
+<div class="level0">&nbsp;Returns True if either the object value is True or the &nbsp;argument is True or both are True. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;a | b <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Boolean] ? [other]</span> </div>
+<div class="level0">&nbsp;Returns True if either the object value is True or the &nbsp;argument is True but not both. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;a ? b <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Boolean] toNumber</span> </div>
+<div class="level0">&nbsp;Returns 0 if boolean is False and 1 otherwise. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Number</span> </div>
+<div class="level0">&nbsp;Literal: </div>
+<div class="level0">&nbsp;0 &nbsp;1 &nbsp;-8 &nbsp;2.5 </div>
+<div class="level0">&nbsp;Represents a number object in Citron. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] unpack: [String:Ref]</span> &nbsp;Assign ref to number <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] &gt; [other]</span> </div>
+<div class="level0">&nbsp;Returns True if the number is higher than other number. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] &gt;=: [other]</span> </div>
+<div class="level0">&nbsp;Returns True if the number is higher than or equal to other number. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] &lt; [other]</span> </div>
+<div class="level0">&nbsp;Returns True if the number is less than other number. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] &lt;=: [other]</span> </div>
+<div class="level0">&nbsp;Returns True if the number is less than or equal to other number. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] = [other]</span> </div>
+<div class="level0">&nbsp;Returns True if the number equals the other number. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] !=: [other]</span> </div>
+<div class="level0">&nbsp;Returns True if the number does not equal the other number. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] between: [low] and: [high]</span> </div>
+<div class="level0">&nbsp;Returns True if the number instance has a value between the two &nbsp;specified values. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;q between: x and: y <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] odd</span> </div>
+<div class="level0">&nbsp;Returns True if the number is odd and False otherwise. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] even</span> </div>
+<div class="level0">&nbsp;Returns True if the number is even and False otherwise. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] + [Number]</span> </div>
+<div class="level0">&nbsp;Adds the other number to the current one. Returns a new &nbsp;number object. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] +=: [Number]</span> </div>
+<div class="level0">&nbsp;Increases the number ITSELF by the specified amount, this message will change the &nbsp;value of the number object itself instead of returning a new number. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] - [Number]</span> </div>
+<div class="level0">&nbsp;Subtracts the other number from the current one. Returns a new &nbsp;number object. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] -=: [number]</span> </div>
+<div class="level0">&nbsp;Decreases the number ITSELF by the specified amount, this message will change the &nbsp;value of the number object itself instead of returning a new number. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] * [Number or Block]</span> </div>
+<div class="level0">&nbsp;Multiplies the number by the specified multiplier. Returns a new &nbsp;number object. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] times: [Block]</span> </div>
+<div class="level0">&nbsp;Runs the block of code a 'Number' of times. &nbsp;This is the most basic form of a loop. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;7 times: { :i Pen write: i. }. </div>
+<div class="level0">&nbsp;The example above runs the block 7 times. The current iteration &nbsp;number is passed to the block as a parameter (i in this example). <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] *=: [Number]</span> </div>
+<div class="level0">&nbsp;Multiplies the number ITSELF by multiplier, this message will change the &nbsp;value of the number object itself instead of returning a new number. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;x := 5. &nbsp;x *=: 2. #x is now 10. </div>
+<div class="level0">&nbsp;Use this message to apply the operation to the object itself instead &nbsp;of creating and returning a new object. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] / [Number]</span> </div>
+<div class="level0">&nbsp;Divides the number by the specified divider. Returns a new &nbsp;number object. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] /=: [Number]</span> </div>
+<div class="level0">&nbsp;Divides the number ITSELF by divider, this message will change the &nbsp;value of the number object itself instead of returning a new number. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;x := 10. &nbsp;x /=: 2. #x will now be 5. </div>
+<div class="level0">&nbsp;Use this message to apply the operation to the object itself instead &nbsp;of generating a new object. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] % [modulo]</span> </div>
+<div class="level0">&nbsp;Returns the modulo of the number. This message will return a new &nbsp;object representing the modulo of the recipient. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;x := 11 % 3. #x will now be 2 </div>
+<div class="level0">&nbsp;Use this message to apply the operation of division to the &nbsp;object itself instead of generating a new one. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] toPowerOf: [power]</span> </div>
+<div class="level0">&nbsp;Returns a new object representing the &nbsp;number to the specified power. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;x := 2 toPowerOf: 8. #x will be 256 </div>
+<div class="level0">&nbsp;The example above will raise 2 to the power of 8 resulting in &nbsp;a new Number object: 256. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] pos</span> </div>
+<div class="level0">&nbsp;Returns a boolean indicating wether the number is positive. &nbsp;This message will return a boolean object 'True' if the recipient is &nbsp;positive and 'False' otherwise. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;hope := 0.1. &nbsp;( hope pos ) ifTrue: { Pen write: 'Still a little hope for humanity'. }. </div>
+<div class="level0">&nbsp;The example above will print the message because hope is higher than 0. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] neg</span> </div>
+<div class="level0">&nbsp;Returns a boolean indicating wether the number is negative. &nbsp;This message will return a boolean object 'True' if the recipient is &nbsp;negative and 'False' otherwise. It's the eaxct opposite of the 'positive' &nbsp;message. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;hope := -1. &nbsp;(hope neg) ifTrue: { Pen write: 'No hope left'. }. </div>
+<div class="level0">&nbsp;The example above will print the message because the value of the variable &nbsp;hope is less than 0. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] max: [other]</span> </div>
+<div class="level0">&nbsp;Returns the biggest number of the two. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;x := 6 max: 4. #x is 6 &nbsp;x := 6 max: 7. #x is 7 <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] min: [other]</span> </div>
+<div class="level0">&nbsp;Returns a the smallest number. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;x := 6 min: 4. #x is 4 &nbsp;x := 6 min: 7. #x is 7 <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] factorial</span> </div>
+<div class="level0">&nbsp;Calculates the factorial of a number. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] to: [number] step: [step] do: [block]</span> </div>
+<div class="level0">&nbsp;Runs the specified block for each step it takes to go from &nbsp;the start value to the target value using the specified step size. &nbsp;This is basically how you write for-loops in Citron. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;1 to: 5 step: 1 do: { :step Pen write: 'this is step #'+step. }. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] to: [number] step: [step]</span> <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] floor</span> </div>
+<div class="level0">&nbsp;Gives the largest integer less than the recipient. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;x := 4.5 &nbsp;y := x floor. #y will be 4 </div>
+<div class="level0">&nbsp;The example above applies the floor function to the recipient (4.5) &nbsp;returning a new number object (4). <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] ceil</span> </div>
+<div class="level0">&nbsp;Rounds up the recipient number and returns the next higher integer number &nbsp;as a result. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;x := 4.5. &nbsp;y = x ceil. #y will be 5 </div>
+<div class="level0">&nbsp;The example above applies the ceiling function to the recipient (4.5) &nbsp;returning a new number object (5). <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] round</span> </div>
+<div class="level0">&nbsp;Returns the rounded number. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] abs</span> </div>
+<div class="level0">&nbsp;Returns the absolute (unsigned, positive) value of the number. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;x := -7. &nbsp;y := x abs. #y will be 7 </div>
+<div class="level0">&nbsp;The example above strips the sign off the value -7 resulting &nbsp;in 7. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] sqrt</span> </div>
+<div class="level0">&nbsp;Returns the square root of the recipient. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;x := 49. &nbsp;y := x sqrt. #y will be 7 </div>
+<div class="level0">&nbsp;The example above takes the square root of 49, resulting in the &nbsp;number 7. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] exp</span> </div>
+<div class="level0">&nbsp;Returns the exponent of the number. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] sin</span> </div>
+<div class="level0">&nbsp;Returns the sine of the number. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] cos</span> </div>
+<div class="level0">&nbsp;Returns the cosine of the number. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] tan</span> </div>
+<div class="level0">&nbsp;Caculates the tangent of a number. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] atan</span> </div>
+<div class="level0">&nbsp;Caculates the arctangent of a number. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] log</span> </div>
+<div class="level0">&nbsp;Calculates the logarithm of a number. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] shiftRight: [Number]</span> &nbsp; Only with integers <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] shiftLeft: [Number]</span> <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] integerOr: [Number]</span> <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] integerAnd: [Number]</span> <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] integerXor: [Number]</span> <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] toByte</span> </div>
+<div class="level0">&nbsp;Converts a number to a single byte. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] toString</span> </div>
+<div class="level0">&nbsp;Wrapper for cast function. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Number] toBoolean</span> </div>
+<div class="level0">&nbsp;Casts a number to a boolean object. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">String</span> </div>
+<div class="level0">&nbsp;Literal: </div>
+<div class="level0">&nbsp;'Hello World, this is a String.' </div>
+<div class="level0">&nbsp;A sequence of characters. In Citron, strings are UTF-8 aware. &nbsp;You may only use single quotes. To escape a character use the &nbsp;backslash '&acute; character. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] isConstructible: [Object]</span> </div>
+<div class="level0">&nbsp;returns whether object is constructible from string <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] unpack: [String:Ref]</span> &nbsp;Assign ref to string <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] bytes</span> </div>
+<div class="level0">&nbsp;Returns the number of bytes in a string, as opposed to &nbsp;length which returns the number of UTF-8 code points (symbols or characters). <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] = [other]</span> </div>
+<div class="level0">&nbsp;Returns True if the other string is the same (in bytes). <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] != [other]</span> </div>
+<div class="level0">&nbsp;Returns True if the other string is not the same (in bytes). <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] length</span> </div>
+<div class="level0">&nbsp;Returns the length of the string in symbols. &nbsp;This message is UTF-8 unicode aware. A 4 byte character will be counted as ONE. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] + [other]</span> </div>
+<div class="level0">&nbsp;Appends other string to self and returns the resulting &nbsp;string as a new object. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] append: [String].</span> </div>
+<div class="level0">&nbsp;Appends the specified string to itself. This is different from the '+' &nbsp;message, the '+' message adds the specified string while creating a new string. &nbsp;Appends on the other hand modifies the original string. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;x := 'Hello '. &nbsp;x append: 'World'. &nbsp;Pen write: x. #Hello World </div>
+<div class="level0">&nbsp;Instead of using the append message you may also use its short form, &nbsp;like this: </div>
+<div class="level0">&nbsp;x +=: 'World'. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] multiply: [Number].</span> </div>
+<div class="level0">&nbsp;Appends the specified string to itself as many times as [Number] &nbsp;alias: * <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] formatObjects: [Array].</span> </div>
+<div class="level0">&nbsp;Creates a string with the template format and the specified objects </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;fmt := 'Hello, %s! %d is a number!' &nbsp;str := fmt formatObjects: (Array new &lt; 'World', 23). <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] formatMap: [Map]</span> </div>
+<div class="level0">&nbsp;format a format string based off a map </div>
+<div class="level0">&nbsp;e.g. &nbsp; format := 'this &acute;%{string}&acute; contains some wierd %{shit}.'. &nbsp; fmtd := format formatMap: (Map new put: 'shit' at: 'shit', put: format at: 'string'). &nbsp; # 'this &acute;this &acute;%{string}&acute; contains some wierd %{shit}.&acute; contains some weird shit.' <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] from: [position] to: [destination]</span> </div>
+<div class="level0">&nbsp;Returns a portion of a string defined by from-to values. &nbsp;This message is UTF-8 unicode aware. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;'hello' from: 2 to: 3. #ll <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] from: [start] length: [length]</span> </div>
+<div class="level0">&nbsp;Returns a portion of a string defined by from &nbsp;and length values. &nbsp;This message is UTF-8 unicode aware. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;'hello' from: 2 length: 3. #llo <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] skip: [number]</span> </div>
+<div class="level0">&nbsp;Returns a string without the first X characters. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] sliceFrom: [number] length: [number]</span> </div>
+<div class="level0">&nbsp;slice a string from,length and return the sliced. modifies string <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] at: [position]</span> </div>
+<div class="level0">&nbsp;Returns the character at the specified position (UTF8 aware). &nbsp;You may also use the alias '@'. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;('hello' at: 2). #l &nbsp;('hello' @ 2). #l <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] byteAt: [position]</span> </div>
+<div class="level0">&nbsp;Returns the byte at the specified position (in bytes). &nbsp;Note that you cannot use the '@' message here because that will &nbsp;return the unicode point at the specified position, not the byte. </div>
+<div class="level0">&nbsp;Usage: &nbsp;('abc' byteAt: 1). #98 <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] indexOf: [subject]</span> </div>
+<div class="level0">&nbsp;Returns the index (character number, not the byte!) of the &nbsp;needle in the haystack. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;'find the needle' indexOf: 'needle'. #9 <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] asciiUpperCase</span> </div>
+<div class="level0">&nbsp;Returns a new uppercased version of the string. &nbsp;Note that this is just basic ASCII case functionality, this should only &nbsp;be used for internal keys and as a basic utility function. This function &nbsp;DOES NOT WORK WITH UTF8 characters ! <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] asciiLowerCase</span> </div>
+<div class="level0">&nbsp;Returns a new lowercased version of the string. &nbsp;Note that this is just basic ASCII case functionality, this should only &nbsp;be used for internal keys and as a basic utility function. This function &nbsp;DOES NOT WORK WITH UTF8 characters ! <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] asciiLowerCase1st</span> </div>
+<div class="level0">&nbsp;Converts the first character of the recipient to lowercase and &nbsp;returns the resulting string object. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] asciiUpperCase1st</span> </div>
+<div class="level0">&nbsp;Converts the first character of the recipient to uppercase and &nbsp;returns the resulting string object. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] lastIndexOf: [subject]</span> </div>
+<div class="level0">&nbsp;Returns the index (character number, not the byte!) of the &nbsp;needle in the haystack. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;'find the needle' lastIndexOf: 'needle'. #9 <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] replace: [string] with: [other]</span> </div>
+<div class="level0">&nbsp;Replaces needle with replacement in original string and returns &nbsp;the result as a new string object. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;'LiLo BootLoader' replace: 'L' with: 'l'. #lilo Bootloader <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] findPattern: [String] do: [Block] options: [String].</span> </div>
+<div class="level0">&nbsp;Matches the POSIX or PCRE (depending on the #defines) regular expression in the first argument against &nbsp;the string and executes the specified block on every match passing &nbsp;an array containing the matches. </div>
+<div class="level0">&nbsp;The options parameter can be used to pass specific flags to the &nbsp;regular expression engine. As of the moment of writing this functionality &nbsp;has not been implemented yet. The only flag you can set at this moment is &nbsp;the 'ignore' flag, just a test flag. This flag does not execute the block. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;'hello world' findPattern: '([hl])' do: { :arr &nbsp; Pen write: (arr join: '|'), brk. &nbsp;} options: ''. </div>
+<div class="level0">&nbsp;On every match the block gets executed and the matches are &nbsp;passed to the block as arguments. You can also use this feature to replace &nbsp;parts of the string, simply return the replacement string in your block. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] findPattern: [String] do: [Block].</span> </div>
+<div class="level0">&nbsp;Same as findPattern:do:options: but without the options, no flags will &nbsp;be send to the regex engine. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] contains: [String]</span> </div>
+<div class="level0">&nbsp;Returns True if the other string is a substring. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] containsPattern: [String].</span> </div>
+<div class="level0">&nbsp;Tests the pattern against the string and returns True if there is a match &nbsp;and False otherwise. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;var match := 'Hello World' containsPattern: '[:space:]'. &nbsp;#match will be True because there is a space in 'Hello World' <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] trim</span> </div>
+<div class="level0">&nbsp;Trims a string. Removes surrounding white space characters &nbsp;from string and returns the result as a new string object. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;' hello ' trim. #hello </div>
+<div class="level0">&nbsp;The example above will strip all white space characters from the &nbsp;recipient on both sides of the text. Also see: leftTrim and rightTrim &nbsp;for variations of this message. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] leftTrim</span> </div>
+<div class="level0">&nbsp;Removes all the whitespace at the left side of the string. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;message := ' hello world  '. &nbsp;message leftTrim. </div>
+<div class="level0">&nbsp;The example above will remove all the whitespace at the left of the &nbsp;string but leave the spaces at the right side intact. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] rightTrim</span> </div>
+<div class="level0">&nbsp;Removes all the whitespace at the right side of the string. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;message := ' hello world  '. &nbsp;message rightTrim. </div>
+<div class="level0">&nbsp;The example above will remove all the whitespace at the right of the &nbsp;string but leave the spaces at the left side intact. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] toNumber</span> </div>
+<div class="level0">&nbsp;Converts string to a number. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] toBoolean</span> </div>
+<div class="level0">&nbsp;Converts string to boolean <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] split: [String]</span> </div>
+<div class="level0">&nbsp;Converts a string to an array by splitting the string using &nbsp;the specified delimiter (also a string). <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] characters.</span> </div>
+<div class="level0">&nbsp;Splits the string in UTF-8 characters and returns &nbsp;those as an array. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;a := 'abc' characters. &nbsp;a count. #3 <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] toByteArray</span> </div>
+<div class="level0">&nbsp;Returns an array of bytes representing the string. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] appendByte: [Number].</span> </div>
+<div class="level0">&nbsp;Appends a raw byte to a string. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String(length=1)] charSub: [Number | String(length=1)]</span> </div>
+<div class="level0">&nbsp;works on the underlaying character. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String(length=1)] charAdd: [Number | String(length=1)]</span> </div>
+<div class="level0">&nbsp;works on the underlaying character. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] htmlEscape</span> </div>
+<div class="level0">&nbsp;Escapes HTML chars. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] hashWithKey: [String]</span> </div>
+<div class="level0">&nbsp;Returns the hash of the recipient String using the specified key. &nbsp;The default hash in Citron is the SipHash which is also used internally. &nbsp;SipHash can protect against hash flooding attacks. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] eval</span> </div>
+<div class="level0">&nbsp;Evaluates the contents of the string as code. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;a := 'Array &lt; 1 ; 2 ; 3' eval. &nbsp;x := a @ 2. #3 <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] unsafeExec</span> </div>
+<div class="level0">&nbsp;Evaluates the contents of the string as code. &nbsp;This is the unsafe version of the eval message. </div>
+<div class="level0"></div>
+<div class="level0">tr_object* ctr_string_eval(ctr_object* myself, ctr_argument* argumentList) { tr_tnode* parsedCode; har* pathString; tr_object* result; tr_object* code; ctr_command_security_profile ^= CTR_SECPRO_EVAL; thString = ctr_heap_allocate_tracked(sizeof(char)*5); mcpy(pathString, "exec", 4); mcpy(pathString+4,"0",1); r_argument* newArgumentList = ctr_heap_allocate( sizeof( ctr_argument ) ); wArgumentList-&gt;object = myself; code = ctr_string_append( ctr_build_string_from_cstring( "^ " ), newArgumentList ); newArgumentList-&gt;object = ctr_build_string_from_cstring( "." ); //We expect the code to be correct. de = ctr_string_append( code, newArgumentList ); r_program_length = code-&gt;value.svalue-&gt;vlen; rsedCode = ctr_cparse_parse(code-&gt;value.svalue-&gt;value, pathString); r_cwlk_subprogram++; sult = ctr_cwlk_run(parsedCode); r_cwlk_subprogram--; &nbsp;( result == NULL ) result = CtrStdNil; r_heap_free( newArgumentList ); r_command_security_profile ^= CTR_SECPRO_EVAL; turn result; <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] escapeQuotes.</span> </div>
+<div class="level0">&nbsp;Escapes all single quotes in a string. Sending this message to a &nbsp;string will cause all single quotes (') to be replaced with (&acute;). <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] randomizeBytesWithLength: [Number].</span> </div>
+<div class="level0">&nbsp;Returns a randomized string with the specified length using the pool of &nbsp;bytes contained in the String object. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[String] reverse</span> </div>
+<div class="level0">&nbsp;reverse the string <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Tuple</span> </div>
+<div class="level0">&nbsp;Literal: </div>
+<div class="level0">&nbsp;[ item , item , ... ] or [] </div>
+<div class="level0">&nbsp;Examples: </div>
+<div class="level0">&nbsp;[ 1 , 2 , 3 ] &nbsp;[] <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Block</span> </div>
+<div class="level0">&nbsp;Literal: </div>
+<div class="level0">&nbsp;{ parameters (if any) here... code here... } </div>
+<div class="level0">&nbsp;each parameter has to be prefixed with &nbsp;a colon (:). </div>
+<div class="level0">&nbsp;Examples: </div>
+<div class="level0">&nbsp;{ Pen write: 'a simple code block'. } run. &nbsp;{ :param Pen write: param. } applyTo: 'write this!'. &nbsp;{ :a :b ^ a + b. } applyTo: 1 and: 2. &nbsp;{ :a :b :c ^ a + b + c. } applyTo: 1 and: 2 and: 3. </div>
+<div class="level0">&nbsp;to enable context auto-capture, &nbsp;qualify captures with the 'const' modifier <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Captures all const qualified values and adds them to private space</span> <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Block] unpack: [String:Ref]</span> &nbsp;Assign ref to block <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Block] applyTo: [object]</span> </div>
+<div class="level0">&nbsp;Runs a block of code using the specified object as a parameter. &nbsp;If you run a block using the messages 'run' or 'applyTo:', me/my will &nbsp;refer to the block itself instead of the containing object. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Block] whileTrue: [block]</span> </div>
+<div class="level0">&nbsp;Runs a block of code, depending on the outcome runs the other block &nbsp;as long as the result of the first one equals boolean True. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;x := 0. &nbsp;{ ^(x &lt; 6). } whileFalse: &nbsp;{ x add: 1. }. #increment x until it reaches 6. </div>
+<div class="level0">&nbsp;Here we increment variable x by one until it reaches 6. &nbsp;While the number x is lower than 6 we keep incrementing it. &nbsp;Don't forget to use the return ^ symbol in the first block. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Block] whileFalse: [block]</span> </div>
+<div class="level0">&nbsp;Runs a block of code, depending on the outcome runs the other block &nbsp;as long as the result of the first one equals to False. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;x := 0. &nbsp;{ ^(x &gt; 5). } &nbsp;whileFalse: { x add: 1. }. #increment x until it reaches 6. </div>
+<div class="level0">&nbsp;Here we increment variable x by one until it reaches 6. &nbsp;While the number x is not higher than 5 we keep incrementing it. &nbsp;Don't forget to use the return ^ symbol in the first block. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Block] run</span> </div>
+<div class="level0">&nbsp;Sending the unary message 'run' to a block will cause it to execute. &nbsp;The run message takes no arguments, if you want to use the block as a function &nbsp;and send arguments, consider using the applyTo-family of messages instead. &nbsp;This message just simply runs the block of code without any arguments. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;{ Pen write: 'Hello World'. } run. #prints 'Hello World' </div>
+<div class="level0">&nbsp;The example above will run the code inside the block and display &nbsp;the greeting. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Block] set: [name] value: [object]</span> </div>
+<div class="level0">&nbsp;Sets a variable in a block of code. This how you can get closure-like &nbsp;functionality. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;shout := { Pen write: (my message + '!!!'). }. &nbsp;shout set: 'message' value: 'hello'. &nbsp;shout run. </div>
+<div class="level0">&nbsp;Here we assign a block to a variable named 'shout'. &nbsp;We assign the string 'hello' to the variable 'message' inside the block. &nbsp;When we invoke the block 'shout' by sending the run message without any &nbsp;arguments it will display the string: 'hello!!!'. </div>
+<div class="level0">&nbsp;Similarly, you could use this technique to create a block that returns a &nbsp;block that applies a formula (for instance simple multiplication) and then set the &nbsp;multiplier to use in the formula. This way, you could create a block &nbsp;building 'formula blocks'. This is how you implement & use closures &nbsp;in Citron. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Block] error: [object].</span> </div>
+<div class="level0">&nbsp;Sets error flag on a block of code. &nbsp;This will throw an error / exception. &nbsp;You can attach an object to the error, for instance &nbsp;an error message. </div>
+<div class="level0">&nbsp;Example: </div>
+<div class="level0">&nbsp;{ &nbsp;  thisBlock error: 'oops!'. &nbsp;} catch: { :errorMessage &nbsp;  Pen write: errorMessage. &nbsp;}, run. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Block] catch: [otherBlock]</span> </div>
+<div class="level0">&nbsp;Associates an error clause to a block. &nbsp;If an error (exception) occurs within the block this block will be &nbsp;executed. </div>
+<div class="level0">&nbsp;Example: </div>
+<div class="level0">&nbsp;#Raise error on division by zero. &nbsp;{ &nbsp;   var z := 4 / 0. &nbsp;} catch: { :errorMessage &nbsp;   Pen write: e, brk. &nbsp;}, run. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Block] toString</span> </div>
+<div class="level0">&nbsp;Returns a string representation of the Block. This basic behavior, part &nbsp;of any object will just return [Block]. Other objects typically override this &nbsp;behavior with more useful implementations. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] new</span> </div>
+<div class="level0">&nbsp;Creates a new Array. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;a := Array new. </div>
+<div class="level0">&nbsp;or, the short form: </div>
+<div class="level0">&nbsp;a := Array ← 1 ; 2 ; 3.   </div>
+<div class="level0">&nbsp;or (if you prefer ASCII only symbols): </div>
+<div class="level0">&nbsp;a := Array &lt; 1 ; 2 ; 3. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] copy</span> </div>
+<div class="level0">&nbsp;shallow copy of the array <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] type</span> </div>
+<div class="level0">&nbsp;Returns the string 'Array'. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] push: [Element]</span> </div>
+<div class="level0">&nbsp;Pushes an element on top of the array. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;numbers := Array new. &nbsp;numbers push: 3. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] min</span> </div>
+<div class="level0">&nbsp;Returns the minimum value from an array. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;a := Array ← 8 ; 4 ; 2 ; 16.   &nbsp;m := a min. #2 <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] max</span> </div>
+<div class="level0">&nbsp;Returns the maximum value from an array. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;a := Array ← 8 ; 4 ; 2 ; 16.   &nbsp;m := a max. #16 <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] sum</span> </div>
+<div class="level0">&nbsp;Takes the sum of an array. This message will calculate the &nbsp;sum of the elements in the array. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;a := Array ← 1 ; 2 ; 3.   &nbsp;s := a sum. #6 </div>
+<div class="level0">&nbsp;In the example above, the sum of array will be stored in s and &nbsp;it's value will be 6. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] product</span> </div>
+<div class="level0">&nbsp;Takes the product of an array. On receiving this message, the &nbsp;Array recipient object will calculate the product of its &nbsp;numerical elements. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;a := Array ← 2 ; 4 ; 8.   &nbsp;p := a product. #64 </div>
+<div class="level0">&nbsp;In the example above, the product of the array will be calculated &nbsp;because the array receives the message 'product'. The product of the elements &nbsp;( 2 * 4 * 8 = 64 ) will be stored in p. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] * [o:Number | Array]</span> </div>
+<div class="level0">&nbsp;Repeats the array o times if o is a number, and generates an array multiplication &nbsp;for myself and o if o is an array <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] intersperse: [o: Object]</span> </div>
+<div class="level0">&nbsp;places an 'o' between all array elements &nbsp;returns an array <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] map: [Block].</span> </div>
+<div class="level0">&nbsp;Iterates over the array. Passing each element as a key-value pair to the &nbsp;specified block. &nbsp;The map message will pass the following arguments to the block, the key, &nbsp;the value and a reference to the array itself. The last argument might seem &nbsp;redundant but allows for a more functional programming style. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;files map: showName. &nbsp;files map: { &nbsp;  :key :filename :files &nbsp;  Pen write: filename, brk. &nbsp;}. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] each: [Block].</span> </div>
+<div class="level0">&nbsp; Alias for [Array] map: [Block]. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] ← [Element1] ; [Element2] ; ...  </span> </div>
+<div class="level0">&nbsp;Creates a new instance of an array and initializes this &nbsp;array with a first element, useful for literal-like Array &nbsp;notations. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;a := Array ← 1 ; 2 ; 3.   </div>
+<div class="level0">&nbsp;or if you like ASCII-only: </div>
+<div class="level0">&nbsp;a := Array &lt; 1 ; 2 ; 3. </div>
+<div class="level0">&nbsp;Note that the ; symbol here is an alias for 'push:'. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] unshift: [Element].</span> </div>
+<div class="level0">&nbsp;Unshift operation for array. &nbsp;Adds the specified element to the beginning of the array. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;a := Array new. &nbsp;a push: 1. &nbsp;a unshift: 3. #now contains: 3,1 <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] reverse</span> <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] join: [Glue].</span> </div>
+<div class="level0">&nbsp;Joins the elements of an array together in a string &nbsp;separated by a specified glue string. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;collection := Array new. &nbsp;collection push: 1, push: 2, push 3. &nbsp;collection join: ','. # results in string: '1,2,3' <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] at: [Index]</span> </div>
+<div class="level0">&nbsp;Returns the element in the array at the specified index. &nbsp;Note that the fisrt index of the array is index 0. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;fruits := Array ← 'apples' ; 'oranges' ; 'bananas'.   &nbsp;fruits at: 1. #returns 'oranges' <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] indexOf: [Object]</span> </div>
+<div class="level0">&nbsp;Returns the index of the first occurence of object &nbsp;-1 if not found <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] contains: [Object]</span> </div>
+<div class="level0">&nbsp;Returns whether the array contains the object or not <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] @ [Index]</span> </div>
+<div class="level0">&nbsp;Alias for [Array] at: [Index] <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] put: [Element] at: [Index]</span> </div>
+<div class="level0">&nbsp;Puts a value in the array at the specified index. &nbsp;Array will be automatically expanded if the index is higher than &nbsp;the maximum index of the array, unless the array is immutable </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;fruits := Array new. &nbsp;fruits put: 'apples' at: 5. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] pop</span> </div>
+<div class="level0">&nbsp;Pops off the last element of the array. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] shift</span> </div>
+<div class="level0">&nbsp;Shifts off the first element of the array. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] count</span> </div>
+<div class="level0">&nbsp;Returns the number of elements in the array. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] from: [Begin] length: [End]</span> </div>
+<div class="level0">&nbsp;Copies part of an array indicated by from and to and &nbsp;returns a new array consisting of a copy of this region. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] head</span> &nbsp;see also (tail, init, last) </div>
+<div class="level0">&nbsp;returns the first element of the array &nbsp;Does generate exceptions when array is empty <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] tail</span> &nbsp;see also (head, init, last) </div>
+<div class="level0">&nbsp;returns all of the array sans the first element &nbsp;Does not generate exceptions when array is empty <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] init</span> &nbsp;see also (head, tail, last) </div>
+<div class="level0">&nbsp;returns all of the array sans the last element &nbsp;Does not generate exceptions when array is empty <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] last</span> &nbsp;see also (head, tail, init) </div>
+<div class="level0">&nbsp;returns all of the array sans the last element &nbsp;Does generate exceptions when array is empty <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] + [Array]</span> </div>
+<div class="level0">&nbsp;Returns a new array, containing elements of itself and the other &nbsp;array. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Array fmap: [Block]</span> </div>
+<div class="level0">&nbsp;Maps a function over the block. this function should accept a single value. </div>
+<div class="level0">&nbsp;[1,2,3,4] fmap: {:v ^v + 1.}. #=&gt; Array new &lt; 2 ; 3 ; 4 ; 5 <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Array imap: [Block]</span> </div>
+<div class="level0">&nbsp;Maps a function over the block. this function should accept an index and a value. </div>
+<div class="level0">&nbsp;[1,2,3,4] imap: {:i:v ^v + i.}. #=&gt; Array new &lt; 1 ; 3 ; 5 ; 7 <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Array foldl: [Block] accumulator: [Object]</span> </div>
+<div class="level0">&nbsp;reduces an array according to a block (which takes an accumulator and the value, and returns the next acc) from the left (index 0) </div>
+<div class="level0">&nbsp;([1,2,3,4]) foldl: {:acc:v ^acc + v.} accumulator: 0. #=&gt; Equivalent to ([1,2,3,4]) sum. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] filter: [Block]</span> </div>
+<div class="level0">&nbsp;Include the element iff block returns True for the element <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><a class="bold" href="#">* [Array] unpack: [Array:{Ref:string}]</a> &nbsp;* Element-wise assign <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] sort: [Block]</span> </div>
+<div class="level0">&nbsp;Sorts the contents of an array using a sort block. &nbsp;Uses qsort. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] toString</span> </div>
+<div class="level0">&nbsp;Returns a string representation of the array and its contents. &nbsp;This representation will be encoded in the Citron language itself and is &nbsp;therefore evallable. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;a := Array ← 'hello' ; 'world'.   &nbsp;b := a toString. &nbsp;c := b eval. &nbsp;x := c @ 1. #world </div>
+<div class="level0">&nbsp;toString messages are implicitly send by some objects, for instance when &nbsp;attempting to write an Array using a Pen. </div>
+<div class="level0">&nbsp;You can also use the alias 'serialize'. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Array] serialize</span> </div>
+<div class="level0">&nbsp;Alias for [Array] toString. </div>
+<div class="level0">&nbsp;See 'Map serialize' for the reason for this alias. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Map</span> </div>
+<div class="level0">&nbsp;Creates a Map object. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;files := Map new. &nbsp;files put: 'readme.txt' at: 'textfile'. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Map] type</span> </div>
+<div class="level0">&nbsp;Returns the string 'Map'. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Map] put: [Element] at: [Key]</span> </div>
+<div class="level0">&nbsp;Puts a key-value pair in a map. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;map put: 'hello' at: 'world'. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Map] at: [Key]</span> </div>
+<div class="level0">&nbsp;Retrieves the value specified by the key from the map. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Map] @ [Key]</span> </div>
+<div class="level0">&nbsp;Alias for [Map] at: [Key]. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Map] count</span> </div>
+<div class="level0">&nbsp;Returns the number of elements in the map. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Map] each: [Block]</span> </div>
+<div class="level0">&nbsp;Iterates over the map, passing key-value pairs to the specified block. &nbsp;Note that within an each/map block, 'me' and 'my' refer to the collection. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Map] kvmap: [Block]</span> </div>
+<div class="level0">&nbsp;Iterates over the map, passing a tuple of [key, value] to the specified block. &nbsp;And constructs a new Map based off the returned kv-tuple &nbsp;Note that within an each/map block, 'me' and 'my' refer to the collection. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Map] kvlist: [Block]</span> </div>
+<div class="level0">&nbsp;Iterates over the map, passing a tuple of [key, value] to the specified block. &nbsp;And constructs a new list based off the returned kv-tuple &nbsp;Note that within an each/map block, 'me' and 'my' refer to the collection. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Map] flip</span> </div>
+<div class="level0">&nbsp;flips the keys and the values of the map. (same-value keys will be overwritten) <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Map] toString</span> </div>
+<div class="level0">&nbsp;Returns a string representation of a map encoded in Citron itself. &nbsp;This will give you an &nbsp;evallable representation of the map and all of its members. </div>
+<div class="level0">&nbsp;Usage </div>
+<div class="level0">&nbsp;m := (Map new) put: 'hello' at: 'world'. &nbsp;x := m toString &nbsp;m := x eval. </div>
+<div class="level0">&nbsp;The toString method is automatically invoked when attempting to &nbsp;print a Map: </div>
+<div class="level0">&nbsp;Pen write: (Map new). #prints Map new. </div>
+<div class="level0">&nbsp;You can also use the alias 'serialize'. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><a class="bold" href="#">* [Map] serialize</a> * * Alias for [Map] toString. * A toString message, sometimes implicitly send by other messages like * 'Pen write:' will give you a serialized version of the Map or Array. * This is far more useful than a 'dumb' textual description of the object like * 'array' or 'object'. However, when working with very large Maps or Arrays * accidentally dumping the entire contents can be annoying, in this case you can * override the toString behaviour but you don't have to remap the original, you * can just use this alias. Also, this alias can be used if you want to make * the serialization more explicit. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Map] unpack: [Map:{Ref:string}]</span> &nbsp;Key-wise assign <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Iterator</span> </div>
+<div class="level0">&nbsp;Iterator (range), an object that supports next and current, &nbsp;and steps through some values before (optionally) reaching an end <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Iterator] setFunc: [f:Block]</span> </div>
+<div class="level0">&nbsp;sets the iterator step function. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Iterator] rangeFrom: [f:Number] to: [t:Number] step: [s:Number]</span> </div>
+<div class="level0">&nbsp;makes a range iterator in range [f,t] with steps of s <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Iterator] rangeFrom: [f:(supports +)] step: [s:(supports +)]</span> </div>
+<div class="level0">&nbsp;makes a range iterator in range [f,inf) with steps of s &nbsp;works on all objects that support the message '+' <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Iterator] next</span> </div>
+<div class="level0">&nbsp;gives the next value or throws an exception (to signal the end of the iterator) <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Iterator] each: [Block&lt;value&gt;]</span> </div>
+<div class="level0">&nbsp;Runs the block for each value in the iterator while stepping through it <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Iterator] fmap: [b:Block&lt;value&gt;]</span> &nbsp;Equivalent to [Array] fmap: [Block&lt;value&gt;] </div>
+<div class="level0">&nbsp;transforms the iterator with the block to an array <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Iterator] count</span> </div>
+<div class="level0">&nbsp;Steps through the iterator until it ends and returns the count. &nbsp;resets the state of the iterator <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Iterator] take: [t:Number]</span> </div>
+<div class="level0">&nbsp;takes at most &lt;t&gt; number of elements from the Iterator <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Iterator] takeWhile: [predicate:Block]</span> </div>
+<div class="level0">&nbsp;takes values as long as predicate returns true. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Iterator] endBlock</span> </div>
+<div class="level0">&nbsp;returns a block that throws an IteratorEndException. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Iterator] endIf: [clause:Block]</span> </div>
+<div class="level0">&nbsp;ends the Iterator if clause returns True <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Iterator] toArray</span> </div>
+<div class="level0">&nbsp;Collects all of the iterator values into an array <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Iterator] skip: [n:Number]</span> </div>
+<div class="level0">&nbsp;skips n iterations and returns the nth value &nbsp;does not reset the evaluation. (iterator will advance to index n) <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">File</span> </div>
+<div class="level0">&nbsp;Represents a File object. &nbsp;Creates a new file object based on the specified path. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;File new: '/example/path/to/file.txt'. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[File] tempFileLike: [String]</span> </div>
+<div class="level0">&nbsp;Represents a File object. &nbsp;Creates a new temporary file object based on the specified path. &nbsp;replacing XXXX with some chars. &nbsp;Usage: </div>
+<div class="level0">&nbsp;File tempFileLike: '/example/path/to/fileXXXXXXXX.txt'. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[File] path</span> </div>
+<div class="level0">&nbsp;Returns the path of a file. The file object will respond to this &nbsp;message by returning a string object describing the full path to the &nbsp;recipient. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[File] realPath</span> </div>
+<div class="level0">&nbsp;Returns the real path of a file. The file object will respond to this &nbsp;message by returning a string object describing the absolute path to the &nbsp;recipient. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[File] read</span> </div>
+<div class="level0">&nbsp;Reads contents of a file. Send this message to a file to read the entire contents in &nbsp;one go. For big files you might want to prefer a streaming approach to avoid &nbsp;memory exhaustion (see readBytes etc). </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;data := File new: '/path/to/mydata.csv', read. </div>
+<div class="level0">&nbsp;In the example above we read the contents of the entire CSV file callled mydata.csv &nbsp;in the variable called data. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[File] write: [String]</span> </div>
+<div class="level0">&nbsp;Writes content to a file. Send this message to a file object to write the &nbsp;entire contents of the specified string to the file in one go. The file object &nbsp;responds to this message for convience reasons, however for big files it might &nbsp;be a better idea to use the streaming API if possible (see readBytes etc.). </div>
+<div class="level0">&nbsp;data := '&lt;xml&gt;hello&lt;/xml&gt;'. &nbsp;File new: 'myxml.xml', write: data. </div>
+<div class="level0">&nbsp;In the example above we write the XML snippet in variable data to a file &nbsp;called myxml.xml in the current working directory. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[File] append: [String]</span> </div>
+<div class="level0">&nbsp;Appends content to a file. The file object responds to this message like it &nbsp;responds to the write-message, however in this case the contents of the string &nbsp;will be appended to the existing content inside the file. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[File] exists</span> </div>
+<div class="level0">&nbsp;Returns True if the file exists and False otherwise. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[File] include</span> </div>
+<div class="level0">&nbsp;Includes the file as a piece of executable code. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[File] runHere</span> </div>
+<div class="level0">&nbsp;Includes the file as a piece of executable code. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[File] delete</span> </div>
+<div class="level0">&nbsp;Deletes the file. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[File] size</span> </div>
+<div class="level0">&nbsp;Returns the size of the file. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[File] open: [string]</span> </div>
+<div class="level0">&nbsp;Open a file with using the specified mode. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;f := File new: '/path/to/file'. &nbsp;f open: 'r+'. #opens file for reading and writing </div>
+<div class="level0">&nbsp;The example above opens the file in f for reading and writing. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[File] close.</span> </div>
+<div class="level0">&nbsp;Closes the file represented by the recipient. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;f := File new: '/path/to/file.txt'. &nbsp;f open: 'r+'. &nbsp;f close. </div>
+<div class="level0">&nbsp;The example above opens and closes a file. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[File] readBytes: [Number].</span> </div>
+<div class="level0">&nbsp;Reads a number of bytes from the file. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;f := File new: '/path/to/file.txt'. &nbsp;f open: 'r+'. &nbsp;x := f readBytes: 10. &nbsp;f close. </div>
+<div class="level0">&nbsp;The example above reads 10 bytes from the file represented by f &nbsp;and puts them in buffer x. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[File] writeBytes: [String].</span> </div>
+<div class="level0">&nbsp;Takes a string and writes the bytes in the string to the file &nbsp;object. Returns the number of bytes actually written. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;f := File new: '/path/to/file.txt'. &nbsp;f open: 'r+'. &nbsp;n := f writeBytes: 'Hello World'. &nbsp;f close. </div>
+<div class="level0">&nbsp;The example above writes 'Hello World' to the specified file as bytes. &nbsp;The number of bytes written is returned in variable n. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[File] seek: [Number].</span> </div>
+<div class="level0">&nbsp;Moves the file pointer to the specified position in the file &nbsp;(relative to the current position). </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;file open: 'r', seek: 10. </div>
+<div class="level0">&nbsp;The example above opens a file for reading and moves the &nbsp;pointer to position 10 (meaning 10 bytes from the beginning of the file). &nbsp;The seek value may be negative. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[File] rewind.</span> </div>
+<div class="level0">&nbsp;Rewinds the file. Moves the file pointer to the beginning of the file. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;file open: 'r'. &nbsp;x := file readBytes: 10. #read 10 bytes &nbsp;file rewind.        #rewind, set pointer to begin again &nbsp;y := file readBytes: 10. #re-read same 10 bytes </div>
+<div class="level0">&nbsp;The example above reads the same sequence of 10 bytes twice, resulting &nbsp;in variable x and y being equal. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[File] end.</span> </div>
+<div class="level0">&nbsp;Moves the file pointer to the end of the file. Use this in combination with &nbsp;negative seek operations. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;file open: 'r'. &nbsp;file end. &nbsp;x := file seek: -10, readBytes: 10. </div>
+<div class="level0">&nbsp;The example above will read the last 10 bytes of the file. This is &nbsp;accomplished by first moving the file pointer to the end of the file, &nbsp;then putting it back 10 bytes (negative number), and then reading 10 &nbsp;bytes. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Broom</span> </div>
+<div class="level0">&nbsp;GarbageCollector, to invoke use: </div>
+<div class="level0">&nbsp;[Broom] sweep. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Broom] dust</span> </div>
+<div class="level0">&nbsp;Returns the number of objects collected. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Broom] objectCount</span> </div>
+<div class="level0">&nbsp;Returns the total number of objects considered in the latest collect &nbsp;cycle. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Broom] keptCount</span> </div>
+<div class="level0">&nbsp;Returns the total number of objects that have been marked during the &nbsp;latest cycle and have therefore been allowed to stay in memory. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Broom] keptAlloc</span> </div>
+<div class="level0">&nbsp;Returns the amount of allocated memory. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Broom] stickyCount</span> </div>
+<div class="level0">&nbsp;Returns the total number of objects that have a sticky flag. &nbsp;These objects will never be removed. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Broom] memoryLimit</span> </div>
+<div class="level0">&nbsp;Sets the memory limit, if this limit gets exceeded the program will produce &nbsp;an out-of-memory error. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Broom] mode: [Number]</span> </div>
+<div class="level0">&nbsp;Selects mode of operation for GC. </div>
+<div class="level0">&nbsp;Available Modes: &nbsp;0 - No Garbage Collection &nbsp;1 - Activate Garbage Collector &nbsp;4 - Activate Garbage Collector for every single step (testing only) <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Shell] call: [String]</span> </div>
+<div class="level0">&nbsp;Performs a Shell operation. The Shell object uses a fluid API, so you can &nbsp;mix shell code with programming logic. For instance to list the contents &nbsp;of a directory use: </div>
+<div class="level0">&nbsp;Shell ls </div>
+<div class="level0">&nbsp;This will output the contents of the current working directly, you &nbsp;can also pass keyword messages like so: </div>
+<div class="level0">&nbsp;Shell echo: 'Hello from the Shell!'. </div>
+<div class="level0">&nbsp;The example above will output the specified message to the console. &nbsp;Every message you send will be turned into a string and dispatched to &nbsp;the 'call:' message. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Slurp] obtain.</span> </div>
+<div class="level0">&nbsp;Obtains the string generated using the Slurp object. &nbsp;A Slurp object collects all messages send to it and flushes its buffer while &nbsp;returning the resulting string after an 'obtain' message has been received. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;Slurp hello world. &nbsp;Pen write: (Slurp obtain). </div>
+<div class="level0">&nbsp;This will output: 'hello world'. &nbsp;Use the Slurp object to integrate verbose shell commands, other programming languages &nbsp;(like SQL) etc into your main program without overusing strings. </div>
+<div class="level0">&nbsp;Example: </div>
+<div class="level0">&nbsp;query select: '*', from users where: 'id = 2'. </div>
+<div class="level0">&nbsp;Note that we can't use the = and * unfortunately right now &nbsp;because = is also a method in the main object. While * can be used &nbsp;theoretically, it expects an identifier, and 'from' is not a real &nbsp;identifier, it's just another unary message, so instead of using a binary &nbsp;* we simply use a keyword message select: with argument '*' and then &nbsp;proceed our SQL query with a comma (,) to chain the rest. &nbsp;This is an artifact of the fact that the DSL has to be embedded within &nbsp;the language of Citron. However even with these restrictions (some of which might be &nbsp;alleviated in future versions) it's quite comfortable and readable to interweave &nbsp;an external language in your Citron script code. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Program] argument: [Number]</span> </div>
+<div class="level0">&nbsp;Obtains an argument from the CLI invocation. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Program] argCount</span> </div>
+<div class="level0">&nbsp;Returns the number of CLI arguments passed to the script. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Program] exit</span> </div>
+<div class="level0">&nbsp;Exits program immediately. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Program] env: [String]</span> </div>
+<div class="level0">&nbsp;Returns the value of an environment variable. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;x := Command env: 'MY_PATH_VAR'. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Program] env: [Key] val: [Value]</span> </div>
+<div class="level0">&nbsp;Sets the value of an environment variable. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Program changeDirectory: [path:String]</span> </div>
+<div class="level0">&nbsp;chdir to path, returns the past directory on success <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Program] waitForInput</span> </div>
+<div class="level0">&nbsp;Ask a question on the command-line, resumes program &nbsp;only after pressing the enter key. &nbsp;Only reads up to 100 characters. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;Pen write: 'What is your name ?'. &nbsp;x := Command waitForInput. &nbsp;Pen write: 'Hello ' + x + ' !', brk. </div>
+<div class="level0">&nbsp;The example above asks the user for his/her name and &nbsp;then displays the input received. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Program] getCharacter</span> </div>
+<div class="level0">&nbsp;reads a character from STDIN. &nbsp;Will only return after reading one ASCII character and a return. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Program] input.</span> </div>
+<div class="level0">&nbsp;Reads all raw input from STDIN. </div>
+<div class="level0">&nbsp;Usage (for instance to read raw CGI post): </div>
+<div class="level0">&nbsp;post := Program input. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Program] forbidShell</span> </div>
+<div class="level0">&nbsp;This method is part of the security profiles feature of Citron. &nbsp;This will forbid the program to execute any shell operations. All &nbsp;external libraries and plugins are assumed to respect this setting as well. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;Program forbidShell. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Program] forbidFileWrite</span> </div>
+<div class="level0">&nbsp;This method is part of the security profiles feature of Citron. &nbsp;This will forbid the program to modify, create or delete any files. All &nbsp;external libraries and plugins are assumed to respect this setting as well. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;Program forbidFileWrite. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Program] forbidFileRead</span> </div>
+<div class="level0">&nbsp;This method is part of the security profiles feature of Citron. &nbsp;This will forbid the program to read any files. In fact this will prevent you from &nbsp;creating the file object at all. &nbsp;This will also prevent you from reading environment variables. &nbsp;All external libraries and plugins are assumed to respect this setting as well. &nbsp;Forbidding a program to read files also has the effect to forbid including other &nbsp;source files. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;Program forbidFileRead. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Program] forbidInclude</span> </div>
+<div class="level0">&nbsp;This method is part of the security profiles feature of Citron. &nbsp;This will forbid the program to include any other files. All &nbsp;external libraries and plugins are assumed to respect this setting as well. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;Program forbidInclude. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Program] forbidFork.</span> <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Program] remainingMessages: [Number]</span> </div>
+<div class="level0">&nbsp;This method is part of the security profiles feature of Citron. &nbsp;This will initiate a countdown for the program, you can specify the maximum quota of &nbsp;messages the program may process, once this quota has been exhausted the program will &nbsp;be killed entirely (no exception). </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;Program remainingMessages: 100. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Program] flush.</span> </div>
+<div class="level0">&nbsp;Flushes the STDOUT output buffer. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Program] new: [Block].</span> </div>
+<div class="level0">&nbsp;Forks the program into two programs. &nbsp;Creates another program that will run at the same time as the &nbsp;current program. Both the parent and the child will obtain a reference &nbsp;to the newly created program. The child will obtain a reference to &nbsp;itself passed as a parameter to the code block while the parent will &nbsp;obtain its version of the program instance as the return value of the &nbsp;new: message. </div>
+<div class="level0">&nbsp;Note that spawning a new program will leak memory. &nbsp;The file descriptors used to setup communication between parent and &nbsp;child will be removed when the main program ends but any newly created &nbsp;program will add a descriptor pair to the set. This is a limitation &nbsp;in the current implementation. </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;child := Program new: { :program &nbsp;	Pen write: 'Child', brk. &nbsp;}. &nbsp;Pen write: 'Parent'. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Command] message: [String].</span> </div>
+<div class="level0">&nbsp;Sends a message to another program, i.e. a child or a parent that is &nbsp;running at the same time. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Command] listen: [Block].</span> </div>
+<div class="level0">&nbsp;Stops the current flow of the program and starts listening for &nbsp;messages from other programs that are running at the same time. &nbsp;Upon receiving a message, the specified block will be invocated &nbsp;and passed the message that has been received. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Command] join</span> </div>
+<div class="level0">&nbsp;Rejoins the program with the main program. &nbsp;This message will cause the current program to stop and wait &nbsp;for the child program to end. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Object fromComputer: [String] [port: [Number] [inet6: [Boolean]]]</span> </div>
+<div class="level0">&nbsp;Creates a remote object from the server specified by the &nbsp;ip address. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Program port: [Number].</span> </div>
+<div class="level0">&nbsp;Sets the port to use for remote connections. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Program connectionLimit: [Number].</span> </div>
+<div class="level0">&nbsp;Sets the maximum number of connections and requests that will be &nbsp;accepted by the current program. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Program serve: [Object].</span> </div>
+<div class="level0">&nbsp;Serves an object. Client programs can now communicate with this object &nbsp;and send messages to it. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Dice] rollWithSides: [Number]</span> </div>
+<div class="level0">&nbsp;Rolls the dice, generates a pseudo random number. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Dice] roll</span> </div>
+<div class="level0">&nbsp;Rolls a standard dice with 6 sides. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Dice] rawRandomNumber</span> </div>
+<div class="level0">&nbsp;Generates a random number, the traditional way (like rand()). <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] wait: [Number]</span> </div>
+<div class="level0">&nbsp;Waits X useconds. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] new: [Number].</span> </div>
+<div class="level0">&nbsp;Creates a new clock instance from a UNIX time stamp. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] like: [Clock]</span> </div>
+<div class="level0">&nbsp;Syncs a clock. Copies the time AND zone from the other clock. </div>
+<div class="level0">&nbsp;Usage: &nbsp;clock := Clock new: timeStamp. &nbsp;copyClock := Clock new like: clock. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] zone: [String]</span> </div>
+<div class="level0">&nbsp;Sets the time zone of the clock. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] zone</span> </div>
+<div class="level0">&nbsp;Returns time zone of the clock. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] zone: [Number]</span> </div>
+<div class="level0">&nbsp;Sets the year of the clock. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] zone: [Number]</span> </div>
+<div class="level0">&nbsp;Sets the month of the clock. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] zone: [Number]</span> </div>
+<div class="level0">&nbsp;Sets the day of the clock. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] zone: [Number]</span> </div>
+<div class="level0">&nbsp;Sets the hour of the clock. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] zone: [Number]</span> </div>
+<div class="level0">&nbsp;Sets the minute of the clock. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] zone: [Number]</span> </div>
+<div class="level0">&nbsp;Sets the second of the clock. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] year</span> </div>
+<div class="level0">&nbsp;Returns year of the clock. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] month</span> </div>
+<div class="level0">&nbsp;Returns month of the clock. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] day</span> </div>
+<div class="level0">&nbsp;Returns day of the clock. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] hour</span> </div>
+<div class="level0">&nbsp;Returns hour of the clock. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] minute</span> </div>
+<div class="level0">&nbsp;Returns minute of the clock. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] second</span> </div>
+<div class="level0">&nbsp;Returns second of the clock. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] yearday</span> </div>
+<div class="level0">&nbsp;Returns day number of the year. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] weekday</span> </div>
+<div class="level0">&nbsp;Returns the week day number of the clock. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] time.</span> </div>
+<div class="level0">&nbsp;Returns the UNIX time stamp representation of the time. &nbsp;Note: this is the time OF CREATION OF THE OBJECT. To get the actual time use: </div>
+<div class="level0">&nbsp;[Clock] new time. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] week</span> </div>
+<div class="level0">&nbsp;Returns the week number of the clock. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] format: [String]</span> </div>
+<div class="level0">&nbsp;Returns a string describing the date and time represented by the clock object &nbsp;according to the specified format. See strftime for format syntax details. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] toString</span> </div>
+<div class="level0">&nbsp;Returns a string describing the date and time &nbsp;represented by the clock object. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] add: [Number].</span> </div>
+<div class="level0">&nbsp;Adds the number to the clock, updating its time accordingly. &nbsp;Note that this is typically used with a qualifier. &nbsp;If the qualifier is 'hours' the number is treated as hours and &nbsp;the specified number of hours will be added to the time. </div>
+<div class="level0">&nbsp;The Clock object understands the following qualifiers &nbsp;if the selected language is English: </div>
+<div class="level0">&nbsp;sec, second, seconds, &nbsp;min, minute, minutes, &nbsp;hrs, hour, hours, &nbsp;day, days, &nbsp;week, weeks, &nbsp;month, months, &nbsp;year, years </div>
+<div class="level0">&nbsp;Note that it does not matter which form you use, 2 hour means &nbsp;the same as 2 hours (plural). </div>
+<div class="level0">&nbsp;Usage: </div>
+<div class="level0">&nbsp;clock add: 3 minutes. #adds 3 minutes &nbsp;clock add: 1 hour.    #adds 1 hour &nbsp;clock add: 2 second.  #adds 2 seconds <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] subtract: [Number].</span> </div>
+<div class="level0">&nbsp;Same as '[Clock] add:' but subtracts the number instead of adding it to &nbsp;the clock's time. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] new</span> </div>
+<div class="level0">&nbsp;Creates a new clock, by default a clock will be set to &nbsp;the UTC timezone having the current time. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] processorClock</span> </div>
+<div class="level0">&nbsp;returns the number of processor ticks since the beginning of this program. &nbsp;Note that this will be reset depending on the processor <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] ticksPerSecond</span> </div>
+<div class="level0">&nbsp;returns the count of processor ticks in a second <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] timeExecutionOf: [Block]</span> </div>
+<div class="level0">&nbsp;How long does the execution of the block take? (returns in cpu ticks) <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Clock] executionSeconds: [Block]</span> </div>
+<div class="level0">&nbsp;How long does the execution of the block take? (returns in seconds) <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Pen] write: [String]</span> </div>
+<div class="level0">&nbsp;Writes string to console. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Pen] brk</span> </div>
+<div class="level0">&nbsp;Outputs a newline character. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Reflect addGlobalVariable: [name:String]</span> </div>
+<div class="level0">&nbsp;adds a variable named &lt;name&gt; to the global context <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Reflect addLocalVariable: [name:String]</span> </div>
+<div class="level0">&nbsp;adds a variable named &lt;name&gt; to the Local context <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Reflect addPrivateVariable: [name:String]</span> </div>
+<div class="level0">&nbsp;adds a variable named &lt;name&gt; to this context <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Reflect set: [name:String] to: [Object]</span> </div>
+<div class="level0">&nbsp;dynamically sets a binding <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Reflect getContext</span> </div>
+<div class="level0">&nbsp;returns all the context keys <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Reflect getMethodsOf: [Object]</span> </div>
+<div class="level0">&nbsp;returns all the method names of object <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Reflect getPropertiesOf: [Object]</span> </div>
+<div class="level0">&nbsp;returns all the property names of object <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Reflect] getObject: [s:String]</span> </div>
+<div class="level0">&nbsp;looks for the object `s` in the current context or any of the contexts beneath <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Reflect objectExists: [Object]</span> </div>
+<div class="level0">&nbsp;returns whether the object exists <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Reflect] addArgumentTo: [Block] named: [s:String]</span> </div>
+<div class="level0">&nbsp;adds a new argument `s` to the block <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Reflect] copyBlock: [b:Block]</span> </div>
+<div class="level0">&nbsp;copies block b to a new context <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Reflect] newSharedObject</span> </div>
+<div class="level0">&nbsp;makes a memmapped object. (Automatic destructor exists) <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Reflect] link: [o:Object] to: [p:Object]</span> </div>
+<div class="level0">&nbsp;casts o to object type p <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Reflect] objectExists: [o:String]</span> </div>
+<div class="level0">&nbsp;checks whether the object named o exists <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Reflect] isObject: [o:Object] linkedTo: [p:Object]</span> </div>
+<div class="level0">&nbsp;checks whether p is anywhere in o's link chain <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Reflect] isObject: [o:Object] childOf: [p:Object]</span> </div>
+<div class="level0">&nbsp;returns whether p is the parent of o <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Reflect] generateLinkTree: [o:Object]</span> </div>
+<div class="level0">&nbsp;generates a linear tree, representing the chain of inheritance for object o <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Reflect] primitiveLinkOf: [o:Object]</span> </div>
+<div class="level0">&nbsp;gets the first primitive object associated with o in its link chain <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Reflect] parentOf: [o:Object]</span> </div>
+<div class="level0">&nbsp;gets the first immediate parent of o. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Reflect] getResponder: [r:String] ofObject: [o:Object]</span> </div>
+<div class="level0">&nbsp;gets the method r from object o, AS IS &nbsp;The returned block will not contain any references to o. &nbsp;So a context must be supplied. <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Reflect run: [Block] forObject: [object:Object] arguments: [Array]</span> </div>
+<div class="level0">&nbsp;runs a block with its 'me'/'my' set to object <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">Reflect runHere: [Block] forObject: [o:Object] arguments: [Array]</span> </div>
+<div class="level0">&nbsp;runs a block with its 'me'/'my' set to object, without switching contexts <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"><span Class="bold">[Reflect] closure: [String] of: [Object]</span> </div>
+<div class="level0">&nbsp;captures a method from an object as a closure </div>
+<div class="level0">&nbsp;(Reflect closure: 'closure:of:' of: Reflect) applyTo: 'toString' and: 10. #'10' <br></div>
+<div class="level0"><p/></div><h3 class="nroffsh" id=""></h3>
+<div class="level0"></div>
+<div class="level0"></div><h2 class="nroffsh" id="BUGS">BUGS</h2>
+<div class="level0">This is a preliminary version (&lt; 1.0) of Citron, there might still be very serious bugs. Please refrain from using this version in a production environment. This version of Citron is still considered 'alpha' stage and cannot be expected to be reliable. </div>
+<div class="level0"></div><h2 class="nroffsh" id="AUTHOR">AUTHOR</h2>
+<div class="level0">AnotherTest and the Citron Community (Nil) <p/>devanothertest@gmail.com </div><div class="roffit" align="middle">
+ This HTML page was made with <a href="https://github.com/aaly/roffit">roffit 0.8</a>.
+</div>
+</body></html>

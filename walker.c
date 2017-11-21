@@ -45,7 +45,7 @@ ctr_object* ctr_cwlk_message(ctr_tnode* paramNode) {
     ctr_tlistitem* li = eitem;
     char* message;
     ctr_tlistitem* argumentList;
-    ctr_object* r;
+    volatile ctr_object volatile* r;
     ctr_object* recipientName = NULL;
     switch (receiverNode->type) {
         case CTR_AST_NODE_REFERENCE:
@@ -236,7 +236,7 @@ ctr_object* ctr_cwlk_expr(ctr_tnode* node, char* wasReturn) {
                     fwrite(CtrStdFlow->value.svalue->value, sizeof(char), CtrStdFlow->value.svalue->vlen, stdout);
                     printf("\n");
                 }
-                fputs(ctr_get_stack_trace()->value.svalue->value, stdout);
+                ctr_print_stack_trace();
             }
             result = ctr_build_nil();
             break;
@@ -253,13 +253,14 @@ ctr_object* ctr_cwlk_expr(ctr_tnode* node, char* wasReturn) {
  *
  * Processes the execution of a block of code.
  */
+
 ctr_object* ctr_cwlk_run(ctr_tnode* program) {
     ctr_object* result = NULL;
     char wasReturn = 0;
     ctr_tlistitem* li;
     li = program->nodes;
     while(li) {
-        ctr_tnode* node = li->node;
+        ctr_tnode volatile* node = li->node;
         if (!li->node) {
             printf("Missing parse node\n");
             exit(1);

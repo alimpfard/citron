@@ -1,1 +1,8 @@
-var a is {test. ^Pen write: test, brk.}.
+A is Object new genAccessors: 'test'.
+A test: 4.
+
+ra is {^[(const A test), (A test)].}.
+
+A is A new test: 5.
+
+Pen write: (ra run), brk.

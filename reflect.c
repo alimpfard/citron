@@ -16,8 +16,9 @@ ctr_object* ctr_reflect_new(ctr_object* myself, ctr_argument* argumentList) {
  */
 ctr_object* ctr_reflect_add_glob (ctr_object* myself, ctr_argument* argumentList) {
     CTR_ENSURE_TYPE_STRING(argumentList->object);
-    ctr_object* instance = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-    instance->link = CtrStdObject;
+    if(ctr_internal_object_find_property(CtrStdWorld, argumentList->object, 0)) return myself; //We already have it
+    ctr_object* instance = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNIL);
+    instance->link = CtrStdNil;
     instance->info.sticky = 0;
     ctr_internal_object_add_property(CtrStdWorld, ctr_internal_cast2string(argumentList->object), instance, 0);
     return instance;
@@ -172,13 +173,18 @@ ctr_object* ctr_reflect_dump_context_spec_prop(ctr_object* myself, ctr_argument*
     return props;
 }
 
+/**
+ * [Reflect] getObject: [s:String]
+ *
+ * looks for the object `s` in the current context or any of the contexts beneath
+ **/
 ctr_object* ctr_reflect_find_obj(ctr_object* myself, ctr_argument* argumentList) {
     CTR_ENSURE_TYPE_STRING(argumentList->object);
     return ctr_find(ctr_internal_cast2string(argumentList->object));
 }
 
 /**
- * Reflect objectExists: [Object]
+ * [Reflect] objectExists: [Object]
  *
  * returns whether the object exists
  */
@@ -508,6 +514,11 @@ ctr_object* ctr_reflect_cb_ic(ctr_object* myself, ctr_argument* argumentList) {
   return arglist;
 }
 
+/**
+ * [Reflect] addArgumentTo: [Block] named: [s:String]
+ *
+ * adds a new argument `s` to the block
+ */
 ctr_object* ctr_reflect_cb_add_param(ctr_object* myself, ctr_argument* argumentList) {
   CTR_ENSURE_TYPE_BLOCK(argumentList->object);
   ctr_object* obj = argumentList->object;
@@ -536,6 +547,12 @@ ctr_object* ctr_reflect_cb_add_param(ctr_object* myself, ctr_argument* argumentL
   parameterList->node->vlen = strlen(name);
   return myself;
 }
+
+/**
+ * [Reflect] copyBlock: [b:Block]
+ *
+ * copies block b to a new context
+ */
 ctr_object* ctr_reflect_fn_copy(ctr_object* myself, ctr_argument* argumentList) {
   CTR_ENSURE_TYPE_BLOCK(argumentList->object);
   if(argumentList->object->info.type != CTR_OBJECT_TYPE_OTBLOCK) {
@@ -548,17 +565,34 @@ ctr_object* ctr_reflect_fn_copy(ctr_object* myself, ctr_argument* argumentList) 
   if(prop != NULL) ctr_internal_object_add_property(newblk, name, prop, CTR_CATEGORY_PRIVATE_PROPERTY);
   return newblk;
 }
+
+/**
+ * [Reflect] newSharedObject
+ *
+ * makes a memmapped object. (Automatic destructor exists)
+ **/
 ctr_object* ctr_reflect_share_memory(ctr_object* myself, ctr_argument* argumentList) {
-  CTR_ENSURE_TYPE_STRING(argumentList->object);
+  // CTR_ENSURE_TYPE_STRING(argumentList->object);
   ctr_object* shared = ctr_internal_create_mapped_object(CTR_OBJECT_TYPE_OTOBJECT, 1);
   shared->link = CtrStdObject;
   return shared;
 }
+
+/**
+ * [Reflect] link: [o:Object] to: [p:Object]
+ *
+ * casts o to object type p
+ **/
 ctr_object* ctr_reflect_link_to(ctr_object* myself, ctr_argument* argumentList) {
   argumentList->object->link = argumentList->next->object;
   return argumentList->object;
 }
 
+/**
+ * [Reflect] objectExists: [o:String]
+ *
+ * checks whether the object named o exists
+ **/
 ctr_object* ctr_reflect_find_obj_ex(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* maybefound = ctr_reflect_find_obj(myself, argumentList);
   CtrStdFlow = NULL;
@@ -572,12 +606,30 @@ int ctr_reflect_is_linked_to_(ctr_argument* argumentList) {
   argumentList->object = link;
   return (link == argumentList->next->object) || ctr_reflect_is_linked_to_(argumentList);
 }
+
+/**
+ * [Reflect] isObject: [o:Object] linkedTo: [p:Object]
+ *
+ * checks whether p is anywhere in o's link chain
+ **/
 ctr_object* ctr_reflect_is_linked_to(ctr_object* myself, ctr_argument* argumentList) {
   return ctr_build_bool(ctr_reflect_is_linked_to_(argumentList));
 }
+
+/**
+ * [Reflect] isObject: [o:Object] childOf: [p:Object]
+ *
+ * returns whether p is the parent of o
+ **/
 ctr_object* ctr_reflect_child_of(ctr_object* myself, ctr_argument* argumentList) {
   return ctr_build_bool(argumentList->object->link == argumentList->next->object);
 }
+
+/**
+ * [Reflect] generateLinkTree: [o:Object]
+ *
+ * generates a linear tree, representing the chain of inheritance for object o
+ **/
 ctr_object* ctr_reflect_generate_inheritance_tree(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* parent = argumentList->object;
   ctr_object* arr = ctr_array_new(CtrStdArray, NULL);
@@ -656,10 +708,21 @@ ctr_object* ctr_reflect_get_primitive_link(ctr_object* object) {
   }
   return parent;
 }
+
+/**
+ * [Reflect] primitiveLinkOf: [o:Object]
+ *
+ * gets the first primitive object associated with o in its link chain
+ **/
 ctr_object* ctr_reflect_get_primitive(ctr_object* myself, ctr_argument* argumentList) {
   return ctr_reflect_get_primitive_link(argumentList->object);
 }
 
+/**
+ * [Reflect] typeOf: [Object]
+ *
+ * returns a type constructor suited for the object
+ **/
 ctr_object* ctr_reflect_describe_type(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* object = argumentList->object;
   ctr_object* link = object->link;
@@ -825,6 +888,11 @@ ctr_object* ctr_reflect_try_serialize_block(ctr_object* myself, ctr_argument* ar
   return mp;
 }
 
+/**
+ * [Reflect] parentOf: [o:Object]
+ *
+ * gets the first immediate parent of o.
+ **/
 ctr_object* ctr_reflect_get_first_link(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* link = argumentList->object->link;
   if(link)
@@ -835,6 +903,13 @@ ctr_object* ctr_reflect_get_first_link(ctr_object* myself, ctr_argument* argumen
   }
 }
 
+/**
+ * [Reflect] getResponder: [r:String] ofObject: [o:Object]
+ *
+ * gets the method r from object o, AS IS
+ * The returned block will not contain any references to o.
+ * So a context must be supplied.
+ **/
 ctr_object* ctr_reflect_get_responder(ctr_object* myself, ctr_argument* argumentList) {
   if(argumentList == NULL || argumentList->next == NULL) CTR_ERR("Argument cannot be NULL.");
   CTR_ENSURE_TYPE_STRING(argumentList->object);
@@ -854,7 +929,7 @@ ctr_object* ctr_reflect_get_responder(ctr_object* myself, ctr_argument* argument
 }
 
 /**
- * Reflect run: [Block] forObject: [object:Object] arguments: [Array]
+ * [Reflect] run: [Block] forObject: [object:Object] arguments: [Array]
  *
  * runs a block with its 'me'/'my' set to object
  **/
@@ -896,9 +971,9 @@ ctr_object* ctr_reflect_run_for_object(ctr_object* myself, ctr_argument* argumen
 }
 
 /**
- * Reflect runHere: [Block] forObject: [o:Object] arguments: [Array]
+ * [Reflect] runHere: [Block] forObject: [o:Object] arguments: [Array]
  *
- * runs a block with its 'me'/'my' set to object
+ * runs a block with its 'me'/'my' set to object, without switching contexts
  **/
 ctr_object* ctr_reflect_run_for_object_ctx(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object *blk, *me, *argl;
@@ -937,6 +1012,13 @@ ctr_object* ctr_reflect_run_for_object_ctx(ctr_object* myself, ctr_argument* arg
   return answer;
 }
 
+/**
+ * [Reflect] closure: [String] of: [Object]
+ *
+ * captures a method from an object as a closure
+ *
+ * (Reflect closure: 'closure:of:' of: Reflect) applyTo: 'toString' and: 10. #'10'
+ **/
 ctr_object* ctr_reflect_closure_of(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* methodName = argumentList->object;
   ctr_object* object = argumentList->next->object;

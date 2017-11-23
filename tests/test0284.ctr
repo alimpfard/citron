@@ -1,0 +1,26 @@
+ptr is CTypes fromString: 'print(int("234235"))'.
+cif is CIF new setABI: 0 return: Nil argTypes: [].
+ll is CTypes loadLibrary: '/lib64/libpython3.so'.
+pyinit is ll Py_Initialize.
+pyrun is ll PyRun_SimpleString.
+pyfinalize is ll Py_FinalizeEx.
+
+cif call: pyinit withArgs: [].
+cif setABI: 0 return: Nil argTypes: [ptr].
+
+Pen write: (Clock timeExecutionOf: {
+    cif call: pyrun withArgs: [ptr].
+}), brk.
+
+cif setABI: 0 return: Nil argTypes: [].
+cif call: pyfinalize.
+
+cif destruct.
+pyrun desstruct.
+pyinit destruct.
+pyfinalize destruct.
+ll destruct.
+
+Pen write: (Clock timeExecutionOf: {
+    'Pen write: (\'234235\' toNumber), brk' eval.
+}), brk.

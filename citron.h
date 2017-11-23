@@ -889,6 +889,7 @@ ctr_object* ctr_reflect_run_for_object(ctr_object* myself, ctr_argument* argumen
 ctr_object* ctr_reflect_run_for_object_ctx(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_closure_of(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_get_primitive(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_get_property(ctr_object* myself, ctr_argument* argumentList);
 // ctr_object* ctr_reflect_dump_function(ctr_object* myself, ctr_argument* argumentList);
 
 /**

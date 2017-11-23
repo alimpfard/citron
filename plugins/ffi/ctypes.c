@@ -552,7 +552,7 @@ ctr_ctype ctr_ctypes_ffi_convert_to_citron_ctype(ctr_object* type) {
 }
 ctr_object* ctr_ctypes_convert_ffi_type_to_citron(ffi_arg* value, ctr_ctype type) {
   CTR_CREATE_CTOBJECT(object);
-  object->value.rvalue = ctr_heap_allocate_tracked(sizeof(ctr_resource));
+  object->value.rvalue = ctr_heap_allocate(sizeof(ctr_resource));
   switch(type) {
     case CTR_CTYPE_VOID: object->link = CtrStdCType_void; break;
     case CTR_CTYPE_UINT8: object->value.rvalue->ptr = (void*)(uint8_t*)value; object->link = CtrStdCType_uint8; break;
@@ -600,7 +600,7 @@ CTR_CT_FFI_BIND(prep_cif) { //cif*, int<abi>, type* rtype, type** atypes
   ffi_type*     rtype   = (ctr_ctypes_ffi_convert_to_ffi_type(argumentList->next->object));
   ctr_object*   atypes_ = argumentList->next->next->object;
   int           asize   = (int)(ctr_array_count(atypes_, NULL)->value.nvalue);
-  ffi_type**    atypes  = ctr_heap_allocate_tracked(sizeof(ffi_type) * asize);
+  ffi_type**    atypes  = ctr_heap_allocate(sizeof(ffi_type) * asize);
   ctr_argument* args    = ctr_heap_allocate(sizeof(ctr_argument));
   for(int i = 0; i<asize; i++) {
     args->object = ctr_build_number_from_float(i);

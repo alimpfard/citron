@@ -1,26 +1,56 @@
-ptr is CTypes fromString: 'print(int("234235"))'.
+ptr is CTypes fromString: 'print("test" * 10)'.
+int is CTypes sint.
 cif is CIF new setABI: 0 return: Nil argTypes: [].
 ll is CTypes loadLibrary: '/lib64/libpython3.so'.
 pyinit is ll Py_Initialize.
+pyfinalize is ll Py_Finalize.
 pyrun is ll PyRun_SimpleString.
-pyfinalize is ll Py_FinalizeEx.
 
 cif call: pyinit withArgs: [].
 cif setABI: 0 return: Nil argTypes: [ptr].
 
-Pen write: (Clock timeExecutionOf: {
-    cif call: pyrun withArgs: [ptr].
-}), brk.
+ptime is 0.
+pbest is 10 toPowerOf: 10.
+50 times: {
+  ptime +=: (var bestc is (Clock timeExecutionOf: {
+      cif call: pyrun withArgs: [ptr].
+  })).
+  pbest is pbest min: bestc.
+}.
 
 cif setABI: 0 return: Nil argTypes: [].
-cif call: pyfinalize.
+cif call: pyfinalize withArgs: [].
 
-cif destruct.
 pyrun desstruct.
 pyinit destruct.
 pyfinalize destruct.
 ll destruct.
+ptr destruct.
 
-Pen write: (Clock timeExecutionOf: {
-    'Pen write: (\'234235\' toNumber), brk' eval.
-}), brk.
+ll is CTypes loadLibrary: Nil.
+ptr is CTypes fromString: 'Pen write: (\'test \' * 10), brk'.
+cif setABI: 0 return: Nil argTypes: [ptr].
+execstr is ll execute_string.
+
+rtime is 0.
+rbest is 10 toPowerOf: 10.
+50 times:{
+  rtime +=: (var bestc is (Clock timeExecutionOf: {
+        cif call: execstr withArgs: [ptr].
+  })).
+  rbest is rbest min: bestc.
+}.
+
+cif destruct.
+ptr destruct.
+ll destruct.
+
+Pen write: ('Python statistics:
+    total time: %d,
+    best time: %d,
+    average over 50: %d
+Citron statistics:
+    total time: %d,
+    best time: %d,
+    average over 50: %d
+' formatObjects: [ptime, pbest, (ptime / 50), rtime, rbest, (rtime / 50)]), brk.

@@ -2073,13 +2073,21 @@ ctr_object* ctr_string_append(ctr_object* myself, ctr_argument* argumentList) {
  * alias: *
  */
 ctr_object* ctr_string_multiply(ctr_object* myself, ctr_argument* argumentList) {
-    ctr_object* new = ctr_build_empty_string();
-    ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
-    arg->object=myself;
-    for (int i=0; i<ctr_internal_cast2number(argumentList->object)->value.nvalue; i++)
-      ctr_string_append(new, arg);
-    ctr_heap_free(arg);
-    return new;
+  int count = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  if (count == 0) return ctr_build_empty_string();
+  if (count == 1) return ctr_build_string(myself->value.svalue->value, myself->value.svalue->vlen);
+  ctr_object* new = ctr_build_empty_string();
+  char* o_str = ctr_heap_allocate_cstring(myself);
+  char* newbuf = ctr_heap_allocate(count*myself->value.svalue->vlen*sizeof(char));
+  char* pbuf = newbuf;
+  size_t new_length = myself->value.svalue->vlen*count;
+  size_t old_length = myself->value.svalue->vlen;
+  for (int i=0; i<count; i++) {
+    memcpy(pbuf, o_str, old_length);
+    pbuf+=old_length;
+  }
+  ctr_heap_free(o_str);
+  return ctr_build_string(newbuf, new_length);
 }
 
 /**

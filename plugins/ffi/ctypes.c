@@ -630,8 +630,8 @@ CTR_CT_FFI_BIND(call) { //<cif, CTypes pointer (fn), Array avalues; ^CTypes type
 
   for(int i = 0; i<asize; i++) {
     args->object = ctr_build_number_from_float(i);
-    avals[i] = (ctr_array_get(avals_, args)->value.rvalue->ptr);
-    printf("assigning pointer %p to argument %d\n", avals[i], i);
+    avals[i] = &(ctr_array_get(avals_, args)->value.rvalue->ptr);
+    //printf("assigning pointer %p to argument %d\n", avals[i], i);
   }
   ffi_call(cif, fn, result, avals);
   ctr_heap_free(avals);
@@ -841,7 +841,7 @@ void begin() {
   ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("new"), &ctr_ctype_ffi_cif_new);
   ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("destruct"), &ctr_ctype_ffi_cif_destruct);
   ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("setABI:return:argTypes:"), &ctr_ctype_ffi_prep_cif);
-  ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("call:withArgs:"), &ctr_ctype_ffi_call);
+    ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("call:withArgs:"), &ctr_ctype_ffi_call);
 
   ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring("allocateBytes:"), &ctr_ctype_ffi_malloc);
   ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring("copyTo:from:numBytes:"), &ctr_ctype_ffi_memcpy);

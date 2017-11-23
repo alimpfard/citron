@@ -1889,9 +1889,7 @@ ctr_object* ctr_build_string(char* stringValue, long size) {
 ctr_object* ctr_build_string_from_cformat(char* format, int count, ...) { //TODO: Infer count from format
   va_list ap;
   va_start(ap, count);
-  for (size_t i = 0; i < count; i++)
-    va_arg(ap, ctr_object*);
-  int len = vsprintf(NULL, format, ap);
+  int len = vsnprintf(NULL, 0, format, ap);
   char* buf = malloc(len*sizeof(char));
   vsprintf(buf, format, ap);
   va_end(ap);

@@ -1028,6 +1028,28 @@ ctr_object* ctr_reflect_closure_of(ctr_object* myself, ctr_argument* argumentLis
   return methodObject;
 }
 
+/**
+ * [Reflect] getProperty: [p:String] ofObject: [o:Object]
+ *
+ * returns the property p of object o.
+ * this will produce an error should said property not exist.
+ *
+ * Reflect getProperty: 'end' ofObject: Eval
+ **/
+ctr_object* ctr_reflect_get_property(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* name = ctr_internal_cast2string(argumentList->object);
+  ctr_object* ns = argumentList->next->object;
+  ctr_object* ret = ctr_internal_object_find_property(ns, name, 0);
+  if (ret) return ret;
+  ctr_object* ns_type = ns->lexical_name ? ns->lexical_name :  ctr_internal_cast2string(ctr_send_message(ns, "type", 4, NULL));
+  int len = snprintf(NULL, 0, "Attempt to read nonexistent property '%.*s' of Object %p (namely '%.*s' in this context)", (int)(name->value.svalue->vlen), name->value.svalue->value, ns, (int)(ns_type->value.svalue->vlen), ns_type->value.svalue->value);
+  char* buf = malloc(len);
+  sprintf(buf, "Attempt to read nonexistent property '%.*s' of Object %p (namely '%.*s' in this context)", (int)(name->value.svalue->vlen), name->value.svalue->value, ns, (int)(ns_type->value.svalue->vlen), ns_type->value.svalue->value);
+  CtrStdFlow = ctr_build_string(buf, len);
+  free(buf);
+  return CtrStdNil;
+}
+
 ///Trash v
 ctr_object* ctr_reflect_cons_value(ctr_object* myself, ctr_argument* argumentList) {
   return ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("value"), 0);

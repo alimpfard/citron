@@ -1,0 +1,5 @@
+Object on: 'arrow:' do: {:name
+  ^Reflect getProperty: name ofObject: me.
+}.
+
+Object learn: '→' means: 'arrow:'.

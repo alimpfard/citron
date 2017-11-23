@@ -326,7 +326,7 @@ void ctr_internal_object_delete_property(ctr_object* owner, ctr_object* key, int
  * Adds a property to an object.
  */
 void ctr_internal_object_add_property(ctr_object* owner, ctr_object* key, ctr_object* value, int m) {
-    value->lexical_name = key;
+    if(strncmp(key->value.svalue->value, "me", key->value.svalue->vlen) != 0)  value->lexical_name = key;
     ctr_mapitem* new_item = ctr_heap_allocate(sizeof(ctr_mapitem));
     ctr_mapitem* current_head = NULL;
     new_item->key = key;
@@ -674,7 +674,7 @@ void ctr_set(ctr_object* key, ctr_object* object) {
         ctr_heap_free( key_name );
         return;
     }
-    object->lexical_name = key;
+    if(strncmp(key->value.svalue->value, "me", key->value.svalue->vlen) != 0) object->lexical_name = key;
     ctr_internal_object_set_property(context, key, object, 0);
 }
 
@@ -1209,6 +1209,7 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("run:forObject:arguments:"), &ctr_reflect_run_for_object);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("runHere:forObject:arguments:"), &ctr_reflect_run_for_object_ctx);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("primitiveLinkOf:"), &ctr_reflect_get_primitive);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("getProperty:ofObject:"), &ctr_reflect_get_property);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("version"), &ctr_give_version);
 
     ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Reflect"), CtrStdReflect, 0);

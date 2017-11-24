@@ -272,7 +272,6 @@ arc4random_uniform(u_int32_t upper_bound)
  * GarbageCollector Marker
  */
 void ctr_gc_mark(ctr_object* object) {
-  if (object->info.mark) return; //return if already marked
     ctr_object* el;
     ctr_mapitem* item;
     ctr_object* o;
@@ -282,6 +281,7 @@ void ctr_gc_mark(ctr_object* object) {
         for (i = 0; i < object->value.avalue->head; i++) {
             el = *(object->value.avalue->elements+i);
             el->info.mark = 1;
+            if(el!=object)
             ctr_gc_mark(el);
         }
     }
@@ -291,6 +291,7 @@ void ctr_gc_mark(ctr_object* object) {
         o = item->value;
         o->info.mark = 1;
         k->info.mark = 1;
+        if(o!=object)
         ctr_gc_mark(o);
         item = item->next;
     }
@@ -300,6 +301,7 @@ void ctr_gc_mark(ctr_object* object) {
         k = item->key;
         o->info.mark = 1;
         k->info.mark = 1;
+        if(o!=object)
         ctr_gc_mark(o);
         item = item->next;
     }
@@ -547,6 +549,17 @@ ctr_object* ctr_gc_setmode(ctr_object* myself, ctr_argument* argumentList) {
     ctr_gc_mode = (int) ctr_internal_cast2number( argumentList->object )->value.nvalue;
     return myself;
 }
+
+/**
+ * [Broom] autoAlloc: [Boolean]
+ *
+ * Set whether the max allowed memory cap is enforced or not
+ */
+ctr_object* ctr_gc_setautoalloc(ctr_object* myself, ctr_argument* argumentList) {
+  CTR_LIMIT_MEM = !(ctr_internal_cast2bool(argumentList->object)->value.bvalue);
+  return myself;
+}
+
 
 /**
  * [Shell] call: [String]
@@ -2050,7 +2063,7 @@ ctr_object* ctr_clock_time_exec_s( ctr_object* myself, ctr_argument* argumentLis
 ctr_object* ctr_console_write(ctr_object* myself, ctr_argument* argumentList) {
     ctr_object* argument1 = argumentList->object;
     ctr_object* strObject = ctr_internal_cast2string(argument1);
-    fwrite(strObject->value.svalue->value, sizeof(char), strObject->value.svalue->vlen, stdout);
+    fwrite(strObject->value.svalue->value, strObject->value.svalue->vlen, 1, stdout);
     return myself;
 }
 

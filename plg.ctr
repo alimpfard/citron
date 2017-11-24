@@ -1,8 +1,6 @@
-A is Object new genAccessors: 'test'.
-A test: 4.
+Broom autoAlloc: True.
 
-ra is {^[(const A test), (A test)].}.
+import Library/Control/Applicative.
+import Library/Control/Arrow.
 
-A is A new test: 5.
-
-Pen write: (ra run), brk.
+Iterator rangeFrom: 0 to: 1 step: 0.01, each_v: (Pen ⇒ 'brk' compose: Pen ⇒ 'write:').

@@ -1,0 +1,26 @@
+import Library/Functional. #For apply
+
+CodeBlock on: 'appropriateApplicationMessage' do: {
+  var pcount is Reflect argumentListOf: me, count.
+  ^pcount = 0 either: 'run' or: {
+    ^'applyTo:' + ('and:' * (pcount - 1)).
+  }.
+}.
+CodeBlock on: 'applyAll:' do: {:args
+  var pcount is Reflect argumentListOf: me, count.
+  var acount is args count.
+  ^pcount = acount either: {
+    ^const me message: (const me appropriateApplicationMessage) arguments: const args.
+  } or: {
+    ^const pcount > const acount either: {
+      ^ {:*sargs ^const me message: (const me appropriateApplicationMessage) arguments: (const args + sargs).}.
+    } or: {
+      thisBlock error: 'Expected ' + const pcount + ' argument(s), but got ' + const acount.
+    }.
+  }.
+}.
+CodeBlock on: 'compose:' do: {:func
+  ^{:*args
+      ^const me apply: (const func applyAll: args).
+  }.
+}.

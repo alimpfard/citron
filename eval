@@ -239,8 +239,9 @@ run with '-h' to read the eval mode help.
     (inp = '') continue.
 
     # if it ends in a dot, get rid of it.
-    inp findPattern: '(.*)\\.' do: {:p inp is p at: 1.}.
-
+    inp at: inp length, = '.' ifTrue: {
+        inp is inp from: 0 length: (inp length - 1).
+    }.
     inp is Eval handleGlobalVars: inp.
 
     # Syntactic errors will not be passed to the eval. # TODO: handle that.

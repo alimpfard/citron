@@ -3,3 +3,19 @@ Object on: 'arrow:' do: {:name
 }.
 
 Object learn: '→' means: 'arrow:'.
+
+Object on: 'farrow:' do: {:name
+  ^Reflect closure: name of: me.
+}.
+Object learn: '⇒' means: 'farrow:'.
+
+# Object on: 'namespaceResolve' do: {
+#   var nsr is Object new.
+#   var self is me.
+#   nsr on: 'respondTo:' do: {:mn ^const self farrow: (mn replace: ';' with: ':'). }.
+#   nsr on: 'respondTo:and:' do: {:mn ^const self farrow: (mn replace: ';' with: ':').}.
+#   nsr on: 'respondTo:and:and:' do: {:mn ^const self farrow: (mn replace: ';' with: ':'). }.
+#   ^nsr.
+# }.
+#
+# Object learn: '->' means: 'namespaceResolve'.

@@ -8,7 +8,7 @@
 #include <sys/mman.h>
 #include "citron.h"
 
-#define LIMIT_MEM 1
+#define CTR_MEMBLOCK_CACHE_MAX 32
 
 /**
  * Heap Object, represents dynamic memory.
@@ -18,6 +18,16 @@ struct memBlock {
     size_t size;
     void* space;
 };
+
+struct memBlockCache_node {
+  struct memBlock* block;
+  struct memBlockCache_node* next;
+};
+
+struct memBlockCache_ {
+  struct memBlockCache_node* node;
+  int length;
+} memBlockCache;
 
 typedef struct memBlock memBlock;
 
@@ -49,7 +59,16 @@ size_t     maxNumberOfMemBlocks = 0;
  * @return void*
  */
 void* ctr_heap_allocate( size_t size ) {
-
+    if (memBlockCache.length > 0) {
+      struct memBlockCache_node* last_node = memBlockCache.node;
+      if (last_node->block->size != size) goto cache_miss;
+      memBlockCache.node = last_node->next;
+      memBlockCache.length--;
+      memBlock* block = last_node->block;
+      free(last_node);
+      return block;
+    }
+  cache_miss:;
     void* slice_of_memory;
     size_t* block_width;
     int q = sizeof( size_t );
@@ -58,7 +77,7 @@ void* ctr_heap_allocate( size_t size ) {
     /* Check whether we can afford to allocate this much */
     ctr_gc_alloc += size;
 
-    if (LIMIT_MEM && ctr_gc_memlimit < ctr_gc_alloc) {
+    if (CTR_LIMIT_MEM && ctr_gc_memlimit < ctr_gc_alloc) {
         printf( "Out of memory. Failed to allocate %lu bytes.\n", size );
         ctr_print_stack_trace();
         exit(1);
@@ -97,7 +116,7 @@ void* ctr_heap_allocate_shared( size_t size ) {
   /* Check whether we can afford to allocate this much */
   ctr_gc_alloc += size;
 
-  if (LIMIT_MEM && ctr_gc_memlimit < ctr_gc_alloc) {
+  if (CTR_LIMIT_MEM && ctr_gc_memlimit < ctr_gc_alloc) {
       printf( "Out of memory. Failed to allocate %lu bytes.\n", size );
       ctr_print_stack_trace();
       exit(1);
@@ -184,8 +203,15 @@ void ctr_heap_free_rest() {
  *
  * @return void
  */
-__attribute__((optimize(0))) void ctr_heap_free( void* ptr ) {
-
+void ctr_heap_free( void* ptr ) {
+    if (memBlockCache.length < CTR_MEMBLOCK_CACHE_MAX) {
+      struct memBlockCache_node* new_node = malloc(sizeof(struct memBlockCache_node));
+      new_node->next = memBlockCache.length == 0 ? NULL : memBlockCache.node;
+      new_node->block = (memBlock*)ptr;
+      memBlockCache.length++;
+      memBlockCache.node = new_node;
+      return;
+    }
     size_t* block_width;
     int q = sizeof( size_t );
     size_t size;
@@ -198,7 +224,7 @@ __attribute__((optimize(0))) void ctr_heap_free( void* ptr ) {
     free( ptr );
     ctr_gc_alloc -= size;
 }
-__attribute__((optimize(0))) void ctr_heap_free_shared( void* ptr ) {
+void ctr_heap_free_shared( void* ptr ) {
 
     size_t* block_width;
     int q = sizeof( size_t );

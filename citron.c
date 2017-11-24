@@ -21,6 +21,7 @@ void ctr_cli_welcome() {
     printf("\n");
     printf("CTR Programming Language V " CTR_VERSION "\n");
     printf("Written by AnotherTest (c) copyright 2017, Licensed BSD.\n");
+    printf("\tExtensions at: " CTR_STD_EXTENSION_PATH "\n");
     printf("\n");
 }
 
@@ -59,6 +60,7 @@ int main(int argc, char* argv[]) {
     ctr_argc = argc;
     ctr_argv = argv;
     ctr_gc_memlimit = 8388608;
+    CTR_LIMIT_MEM = 1; //enfore GC
     ctr_callstack_index = 0;
     ctr_source_map_head = NULL;
     ctr_source_mapping = 0;
@@ -104,6 +106,7 @@ void initialize(int extensions) {
 
     ctr_gc_mode = 1; /* default GC mode: activate GC */
     ctr_gc_memlimit = 32 * 1024 * 1024; // 32 MB
+    CTR_LIMIT_MEM = 1; //enfore GC
     ctr_callstack_index = 0;
     ctr_source_map_head = NULL;
     ctr_source_mapping = 0;

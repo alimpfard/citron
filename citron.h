@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CTR_VERSION "0.0.6"
+#define CTR_VERSION "0.0.6.1a"
 #define CTR_LOG_WARNINGS 0//2 to enable
 /**
  * Define the Citron tokens
@@ -385,11 +385,11 @@ ctr_object* ctr_internal_object_find_property(ctr_object* owner, ctr_object* key
 ctr_object* ctr_internal_object_find_property_ignore(ctr_object* owner, ctr_object* key, int is_method, int ignore);
 uint64_t    ctr_internal_index_hash(ctr_object* key);
 void        ctr_internal_object_add_property(ctr_object* owner, ctr_object* key, ctr_object* value, int m);
-ctr_object* ctr_internal_cast2bool( ctr_object* o );
-ctr_object* ctr_internal_cast2number(ctr_object* o);
+inline ctr_object* ctr_internal_cast2bool( ctr_object* o );
+inline ctr_object* ctr_internal_cast2number(ctr_object* o);
+inline ctr_object* ctr_internal_cast2string( ctr_object* o );
 ctr_object* ctr_internal_create_object(int type);
 ctr_object* ctr_internal_create_mapped_object(int type, int shared);
-ctr_object* ctr_internal_cast2string( ctr_object* o );
 void*       ctr_internal_plugin_find( ctr_object* key );
 ctr_object* ctr_find_(ctr_object* key, int noerror);
 ctr_object* ctr_find(ctr_object* key);
@@ -643,6 +643,7 @@ ctr_object* ctr_array_init(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_last(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_add(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_map(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_map_v(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_min(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_max(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_sum(ctr_object* myself, ctr_argument* argumentList);
@@ -681,7 +682,10 @@ ctr_object* ctr_iterator_make_range(ctr_object* myself, ctr_argument* argumentLi
 ctr_object* ctr_iterator_make_uncapped_range(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_iterator_next(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_iterator_each(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_iterator_each_v(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_iterator_fmap(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_iterator_filter(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_iterator_foldl(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_iterator_count(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_iterator_take(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_iterator_takewhile(ctr_object* myself, ctr_argument* argumentList);
@@ -839,6 +843,7 @@ ctr_object* ctr_shell_respond_to_and(ctr_object* myself, ctr_argument* argumentL
 /**
  * Garbage Collector Object Interface
  */
+int CTR_LIMIT_MEM;
 ctr_object* ctr_gc_collect(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gc_dust(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gc_object_count(ctr_object* myself, ctr_argument* argumentList);
@@ -846,6 +851,7 @@ ctr_object* ctr_gc_kept_count(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gc_kept_alloc(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gc_sticky_count(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gc_setmode(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_gc_setautoalloc(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gc_setmemlimit(ctr_object* myself, ctr_argument* argumentList);
 void ctr_gc_sweep( int all );
 

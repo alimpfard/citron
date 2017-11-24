@@ -543,16 +543,16 @@ ctr_object* ctr_object_message( ctr_object* myself, ctr_argument* argumentList )
     int i = 0;
     ctr_argument* args = ctr_heap_allocate( sizeof( ctr_argument ) );
     ctr_argument* cur  = args;
+    ctr_argument* index = ctr_heap_allocate( sizeof( ctr_argument ) );
     for ( i = 0; i < length; i ++ ) {
-        ctr_argument* index = ctr_heap_allocate( sizeof( ctr_argument ) );
         if ( i > 0 ) {
             cur->next = ctr_heap_allocate( sizeof( ctr_argument ) );
             cur = cur->next;
         }
         index->object = ctr_build_number_from_float( (double) i );
         cur->object = ctr_array_get( arr, index );
-        ctr_heap_free( index );
     }
+    ctr_heap_free( index );
     char* flatMessage = ctr_heap_allocate_cstring( message );
     ctr_object* answer = ctr_send_message( myself, flatMessage, message->value.svalue->vlen, args);
     cur = args;
@@ -2021,9 +2021,17 @@ ctr_object* ctr_string_concat(ctr_object* myself, ctr_argument* argumentList) {
     strObject = ctr_internal_cast2string(argumentList->object);
     n1 = myself->value.svalue->vlen;
     n2 = strObject->value.svalue->vlen;
+    if (n1 == 0) return ctr_build_string(strObject->value.svalue->value, n2);
+    if (n2 == 0) return ctr_build_string(myself->value.svalue->value, n1);
     dest = ctr_heap_allocate( sizeof(char) * ( n1 + n2 ) );
-    memcpy(dest, myself->value.svalue->value, n1);
-    memcpy(dest+n1, strObject->value.svalue->value, n2);
+    if(n1>1)
+      memcpy(dest, myself->value.svalue->value, n1);
+    else
+      *dest = *(myself->value.svalue->value);
+    if(n2>1)
+      memcpy(dest+n1, strObject->value.svalue->value, n2);
+    else
+      *(dest+n1) = *(strObject->value.svalue->value);
     newString = ctr_build_string(dest, (n1 + n2));
     ctr_heap_free( dest );
     return newString;
@@ -2074,19 +2082,16 @@ ctr_object* ctr_string_append(ctr_object* myself, ctr_argument* argumentList) {
  */
 ctr_object* ctr_string_multiply(ctr_object* myself, ctr_argument* argumentList) {
   int count = ctr_internal_cast2number(argumentList->object)->value.nvalue;
-  if (count == 0) return ctr_build_empty_string();
-  if (count == 1) return ctr_build_string(myself->value.svalue->value, myself->value.svalue->vlen);
-  ctr_object* new = ctr_build_empty_string();
-  char* o_str = ctr_heap_allocate_cstring(myself);
-  char* newbuf = ctr_heap_allocate(count*myself->value.svalue->vlen*sizeof(char));
-  char* pbuf = newbuf;
-  size_t new_length = myself->value.svalue->vlen*count;
   size_t old_length = myself->value.svalue->vlen;
-  for (int i=0; i<count; i++) {
-    memcpy(pbuf, o_str, old_length);
-    pbuf+=old_length;
-  }
-  ctr_heap_free(o_str);
+  size_t new_length = old_length*count;
+  if (count < 1) return ctr_build_empty_string();
+  if (count == 1) return ctr_build_string(myself->value.svalue->value, old_length);
+  char* o_str = (myself->value.svalue->value);
+  char* newbuf = ctr_heap_allocate(count*old_length*sizeof(char));
+  char* pbuf = newbuf;
+  char* endbuf = newbuf+new_length;
+  while(1)
+    if((pbuf=memcpy(pbuf, o_str, old_length)+old_length) == endbuf) break;
   return ctr_build_string(newbuf, new_length);
 }
 
@@ -2932,7 +2937,6 @@ ctr_object* ctr_string_trim(ctr_object* myself, ctr_argument* argumentList) {
     char* str = myself->value.svalue->value;
     long  len = myself->value.svalue->vlen;
     long i, begin, end, tlen;
-    char* tstr;
     if (len == 0) return ctr_build_empty_string();
     i = 0;
     while(i < len && isspace(*(str+i))) i++;
@@ -2941,10 +2945,7 @@ ctr_object* ctr_string_trim(ctr_object* myself, ctr_argument* argumentList) {
     while(i > begin && isspace(*(str+i))) i--;
     end = i + 1;
     tlen = (end - begin);
-    tstr = ctr_heap_allocate( tlen * sizeof( char ) );
-    memcpy(tstr, str+begin, tlen);
-    newString = ctr_build_string(tstr, tlen);
-    ctr_heap_free( tstr );
+    newString = ctr_build_string((str+begin), tlen);
     return newString;
 }
 
@@ -2965,19 +2966,15 @@ ctr_object* ctr_string_trim(ctr_object* myself, ctr_argument* argumentList) {
 ctr_object* ctr_string_ltrim(ctr_object* myself, ctr_argument* argumentList) {
     ctr_object* newString = NULL;
     char* str = myself->value.svalue->value;
-    long  len = myself->value.svalue->vlen;
-    long i = 0, begin;
-    long tlen;
-    char* tstr;
+    size_t  len = myself->value.svalue->vlen;
+    size_t i = 0, begin;
+    size_t tlen;
     if (len == 0) return ctr_build_empty_string();
     while(i < len && isspace(*(str+i))) i++;
     begin = i;
     i = len - 1;
     tlen = (len - begin);
-    tstr = ctr_heap_allocate( tlen * sizeof(char) );
-    memcpy(tstr, str+begin, tlen);
-    newString = ctr_build_string(tstr, tlen);
-    ctr_heap_free( tstr );
+    newString = ctr_build_string(str+begin, tlen);
     return newString;
 }
 
@@ -3041,16 +3038,12 @@ ctr_object* ctr_string_rtrim(ctr_object* myself, ctr_argument* argumentList) {
     char* str = myself->value.svalue->value;
     long  len = myself->value.svalue->vlen;
     long i = 0, end, tlen;
-    char* tstr;
     if (len == 0) return ctr_build_empty_string();
     i = len - 1;
     while(i > 0 && isspace(*(str+i))) i--;
     end = i + 1;
     tlen = end;
-    tstr = ctr_heap_allocate( tlen * sizeof(char) );
-    memcpy(tstr, str, tlen);
-    newString = ctr_build_string(tstr, tlen);
-    ctr_heap_free( tstr );
+    newString = ctr_build_string(str, tlen);
     return newString;
 }
 
@@ -3366,11 +3359,14 @@ ctr_object* ctr_string_eval(ctr_object* myself, ctr_argument* argumentList) {
     char* pathString;
     ctr_object* result;
     ctr_object* code;
+
+    #ifdef EVALSECURITY
     /* activate white-list based security profile */
     ctr_command_security_profile ^= CTR_SECPRO_EVAL;
+    #endif
+
     pathString = ctr_heap_allocate_tracked(sizeof(char)*5);
-    memcpy(pathString, "eval", 4);
-    memcpy(pathString+4,"\0",1);
+    memcpy(pathString, "eval\0", 5);
     /* add a return statement so we can catch result */
     ctr_argument* newArgumentList = ctr_heap_allocate( sizeof( ctr_argument ) );
     newArgumentList->object = myself;
@@ -3384,11 +3380,15 @@ ctr_object* ctr_string_eval(ctr_object* myself, ctr_argument* argumentList) {
     ctr_cwlk_subprogram--;
     if ( result == NULL ) result = CtrStdNil;
     ctr_heap_free( newArgumentList );
+
+    #ifdef EVALSECURITY
     ctr_command_security_profile ^= CTR_SECPRO_EVAL;
+    #endif
+
     return result;
 }
 
-/**
+/*
  * [String] unsafeExec
  *
  * Evaluates the contents of the string as code.
@@ -3690,6 +3690,7 @@ ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object*
     if (parameterList && parameterList->node) {
         parameter = parameterList->node;
         while(argList) {
+          __asm__ __volatile__ ("");
             if (parameter && argList->object) {
                 was_vararg = (strncmp(parameter->value, "*", 1) == 0);
                 if (parameterList->next) {
@@ -3697,8 +3698,8 @@ ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object*
                     ctr_assign_value_to_local(ctr_build_string(parameter->value, parameter->vlen), a);
                 } else if (!parameterList->next && was_vararg) {
                     ctr_object* arr = ctr_array_new(CtrStdArray, NULL);
-                    ctr_argument* arglist__ = ctr_heap_allocate(sizeof(ctr_argument*));
-                    while (argList->next) {
+                    ctr_argument* arglist__ = ctr_heap_allocate(sizeof(ctr_argument));
+                    while (argList&&argList->object) {
                         arglist__->object = argList->object;
                         ctr_array_push(arr, arglist__);
                         argList = argList->next;
@@ -3710,7 +3711,7 @@ ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object*
                     ctr_assign_value_to_local(ctr_build_string(parameter->value, parameter->vlen), a);
                 }
             }
-            if (!argList->next) break;
+            if (!argList || !argList->next) break;
             argList = argList->next;
             if (!parameterList->next) break;
             parameterList = parameterList->next;

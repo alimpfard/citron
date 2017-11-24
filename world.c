@@ -459,7 +459,7 @@ void ctr_internal_create_func(ctr_object* o, ctr_object* key, ctr_object* (*func
  *
  * Casts an object to a number object.
  */
-ctr_object* ctr_internal_cast2number(ctr_object* o) {
+ ctr_object* ctr_internal_cast2number(ctr_object* o) {
     if ( o->info.type == CTR_OBJECT_TYPE_OTNUMBER ) return o;
     ctr_argument* a = ctr_heap_allocate( sizeof( ctr_argument ) );
     a->object = CtrStdNil;
@@ -479,7 +479,7 @@ ctr_object* ctr_internal_cast2number(ctr_object* o) {
  *
  * Casts an object to a string object.
  */
-ctr_object* ctr_internal_cast2string( ctr_object* o ) {
+ ctr_object* ctr_internal_cast2string( ctr_object* o ) {
     if ( o->info.type == CTR_OBJECT_TYPE_OTSTRING ) return o;
     ctr_argument* a = ctr_heap_allocate( sizeof( ctr_argument ) );
     a->object = CtrStdNil;
@@ -518,7 +518,7 @@ ctr_object* ctr_internal_cast2string( ctr_object* o ) {
  *
  * Casts an object to a boolean.
  */
-ctr_object* ctr_internal_cast2bool( ctr_object* o ) {
+ ctr_object* ctr_internal_cast2bool( ctr_object* o ) {
     if (o->info.type == CTR_OBJECT_TYPE_OTBOOL) return o;
     ctr_argument* a = ctr_heap_allocate( sizeof( ctr_argument ) );
     a->object = CtrStdNil;
@@ -579,10 +579,10 @@ ctr_object* ctr_find_(ctr_object* key, int noerror) {
         foundObject = ctr_internal_object_find_property(context, key, 0);
         i--;
     }
-    if (foundObject == NULL) {
-        ctr_internal_plugin_find(key);
-        foundObject = ctr_internal_object_find_property(CtrStdWorld, key, 0);
-    }
+    if (foundObject)
+      return foundObject;
+    ctr_internal_plugin_find(key);
+    foundObject = ctr_internal_object_find_property(CtrStdWorld, key, 0);
     if (foundObject == NULL) {
         if (noerror) return NULL;
         char* key_name;
@@ -603,7 +603,36 @@ ctr_object* ctr_find_(ctr_object* key, int noerror) {
     }
     return foundObject;
 }
-ctr_object* ctr_find(ctr_object* key) {return ctr_find_(key, 0);}
+ctr_object* ctr_find(ctr_object* key) {
+  int i = ctr_context_id;
+  ctr_object* foundObject = NULL;
+  if (CtrStdFlow) return CtrStdNil;
+  while((i>-1 && foundObject == NULL))
+      foundObject = ctr_internal_object_find_property(ctr_contexts[i--], key, 0);
+
+  if (foundObject)
+    return foundObject;
+  ctr_internal_plugin_find(key);
+  foundObject = ctr_internal_object_find_property(CtrStdWorld, key, 0);
+  if (foundObject == NULL) {
+      char* key_name;
+      char* message;
+      char* full_message;
+      int message_size;
+      message = "Key not found: ";
+      message_size = ((strlen(message))+key->value.svalue->vlen);
+      full_message = ctr_heap_allocate( message_size * sizeof( char ) );
+      key_name = ctr_heap_allocate_cstring( key );
+      memcpy(full_message, message, strlen(message));
+      memcpy(full_message + strlen(message), key_name, key->value.svalue->vlen);
+      CtrStdFlow = ctr_build_string(full_message, message_size);
+      CtrStdFlow->info.sticky = 1;
+      ctr_heap_free( full_message );
+      ctr_heap_free( key_name );
+      return CtrStdNil;
+  }
+  return foundObject;
+}
 
 /**
  * @internal
@@ -947,7 +976,9 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "init" ), &ctr_array_init );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "last" ), &ctr_array_last );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( CTR_DICT_MAP ), &ctr_array_map );
+    ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "map_v:" ), &ctr_array_map_v );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( CTR_DICT_EACH ), &ctr_array_map );
+    ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "each_v:" ), &ctr_array_map_v );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( CTR_DICT_MIN ), &ctr_array_min );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( CTR_DICT_MAX ), &ctr_array_max );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( CTR_DICT_SUM ), &ctr_array_sum );
@@ -980,7 +1011,9 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("rangeFrom:step:"), &ctr_iterator_make_uncapped_range );
     ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("next"), &ctr_iterator_next );
     ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("each:"), &ctr_iterator_each );
+    ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("each_v:"), &ctr_iterator_each_v );
     ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("fmap:"), &ctr_iterator_fmap );
+    ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("filter:"), &ctr_iterator_filter );
     ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("count"), &ctr_iterator_count );
     ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("take:"), &ctr_iterator_take );
     ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("endBlock"), &ctr_iterator_takewhile );
@@ -1177,6 +1210,7 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdGC, ctr_build_string_from_cstring( CTR_DICT_STICKY_COUNT ), &ctr_gc_sticky_count );
     ctr_internal_create_func(CtrStdGC, ctr_build_string_from_cstring( CTR_DICT_MEMORY_LIMIT ), &ctr_gc_setmemlimit );
     ctr_internal_create_func(CtrStdGC, ctr_build_string_from_cstring( CTR_DICT_MODE ),  &ctr_gc_setmode );
+    ctr_internal_create_func(CtrStdGC, ctr_build_string_from_cstring( "autoAlloc:" ),  &ctr_gc_setautoalloc );
     ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring( CTR_DICT_BROOM ), CtrStdGC, 0 );
     CtrStdGC->link = CtrStdObject;
     CtrStdGC->info.sticky = 1;
@@ -1361,6 +1395,8 @@ ctr_object* ctr_send_message(ctr_object* receiverObject, char* message, long vle
           return ctr_ccomp_get_stub(funct, receiverObject, argumentList); //return a stub object with the correct type
         }
         #endif
+
+        #ifdef EVALSECURITY
         if ( ctr_command_security_profile & CTR_SECPRO_EVAL ) {
             messageApproved = 0;
             for ( i = 0; i < 15; i ++ ) {
@@ -1375,14 +1411,18 @@ ctr_object* ctr_send_message(ctr_object* receiverObject, char* message, long vle
                 exit(1);
             }
         }
+        #endif
+
         result = funct(receiverObject, argumentList);
     }
     if (methodObject->info.type == CTR_OBJECT_TYPE_OTBLOCK ) {
+      #ifdef EVALSECURITY
         if ( ctr_command_security_profile & CTR_SECPRO_EVAL ) {
             printf( "Custom message not allowed in eval.\n" );
             ctr_print_stack_trace();
             exit(1);
         }
+        #endif
         result = ctr_block_run(methodObject, argumentList, receiverObject);
     }
     if (msg) msg->info.sticky = 0;

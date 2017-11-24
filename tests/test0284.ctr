@@ -1,4 +1,8 @@
-ptr is CTypes fromString: 'print("test" * 10)'.
+Broom memoryLimit: 1024 * 1024 * 128.
+
+rept is 1000.
+
+ptr is CTypes fromString: ''.
 int is CTypes sint.
 cif is CIF new setABI: 0 return: Nil argTypes: [].
 ll is CTypes loadLibrary: '/lib64/libpython3.so'.
@@ -11,7 +15,9 @@ cif setABI: 0 return: Nil argTypes: [ptr].
 
 ptime is 0.
 pbest is 10 toPowerOf: 10.
-50 times: {
+rept times: {:i
+  ptr destruct.
+  ptr is CTypes fromString: 'len( "    " * $$i )'.
   ptime +=: (var bestc is (Clock timeExecutionOf: {
       cif call: pyrun withArgs: [ptr].
   })).
@@ -21,36 +27,33 @@ pbest is 10 toPowerOf: 10.
 cif setABI: 0 return: Nil argTypes: [].
 cif call: pyfinalize withArgs: [].
 
-pyrun desstruct.
-pyinit destruct.
-pyfinalize destruct.
-ll destruct.
-ptr destruct.
+Broom sweep.
 
 ll is CTypes loadLibrary: Nil.
-ptr is CTypes fromString: 'Pen write: (\'test \' * 10), brk'.
+ptr is CTypes fromString: ''.
 cif setABI: 0 return: Nil argTypes: [ptr].
 execstr is ll execute_string.
 
 rtime is 0.
 rbest is 10 toPowerOf: 10.
-50 times:{
+rept times:{:i
+  ptr destruct.
+  ptr is CTypes fromString: '\'    \' * $$i length'.
   rtime +=: (var bestc is (Clock timeExecutionOf: {
         cif call: execstr withArgs: [ptr].
   })).
   rbest is rbest min: bestc.
 }.
 
-cif destruct.
-ptr destruct.
-ll destruct.
 
 Pen write: ('Python statistics:
+    ran command: len( "    " * i ),
     total time: %d,
     best time: %d,
-    average over 50: %d
+    average over $$rept : %d
 Citron statistics:
+    ran command: \'    \' * i length,
     total time: %d,
     best time: %d,
-    average over 50: %d
-' formatObjects: [ptime, pbest, (ptime / 50), rtime, rbest, (rtime / 50)]), brk.
+    average over $$rept : %d
+' formatObjects: [ptime, pbest, (ptime / rept), rtime, rbest, (rtime / rept)]), brk.

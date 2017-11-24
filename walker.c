@@ -117,7 +117,7 @@ ctr_object* ctr_cwlk_message(ctr_tnode* paramNode) {
                 /* there is always an extra empty argument at the end */
                 aItem->next = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
                 aItem = aItem->next;
-                aItem->object = CtrStdNil;
+                aItem->object = NULL;
                 if (!argumentList->next) break;
                 argumentList = argumentList->next;
                 node = argumentList->node;

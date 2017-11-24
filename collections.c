@@ -309,14 +309,15 @@ ctr_object* ctr_array_map(ctr_object* myself, ctr_argument* argumentList) {
     if (block->info.type != CTR_OBJECT_TYPE_OTBLOCK) {
         CtrStdFlow = ctr_build_string_from_cstring("Expected Block.");
         CtrStdFlow->info.sticky = 1;
+        return myself;
     }
     block->info.sticky = 1;
     ctr_argument* arguments = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
     ctr_argument* argument2 = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
-    ctr_argument* argument3 = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    ctr_argument* argument3 = NULL; //= (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
 
     if (!myself->value.avalue->immutable)
-      argument3 = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+     argument3 = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
 
     for(i = myself->value.avalue->tail; i < myself->value.avalue->head; i++) {
         arguments->object = ctr_build_number_from_float((double) i);
@@ -345,6 +346,44 @@ ctr_object* ctr_array_map(ctr_object* myself, ctr_argument* argumentList) {
  *
  *  Alias for [Array] map: [Block].
  */
+
+/**
+ * [Array] map_v: [Block].
+ *
+ * Iterates over the array. Passing each element as a value to the
+ * specified block.
+ * The map message will pass only the value.
+ *
+ * Usage:
+ *
+ * files map_v: showName.
+ * files map_v: {
+ *   :filename
+ *   Pen write: filename, brk.
+ * }.
+ */
+ /**
+  * [Array] each_v: [Block].
+  *
+  *  Alias for [Array] map_v: [Block].
+  */
+ctr_object* ctr_array_map_v(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* func = argumentList->object;
+  CTR_ENSURE_TYPE_BLOCK(func);
+
+  ctr_argument* pushArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+  ctr_argument* elnumArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+  int i;
+  for(i = myself->value.avalue->tail; i<myself->value.avalue->head; i++) {
+      ctr_object* elnum = ctr_build_number_from_float((ctr_number) i);
+      elnumArg->object = elnum;
+      pushArg->object = ctr_array_get(myself, elnumArg);
+      ctr_block_run(func, pushArg, func);
+  }
+  ctr_heap_free(elnumArg);
+  ctr_heap_free(pushArg);
+  return myself;
+}
 
 /**
  * [Array] ← [Element1] ; [Element2] ; ...
@@ -856,29 +895,32 @@ ctr_object* ctr_array_imap(ctr_object* myself, ctr_argument* argumentList) {
  * Include the element iff block returns True for the element
  */
   ctr_object* ctr_array_filter(ctr_object* myself, ctr_argument* argumentList) {
-    ctr_object* func = argumentList->object;
-    CTR_ENSURE_TYPE_BLOCK(func);
-
-    ctr_object* newArray = ctr_array_new(CtrStdArray, NULL);
-    ctr_argument* elnumArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
-    ctr_argument* accArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
-    accArg->next = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
-    int i;
-    for(i = myself->value.avalue->tail; i<myself->value.avalue->head; i++) {
-        ctr_object* elnum = ctr_build_number_from_float((ctr_number) i);
-        elnumArg->object = elnum;
-        accArg->next->object = ctr_array_get(myself, elnumArg);
-        accArg->object = elnum;
-        if (ctr_internal_cast2bool(ctr_block_run(func, accArg, func))->value.bvalue) {
-          accArg->object = accArg->next->object;
-          accArg->next->object = NULL;
-          ctr_array_push(newArray, accArg);
+    ctr_object* block = argumentList->object;
+    CTR_ENSURE_TYPE_BLOCK(block);
+    int i = 0;
+    block->info.sticky = 1;
+    ctr_argument* arguments = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    ctr_argument* argument2 = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+    ctr_object* newArr = ctr_array_new(CtrStdArray, NULL);
+    ctr_object* current;
+    for(i = myself->value.avalue->tail; i < myself->value.avalue->head; i++) {
+      current = *(myself->value.avalue->elements + i);
+        arguments->object = ctr_build_number_from_float((double) i);
+        argument2->object = current;
+        arguments->next = argument2;
+        if(ctr_internal_cast2bool(ctr_block_run(block, arguments, NULL))->value.bvalue) {
+          argument2->object = current;
+          ctr_array_push(newArr, argument2);
         }
+        if (CtrStdFlow == CtrStdContinue) CtrStdFlow = NULL;
+        if (CtrStdFlow) break;
     }
-    ctr_heap_free(elnumArg);
-    ctr_heap_free(accArg->next);
-    ctr_heap_free(accArg);
-    return newArray;
+    ctr_heap_free( arguments );
+    ctr_heap_free( argument2 );
+    if (CtrStdFlow == CtrStdBreak) CtrStdFlow = NULL; /* consume break */
+    block->info.mark = 0;
+    block->info.sticky = 0;
+    return myself;
   }
 
   /**
@@ -1336,7 +1378,7 @@ ctr_object* ctr_map_kvlist(ctr_object* myself, ctr_argument* argumentList) {
 
         arguments->object = kvtup;
         arguments->object = ctr_block_run(block, arguments, NULL);
-        if (arguments->object->info.type != CTR_OBJECT_TYPE_OTARRAY) {
+        if (arguments->object->info.type != CTR_OBJECT_TYPE_OTARRAY && arguments->object != myself ) {
           CtrStdFlow = ctr_build_string_from_cstring("kvmap block must only return a 2-tuple or nothing.");
           return CtrStdNil;
         }
@@ -1664,11 +1706,38 @@ ctr_object* ctr_iterator_next(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 /**
- * [Iterator] each: [Block<value>]
+ * [Iterator] each: [Block<nil,value,iterator>]
+ *
+ * Runs the block for each value in the iterator while stepping through it
+ * Sends Nil for the index.
+ */
+ctr_object* ctr_iterator_each(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* value;
+  ctr_object* dothis = argumentList->object;
+  ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+  arg->next = ctr_heap_allocate(sizeof(ctr_argument));
+  arg->next->next = ctr_heap_allocate(sizeof(ctr_argument));
+  while (1) {
+    value = ctr_iterator_next(myself, NULL);
+    if (CtrStdFlow) break;
+    arg->object = CtrStdNil;
+    arg->next->object = value;
+    arg->next->next->object = myself;
+    ctr_block_runIt(dothis, arg);
+  }
+  ctr_heap_free(arg->next->object);
+  ctr_heap_free(arg->next);
+  ctr_heap_free(arg);
+  CtrStdFlow = NULL;
+  return myself;
+}
+
+/**
+ * [Iterator] each_v: [Block<value>]
  *
  * Runs the block for each value in the iterator while stepping through it
  */
-ctr_object* ctr_iterator_each(ctr_object* myself, ctr_argument* argumentList) {
+ctr_object* ctr_iterator_each_v(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* value;
   ctr_object* dothis = argumentList->object;
   ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
@@ -1678,6 +1747,7 @@ ctr_object* ctr_iterator_each(ctr_object* myself, ctr_argument* argumentList) {
     arg->object = value;
     ctr_block_runIt(dothis, arg);
   }
+  ctr_heap_free(arg);
   CtrStdFlow = NULL;
   return myself;
 }
@@ -1704,6 +1774,55 @@ ctr_object* ctr_iterator_fmap(ctr_object* myself, ctr_argument* argumentList) {
   ctr_heap_free(arg);
   return ret;
 }
+
+/**
+ * [Iterator] filter: [b:Block<nil,value>]
+ * Equivalent to [Array] filter: [Block<nil,value>]
+ *
+ * filters the iterator with the block's return value as the predicate to an array
+ */
+ctr_object* ctr_iterator_filter(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* value;
+  ctr_object* dothis = argumentList->object;
+  ctr_object* ret = ctr_array_new(CtrStdArray, NULL);
+  ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+  while (1) {
+    value = ctr_iterator_next(myself, NULL);
+    if (CtrStdFlow) break;
+    arg->object = value;
+    if (ctr_internal_cast2bool(ctr_block_runIt(dothis, arg))->value.bvalue)
+      ctr_array_push(ret, arg);
+  }
+  CtrStdFlow = NULL;
+  ctr_heap_free(arg);
+  return ret;
+}
+
+/**
+ * [Iterator] foldl: [Block] accumulator: [Object]
+ *
+ * reduces an iterator according to a block (which takes an accumulator and the value, and returns the next acc) from the left (index 0)
+ *
+ */
+ ctr_object* ctr_iterator_foldl(ctr_object* myself, ctr_argument* argumentList) {
+   ctr_object* func = argumentList->object;
+   CTR_ENSURE_TYPE_BLOCK(func);
+
+   ctr_object* accumulator = argumentList->next->object;
+   ctr_argument* accArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+   accArg->next = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+   accArg->object = accumulator;
+   while(1) {
+       accArg->next->object = ctr_iterator_next(myself, NULL);
+       if (CtrStdFlow) break;
+       accArg->object = ctr_block_run(func, accArg, func);
+   }
+   CtrStdFlow = NULL;
+   accumulator = accArg->object;
+   ctr_heap_free(accArg->next);
+   ctr_heap_free(accArg);
+   return accumulator;
+ }
 
 /**
  * [Iterator] count

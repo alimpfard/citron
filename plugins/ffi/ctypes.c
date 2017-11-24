@@ -11,6 +11,7 @@
 void ctr_ctypes_set_type(ctr_object* object, ctr_ctype type) {
   ctr_internal_object_set_property(object, ctr_build_string_from_cstring(":cType"), ctr_build_number_from_float((int)type), 0);
   object->value.rvalue = ctr_heap_allocate(sizeof(ctr_resource));
+  object->info.sticky = 1;
   switch(type) {
     case CTR_CTYPE_VOID: object->link = CtrStdCType_void; break;
     case CTR_CTYPE_UINT8: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(uint8_t)); object->link = CtrStdCType_uint8; break;

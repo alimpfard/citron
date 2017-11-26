@@ -19,15 +19,15 @@ struct memBlock {
     void* space;
 };
 
-struct memBlockCache_node {
-  struct memBlock* block;
-  struct memBlockCache_node* next;
-};
-
-struct memBlockCache_ {
-  struct memBlockCache_node* node;
-  int length;
-} memBlockCache;
+//struct memBlockCache_node {
+//  struct memBlock* block;
+//  struct memBlockCache_node* next;
+//};
+//
+//struct memBlockCache_ {
+//  struct memBlockCache_node* node;
+//  int length;
+//} memBlockCache;
 
 typedef struct memBlock memBlock;
 
@@ -59,15 +59,23 @@ size_t     maxNumberOfMemBlocks = 0;
  * @return void*
  */
 void* ctr_heap_allocate( size_t size ) {
-    if (memBlockCache.length > 0) {
-      struct memBlockCache_node* last_node = memBlockCache.node;
-      if (last_node->block->size != size) goto cache_miss;
-      memBlockCache.node = last_node->next;
-      memBlockCache.length--;
-      memBlock* block = last_node->block;
-      free(last_node);
-      return block;
-    }
+    //if (memBlockCache.length > 0) {
+    //  struct memBlockCache_node* last_node = memBlockCache.node;
+    //  struct memBlockCache_node* node_after_last = NULL;
+    //  while (last_node->block->size != (size + sizeof(size_t))) {
+    //    node_after_last = last_node;
+    //    if(last_node->next == NULL)  goto cache_miss;
+    //    last_node=last_node->next;
+    //  }
+    //  if (node_after_last)
+    //    node_after_last->next = last_node->next;
+    //  else
+    //    memBlockCache.node = last_node->next;
+    //  memBlockCache.length--;
+    //  memBlock* block = last_node->block;
+    //  free(last_node);
+    //  return block;
+    //}
   cache_miss:;
     void* slice_of_memory;
     size_t* block_width;
@@ -77,10 +85,14 @@ void* ctr_heap_allocate( size_t size ) {
     /* Check whether we can afford to allocate this much */
     ctr_gc_alloc += size;
 
-    if (CTR_LIMIT_MEM && ctr_gc_memlimit < ctr_gc_alloc) {
-        printf( "Out of memory. Failed to allocate %lu bytes.\n", size );
-        ctr_print_stack_trace();
-        exit(1);
+    if (ctr_gc_memlimit < ctr_gc_alloc) {
+      if (CTR_LIMIT_MEM) {
+          printf( "Out of memory. Failed to allocate %lu bytes.\n", size );
+          ctr_print_stack_trace();
+          exit(1);
+        } else {
+          ctr_gc_memlimit *= 2;
+        }
     }
 
     /* Perform allocation and check result */
@@ -116,10 +128,14 @@ void* ctr_heap_allocate_shared( size_t size ) {
   /* Check whether we can afford to allocate this much */
   ctr_gc_alloc += size;
 
-  if (CTR_LIMIT_MEM && ctr_gc_memlimit < ctr_gc_alloc) {
-      printf( "Out of memory. Failed to allocate %lu bytes.\n", size );
-      ctr_print_stack_trace();
-      exit(1);
+  if (ctr_gc_memlimit < ctr_gc_alloc) {
+    if (CTR_LIMIT_MEM) {
+        printf( "Out of memory. Failed to allocate %lu bytes.\n", size );
+        ctr_print_stack_trace();
+        exit(1);
+      } else {
+        ctr_gc_memlimit *= 2;
+      }
   }
 
   /* Perform allocation and check result */
@@ -189,7 +205,7 @@ void ctr_heap_free_rest() {
     for ( i = 0; i < numberOfMemBlocks; i ++) {
         ctr_heap_free( memBlocks[i].space );
     }
-    ctr_heap_free( memBlocks );
+    //ctr_heap_free( memBlocks );
 }
 
 
@@ -204,24 +220,34 @@ void ctr_heap_free_rest() {
  * @return void
  */
 void ctr_heap_free( void* ptr ) {
-    if (memBlockCache.length < CTR_MEMBLOCK_CACHE_MAX) {
-      struct memBlockCache_node* new_node = malloc(sizeof(struct memBlockCache_node));
-      new_node->next = memBlockCache.length == 0 ? NULL : memBlockCache.node;
-      new_node->block = (memBlock*)ptr;
-      memBlockCache.length++;
-      memBlockCache.node = new_node;
-      return;
-    }
+    //struct memBlockCache_node* node = memBlockCache.node;
+    //struct memBlockCache_node* lnode = node;
+    //for(;node!=NULL;lnode=node,node=node->next)
+    //  if(node->block->space == ptr) {
+    //    printf("Found matching %p in linked list. two requests for free, freeing %i bytes\n", node->block->space, node->block->size);
+    //    lnode->next = node->next;
+    //    free(node->block);
+    //    free(node);
+    //    memBlockCache.length--;
+    //    return;
+    //  }
+    //if (memBlockCache.length < CTR_MEMBLOCK_CACHE_MAX) {
+    //  struct memBlockCache_node* new_node = malloc(sizeof(struct memBlockCache_node));
+    //  new_node->next = memBlockCache.node;
+    //  new_node->block = (memBlock*)(ptr + sizeof(size_t));
+    //  memBlockCache.length++;
+    //  memBlockCache.node = new_node;
+    //  //ctr_gc_alloc -= new_node->block->size;
+    //  return;
+    //}
     size_t* block_width;
     int q = sizeof( size_t );
     size_t size;
 
     /* find the correct size of this memory block and move pointer back */
-    ptr = (void*) ((char*) ptr - q);
-    block_width = (size_t*) ptr;
-    size = *(block_width);
-
-    free( ptr );
+    block_width = (size_t*) ((char*) ptr - q);
+    size = *block_width;
+    free( (void*)block_width );
     ctr_gc_alloc -= size;
 }
 void ctr_heap_free_shared( void* ptr ) {

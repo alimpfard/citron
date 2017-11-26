@@ -267,22 +267,44 @@ arc4random_uniform(u_int32_t upper_bound)
 #include "citron.h"
 #include "siphash.h"
 
+#define CTR_GC_BACKLOG_MAX 32
+
+ctr_object* gc_checked[CTR_GC_BACKLOG_MAX];//32 backward spanning last_checked pointers.
+
 /**
  * @internal
  * GarbageCollector Marker
+ *
+ * @param last_vector_index : last vector index for this object. pass -1.
  */
-void ctr_gc_mark(ctr_object* object) {
+void ctr_gc_mark(ctr_object* object, int last_vector_index) {
     ctr_object* el;
     ctr_mapitem* item;
     ctr_object* o;
     ctr_object* k;
+
+    // for (size_t i = 0; i < CTR_GC_BACKLOG_MAX; i++)
+    //   printf("%p,", gc_checked[i]);
+    // printf("->%d,%p\n", last_vector_index, object);
+
+    // for (size_t i = 0; i < last_vector_index; i++)
+    //   if (gc_checked[i] == object) return; //already marked, was just a cycle
+    // if (last_vector_index+1<CTR_GC_BACKLOG_MAX)
+    //   gc_checked[last_vector_index++] = object;
+    // else
+    //   gc_checked[(last_vector_index=1)-1] = object;//reset the cycle
+    // if (object->info.sticky) return;
     long i;
     if (object->info.type == CTR_OBJECT_TYPE_OTARRAY) {
         for (i = 0; i < object->value.avalue->head; i++) {
             el = *(object->value.avalue->elements+i);
             el->info.mark = 1;
-            if(el!=object)
-            ctr_gc_mark(el);
+            // if (last_vector_index+1<CTR_GC_BACKLOG_MAX)
+            //   gc_checked[last_vector_index++] = object;
+            // else
+            //   gc_checked[(last_vector_index=1)-1] = object;//reset the cycle
+            if(el != object)
+            ctr_gc_mark(el, last_vector_index);
         }
     }
     item = object->properties->head;
@@ -291,8 +313,12 @@ void ctr_gc_mark(ctr_object* object) {
         o = item->value;
         o->info.mark = 1;
         k->info.mark = 1;
-        if(o!=object)
-        ctr_gc_mark(o);
+        // if (last_vector_index+1<CTR_GC_BACKLOG_MAX)
+        //   gc_checked[last_vector_index++] = object;
+        // else
+        //   gc_checked[(last_vector_index=1)-1] = object;//reset the cycle
+        if(o != object)
+        ctr_gc_mark(o, last_vector_index);
         item = item->next;
     }
     item = object->methods->head;
@@ -301,8 +327,12 @@ void ctr_gc_mark(ctr_object* object) {
         k = item->key;
         o->info.mark = 1;
         k->info.mark = 1;
-        if(o!=object)
-        ctr_gc_mark(o);
+        // if (last_vector_index+1<CTR_GC_BACKLOG_MAX)
+        //   gc_checked[last_vector_index++] = object;
+        // else
+        //   gc_checked[(last_vector_index=1)-1] = object;//reset the cycle
+        if (o != object)
+        ctr_gc_mark(o, last_vector_index);
         item = item->next;
     }
 }
@@ -404,7 +434,7 @@ void  ctr_gc_internal_collect() {
     context = ctr_contexts[ctr_context_id];
     oldcid = ctr_context_id;
     while(ctr_context_id > -1) {
-        ctr_gc_mark(context);
+        ctr_gc_mark(context, 0);
         ctr_context_id--;
         context = ctr_contexts[ctr_context_id];
     }
@@ -2064,6 +2094,19 @@ ctr_object* ctr_console_write(ctr_object* myself, ctr_argument* argumentList) {
     ctr_object* argument1 = argumentList->object;
     ctr_object* strObject = ctr_internal_cast2string(argument1);
     fwrite(strObject->value.svalue->value, strObject->value.svalue->vlen, 1, stdout);
+    return myself;
+}
+
+/**
+ * [Pen] writeln: [String]
+ *
+ * Writes string to console, with a newline at the end.
+ */
+ctr_object* ctr_console_writeln(ctr_object* myself, ctr_argument* argumentList) {
+    ctr_object* argument1 = argumentList->object;
+    ctr_object* strObject = ctr_internal_cast2string(argument1);
+    fwrite(strObject->value.svalue->value, strObject->value.svalue->vlen, 1, stdout);
+    fwrite("\n", 1, 1, stdout);
     return myself;
 }
 

@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
         printf( "[WARNING] Citron has detected an internal memory leak of: %" PRIu64 " bytes.\n", ctr_gc_alloc );
         exit(1);
     }
-    exit(0);
+    //exit(0);
     return 0;
 }
 void initialize(int extensions) {

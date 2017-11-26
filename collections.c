@@ -1607,26 +1607,29 @@ ctr_object* ctr_iterator_set_func_(ctr_object* myself, ctr_object* function, ctr
     func,
     CTR_CATEGORY_PRIVATE_PROPERTY
   );
-  if (end)
+
+  if (end) {
   ctr_internal_object_set_property(
-    func,
+    myself,
     ctr_build_string_from_cstring("end_value"),
     end,
     CTR_CATEGORY_PRIVATE_PROPERTY
   );
-  if (step)
+}
+  if (step) {
   ctr_internal_object_set_property(
-    func,
+    myself,
     ctr_build_string_from_cstring("step"),
     step,
     CTR_CATEGORY_PRIVATE_PROPERTY
   );
-  ctr_internal_object_set_property(
-    func,
-    ctr_build_string_from_cstring("iterator"),
-    myself,
-    CTR_CATEGORY_PRIVATE_PROPERTY
-  );
+}
+  // ctr_internal_object_set_property(
+  //   func,
+  //   ctr_build_string_from_cstring("iterator"),
+  //   myself,
+  //   CTR_CATEGORY_PRIVATE_PROPERTY
+  // );
   return myself;
 }
 
@@ -1644,12 +1647,12 @@ ctr_object* ctr_iterator_set_func(ctr_object* myself, ctr_argument* argumentList
     func,
     CTR_CATEGORY_PRIVATE_PROPERTY
   );
-  ctr_internal_object_set_property(
-    func,
-    ctr_build_string_from_cstring("iterator"),
-    myself,
-    CTR_CATEGORY_PRIVATE_PROPERTY
-  );
+  // ctr_internal_object_set_property(
+  //   func,
+  //   ctr_build_string_from_cstring("iterator"),
+  //   myself,
+  //   CTR_CATEGORY_PRIVATE_PROPERTY
+  // );
   return myself;
 }
 
@@ -1691,16 +1694,20 @@ ctr_object* ctr_iterator_make_uncapped_range(ctr_object* myself, ctr_argument* a
 /**
  * [Iterator] next
  *
- * gives the next value or throws an exception (to signal the end of the iterator)
+ * gives the next value or breaks (to signal the end of the iterator)
  */
 ctr_object* ctr_iterator_next(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* iter = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("func"), 0);
   ctr_object* seed = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("seed"), 0);
-  if (!(iter&&seed)) {
-    CtrStdFlow = ctr_build_string_from_cstring("Invalid iterator.");
+  if (!iter) {
+    CtrStdFlow = ctr_build_string_from_cstring("Invalid iterator function.");
     return myself;
   }
-  seed = ctr_block_run_variadic(iter, 1, seed);
+  if (!seed) {
+    CtrStdFlow = ctr_build_string_from_cstring("Invalid iterator seed.");
+    return myself;
+  }
+  seed = ctr_block_run_variadic_my(iter, myself, 1, seed);
   ctr_internal_object_set_property(myself, ctr_build_string_from_cstring("seed"), seed, 0);
   return seed;
 }
@@ -1712,23 +1719,31 @@ ctr_object* ctr_iterator_next(ctr_object* myself, ctr_argument* argumentList) {
  * Sends Nil for the index.
  */
 ctr_object* ctr_iterator_each(ctr_object* myself, ctr_argument* argumentList) {
-  ctr_object* value;
   ctr_object* dothis = argumentList->object;
   ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
   arg->next = ctr_heap_allocate(sizeof(ctr_argument));
   arg->next->next = ctr_heap_allocate(sizeof(ctr_argument));
+  int oldsticky = myself->info.sticky; myself->info.sticky = 1;
+  ctr_object* iter = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("func"), 0);
+  ctr_object* value = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("seed"), 0);
+  ctr_object* seed_str = ctr_build_string_from_cstring("seed");
   while (1) {
-    value = ctr_iterator_next(myself, NULL);
-    if (CtrStdFlow) break;
+    arg->object = value;
+    value = ctr_block_run(iter, arg, myself);
+    ctr_internal_object_set_property(myself, seed_str, value, 0);
+    if (CtrStdFlow) break; //break on break
     arg->object = CtrStdNil;
     arg->next->object = value;
     arg->next->next->object = myself;
-    ctr_block_runIt(dothis, arg);
+    ctr_block_run(dothis, arg, dothis);
   }
-  ctr_heap_free(arg->next->object);
+  myself->info.sticky = oldsticky;
+  ctr_heap_free(arg->next->next);
   ctr_heap_free(arg->next);
   ctr_heap_free(arg);
-  CtrStdFlow = NULL;
+  ctr_heap_free(seed_str);
+  if (CtrStdFlow == CtrStdBreak)
+    CtrStdFlow = NULL;
   return myself;
 }
 
@@ -1738,17 +1753,24 @@ ctr_object* ctr_iterator_each(ctr_object* myself, ctr_argument* argumentList) {
  * Runs the block for each value in the iterator while stepping through it
  */
 ctr_object* ctr_iterator_each_v(ctr_object* myself, ctr_argument* argumentList) {
-  ctr_object* value;
   ctr_object* dothis = argumentList->object;
   ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+  ctr_object* seed_str = ctr_build_string_from_cstring("seed");
+  ctr_object* iter = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("func"), 0);
+  ctr_object* value = ctr_internal_object_find_property(myself, seed_str, 0);
+  int oldsticky = myself->info.sticky; myself->info.sticky = 1;
   while (1) {
-    value = ctr_iterator_next(myself, NULL);
+    arg->object = value;
+    value = ctr_block_run(iter, arg, myself);
+    ctr_internal_object_set_property(myself, seed_str, value, 0);
     if (CtrStdFlow) break;
     arg->object = value;
-    ctr_block_runIt(dothis, arg);
+    ctr_block_run(dothis, arg, dothis);
   }
+  myself->info.sticky = oldsticky;
   ctr_heap_free(arg);
-  CtrStdFlow = NULL;
+  ctr_heap_free(seed_str);
+  if (CtrStdFlow == CtrStdBreak) CtrStdFlow = NULL;
   return myself;
 }
 
@@ -1759,18 +1781,25 @@ ctr_object* ctr_iterator_each_v(ctr_object* myself, ctr_argument* argumentList) 
  * transforms the iterator with the block to an array
  */
 ctr_object* ctr_iterator_fmap(ctr_object* myself, ctr_argument* argumentList) {
-  ctr_object* value;
+
   ctr_object* dothis = argumentList->object;
   ctr_object* ret = ctr_array_new(CtrStdArray, NULL);
   ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+  ctr_object* iter = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("func"), 0);
+  ctr_object* value = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("seed"), 0);
+  ctr_object* seed_str = ctr_build_string_from_cstring("seed");
+  int oldsticky = myself->info.sticky; myself->info.sticky = 1;
   while (1) {
-    value = ctr_iterator_next(myself, NULL);
+    arg->object = value;
+    value = ctr_block_run(iter, arg, myself);
+    ctr_internal_object_set_property(myself, seed_str, value, 0);
     if (CtrStdFlow) break;
     arg->object = value;
     arg->object = ctr_block_runIt(dothis, arg);
     ctr_array_push(ret, arg);
   }
-  CtrStdFlow = NULL;
+  myself->info.sticky = oldsticky;
+  if (CtrStdFlow == CtrStdBreak) CtrStdFlow = NULL;
   ctr_heap_free(arg);
   return ret;
 }
@@ -1782,18 +1811,25 @@ ctr_object* ctr_iterator_fmap(ctr_object* myself, ctr_argument* argumentList) {
  * filters the iterator with the block's return value as the predicate to an array
  */
 ctr_object* ctr_iterator_filter(ctr_object* myself, ctr_argument* argumentList) {
-  ctr_object* value;
+
   ctr_object* dothis = argumentList->object;
   ctr_object* ret = ctr_array_new(CtrStdArray, NULL);
   ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+  ctr_object* iter = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("func"), 0);
+  ctr_object* value = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("seed"), 0);
+  ctr_object* seed_str = ctr_build_string_from_cstring("seed");
+  int oldsticky = myself->info.sticky; myself->info.sticky = 1;
   while (1) {
-    value = ctr_iterator_next(myself, NULL);
+    arg->object = value;
+    value = ctr_block_run(iter, arg, myself);
+    ctr_internal_object_set_property(myself, seed_str, value, 0);
     if (CtrStdFlow) break;
     arg->object = value;
     if (ctr_internal_cast2bool(ctr_block_runIt(dothis, arg))->value.bvalue)
       ctr_array_push(ret, arg);
   }
-  CtrStdFlow = NULL;
+  myself->info.sticky = oldsticky;
+  if (CtrStdFlow == CtrStdBreak) CtrStdFlow = NULL;
   ctr_heap_free(arg);
   return ret;
 }
@@ -1812,15 +1848,24 @@ ctr_object* ctr_iterator_filter(ctr_object* myself, ctr_argument* argumentList) 
    ctr_argument* accArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
    accArg->next = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
    accArg->object = accumulator;
+   ctr_object* iter = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("func"), 0);
+   ctr_object* value = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("seed"), 0);
+   ctr_object* seed_str = ctr_build_string_from_cstring("seed");
+   ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+   int oldsticky = myself->info.sticky; myself->info.sticky = 1;
    while(1) {
-       accArg->next->object = ctr_iterator_next(myself, NULL);
+     arg->object = value;
+     value = ctr_block_run(iter, arg, myself);
+     ctr_internal_object_set_property(myself, seed_str, value, 0);
        if (CtrStdFlow) break;
        accArg->object = ctr_block_run(func, accArg, func);
    }
-   CtrStdFlow = NULL;
+   myself->info.sticky = oldsticky;
+   if (CtrStdFlow == CtrStdBreak) CtrStdFlow = NULL;
    accumulator = accArg->object;
    ctr_heap_free(accArg->next);
    ctr_heap_free(accArg);
+   ctr_heap_free(arg);
    return accumulator;
  }
 
@@ -1834,13 +1879,21 @@ ctr_object* ctr_iterator_count(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* ret = ctr_build_number_from_float(0);
   ctr_object* seed = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("seed"), 0);
   ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+  ctr_object* iter = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("func"), 0);
+  ctr_object* value = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("seed"), 0);
+  ctr_object* seed_str = ctr_build_string_from_cstring("seed");
   arg->object = ctr_build_number_from_float(1);
+  int oldsticky = myself->info.sticky; myself->info.sticky = 1;
   while (1) {
-   ctr_iterator_next(myself, NULL);
+    // arg->object = value;
+    // value = ctr_block_run(iter, arg, myself);
+    // ctr_internal_object_set_property(myself, seed_str, value, 0);
+    ctr_iterator_next(myself, NULL);
    if (CtrStdFlow) break;
    ret = ctr_number_add(ret, arg);
   }
-  CtrStdFlow = NULL;
+  myself->info.sticky = oldsticky;
+  if (CtrStdFlow == CtrStdBreak) CtrStdFlow = NULL;
   arg->object = seed;
   ctr_iterator_set_seed(myself, arg);
   ctr_heap_free(arg);
@@ -1853,17 +1906,24 @@ ctr_object* ctr_iterator_count(ctr_object* myself, ctr_argument* argumentList) {
  * takes at most <t> number of elements from the Iterator
  */
 ctr_object* ctr_iterator_take(ctr_object* myself, ctr_argument* argumentList) {
-  ctr_object* value;
+
   int count = ctr_internal_cast2number(argumentList->object)->value.nvalue;
   ctr_object* ret = ctr_array_new(CtrStdArray, NULL);
   ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+  ctr_object* iter = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("func"), 0);
+  ctr_object* value = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("seed"), 0);
+  ctr_object* seed_str = ctr_build_string_from_cstring("seed");
+  int oldsticky = myself->info.sticky; myself->info.sticky = 1;
   while (count--) {
-    value = ctr_iterator_next(myself, NULL);
+    arg->object = value;
+    value = ctr_block_run(iter, arg, myself);
+    ctr_internal_object_set_property(myself, seed_str, value, 0);
     if (CtrStdFlow) break;
     arg->object = value;
     ctr_array_push(ret, arg);
   }
-  CtrStdFlow = NULL;
+  myself->info.sticky = oldsticky;
+  if (CtrStdFlow == CtrStdBreak) CtrStdFlow = NULL;
   ctr_heap_free(arg);
   return ret;
 }
@@ -1874,14 +1934,20 @@ ctr_object* ctr_iterator_take(ctr_object* myself, ctr_argument* argumentList) {
  * takes values as long as predicate returns true.
  */
 ctr_object* ctr_iterator_takewhile(ctr_object* myself, ctr_argument* argumentList) {
-  ctr_object* value;
+
   ctr_object* pred = argumentList->object;
   ctr_object* last_seed = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("seed"), 0);
   ctr_object* ret = ctr_array_new(CtrStdArray, NULL);
   ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+  ctr_object* iter = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("func"), 0);
+  ctr_object* value = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("seed"), 0);
+  ctr_object* seed_str = ctr_build_string_from_cstring("seed");
+  int oldsticky = myself->info.sticky; myself->info.sticky = 1;
   while(1) {
     if (value) last_seed = value;
-    value = ctr_iterator_next(myself, NULL);
+    arg->object = value;
+    value = ctr_block_run(iter, arg, myself);
+    ctr_internal_object_set_property(myself, seed_str, value, 0);
     if (CtrStdFlow) break;
     arg->object = value;
     if(!ctr_block_runIt(pred, arg)->value.bvalue) {
@@ -1890,7 +1956,8 @@ ctr_object* ctr_iterator_takewhile(ctr_object* myself, ctr_argument* argumentLis
     }
     ctr_array_push(ret, arg);
   }
-  CtrStdFlow = NULL;
+  myself->info.sticky = oldsticky;
+  if (CtrStdFlow == CtrStdBreak) CtrStdFlow = NULL;
   ctr_heap_free(arg);
   return ret;
 }
@@ -1901,7 +1968,7 @@ ctr_object* ctr_iterator_takewhile(ctr_object* myself, ctr_argument* argumentLis
  * returns a block that throws an IteratorEndException.
  */
 ctr_object* ctr_iterator_end(ctr_object* myself, ctr_argument* argumentList) {
-  ctr_object* iterend = ctr_string_eval(ctr_build_string_from_cstring("{thisBlock error: 'IteratorEndException'.}"), NULL);
+  ctr_object* iterend = ctr_string_eval(ctr_build_string_from_cstring("{True break.}"), NULL);
   return iterend;
 }
 
@@ -1916,7 +1983,7 @@ ctr_object* ctr_iterator_end_check(ctr_object* myself, ctr_argument* argumentLis
     return myself;
   }
   if (ctr_internal_cast2bool(clause)->value.bvalue)
-    CtrStdFlow = ctr_build_string_from_cstring("IteratorEndException");
+    CtrStdFlow = CtrStdBreak;
   return myself;
 }
 
@@ -1927,16 +1994,23 @@ ctr_object* ctr_iterator_end_check(ctr_object* myself, ctr_argument* argumentLis
  * Collects all of the iterator values into an array
  */
  ctr_object* ctr_iterator_to_array(ctr_object* myself, ctr_argument* argumentList) {
-   ctr_object* value;
+
    ctr_object* ret = ctr_array_new(CtrStdArray, NULL);
    ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+   ctr_object* iter = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("func"), 0);
+   ctr_object* value = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("seed"), 0);
+   ctr_object* seed_str = ctr_build_string_from_cstring("seed");
+   int oldsticky = myself->info.sticky; myself->info.sticky = 1;
    while (1) {
-     value = ctr_iterator_next(myself, NULL);
+     arg->object = value;
+     value = ctr_block_run(iter, arg, myself);
+     ctr_internal_object_set_property(myself, seed_str, value, 0);
      if (CtrStdFlow) break;
      arg->object = value;
      ctr_array_push(ret, arg);
    }
-   CtrStdFlow = NULL;
+   myself->info.sticky = oldsticky;
+   if (CtrStdFlow == CtrStdBreak) CtrStdFlow = NULL;
    ctr_heap_free(arg);
    return ret;
  }
@@ -1950,9 +2024,13 @@ ctr_object* ctr_iterator_end_check(ctr_object* myself, ctr_argument* argumentLis
  ctr_object* ctr_iterator_skip(ctr_object* myself, ctr_argument* argumentList) {
    int i = ctr_internal_cast2number(argumentList->object)->value.nvalue;
    ctr_object* value = NULL;
+   int oldsticky = myself->info.sticky; myself->info.sticky = 1;
+   ctr_object* seed_str = ctr_build_string_from_cstring("seed");
    for(;i>0;i--) {
      if(CtrStdFlow) break;
      value = ctr_iterator_next(myself, NULL);
    }
+   myself->info.sticky = oldsticky;
+   ctr_heap_free(seed_str);
    return value?value:ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("seed"), 0);
  }

@@ -1,6 +1,7 @@
 Broom autoAlloc: True.
+Broom mode: 0.
 
 import Library/Control/Applicative.
 import Library/Control/Arrow.
 
-Iterator rangeFrom: 0 to: 1 step: 0.01, each_v: (Pen ⇒ 'brk' compose: Pen ⇒ 'write:').
+Iterator rangeFrom: 0 to: 1000 step: 1, each_v: Pen ⇒ 'writeln:'.

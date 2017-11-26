@@ -996,7 +996,7 @@ void ctr_initialize_world() {
 
     /* Iterator */
     ctr_iter_range = ctr_string_eval(ctr_build_string_from_cstring(
-      "{:seed var step is my step. var end_value is my end_value. my iterator endIf: {^seed + step > end_value.}. ^(seed + step).}"
+      "{:seed var step is my step. var end_value is my end_value. me endIf: {^seed + step > end_value.}. ^(seed + step).}"
     ), NULL);
     ctr_iter_range->info.sticky = 1;
     ctr_iter_urange = ctr_string_eval(ctr_build_string_from_cstring(
@@ -1049,6 +1049,7 @@ void ctr_initialize_world() {
     /* Console */
     CtrStdConsole = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
     ctr_internal_create_func(CtrStdConsole, ctr_build_string_from_cstring( CTR_DICT_WRITE ), &ctr_console_write );
+    ctr_internal_create_func(CtrStdConsole, ctr_build_string_from_cstring( "writeln:" ), &ctr_console_writeln );
     ctr_internal_create_func(CtrStdConsole, ctr_build_string_from_cstring( CTR_DICT_WRITE_TEMPLATE_SYMBOL ), &ctr_console_write );
     ctr_internal_create_func(CtrStdConsole, ctr_build_string_from_cstring( CTR_DICT_BRK ), &ctr_console_brk );
     ctr_internal_create_func(CtrStdConsole, ctr_build_string_from_cstring( CTR_DICT_RED ), &ctr_console_red );

@@ -563,6 +563,7 @@ ctr_object* ctr_reflect_fn_copy(ctr_object* myself, ctr_argument* argumentList) 
   ctr_object* name = ctr_build_string_from_cstring("inheritance");
   ctr_object* prop = ctr_internal_object_find_property(argumentList->object, name, CTR_CATEGORY_PRIVATE_PROPERTY);
   if(prop != NULL) ctr_internal_object_add_property(newblk, name, prop, CTR_CATEGORY_PRIVATE_PROPERTY);
+  newblk->info.sticky = argumentList->object->info.sticky;
   return newblk;
 }
 

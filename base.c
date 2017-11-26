@@ -3900,6 +3900,29 @@ ctr_object* ctr_block_runIt(ctr_object* myself, ctr_argument* argumentList) {
     return result;
 }
 
+ctr_object* ctr_block_run_variadic_my(ctr_object* myself, ctr_object* my, int count, ...) {
+  if (count < 1) return ctr_block_run(myself, NULL, my);
+  ctr_argument* argumentList = ctr_heap_allocate(sizeof(ctr_argument));
+  ctr_argument* pass = argumentList;
+  va_list ap;
+  va_start(ap, count);
+  for (size_t i = 0; i < count; i++) {
+      pass->object = va_arg(ap, ctr_object*);
+      pass->next = ctr_heap_allocate(sizeof(ctr_argument));
+      pass = pass->next;
+  }
+  va_end(ap);
+  ctr_object* result = ctr_block_run(myself, argumentList, my);
+  pass = argumentList;
+  while(pass->next != NULL) {
+      ctr_argument* prev = pass;
+      pass = pass->next;
+      if(prev != NULL) ctr_heap_free(prev);
+  }
+  // ctr_heap_free(argumentList);
+  return result;
+}
+
 ctr_object* ctr_block_run_variadic(ctr_object* myself, int count, ...) {
     if (count < 1) return ctr_block_runIt(myself, NULL);
     ctr_argument* argumentList = ctr_heap_allocate(sizeof(ctr_argument));

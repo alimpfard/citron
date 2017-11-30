@@ -282,27 +282,18 @@ void ctr_gc_mark(ctr_object* object, int last_vector_index) {
     ctr_mapitem* item;
     ctr_object* o;
     ctr_object* k;
-
-    // for (size_t i = 0; i < CTR_GC_BACKLOG_MAX; i++)
-    //   printf("%p,", gc_checked[i]);
-    // printf("->%d,%p\n", last_vector_index, object);
-
-    // for (size_t i = 0; i < last_vector_index; i++)
-    //   if (gc_checked[i] == object) return; //already marked, was just a cycle
-    // if (last_vector_index+1<CTR_GC_BACKLOG_MAX)
-    //   gc_checked[last_vector_index++] = object;
-    // else
-    //   gc_checked[(last_vector_index=1)-1] = object;//reset the cycle
-    // if (object->info.sticky) return;
+    //for(int i=0; i<CTR_GC_BACKLOG_MAX; i++) printf("%p, ", gc_checked[i]);
     long i;
+    if(last_vector_index>CTR_GC_BACKLOG_MAX-1) last_vector_index=CTR_GC_BACKLOG_MAX-1;
+    if(last_vector_index>-1)
+    for (int i=0; i<CTR_GC_BACKLOG_MAX&&i<=last_vector_index; i++)
+      if(gc_checked[i] == object) return;
+    gc_checked[(last_vector_index+=1)] = object;
     if (object->info.type == CTR_OBJECT_TYPE_OTARRAY) {
+
         for (i = 0; i < object->value.avalue->head; i++) {
             el = *(object->value.avalue->elements+i);
             el->info.mark = 1;
-            // if (last_vector_index+1<CTR_GC_BACKLOG_MAX)
-            //   gc_checked[last_vector_index++] = object;
-            // else
-            //   gc_checked[(last_vector_index=1)-1] = object;//reset the cycle
             if(el != object)
             ctr_gc_mark(el, last_vector_index);
         }
@@ -313,10 +304,6 @@ void ctr_gc_mark(ctr_object* object, int last_vector_index) {
         o = item->value;
         o->info.mark = 1;
         k->info.mark = 1;
-        // if (last_vector_index+1<CTR_GC_BACKLOG_MAX)
-        //   gc_checked[last_vector_index++] = object;
-        // else
-        //   gc_checked[(last_vector_index=1)-1] = object;//reset the cycle
         if(o != object)
         ctr_gc_mark(o, last_vector_index);
         item = item->next;
@@ -327,10 +314,6 @@ void ctr_gc_mark(ctr_object* object, int last_vector_index) {
         k = item->key;
         o->info.mark = 1;
         k->info.mark = 1;
-        // if (last_vector_index+1<CTR_GC_BACKLOG_MAX)
-        //   gc_checked[last_vector_index++] = object;
-        // else
-        //   gc_checked[(last_vector_index=1)-1] = object;//reset the cycle
         if (o != object)
         ctr_gc_mark(o, last_vector_index);
         item = item->next;
@@ -347,6 +330,7 @@ void ctr_gc_sweep( int all ) {
     ctr_object* nextObject = NULL;
     ctr_mapitem* mapItem = NULL;
     ctr_mapitem* tmp = NULL;
+    int i = 0;
     while(currentObject) {
         ctr_gc_object_counter ++;
         if ( ( currentObject->info.mark==0 && currentObject->info.sticky==0 ) || all){
@@ -972,11 +956,17 @@ ctr_object* ctr_command_set_INT_handler(ctr_object* myself, ctr_argument* argume
 }
 
 void ctr_int_handler(int isig) {
-  printf("%i\n", isig);
+  //printf("%i\n", isig);
   if (ctr_global_interrupt_handler != NULL) {
     ctr_invoke_variadic(ctr_global_interrupt_handler, &ctr_block_runIt, 1, ctr_build_number_from_float(isig));
+    if(CtrStdFlow) CtrStdFlow = CtrStdExit; //exit on exception in interrupt handler
   } else {
-    exit(1);
+    switch(isig) {
+      case SIGINT:
+      case SIGTERM:
+      case SIGHUP: exit(1);
+      default: return;
+    }
   }
 }
 

@@ -18,10 +18,11 @@ Eval on: 'init' do: {
   my globalvars is False.
   my history is LRArray new init: 100.
   my commands is Nil.
+  my continuation is '...'.
   me genReader: 'eServer'.
   ^me.
 }.
-Eval on: 'end' do: { my end is True. me joinEvalServer. }.
+Eval on: 'end' do: { my end is True. me stopEvalServer. }.
 Eval on: 'break' do: { my end ifTrue: {Broom sweep.}. my end break. }.
 Eval on: 'allowedColors' do: { ^my allowedColors. }.
 Eval on: 'isAllowedColor:' do: { :c
@@ -32,9 +33,11 @@ Eval on: 'setColor:' do: { :c
   my color is c.
 }.
 Eval on: 'setPrompt:' do: { :p my prompt is p. }.
+Eval on: 'setContinuation:' do: { :p my continuation is p. }.
 Eval on: 'setArgs:' do: { :a my args := a. }.
 Eval on: 'color' do: { ^my color. }.
 Eval on: 'prompt' do: { ^my prompt. }.
+Eval on: 'continuation' do: { ^my continuation. }.
 Eval on: 'shiftArgs' do: { ^(my args shift). }.
 Eval on: 'argCount' do: { ^(my args count). }.
 Eval on: 'onlyRelevantArgs' do: { my args do shift shift done. }. #get rid of ./ctr eval
@@ -70,33 +73,36 @@ Eval on: 'startEvalServerOnPort:' do: {:port
   ^port.
 }.
 
-Eval on: 'joinEvalServer' do: {
-  my eServer ifFalse: {^False.}.
-  my eServer join.
+Eval on: 'stopEvalServer' do: {
+  ^my eServer isNil not either: {my eServer signal: 1. ^True.} or: {^False.}.
 }.
 
 Eval on: 'Commands' do: {
   my commands is my commands or: {
     ^Map new
       put: {:args Eval end.} at: 'q',
-      put: {:args ^Reflect strTypeOf: (args eval).} at: 't'.
+      put: {:args ^Reflect strTypeOf: (args eval).} at: 't',
+      put: {:args ^(args trim = '') either: {^Eval startEvalServer.} or: {^Eval startEvalServerOnPort: args eval.}.} at: 'server',
+      put: {^Eval stopEvalServer.} at: '!server'.
   }.
   ^my commands.
 }.
 
-Eval on: 'doMeta:' do: {:str
-  ^(Eval Commands at: (str at: 0)) applyTo: (str skip: 1, trim).
+Eval on: 'doMeta:' do: {:str:ptr
+  var cmd is 'h'.
+  var args is ''.
+  str trim findPattern: '(\\W?\\w+)(\\s+(.*))?' do: {:parts cmd is parts @ 1. args is parts count > 2 either: {^parts @ 3.} or: ''.}.
+  ^(Eval Commands at: cmd) applyTo: args.
 }.
 
 Eval on: 'evaluate:' do: { :str
   var x is Nil.
   (str at: 0, = ':')
     either:
-      ({ ^x is Eval doMeta: (str skip: 1). } catch: {:e Pen red write: 'Uncaught exception occurred: ', brk. x is e.})
+      ({ ^x is Eval doMeta: (str skip: 1). } catch: {:e Pen red writeln: 'Uncaught exception occurred: '. x is e.})
     or:
-      ({ ^x is str eval toString. } catch: {:e Pen red write: 'Uncaught exception occurred: ', brk. x is e.}).
-    Pen resetColor.
-  ^(x containsPattern: '\\[\\w+\\]') either: '' or: x.
+      ({ ^x is str eval toString. } catch: {:e Pen red writeln: 'Uncaught exception occurred: '. x is e.}).
+  ^(x containsPattern: '\\[\\w*?\\]') either: '' or: x.
 }.
 Eval on: 'evaluateFile:' do: { :fl
   { File new: fl, include. } catch: { :e
@@ -132,6 +138,10 @@ Eval on: 'executeLast:' do: {:n
 }.
 Eval on: 'getHistory' do: {^my history.}.
 
+Eval on: 'queryState:' do: {:query
+  ^((query countOf: '\'') - (query countOf: '\\\'') even) & ((query countOf: '{') = (query countOf: '}')) & ((query countOf: '[') = (query countOf: ']')).
+}.
+
 Eval init.
 Eval setArgs: (Array with: {:i ^Program argument: i. } count: (Program argCount)).
 Eval onlyRelevantArgs.
@@ -154,7 +164,7 @@ var rf is Nil.
     var opt is Eval shiftArgs.
     args push: opt.
     # when passed -h, show help, then exit.
-    opt singleCase: '-h' do: {
+    opt case: '-h' do: {
         args pop. #consume option.
         Pen green write: 'Citron Evaluator.\n', resetColor.
         var P is Pen new.
@@ -184,23 +194,29 @@ var rf is Nil.
         P resetColor.
         Program exit.
     # when passed -p, get the next arg, and set the prompt to that.
-    }, singleCase: '-p' do: {
+    }, case: '-p' do: {
         args pop. #consume option..
         var value is Eval shiftArgs.
         (value isNil) ifTrue: { thisBlock error: '-p requires an arg.'. }.
         Eval setPrompt: value.
+    # when passed -pc, get the next arg, and set the continuation prompt to that.
+    }, case: '-pc' do: {
+        args pop. #consume option..
+        var value is Eval shiftArgs.
+        (value isNil) ifTrue: { thisBlock error: '-pc requires an arg.'. }.
+        Eval setContinuation: value.
     # when passed -c, get the next arg, and set the result color to that.
-    }, singleCase: '-c' do: {
+    }, case: '-c' do: {
         args pop. #consume option.
         var value is Eval shiftArgs.
         (value isNil) ifTrue: { thisBlock error: '-c requires an arg, valid arguments are: \n\t' + (((Eval allowedColors) split: '|') join: '\n\t'). }.
         Eval setColor: value.
-    }, singleCase: '-f' do: {
+    }, case: '-f' do: {
         args pop. #consume option.
         var file is Eval shiftArgs.
         (file isNil) ifTrue: { thisBlock error: '-f requires a file name.'. }.
         Eval enqueue: file.
-    }, singleCase: '-e' do: {
+    }, case: '-e' do: {
         args pop. #consume option..
         var value is Eval shiftArgs.
         (value isNil) ifTrue: { thisBlock error: '-e requires an argument.'. }.
@@ -210,10 +226,10 @@ var rf is Nil.
         value is Eval handleGlobalVars: value.
         Pen write: (Eval evaluate: value).
         Program exit.
-    }, singleCase: '--global-vars' do: {
+    }, case: '--global-vars' do: {
         args pop. #consume option.
         Eval setGlobalVars: True.
-    }. # do not consume any other option.
+    }, switch. # do not consume any other option.
 }.
 Pen green. ?>Project Citron : The Programming Language (V<?. Pen write:(Reflect version) + ')' ,resetColor brk.
 ?>Eval Mode, parameters related to eval are in the Eval namespace.
@@ -235,18 +251,24 @@ run with '-h' to read the eval mode help.
     Pen cyan write: (Eval prompt), resetColor.
 
     # get input, get rid of the trailing \n. If empty, don't bother evaluating.
-    var inp is (Program waitForInput) trim.
-    (inp = '') continue.
+    var inp is Program waitForInput.
+    (inp trim = '') continue.
 
+    {^Eval queryState: inp.} whileFalse: {
+      inp append: (inp countOf: '\'', even either: '\n' or: '') + ({
+        Pen cyan write: Eval continuation, resetColor.
+        ^Program waitForInput.
+        } run).
+      }.
     # if it ends in a dot, get rid of it.
     inp at: inp length, = '.' ifTrue: {
-        inp is inp from: 0 length: (inp length - 1).
+    inp is inp from: 0 length: (inp length - 1).
     }.
-    inp is Eval handleGlobalVars: inp.
 
+    inp is Eval handleGlobalVars: inp.
     # Syntactic errors will not be passed to the eval. # TODO: handle that.
-    #Pen write: inp, brk.
-    Pen write: (var ret is Eval evaluate: inp).
+    'Pen %s write: (var ret is Eval evaluate: inp)' formatObjects: [(Eval color)], eval.
+    Pen resetColor.
     Eval pushHist: inp.
     #Broom sweep. #Keep the darn pointers in memory
     ret length > 0 ifTrue: { Pen brk. }.

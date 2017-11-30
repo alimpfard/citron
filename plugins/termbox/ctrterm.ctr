@@ -1,0 +1,235 @@
+var fnames is
+[ 'tb_init', 'tb_shutdown', 'tb_width', 'tb_height',
+  'tb_clear', 'tb_set_clear_attributes', 'tb_present',
+  'tb_set_cursor', 'tb_put_cell', 'tb_change_cell',
+  'tb_blit', 'tb_cell_buffer', 'tb_select_input_mode',
+  'tb_select_output_mode', 'tb_peek_event', 'tb_poll_event',
+  'tb_utf8_char_to_unicode' ].
+var Termbox is Object cnew: {
+  CTypes.
+  my Tbso is Nil. #Termbox so
+  my TB_KEY_F1 is               (65535).
+  my TB_KEY_F2 is               (65534).
+  my TB_KEY_F3 is               (65533).
+  my TB_KEY_F4 is               (65532).
+  my TB_KEY_F5 is               (65531).
+  my TB_KEY_F6 is               (65530).
+  my TB_KEY_F7 is               (65529).
+  my TB_KEY_F8 is               (65528).
+  my TB_KEY_F9 is               (65527).
+  my TB_KEY_F10 is              (65526).
+  my TB_KEY_F11 is              (65525).
+  my TB_KEY_F12 is              (65524).
+  my TB_KEY_INSERT is           (65523).
+  my TB_KEY_DELETE is           (65522).
+  my TB_KEY_HOME is             (65521).
+  my TB_KEY_END is              (65520).
+  my TB_KEY_PGUP is             (65519).
+  my TB_KEY_PGDN is             (65518).
+  my TB_KEY_ARROW_UP is         (65517).
+  my TB_KEY_ARROW_DOWN is       (65516).
+  my TB_KEY_ARROW_LEFT is       (65515).
+  my TB_KEY_ARROW_RIGHT is      (65514).
+  my TB_KEY_MOUSE_LEFT is       (65513).
+  my TB_KEY_MOUSE_RIGHT is      (65512).
+  my TB_KEY_MOUSE_MIDDLE is     (65511).
+  my TB_KEY_MOUSE_RELEASE is    (65510).
+  my TB_KEY_MOUSE_WHEEL_UP is   (65509).
+  my TB_KEY_MOUSE_WHEEL_DOWN is (65508).
+
+
+  my TB_KEY_CTRL_TILDE is       0.
+  my TB_KEY_CTRL_2 is           0.
+  my TB_KEY_CTRL_A is           1.
+  my TB_KEY_CTRL_B is           2.
+  my TB_KEY_CTRL_C is           3.
+  my TB_KEY_CTRL_D is           4.
+  my TB_KEY_CTRL_E is           5.
+  my TB_KEY_CTRL_F is           6.
+  my TB_KEY_CTRL_G is           7.
+  my TB_KEY_BACKSPACE is        8.
+  my TB_KEY_CTRL_H is           8.
+  my TB_KEY_TAB is              9.
+  my TB_KEY_CTRL_I is           9.
+  my TB_KEY_CTRL_J is           10.
+  my TB_KEY_CTRL_K is           11.
+  my TB_KEY_CTRL_L is           12.
+  my TB_KEY_ENTER is            13.
+  my TB_KEY_CTRL_M is           13.
+  my TB_KEY_CTRL_N is           14.
+  my TB_KEY_CTRL_O is           15.
+  my TB_KEY_CTRL_P is           16.
+  my TB_KEY_CTRL_Q is           17.
+  my TB_KEY_CTRL_R is           18.
+  my TB_KEY_CTRL_S is           19.
+  my TB_KEY_CTRL_T is           20.
+  my TB_KEY_CTRL_U is           21.
+  my TB_KEY_CTRL_V is           22.
+  my TB_KEY_CTRL_W is           23.
+  my TB_KEY_CTRL_X is           24.
+  my TB_KEY_CTRL_Y is           25.
+  my TB_KEY_CTRL_Z is           26.
+  my TB_KEY_ESC is              27.
+  my TB_KEY_CTRL_LSQ_BRACKET is 27.
+  my TB_KEY_CTRL_3 is           27.
+  my TB_KEY_CTRL_4 is           28.
+  my TB_KEY_CTRL_BACKSLASH is   28.
+  my TB_KEY_CTRL_5 is           29.
+  my TB_KEY_CTRL_RSQ_BRACKET is 29.
+  my TB_KEY_CTRL_6 is           30.
+  my TB_KEY_CTRL_7 is           31.
+  my TB_KEY_CTRL_SLASH is       31.
+  my TB_KEY_CTRL_UNDERSCORE is  31.
+  my TB_KEY_SPACE is            32.
+  my TB_KEY_BACKSPACE2 is       127.
+  my TB_KEY_CTRL_8 is           127.
+
+  my TB_MOD_ALT is    1.
+  my TB_MOD_MOTION is 2.
+
+
+  my TB_DEFAULT is 0.
+  my TB_BLACK is   1.
+  my TB_RED is     2.
+  my TB_GREEN is   3.
+  my TB_YELLOW is  4.
+  my TB_BLUE is    5.
+  my TB_MAGENTA is 6.
+  my TB_CYAN is    7.
+  my TB_WHITE is   8.
+
+  my TB_BOLD is      256.
+  my TB_UNDERLINE is 512.
+  my TB_REVERSE is   1024.
+
+  my TB_EVENT_KEY    is 1.
+  my TB_EVENT_RESIZE is 2.
+  my TB_EVENT_MOUSE  is 3.
+
+  my TB_EUNSUPPORTED_TERMINAL is -1.
+  my TB_EFAILED_TO_OPEN_TTY   is -2.
+  my TB_EPIPE_TRAP_ERROR      is -3.
+
+  my TB_HIDE_CURSOR is -1.
+
+
+  my tb_init is Nil.                           #:c int init(void)
+  my tb_shutdown is Nil.                       #:c void shutdown(void)
+  my tb_width is Nil.                          #:c int width(void)
+  my tb_height is Nil.                         #:c int height(void)
+  my tb_clear is Nil.                          #:c void tb_clear(void)
+  my tb_set_clear_attributes is Nil.           #:c void tb_set_clear_attributes(uint16_t,uint16_t)
+  my tb_present is Nil.                        #:c void tb_present(void)
+  my tb_set_cursor is Nil.                     #:c void tb_set_cursor(int,int)
+  my tb_put_cell is Nil.                       #:c void tb_put_cell(int,int,struct tb_cell*)
+  my tb_change_cell is Nil.                    #:c void tb_change_cell(int,int,uint32_t,uint32_t,uint32_t)
+  my tb_blit is Nil.                           #:c void tb_blit(int,int,int,int,struct tbcell*)
+  my tb_cell_buffer is Nil.                    #:c struct tb_cell* tb_cell_buffer(void)
+  my TB_INPUT_CURRENT is    0.                 #
+  my TB_INPUT_ESC is        1.                 #
+  my TB_INPUT_ALT is        2.                 #
+  my TB_INPUT_MOUSE is      4.                 #
+  my tb_select_input_mode is Nil.              #:c int tb_select_input_mode(int)
+  my TB_OUTPUT_CURRENT   is 0.                 #
+  my TB_OUTPUT_NORMAL    is 1.                 #
+  my TB_OUTPUT_256       is 2.                 #
+  my TB_OUTPUT_216       is 3.                 #
+  my TB_OUTPUT_GRAYSCALE is 4.                 #
+  my tb_select_output_mode is Nil.             #:c int tb_select_output_mode(int)
+  my tb_peek_event is Nil.                     #:c int tb_peek_event(struct tb_event*, int)
+  my tb_poll_event is Nil.                     #:c int tb_poll_event(struct tb_event*)
+  my tb_utf8_char_to_unicode is Nil.           #:c int tb_utf8_char_to_unicode(uint32_t *out, const char *c)
+  my cif is CIF new.
+  my cchar is CTypes schar.
+  my cint is CTypes sint.
+  my ci_0 is CTypes sint.
+  my ci_1 is CTypes sint.
+  my cui16 is CTypes uint16.
+  my cui16_0 is CTypes uint16.
+  my cui16_1 is CTypes uint16.
+  my cui32 is CTypes uint32.
+  my cui32_0 is CTypes uint32.
+  my cptr is CTypes pointer.
+  my c32buf is CTypes fromString: (' ' * 32).
+
+}.
+Termbox on: 'charToUnicode:' do: {:char
+  #my cchar set: (char at: 0).
+  #my cptr set: my cchar.
+  #my cif setABI: 0 return: my cint argTypes: [my cptr, my cptr].
+  #my cif call: my tb_utf8_char_to_unicode withArgs: [my c32buf, my cptr].
+  #^my c32buf derefAs: my cui32, get.
+  ^char toByteArray sum.
+}.
+Termbox on: 'init' do: {
+  my Tbso is CTypes loadLibrary: './libtermbox.so.1.0.0'.
+  Pen writeln: my Tbso.
+  const fnames each: {:i:v
+    var str is 'my $$v is my Tbso $$v'.
+    Pen write: str + ' :: '.
+    Pen writeln: str eval.
+  }.
+  my cif setABI: 0 return: Nil argTypes: [].
+  my cif call: my tb_init withArgs: [].
+  # Pen writeln: 'Out of call()'.
+}.
+Termbox on: 'shutdown' do: {
+  Pen writeln: 'Shutting down'.
+  my cif setABI: 0 return: Nil argTypes: [].
+  my cif call: my tb_shutdown withArgs: [].
+}.
+Termbox on: 'width' do: {
+  my cif setABI: 0 return: my cint argTypes: [].
+  var out is my cif call: my tb_width withArgs: [].
+  ^out get.
+}.
+Termbox on: 'height' do: {
+  my cif setABI: 0 return: my cint argTypes: [].
+  var out is my cif call: my tb_height withArgs: [].
+  ^out get.
+}.
+Termbox on: 'clear' do: {
+  my cif setABI: 0 return: Nil argTypes: [].
+  my cif call: my tb_clear withArgs: [].
+}.
+Termbox on: 'set_clear_attributes:' do: {:fgbg
+  var fg is fgbg at: 0.
+  var bg is fgbg at: 1.
+  my cui16_0 set: fg.
+  my cui16_1 set: bg.
+  my cif setABI: 0 return: Nil argTypes: [my cui16, my cui16].
+  my cif call: my tb_clear withArgs: [my cui16_0, my cui16_1].
+}.
+Termbox on: 'present' do: {
+  my cif setABI: 0 return: Nil argTypes: [].
+  my cif call: my tb_present withArgs: [].
+}.
+Termbox on: 'set_cursor:' do: {:x:y
+  my ci_0 set: x.
+  my ci_1 set: y.
+  my cif setABI: 0 return: Nil argTypes: [my cint, my cint].
+  my cif call: my tb_set_cursor withArgs: [my ci_0, my ci_1].
+}.
+Termbox on: 'put_cell:at:' do: {:cellptr:xy
+  my ci_0 set: (xy at: 0).
+  my ci_1 set: (xy at: 1).
+  my cif setABI: 0 return: Nil argTypes: [my cint, my cint, my cptr].
+  my cif call: my tb_put_cell withArgs: [my ci_0, my ci_1, cellptr].
+}.
+Termbox on: 'change_cell:toChar:colors:' do: {:xy:char:fgbg
+  my ci_0 set: (xy at: 0).
+  my ci_1 set: (xy at: 1).
+  my cui16_0 set: (fgbg at: 0).
+  my cui16_1 set: (fgbg at: 1).
+  my cui32_0 set: (me charToUnicode: char).
+  my cif setABI: 0 return: Nil argTypes: [my cint, my cint, my cui32, my cui16, my cui16].
+  my cif call: my tb_put_cell withArgs: [my ci_0, my ci_1, my cui32_0, my cui16_0, my cui16_1].
+}.
+Termbox on: 'blit:' do: {}. #Deprecated
+Termbox on: 'cell_buffer' do: {
+  my cif setABI: 0 return: my cptr argTypes: [].
+  ^my cif call: my tb_cell_buffer withArgs: [].
+}.
+
+import export: Termbox as: 'Termbox'.
+import return: Termbox.

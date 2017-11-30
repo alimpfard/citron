@@ -12,6 +12,12 @@
 #include "citron.h"
 #include "siphash.h"
 
+#define DO_PROFILE 0
+
+#if DO_PROFILE
+#include <gperftools/profiler.h>
+#endif
+
 /**
  * CommandLine Display Welcome Message
  * Displays a Welcome message, copyright information,
@@ -21,7 +27,7 @@ void ctr_cli_welcome() {
     printf("\n");
     printf("CTR Programming Language V " CTR_VERSION "\n");
     printf("Written by AnotherTest (c) copyright 2017, Licensed BSD.\n");
-    printf("\tExtensions at: " CTR_STD_EXTENSION_PATH "\n");
+    printf("\tbuilt with Extensions at: " CTR_STD_EXTENSION_PATH "\n");
     printf("\n");
 }
 
@@ -77,6 +83,10 @@ int main(int argc, char* argv[]) {
     ctr_clex_keyword_var_len = strlen( ctr_clex_keyword_var );
     ctr_clex_keyword_const_len = strlen( ctr_clex_keyword_const );
     ctr_internal_next_return = 0;
+    #if (DO_PROFILE)
+      ProfilerStart("citron.log");
+    #endif
+
     if (ctr_mode_input_file != NULL) {
       prg = ctr_internal_readf(ctr_mode_input_file, &program_text_size);
       program = ctr_cparse_parse(prg, ctr_mode_input_file);
@@ -93,6 +103,9 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
     //exit(0);
+    #if (DO_PROFILE)
+      ProfilerStop();
+    #endif
     return 0;
 }
 void initialize(int extensions) {

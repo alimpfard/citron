@@ -5,7 +5,7 @@ all: libjansson ctrjson
 libjansson: 
 	cd jansson && make
 ctrjson: 
-	cc -c json.c -Wall -Werror -fPIC -g3 -o json.o
+	cc -c json.c -fPIC -g3 -o json.o
 	cp jansson/lib/libjansson.a .
 	cc -shared -o libctrjson.so json.o libjansson.a
 	cp -f libctrjson.so ../../mods/json

@@ -1,0 +1,12 @@
+var Timer is Object new.
+Timer on: 'timeBlock:' do: {:blk
+  ^Clock timeExecutionOf: blk.
+}.
+Timer on: 'timeBlock:withArguments:' do: {:blk :args
+  ^Clock timeExecutionOf: {
+    const blk message: 'applyTo:' arguments: const args.
+  }.
+}.
+
+import return: Timer.
+import export: Timer as: 'Timer'.

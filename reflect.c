@@ -127,25 +127,62 @@ ctr_object* ctr_reflect_dump_context(ctr_object* myself, ctr_argument* argumentL
 ctr_object* ctr_reflect_dump_context_spec(ctr_object* myself, ctr_argument* argumentList) {
     ctr_object* of = argumentList->object;
     ctr_object* meths = ctr_array_new(CtrStdArray, NULL);
+    ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
     while(of->link) {
       int m = of->methods->size - 1;
       struct ctr_mapitem* head;
       head = of->methods->head;
       while(m>-1) {
           //printf("m:%d:%d :: ", i, m);
-          ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
           args->object = head->key;
-          args->next = NULL;
+
+
+            args->next = NULL;
           //printf("%s\n", head->key->value.svalue->value);
           ctr_array_push(meths, args);
-          ctr_heap_free(args);
           head = head->next;
           m--;
       }
       if (of->link) of = of->link;
       else break;
     }
+    ctr_heap_free(args);
     return meths;
+}
+int ctr_internal_has_responder(ctr_object* of, ctr_object* meth) {
+  while(of->link) {
+    int m = of->methods->size - 1;
+    struct ctr_mapitem* head;
+    head = of->methods->head;
+    while(m>-1) {
+        if (ctr_internal_object_is_equal(head->key, meth)) goto return_true;
+        head = head->next;
+        m--;
+    }
+    if (of->link) of = of->link;
+    else break;
+  }
+  return 0;
+  return_true:;
+  return 1;
+}
+int ctr_internal_has_own_responder(ctr_object* of, ctr_object* meth) {
+  int m = of->methods->size - 1;
+  struct ctr_mapitem* head;
+  head = of->methods->head;
+  while(m>-1) {
+      if (ctr_internal_object_is_equal(head->key, meth)) goto return_true;
+      head = head->next;
+      m--;
+  }
+  return 0;
+  return_true:;
+  return 1;
+}
+ctr_object* ctr_reflect_has_own_responder(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* of = argumentList->object;
+  ctr_object* meth = argumentList->next->object;
+  return ctr_build_bool(ctr_internal_has_own_responder(of, meth));
 }
 
 /**

@@ -86,6 +86,8 @@ void* ctr_heap_allocate( size_t size ) {
     ctr_gc_alloc += size;
 
     if (ctr_gc_memlimit < ctr_gc_alloc) {
+      ctr_gc_sweep(0);
+      if(ctr_gc_memlimit < ctr_gc_alloc)
       if (CTR_LIMIT_MEM) {
           printf( "Out of memory. Failed to allocate %lu bytes.\n", size );
           ctr_print_stack_trace();

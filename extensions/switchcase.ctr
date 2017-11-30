@@ -1,48 +1,23 @@
 #Reflect addGlobalVariable: 'IntermediateCaseObject'.
-var IntermediateCaseObject is Object new.
-IntermediateCaseObject on: 'init:' do: { :p
-  my parent is p.
-  my cases is Array new.
-  ^me.
+var CaseConstruct is Object new.
+CaseConstruct on: 'initFor:' do: {:obj
+  my obj is obj.
+  my casemap is Map new.
+  my default is Nil.
 }.
-
-IntermediateCaseObject on: 'put:' do: { :v
-  my cases push: v.
-  ^me.
+CaseConstruct on: 'case:do:' do: {:s:b
+  my casemap put: b at: s.
 }.
-
-IntermediateCaseObject on: 'do:' do: { :blk
-  var caseExists is False.
-  my cases each: {:i:v:a
-    caseExists break.
-    caseExists is (v = my parent).
-    }.
-  caseExists ifTrue: {
-    blk set: 'value' value: my parent.
-    blk run.
-  }.
-  my parent clearCases.
-  ^my parent.
+CaseConstruct on: 'default:' do: {:b my default is b.}
+CaseConstruct on: 'switch:' do: {:value
+  var ans is my casemap at: value.
+  ^ans isNil either: {^my default run.} or: {^ans run.}.
 }.
-
-IntermediateCaseObject on: 'case:' do: { :s
-  me put: s.
-  ^me.
+CaseConstruct on: 'switch' do: {
+  var ans is my casemap at: my obj.
+  ^ans isNil either: {^my default run.} or: {^ans run.}.
 }.
-
-Object on: 'case:' do: { :s
-  var cases is Nil.
-  (my cases isNil) ifFalse: { cases is IntermediateCaseObject new. cases init: me. }.
-  my cases is cases.
-  my cases put: s.
-  ^my cases.
-}.
-
-Object on: 'clearCases' do: {
-  my cases is Nil.
-}.
-
-Object on: 'singleCase:do:' do: { :s :b
-  var self is me.
-  (me = s) ifTrue: { b set: 'value' value: self. b run. ^self.}, ifFalse: { ^self. }.
+Object on: 'case:do:' do: { :s :b
+  var ret is const CaseConstruct new initFor: me.
+  ^ret case: s do: b.
 }.

@@ -276,7 +276,7 @@ ctr_object* ctr_cwlk_run(ctr_tnode* program) {
         }
         /* Perform garbage collection cycle */
         if ( ( ( ctr_gc_mode & 1 ) && ctr_gc_alloc > ( ctr_gc_memlimit * 0.8 ) ) || ctr_gc_mode & 4 ) {
-            ctr_gc_internal_collect();
+          ctr_gc_internal_collect(); //collect on limit mode
         }
         if (!li->next) break;
         li = li->next;

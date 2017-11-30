@@ -6,12 +6,123 @@
 #include <math.h>
 #include <unistd.h>
 #include <signal.h>
+#include <errno.h>
 #include <stdint.h>
 #include <time.h>
 
 #include "citron.h"
 #include "siphash.h"
 
+static const all_signals[] = {
+#ifdef SIGHUP
+  SIGHUP,
+#endif
+#ifdef SIGINT
+  SIGINT,
+#endif
+#ifdef SIGQUIT
+  SIGQUIT,
+#endif
+#ifdef SIGILL
+  SIGILL,
+#endif
+#ifdef SIGABRT
+  SIGABRT,
+#endif
+#ifdef SIGFPE
+  SIGFPE,
+#endif
+#ifdef SIGSEGV
+  SIGSEGV,
+#endif
+#ifdef SIGPIPE
+  SIGPIPE,
+#endif
+#ifdef SIGALRM
+  SIGALRM,
+#endif
+#ifdef SIGTERM
+  SIGTERM,
+#endif
+#ifdef SIGUSR1
+  SIGUSR1,
+#endif
+#ifdef SIGUSR2
+  SIGUSR2,
+#endif
+#ifdef SIGCHLD
+  SIGCHLD,
+#endif
+#ifdef SIGCONT
+  SIGCONT,
+#endif
+#ifdef SIGSTP
+  SIGSTP,
+#endif
+#ifdef SIGTTIN
+  SIGTTIN,
+#endif
+#ifdef SIGTTOU
+  SIGTTOU,
+#endif
+#ifdef SIGBUS
+  SIGBUS,
+#endif
+#ifdef SIGPOLL
+  SIGPOLL,
+#endif
+#ifdef SIGPROF
+  SIGPROF,
+#endif
+#ifdef SIGSYS
+  SIGSYS,
+#endif
+#ifdef SIGTRAP
+  SIGTRAP,
+#endif
+#ifdef SIGURG
+  SIGURG,
+#endif
+#ifdef SIGVTALRM
+  SIGVTALRM,
+#endif
+#ifdef SIGXCPU
+  SIGXCPU,
+#endif
+#ifdef SIGXFSZ
+  SIGXFSZ,
+#endif
+#ifdef SIGEMT
+  SIGEMT,
+#endif
+#ifdef SIGSTKFLT
+  SIGSTKFLT,
+#endif
+#ifdef SIGIO
+  SIGIO,
+#endif
+#ifdef SIGPWR
+  SIGPWR,
+#endif
+#ifdef SIGLOST
+  SIGLOST,
+#endif
+#ifdef SIGWINCH
+  SIGWINCH,
+#endif
+  SIGKILL, //last one. must exist
+};
+static void register_signal_handlers() {
+  struct sigaction act;
+  int i = 0;
+  memset(&act, 0, sizeof act);
+  act.sa_handler = ctr_int_handler;
+  act.sa_flags = 0;
+  do {
+    if(sigaction(all_signals[i], &act, NULL))
+      fprintf(stderr, "Could not install signal %d handler: %s (Ignoring)\n", all_signals[i], strerror(errno));
+  } while(all_signals[++i] != SIGKILL);
+}
 
 /**
  * @internal
@@ -723,8 +834,7 @@ ctr_object* ctr_object_destruct(ctr_object* object, ctr_argument* nothing) {
  * Populate the World of Citron.
  */
 void ctr_initialize_world() {
-    signal(SIGINT, ctr_int_handler);
-    signal(SIGHUP, ctr_int_handler);
+    register_signal_handlers();
 
     int i;
     srand((unsigned)time(NULL));
@@ -1171,7 +1281,7 @@ void ctr_initialize_world() {
     ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring( CTR_DICT_CLOCK ), CtrStdClock, 0 );
     ctr_clock_init( CtrStdClock );
     CtrStdClock->link = CtrStdObject;
-    CtrStdFile->info.sticky = 1;
+    CtrStdClock->info.sticky = 1;
 
     /* Dice */
     CtrStdDice = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
@@ -1245,6 +1355,7 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("runHere:forObject:arguments:"), &ctr_reflect_run_for_object_ctx);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("primitiveLinkOf:"), &ctr_reflect_get_primitive);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("getProperty:ofObject:"), &ctr_reflect_get_property);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("object:hasOwnResponder:"), &ctr_reflect_has_own_responder);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("version"), &ctr_give_version);
 
     ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Reflect"), CtrStdReflect, 0);
@@ -1332,7 +1443,7 @@ ctr_object* ctr_get_responder(ctr_object* receiverObject, char* message, long vl
  *
  * Sends a message to a receiver object.
  */
-ctr_object* ctr_send_message(ctr_object* receiverObject, char* message, long vlen, ctr_argument* argumentList) {
+__attribute__((optimize(0))) ctr_object* ctr_send_message(ctr_object* receiverObject, char* message, long vlen, ctr_argument* argumentList) {
     char toParent = 0;
     int  i = 0;
     char messageApproved = 0;

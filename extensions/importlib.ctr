@@ -1,3 +1,6 @@
+import genAccessors: 'return'.
+import return: (Map new).
+
 import on: 'searchPaths' do: {^my searchPaths.}.
 import on: 'export:as:' do: {:object:name
   Reflect addGlobalVariable: name.
@@ -6,6 +9,13 @@ import on: 'export:as:' do: {:object:name
 import on: 'require-parent' do: {
   me message: '..' arguments: [].
 }.
+import on: 'return:' do: {:obj
+  var path is (File new: '.', realPath).
+  var spath is my searchPaths filter: {:i:v ^path contains: v.}.
+  var import_name is path skip: (spath at: 0, length + 1).
+  my return put: obj at: import_name.
+}.
+import on: 'return' do: {}.
 import on: 'respondTo:' do: {:name
   var file is Nil.
   var path is Nil.
@@ -33,4 +43,5 @@ import on: 'respondTo:' do: {:name
   var oldp is Program changeDirectory: path.
   file include.
   Program changeDirectory: oldp.
+  ^my return at: name.
 }.

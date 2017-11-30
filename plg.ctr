@@ -4,4 +4,9 @@ Broom mode: 0.
 import Library/Control/Applicative.
 import Library/Control/Arrow.
 
-Iterator rangeFrom: 0 to: 1000 step: 1, each_v: Pen ⇒ 'writeln:'.
+var x is Iterator rangeFrom: 0 to: 1000 step: 1.
+10 times: {
+    x setSeed:0, each_v: Pen ⇒ 'writeln:'.
+}.
+Pen writeln: 'we out'.
+Program exit.

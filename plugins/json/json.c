@@ -157,7 +157,10 @@ ctr_object* ctr_json_serialize_(ctr_object* object) {
       return string;
     }
     case CTR_OBJECT_TYPE_OTOBJECT: {
-      obj = ctr_serialize_map(object);
+      if(ctr_internal_has_responder(object, ctr_build_string_from_cstring("toJSON")))
+        obj = ctr_internal_cast2string(ctr_send_message(object, "toJSON", 6, NULL));
+      else
+        obj = ctr_serialize_map(object);
       break;
     }
     case CTR_OBJECT_TYPE_OTNUMBER: {
@@ -178,8 +181,13 @@ ctr_object* ctr_json_serialize_(ctr_object* object) {
       break;
     }
     default: {
-      CtrStdFlow = ctr_build_string_from_cstring("Cannot serialize this object."); //TODO:get a decent message.
-      return CtrStdNil;
+      if(ctr_internal_has_responder(object, ctr_build_string_from_cstring("toJSON")))
+        obj = ctr_internal_cast2string(ctr_send_message(object, "toJSON", 6, NULL));
+      else {
+        CtrStdFlow = ctr_build_string_from_cstring("Cannot serialize this object."); //TODO:get a decent message.
+        return CtrStdNil;
+      }
+      break;
     }
   }
   return obj;

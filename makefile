@@ -13,7 +13,7 @@ install: ctr
 	cp ./ctr /usr/bin/ctr
 
 ctr:	$(OBJS)
-	$(CC) $(OBJS) -rdynamic -lm -ldl -lbsd -lpcre  -o ctr
+	$(CC) $(OBJS) -rdynamic -lm -ldl -lbsd -lpcre -lprofiler -o ctr
 
 libctr: CFLAGS := $(CFLAGS) -fPIC -D CTR_STD_EXTENSION_PATH='".."'
 libctr: $(OBJS)

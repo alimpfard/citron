@@ -1111,7 +1111,10 @@ ctr_object* ctr_bool_to_number(ctr_object* myself, ctr_argument* argumentList) {
  */
 ctr_object* ctr_build_number(char* n) {
     ctr_object* numberObject = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNUMBER);
-    numberObject->value.nvalue = atof(n);
+    if (strncmp(n, "0x", 2)==0)
+      numberObject->value.nvalue = (double)strtol(n, NULL, 0);
+    else
+      numberObject->value.nvalue = atof(n);
     numberObject->link = CtrStdNumber;
     return numberObject;
 }
@@ -3676,8 +3679,79 @@ ctr_object* ctr_block_assign(ctr_object* myself, ctr_argument* argumentList) { i
  * the passed 'my' will be respected first,
  * and if lookup fails, it will be swapped for the block itself
  */
+
+typedef struct ctr_block_run_cache_key {
+  ctr_object* block;
+  ctr_argument* argumentList;
+} ctr_block_run_cache_key;
+
+typedef struct {
+  ctr_block_run_cache_key* key;
+  ctr_object* value;
+  struct ctr_cache_item* next;
+} ctr_cache_item;
+
+struct {
+ ctr_cache_item* map;
+} ctr_block_run_cached_keyvalue_map;
+
+long ctr_block_run_cache_ready_timer = 0;
+long ctr_block_run_last_cache_lookup_time = 0;
+void ctr_block_run_cache_result_if_expensive(ctr_object* myself, ctr_argument* arglist, ctr_object* result) {
+  if(clock() - ctr_block_run_cache_ready_timer > ctr_block_run_last_cache_lookup_time) {
+    ctr_block_run_cache_key* key = ctr_heap_allocate(sizeof(ctr_block_run_cache_key));
+    key->block = myself;
+    key->argumentList = arglist;
+    ctr_cache_item* newitem = ctr_heap_allocate_tracked(sizeof(ctr_cache_item));
+    if(!ctr_block_run_cached_keyvalue_map.map) {
+      ctr_block_run_cached_keyvalue_map.map = newitem;
+      newitem->key = key;
+      newitem->value = result;
+      return;
+    }
+    newitem->next = ctr_block_run_cached_keyvalue_map.map;
+    ctr_block_run_cached_keyvalue_map.map = newitem;
+    newitem->key = key;
+    newitem->value = result;
+  }
+}
+void ctr_block_run_cache_set_ready_for_comp() {
+ ctr_block_run_cache_ready_timer = clock();
+}
+
+int ctr_args_eq(ctr_argument* arg0, ctr_argument* arg1) {
+  if(!((arg0==NULL)&&(arg1==NULL))) return 0;
+  while(arg0&&arg1) {
+    if((arg0->object==NULL)^(arg1->object==NULL)) return 0;
+    if(!ctr_internal_object_is_equal(arg0->object, arg1->object)) return 0;
+    if((arg0->next==NULL)^(arg1->next==NULL)) return 0;
+    arg0=arg0->next;
+    arg1=arg1->next;
+  }
+  return 1;
+}
+
+ctr_object* ctr_block_run_try_get_result_for(ctr_object* myself, ctr_argument* arglist) {
+  ctr_cache_item* m;
+  m = ctr_block_run_cached_keyvalue_map.map;
+  long init = clock();
+  while(m) {
+      if(clock() - init > ctr_block_run_last_cache_lookup_time + 10) return NULL; //cache miss on timeout
+      if (m->key->block == myself && ctr_args_eq(m->key->argumentList, arglist)) {
+        printf("cache hit: %p <=> %p -> %p\n", myself, arglist, m->value);
+        ctr_block_run_last_cache_lookup_time = clock() - init;
+        return m->value;
+      }
+      m = m->next;
+  }
+  ctr_block_run_last_cache_lookup_time = clock() - init;
+  return NULL;
+}
+
 ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object* my) {
     ctr_object* result;
+    //result = ctr_block_run_try_get_result_for(myself, argList);
+    //if(result) return result;
     ctr_tnode* node = myself->value.block;
     ctr_tlistitem* codeBlockParts = node->nodes;
     ctr_tnode* codeBlockPart1 = codeBlockParts->node;
@@ -3728,6 +3802,7 @@ ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object*
         head = head->next;
         p--;
     }
+    //ctr_block_run_cache_set_ready_for_comp();
     result = ctr_cwlk_run(codeBlockPart2);
     if (result == NULL) {
         if (my) result = my; else result = myself;
@@ -3745,6 +3820,7 @@ ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object*
             result = myself;
         }
     }
+    //ctr_block_run_cache_result_if_expensive(myself, argList, result);
     return result;
 }
 

@@ -1,0 +1,21 @@
+Broom autoAlloc: True.
+#Broom mode: 0.
+
+import ctrterm.
+
+Termbox init.
+mid_w is Termbox width / 2 floor.
+mid_h is Termbox height / 2 floor.
+mid is [mid_w, mid_h].
+alt is False.
+
+500 times: {
+    Termbox change_cell: mid toChar: -1 colors: [1,2].
+    Clock wait: 10000.
+    Termbox present.
+}.
+
+Pen writeln: 'out of loop'.
+
+Termbox shutdown.
+Pen writeln: 'Shutdown'.

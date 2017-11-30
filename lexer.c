@@ -247,6 +247,19 @@ void ctr_match_toggle_pragma() {
     }
 }
 
+int ctr_clex_is_valid_digit_in_base(char c, int b) {
+  if (b <= 10) {
+  if ((c >= '0') && (c < ('0' + b)))
+    return 1;
+  } else if (b <= 36) {
+    if ((c >= '0') && (c <= '9'))
+      return 1;
+    else if ((c >= 'A') && (c < 'A' + (b - 10)))
+      return 1;
+  }
+  return 0; //unsupported base or not a digit
+}
+
 /**
  * CTRLexerReadToken
  *
@@ -348,31 +361,42 @@ int ctr_clex_tok() {
     }
     if (c == '\'') { ctr_code++; return CTR_TOKEN_QUOTE; }
     if ((c == '-' && (ctr_code+1)<ctr_eofcode && isdigit(*(ctr_code+1))) || isdigit(c)) {
+        int xnum_likely = c == '0';
+        int base = 10;
         ctr_clex_buffer[i] = c; ctr_clex_tokvlen++;
         i++;
         ctr_code++;
-        c = *ctr_code;
-        while((isdigit(c))) {
+        c = toupper(*ctr_code);
+        if(xnum_likely)
+          base = c == 'X' ? 16 : (c == 'C' ? 8 : 10); //let the lexer handle incorrect values
+          if(base != 10)  {
             ctr_clex_buffer[i] = c; ctr_clex_tokvlen++;
             i++;
             ctr_code++;
-            c = *ctr_code;
+            c = toupper(*ctr_code);
+          }
+        while((ctr_clex_is_valid_digit_in_base(c, base))) {
+            ctr_clex_buffer[i] = c; ctr_clex_tokvlen++;
+            i++;
+            ctr_code++;
+            c = toupper(*ctr_code);
         }
-        if (c=='.' && (ctr_code+1 <= ctr_eofcode) && !isdigit(*(ctr_code+1))) {
+        if (c=='.' && (ctr_code+1 <= ctr_eofcode) && !ctr_clex_is_valid_digit_in_base(toupper(*(ctr_code+1)), base)) {
             return CTR_TOKEN_NUMBER;
         }
         if (c=='.') {
             ctr_clex_buffer[i] = c; ctr_clex_tokvlen++;
             i++;
             ctr_code++;
-            c = *ctr_code;
+            c = toupper(*ctr_code);
         }
-        while((isdigit(c))) {
+        while((ctr_clex_is_valid_digit_in_base(c, base))) {
             ctr_clex_buffer[i] = c; ctr_clex_tokvlen++;
             i++;
             ctr_code++;
-            c = *ctr_code;
+            c = toupper(*ctr_code);
         }
+        c = *ctr_code;
         return CTR_TOKEN_NUMBER;
     }
     if (strncmp(ctr_code, "True", 4)==0){
@@ -535,6 +559,14 @@ char* ctr_clex_readstr() {
                     break;
                 case 'f':
                     c = '\f';
+                    break;
+                case 'x':
+                    c = 0;
+                    while(ctr_clex_is_valid_digit_in_base(toupper(*(ctr_code+1)), 16)) {
+                      char t = *(ctr_code+1);
+                      c = c*16 + (t >= '0' && t <= '9' ? t-'0' : toupper(t)-'A');
+                      ctr_code++;
+                    }
                     break;
             }
         }

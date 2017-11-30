@@ -12,6 +12,7 @@ void ctr_ctypes_set_type(ctr_object* object, ctr_ctype type) {
   ctr_internal_object_set_property(object, ctr_build_string_from_cstring(":cType"), ctr_build_number_from_float((int)type), 0);
   object->value.rvalue = ctr_heap_allocate(sizeof(ctr_resource));
   object->info.sticky = 1;
+  object->value.rvalue->type = (int)(type);
   switch(type) {
     case CTR_CTYPE_VOID: object->link = CtrStdCType_void; break;
     case CTR_CTYPE_UINT8: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(uint8_t)); object->link = CtrStdCType_uint8; break;
@@ -35,6 +36,7 @@ void ctr_ctypes_set_type(ctr_object* object, ctr_ctype type) {
     case CTR_CTYPE_LONGDOUBLE: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(long double)); object->link = CtrStdCType_longdouble; break;
     case CTR_CTYPE_POINTER: object->link = CtrStdCType_pointer; break;
     case CTR_CTYPE_DYN_LIB: object->link = CtrStdCType_dynamic_lib; break;
+    case CTR_CTYPE_STRUCT: object->link = CtrStdCType_struct; break;
     default: return;
   }
 }
@@ -457,6 +459,59 @@ CTR_CT_SIMPLE_TYPE_FUNC_STR(pointer) {
   return str_rep;
 }
 
+ssize_t ctr_ctype_get_c_size(ctr_object* meta) {
+  if((meta) == CtrStdCType_void)             return sizeof(void);
+  else if((meta) == CtrStdCType_uint8)       return sizeof(uint8_t);
+  else if((meta) == CtrStdCType_sint8)       return sizeof(int8_t);
+  else if((meta) == CtrStdCType_uint16)      return sizeof(uint16_t);
+  else if((meta) == CtrStdCType_sint16)      return sizeof(int16_t);
+  else if((meta) == CtrStdCType_uint32)      return sizeof(uint32_t);
+  else if((meta) == CtrStdCType_sint32)      return sizeof(int32_t);
+  else if((meta) == CtrStdCType_uint64)      return sizeof(uint64_t);
+  else if((meta) == CtrStdCType_sint64)      return sizeof(int64_t);
+  else if((meta) == CtrStdCType_float)       return sizeof(float);
+  else if((meta) == CtrStdCType_double)      return sizeof(double);
+  else if((meta) == CtrStdCType_uchar)       return sizeof(unsigned char);
+  else if((meta) == CtrStdCType_schar)       return sizeof(char);
+  else if((meta) == CtrStdCType_ushort)      return sizeof(unsigned short);
+  else if((meta) == CtrStdCType_sshort)      return sizeof(short);
+  else if((meta) == CtrStdCType_uint)        return sizeof(unsigned int);
+  else if((meta) == CtrStdCType_sint)        return sizeof(signed int);
+  else if((meta) == CtrStdCType_ulong)       return sizeof(unsigned long);
+  else if((meta) == CtrStdCType_slong)       return sizeof(long);
+  else if((meta) == CtrStdCType_longdouble)  return sizeof(long double);
+  else if((meta) == CtrStdCType_pointer ||
+        meta == CtrStdCType_dynamic_lib)     return sizeof(void*);
+  else if(  meta == CtrStdCType_struct)      return -1;//signal for struct
+  else return sizeof(void*);
+}
+
+ctr_object* ctr_ctypes_addr_of(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* ret = ctr_ctypes_make_pointer(NULL,NULL);
+  if(myself->info.type != CTR_OBJECT_TYPE_OTEX) {
+    ret->value.rvalue->ptr = &(myself);
+    return ret;
+  } else {
+    ret->value.rvalue->ptr = &(myself->value.rvalue->ptr);
+    return ret;
+  }
+}
+
+ctr_object* ctr_ctypes_deref_pointer(ctr_object* myself, ctr_argument* argumentList) {
+  if(argumentList->object->info.type != CTR_OBJECT_TYPE_OTEX) {
+    CtrStdFlow = ctr_build_string_from_cstring("Attempt to deref as a non-ctype object");
+    return CtrStdNil;
+  }
+  void* ptr = myself->value.rvalue->ptr;
+  ctr_object* meta = ctr_ctypes_get_first_meta(argumentList->object, CtrStdCType);
+  ctr_object* new_obj = ctr_send_message_variadic(meta, "new", 3, 0);
+  ssize_t csize = ctr_ctype_get_c_size(meta);
+  if(csize == -1)
+    csize = ((ctr_ctypes_ffi_struct_value*)(argumentList->object->value.rvalue->ptr))->size;
+  memcpy(new_obj->value.rvalue->ptr, ptr, csize);
+  return new_obj;
+}
+
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(dynamic_lib) {
   dlclose(myself->value.rvalue->ptr); //close the handle
   myself->value.rvalue->ptr = NULL;
@@ -487,6 +542,131 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(dynamic_lib) {
   funptr->value.rvalue->ptr = (void*) fn;
   ctr_heap_free(symbol);
   return funptr;
+}
+
+ctr_object* ctr_ctypes_make_struct(ctr_object* myself, ctr_argument* argumentList) {
+  CTR_CREATE_CTOBJECT(object);
+  ctr_ctypes_set_type(object, CTR_CTYPE_STRUCT);
+  char* fmt  = ctr_heap_allocate_cstring(argumentList->object);
+  char* fmtp = fmt;
+  size_t size;
+  struct_member_desc_t desc;
+  desc = ctr_ffi_type_get_member_count(fmt, &size, 1);
+  int member_count = desc.member_count;
+  ffi_type* type = ctr_create_ffi_type_descriptor_(fmt, member_count);
+  ctr_ctypes_ffi_struct_value* ptr = ctr_heap_allocate(sizeof(ctr_ctypes_ffi_struct_value));
+  ptr->member_count = member_count;
+  ptr->type = type;
+  ptr->size = size;
+  ptr->padinfo = desc.pad_structure;
+  ptr->value = NULL;
+  ctr_heap_free(fmtp);
+  object->value.rvalue->ptr = (void*)ptr;
+  return object;
+}
+
+/* ptr is CTypes fromString: 'test'.
+ * struct is CTypes structWithFormat: 'sip'. #signed int, pointer
+ * struct pack: [4, ptr]. #Fills the struct <-
+ */
+ctr_object* ctr_ctypes_pack_struct(ctr_object* myself, ctr_argument* argumentList) { //<struct> pack: [member, ...]
+  if(myself->info.type != CTR_OBJECT_TYPE_OTEX || myself->value.rvalue->type != CTR_CTYPE_STRUCT) {
+    //TODO: Error out
+    printf("Invalid object\n");
+    return myself;
+  }
+  ctr_ctypes_ffi_struct_value* structptr = myself->value.rvalue->ptr;
+  ffi_type* structtype = structptr->type;
+  ffi_type** struct_fields = structtype->elements;
+  int member_count = structptr->member_count;
+  size_t size = structptr->size;
+  ctr_object* data = argumentList->object;
+  pad_info_node_t** padinfo = structptr->padinfo;
+  char* fields = ctr_heap_allocate(sizeof(char)*size);
+  char* fieldsp = fields;
+  CTR_ENSURE_TYPE_ARRAY(data);
+  //----
+  int init=0;
+  for(int i=data->value.avalue->tail; i<data->value.avalue->head; i++) {
+    size_t this_size = reverse_ffi_type_size_map_lookup(struct_fields[init]);
+    while(padinfo[init]->pad) {//skip them pads
+      fieldsp+=1;
+      // ctr_heap_free(padinfo[init]); //we don't need this anymoar
+      init++;
+      if(!padinfo[init]) break;
+    }
+    ctr_object* fld = *(data->value.avalue->elements + i);
+    if(fld->info.type == CTR_OBJECT_TYPE_OTNIL) {
+      memset(fieldsp, 0, this_size);
+    }
+    else if(fld->info.type == CTR_OBJECT_TYPE_OTEX) {
+      nppointer(fieldsp, fld);
+    }
+    else {
+      int ret = npdispatch(fieldsp, fld, struct_fields[init]);
+    }
+    fieldsp += this_size;
+    // ctr_heap_free(padinfo[init]); //we don't need this anymoar either
+    init++;
+  }
+  structptr->value = fields;
+  //----
+  return myself;
+}
+
+ctr_object* ctr_ctypes_unpack_struct(ctr_object* myself, ctr_argument* argumentList) { //<struct> unpack
+  if(myself->info.type != CTR_OBJECT_TYPE_OTEX || myself->value.rvalue->type != CTR_CTYPE_STRUCT) {
+    //TODO: Error out
+    printf("Invalid object\n");
+    return myself;
+  }
+  ctr_ctypes_ffi_struct_value* structptr = myself->value.rvalue->ptr;
+  ffi_type* structtype = structptr->type;
+  ffi_type** struct_fields = structtype->elements;
+  int member_count = structptr->member_count;
+  size_t size = structptr->size;
+  ctr_object* data = ctr_array_new(CtrStdArray, NULL);
+  pad_info_node_t** padinfo = structptr->padinfo;
+  char* fieldsp = structptr->value;
+  ctr_argument* arglist = ctr_heap_allocate(sizeof(ctr_argument));
+  //----
+  int init=0;
+  int i=0;
+  int ignore_pads = 0;
+  while(struct_fields[i]) {
+    size_t this_size = reverse_ffi_type_size_map_lookup(struct_fields[init]);
+    if(!padinfo[init]) {
+      //printf("no more pad info. dumping the rest");
+      ignore_pads = 1;
+    }
+    while(!ignore_pads && padinfo[init]->pad) {//skip them pads
+      fieldsp+=1;
+      // ctr_heap_free(padino[init]); //we don't need this anymoar
+      init++;
+    }
+    ctr_object* fld = nudispatch(fieldsp, struct_fields[init]);
+    if(fld){
+      arglist->object = fld;
+      ctr_array_push(data, arglist);
+    }
+    fieldsp += this_size;
+    // ctr_heap_free(padinfo[init]); //we don't need this anymoar either
+    init++;
+    i++;
+  }
+  //----
+  return data;
+}
+
+ctr_object* ctr_ctypes_struct_to_string(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_ctypes_ffi_struct_value* ptr = myself->value.rvalue->ptr;
+  ffi_type* type = ptr->type;
+  int len = ctr_create_ffi_str_descriptor(type, NULL);
+  char* buf = ctr_heap_allocate(len*sizeof(char) + 1); //one lucky byte, pls
+  ctr_create_ffi_str_descriptor(type, buf);
+  char* nbf = ctr_heap_allocate((len+32)*sizeof(char));
+  len = sprintf(nbf, "CTypes structWithFormat: '%.*s'", len, buf);
+  return ctr_build_string(nbf, len);
 }
 
 ctr_object* ctr_ctypes_get_first_meta(ctr_object* object, ctr_object* last) {
@@ -520,8 +700,8 @@ ffi_type* ctr_ctypes_ffi_convert_to_ffi_type(ctr_object* type) {
     else if((initial) == CtrStdCType_slong)       return &ffi_type_slong;
     else if((initial) == CtrStdCType_longdouble)  return &ffi_type_longdouble;
     else if((initial) == CtrStdCType_pointer ||
-             initial == CtrStdCType_dynamic_lib)  return &ffi_type_pointer;
-
+          initial == CtrStdCType_dynamic_lib)     return &ffi_type_pointer;
+    else if(  initial == CtrStdCType_struct)      return ((ctr_ctypes_ffi_struct_value*)(type->value.rvalue->ptr))->type;
     else return &ffi_type_void;
 }
 ctr_ctype ctr_ctypes_ffi_convert_to_citron_ctype(ctr_object* type) {
@@ -548,12 +728,13 @@ ctr_ctype ctr_ctypes_ffi_convert_to_citron_ctype(ctr_object* type) {
     else if((initial) == CtrStdCType_longdouble)  return CTR_CTYPE_LONGDOUBLE;
     else if((initial) == CtrStdCType_pointer ||
              initial == CtrStdCType_dynamic_lib)  return CTR_CTYPE_POINTER;
-
+    else if(initial == CtrStdCType_struct)        return CTR_CTYPE_STRUCT;
     else return CTR_CTYPE_VOID;
 }
 ctr_object* ctr_ctypes_convert_ffi_type_to_citron(ffi_arg* value, ctr_ctype type) {
   CTR_CREATE_CTOBJECT(object);
   object->value.rvalue = ctr_heap_allocate(sizeof(ctr_resource));
+  object->info.sticky = 1;
   switch(type) {
     case CTR_CTYPE_VOID: object->link = CtrStdCType_void; break;
     case CTR_CTYPE_UINT8: object->value.rvalue->ptr = (void*)(uint8_t*)value; object->link = CtrStdCType_uint8; break;
@@ -577,7 +758,8 @@ ctr_object* ctr_ctypes_convert_ffi_type_to_citron(ffi_arg* value, ctr_ctype type
     case CTR_CTYPE_LONGDOUBLE: object->value.rvalue->ptr = (void*)(long double*)value; object->link = CtrStdCType_longdouble; break;
     case CTR_CTYPE_POINTER: object->value.rvalue->ptr = (void*)value; object->link = CtrStdCType_pointer; break;
     case CTR_CTYPE_DYN_LIB: object->link = CtrStdCType_dynamic_lib; break;//Ha?
-    default: object = CtrStdNil;
+    case CTR_CTYPE_STRUCT: object->link = CtrStdCType_struct; break;
+    default: ctr_heap_free(object->value.rvalue); ctr_heap_free(object); object = CtrStdNil; break;
   }
   return object;
 }
@@ -631,7 +813,11 @@ CTR_CT_FFI_BIND(call) { //<cif, CTypes pointer (fn), Array avalues; ^CTypes type
 
   for(int i = 0; i<asize; i++) {
     args->object = ctr_build_number_from_float(i);
-    avals[i] = &(ctr_array_get(avals_, args)->value.rvalue->ptr);
+    ctr_object* obj = ctr_array_get(avals_, args);
+    if(ctr_ctypes_get_first_meta(obj, CtrStdCType) == CtrStdCType_struct)
+      avals[i] = ((ctr_ctypes_ffi_struct_value*)(obj->value.rvalue->ptr))->value;
+    else
+      avals[i] = obj->value.rvalue->ptr;
     //printf("assigning pointer %p to argument %d\n", avals[i], i);
   }
   ffi_call(cif, fn, result, avals);
@@ -654,6 +840,8 @@ CTR_CT_FFI_BIND(ll) {
   if(name != NULL) ctr_heap_free(name);
   return object;
 }
+
+
 
 CTR_CT_FFI_BIND(malloc) {
   int size = ctr_internal_cast2number(argumentList->object)->value.nvalue;
@@ -703,8 +891,10 @@ CTR_CT_FFI_BIND(free) {
 void begin() {
   CtrStdCType = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
   CtrStdCType->link = CtrStdObject;
+  CtrStdCType->info.sticky = 1;
   CtrStdCType_ffi_cif = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
   CtrStdCType_ffi_cif->link = CtrStdObject;
+  CtrStdCType_ffi_cif->info.sticky = 1;
 
   //Void
   CTR_CT_INTRODUCE_TYPE(void);
@@ -830,6 +1020,8 @@ void begin() {
   CTR_CT_INTRODUCE_TYPE(pointer);
   CTR_CT_INTRODUCE_SET(pointer);
   ctr_internal_create_func(CtrStdCType_pointer, ctr_build_string_from_cstring("toString"), &ctr_ctypes_str_pointer);
+  ctr_internal_create_func(CtrStdCType_pointer, ctr_build_string_from_cstring("derefAs:"), &ctr_ctypes_deref_pointer);
+  ctr_internal_create_func(CtrStdCType_pointer, ctr_build_string_from_cstring("getAddress"), &ctr_ctypes_addr_of);
   CTR_CT_INTRODUCE_MAKE(pointer);
 	CTR_CT_INTRODUCE_UNMAKE(pointer);
   //Dynamic Library
@@ -839,10 +1031,17 @@ void begin() {
   CTR_CT_INTRODUCE_MAKE(dynamic_lib);
 	CTR_CT_INTRODUCE_UNMAKE(dynamic_lib);
 
+  //C Struct
+  CTR_CT_INTRODUCE_TYPE(struct);
+  ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring("structWithFormat:"), &ctr_ctypes_make_struct);
+  ctr_internal_create_func(CtrStdCType_struct, ctr_build_string_from_cstring("toString"), &ctr_ctypes_struct_to_string);
+  ctr_internal_create_func(CtrStdCType_struct, ctr_build_string_from_cstring("pack:"), &ctr_ctypes_pack_struct);
+  ctr_internal_create_func(CtrStdCType_struct, ctr_build_string_from_cstring("unpack"), &ctr_ctypes_unpack_struct);
+
   ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("new"), &ctr_ctype_ffi_cif_new);
   ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("destruct"), &ctr_ctype_ffi_cif_destruct);
   ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("setABI:return:argTypes:"), &ctr_ctype_ffi_prep_cif);
-    ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("call:withArgs:"), &ctr_ctype_ffi_call);
+  ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("call:withArgs:"), &ctr_ctype_ffi_call);
 
   ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring("allocateBytes:"), &ctr_ctype_ffi_malloc);
   ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring("copyTo:from:numBytes:"), &ctr_ctype_ffi_memcpy);

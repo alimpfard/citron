@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CTR_VERSION "0.0.6.1a"
+#define CTR_VERSION "0.0.6.3a"
 #define CTR_LOG_WARNINGS 0//2 to enable
 /**
  * Define the Citron tokens
@@ -898,6 +898,9 @@ ctr_object* ctr_reflect_run_for_object_ctx(ctr_object* myself, ctr_argument* arg
 ctr_object* ctr_reflect_closure_of(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_get_primitive(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_get_property(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_has_own_responder(ctr_object* myself, ctr_argument* argumentList);
+int ctr_internal_has_own_responder(ctr_object* myself, ctr_object* meth);
+int ctr_internal_has_responder(ctr_object* myself, ctr_object* meth);
 // ctr_object* ctr_reflect_dump_function(ctr_object* myself, ctr_argument* argumentList);
 
 /**

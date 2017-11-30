@@ -920,7 +920,7 @@ ctr_object* ctr_array_imap(ctr_object* myself, ctr_argument* argumentList) {
     if (CtrStdFlow == CtrStdBreak) CtrStdFlow = NULL; /* consume break */
     block->info.mark = 0;
     block->info.sticky = 0;
-    return myself;
+    return newArr;
   }
 
   /**

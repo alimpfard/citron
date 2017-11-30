@@ -12,6 +12,7 @@ ctr_object* ctr_ctypes_make_##type (ctr_object* myself, ctr_argument* argumentLi
 
 #define CTR_CT_INTRODUCE_TYPE(type)        CtrStdCType_##type = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);\
 CtrStdCType_##type->link = CtrStdCType;\
+CtrStdCType_##type->info.sticky = 1;\
 ctr_internal_object_add_property(CtrStdCType, ctr_build_string_from_cstring("type_"#type), CtrStdCType_##type, 0);
 #define CTR_CT_INTRODUCE_MAKE(type)        ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring(#type), &ctr_ctypes_make_##type)
 #define CTR_CT_INTRODUCE_UNMAKE(type)    ctr_internal_create_func(CtrStdCType_##type, ctr_build_string_from_cstring("destruct"), &ctr_ctypes_unmake_##type)
@@ -19,6 +20,8 @@ ctr_internal_object_add_property(CtrStdCType, ctr_build_string_from_cstring("typ
 #define CTR_CT_INTRODUCE_GET(type)         ctr_internal_create_func(CtrStdCType_##type, ctr_build_string_from_cstring("get"), &ctr_ctypes_get_##type)
 #include <ffi.h>
 #include "../../citron.h"
+#include "_struct.h"
+#include "structmember.h"
 
 //Unified struct to treat all ffi resources as one Citron resource.
 //And also easy allocation
@@ -53,9 +56,18 @@ enum ctr_ctype {
   CTR_CTYPE_LONGDOUBLE,
   CTR_CTYPE_POINTER,
   CTR_CTYPE_CIF,
-  CTR_CTYPE_DYN_LIB
+  CTR_CTYPE_DYN_LIB,
+  CTR_CTYPE_STRUCT
 };
 typedef enum ctr_ctype ctr_ctype;
+
+typedef struct {
+    int member_count;
+    size_t size;
+    ffi_type* type;
+    pad_info_node_t* padinfo;
+    void* value;
+} ctr_ctypes_ffi_struct_value;
 
 ctr_object* CtrStdCType; //Template, not added to the world
 ctr_object* CtrStdCType_ffi_cif;
@@ -170,9 +182,13 @@ CTR_CT_SIMPLE_TYPE_FUNC_MAKE(dynamic_lib);
 CTR_CT_SIMPLE_TYPE_FUNC_GET(dynamic_lib);
 CTR_CT_SIMPLE_TYPE_FUNC_STR(dynamic_lib);
 
+//Dynamic Library
+CTR_CT_SIMPLE_TYPE_FUNC_MAKE(struct);
+
 //FFI bindings
 CTR_CT_FFI_BIND(prep_cif);
 CTR_CT_FFI_BIND(cif_new);
 CTR_CT_FFI_BIND(call);
 
+ctr_object* ctr_ctypes_get_first_meta(ctr_object* object, ctr_object* last);
 #endif

@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CTR_VERSION "0.0.6.5a"
+#define CTR_VERSION "0.0.6.6"
 #define CTR_LOG_WARNINGS 0//2 to enable
 /**
  * Define the Citron tokens

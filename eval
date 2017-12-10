@@ -1,5 +1,6 @@
 #!/usr/bin/env ctr
 #
+Broom autoAlloc: True.
 contextPurity is False. #This is not a pure context, since objects are mutated in-between evaluations. so disallowing purely functional things.
 #Pen write: 'Extensions: ' + (File extensionsPath), brk.
 File new: (File extensionsPath) + '/extensions/fileutils.ctr', include.
@@ -19,11 +20,19 @@ Eval on: 'init' do: {
   my history is LRArray new init: 100.
   my commands is Nil.
   my continuation is '...'.
+  me genAccessors: 'equit'.
+  me equit: False.
   me genReader: 'eServer'.
+  my instr is False.
   ^me.
 }.
+Eval on: 'instrument' do: {my instr ifTrue: {Reflect enableInstrumentation.}.}.
+Eval on: 'enableInstrumentation' do: {my instr is True.}.
+Eval on: 'handleException:' do: {:e
+  ^my equit either: {Pen red write: e, resetColor brk. ^e.} or: {thisBlock error: e.}.
+}.
 Eval on: 'end' do: { my end is True. me stopEvalServer. }.
-Eval on: 'break' do: { my end ifTrue: {Broom sweep.}. my end break. }.
+Eval on: 'break' do: { my end ifTrue: {Broom sweep.}. ^my end. }.
 Eval on: 'allowedColors' do: { ^my allowedColors. }.
 Eval on: 'isAllowedColor:' do: { :c
   ^(c containsPattern: my allowedColors).
@@ -82,6 +91,7 @@ Eval on: 'Commands' do: {
     ^Map new
       put: {:args Eval end.} at: 'q',
       put: {:args ^Reflect strTypeOf: (args eval).} at: 't',
+      put: {:args Reflect addGlobalVariable: (args split: ' ', at: 0). ^'bind :: ' + args trim + ' bound to Nil'.} at: 'bind',
       put: {:args ^(args trim = '') either: {^Eval startEvalServer.} or: {^Eval startEvalServerOnPort: args eval.}.} at: 'server',
       put: {^Eval stopEvalServer.} at: '!server'.
   }.
@@ -96,18 +106,20 @@ Eval on: 'doMeta:' do: {:str:ptr
 }.
 
 Eval on: 'evaluate:' do: { :str
-  var x is Nil.
+  var eval_result_x is Nil.
   (str at: 0, = ':')
     either:
-      ({ ^x is Eval doMeta: (str skip: 1). } catch: {:e Pen red writeln: 'Uncaught exception occurred: '. x is e.})
+      ({ ^eval_result_x is Eval doMeta: (str skip: 1). } catch: {:e Eval handleException: e.})
     or:
-      ({ ^x is str eval toString. } catch: {:e Pen red writeln: 'Uncaught exception occurred: '. x is e.}).
-  ^(x containsPattern: '\\[\\w*?\\]') either: '' or: x.
+      ({ Eval instrument. ^eval_result_x is str eval toString. } catch: {:e Eval handleException: e.}).
+  ^(eval_result_x containsPattern: '^\\[\\w*?\\]') either: '' or: eval_result_x.
 }.
 Eval on: 'evaluateFile:' do: { :fl
-  { File new: fl, include. } catch: { :e
-    # try to recover from some small errors.
-      Pen red write: e, brk.
+  {
+    Pen yellow write: 'File ', magenta write: fl, yellow write: ' : Interpreting...', brk.
+    File new: fl, include.
+  } catch: { :e
+      Eval handleException: e.
       # get rid of the trash.
       Broom sweep.
   }, run.
@@ -139,7 +151,7 @@ Eval on: 'executeLast:' do: {:n
 Eval on: 'getHistory' do: {^my history.}.
 
 Eval on: 'queryState:' do: {:query
-  ^((query countOf: '\'') - (query countOf: '\\\'') even) & ((query countOf: '{') = (query countOf: '}')) & ((query countOf: '[') = (query countOf: ']')).
+    ^(((query countOf: '\'') - (query countOf: '\\\'')) even) & ((query countOf: '{') = (query countOf: '}')) & ((query countOf: '[') = (query countOf: ']')).
 }.
 
 Eval init.
@@ -157,6 +169,15 @@ var rd is Nil.
 var re is Nil.
 var rf is Nil.
 
+
+Reflect registerInstrumentor: {:obj:msg:args
+  Reflect disableInstrumentation.
+  var ret is obj message: msg arguments: args.
+  Pen green write: ('\n(%s : %s.%s(%s) => %s [%s]' formatObjects: [(Reflect generateLinkTree: obj join: '<-'), obj, msg, (args join: ', '), ret, (ret type)]), resetColor brk.
+  Reflect enableInstrumentation.
+  ^ret.
+}.
+Reflect disableInstrumentation.
 
 # parse arguments
 { ^(Eval argCount > 0). } whileTrue: {
@@ -189,6 +210,8 @@ var rf is Nil.
           indent: 2 write: '-f : evaluate file. many can be passed, evals in passed order\n',
           indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
           indent: 2 write: '--global-vars : variables in a single line are global, but this leaks a minute amount of memory.\n',
+          indent: 2 write: '-enoquit : Do not quit the interpreter on errors\n',
+          indent: 2 write: '-finstr : Enable instrumentation (advanced debug feature).\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
         P red write: 'new Global variables can be created using Reflection.', brk.
         P resetColor.
@@ -229,6 +252,13 @@ var rf is Nil.
     }, case: '--global-vars' do: {
         args pop. #consume option.
         Eval setGlobalVars: True.
+    }, case: '-enoquit' do: {
+        args pop.
+        Eval equit: True.
+    }, case: '-finstr' do: {
+        args pop.
+        Reflect enableInstrumentation.
+        Eval enableInstrumentation.
     }, switch. # do not consume any other option.
 }.
 Pen green. ?>Project Citron : The Programming Language (V<?. Pen write:(Reflect version) + ')' ,resetColor brk.
@@ -240,9 +270,10 @@ run with '-h' to read the eval mode help.
     Pen write: 'Reflect addGlobalVariable: \'name\'', brk.
 } done.
 
-{ ^False. } whileFalse: {
-  # break the repl when `end` is True.
-    Eval break.
+Eval on: 'repl' do: {
+  {^True.} whileTrue: {
+    # break the repl when `end` is True.
+    Eval break break.
     (Eval queueHasItem) ifTrue: {
       var item is Eval dequeue.
       Eval evaluateFile: item.
@@ -256,13 +287,14 @@ run with '-h' to read the eval mode help.
 
     {^Eval queryState: inp.} whileFalse: {
       inp append: (inp countOf: '\'', even either: '\n' or: '') + ({
-        Pen cyan write: Eval continuation, resetColor.
+        Pen cyan write: Eval continuation * (1 + (inp countOf: '{') - (inp countOf: '}')), resetColor.
         ^Program waitForInput.
         } run).
       }.
     # if it ends in a dot, get rid of it.
-    inp at: inp length, = '.' ifTrue: {
-    inp is inp from: 0 length: (inp length - 1).
+    inp is inp trim.
+    (inp at: (inp length - 1), = '.') ifTrue: {
+      inp is inp from: 0 length: (inp length - 1).
     }.
 
     inp is Eval handleGlobalVars: inp.
@@ -272,4 +304,7 @@ run with '-h' to read the eval mode help.
     Eval pushHist: inp.
     #Broom sweep. #Keep the darn pointers in memory
     ret length > 0 ifTrue: { Pen brk. }.
+  }.
 }.
+
+Eval repl.

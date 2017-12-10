@@ -5,13 +5,12 @@
 #ifndef CTR_H_GUARD
 #define CTR_H_GUARD
 
-
 #include "dictionary.h"
 #include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define CTR_VERSION "0.0.6.3a"
+#define CTR_VERSION "0.0.6.5a"
 #define CTR_LOG_WARNINGS 0//2 to enable
 /**
  * Define the Citron tokens
@@ -34,11 +33,15 @@
 #define CTR_TOKEN_RET 17
 #define CTR_TOKEN_TUPOPEN 18
 #define CTR_TOKEN_TUPCLOSE 19
+#define CTR_TOKEN_PASSIGNMENT 20
 #define CTR_TOKEN_FIN 99
 //
 //
 #define EXIT_ON_ERROR //Exit on parse error.
 #undef EXIT_ON_ERROR
+
+#define likely(x) __builtin_expect(!!(x), 1)
+#define unlikely(x) __builtin_expect(!!(x), 0)
 
 /**
  * Define the UTF8 byte patterns
@@ -300,6 +303,14 @@ ctr_object* CtrStdReflect_cons;
 ctr_object* CtrStdFiber;
 ctr_object* ctr_first_object;
 
+/**
+* @internal
+ * standard instrumentor, do not override.
+ * only combine
+ */
+ctr_object* ctr_instrumentor_func;
+ctr_object* ctr_past_instrumentor_func;
+
 int ctr_internal_next_return;
 
 /**
@@ -379,9 +390,12 @@ ctr_object* ctr_cwlk_expr(ctr_tnode* node, char* wasReturn);
 void        ctr_initialize_world();
 char*       ctr_internal_memmem(char* haystack, long hlen, char* needle, long nlen, int reverse );
 void        ctr_internal_object_add_property(ctr_object* owner, ctr_object* key, ctr_object* value, int m);
+void        ctr_internal_object_add_property_with_hash(ctr_object* owner, ctr_object* key, uint64_t hash, ctr_object* value, int m);
 void        ctr_internal_object_set_property(ctr_object* owner, ctr_object* key, ctr_object* value, int is_method);
 void        ctr_internal_object_delete_property(ctr_object* owner, ctr_object* key, int is_method);
+void        ctr_internal_object_delete_property_with_hash(ctr_object* owner, ctr_object* key, uint64_t hash, int is_method);
 ctr_object* ctr_internal_object_find_property(ctr_object* owner, ctr_object* key, int is_method);
+ctr_object* ctr_internal_object_find_property_with_hash(ctr_object* owner, ctr_object* key, uint64_t hash, int is_method);
 ctr_object* ctr_internal_object_find_property_ignore(ctr_object* owner, ctr_object* key, int is_method, int ignore);
 uint64_t    ctr_internal_index_hash(ctr_object* key);
 void        ctr_internal_object_add_property(ctr_object* owner, ctr_object* key, ctr_object* value, int m);
@@ -442,12 +456,14 @@ ctr_object* ctr_nil_assign(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_make(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_ctor(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_assign(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_object_hash(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_attr_accessor(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_attr_reader(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_attr_writer(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_make_hiding(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_swap(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_equals(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_object_id(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_on_do(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_respond(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_type(ctr_object* myself, ctr_argument* argumentList);
@@ -638,6 +654,9 @@ ctr_object* ctr_array_get(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_sort(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_put(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_from_length(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_skip(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_zip(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_zip_with(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_head(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_tail(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_init(ctr_object* myself, ctr_argument* argumentList);
@@ -655,7 +674,9 @@ ctr_object* ctr_array_fill(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_column(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_assign(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_intersperse(ctr_object* myself, ctr_argument* argumentList);
-
+ctr_object* ctr_array_slice(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_chunks(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_every_do_fill(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_build_immutable(ctr_tnode* node);
 
 /**
@@ -664,9 +685,11 @@ ctr_object* ctr_build_immutable(ctr_tnode* node);
 ctr_object* ctr_map_new(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_type(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_put(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_map_rm(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_get(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_count(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_each(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_map_fmap(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_kvmap(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_kvlist(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_flip(ctr_object* myself, ctr_argument* argumentList);
@@ -899,6 +922,12 @@ ctr_object* ctr_reflect_closure_of(ctr_object* myself, ctr_argument* argumentLis
 ctr_object* ctr_reflect_get_primitive(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_get_property(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_has_own_responder(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_object_delegate_get_responder(ctr_object* itself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_rawmsg(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_instrmsg(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_register_instrumentor(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_get_instrumentor(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_run_glob(ctr_object* myself, ctr_argument* argumentList);
 int ctr_internal_has_own_responder(ctr_object* myself, ctr_object* meth);
 int ctr_internal_has_responder(ctr_object* myself, ctr_object* meth);
 // ctr_object* ctr_reflect_dump_function(ctr_object* myself, ctr_argument* argumentList);

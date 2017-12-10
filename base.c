@@ -159,7 +159,7 @@ ctr_object* ctr_object_attr_accessor(ctr_object* myself, ctr_argument* argumentL
   } else {
     ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
     ctr_argument* elnumArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
-    int i;
+    ctr_size i;
     for(i = argumentList->object->value.avalue->tail; i<argumentList->object->value.avalue->head; i++) {
         elnumArg->object = ctr_build_number_from_float((ctr_number) i);
         args->object = ctr_array_get(argumentList->object, elnumArg);
@@ -197,7 +197,7 @@ ctr_object* ctr_object_attr_reader(ctr_object* myself, ctr_argument* argumentLis
   } else {
     ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
     ctr_argument* elnumArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
-    int i;
+    ctr_size i;
     for(i = argumentList->object->value.avalue->tail; i<argumentList->object->value.avalue->head; i++) {
         elnumArg->object = ctr_build_number_from_float((ctr_number) i);
         args->object = ctr_array_get(argumentList->object, elnumArg);
@@ -231,7 +231,7 @@ ctr_object* ctr_object_attr_writer(ctr_object* myself, ctr_argument* argumentLis
   } else {
     ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
     ctr_argument* elnumArg = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
-    int i;
+    ctr_size i;
     for(i = argumentList->object->value.avalue->tail; i<argumentList->object->value.avalue->head; i++) {
         elnumArg->object = ctr_build_number_from_float((ctr_number) i);
         args->object = ctr_array_get(argumentList->object, elnumArg);
@@ -254,6 +254,18 @@ ctr_object* ctr_object_assign(ctr_object* myself, ctr_argument* argumentList) { 
   ctr_map_assign(myself, argumentList);
   myself->link = oldlink; //cast back to whatever we were
   return myself;
+}
+
+/**
+ * [Object] iHash
+ *
+ * fallback hashing
+ * returns the hash of the object's string form.
+ */
+ctr_object* ctr_object_hash(ctr_object* myself, ctr_argument* argumentList) {
+  uint64_t hh = ctr_internal_index_hash(myself);
+  ctr_object* hash = ctr_build_number_from_float(hh);
+  return hash;
 }
 
 /**
@@ -415,11 +427,18 @@ ctr_object* ctr_object_to_boolean(ctr_object* myself, ctr_argument* ctr_argument
  * object equals: other
  */
 ctr_object* ctr_object_equals(ctr_object* myself, ctr_argument* argumentList) {
-    ctr_object* otherObject = argumentList->object;
-    if (otherObject == myself) return ctr_build_bool(1);
-    return ctr_build_bool(0);
+    ctr_object* other = argumentList->object;
+    return ctr_build_bool(ctr_internal_object_is_equal(myself, other));
 }
 
+/**
+ * [Object] id
+ *
+ * returns a unique identifier for the object
+ */
+ctr_object* ctr_object_id(ctr_object* myself, ctr_argument* argumentList) {
+  return ctr_build_number_from_float((intptr_t) myself);
+}
 /**
  * [Object] myself
  *
@@ -1174,6 +1193,7 @@ ctr_object* ctr_build_number_from_float(ctr_number f) {
  * Returns True if the number is higher than other number.
  */
 ctr_object* ctr_number_higherThan(ctr_object* myself, ctr_argument* argumentList) {
+    CTR_ENSURE_TYPE_NUMBER(argumentList->object);
     ctr_object* otherNum = ctr_internal_cast2number(argumentList->object);
     return ctr_build_bool((myself->value.nvalue > otherNum->value.nvalue));
 }
@@ -1184,6 +1204,7 @@ ctr_object* ctr_number_higherThan(ctr_object* myself, ctr_argument* argumentList
  * Returns True if the number is higher than or equal to other number.
  */
 ctr_object* ctr_number_higherEqThan(ctr_object* myself, ctr_argument* argumentList) {
+    CTR_ENSURE_TYPE_NUMBER(argumentList->object);
     ctr_object* otherNum = ctr_internal_cast2number(argumentList->object);
     return ctr_build_bool((myself->value.nvalue >= otherNum->value.nvalue));
 }
@@ -1194,6 +1215,7 @@ ctr_object* ctr_number_higherEqThan(ctr_object* myself, ctr_argument* argumentLi
  * Returns True if the number is less than other number.
  */
 ctr_object* ctr_number_lowerThan(ctr_object* myself, ctr_argument* argumentList) {
+    CTR_ENSURE_TYPE_NUMBER(argumentList->object);
     ctr_object* otherNum = ctr_internal_cast2number(argumentList->object);
     return ctr_build_bool((myself->value.nvalue < otherNum->value.nvalue));
 }
@@ -1204,6 +1226,7 @@ ctr_object* ctr_number_lowerThan(ctr_object* myself, ctr_argument* argumentList)
  * Returns True if the number is less than or equal to other number.
  */
 ctr_object* ctr_number_lowerEqThan(ctr_object* myself, ctr_argument* argumentList) {
+    CTR_ENSURE_TYPE_NUMBER(argumentList->object);
     ctr_object* otherNum = ctr_internal_cast2number(argumentList->object);
     return ctr_build_bool((myself->value.nvalue <= otherNum->value.nvalue));
 }
@@ -1214,6 +1237,7 @@ ctr_object* ctr_number_lowerEqThan(ctr_object* myself, ctr_argument* argumentLis
  * Returns True if the number equals the other number.
  */
 ctr_object* ctr_number_eq(ctr_object* myself, ctr_argument* argumentList) {
+  CTR_ENSURE_TYPE_NUMBER(argumentList->object);
     ctr_object* otherNum = ctr_internal_cast2number(argumentList->object);
     return ctr_build_bool(myself->value.nvalue == otherNum->value.nvalue);
 }
@@ -1224,6 +1248,7 @@ ctr_object* ctr_number_eq(ctr_object* myself, ctr_argument* argumentList) {
  * Returns True if the number does not equal the other number.
  */
 ctr_object* ctr_number_neq(ctr_object* myself, ctr_argument* argumentList) {
+  CTR_ENSURE_TYPE_NUMBER(argumentList->object);
     ctr_object* otherNum = ctr_internal_cast2number(argumentList->object);
     return ctr_build_bool(myself->value.nvalue != otherNum->value.nvalue);
 }
@@ -1883,7 +1908,7 @@ ctr_object* ctr_build_string(char* stringValue, long size) {
     if (size != 0) {
         stringObject->value.svalue->value = ctr_heap_allocate( size*sizeof(char) );
         memcpy(stringObject->value.svalue->value, stringValue, ( sizeof(char) * size ) );
-    }
+    } else stringObject->value.svalue->value = NULL;
     stringObject->value.svalue->vlen = size;
     stringObject->link = CtrStdString;
     return stringObject;
@@ -2446,7 +2471,7 @@ ctr_object* ctr_string_index_of(ctr_object* myself, ctr_argument* argumentList) 
 }
 
 /**
- * [String] asciiUpperCase
+ * [String] upper
  *
  * Returns a new uppercased version of the string.
  * Note that this is just basic ASCII case functionality, this should only
@@ -2469,7 +2494,7 @@ ctr_object* ctr_string_to_upper(ctr_object* myself, ctr_argument* argumentList) 
 
 
 /**
- * [String] asciiLowerCase
+ * [String] lower
  *
  * Returns a new lowercased version of the string.
  * Note that this is just basic ASCII case functionality, this should only
@@ -2491,7 +2516,7 @@ ctr_object* ctr_string_to_lower(ctr_object* myself, ctr_argument* argumentList) 
 }
 
 /**
- * [String] asciiLowerCase1st
+ * [String] lower1st
  *
  * Converts the first character of the recipient to lowercase and
  * returns the resulting string object.
@@ -2509,7 +2534,7 @@ ctr_object* ctr_string_to_lower1st(ctr_object* myself, ctr_argument* argumentLis
 }
 
 /**
- * [String] asciiUpperCase1st
+ * [String] upper1st
  *
  * Converts the first character of the recipient to uppercase and
  * returns the resulting string object.
@@ -3363,6 +3388,8 @@ ctr_object* ctr_string_eval(ctr_object* myself, ctr_argument* argumentList) {
     ctr_object* result;
     ctr_object* code;
 
+    if(myself->value.svalue->vlen == 0) return myself;
+
     #ifdef EVALSECURITY
     /* activate white-list based security profile */
     ctr_command_security_profile ^= CTR_SECPRO_EVAL;
@@ -3765,8 +3792,20 @@ ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object*
         parameter = parameterList->node;
         while(argList) {
           __asm__ __volatile__ ("");
-            if (parameter && argList->object) {
+            if (parameter) {
                 was_vararg = (strncmp(parameter->value, "*", 1) == 0);
+                if(!argList->object) {
+                  if(was_vararg) {
+                    ctr_object* arr = ctr_array_new(CtrStdArray, NULL);
+                    ctr_assign_value_to_local(ctr_build_string(parameter->value+1, parameter->vlen-1), arr);
+                  }
+                  if (!argList || !argList->next) break;
+                  argList = argList->next;
+                  if (!parameterList->next) break;
+                  parameterList = parameterList->next;
+                  parameter = parameterList->node;
+                  continue;
+                }
                 if (parameterList->next) {
                     a = argList->object;
                     ctr_assign_value_to_local(ctr_build_string(parameter->value, parameter->vlen), a);
@@ -3793,7 +3832,8 @@ ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object*
         }
     }
     if (my) ctr_assign_value_to_local_by_ref(ctr_build_string_from_cstring( ctr_clex_keyword_me ), my ); /* me should always point to object, otherwise you have to store me in self and can't use in if */
-    ctr_assign_value_to_local(ctr_build_string_from_cstring( "thisBlock" ), myself ); /* otherwise running block may get gc'ed. */
+    // ctr_object* this = ctr_build_string("thisBlock", 9);
+    // ctr_assign_value_to_local(this, myself); /* otherwise running block may get gc'ed. */
     int p = myself->properties->size - 1;
     struct ctr_mapitem* head;
     head = myself->properties->head;
@@ -3809,8 +3849,7 @@ ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object*
     }
     ctr_close_context();
     if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak && CtrStdFlow != CtrStdContinue) {
-        ctr_object* catchBlock = ctr_internal_create_object( CTR_OBJECT_TYPE_OTBLOCK );
-        catchBlock = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring( "catch" ), 0);
+        ctr_object* catchBlock = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring( "catch" ), 0);
         if (catchBlock != NULL) {
             ctr_argument* a = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
             a->object = CtrStdFlow;
@@ -3879,8 +3918,7 @@ ctr_object* ctr_block_run_here(ctr_object* myself, ctr_argument* argList, ctr_ob
     }
     // ctr_close_context();
     if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak && CtrStdFlow != CtrStdContinue) {
-        ctr_object* catchBlock = ctr_internal_create_object( CTR_OBJECT_TYPE_OTBLOCK );
-        catchBlock = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring( "catch" ), 0);
+        ctr_object* catchBlock = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring( "catch" ), 0);
         if (catchBlock != NULL) {
             ctr_argument* a = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
             a->object = CtrStdFlow;

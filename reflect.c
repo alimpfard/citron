@@ -579,9 +579,9 @@ ctr_object* ctr_reflect_cb_add_param(ctr_object* myself, ctr_argument* argumentL
   parameterList = parameterList->next;
   char* name = ctr_heap_allocate_cstring(argumentList->next->object);
   parameterList->node->value = ctr_heap_allocate_tracked(sizeof(name));
-  memcpy(parameterList->node->value, name, strlen(name));
+  int len = memcpy(parameterList->node->value, name, strlen(name));
   ctr_heap_free(name);
-  parameterList->node->vlen = strlen(name);
+  parameterList->node->vlen = len;
   return myself;
 }
 
@@ -946,7 +946,7 @@ ctr_object* ctr_reflect_get_first_link(ctr_object* myself, ctr_argument* argumen
  *
  * gets the method r from object o, AS IS
  * The returned block will not contain any references to o.
- * So a context must be supplied.
+ * So a context must be supplied. (Takes a 'self' argument first)
  **/
 ctr_object* ctr_reflect_get_responder(ctr_object* myself, ctr_argument* argumentList) {
   if(argumentList == NULL || argumentList->next == NULL) CTR_ERR("Argument cannot be NULL.");
@@ -955,15 +955,30 @@ ctr_object* ctr_reflect_get_responder(ctr_object* myself, ctr_argument* argument
   ctr_object* obj = argumentList->next->object;
   ctr_object* methodObject = ctr_get_responder(obj, name->value.svalue->value, name->value.svalue->vlen);
   if(methodObject&&methodObject->info.type == CTR_OBJECT_TYPE_OTNATFUNC) {
-    ctr_object* mn = ctr_build_string_from_cstring("{:*args ^me message: '");
+    ctr_object* mn = ctr_build_string_from_cstring("{:self:*args ^self message: '");
     ctr_invoke_variadic(mn, &ctr_string_append, 1, name);
     ctr_invoke_variadic(mn, &ctr_string_append, 1, ctr_build_string_from_cstring("' arguments: args.}"));
     // ctr_invoke_variadic(CtrStdConsole, &ctr_console_write, 1, mn);
     ctr_object* ret = ctr_string_eval(mn, NULL);
     return ret;
   }
-  if(methodObject) return methodObject;
+  if(methodObject) {
+    ctr_object* meth = ctr_string_eval(ctr_build_string_from_cstring("{:self:*args ^Reflect run: my method forObject: self arguments: args.}"), NULL);
+    ctr_internal_object_add_property(meth, ctr_build_string_from_cstring("method"), methodObject, 0);
+    return meth;
+  }
   return CtrStdNil;
+}
+
+ctr_object* ctr_reflect_object_delegate_get_responder(ctr_object* itself, ctr_argument* argumentList) {
+  ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+  arg->object = argumentList->object;
+  arg->next = ctr_heap_allocate(sizeof(ctr_argument));
+  arg->next->object = itself;
+  ctr_object* ret = ctr_reflect_get_responder(CtrStdReflect, arg);
+  ctr_heap_free(arg->next);
+  ctr_heap_free(arg);
+  return ret;
 }
 
 /**
@@ -1088,6 +1103,66 @@ ctr_object* ctr_reflect_get_property(ctr_object* myself, ctr_argument* argumentL
   return CtrStdNil;
 }
 
+// #ifdef WITH_INSTRUMENTORS
+
+/**
+ * [Reflect] disableInstrumentation
+ * Sends a message to an object with some arguments bypassing the instrumentor
+ */
+ctr_object* ctr_reflect_rawmsg(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_past_instrumentor_func = ctr_instrumentor_func;
+  ctr_instrumentor_func = NULL;
+  return myself;
+}
+
+/**
+ * [Reflect] enableInstrumentation
+ * Sends a message to an object with some arguments bypassing the instrumentor
+ */
+ctr_object* ctr_reflect_instrmsg(ctr_object* myself, ctr_argument* argumentList) {
+  if(!ctr_instrumentor_func)
+    ctr_instrumentor_func = ctr_past_instrumentor_func;
+  return myself;
+}
+
+/**
+ * [Reflect] registerInstrumentor: [Block<object, message, arguments>:<object, message, arguments>]
+ *
+ * register to an event that fires every time a message is sent.
+ * This instrumentor will have to handle all message sending operations
+ * using `[Reflect] disableInstrumentation` and '[Reflect] enableInstrumentation'.
+ * return value is used as the result of the message, unless it is the instrumentor function,
+ * In which case, the message is handed down to the object raw
+ */
+ctr_object* ctr_reflect_register_instrumentor(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_instrumentor_func = argumentList->object;
+  return myself;
+}
+
+/**
+ * [Reflect] currentInstrumentor
+ *
+ * gets the current instrumentor instance, or Nil if none exists
+ */
+ctr_object* ctr_reflect_get_instrumentor(ctr_object* myself, ctr_argument* argumentList) {
+  if(!ctr_instrumentor_func) return ctr_build_nil();
+  return ctr_instrumentor_func;
+}
+
+/**
+ * @Experimental
+ *
+ * [Reflect] runAtGlobal: [Block] arguments: [[Object]]
+ *
+ * Runs a block at global context passing it the arguments
+ */
+ctr_object* ctr_reflect_run_glob(ctr_object* myself, ctr_argument* argumentList) {
+  int old_index = ctr_context_id;
+  ctr_context_id = 0;
+  ctr_object* ret = ctr_block_run(argumentList->object, argumentList->next, argumentList->object);
+  ctr_context_id = old_index;
+  return ret;
+}
 ///Trash v
 ctr_object* ctr_reflect_cons_value(ctr_object* myself, ctr_argument* argumentList) {
   return ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("value"), 0);

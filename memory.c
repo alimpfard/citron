@@ -6,6 +6,7 @@
 #include <math.h>
 #include <stdint.h>
 #include <sys/mman.h>
+#include <execinfo.h>
 #include "citron.h"
 
 #define CTR_MEMBLOCK_CACHE_MAX 32
@@ -34,6 +35,23 @@ typedef struct memBlock memBlock;
 memBlock*  memBlocks = NULL;
 size_t     numberOfMemBlocks = 0;
 size_t     maxNumberOfMemBlocks = 0;
+
+void sttrace_print(void* ptr) {
+  return;
+  printf("MEMORY ALLOC %p\n", ptr);
+  void *array[99999];
+  size_t size;
+  char **strings;
+  size_t i;
+
+  size = backtrace (array, 10);
+  strings = backtrace_symbols (array, size);
+
+  for (i = 0; i < size; i++)
+     printf ("%s\n", strings[i]);
+
+  free (strings);
+}
 
 /**
  * Heap allocate raw memory
@@ -110,7 +128,7 @@ void* ctr_heap_allocate( size_t size ) {
     *(block_width) = size;
     /* Now move the new memory pointer behind the blockwidth */
     slice_of_memory = (void*) ((char*) slice_of_memory + q);
-
+    sttrace_print(slice_of_memory);
     return slice_of_memory;
 }
 
@@ -153,7 +171,7 @@ void* ctr_heap_allocate_shared( size_t size ) {
   *(block_width) = size;
   /* Now move the new memory pointer behind the blockwidth */
   slice_of_memory = (void*) ((char*) slice_of_memory + q);
-
+  sttrace_print(slice_of_memory);
   return slice_of_memory;
 }
 

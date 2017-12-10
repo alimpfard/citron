@@ -117,7 +117,7 @@ static void register_signal_handlers() {
   int i = 0;
   memset(&act, 0, sizeof act);
   act.sa_handler = ctr_int_handler;
-  act.sa_flags = 0;
+  act.sa_flags = SA_NOCLDSTOP;
   do {
     if(sigaction(all_signals[i], &act, NULL))
       fprintf(stderr, "Could not install signal %d handler: %s (Ignoring)\n", all_signals[i], strerror(errno));
@@ -198,7 +198,7 @@ int ctr_internal_object_is_equal(ctr_object* object1, ctr_object* object2) {
         int i = 1;
         ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
         for(;count>0&&i;count--) {
-          args->object = ctr_build_number_from_float(i-1);
+          args->object = ctr_build_number_from_float(count-1);
           i = i && ctr_internal_object_is_equal(ctr_array_get(object1,args), ctr_array_get(object2, args));
         }
         ctr_heap_free(args);
@@ -212,6 +212,12 @@ int ctr_internal_object_is_equal(ctr_object* object1, ctr_object* object2) {
       ctr_object* o2t = ctr_reflect_describe_value(CtrStdReflect, args);
       ctr_heap_free(args);
       return ctr_internal_object_is_equal(o1t, o2t);
+    }
+    if(ctr_internal_has_responder(object1, ctr_build_string_from_cstring("=")))
+    if(ctr_internal_has_responder(object2, ctr_build_string_from_cstring("="))) {
+      int a = ctr_internal_cast2bool(ctr_send_message_variadic(object1, "=", 1, 1, object2))->value.bvalue && ctr_internal_cast2bool(ctr_send_message_variadic(object2, "=", 1, 1, object1))->value.bvalue;
+      printf("%d\n", a);
+      return a;
     }
     return 0;
 }
@@ -367,6 +373,29 @@ ctr_object* ctr_internal_object_find_property_ignore(ctr_object* owner, ctr_obje
     return NULL;
 }
 
+ctr_object* ctr_internal_object_find_property_with_hash(ctr_object* owner, ctr_object* key, uint64_t hashKey, int is_method) {
+    ctr_mapitem* head;
+    if (is_method) {
+        if (owner->methods->size == 0) {
+            return NULL;
+        }
+        head = owner->methods->head;
+    } else {
+        if (owner->properties->size == 0) {
+            return NULL;
+        }
+        head = owner->properties->head;
+    }
+    while(head) {
+        if ((hashKey == head->hashKey)) {
+            if(ctr_internal_object_is_equal(head->key, key)) {
+                return head->value;
+              }
+            }
+        head = head->next;
+    }
+    return NULL;
+}
 
 /**
  * @internal
@@ -377,6 +406,65 @@ ctr_object* ctr_internal_object_find_property_ignore(ctr_object* owner, ctr_obje
  */
 void ctr_internal_object_delete_property(ctr_object* owner, ctr_object* key, int is_method) {
     uint64_t hashKey = ctr_internal_index_hash(key);
+    ctr_mapitem* head;
+    if (is_method) {
+        if (owner->methods->size == 0) {
+            return;
+        }
+        head = owner->methods->head;
+    } else {
+        if (owner->properties->size == 0) {
+            return;
+        }
+        head = owner->properties->head;
+    }
+    while(head) {
+        if ((hashKey == head->hashKey) && ctr_internal_object_is_equal(head->key, key)) {
+            if (head->next && head->prev) {
+                head->next->prev = head->prev;
+                head->prev->next = head->next;
+            } else {
+                if (head->next) {
+                    head->next->prev = NULL;
+                }
+                if (head->prev) {
+                    head->prev->next = NULL;
+                }
+            }
+            if (is_method) {
+                if (owner->methods->head == head) {
+                    if (head->next) {
+                        owner->methods->head = head->next;
+                    } else {
+                        owner->methods->head = NULL;
+                    }
+                }
+                owner->methods->size --;
+            } else {
+                if (owner->properties->head == head) {
+                    if (head->next) {
+                        owner->properties->head = head->next;
+                    } else {
+                        owner->properties->head = NULL;
+                    }
+                }
+                owner->properties->size --;
+            }
+            ctr_heap_free( head );
+            return;
+        }
+        head = head->next;
+    }
+    return;
+}
+/**
+ * @internal
+ *
+ * InternalObjectDeletePropertyWithHash
+ *
+ * Deletes the specified property from the object given a hash value.
+ */
+void ctr_internal_object_delete_property_with_hash(ctr_object* owner, ctr_object* key, uint64_t hashKey, int is_method) {
     ctr_mapitem* head;
     if (is_method) {
         if (owner->methods->size == 0) {
@@ -471,6 +559,44 @@ void ctr_internal_object_add_property(ctr_object* owner, ctr_object* key, ctr_ob
 /**
  * @internal
  *
+ * InternalObjectAddPropertyWithHash
+ *
+ * Adds a property to an object.
+ */
+void ctr_internal_object_add_property_with_hash(ctr_object* owner, ctr_object* key, uint64_t hashKey, ctr_object* value, int m) {
+    ctr_mapitem* new_item = ctr_heap_allocate(sizeof(ctr_mapitem));
+    ctr_mapitem* current_head = NULL;
+    new_item->key = key;
+    new_item->hashKey = hashKey;
+    new_item->value = value;
+    new_item->next = NULL;
+    new_item->prev = NULL;
+    if (m) {
+        if (owner->methods->size == 0) {
+            owner->methods->head = new_item;
+        } else {
+            current_head = owner->methods->head;
+            current_head->prev = new_item;
+            new_item->next = current_head;
+            owner->methods->head = new_item;
+        }
+        owner->methods->size ++;
+    } else {
+        if (owner->properties->size == 0) {
+            owner->properties->head = new_item;
+        } else {
+            current_head = owner->properties->head;
+            current_head->prev = new_item;
+            new_item->next = current_head;
+            owner->properties->head = new_item;
+        }
+        owner->properties->size ++;
+    }
+}
+
+/**
+ * @internal
+ *
  * InternalObjectSetProperty
  *
  * Sets a property on an object.
@@ -478,6 +604,17 @@ void ctr_internal_object_add_property(ctr_object* owner, ctr_object* key, ctr_ob
 void ctr_internal_object_set_property(ctr_object* owner, ctr_object* key, ctr_object* value, int is_method) {
     ctr_internal_object_delete_property(owner, key, is_method);
     ctr_internal_object_add_property(owner, key, value, is_method);
+}
+/**
+ * @internal
+ *
+ * InternalObjectSetPropertyWithHash
+ *
+ * Sets a property on an object.
+ */
+void ctr_internal_object_set_property_with_hash(ctr_object* owner, ctr_object* key, uint64_t hashKey, ctr_object* value, int is_method) {
+    ctr_internal_object_delete_property_with_hash(owner, key, hashKey, is_method);
+    ctr_internal_object_add_property_with_hash(owner, key, hashKey, value, is_method);
 }
 
 /**
@@ -515,7 +652,7 @@ char* ctr_internal_memmem(char* haystack, long hlen, char* needle, long nlen, in
  *
  * Creates an object.
  */
-ctr_object* ctr_internal_create_object(int type) {
+inline ctr_object* ctr_internal_create_object(int type) {
   return ctr_internal_create_mapped_object(type, 0);
 }
 
@@ -617,6 +754,7 @@ void ctr_internal_create_func(ctr_object* o, ctr_object* key, ctr_object* (*func
     if ( stringObject->info.type != CTR_OBJECT_TYPE_OTSTRING ) {
         printf("wanted 3, got %d from %d\n", stringObject->info.type, o->info.type);
         CtrStdFlow = ctr_build_string_from_cstring( "toString must return a string." );
+        ctr_print_stack_trace();
         return ctr_build_string_from_cstring( "?" );
     }
     return stringObject;
@@ -846,6 +984,9 @@ void ctr_initialize_world() {
     CtrStdWorld->info.sticky = 1;
     ctr_contexts[0] = CtrStdWorld;
 
+    ctr_instrumentor_func = NULL; //register instrumentors to nil
+    ctr_past_instrumentor_func = NULL; //register instrumentors to nil
+
     /* Object */
     CtrStdObject = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( CTR_DICT_NEW ), &ctr_object_make );
@@ -859,6 +1000,7 @@ void ctr_initialize_world() {
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( CTR_DICT_SWAP ), &ctr_object_swap );
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( CTR_DICT_EQUALS ), &ctr_object_equals );
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( CTR_DICT_SYMBOL_EQUALS ), &ctr_object_equals );
+    ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( "id" ), &ctr_object_id );
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( CTR_DICT_ONDO ), &ctr_object_on_do );
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( CTR_DICT_RESPOND_TO ), &ctr_object_respond );
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( CTR_DICT_RESPOND_TO_AND ), &ctr_object_respond_and );
@@ -881,6 +1023,7 @@ void ctr_initialize_world() {
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( CTR_DICT_SOCK ), &ctr_command_remote );
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( "destruct" ), &ctr_object_destruct );
     ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( CTR_DICT_UNPACK ), &ctr_object_assign );
+    ctr_internal_create_func( CtrStdObject, ctr_build_string_from_cstring( "iHash" ), &ctr_object_hash );
 
     ctr_internal_object_add_property( CtrStdWorld, ctr_build_string_from_cstring( CTR_DICT_OBJECT ), CtrStdObject, 0 );
     CtrStdObject->link = NULL;
@@ -1080,6 +1223,9 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( CTR_DICT_SORT ), &ctr_array_sort );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( CTR_DICT_PUT_AT ), &ctr_array_put );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( CTR_DICT_FROM_LENGTH ), &ctr_array_from_length );
+    ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "skip:" ), &ctr_array_skip );
+    ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "zip" ), &ctr_array_zip );
+    ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "zipWith:" ), &ctr_array_zip_with );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( CTR_DICT_PLUS ), &ctr_array_add );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "head" ), &ctr_array_head );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "tail" ), &ctr_array_tail );
@@ -1100,13 +1246,18 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( CTR_DICT_UNPACK ), &ctr_array_assign );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( CTR_DICT_SERIALIZE ), &ctr_array_to_string );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "intersperse:" ), &ctr_array_intersperse );
+    ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "chunks:" ), &ctr_array_chunks );
+    ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "chunks:fill:" ), &ctr_array_chunks );
+    ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "every:do:" ), &ctr_array_every_do_fill );
+    ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "every:do:fill:" ), &ctr_array_every_do_fill );
+    ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "from:lengthMax:" ), &ctr_array_slice );
     ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring( CTR_DICT_ARRAY ), CtrStdArray, 0 );
     CtrStdArray->link = CtrStdObject;
     CtrStdArray->info.sticky = 1;
 
     /* Iterator */
     ctr_iter_range = ctr_string_eval(ctr_build_string_from_cstring(
-      "{:seed var step is my step. var end_value is my end_value. me endIf: {^seed + step > end_value.}. ^(seed + step).}"
+      "{:seed var step is my step. var end_value is my end_value. me endIf: {^seed = end_value.}. ^(seed + step).}"
     ), NULL);
     ctr_iter_range->info.sticky = 1;
     ctr_iter_urange = ctr_string_eval(ctr_build_string_from_cstring(
@@ -1141,11 +1292,13 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdMap, ctr_build_string_from_cstring( CTR_DICT_NEW ), &ctr_map_new );
     ctr_internal_create_func(CtrStdMap, ctr_build_string_from_cstring( CTR_DICT_TYPE ), &ctr_map_type );
     ctr_internal_create_func(CtrStdMap, ctr_build_string_from_cstring( CTR_DICT_PUT_AT ), &ctr_map_put );
+    ctr_internal_create_func(CtrStdMap, ctr_build_string_from_cstring( "deleteAt:" ), &ctr_map_rm );
     ctr_internal_create_func(CtrStdMap, ctr_build_string_from_cstring( CTR_DICT_AT ), &ctr_map_get );
     ctr_internal_create_func(CtrStdMap, ctr_build_string_from_cstring( CTR_DICT_AT_SYMBOL ), &ctr_map_get );
     ctr_internal_create_func(CtrStdMap, ctr_build_string_from_cstring( CTR_DICT_COUNT ), &ctr_map_count );
     ctr_internal_create_func(CtrStdMap, ctr_build_string_from_cstring( CTR_DICT_EACH ), &ctr_map_each );
     ctr_internal_create_func(CtrStdMap, ctr_build_string_from_cstring( CTR_DICT_MAP ), &ctr_map_each );
+    ctr_internal_create_func(CtrStdMap, ctr_build_string_from_cstring( "fmap:" ), &ctr_map_fmap );
     ctr_internal_create_func(CtrStdMap, ctr_build_string_from_cstring( "kvmap:" ), &ctr_map_kvmap );
     ctr_internal_create_func(CtrStdMap, ctr_build_string_from_cstring( "kvlist:" ), &ctr_map_kvlist );
     ctr_internal_create_func(CtrStdMap, ctr_build_string_from_cstring( CTR_DICT_FLIP ), &ctr_map_flip );
@@ -1356,8 +1509,14 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("primitiveLinkOf:"), &ctr_reflect_get_primitive);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("getProperty:ofObject:"), &ctr_reflect_get_property);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("object:hasOwnResponder:"), &ctr_reflect_has_own_responder);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("disableInstrumentation"), &ctr_reflect_rawmsg);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("enableInstrumentation"), &ctr_reflect_instrmsg);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("registerInstrumentor:"), &ctr_reflect_register_instrumentor);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("currentInstrumentor"), &ctr_reflect_get_instrumentor);
+    ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("runAtGlobal:arguments:"), &ctr_reflect_run_glob);
     ctr_internal_create_func(CtrStdReflect, ctr_build_string_from_cstring("version"), &ctr_give_version);
 
+    ctr_internal_create_func(CtrStdObject, ctr_build_string_from_cstring("&method:"), &ctr_reflect_object_delegate_get_responder);
     ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Reflect"), CtrStdReflect, 0);
     CtrStdReflect->info.sticky = 1;
 
@@ -1439,11 +1598,39 @@ ctr_object* ctr_get_responder(ctr_object* receiverObject, char* message, long vl
 /**
  * @internal
  *
+ * CTRTransformArgumentList2CTRList
+ *
+ * Converts an argumentList to a citron list
+ */
+ctr_object* ctr_internal_argumentptr2tuple(ctr_argument* argumentList) {
+  ctr_object* ret = ctr_array_new(CtrStdArray, NULL);
+  while(argumentList->object) {
+    ctr_array_push(ret, argumentList);
+    argumentList = argumentList->next;
+    if(!argumentList) break;
+  }
+  return ret;
+}
+/**
+ * @internal
+ *
  * CTRMessageSend
  *
  * Sends a message to a receiver object.
  */
 __attribute__((optimize(0))) ctr_object* ctr_send_message(ctr_object* receiverObject, char* message, long vlen, ctr_argument* argumentList) {
+    if(unlikely(receiverObject != CtrStdReflect && ctr_instrumentor_func != NULL)) {
+      ctr_argument* blkargs = ctr_heap_allocate(sizeof(ctr_argument));
+      blkargs->object = receiverObject;
+      blkargs->next = ctr_heap_allocate(sizeof(ctr_argument));
+      blkargs->next->object = ctr_build_string(message, vlen);
+      blkargs->next->next = ctr_heap_allocate(sizeof(ctr_argument));
+      blkargs->next->next->object = ctr_internal_argumentptr2tuple(argumentList);
+      ctr_object* result = ctr_block_run(ctr_instrumentor_func, blkargs, ctr_instrumentor_func);
+      if(result == ctr_instrumentor_func) goto no_instrum;
+      return result;
+    }
+    no_instrum:;
     char toParent = 0;
     int  i = 0;
     char messageApproved = 0;
@@ -1472,13 +1659,6 @@ __attribute__((optimize(0))) ctr_object* ctr_send_message(ctr_object* receiverOb
         // ctr_print_stack_trace();
         return receiverObject;
       }
-      #ifdef COMP
-        if (CTR_CCOMP_SIMULATION) {
-          CtrCompilerStub->object = receiverObject;
-          return NULL; //If in compiler simulation mode,
-                      //return null and set the CtrCompilerStub to the object <We don't have this method>
-        }
-      #endif
         argCounter = argumentList;
         argCount = 0;
         while(argCounter && argCounter->next && argCount < 4) {
@@ -1502,13 +1682,7 @@ __attribute__((optimize(0))) ctr_object* ctr_send_message(ctr_object* receiverOb
     }
     if (methodObject->info.type == CTR_OBJECT_TYPE_OTNATFUNC) {
         funct = methodObject->value.fvalue;
-        #ifdef COMP
-        if(CTR_CCOMP_SIMULATION) {
-          return ctr_ccomp_get_stub(funct, receiverObject, argumentList); //return a stub object with the correct type
-        }
-        #endif
-
-        #ifdef EVALSECURITY
+#ifdef EVALSECURITY
         if ( ctr_command_security_profile & CTR_SECPRO_EVAL ) {
             messageApproved = 0;
             for ( i = 0; i < 15; i ++ ) {
@@ -1523,7 +1697,7 @@ __attribute__((optimize(0))) ctr_object* ctr_send_message(ctr_object* receiverOb
                 exit(1);
             }
         }
-        #endif
+#endif
 
         result = funct(receiverObject, argumentList);
     }

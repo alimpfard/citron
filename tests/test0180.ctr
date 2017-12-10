@@ -9,10 +9,10 @@ Broom mode: 0.
 
 txt is '<h1>"Hell\'o & Goodbye"</h1>'.
 Pen write: txt htmlEscape, brk.
-Pen write: txt asciiLowerCase, brk.
-Pen write: txt asciiUpperCase, brk.
-Pen write: 'uppercase first' asciiUpperCase1st, brk.
-Pen write: 'LOWERcase first' asciiLowerCase1st, brk.
+Pen write: txt lower, brk.
+Pen write: txt upper, brk.
+Pen write: 'uppercase first' upper1st, brk.
+Pen write: 'LOWERcase first' lower1st, brk.
 
 Broom sweep.
 
@@ -21,10 +21,10 @@ usedMemory1 is Broom keptAlloc.
 
 txt is '<h1>"Hell\'o & Goodbye"</h1>'.
 Pen write: txt htmlEscape, brk.
-Pen write: txt asciiLowerCase, brk.
-Pen write: txt asciiUpperCase, brk.
-Pen write: 'uppercase first' asciiUpperCase1st, brk.
-Pen write: 'LOWERcase first' asciiLowerCase1st, brk.
+Pen write: txt lower, brk.
+Pen write: txt upper, brk.
+Pen write: 'uppercase first' upper1st, brk.
+Pen write: 'LOWERcase first' lower1st, brk.
 
 Broom sweep.
 usedMemory2 is Broom keptAlloc.
@@ -32,10 +32,10 @@ usedMemory2 is Broom keptAlloc.
 
 txt is '<h1>"Hell\'o & Goodbye"</h1>'.
 Pen write: txt htmlEscape, brk.
-Pen write: txt asciiLowerCase, brk.
-Pen write: txt asciiUpperCase, brk.
-Pen write: 'uppercase first' asciiUpperCase1st, brk.
-Pen write: 'LOWERcase first' asciiLowerCase1st, brk.
+Pen write: txt lower, brk.
+Pen write: txt upper, brk.
+Pen write: 'uppercase first' upper1st, brk.
+Pen write: 'LOWERcase first' lower1st, brk.
 
 Broom sweep.
 usedMemory3 is Broom keptAlloc.

@@ -18,12 +18,12 @@ ctr_object* ctr_cwlk_return(ctr_tnode* node) {
     ctr_tlistitem* li;
     ctr_object* e;
     if (!node->nodes) {
-        printf("Invalid return expression.\n");
+        printf("Invalid return expression (Return statement has no structure wtf).\n");
         exit(1);
     }
     li = node->nodes;
     if (!li->node) {
-        printf("Invalid return expression 2.\n");
+        printf("Invalid return expression 2 (Return statement has no parse node %p has no node %p).\n", li, li->node);
         exit(1);
     }
     e = ctr_cwlk_expr(li->node, &wasReturn);
@@ -268,6 +268,7 @@ ctr_object* ctr_cwlk_run(ctr_tnode* program) {
         wasReturn = 0;
         result = ctr_cwlk_expr(node, &wasReturn);
         if (ctr_internal_next_return) {
+          wasReturn = 1;
           ctr_internal_next_return = 0;
           break;
         }

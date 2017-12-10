@@ -40,6 +40,7 @@ char* ctr_clex_desc_tok_booleanyes = "True";
 char* ctr_clex_desc_tok_booleanno = "False";
 char* ctr_clex_desc_tok_nil = "Nil";
 char* ctr_clex_desc_tok_assignment = ":=";  //derp
+char* ctr_clex_desc_tok_passignment = "=>";  //REEEE
 char* ctr_clex_desc_tok_ret = "^";
 char* ctr_clex_desc_tok_ret_unicode = "↑";
 char* ctr_clex_desc_tok_fin = "end of program";
@@ -114,6 +115,9 @@ char* ctr_clex_tok_describe(int token)
             break;
         case CTR_TOKEN_ASSIGNMENT:
             description = ctr_clex_desc_tok_assignment;
+            break;
+        case CTR_TOKEN_PASSIGNMENT:
+            description = ctr_clex_desc_tok_passignment;
             break;
         case CTR_TOKEN_BLOCKCLOSE:
             description = ctr_clex_desc_tok_blockclose;
@@ -349,7 +353,14 @@ int ctr_clex_tok() {
         ctr_code += 2;
         return CTR_TOKEN_ASSIGNMENT;
     }
-    if (c == ':') { ctr_code++; return CTR_TOKEN_COLON; }
+    if ((c == '=') && (ctr_code+1)<ctr_eofcode && (*(ctr_code+1)=='>')) {
+        ctr_code += 2;
+        return CTR_TOKEN_PASSIGNMENT;
+    }
+    if (c == ':' /*&& ctr_code+1!=ctr_eofcode && *(ctr_code+1) != ':'*/) {
+      ctr_code++;
+      return CTR_TOKEN_COLON;
+    }
     if (c == '^') { ctr_code++; return CTR_TOKEN_RET; }
     //↑
     if ( ( ctr_code + 2) < ctr_eofcode
@@ -368,13 +379,13 @@ int ctr_clex_tok() {
         ctr_code++;
         c = toupper(*ctr_code);
         if(xnum_likely)
-          base = c == 'X' ? 16 : (c == 'C' ? 8 : 10); //let the lexer handle incorrect values
-          if(base != 10)  {
-            ctr_clex_buffer[i] = c; ctr_clex_tokvlen++;
-            i++;
-            ctr_code++;
-            c = toupper(*ctr_code);
-          }
+          base = c == 'X' ? 16 : 10; //let the parser handle incorrect values
+        if(base != 10)  {
+          ctr_clex_buffer[i] = c; ctr_clex_tokvlen++;
+          i++;
+          ctr_code++;
+          c = toupper(*ctr_code);
+        }
         while((ctr_clex_is_valid_digit_in_base(c, base))) {
             ctr_clex_buffer[i] = c; ctr_clex_tokvlen++;
             i++;
@@ -435,6 +446,20 @@ int ctr_clex_tok() {
         ctr_clex_tokvlen = 1;
         return CTR_TOKEN_REF;
     }
+    // if (*ctr_code == ':') {
+    //   int i = 1;
+    //   ctr_code++;
+    //   while(ctr_code+1!=ctr_eofcode && *(ctr_code++)==':') i++;
+    //   if(i>ctr_clex_bflmt) ctr_clex_emit_error( "Token buffer exhausted. Tokens may not exceed 255 bytes" );
+    //   ctr_clex_tokvlen = i>2 ? i-1 : i; //leave one ':' for the KWM if more than two chars
+    //   for(int v=0; v<ctr_clex_tokvlen; v++)
+    //     ctr_clex_buffer[v] = ':';
+    //   if(i > 2)
+    //     ctr_code -= 2;
+    //   // else
+    //     // ctr_code;
+    //   return CTR_TOKEN_REF;
+    // }
     while(
             !isspace(c) && (
                 c != '#' &&
@@ -452,9 +477,10 @@ int ctr_clex_tok() {
                     &&   (uint8_t)            c == 226
                     && ( (uint8_t) *(ctr_code+1)== 134)
                     && ( (uint8_t) *(ctr_code+2)== 145) ) ) &&
-                c != ':' &&
+                (c != ':') &&
                 c != '\''
-                ) && ctr_code!=ctr_eofcode
+                ) &&
+                ctr_code!=ctr_eofcode
          ) {
         ctr_clex_buffer[i] = c; ctr_clex_tokvlen++;
         i++;

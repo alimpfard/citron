@@ -497,6 +497,18 @@ ctr_object* ctr_ctypes_addr_of(ctr_object* myself, ctr_argument* argumentList) {
   }
 }
 
+ctr_object* ctr_ctypes_to_bytes(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* ret = ctr_array_new(CtrStdArray, NULL);
+  char* buf = (void*)myself->value.rvalue->ptr;
+  int count = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+  for(;count;count--) {
+    arg->object = ctr_build_number_from_float((double)(*buf++));
+    ctr_array_push(ret, arg);
+  }
+  return ret;
+}
+
 ctr_object* ctr_ctypes_deref_pointer(ctr_object* myself, ctr_argument* argumentList) {
   if(argumentList->object->info.type != CTR_OBJECT_TYPE_OTEX) {
     CtrStdFlow = ctr_build_string_from_cstring("Attempt to deref as a non-ctype object");
@@ -667,6 +679,18 @@ ctr_object* ctr_ctypes_struct_to_string(ctr_object* myself, ctr_argument* argume
   char* nbf = ctr_heap_allocate((len+32)*sizeof(char));
   len = sprintf(nbf, "CTypes structWithFormat: '%.*s'", len, buf);
   return ctr_build_string(nbf, len);
+}
+
+ctr_object* ctr_ctypes_unmake_struct(ctr_object* myself, ctr_argument* argumentList) {
+  argumentList->object = myself;
+  ctr_gc_sweep_this(CtrStdGC, argumentList);
+  return ctr_build_nil();
+}
+
+ctr_object* ctr_ctypes_struct_get_size(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_ctypes_ffi_struct_value* ptr = myself->value.rvalue->ptr;
+  size_t size = ptr->size;
+  return ctr_build_number_from_float(size);
 }
 
 ctr_object* ctr_ctypes_get_first_meta(ctr_object* object, ctr_object* last) {
@@ -1021,6 +1045,7 @@ void begin() {
   CTR_CT_INTRODUCE_SET(pointer);
   ctr_internal_create_func(CtrStdCType_pointer, ctr_build_string_from_cstring("toString"), &ctr_ctypes_str_pointer);
   ctr_internal_create_func(CtrStdCType_pointer, ctr_build_string_from_cstring("derefAs:"), &ctr_ctypes_deref_pointer);
+  ctr_internal_create_func(CtrStdCType_pointer, ctr_build_string_from_cstring("readBytes:"), &ctr_ctypes_to_bytes);
   ctr_internal_create_func(CtrStdCType_pointer, ctr_build_string_from_cstring("getAddress"), &ctr_ctypes_addr_of);
   CTR_CT_INTRODUCE_MAKE(pointer);
 	CTR_CT_INTRODUCE_UNMAKE(pointer);
@@ -1035,8 +1060,10 @@ void begin() {
   CTR_CT_INTRODUCE_TYPE(struct);
   ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring("structWithFormat:"), &ctr_ctypes_make_struct);
   ctr_internal_create_func(CtrStdCType_struct, ctr_build_string_from_cstring("toString"), &ctr_ctypes_struct_to_string);
+  ctr_internal_create_func(CtrStdCType_struct, ctr_build_string_from_cstring("getSize"), &ctr_ctypes_struct_get_size);
   ctr_internal_create_func(CtrStdCType_struct, ctr_build_string_from_cstring("pack:"), &ctr_ctypes_pack_struct);
   ctr_internal_create_func(CtrStdCType_struct, ctr_build_string_from_cstring("unpack"), &ctr_ctypes_unpack_struct);
+  ctr_internal_create_func(CtrStdCType_struct, ctr_build_string_from_cstring("destruct"), &ctr_ctypes_unmake_struct);
 
   ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("new"), &ctr_ctype_ffi_cif_new);
   ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("destruct"), &ctr_ctype_ffi_cif_destruct);

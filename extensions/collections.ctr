@@ -176,11 +176,11 @@ Array on: 'shuffle' do: {
   }.
 }.
 
-Array on: 'contains:' do: { :thing
-  var found is False.
-  me each: { :k :v found break. (thing = v) ifTrue: {found is True.}.}.
-  ^found.
-}.
+# Array on: 'contains:' do: { :thing
+#   var found is False.
+#   me each: { :k :v found break. (thing = v) ifTrue: {found is True.}.}.
+#   ^found.
+# }.
 
 Array on: 'isSubsetOf:' do: { :things
   var return is True.
@@ -236,7 +236,7 @@ Array on: 'from:to:skip:' do: {:f :t :s
 # }.
 Array on: 'indexOf:' do: { :what
   var ind is -1.
-  me each: { :i :v (what = v) ifTrue: {ind is i.}, break. }.
+  me each: { :i :v ind is i. (what = v) break. }.
   ^ind.
 }.
 
@@ -435,12 +435,6 @@ HeapQueue on: '_siftup:from:' do: {:heap:pos
   heap put: newitem at: pos.
   me _siftdown: heap from: startpos to: pos.
 }.
-
-# var CSV is Object new.
-# CSV on: 'parse:' do: {:str
-#   str is str toString.
-#
-# }.
 
 
 (Reflect objectExists: 'ImportLib') ifTrue: {

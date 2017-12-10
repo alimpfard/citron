@@ -1,0 +1,185 @@
+Broom autoAlloc: True.
+
+import Library/Control/Applicative.
+
+['Env', 'GlobalEnv', 'Truth',
+'_eval', 'parse', 'tokenize',
+'read_from', 'atom', 'to_string',
+'repl'] each: {:i:v Reflect addGlobalVariable: v.}.
+
+Env is Object new.
+Env on: 'initParams:args:outer:' do: {:params:args:outer
+  my outer is outer.
+  my dict is Map new.
+  params toBoolean & args ifTrue: {
+    params count times: {:i
+      me put: (args at: i) at: (params at: i).
+    }.
+  }.
+}.
+Env on: 'at:' do: {:k ^my dict at: '$' + k.}.
+Env on: 'put:at:' do: {:v:k my dict put: v at: '$' + k.}.
+Env on: 'find:' do: {:k
+  var outer is my outer.
+  var key is '$' + k.
+  # Pen write: 'Looking for $$k', brk.
+  ^my dict at: key, isNil either: {
+    #Pen write: 'I don\'t have $$k ~', brk.
+    ^outer isNil either: Nil
+                 or: {
+                 #Pen write: 'Yo enclosing, you got some $$k ?', brk.
+                 ^outer find: k.
+                 }.
+  } or: me.
+}.
+Env on: 'toString' do: {
+  ^'(' + my dict toString + ') < ' + (my outer toString).
+}.
+GlobalEnv is Env new initParams: [] args: [] outer: Nil.
+var GlobalInit is Map new.
+var LastEnv is GlobalEnv.
+GlobalInit do
+  put: {:a:b ^a + b.} at: '+',
+  put: {:a:b ^a - b.} at: '-',
+  put: {:a:b ^a * b.} at: '*',
+  put: {:a:b ^a / b.} at: '/',
+  put: {:a:b ^a toBoolean & b.} at: 'and',
+  put: {:a:b ^a toBoolean | b.} at: 'or' ,
+  put: {:a ^a toBoolean not.} at: 'not',
+  put: {:a:b ^a > b.} at: '>',
+  put: {:a:b ^a < b.} at: '<',
+  put: {:a:b ^a >=: b.} at: '>=',
+  put: {:a:b ^a <=: b.} at: '<=',
+  put: {:a:b ^a = b.} at: '=' ,
+  put: {:a:b ^a = b.} at: 'equal?',
+  put: {:a:b ^a = b.} at: 'eq?',
+  put: {:a ^a count.} at: 'length',
+  put: {:a:b ^[a, b].} at: 'cons',
+  put: {:a ^a head.} at: 'car',
+  put: {:a ^a tail.} at: 'cdr',
+  put: {:a:b ^a + b.} at: 'append',
+  put: {:*args ^args.} at: 'list',
+  put: {:a ^Reflect isObject: a linkedTo: Array.} at: 'list?',
+  put: {:a ^Reflect isObject: a linkedTo: Array, & (a count = 0).} at: 'null?',
+  put: {:a ^Reflect isObject: a linkedTo: String.} at: 'symbol?',
+  put: {:a ^(Reflect isObject: a linkedTo: String) | (Reflect isObject: a linkedTo: Number) | (a isNil).} at: 'atom?',
+  put: { ^atom applyTo: (Program getCharacter). } at: 'read',
+done.
+GlobalInit each: {:k:v GlobalEnv put: v at: k.}.
+['abs', 'atan', 'ceil', 'cos', 'exp',
+ 'floor', 'log', 'round', 'sin',
+ 'sqrt', 'tan']
+each: {:i:v
+    GlobalEnv put: (Number &method: v) at: v.
+}.
+GlobalEnv put: (Number &method: 'toPowerOf:') at: 'pow'.
+GlobalEnv put: (Number &method: 'max:') at: 'max'.
+GlobalEnv put: (Number &method: 'min:') at: 'min'.
+GlobalEnv put: (Number &method: 'mod:') at: 'mod'.
+
+Truth is {:st ^Reflect isObject: st linkedTo: Array, either: (st count toBoolean) or: st.}.
+Truth on: 'of:' do: {:exp ^me applyTo: exp.}.
+_eval is {:x:en
+  # Pen write: 'evaluating $$x', brk.
+  var env is en or: GlobalEnv.
+  LastEnv is env.
+  (Reflect isObject: x linkedTo: String) ifTrue: {#symbol
+    ^env find: x, at: x.
+  }.
+  (Reflect isObject: x linkedTo: Array) ifFalse: {#constant literal
+    ^x.
+  }.
+  (x count = 0) ifTrue: {#null
+    ^x.
+  }.
+  (x @ 0 = 'quote') | (x @ 0 = '\'') ifTrue: {#(quote (...))
+    ^x at: 1.
+  }.
+  (x @ 0 = 'if') ifTrue: {#(if cond t_e f_e)
+    ^_eval applyTo: (Truth of: (_eval applyTo: x @ 1 and: env), either: x @ 2 or: x @ 3) and: env.
+  }.
+  (x @ 0 = 'set!') ifTrue: {#(set! name expr)
+    env find: x @ 1, put: (_eval applyTo: x @ 2 and: env) at: x @ 1.
+    ^env at: x @ 1.
+  }.
+  (['define', 'defun'] contains: x @ 0) ifTrue: {#(define name expr)
+    Pen writeln: (x @ 1).
+    env put: (_eval applyTo: x @ 2 and: env) at: x @ 1.
+    ^env at: x @ 1.
+  }.
+  (x @ 0 = 'lambda') ifTrue: {#(lambda (bindings*) expr)
+    ^{:*args ^_eval applyTo: const x @ 2 and: (Env new initParams: const x @ 1 args: args outer: const env).}.
+  }.
+  (x @ 0 = 'begin') ifTrue: {#(begin ...)
+    var val is Nil.
+    x tail each_v: {:v val is _eval applyTo: v and: env.}.
+    ^val.
+  }.
+  (x @ 0 = 'require') ifTrue: {#(require file-path)
+    var str is (File new: (x tail head), read).
+    ^_eval applyTo: (parse applyTo: str) and: env.
+  }.
+  (x @ 0 = '#') ifTrue: {#(# ...) evaluate citron code
+    ^(x from: 1 length: (x count - 1), join: ' ') eval.
+  }.
+  (x @ 0 containsPattern: '^c(a|d)[ad]+r$') ifTrue: {
+    var spek is (x head from: 1 to: (x head length - 1), characters fmap: {:e ^e = 'a' either: 'car' or: 'cdr'.}).
+    spek is spek init foldl: {:acc:x ^[x, acc].} accumulator: ([(spek last)] + (x tail)).
+    ^_eval applyTo: spek and: env.
+  }.
+  var exps is x fmap: {:exp var x is _eval applyTo: exp and: const env. ^x.}.
+  var proc is exps shift.
+  ^proc message: (proc appropriateApplicationMessage) arguments: exps.
+}.
+
+parse is {:s ^read_from applyTo: (tokenize applyTo: s).}.
+tokenize is {:s ^s replace: '(' with: ' ( ', replace: ')' with: ' ) ', split: ' ', filter: {:i:v ^v trim !=: ''.}.}.
+read_from is {:tokens
+  tokens count ifFalse: {thisBlock error: 'unexpected EOF while reading'.}.
+  var token is tokens shift.
+  '(' = token ifTrue: {
+      var l is Array new.
+      {^tokens @ 0 !=: ')'.} whileTrue: {
+        l push: (read_from applyTo: tokens).
+      }.
+      tokens shift. # ')'
+      ^l.
+    }, else: {
+      (token = ')') ifTrue: {thisBlock error: 'unexpected )'.}.
+      ^atom applyTo: token.
+    }.
+}.
+
+atom is {:token
+  var number is token toNumber.
+  (number toString = token) ifTrue: {^number.}.
+  ^token toString.
+}.
+
+to_string is {:exp
+  (Reflect isObject: exp linkedTo: Array) ifTrue: {
+    ^'(' + (exp fmap: to_string, join: ' ') + ')'.
+  }.
+  ^exp toString.
+}.
+
+repl is {:str
+  var result is _eval applyTo: (parse applyTo: str) and: LastEnv.
+  ^result isNil either: Nil or: {^to_string applyTo: result.}.
+}.
+
+# repl applyTo: '(define fact (lambda (n) (if (<= n 1) 1 (* n (fact (- n 1))))))'.
+# repl applyTo: '(fact 11)'.
+
+var get_input is {:inner:before
+  Pen cyan write: inner, resetColor.
+  var inp is Program waitForInput trim.
+  (var ss is (inp countOf: '(') - (inp countOf: ')') + before) > 0 ifTrue: {
+    ^inp + ' ' + (get_input applyTo: ('...' * (ss + 1)) + ' ' and: ss).
+  }.
+  ^inp.
+}.
+
+{^True.} whileTrue: {
+  {Pen writeln: (repl applyTo: (get_input applyTo: '>>> ' and: 0)).} catch: {:e Pen red write: e, resetColor brk.}, run.
+}.

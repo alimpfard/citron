@@ -8,406 +8,780 @@
 
 #include "citron.h"
 
-ctr_object* ctr_ccomp_get_stub(ctr_function_ptr_t func, ctr_object* receiver, ctr_argument* args) {
-  switch (func) {
-    case &ctr_nil_is_nil:
-      return ctr_build_bool(1);
+#pragma optimize 0
 
-    case &ctr_nil_assign:
-    case &ctr_block_error:
-    case &ctr_console_brk:
-      return CtrStdNil;
+#define malloc ctr_heap_allocate
 
-    case &ctr_object_to_string:
-    case &ctr_bool_to_string:
-    case &ctr_object_type:
-    case &ctr_number_uint_binrep:
-    case &ctr_number_to_string:
-    case &ctr_string_fromto:
-    case &ctr_string_from_length:
-    case &ctr_string_concat:
-    case &ctr_string_append:
-    case &ctr_string_multiply:
-    case &ctr_string_trim:
-    case &ctr_string_ltrim:
-    case &ctr_string_rtrim:
-    case &ctr_string_padding_left:
-    case &ctr_string_padding_right:
-    case &ctr_string_html_escape:
-    case &ctr_string_count_of:
-    case &ctr_string_slice:
-    case &ctr_string_at:
-    case &ctr_string_replace_with:
-    case &ctr_string_to_lower:
-    case &ctr_string_to_upper:
-    case &ctr_string_skip:
-    case &ctr_string_to_lower1st:
-    case &ctr_string_to_upper1st:
-    case &ctr_string_find_pattern_do:
-    case &ctr_string_find_pattern_options_do:
-    case &ctr_string_to_string:
-    case &ctr_string_format:
-    case &ctr_string_format_map:
-    case &ctr_string_quotes_escape:
-    case &ctr_string_dquotes_escape:
-    case &ctr_string_append_byte:
-    case &ctr_string_csub:
-    case &ctr_string_cadd:
-    case &ctr_string_randomize_bytes:
-    case &ctr_string_reverse:
-    case &ctr_string_assign:
-    case &ctr_nil_to_string:
-    case &ctr_array_type:
-    case &ctr_array_join:
-    case &ctr_array_to_string:
-    case &ctr_map_type:
-    case &ctr_map_to_string:
-      return CtrStdString;
+const char** ctr_ast_node_names[] = {
+	"exprassignment",
+	"exprmessage",
+	"unamessage",
+	"binmessage",
+	"kwmessage",
+	"ltrstring",
+	"reference",
+	"ltrnum",
+	"codeblock",
+	"returnfromblock",
+	"immutable",
+	"(unknown)",
+	"(unknown)",
+	"(unknown)",
+	"(unknown)",
+	"(unknown)",
+	"(unknown)",
+	"(unknown)",
+	"(unknown)",
+	"(unknown)",
+	"(unknown)",
+	"(unknown)",
+	"(unknown)",
+	"(unknown)",
+	"(unknown)",
+	"paramlist",
+	"instrlist",
+	"",
+	"endofprogram",
+	"nested",
+	"ltrbooltrue",
+	"ltrboolfalse",
+	"ltrnil",
+	"program"
+};
 
+struct environment {
+	int length;
+	unsigned int index;
+  char* binding;
+  ctr_tnode* value;
+  int deterministic;
+  int indeterministic_level;
+  struct environment* next;
+  struct environment* parent;
+};
+typedef struct environment environment;
 
-    case &ctr_object_message:
-    case &ctr_object_if_false:
-    case &ctr_object_if_true:
-    case &ctr_bool_if_true:
-    case &ctr_bool_if_false:
-    case &ctr_bool_either_or:
-    case &ctr_number_respond_to:
-    case &ctr_string_eval:
-    case &ctr_block_runIt:
-    case &ctr_block_run:
-      int cc = CTR_CCOMP_SIMULATION;
-      CTR_CCOMP_SIMULATION = 1; //enable simulation
-      ctr_object* result = ctr_send_message(receiver, args);
-      CTR_CCOMP_SIMULATION = cc; //set it back to its original value
-      return result;
+environment senv = {.parent = NULL, .binding = "", .length = 0, .index = 0};
+environment* env = &senv;
+int env_index = 0;
+int env_context_index = 0;
 
-    case &ctr_object_remote:
-    case &ctr_object_learn_meaning:
-    case &ctr_object_respond_and:
-    case &ctr_object_respond_and_and:
-    case &ctr_object_myself:
-    case &ctr_object_do:
-    case &ctr_object_done:
-    case &ctr_object_on_do:
-    case &ctr_object_respond:
-    case &ctr_object_make:
-    case &ctr_object_ctor:
-    case &ctr_object_assign:
-    case &ctr_object_attr_accessor:
-    case &ctr_object_attr_reader:
-    case &ctr_object_attr_writer:
-    case &ctr_object_make_hiding:
-    case &ctr_object_swap:
-    case &ctr_array_foldl:
-    case &ctr_array_unshift:
-    case &ctr_array_shift:
-    case &ctr_array_count:
-    case &ctr_array_pop:
-    case &ctr_array_index:
-    case &ctr_array_contains:
-    case &ctr_array_get:
-    case &ctr_array_head:
-    case &ctr_array_last:
-    case &ctr_array_min:
-    case &ctr_array_max:
-    case &ctr_array_sum:
-    case &ctr_array_product:
-    case &ctr_array_multiply:
-    case &ctr_map_get:
-    case &ctr_iterator_skip:
-    case &ctr_iterator_next:
-      return CtrStdObject;
-
-    case &ctr_object_equals:
-    case &ctr_bool_and:
-    case &ctr_bool_nor:
-    case &ctr_bool_or:
-    case &ctr_bool_eq:
-    case &ctr_bool_neq:
-    case &ctr_bool_xor:
-    case &ctr_bool_not:
-    case &ctr_bool_flip:
-    case &ctr_bool_break:
-    case &ctr_bool_continue:
-    case &ctr_bool_assign:
-    case &ctr_number_higherThan:
-    case &ctr_number_higherEqThan:
-    case &ctr_number_lowerThan:
-    case &ctr_number_lowerEqThan:
-    case &ctr_number_eq:
-    case &ctr_number_neq:
-    case &ctr_number_odd:
-    case &ctr_number_even:
-    case &ctr_number_to_boolean:
-    case &ctr_number_between:
-    case &ctr_number_positive:
-    case &ctr_number_negative:
-    case &ctr_string_eq:
-    case &ctr_string_neq:
-    case &ctr_string_to_boolean:
-    case &ctr_string_is_regex_pcre:
-    case &ctr_string_contains_pattern:
-    case &ctr_string_contains:
-    case &ctr_string_is_ctor:
-    case &ctr_object_to_boolean:
-    case &ctr_object_is_nil:
-    case &ctr_nil_to_boolean:
-      return CtrStdBool;
-
-    case &ctr_object_to_number:
-    case &ctr_bool_to_number:
-    case &ctr_nil_to_number:
-    case &ctr_number_add:
-    case &ctr_number_inc:
-    case &ctr_number_minus:
-    case &ctr_number_dec:
-    case &ctr_number_multiply:
-    case &ctr_number_times:
-    case &ctr_number_mul:
-    case &ctr_number_divide:
-    case &ctr_number_div:
-    case &ctr_number_modulo:
-    case &ctr_number_factorial:
-    case &ctr_number_floor:
-    case &ctr_number_ceil:
-    case &ctr_number_round:
-    case &ctr_number_abs:
-    case &ctr_number_sin:
-    case &ctr_number_cos:
-    case &ctr_number_exp:
-    case &ctr_number_sqrt:
-    case &ctr_number_tan:
-    case &ctr_number_atan:
-    case &ctr_number_log:
-    case &ctr_number_shr:
-    case &ctr_number_shl:
-    case &ctr_number_pow:
-    case &ctr_number_min:
-    case &ctr_number_max:
-    case &ctr_number_xor:
-    case &ctr_number_or:
-    case &ctr_number_and:
-    case &ctr_number_to_step_do:
-    case &ctr_number_to_byte:
-    case &ctr_number_qualify:
-    case &ctr_number_assign:
-    case &ctr_string_length:
-    case &ctr_string_byte_at:
-    case &ctr_string_index_of:
-    case &ctr_string_last_index_of:
-    case &ctr_string_to_number:
-    case &ctr_string_hash_with_key:
-    case &ctr_iterator_count:
-    case &ctr_map_count:
-      return CtrStdNumber;
-
-    case &ctr_string_bytes:
-    case &ctr_string_split:
-    case &ctr_string_characters:
-    case &ctr_string_to_byte_array:
-    case &ctr_array_new:
-    case &ctr_array_copy:
-    case &ctr_array_new_and_push:
-    case &ctr_array_fmap:
-    case &ctr_array_imap:
-    case &ctr_array_filter:
-    case &ctr_array_push:
-    case &ctr_array_push_imm:
-    case &ctr_array_reverse:
-    case &ctr_array_sort:
-    case &ctr_array_put:
-    case &ctr_array_from_length:
-    case &ctr_array_tail:
-    case &ctr_array_init:
-    case &ctr_array_add:
-    case &ctr_array_map:
-    case &ctr_array_fill:
-    case &ctr_array_column:
-    case &ctr_array_assign:
-    case &ctr_iterator_fmap:
-    case &ctr_array_intersperse:
-    case &ctr_iterator_take:
-    case &ctr_iterator_takewhile:
-    case &ctr_iterator_to_array:
-      return CtrStdArray;
-
-    case &ctr_block_set:
-    case &ctr_block_catch:
-    case &ctr_block_while_true:
-    case &ctr_block_while_false:
-    case &ctr_block_times:
-    case &ctr_block_to_string:
-    case &ctr_block_assign:
-      return CtrStdBlock;
-
-    case &ctr_map_new:
-    case &ctr_map_put:
-    case &ctr_map_each:
-    case &ctr_map_kvmap:
-    case &ctr_map_kvlist:
-    case &ctr_map_flip:
-    case &ctr_map_assign:
-      return CtrStdMap;
-
-    case &ctr_iterator_make:
-    case &ctr_iterator_set_seed:
-    case &ctr_iterator_set_func:
-    case &ctr_iterator_make_range:
-    case &ctr_iterator_make_uncapped_range:
-    case &ctr_iterator_each:
-    case &ctr_iterator_end:
-    case &ctr_iterator_end_check:
-      return CtrStdIter;
-
-    case &ctr_console_write:
-    case &ctr_console_red:
-    case &ctr_console_green:
-    case &ctr_console_yellow:
-    case &ctr_console_blue:
-    case &ctr_console_magenta:
-    case &ctr_console_cyan:
-    case &ctr_console_reset:
-    case &ctr_console_tab:
-    case &ctr_console_line:
-    case &ctr_console_clear:
-    case &ctr_console_clear_line:
-      return CtrStdConsole;
-
-    case &ctr_file_new:
-    case &ctr_file_path:
-    case &ctr_file_read:
-    case &ctr_file_write:
-    case &ctr_file_append:
-    case &ctr_file_exists:
-    case &ctr_file_size:
-    case &ctr_file_delete:
-    case &ctr_file_include:
-    case &ctr_file_include_here:
-    case &ctr_file_open:
-    case &ctr_file_close:
-    case &ctr_file_read_bytes:
-    case &ctr_file_write_bytes:
-    case &ctr_file_seek:
-    case &ctr_file_seek_rewind:
-    case &ctr_file_seek_end:
-    case &ctr_file_descriptor:
-    case &ctr_file_lock_generic:
-    case &ctr_file_lock:
-    case &ctr_file_unlock:
-    case &ctr_file_list:
-    case &ctr_file_tmp:
-    case &ctr_file_stdext_path:
-    case &ctr_command_argument:
-    case &ctr_command_num_of_args:
-    case &ctr_command_waitforinput:
-    case &ctr_command_getc:
-    case &ctr_command_input:
-    case &ctr_command_set_INT_handler:
-    case &ctr_command_get_env:
-    case &ctr_command_set_env:
-    case &ctr_command_exit:
-    case &ctr_command_flush:
-    case &ctr_command_forbid_shell:
-    case &ctr_command_forbid_file_write:
-    case &ctr_command_forbid_file_read:
-    case &ctr_command_forbid_include:
-    case &ctr_command_forbid_fork:
-    case &ctr_command_countdown:
-    case &ctr_command_fork:
-    case &ctr_command_message:
-    case &ctr_command_listen:
-    case &ctr_command_join:
-    case &ctr_command_log:
-    case &ctr_command_warn:
-    case &ctr_command_err:
-    case &ctr_command_crit:
-    case &ctr_command_pid:
-    case &ctr_command_accept:
-    case &ctr_command_accept_number:
-    case &ctr_command_remote:
-    case &ctr_command_default_port:
-    case &ctr_clock_change:
-    case &ctr_clock_wait:
-    case &ctr_clock_time:
-    case &ctr_clock_new:
-    case &ctr_clock_new_set:
-    case &ctr_clock_like:
-    case &ctr_clock_day:
-    case &ctr_clock_month:
-    case &ctr_clock_year:
-    case &ctr_clock_hour:
-    case &ctr_clock_minute:
-    case &ctr_clock_second:
-    case &ctr_clock_weekday:
-    case &ctr_clock_yearday:
-    case &ctr_clock_week:
-    case &ctr_clock_set_day:
-    case &ctr_clock_set_month:
-    case &ctr_clock_set_year:
-    case &ctr_clock_set_hour:
-    case &ctr_clock_set_minute:
-    case &ctr_clock_set_second:
-    case &ctr_clock_get_time:
-    case &ctr_clock_set_time:
-    case &ctr_clock_set_zone:
-    case &ctr_clock_get_zone:
-    case &ctr_clock_to_string:
-    case &ctr_clock_format:
-    case &ctr_clock_add:
-    case &ctr_clock_subtract:
-    case &ctr_clock_processor_time:
-    case &ctr_clock_processor_ticks_ps:
-    case &ctr_clock_time_exec:
-    case &ctr_clock_time_exec_s:
-    case &ctr_slurp_obtain:
-    case &ctr_slurp_respond_to:
-    case &ctr_slurp_respond_to_and:
-    case &ctr_shell_call:
-    case &ctr_shell_respond_to:
-    case &ctr_shell_respond_to_and:
-    case &ctr_gc_collect:
-    case &ctr_gc_dust:
-    case &ctr_gc_object_count:
-    case &ctr_gc_kept_count:
-    case &ctr_gc_kept_alloc:
-    case &ctr_gc_sticky_count:
-    case &ctr_gc_setmode:
-    case &ctr_gc_setmemlimit:
-    case &ctr_reflect_add_glob:
-    case &ctr_reflect_add_local:
-    case &ctr_reflect_add_my:
-    case &ctr_reflect_dump_context_spec_prop:
-    case &ctr_reflect_dump_context_spec:
-    case &ctr_reflect_dump_context:
-    case &ctr_reflect_find_obj:
-    case &ctr_reflect_find_obj_ex:
-    case &ctr_reflect_new:
-    case &ctr_reflect_set_to:
-    case &ctr_reflect_cb_ac:
-    case &ctr_reflect_cb_add_param:
-    case &ctr_reflect_fn_copy:
-    case &ctr_reflect_share_memory:
-    case &ctr_reflect_link_to:
-    case &ctr_reflect_child_of:
-    case &ctr_reflect_is_linked_to:
-    case &ctr_reflect_generate_inheritance_tree:
-    case &ctr_reflect_describe_type:
-    case &ctr_reflect_describe_value:
-    case &ctr_reflect_type_descriptor_print:
-    case &ctr_reflect_bind:
-    case &ctr_reflect_cons_of:
-    case &ctr_reflect_try_serialize_block:
-    case &ctr_reflect_cons_value:
-    case &ctr_reflect_cons_str:
-    case &ctr_fiber_spawn:
-    case &ctr_fiber_yield:
-    case &ctr_fiber_join_all:
-    case &ctr_fiber_tostring:
-    case &ctr_fiber_yielded:
-    case &ctr_dice_throw:
-    case &ctr_dice_sides:
-    case &ctr_dice_rand:
-    default:
-      return CtrStdObject;
+void ctr_ccomp_free_env(environment* ctx) {
+  environment* env_ = ctx->next;
+  while(env_) {
+    //free(ctx);
+    env_ = env_->next;
   }
+}
+
+void ctr_ccomp_env_pprint_popped(environment* env, int indent) {
+  if(!env) return;
+  environment* ctx = env;
+  while(ctx != (environment*)0 && ctx) {
+    printf("%*c-%.*s\n", indent, ' ', ctx->length, ctx->binding);
+    ctx = ctx->next;
+  }
+}
+
+
+environment* ctr_ccomp_env_maybe_get_ref(volatile environment* env, ctr_tnode* node) {
+  volatile environment* ctx = env;
+  while(ctx&&node) {
+		printf("-- %d\n", ctx->index);
+		if(ctx->length == node->vlen) {
+	    printf("checking '%.*s' against '%.*s'\n", node->vlen, node->value, ctx->length, ctx->binding);
+	    if(node->vlen == ctx->length && strncmp(node->value, ctx->binding, node->vlen) == 0) return ctx;
+	    printf("failed check against '%.*s', resuming\n", ctx->length, ctx->binding);
+		}
+	   environment* maybe_in_parent = ctr_ccomp_env_maybe_get_ref(ctx->parent, node);
+	   if(maybe_in_parent) return maybe_in_parent;
+    ctx = ctx->next;
+  }
+  return NULL;
+}
+void ctr_ccomp_env_update_new_context() {
+  env_context_index = env_index++;
+  environment* ctx = malloc(sizeof(environment));
+	ctx->index = 0;
+	ctx->next = NULL;
+  ctx->parent = env;
+  env = ctx;
+}
+environment* ctr_ccomp_env_update_pop_context() {
+  if(!env->parent) return env;
+  env_index = env_context_index;
+  environment* ctx = env;
+  env = env->parent;
+  // ctr_ccomp_env_pprint_popped(ctx, 1);
+  return ctx;
+}
+void ctr_ccomp_env_update_block(environment* env, ctr_tnode* node) {
+  //TODO
+}
+void ctr_ccomp_env_update_assign(environment** env, ctr_tlistitem* nodes) {
+  ctr_tnode* name = nodes->node;
+  ctr_tnode* value = nodes->next->node;
+	if(value->type == CTR_AST_NODE_REFERENCE) {
+		printf("Querying environment for binding %.*s\n", value->vlen, value->value);
+		ctr_tnode* alt = ctr_ccomp_env_maybe_get_ref(*env, value);
+		if(alt) {
+			printf("environment has %p for binding %.*s\n", alt, value->vlen, value->value);
+			value = alt;
+		} else printf("No binding found for %.*s, assuming runtime generated\n", value->vlen, value->value);
+	}
+  environment* new_env = malloc(sizeof(environment));
+  new_env->binding = name->value;
+  new_env->length = name->vlen;
+  printf("Updating environment with binding %.*s = %p\n", name->vlen, name->value, value);
+	new_env->value = malloc(sizeof(value));
+	memcpy(new_env->value, value, sizeof(value));
+  new_env->indeterministic_level = ctr_ccomp_node_indeterministic_level(value);
+  new_env->deterministic = new_env->indeterministic_level < 2 ? 1 : 0;
+  printf("\nreached conclusion %s (level %d)\n", new_env->deterministic ? "deterministic" : "indeterministic", new_env->indeterministic_level);
+  new_env->next = *env;
+	new_env->index = (*env)->index + 1;
+  *env = new_env;
+}
+void ctr_ccomp_env_update_assign_charstar(environment** env, char* name, int length, ctr_tnode* value) {
+  environment* new_env = malloc(sizeof(environment));
+  new_env->binding = malloc(sizeof(char) * length + 1);
+	memcpy(new_env->binding, name, length);
+  new_env->length = length;
+  printf("Updating environment with binding %.*s = %p\n", name, length, value);
+  new_env->value = malloc(sizeof(value));
+	memcpy(new_env->value, value, sizeof(value));
+  new_env->indeterministic_level = ctr_ccomp_node_indeterministic_level(value);
+  new_env->deterministic = new_env->indeterministic_level < 2 ? 1 : 0;
+  printf("\nreached conclusion %s (level %d)\n", new_env->deterministic ? "deterministic" : "indeterministic", new_env->indeterministic_level);
+  new_env->next = *env;
+	new_env->index = (*env)->index + 1;
+  *env = new_env;
+}
+
+/* level 0 : value directly available at compile time
+ * level 1 : value recursively available at compile time
+ * level 2 : value possibilities available at compile time
+ * level 3 : value not available at compile time
+ */
+ int ctr_ccomp_node_indeterministic_level(ctr_tnode* node);
+int ctr_ccomp_rec_nodes_indeterministic_level(ctr_tlistitem* nodes) {
+  int max_level = 0;
+  ctr_tlistitem* node = nodes;
+  while(node) {
+    max_level = fmax(max_level, ctr_ccomp_node_indeterministic_level(node->node));
+    node = node->next;
+  }
+  return max_level;
+}
+int lastcci = -1;
+int ctr_ccomp_node_indeterministic_level(ctr_tnode* node) {
+  if(node==NULL) return 0; //we already have the value
+  if(lastcci>-1)printf("CHECK = %d\n", lastcci);
+  printf( "CHECK : looking for deterministicness of %p\n"  , node);
+  if(node->type >= 51 && node->type <= 84 && node->nodes) {
+    printf(  "%s "  "{\n" , ctr_ast_node_names[node->type - CTR_AST_NODE_EXPRASSIGNMENT]);
+    //ctr_internal_debug_tree(node, 2);
+    printf( " }\n");
+  }
+  switch (node->type) {
+    case CTR_AST_NODE_LTRNIL:
+    case CTR_AST_NODE_LTRNUM:
+    case CTR_AST_NODE_LTRSTRING:
+    case CTR_AST_NODE_LTRBOOLTRUE:
+    case CTR_AST_NODE_LTRBOOLFALSE:
+    case CTR_AST_NODE_ENDOFPROGRAM:
+        return lastcci = 0;
+    case CTR_AST_NODE_PARAMLIST: {//if we've been handed this, we have started parsing a block
+      ctr_tlistitem* parameterList = node->nodes;
+      if (!parameterList) return 0;
+      ctr_tnode* param = parameterList->node;
+      if(param == NULL) {
+        return lastcci = 0;
+      }
+      while((param = parameterList->node) != NULL) {
+        int vararg = *(param->value) == '*';
+        ctr_ccomp_env_update_assign_charstar(&env, param->value+vararg, param->vlen-vararg, NULL);
+        parameterList = parameterList->next;
+        if(parameterList == NULL) break;
+      }
+      return lastcci = 0;
+    }
+    case CTR_AST_NODE_NESTED:
+        return lastcci = ctr_ccomp_node_indeterministic_level(node->nodes->node);
+    case CTR_AST_NODE_REFERENCE: {
+        environment* fy = ctr_ccomp_env_maybe_get_ref(env, node);
+        if(fy) {
+          printf("environment had an entry for %.*s : %p (level %d)\n", fy->length, fy->binding, fy->value, fy->indeterministic_level);
+          return lastcci = fy->indeterministic_level;
+        }
+        else return lastcci = 3; //maybe a runtime generated binding
+      }
+    case CTR_AST_NODE_IMMUTABLE: {
+      int max_level = 0;
+      ctr_tlistitem* nn = node->nodes;
+      while(nn) {
+        max_level = fmax(max_level, ctr_ccomp_rec_nodes_indeterministic_level(nn));
+        nn = nn->next;
+      }
+      return lastcci = max_level;
+    }
+    case CTR_AST_NODE_UNAMESSAGE: {
+      return lastcci = 1; //we know this message inside and out
+    }
+    case CTR_AST_NODE_BINMESSAGE:
+      return lastcci = ctr_ccomp_node_indeterministic_level(node->nodes->node); //argument
+    case CTR_AST_NODE_KWMESSAGE:
+      return lastcci = ctr_ccomp_rec_nodes_indeterministic_level(node->nodes); //all the arguments
+    case CTR_AST_NODE_EXPRMESSAGE: {
+      int rec = ctr_ccomp_node_indeterministic_level(node->nodes->node); //receiver
+      int msgs = ctr_ccomp_node_indeterministic_level(node->nodes->next->node); //messages
+      if(rec < 2 && msgs < 2) {
+        //we know the value one way or the other
+        return lastcci = 1; //we can recursively figure out the result of this expression
+      } else return lastcci = fmax(rec, msgs);//whichever is worse
+    }
+    case CTR_AST_NODE_RETURNFROMBLOCK: return lastcci = ctr_ccomp_node_indeterministic_level(node->nodes->node);
+    case CTR_AST_NODE_EXPRASSIGNMENT: ctr_ccomp_env_update_assign(&env, node->nodes); return lastcci = ctr_ccomp_node_indeterministic_level(node->nodes->next->node);//assignee
+    case CTR_AST_NODE_PROGRAM: return lastcci = ctr_ccomp_rec_nodes_indeterministic_level(node->nodes);
+    case CTR_AST_NODE_CODEBLOCK: {
+      ctr_ccomp_env_update_new_context();
+      ctr_ccomp_node_indeterministic_level(node->nodes->node);//paramlist is level 0, but we need to handle it
+      int max = ctr_ccomp_rec_nodes_indeterministic_level(node->nodes->next);//get the worst of our instructions
+      ctr_ccomp_env_update_pop_context();
+      return lastcci=max;
+    }
+    case CTR_AST_NODE_INSTRLIST: return lastcci=ctr_ccomp_rec_nodes_indeterministic_level(node->nodes);
+		case 1: return lastcci=0;
+    default: {
+			printf( "we have no rule for type %d = %s\n" , node->type, ctr_ast_node_names[node->type - CTR_AST_NODE_EXPRASSIGNMENT]);
+			return lastcci = 3; //we have no clue
+		}
+  }
+}
+
+ctr_tnode* ctr_ccomp_as_literal(ctr_tnode* node);
+
+ctr_tlistitem* ctr_ccomp_nodes_as_literal(ctr_tlistitem* li) {
+	ctr_tlistitem* oli = li;
+	while(li) {
+		printf(" => %p <=> %s\n", li->node, ctr_ast_node_names[li->node->type - CTR_AST_NODE_EXPRASSIGNMENT]);
+		li->node = ctr_ccomp_as_literal(li->node);
+		li = li->next;
+	}
+	return oli;
+}
+
+ctr_tnode* ctr_ccomp_as_literal(ctr_tnode* node) {
+	printf(" → %p >< %s\n", node, ctr_ast_node_names[node->type - CTR_AST_NODE_EXPRASSIGNMENT]);
+  switch (node->type) {
+    case CTR_AST_NODE_LTRNIL:
+    case CTR_AST_NODE_LTRNUM:
+    case CTR_AST_NODE_LTRSTRING:
+    case CTR_AST_NODE_LTRBOOLTRUE:
+    case CTR_AST_NODE_LTRBOOLFALSE:
+    case CTR_AST_NODE_ENDOFPROGRAM:
+      return node;
+    case CTR_AST_NODE_IMMUTABLE:
+      node->nodes = ctr_ccomp_nodes_as_literal(node->nodes);
+      return node;
+    case CTR_AST_NODE_NESTED:
+      return ctr_ccomp_as_literal(node->nodes->node);
+    case CTR_AST_NODE_REFERENCE: {
+			printf("Got a reference to turn into a literal namely %.*s\n", node->vlen, node->value);
+      environment* _e = ctr_ccomp_env_maybe_get_ref(env, node);
+      if(_e) return _e->value;
+      else return node;
+      break;
+    }
+		case CTR_AST_NODE_EXPRASSIGNMENT: {
+			ctr_tnode* onode = malloc(sizeof(ctr_tnode));
+			onode->nodes = malloc(sizeof(ctr_tlistitem));
+			onode->nodes->node = node->nodes->node;
+			onode->nodes->next = malloc(sizeof(ctr_tlistitem));
+			onode->nodes->next->node = ctr_ccomp_as_literal(node->nodes->next->node);
+			return onode;
+		}
+    default: return node;
+  }
+}
+
+volatile ctr_tnode* ctr_ccomp_optimize_node_inplace(volatile ctr_tnode** node);
+ctr_tlistitem* ctr_ccomp_optimize_nodes_inplace(ctr_tlistitem* nodes) {
+  ctr_tlistitem* node = nodes;
+  while(node) {
+    node->node = ctr_ccomp_optimize_node_inplace(&(node->node));
+    node = node->next;
+  }
+  return nodes;
+}
+
+volatile ctr_tnode* ctr_ccomp_optimize_node_inplace(volatile ctr_tnode volatile ** node) {
+	printf("Got a(n) %s (%p), optimization start\n", ctr_ast_node_names[(*node)->type - CTR_AST_NODE_EXPRASSIGNMENT], node);
+  switch ((*node)->type) {
+    case CTR_AST_NODE_NESTED: {
+      ctr_tlistitem* nodes = (*node)->nodes;
+      return ctr_ccomp_optimize_node_inplace(&(nodes->node)); //get rid of the nesting
+    }
+		case CTR_AST_NODE_IMMUTABLE:
+		case CTR_AST_NODE_KWMESSAGE:
+		case CTR_AST_NODE_UNAMESSAGE:
+		case CTR_AST_NODE_INSTRLIST: {
+			int deter = 3;
+			if(deter=(ctr_ccomp_node_indeterministic_level(node)) < 2) {
+				printf("proceeding optimization of %p\n", node);
+        (*node)->nodes = ctr_ccomp_nodes_as_literal((*node)->nodes);
+      }
+			printf("DETERMINISTIC STATUS OF %p = level %d\n", node, deter );
+			return *node;
+		}
+    case CTR_AST_NODE_EXPRASSIGNMENT: {
+      //node->nodes->node : no need to optimize a reference
+			printf("Type = %s\n", ctr_ast_node_names[(*node)->nodes->next->node->type - CTR_AST_NODE_EXPRASSIGNMENT]);
+      (*node)->nodes->next->node = ctr_ccomp_optimize_node_inplace(&((*node)->nodes->next->node));
+      //update the environment
+      ctr_ccomp_env_update_assign(&env, (*node)->nodes);
+      return *node;
+    }
+    case CTR_AST_NODE_CODEBLOCK: {
+      //node->nodes->node : no need to optimize the params
+      ctr_ccomp_env_update_new_context();
+      (*node)->nodes->next = ctr_ccomp_optimize_nodes_inplace((*node)->nodes->next);
+      ctr_ccomp_env_update_block(ctr_ccomp_env_update_pop_context(), (*node)->nodes->next->node);
+      return *node;
+    }
+    case CTR_AST_NODE_EXPRMESSAGE: {
+			int deter = 3;
+      if((deter = ctr_ccomp_node_indeterministic_level((*node)->nodes->node)) < 2) {
+				printf("proceeding optimization of %p\n", node);
+        (*node)->nodes->node = ctr_ccomp_as_literal((*node)->nodes->node);
+        (*node)->nodes->next->node->nodes = ctr_ccomp_nodes_as_literal((*node)->nodes->next->node->nodes);
+      }
+			printf("DETERMINISTIC STATUS OF %p = level %d\n", node, deter );
+      return *node;
+    }
+		case CTR_AST_NODE_PROGRAM: ctr_ccomp_optimize_nodes_inplace((*node)->nodes);
+    default: return *node;
+  }
+}
+
+/***********************************Code Gen***********************************/
+
+uint64_t    ctr_ccomp_subprogram;
+ctr_object* ctr_ccomp_run(ctr_tnode* program);
+ctr_object* ctr_ccomp_expr(ctr_tnode* node, char* wasReturn);
+
+int ctr_ccomp_print_series(ctr_tlistitem* item, char space) {
+	char i;
+	char spacer[3];
+	if(space!='\0') {
+		spacer[0] = space;
+		spacer[1] = ' ';
+		spacer[2] = '\0';
+	}
+	else {
+		spacer[0] = ' ';
+		spacer[1] = '\0';
+	}
+	while(item) {
+		ctr_ccomp_expr(item->node, &i);
+		if(item->next) {
+			printf("%s", spacer);
+			item = item->next;
+		}
+		else break;
+	}
+	return 0;
+}
+
+int ctr_ccomp_print_series_raw(ctr_tlistitem* item, char space) {
+	char i;
+	char spacer[3];
+	if(space!='\0') {
+		spacer[0] = space;
+		spacer[1] = ' ';
+		spacer[2] = '\0';
+	}
+	else {
+		spacer[0] = ' ';
+		spacer[1] = '\0';
+	}
+	while(item) {
+		printf("%.*s", item->node->vlen, item->node->value);
+		if(item->next) {
+			printf("%s", spacer);
+			item = item->next;
+		}
+		else break;
+	}
+	return 0;
+}
+
+int ctr_ccomp_print_series_raw_transform(ctr_tlistitem* item, char space, char* tr, char* to) {
+	char i;
+	char spacer[3];
+	int trlen = strlen(tr);
+	if(space!='\0') {
+		spacer[0] = space;
+		spacer[1] = ' ';
+		spacer[2] = '\0';
+	}
+	else {
+		spacer[0] = ' ';
+		spacer[1] = '\0';
+	}
+	while(item) {
+		if(item->node->vlen>=trlen && strncmp(item->node->value, tr, trlen)==0)
+			printf("%s%.*s", to, (item->node->vlen-trlen), item->node->value+trlen);
+		else
+			printf("%.*s", item->node->vlen, item->node->value);
+		if(item->next) {
+			printf("%s", spacer);
+			item = item->next;
+		}
+		else break;
+	}
+	return 0;
+}
+
+/**
+ * CTRCompilerReturn
+ *
+ * Returns from a block of code.
+ */
+ctr_object* ctr_ccomp_return(ctr_tnode* node) {
+    char wasReturn = 0;
+    ctr_tlistitem* li;
+    ctr_object* e;
+    if (!node->nodes) {
+        printf("Invalid return expression.\n");
+        exit(1);
+    }
+    li = node->nodes;
+    if (!li->node) {
+        printf("Invalid return expression 2.\n");
+        exit(1);
+    }
+		printf("return ");
+		e = ctr_ccomp_expr(li->node, &wasReturn);
+    return e;
+}
+
+int ctr_ccomp_str_replace(char* str, char o, char r) {
+	char* ix = str;
+	int n = 0;
+	while((ix = strchr(ix, o)) != NULL) { *ix++ = r; n++; }
+	return n;
+}
+
+/**
+ * CTRCompilerMessage
+ *
+ * Processes a message sending operation.
+ */
+ctr_object* ctr_ccomp_message(ctr_tnode* paramNode) {
+    int sticky = 0;
+    char wasReturn = 0;
+    ctr_object* result;
+    ctr_tlistitem* eitem = paramNode->nodes;
+    ctr_tnode* receiverNode = eitem->node;
+    ctr_tnode* msgnode;
+    ctr_tlistitem* li = eitem;
+    char* message;
+    ctr_tlistitem* argumentList;
+    volatile ctr_object volatile* r;
+    ctr_object* recipientName = NULL;
+    switch (receiverNode->type) {
+        case CTR_AST_NODE_REFERENCE:
+            recipientName = ctr_build_string(receiverNode->value, receiverNode->vlen);
+            recipientName->info.sticky = 1;
+						int can_be_self = 1;
+            if (CtrStdFlow == NULL) {
+                ctr_callstack[ctr_callstack_index++] = receiverNode;
+            }
+            if (receiverNode->modifier == 1 || receiverNode->modifier == 3) {
+								printf("this.");
+								can_be_self = 0;
+                r = ctr_find_in_my(recipientName);
+            } else {
+                r = ctr_find(recipientName);
+            }
+						if (can_be_self&&(strncmp(receiverNode->value, "me", fmin(2, receiverNode->vlen)) == 0)) {
+							printf("this");
+						} else {
+							printf("%.*s", receiverNode->vlen, receiverNode->value);
+						}
+            if (CtrStdFlow == NULL) {
+                ctr_callstack_index--;
+            }
+            // if (!r) {
+            //     exit(1);
+            // }
+            break;
+        case CTR_AST_NODE_LTRNIL:
+            r = ctr_build_nil();
+						printf("null");
+            break;
+        case CTR_AST_NODE_LTRBOOLTRUE:
+            r = ctr_build_bool(1);
+						printf("true");
+            break;
+        case CTR_AST_NODE_LTRBOOLFALSE:
+            r = ctr_build_bool(0);
+						printf("false");
+            break;
+        case CTR_AST_NODE_LTRSTRING:
+            r = ctr_build_string(receiverNode->value, receiverNode->vlen);
+						printf("\'%.*s\'", receiverNode->vlen, receiverNode->value);
+            break;
+        case CTR_AST_NODE_LTRNUM:
+						r = ctr_build_number_from_string(receiverNode->value, receiverNode->vlen);
+						printf("%.*s", receiverNode->vlen, receiverNode->value);
+            break;
+        case CTR_AST_NODE_IMMUTABLE:
+						printf("[");
+						ctr_ccomp_print_series(receiverNode->nodes->node->nodes, ',');
+						printf("]");
+						break;
+        case CTR_AST_NODE_NESTED:
+						printf("(");
+            r = ctr_ccomp_expr(receiverNode, &wasReturn);
+						printf(")");
+            break;
+        case CTR_AST_NODE_CODEBLOCK:
+						ctr_ccomp_print_block(receiverNode);
+						r = ctr_build_block(receiverNode);
+            break;
+        default:
+            printf("Cannot send messages to receiver of type: %d \n", receiverNode->type);
+            break;
+    }
+		int dd=0;
+    while(li->next) {
+        ctr_argument* a;
+        ctr_argument* aItem;
+        ctr_size l;
+        li = li->next;
+        msgnode = li->node;
+        message = msgnode->value;
+        l = msgnode->vlen;
+        if (CtrStdFlow == NULL) {
+            ctr_callstack[ctr_callstack_index++] = msgnode;
+        }
+        argumentList = msgnode->nodes;
+        a = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+        aItem = a;
+        aItem->object = CtrStdNil;
+				char* str = strndup(message, l);
+				printf("['%.*s'](", l, str);
+				free(str);
+        if (argumentList) {
+            ctr_tnode* node;
+            node = argumentList->node;
+            while(1) {
+                ctr_object* o = ctr_ccomp_expr(node, &wasReturn);
+                aItem->object = o;
+                /* we always send at least one argument, note that if you want to modify the argumentList, be sure to take this into account */
+                /* there is always an extra empty argument at the end */
+                aItem->next = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+                aItem = aItem->next;
+                aItem->object = NULL;
+                if (!argumentList->next) break;
+								printf(", ");
+                argumentList = argumentList->next;
+                node = argumentList->node;
+            }
+        }
+				printf(")");
+        // sticky = r->info.sticky;
+        // r->info.sticky = 1;
+        result = ctr_send_message(r, message, l, a);
+        // r->info.sticky = sticky;
+        aItem = a;
+        if (CtrStdFlow == NULL) {
+            ctr_callstack_index --;
+        }
+        while(aItem->next) {
+            a = aItem;
+            aItem = aItem->next;
+            ctr_heap_free( a );
+        }
+        ctr_heap_free( aItem );
+        r = result;
+    }
+    if (recipientName) recipientName->info.sticky = 0;
+    return result;
+}
+
+/**
+ * CTRCompilerAssignment
+ *
+ * Processes an assignment operation.
+ */
+ctr_object* ctr_ccomp_assignment(ctr_tnode* node) {
+    char wasReturn = 0;
+    ctr_tlistitem* assignmentItems = node->nodes;
+    ctr_tnode* assignee = assignmentItems->node;
+    ctr_tlistitem* valueListItem = assignmentItems->next;
+    ctr_tnode* value = valueListItem->node;
+    ctr_object* x;
+    ctr_object* result;
+    if (CtrStdFlow == NULL) {
+        ctr_callstack[ctr_callstack_index++] = assignee;
+    }
+    if (assignee->modifier == 1) {
+				printf("(this.%.*s) = ", assignee->vlen, assignee->value);
+				x = ctr_ccomp_expr(value, &wasReturn);
+        result = ctr_assign_value_to_my(ctr_build_string(assignee->value, assignee->vlen), x);
+    } else if (assignee->modifier == 2) {
+				printf("%.*s = ", assignee->vlen, assignee->value);
+				x = ctr_ccomp_expr(value, &wasReturn);
+        result = ctr_assign_value_to_local(ctr_build_string(assignee->value, assignee->vlen), x);
+    } else if (assignee->modifier == 3) {
+				printf("(this.%.*s) = ", assignee->vlen, assignee->value);
+				x = ctr_ccomp_expr(value, &wasReturn);
+        result = ctr_assign_value(ctr_build_string(assignee->value, assignee->vlen), x);  //Handle lexical scoping
+    } else {
+				printf("%.*s = ", assignee->vlen, assignee->value);
+				x = ctr_ccomp_expr(value, &wasReturn);
+        result = ctr_assign_value(ctr_build_string(assignee->value, assignee->vlen), x);
+    }
+    if (CtrStdFlow == NULL) {
+        ctr_callstack_index--;
+    }
+    return result;
+}
+
+void ctr_ccomp_print_block(ctr_tnode* node) {
+	ctr_tlistitem* item = node->nodes->node->nodes;
+	printf("(function(");
+	ctr_ccomp_print_series_raw_transform(item, ',', "*", "var");
+	printf(") {");
+	item = node->nodes->next->node->nodes;
+	ctr_ccomp_print_series(item, ';');
+	printf("})");
+}
+
+/**
+ * CTRCompilerExpression
+ *
+ * Processes an expression.
+ */
+ctr_object* ctr_ccomp_expr(ctr_tnode* node, char* wasReturn) {
+    ctr_object* result;
+    switch (node->type) {
+        case CTR_AST_NODE_LTRSTRING:
+            result = ctr_build_string(node->value, node->vlen);
+						printf("\"%.*s\"", node->vlen, node->value);
+            break;
+        case CTR_AST_NODE_LTRBOOLTRUE:
+            result = ctr_build_bool(1);
+						printf("true");
+            break;
+        case CTR_AST_NODE_LTRBOOLFALSE:
+            result = ctr_build_bool(0);
+						printf("false");
+            break;
+        case CTR_AST_NODE_LTRNIL:
+            result = ctr_build_nil();
+						printf("NULL");
+            break;
+        case CTR_AST_NODE_LTRNUM:
+            result = ctr_build_number_from_string(node->value, node->vlen);
+						printf("%.*s", node->vlen, node->value);
+            break;
+        case CTR_AST_NODE_CODEBLOCK:
+            result = ctr_build_block(node);
+						ctr_ccomp_print_block(node);
+            break;
+        case CTR_AST_NODE_REFERENCE:
+            if (CtrStdFlow == NULL) {
+                ctr_callstack[ctr_callstack_index++] = node;
+            }
+            if (node->modifier == 1 || node->modifier == 3) {
+                result = ctr_find_in_my(ctr_build_string(node->value, node->vlen));
+								printf("(this.%.*s)", node->vlen, node->value);
+            } else {
+                result = ctr_find(ctr_build_string(node->value, node->vlen));
+								printf("%.*s", node->vlen, node->value);
+							}
+            if (CtrStdFlow == NULL) {
+                ctr_callstack_index--;
+            }
+            break;
+        case CTR_AST_NODE_EXPRMESSAGE:
+            result = ctr_ccomp_message(node);
+            break;
+        case CTR_AST_NODE_EXPRASSIGNMENT:
+            result = ctr_ccomp_assignment(node);
+            break;
+        case CTR_AST_NODE_IMMUTABLE:
+						printf("[");
+						ctr_ccomp_print_series(node->nodes->node->nodes, ',');
+						printf("]");
+            result = ctr_build_immutable(node);
+            break;
+        case CTR_AST_NODE_RETURNFROMBLOCK:
+            result = ctr_ccomp_return(node);
+            *wasReturn = 1;
+            break;
+        case CTR_AST_NODE_NESTED:
+						printf("(");
+            result = ctr_ccomp_expr(node->nodes->node, wasReturn);
+						printf(")");
+            break;
+        case CTR_AST_NODE_ENDOFPROGRAM:
+            //if (CtrStdFlow && CtrStdFlow != CtrStdExit && ctr_ccomp_subprogram == 0) {
+            //    printf("Uncaught error has occurred.\n");
+            //    if (CtrStdFlow->info.type == CTR_OBJECT_TYPE_OTSTRING) {
+            //        fwrite(CtrStdFlow->value.svalue->value, sizeof(char), CtrStdFlow->value.svalue->vlen, stdout);
+            //        printf("\n");
+            //    }
+            //    ctr_print_stack_trace();
+            //}
+            result = ctr_build_nil();
+            break;
+        default:
+            fprintf(stderr, "Runtime Error. Invalid parse node: %d %s \n", node->type,node->value);
+            exit(1);
+            break;
+    }
+    return result;
+}
+
+/**
+ * CTRCompilerRunBlock
+ *
+ * Processes the execution of a block of code.
+ */
+
+ctr_object* ctr_ccomp_run(ctr_tnode* program) {
+    ctr_object* result = NULL;
+    char wasReturn = 0;
+    ctr_tlistitem* li;
+    li = program->nodes;
+    while(li) {
+        ctr_tnode volatile* node = li->node;
+        if (!li->node) {
+            printf("Missing parse node\n");
+            exit(1);
+        }
+        wasReturn = 0;
+        result = ctr_ccomp_expr(node, &wasReturn);
+				puts("");
+        if (ctr_internal_next_return) {
+          wasReturn = 1;
+          ctr_internal_next_return = 0;
+          break;
+        }
+        if ( wasReturn ) {
+            break;
+        }
+        //if ( ( ( ctr_gc_mode & 1 ) && ctr_gc_alloc > ( ctr_gc_memlimit * 0.8 ) ) || ctr_gc_mode & 4 ) {
+        //  ctr_gc_internal_collect(); //collect on limit mode
+        //}
+        if (!li->next) break;
+        li = li->next;
+    }
+    if (wasReturn == 0) result = NULL;
+    return result;
 }

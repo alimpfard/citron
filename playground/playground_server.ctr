@@ -1,0 +1,18 @@
+Broom autoAlloc: True.
+var Evaluator is Object new.
+Evaluator on: 'handleRequest:' do: {:str
+  var time is Clock timeExecutionOf: {
+    str is str split: '\n', filter: {:i:v ^v trim !=: ''.}.
+    var req is str head.
+    str is str tail.
+    str is str fmap: {:v ^v split: ':', fmap: {:v ^v trim.}.}, foldl: {:acc:x ^acc put: (x tail join: ':') at: (x @ 0).} accumulator: (Map new).
+    str put: req at: 'REQUEST LITERAL'.
+  }.
+  str put: (time / (Clock ticksPerSecond)) at: 'Process time'.
+  str put: (str at: 'CtrCode', eval) at: 'Result'.
+  ^JSON serialize: str.
+}.
+
+Program port: (var port is Program env: 'PORT', toNumber).
+Pen writeln: 'serving on ipv6 localhost:$$port'.
+Program serve: Evaluator.

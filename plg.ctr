@@ -1,12 +1,6 @@
-Broom autoAlloc: True.
-Broom mode: 0.
+#var x is 5.
+#var y is x + 5.
+#[1, 2, 3] fmap: {:i ^i + y.}.
+#Pen red write: ('32 %s %s' formatObjects: [1, 2]), brk.
 
-import Library/Control/Applicative.
-import Library/Control/Arrow.
-
-var x is Iterator rangeFrom: 0 to: 1000 step: 1.
-10 times: {
-    x setSeed:0, each_v: Pen ⇒ 'writeln:'.
-}.
-Pen writeln: 'we out'.
-Program exit.
+[1] = [1].

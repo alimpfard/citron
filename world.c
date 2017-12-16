@@ -15,113 +15,113 @@
 
 static const all_signals[] = {
 #ifdef SIGHUP
-  SIGHUP,
+    SIGHUP,
 #endif
 #ifdef SIGINT
-  SIGINT,
+    SIGINT,
 #endif
 #ifdef SIGQUIT
-  SIGQUIT,
+    SIGQUIT,
 #endif
 #ifdef SIGILL
-  SIGILL,
+    SIGILL,
 #endif
 #ifdef SIGABRT
-  SIGABRT,
+    SIGABRT,
 #endif
 #ifdef SIGFPE
-  SIGFPE,
+    SIGFPE,
 #endif
 #ifdef SIGSEGV
-  SIGSEGV,
+    SIGSEGV,
 #endif
 #ifdef SIGPIPE
-  SIGPIPE,
+    SIGPIPE,
 #endif
 #ifdef SIGALRM
-  SIGALRM,
+    SIGALRM,
 #endif
 #ifdef SIGTERM
-  SIGTERM,
+    SIGTERM,
 #endif
 #ifdef SIGUSR1
-  SIGUSR1,
+    SIGUSR1,
 #endif
 #ifdef SIGUSR2
-  SIGUSR2,
+    SIGUSR2,
 #endif
 #ifdef SIGCHLD
-  SIGCHLD,
+    SIGCHLD,
 #endif
 #ifdef SIGCONT
-  SIGCONT,
+    SIGCONT,
 #endif
 #ifdef SIGSTP
-  SIGSTP,
+    SIGSTP,
 #endif
 #ifdef SIGTTIN
-  SIGTTIN,
+    SIGTTIN,
 #endif
 #ifdef SIGTTOU
-  SIGTTOU,
+    SIGTTOU,
 #endif
 #ifdef SIGBUS
-  SIGBUS,
+    SIGBUS,
 #endif
 #ifdef SIGPOLL
-  SIGPOLL,
+    SIGPOLL,
 #endif
 #ifdef SIGPROF
-  SIGPROF,
+    SIGPROF,
 #endif
 #ifdef SIGSYS
-  SIGSYS,
+    SIGSYS,
 #endif
 #ifdef SIGTRAP
-  SIGTRAP,
+    SIGTRAP,
 #endif
 #ifdef SIGURG
-  SIGURG,
+    SIGURG,
 #endif
 #ifdef SIGVTALRM
-  SIGVTALRM,
+    SIGVTALRM,
 #endif
 #ifdef SIGXCPU
-  SIGXCPU,
+    SIGXCPU,
 #endif
 #ifdef SIGXFSZ
-  SIGXFSZ,
+    SIGXFSZ,
 #endif
 #ifdef SIGEMT
-  SIGEMT,
+    SIGEMT,
 #endif
 #ifdef SIGSTKFLT
-  SIGSTKFLT,
+    SIGSTKFLT,
 #endif
 #ifdef SIGIO
-  SIGIO,
+    SIGIO,
 #endif
 #ifdef SIGPWR
-  SIGPWR,
+    SIGPWR,
 #endif
 #ifdef SIGLOST
-  SIGLOST,
+    SIGLOST,
 #endif
 #ifdef SIGWINCH
-  SIGWINCH,
+    SIGWINCH,
 #endif
-  SIGKILL, //last one. must exist
+    SIGKILL, //last one. must exist
 };
 static void register_signal_handlers() {
-  struct sigaction act;
-  int i = 0;
-  memset(&act, 0, sizeof act);
-  act.sa_handler = ctr_int_handler;
-  act.sa_flags = SA_NOCLDSTOP;
-  do {
-    if(sigaction(all_signals[i], &act, NULL))
-      fprintf(stderr, "Could not install signal %d handler: %s (Ignoring)\n", all_signals[i], strerror(errno));
-  } while(all_signals[++i] != SIGKILL);
+    struct sigaction act;
+    int i = 0;
+    memset(&act, 0, sizeof act);
+    act.sa_handler = ctr_int_handler;
+    act.sa_flags = SA_NOCLDSTOP;
+    do {
+        if(sigaction(all_signals[i], &act, NULL))
+            fprintf(stderr, "Could not install signal %d handler: %s (Ignoring)\n", all_signals[i], strerror(errno));
+    } while(all_signals[++i] != SIGKILL);
 }
 
 /**
@@ -198,27 +198,27 @@ int ctr_internal_object_is_equal(ctr_object* object1, ctr_object* object2) {
         int i = 1;
         ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
         for(;count>0&&i;count--) {
-          args->object = ctr_build_number_from_float(count-1);
-          i = i && ctr_internal_object_is_equal(ctr_array_get(object1,args), ctr_array_get(object2, args));
+            args->object = ctr_build_number_from_float(count-1);
+            i = i && ctr_internal_object_is_equal(ctr_array_get(object1,args), ctr_array_get(object2, args));
         }
         ctr_heap_free(args);
         return i;
     }
     if (object1->info.type == CTR_OBJECT_TYPE_OTOBJECT && object2->info.type == CTR_OBJECT_TYPE_OTOBJECT && ctr_reflect_get_primitive_link(object1) == CtrStdMap && ctr_reflect_get_primitive_link(object2) == CtrStdMap) {
-      ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
-      args->object = object1;
-      ctr_object* o1t = ctr_reflect_describe_value(CtrStdReflect, args);
-      args->object = object2;
-      ctr_object* o2t = ctr_reflect_describe_value(CtrStdReflect, args);
-      ctr_heap_free(args);
-      return ctr_internal_object_is_equal(o1t, o2t);
+        ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
+        args->object = object1;
+        ctr_object* o1t = ctr_reflect_describe_value(CtrStdReflect, args);
+        args->object = object2;
+        ctr_object* o2t = ctr_reflect_describe_value(CtrStdReflect, args);
+        ctr_heap_free(args);
+        return ctr_internal_object_is_equal(o1t, o2t);
     }
     if(ctr_internal_has_responder(object1, ctr_build_string_from_cstring("=")))
-    if(ctr_internal_has_responder(object2, ctr_build_string_from_cstring("="))) {
-      int a = ctr_internal_cast2bool(ctr_send_message_variadic(object1, "=", 1, 1, object2))->value.bvalue && ctr_internal_cast2bool(ctr_send_message_variadic(object2, "=", 1, 1, object1))->value.bvalue;
-      printf("%d\n", a);
-      return a;
-    }
+        if(ctr_internal_has_responder(object2, ctr_build_string_from_cstring("="))) {
+            int a = ctr_internal_cast2bool(ctr_send_message_variadic(object1, "=", 1, 1, object2))->value.bvalue && ctr_internal_cast2bool(ctr_send_message_variadic(object2, "=", 1, 1, object1))->value.bvalue;
+            printf("%d\n", a);
+            return a;
+        }
     return 0;
 }
 /**
@@ -267,26 +267,26 @@ int ctr_internal_object_is_constructible_(ctr_object* object1, ctr_object* objec
         ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
         ctr_argument* elnu = ctr_heap_allocate(sizeof(ctr_argument));
         for(;count>0&&i;count--) {
-          elnu->object = ctr_build_number_from_float(i-1);
-          args->object = ctr_array_get(object2, elnu);
-          i = i && (
-            args->object->info.type == CTR_OBJECT_TYPE_OTARRAY && ctr_internal_object_is_constructible_(ctr_array_get(object1, elnu), args->object, raw)
-            || args->object->info.type == CTR_OBJECT_TYPE_OTSTRING
-            || ctr_array_contains(object1, args)->value.bvalue
-          );
+            elnu->object = ctr_build_number_from_float(i-1);
+            args->object = ctr_array_get(object2, elnu);
+            i = i && (
+                    args->object->info.type == CTR_OBJECT_TYPE_OTARRAY && ctr_internal_object_is_constructible_(ctr_array_get(object1, elnu), args->object, raw)
+                    || args->object->info.type == CTR_OBJECT_TYPE_OTSTRING
+                    || ctr_array_contains(object1, args)->value.bvalue
+                    );
         }
         ctr_heap_free(args);
         return i;
     }
     if (object1->info.type == CTR_OBJECT_TYPE_OTOBJECT && object2->info.type == CTR_OBJECT_TYPE_OTOBJECT && ctr_reflect_get_primitive_link(object1) == CtrStdMap && ctr_reflect_get_primitive_link(object2) == CtrStdMap) {
-      ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
-      args->object = object1;
-      ctr_object* o1t = ctr_reflect_describe_value(CtrStdReflect, args);
-      args->object = object2;
-      ctr_object* o2t = ctr_reflect_describe_value(CtrStdReflect, args);
-      ctr_heap_free(args);
+        ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
+        args->object = object1;
+        ctr_object* o1t = ctr_reflect_describe_value(CtrStdReflect, args);
+        args->object = object2;
+        ctr_object* o2t = ctr_reflect_describe_value(CtrStdReflect, args);
+        ctr_heap_free(args);
 
-      return ctr_internal_object_is_constructible_(o1t, o2t, raw);
+        return ctr_internal_object_is_constructible_(o1t, o2t, raw);
     }
     ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
     args->object = object2;
@@ -316,7 +316,26 @@ uint64_t ctr_internal_index_hash(ctr_object* key) {
  * Finds property in object.
  */
 ctr_object* ctr_internal_object_find_property(ctr_object* owner, ctr_object* key, int is_method) {
-    return ctr_internal_object_find_property_ignore(owner, key, is_method, 0);
+    ctr_mapitem* head;
+    uint64_t hashKey = ctr_internal_index_hash(key);
+    if (is_method) {
+        if (owner->methods->size == 0) {
+            return NULL;
+        }
+        head = owner->methods->head;
+    } else {
+        if (owner->properties->size == 0) {
+            return NULL;
+        }
+        head = owner->properties->head;
+    }
+    while(head) {
+        if ((hashKey == head->hashKey) && ctr_internal_object_is_equal(head->key, key)) {
+            return head->value;
+        }
+        head = head->next;
+    }
+    return NULL;
 }
 
 ctr_object* ctr_internal_object_find_property_ignore(ctr_object* owner, ctr_object* key, int is_method, int ignore) {
@@ -390,8 +409,8 @@ ctr_object* ctr_internal_object_find_property_with_hash(ctr_object* owner, ctr_o
         if ((hashKey == head->hashKey)) {
             if(ctr_internal_object_is_equal(head->key, key)) {
                 return head->value;
-              }
             }
+        }
         head = head->next;
     }
     return NULL;
@@ -653,39 +672,39 @@ char* ctr_internal_memmem(char* haystack, long hlen, char* needle, long nlen, in
  * Creates an object.
  */
 inline ctr_object* ctr_internal_create_object(int type) {
-  return ctr_internal_create_mapped_object(type, 0);
+    return ctr_internal_create_mapped_object(type, 0);
 }
 
 ctr_object* ctr_internal_create_mapped_object(int type, int shared) {
-  ctr_object* o;
-  o = shared==1?ctr_heap_allocate_shared(sizeof(ctr_object)):ctr_heap_allocate(sizeof(ctr_object));
-  o->properties = shared==1?ctr_heap_allocate_shared(sizeof(ctr_map)):ctr_heap_allocate(sizeof(ctr_map));
-  o->methods = shared==1?ctr_heap_allocate_shared(sizeof(ctr_map)):ctr_heap_allocate(sizeof(ctr_map));
-  o->properties->size = 0;
-  o->methods->size = 0;
-  o->properties->head = NULL;
-  o->methods->head = NULL;
-  o->info.type = type;
-  o->info.sticky = 0;
-  o->info.mark = 0;
-  o->info.remote = 0;
-  o->info.shared = shared;
-  o->info.raw = 0;
-  if (type==CTR_OBJECT_TYPE_OTBOOL) o->value.bvalue = 0;
-  if (type==CTR_OBJECT_TYPE_OTNUMBER) o->value.nvalue = 0;
-  if (type==CTR_OBJECT_TYPE_OTSTRING) {
-      o->value.svalue = shared==1?ctr_heap_allocate_shared(sizeof(ctr_string)):ctr_heap_allocate(sizeof(ctr_string));
-      o->value.svalue->value = "";
-      o->value.svalue->vlen = 0;
-  }
-  o->gnext = NULL;
-  if (ctr_first_object == NULL) {
-      ctr_first_object = o;
-  } else {
-      o->gnext = ctr_first_object;
-      ctr_first_object = o;
-  }
-  return o;
+    ctr_object* o;
+    o = shared==1?ctr_heap_allocate_shared(sizeof(ctr_object)):ctr_heap_allocate(sizeof(ctr_object));
+    o->properties = shared==1?ctr_heap_allocate_shared(sizeof(ctr_map)):ctr_heap_allocate(sizeof(ctr_map));
+    o->methods = shared==1?ctr_heap_allocate_shared(sizeof(ctr_map)):ctr_heap_allocate(sizeof(ctr_map));
+    o->properties->size = 0;
+    o->methods->size = 0;
+    o->properties->head = NULL;
+    o->methods->head = NULL;
+    o->info.type = type;
+    o->info.sticky = 0;
+    o->info.mark = 0;
+    o->info.remote = 0;
+    o->info.shared = shared;
+    o->info.raw = 0;
+    if (type==CTR_OBJECT_TYPE_OTBOOL) o->value.bvalue = 0;
+    if (type==CTR_OBJECT_TYPE_OTNUMBER) o->value.nvalue = 0;
+    if (type==CTR_OBJECT_TYPE_OTSTRING) {
+        o->value.svalue = shared==1?ctr_heap_allocate_shared(sizeof(ctr_string)):ctr_heap_allocate(sizeof(ctr_string));
+        o->value.svalue->value = "";
+        o->value.svalue->vlen = 0;
+    }
+    o->gnext = NULL;
+    if (ctr_first_object == NULL) {
+        ctr_first_object = o;
+    } else {
+        o->gnext = ctr_first_object;
+        ctr_first_object = o;
+    }
+    return o;
 }
 /**
  * @internal
@@ -707,7 +726,7 @@ void ctr_internal_create_func(ctr_object* o, ctr_object* key, ctr_object* (*func
  *
  * Casts an object to a number object.
  */
- ctr_object* ctr_internal_cast2number(ctr_object* o) {
+ctr_object* ctr_internal_cast2number(ctr_object* o) {
     if ( o->info.type == CTR_OBJECT_TYPE_OTNUMBER ) return o;
     ctr_argument* a = ctr_heap_allocate( sizeof( ctr_argument ) );
     a->object = CtrStdNil;
@@ -727,34 +746,35 @@ void ctr_internal_create_func(ctr_object* o, ctr_object* key, ctr_object* (*func
  *
  * Casts an object to a string object.
  */
- ctr_object* ctr_internal_cast2string( ctr_object* o ) {
+ctr_object* ctr_internal_cast2string( ctr_object* o ) {
     if ( o->info.type == CTR_OBJECT_TYPE_OTSTRING ) return o;
     ctr_argument* a = ctr_heap_allocate( sizeof( ctr_argument ) );
     a->object = CtrStdNil;
     ctr_object* stringObject;
     // printf("%d, %s\n", o->info.type, o->lexical_name?o->lexical_name->value.svalue->value:"No-lexical-name");
     switch (o->info.type) {
-      case CTR_OBJECT_TYPE_OTARRAY:
-        stringObject = ctr_array_to_string(o, NULL);
-        break;
-      case CTR_OBJECT_TYPE_OTBOOL:
-        stringObject = ctr_bool_to_string(o, NULL);
-        break;
-      case CTR_OBJECT_TYPE_OTNUMBER:
-        stringObject = ctr_number_to_string(o, NULL);
-        break;
-      case CTR_OBJECT_TYPE_OTOBJECT:
-        stringObject = ctr_reflect_get_primitive_link(o) == CtrStdMap ? ctr_map_to_string(o, NULL) : ctr_send_message( o, "toString", 8, a );
-        break;
-      default:
-        stringObject = ctr_send_message( o, "toString", 8, a );
-        break;
+        case CTR_OBJECT_TYPE_OTARRAY:
+            stringObject = ctr_array_to_string(o, NULL);
+            break;
+        case CTR_OBJECT_TYPE_OTBOOL:
+            stringObject = ctr_bool_to_string(o, NULL);
+            break;
+        case CTR_OBJECT_TYPE_OTNUMBER:
+            stringObject = ctr_number_to_string(o, NULL);
+            break;
+        case CTR_OBJECT_TYPE_OTOBJECT:
+            stringObject = ctr_reflect_get_primitive_link(o) == CtrStdMap ? ctr_map_to_string(o, NULL) : ctr_send_message( o, "toString", 8, a );
+            break;
+        default:
+            stringObject = ctr_send_message( o, "toString", 8, a );
+            break;
     }
     ctr_heap_free(a);
     if ( stringObject->info.type != CTR_OBJECT_TYPE_OTSTRING ) {
         printf("wanted 3, got %d from %d\n", stringObject->info.type, o->info.type);
         CtrStdFlow = ctr_build_string_from_cstring( "toString must return a string." );
         ctr_print_stack_trace();
+        sttrace_print(NULL);
         return ctr_build_string_from_cstring( "?" );
     }
     return stringObject;
@@ -767,7 +787,7 @@ void ctr_internal_create_func(ctr_object* o, ctr_object* key, ctr_object* (*func
  *
  * Casts an object to a boolean.
  */
- ctr_object* ctr_internal_cast2bool( ctr_object* o ) {
+ctr_object* ctr_internal_cast2bool( ctr_object* o ) {
     if (o->info.type == CTR_OBJECT_TYPE_OTBOOL) return o;
     ctr_argument* a = ctr_heap_allocate( sizeof( ctr_argument ) );
     a->object = CtrStdNil;
@@ -829,7 +849,7 @@ ctr_object* ctr_find_(ctr_object* key, int noerror) {
         i--;
     }
     if (foundObject)
-      return foundObject;
+        return foundObject;
     ctr_internal_plugin_find(key);
     foundObject = ctr_internal_object_find_property(CtrStdWorld, key, 0);
     if (foundObject == NULL) {
@@ -853,34 +873,34 @@ ctr_object* ctr_find_(ctr_object* key, int noerror) {
     return foundObject;
 }
 ctr_object* ctr_find(ctr_object* key) {
-  int i = ctr_context_id;
-  ctr_object* foundObject = NULL;
-  if (CtrStdFlow) return CtrStdNil;
-  while((i>-1 && foundObject == NULL))
-      foundObject = ctr_internal_object_find_property(ctr_contexts[i--], key, 0);
+    int i = ctr_context_id;
+    ctr_object* foundObject = NULL;
+    if (CtrStdFlow) return CtrStdNil;
+    while((i>-1 && foundObject == NULL))
+        foundObject = ctr_internal_object_find_property(ctr_contexts[i--], key, 0);
 
-  if (foundObject)
+    if (foundObject)
+        return foundObject;
+    ctr_internal_plugin_find(key);
+    foundObject = ctr_internal_object_find_property(CtrStdWorld, key, 0);
+    if (foundObject == NULL) {
+        char* key_name;
+        char* message;
+        char* full_message;
+        int message_size;
+        message = "Key not found: ";
+        message_size = ((strlen(message))+key->value.svalue->vlen);
+        full_message = ctr_heap_allocate( message_size * sizeof( char ) );
+        key_name = ctr_heap_allocate_cstring( key );
+        memcpy(full_message, message, strlen(message));
+        memcpy(full_message + strlen(message), key_name, key->value.svalue->vlen);
+        CtrStdFlow = ctr_build_string(full_message, message_size);
+        CtrStdFlow->info.sticky = 1;
+        ctr_heap_free( full_message );
+        ctr_heap_free( key_name );
+        return CtrStdNil;
+    }
     return foundObject;
-  ctr_internal_plugin_find(key);
-  foundObject = ctr_internal_object_find_property(CtrStdWorld, key, 0);
-  if (foundObject == NULL) {
-      char* key_name;
-      char* message;
-      char* full_message;
-      int message_size;
-      message = "Key not found: ";
-      message_size = ((strlen(message))+key->value.svalue->vlen);
-      full_message = ctr_heap_allocate( message_size * sizeof( char ) );
-      key_name = ctr_heap_allocate_cstring( key );
-      memcpy(full_message, message, strlen(message));
-      memcpy(full_message + strlen(message), key_name, key->value.svalue->vlen);
-      CtrStdFlow = ctr_build_string(full_message, message_size);
-      CtrStdFlow->info.sticky = 1;
-      ctr_heap_free( full_message );
-      ctr_heap_free( key_name );
-      return CtrStdNil;
-  }
-  return foundObject;
 }
 
 /**
@@ -961,7 +981,7 @@ ctr_object* ctr_give_version(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 ctr_object* ctr_object_destruct(ctr_object* object, ctr_argument* nothing) {
-  return CtrStdNil;
+    return CtrStdNil;
 }
 
 /**
@@ -1160,7 +1180,9 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_EVAL ), &ctr_string_eval );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_TOSTRING), &ctr_string_to_string );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_STRFMT ), &ctr_string_format );
+    ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( "%" ), &ctr_string_format );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_STRFMTMAP ), &ctr_string_format_map );
+    ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( "~" ), &ctr_string_format_map );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_ESCAPE_QUOTES ),&ctr_string_quotes_escape );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_CHARACTERS ),&ctr_string_characters );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_TO_BYTE_ARRAY ),&ctr_string_to_byte_array );
@@ -1257,19 +1279,24 @@ void ctr_initialize_world() {
 
     /* Iterator */
     ctr_iter_range = ctr_string_eval(ctr_build_string_from_cstring(
-      "{:seed var step is my step. var end_value is my end_value. me endIf: {^seed = end_value.}. ^(seed + step).}"
-    ), NULL);
+                "{:seed var step is my step. var end_value is my end_value. me endIf: {^seed = end_value.}. ^(seed + step).}"
+                ), NULL);
     ctr_iter_range->info.sticky = 1;
     ctr_iter_urange = ctr_string_eval(ctr_build_string_from_cstring(
-      "{:seed ^(seed + my step).}"
-    ), NULL);
-    ctr_iter_range->info.sticky = 1;
+                "{:seed ^(seed + my step).}"
+                ), NULL);
+    ctr_iter_urange->info.sticky = 1;
+    ctr_iter_repeat = ctr_string_eval(ctr_build_string_from_cstring(
+                "{:seed ^seed.}"
+                ), NULL);
+    ctr_iter_repeat->info.sticky = 1;
     CtrStdIter = ctr_array_new(CtrStdObject, NULL);
     ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("new"), &ctr_iterator_make );
     ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("setSeed:"), &ctr_iterator_set_seed );
     ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("setFunc:"), &ctr_iterator_set_func );
     ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("rangeFrom:to:step:"), &ctr_iterator_make_range );
     ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("rangeFrom:step:"), &ctr_iterator_make_uncapped_range );
+    ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("repeat:"), &ctr_iterator_make_repeat );
     ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("next"), &ctr_iterator_next );
     ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("each:"), &ctr_iterator_each );
     ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("each_v:"), &ctr_iterator_each_v );
@@ -1568,31 +1595,31 @@ void ctr_initialize_world() {
 }
 
 ctr_object* ctr_get_responder(ctr_object* receiverObject, char* message, long vlen) {
-  ctr_object* methodObject;
-  ctr_object* searchObject;
-  methodObject = NULL;
-  searchObject = receiverObject;
-  int toParent = 0;
-  ctr_object* me;
-  ctr_object* msg = NULL;
-  if (vlen > 1 && message[0] == '`') {
-      me = ctr_internal_object_find_property(ctr_contexts[ctr_context_id], ctr_build_string_from_cstring( ctr_clex_keyword_me ), 0);
-      if (searchObject == me) {
-          toParent = 1;
-          message = message + 1;
-          vlen--;
-      }
-  }
-  msg = ctr_build_string(message, vlen);
-  msg->info.sticky = 1; /* prevent message from being swept, no need to free(), GC will do */
-  while(!methodObject) {
-      methodObject = ctr_internal_object_find_property(searchObject, msg, 1);
-      if (methodObject && toParent) { toParent = 0; methodObject = NULL; }
-      if (methodObject) break;
-      if (!searchObject->link) break;
-      searchObject = searchObject->link;
-  }
-  return methodObject;
+    ctr_object* methodObject;
+    ctr_object* searchObject;
+    methodObject = NULL;
+    searchObject = receiverObject;
+    int toParent = 0;
+    ctr_object* me;
+    ctr_object* msg = NULL;
+    if (vlen > 1 && message[0] == '`') {
+        me = ctr_internal_object_find_property(ctr_contexts[ctr_context_id], ctr_build_string_from_cstring( ctr_clex_keyword_me ), 0);
+        if (searchObject == me) {
+            toParent = 1;
+            message = message + 1;
+            vlen--;
+        }
+    }
+    msg = ctr_build_string(message, vlen);
+    msg->info.sticky = 1; /* prevent message from being swept, no need to free(), GC will do */
+    while(!methodObject) {
+        methodObject = ctr_internal_object_find_property(searchObject, msg, 1);
+        if (methodObject && toParent) { toParent = 0; methodObject = NULL; }
+        if (methodObject) break;
+        if (!searchObject->link) break;
+        searchObject = searchObject->link;
+    }
+    return methodObject;
 }
 
 /**
@@ -1603,13 +1630,13 @@ ctr_object* ctr_get_responder(ctr_object* receiverObject, char* message, long vl
  * Converts an argumentList to a citron list
  */
 ctr_object* ctr_internal_argumentptr2tuple(ctr_argument* argumentList) {
-  ctr_object* ret = ctr_array_new(CtrStdArray, NULL);
-  while(argumentList->object) {
-    ctr_array_push(ret, argumentList);
-    argumentList = argumentList->next;
-    if(!argumentList) break;
-  }
-  return ret;
+    ctr_object* ret = ctr_array_new(CtrStdArray, NULL);
+    while(argumentList->object) {
+        ctr_array_push(ret, argumentList);
+        argumentList = argumentList->next;
+        if(!argumentList) break;
+    }
+    return ret;
 }
 /**
  * @internal
@@ -1620,100 +1647,100 @@ ctr_object* ctr_internal_argumentptr2tuple(ctr_argument* argumentList) {
  */
 __attribute__((optimize(0))) ctr_object* ctr_send_message(ctr_object* receiverObject, char* message, long vlen, ctr_argument* argumentList) {
     if(unlikely(receiverObject != CtrStdReflect && ctr_instrumentor_func != NULL)) {
-      ctr_argument* blkargs = ctr_heap_allocate(sizeof(ctr_argument));
-      blkargs->object = receiverObject;
-      blkargs->next = ctr_heap_allocate(sizeof(ctr_argument));
-      blkargs->next->object = ctr_build_string(message, vlen);
-      blkargs->next->next = ctr_heap_allocate(sizeof(ctr_argument));
-      blkargs->next->next->object = ctr_internal_argumentptr2tuple(argumentList);
-      ctr_object* result = ctr_block_run(ctr_instrumentor_func, blkargs, ctr_instrumentor_func);
-      if(result == ctr_instrumentor_func) goto no_instrum;
-      return result;
+        ctr_argument* blkargs = ctr_heap_allocate(sizeof(ctr_argument));
+        blkargs->object = receiverObject;
+        blkargs->next = ctr_heap_allocate(sizeof(ctr_argument));
+        blkargs->next->object = ctr_build_string(message, vlen);
+        blkargs->next->next = ctr_heap_allocate(sizeof(ctr_argument));
+        blkargs->next->next->object = ctr_internal_argumentptr2tuple(argumentList);
+        ctr_object* result = ctr_block_run(ctr_instrumentor_func, blkargs, ctr_instrumentor_func);
+        if(result == ctr_instrumentor_func) goto no_instrum;
+        return result;
     }
-    no_instrum:;
-    char toParent = 0;
-    int  i = 0;
-    char messageApproved = 0;
-    ctr_object* me;
-    ctr_object* methodObject;
-    ctr_object* searchObject;
-    ctr_object* returnValue;
-    ctr_argument* argCounter;
-    ctr_argument* mesgArgument;
-    ctr_object* result;
-    ctr_object* (*funct)(ctr_object* receiverObject, ctr_argument* argumentList);
-    ctr_object* msg = ctr_build_string(message, vlen);
-    int argCount;
-    if (CtrStdFlow != NULL) return CtrStdNil; /* Error mode, ignore subsequent messages until resolved. */
-    if ( ctr_command_security_profile & CTR_SECPRO_COUNTDOWN ) {
-        if ( ctr_command_tick > ctr_command_maxtick ) {
-            printf( "This program has exceeded the maximum number of messages.\n" );
-            exit(1);
-        }
-        ctr_command_tick += 1;
-    }
-    methodObject = ctr_get_responder(receiverObject, message, vlen);
-    if (!methodObject) {
-      if(strcmp(message, "respondTo:") == 0) {
-        // printf("Requested message to catch-all in:\n");
-        // ctr_print_stack_trace();
-        return receiverObject;
-      }
-        argCounter = argumentList;
-        argCount = 0;
-        while(argCounter && argCounter->next && argCount < 4) {
-            argCounter = argCounter->next;
-            argCount ++;
-        }
-        mesgArgument = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
-        mesgArgument->object = ctr_build_string(message, vlen);
-        mesgArgument->next = argumentList;
-        if (argCount == 0 || argCount > 2) {
-            returnValue = ctr_send_message(receiverObject, CTR_DICT_RESPOND_TO, strlen(CTR_DICT_RESPOND_TO),  mesgArgument);
-        } else if (argCount == 1) {
-            returnValue = ctr_send_message(receiverObject, CTR_DICT_RESPOND_TO_AND, strlen(CTR_DICT_RESPOND_TO_AND),  mesgArgument);
-        } else if (argCount == 2) {
-            returnValue = ctr_send_message(receiverObject, CTR_DICT_RESPOND_TO_AND_AND, strlen(CTR_DICT_RESPOND_TO_AND_AND),  mesgArgument);
-        }
-        ctr_heap_free( mesgArgument );
-        msg->info.sticky = 0;
-        if (receiverObject->info.chainMode == 1) return receiverObject;
-        return returnValue;
-    }
-    if (methodObject->info.type == CTR_OBJECT_TYPE_OTNATFUNC) {
-        funct = methodObject->value.fvalue;
+no_instrum:;
+           char toParent = 0;
+           int  i = 0;
+           char messageApproved = 0;
+           ctr_object* me;
+           ctr_object* methodObject;
+           ctr_object* searchObject;
+           ctr_object* returnValue;
+           ctr_argument* argCounter;
+           ctr_argument* mesgArgument;
+           ctr_object* result;
+           ctr_object* (*funct)(ctr_object* receiverObject, ctr_argument* argumentList);
+           ctr_object* msg = ctr_build_string(message, vlen);
+           int argCount;
+           if (CtrStdFlow != NULL) return CtrStdNil; /* Error mode, ignore subsequent messages until resolved. */
+           if ( ctr_command_security_profile & CTR_SECPRO_COUNTDOWN ) {
+               if ( ctr_command_tick > ctr_command_maxtick ) {
+                   printf( "This program has exceeded the maximum number of messages.\n" );
+                   exit(1);
+               }
+               ctr_command_tick += 1;
+           }
+           methodObject = ctr_get_responder(receiverObject, message, vlen);
+           if (!methodObject) {
+               if(strcmp(message, "respondTo:") == 0) {
+                   // printf("Requested message to catch-all in:\n");
+                   // ctr_print_stack_trace();
+                   return receiverObject;
+               }
+               argCounter = argumentList;
+               argCount = 0;
+               while(argCounter && argCounter->next && argCount < 4) {
+                   argCounter = argCounter->next;
+                   argCount ++;
+               }
+               mesgArgument = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
+               mesgArgument->object = ctr_build_string(message, vlen);
+               mesgArgument->next = argumentList;
+               if (argCount == 0 || argCount > 2) {
+                   returnValue = ctr_send_message(receiverObject, CTR_DICT_RESPOND_TO, strlen(CTR_DICT_RESPOND_TO),  mesgArgument);
+               } else if (argCount == 1) {
+                   returnValue = ctr_send_message(receiverObject, CTR_DICT_RESPOND_TO_AND, strlen(CTR_DICT_RESPOND_TO_AND),  mesgArgument);
+               } else if (argCount == 2) {
+                   returnValue = ctr_send_message(receiverObject, CTR_DICT_RESPOND_TO_AND_AND, strlen(CTR_DICT_RESPOND_TO_AND_AND),  mesgArgument);
+               }
+               ctr_heap_free( mesgArgument );
+               msg->info.sticky = 0;
+               if (receiverObject->info.chainMode == 1) return receiverObject;
+               return returnValue;
+           }
+           if (methodObject->info.type == CTR_OBJECT_TYPE_OTNATFUNC) {
+               funct = methodObject->value.fvalue;
 #ifdef EVALSECURITY
-        if ( ctr_command_security_profile & CTR_SECPRO_EVAL ) {
-            messageApproved = 0;
-            for ( i = 0; i < 15; i ++ ) {
-                if ( funct == ctr_secpro_eval_whitelist[i] ) {
-                    messageApproved = 1;
-                    break;
-                }
-            }
-            if ( !messageApproved ) {
-                printf( "Native message not allowed in eval %s.\n", msg->value.svalue->value );
-                ctr_print_stack_trace();
-                exit(1);
-            }
-        }
+               if ( ctr_command_security_profile & CTR_SECPRO_EVAL ) {
+                   messageApproved = 0;
+                   for ( i = 0; i < 15; i ++ ) {
+                       if ( funct == ctr_secpro_eval_whitelist[i] ) {
+                           messageApproved = 1;
+                           break;
+                       }
+                   }
+                   if ( !messageApproved ) {
+                       printf( "Native message not allowed in eval %s.\n", msg->value.svalue->value );
+                       ctr_print_stack_trace();
+                       exit(1);
+                   }
+               }
 #endif
 
-        result = funct(receiverObject, argumentList);
-    }
-    if (methodObject->info.type == CTR_OBJECT_TYPE_OTBLOCK ) {
-      #ifdef EVALSECURITY
-        if ( ctr_command_security_profile & CTR_SECPRO_EVAL ) {
-            printf( "Custom message not allowed in eval.\n" );
-            ctr_print_stack_trace();
-            exit(1);
-        }
-        #endif
-        result = ctr_block_run(methodObject, argumentList, receiverObject);
-    }
-    if (msg) msg->info.sticky = 0;
-    if (receiverObject->info.chainMode == 1) return receiverObject;
-    return result; //Normally cascade down to native functions, so get the return type
+               result = funct(receiverObject, argumentList);
+           }
+           if (methodObject->info.type == CTR_OBJECT_TYPE_OTBLOCK ) {
+#ifdef EVALSECURITY
+               if ( ctr_command_security_profile & CTR_SECPRO_EVAL ) {
+                   printf( "Custom message not allowed in eval.\n" );
+                   ctr_print_stack_trace();
+                   exit(1);
+               }
+#endif
+               result = ctr_block_run(methodObject, argumentList, receiverObject);
+           }
+           if (msg) msg->info.sticky = 0;
+           if (receiverObject->info.chainMode == 1) return receiverObject;
+           return result; //Normally cascade down to native functions, so get the return type
 }
 
 

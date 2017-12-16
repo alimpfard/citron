@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "citron.h"
 
+/**@I_OBJ_DEF Reflect*/
 
 ctr_object* ctr_reflect_new(ctr_object* myself, ctr_argument* argumentList) {
     ctr_object* instance = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);

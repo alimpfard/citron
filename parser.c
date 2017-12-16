@@ -8,7 +8,7 @@
 #include "citron.h"
 
 char* ctr_cparse_current_program;
-
+int all_plains_private = 0;
 /**
  * CTRParserEmitErrorUnexpected
  *
@@ -198,7 +198,6 @@ ctr_tlistitem* ctr_cparse_messages(ctr_tnode* r, int mode) {
     return fli;
 }
 
-
 /**
  * CTRParserTuple
  *
@@ -270,8 +269,11 @@ ctr_tnode* ctr_cparse_popen() {
  * Generates a set of AST nodes to represent a block of code.
  */
  ctr_tnode* ctr_cparse_block_(int autocap);
- ctr_tnode* ctr_cparse_block() {
+ inline ctr_tnode* ctr_cparse_block() {
    return ctr_cparse_block_(0);
+ }
+ inline ctr_tnode* ctr_cparse_block_capture() {
+   return ctr_cparse_block_(1);
  }
 ctr_tnode* ctr_cparse_block_(int autocap) {
   ctr_tnode* r;
@@ -319,6 +321,8 @@ ctr_tnode* ctr_cparse_block_(int autocap) {
       t = ctr_clex_tok();
   }
   first = 1;
+  int oldallpl = all_plains_private;
+  all_plains_private = autocap;
   while((first || t == CTR_TOKEN_DOT)) {
       ctr_tlistitem* codeListItem;
       ctr_tnode* codeNode;
@@ -349,7 +353,8 @@ ctr_tnode* ctr_cparse_block_(int autocap) {
           ctr_cparse_emit_error_unexpected( t, "Expected a dot (.).\n" );
       }
   }
-  r->modifier = /*CTR_MODIFIER_AUTOCAPTURE + */autocap == 1;
+  all_plains_private = oldallpl;
+  r->modifier = /*CTR_MODIFIER_AUTOCAPTURE*/autocap == 1;
   return r;
 }
 
@@ -366,6 +371,7 @@ ctr_tnode* ctr_cparse_ref() {
     r = ctr_cparse_create_node( CTR_AST_NODE );
     r->type = CTR_AST_NODE_REFERENCE;
     r->vlen = ctr_clex_tok_value_length();
+    if(all_plains_private) r->modifier = 3;
     tmp = ctr_clex_tok_value();
     if (strncmp(ctr_clex_keyword_my, tmp, ctr_clex_keyword_my_len)==0 && r->vlen == ctr_clex_keyword_my_len) {
         int t = ctr_clex_tok();
@@ -513,6 +519,8 @@ ctr_tnode* ctr_cparse_receiver() {
             return ctr_cparse_ref();
         case CTR_TOKEN_BLOCKOPEN:
             return ctr_cparse_block();
+        case CTR_TOKEN_BLOCKOPEN_MAP:
+            return ctr_cparse_block_capture();
         case CTR_TOKEN_PAROPEN:
             return ctr_cparse_popen();
         case CTR_TOKEN_TUPOPEN:
@@ -566,10 +574,10 @@ ctr_tnode* ctr_cparse_expr(int mode) {
     }
 
     if ( t2 == CTR_TOKEN_ASSIGNMENT ) {
-        if ( r->type != CTR_AST_NODE_REFERENCE ) {
-            ctr_cparse_emit_error_unexpected( t2, "Invalid left-hand assignment.\n" );
-            exit(1);
-        }
+        // if ( r->type != CTR_AST_NODE_REFERENCE ) {
+        //     ctr_cparse_emit_error_unexpected( t2, "Invalid left-hand assignment.\n" );
+        //     exit(1);
+        // }
         e = ctr_cparse_assignment(r);
     }  else if ( t2 == CTR_TOKEN_PASSIGNMENT ) {
         if ( r->type != CTR_AST_NODE_REFERENCE ) {

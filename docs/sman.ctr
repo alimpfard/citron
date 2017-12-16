@@ -9,11 +9,8 @@
 
 Broom memoryLimit: 1024 * 1024 * 128.
 
+Pen write: ('.TH "Citron v%s" 1 "%s" "The Citron programming language Manual"' formatObjects: [(Reflect version), (Clock new format: '%d %B %Y')]).
 ?>
-.\" Manpage for ctr.
-.TH man 1 <?.
-Pen write: ('"%s" "%s"' formatObjects: [(Clock new format: '%d %B %Y'), (Reflect version)]).
-?> "CTR man page"
 .SH NAME
 ctr \- run a Citron program
 .PP
@@ -23,7 +20,7 @@ ctr [PROGRAM]
 .PP
 citron [arguments]
 .SH DESCRIPTION
-Citron is general purpose programming language for UNIX\-like operating systems.
+Citron is a general purpose programming language for UNIX\-like operating systems.
 .SH REFERENCE MANUAL
 Citron has 5 literals:
 .RS 4
@@ -50,10 +47,14 @@ The following messages are part of the Core API of the Citron Programming Langua
 	var f is File new: v.
 	var str is f read.
 	f close.
-	str findPattern: '(?s)/\\*\\*(.*?)\\*/' do: {:p
+	str is str findPattern: '(?s)/\\*\\*(.*?)\\*/' do: {:p
+		p @ 0 findPattern: '(?s)/\\*\\*@I_OBJ_DEF(.*?)\\*/' do: {:p
+			Pen write: '.SH\n' + (p @ 1), brk.
+			^''.
+		}.
 		(p at: 0, contains: '@internal') ifFalse: {
 			Pen write: '.B '.
-			Pen write: (p at: 1, split: '\n', fmap: {:s ^s skip: 2.}, join: '\n', trim), brk.
+			Pen write: (p at: 1, split: '\n', fmap: {:s ^s skip: 2, replace: ':=' with: 'is'.}, join: '\n', trim), brk.
 			Pen write: '.BR' + ('\n\n.PP\n.SS'), brk.
 		}.
 	}.

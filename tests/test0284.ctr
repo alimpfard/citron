@@ -12,7 +12,6 @@ pyrun is ll PyRun_SimpleString.
 
 cif call: pyinit withArgs: [].
 cif setABI: 0 return: Nil argTypes: [ptr].
-
 ptime is 0.
 pbest is 10 toPowerOf: 10.
 rept times: {:i
@@ -46,7 +45,7 @@ rept times:{:i
 }.
 
 
-Pen write: ('Python statistics:
+Pen write: 'Python statistics:
     ran command: len( "    " * i ),
     total time: %d,
     best time: %d,
@@ -56,4 +55,4 @@ Citron statistics:
     total time: %d,
     best time: %d,
     average over $$rept : %d
-' formatObjects: [ptime, pbest, (ptime / rept), rtime, rbest, (rtime / rept)]), brk.
+' % [ptime, pbest, (ptime / rept), rtime, rbest, (rtime / rept)], brk.

@@ -22,7 +22,7 @@
 
 #include "citron.h"
 #include "siphash.h"
-
+/**@I_OBJ_DEF Nil*/
 /**
  * Nil
  *
@@ -97,7 +97,7 @@ ctr_object* ctr_nil_assign(ctr_object* myself, ctr_argument* argumentList) { if 
   );
   return myself;
 }
-
+/**@I_OBJ_DEF Object*/
 /**
  * Object
  *
@@ -805,7 +805,7 @@ ctr_object* ctr_object_respond_and_and(ctr_object* myself, ctr_argument* argumen
 ctr_object* ctr_object_is_nil(ctr_object* myself, ctr_argument* argumentList) {
     return ctr_build_bool(0);
 }
-
+/**@I_OBJ_DEF Boolean*/
 /**
  * Boolean
  *
@@ -1115,7 +1115,7 @@ ctr_object* ctr_bool_xor(ctr_object* myself, ctr_argument* argumentList) {
 ctr_object* ctr_bool_to_number(ctr_object* myself, ctr_argument* argumentList) {
     return ctr_build_number_from_float( (ctr_number) myself->value.bvalue );
 }
-
+/**@I_OBJ_DEF Number*/
 /**
  * Number
  *
@@ -1890,7 +1890,7 @@ ctr_object* ctr_number_to_string(ctr_object* myself, ctr_argument* argumentList)
 ctr_object* ctr_number_to_boolean(ctr_object* myself, ctr_argument* argumentList) {
     return ctr_build_bool( myself->value.nvalue );
 }
-
+/**@I_OBJ_DEF String*/
 /**
  * String
  *
@@ -2192,10 +2192,48 @@ ctr_object* ctr_string_format(ctr_object* myself, ctr_argument* argumentList) {
           ctr_string_append(buffer, args);
           continue;
       }
+      if (c == 'c') {
+        args->object = ctr_build_number_from_float(specnum);
+        args->object = ctr_send_message(ctr_array_get(objects, args), "toNumber", 8, NULL);
+        char buf[2];
+        sprintf(buf, "%c", (int)args->object->value.nvalue);
+        ctr_invoke_variadic(buffer, &ctr_string_append, 1, ctr_build_string(buf, 1));
+        continue;
+      }
       if (c == '%') {
         args->object = ctr_build_string_from_cstring("%");
         ctr_string_append(buffer, args);
         specnum--;
+       }
+       else {
+         char _fmt_[1024];
+         char buf[10240];
+         _fmt_[0] = '%';
+         int fi = 1;
+         while(!isalpha(_fmt_[fi++]=fmt[i++]));
+         --i;
+         _fmt_[fi]='\0';
+         args->object = ctr_build_number_from_float(specnum);
+         switch(_fmt_[fi-1]) {
+           case 'c':
+           case 'd':
+           case 'i':
+           case 'x':
+             args->object = ctr_send_message(ctr_array_get(objects, args), "toNumber", 8, NULL);
+             sprintf(buf, _fmt_, (int)args->object->value.nvalue);
+             break;
+           case 'f':
+             args->object = ctr_send_message(ctr_array_get(objects, args), "toNumber", 8, NULL);
+             sprintf(buf, _fmt_, (float)args->object->value.nvalue);
+             break;
+           default:
+             args->object = ctr_send_message(ctr_array_get(objects, args), "toString", 8, NULL);
+             char* strr = ctr_heap_allocate_cstring(args->object);
+             sprintf(buf, _fmt_, strr);
+             ctr_heap_free(strr);
+             break;
+         }
+         ctr_invoke_variadic(buffer, &ctr_string_append, 1, ctr_build_string_from_cstring(buf));
        }
     } else buf[fmtct++] = c;
   }
@@ -3419,7 +3457,7 @@ ctr_object* ctr_string_eval(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 /*
- * [String] unsafeExec
+[String] unsafeExec
  *
  * Evaluates the contents of the string as code.
  * This is the unsafe version of the eval message.
@@ -3450,6 +3488,7 @@ ctr_command_security_profile ^= CTR_SECPRO_EVAL;
 return result;
 }
 */
+
 /**
  * [String] escapeQuotes.
  *
@@ -3554,7 +3593,7 @@ ctr_object* ctr_string_reverse(ctr_object* myself, ctr_argument* argumentList) {
     return newString;
 }
 
-
+/**@I_OBJ_DEF Tuple*/
 /**
  * Tuple
  *
@@ -3596,6 +3635,7 @@ ctr_object* ctr_build_immutable(ctr_tnode* node) {
   return tupleobj;
 }
 
+/**@I_OBJ_DEF CodeBlock*/
 /**
  * Block
  *
@@ -3788,7 +3828,7 @@ ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object*
     ctr_object* a;
     int was_vararg;
     ctr_open_context();
-    if (parameterList && parameterList->node) {
+    if (likely(parameterList && parameterList->node)) {
         parameter = parameterList->node;
         while(argList) {
           __asm__ __volatile__ ("");
@@ -3819,7 +3859,7 @@ ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object*
                     }
                     ctr_heap_free(arglist__);
                     ctr_assign_value_to_local(ctr_build_string(parameter->value+1, parameter->vlen-1), arr);
-                } else if (!was_vararg){
+                } else if (unlikely(!was_vararg)){
                     a = argList->object;
                     ctr_assign_value_to_local(ctr_build_string(parameter->value, parameter->vlen), a);
                 }
@@ -3832,8 +3872,8 @@ ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object*
         }
     }
     if (my) ctr_assign_value_to_local_by_ref(ctr_build_string_from_cstring( ctr_clex_keyword_me ), my ); /* me should always point to object, otherwise you have to store me in self and can't use in if */
-    // ctr_object* this = ctr_build_string("thisBlock", 9);
-    // ctr_assign_value_to_local(this, myself); /* otherwise running block may get gc'ed. */
+    ctr_object* this = ctr_build_string("thisBlock", 9);
+    ctr_assign_value_to_local(this, myself); /* otherwise running block may get gc'ed. */
     int p = myself->properties->size - 1;
     struct ctr_mapitem* head;
     head = myself->properties->head;

@@ -29,7 +29,7 @@ char* ctr_clex_desc_tok_number = "number";
 char* ctr_clex_desc_tok_paropen = "(";
 char* ctr_clex_desc_tok_parclose = ")";
 char* ctr_clex_desc_tok_blockopen = "{";
-char* ctr_clex_desc_tok_blockopen_autocapture = "{\\";
+char* ctr_clex_desc_tok_blockopen_map = "{\\";
 char* ctr_clex_desc_tok_blockclose = "}";
 char* ctr_clex_desc_tok_tupopen = "[";
 char* ctr_clex_desc_tok_tupclose = "]";
@@ -125,9 +125,9 @@ char* ctr_clex_tok_describe(int token)
         case CTR_TOKEN_BLOCKOPEN:
             description = ctr_clex_desc_tok_blockopen;
             break;
-        // case CTR_TOKEN_BLOCKOPEN_AUTOCAPTURE:
-        //     description = ctr_clex_desc_tok_blockopen_autocapture;
-        //     break;
+        case CTR_TOKEN_BLOCKOPEN_MAP:
+            description = ctr_clex_desc_tok_blockopen_map;
+            break;
         case CTR_TOKEN_BOOLEANNO:
             description = ctr_clex_desc_tok_booleanno;
             break;
@@ -341,9 +341,11 @@ int ctr_clex_tok() {
     if (c == ']') { ctr_code++; return CTR_TOKEN_TUPCLOSE; }
     if (c == '{') {
       ctr_code++;
-      // if (ctr_code != ctr_eofcode && (c = *ctr_code) == '\\')
-      //   return CTR_TOKEN_BLOCKOPEN_AUTOCAPTURE;
-      // else
+      if (ctr_code != ctr_eofcode && (c = *ctr_code) == '\\') {
+        ctr_code++;
+        return CTR_TOKEN_BLOCKOPEN_MAP;
+      }
+      else
         return CTR_TOKEN_BLOCKOPEN;
     }
     if (c == '}') { ctr_code++; return CTR_TOKEN_BLOCKCLOSE; }

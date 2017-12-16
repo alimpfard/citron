@@ -1,6 +1,13 @@
-#var x is 5.
-#var y is x + 5.
-#[1, 2, 3] fmap: {:i ^i + y.}.
-#Pen red write: ('32 %s %s' formatObjects: [1, 2]), brk.
-
-[1] = [1].
+var fun is {
+    ↑Map cnew: {
+        test => 4.
+        whatever => [64,87,'oi', 'io'].
+        w00t => 5.
+        lol => 100000.
+    }.
+}.
+(Map cnew: {
+    test => 'lol'.
+    whatever => ['*_', 'meh', '_'].
+}) is fun run.
+Pen writeln: [lol, meh].

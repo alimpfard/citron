@@ -111,8 +111,8 @@ Eval on: 'evaluate:' do: { :str
     either:
       ({ ^eval_result_x is Eval doMeta: (str skip: 1). } catch: {:e Eval handleException: e.})
     or:
-      ({ Eval instrument. ^eval_result_x is str eval toString. } catch: {:e Eval handleException: e.}).
-  ^(eval_result_x containsPattern: '^\\[\\w*?\\]') either: '' or: eval_result_x.
+      ({ Eval instrument. ^eval_result_x is str eval. } catch: {:e Eval handleException: e.}).
+  ^(eval_result_x toString containsPattern: '^\\[\\w*?\\]') either: '' or: eval_result_x.
 }.
 Eval on: 'evaluateFile:' do: { :fl
   {
@@ -168,7 +168,8 @@ var rc is Nil.
 var rd is Nil.
 var re is Nil.
 var rf is Nil.
-
+var _  is Nil.
+var __ is Nil.
 
 Reflect registerInstrumentor: {:obj:msg:args
   Reflect disableInstrumentation.
@@ -299,11 +300,13 @@ Eval on: 'repl' do: {
 
     inp is Eval handleGlobalVars: inp.
     # Syntactic errors will not be passed to the eval. # TODO: handle that.
-    'Pen %s write: (var ret is Eval evaluate: inp)' formatObjects: [(Eval color)], eval.
+    'Pen %s write: (var ret is Eval evaluate: inp) toString' formatObjects: [(Eval color)], eval.
     Pen resetColor.
+    __ is _.
+    _ is ret.
     Eval pushHist: inp.
     #Broom sweep. #Keep the darn pointers in memory
-    ret length > 0 ifTrue: { Pen brk. }.
+    ret toString length > 0 ifTrue: { Pen brk. }.
   }.
 }.
 

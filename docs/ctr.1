@@ -1,6 +1,4 @@
-
-.\" Manpage for ctr.
-.TH man 1 "18 November 2017" "0.0.6" "CTR man page"
+.TH "Citron v0.0.6.6" 1 "10 December 2017" "The Citron programming language Manual"
 .SH NAME
 ctr \- run a Citron program
 .PP
@@ -10,7 +8,7 @@ ctr [PROGRAM]
 .PP
 citron [arguments]
 .SH DESCRIPTION
-Citron is general purpose programming language for UNIX\-like operating systems.
+Citron is a general purpose programming language for UNIX\-like operating systems.
 .SH REFERENCE MANUAL
 Citron has 5 literals:
 .RS 4
@@ -29,6 +27,13 @@ Citron has 5 literals:
 .RE
 The following messages are part of the Core API of the Citron Programming Language:
 .br
+.PP
+.SS
+.SH
+ Nil
+.B _OBJ_DEF Nil
+.BR
+
 .PP
 .SS
 .B Nil
@@ -80,6 +85,13 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
+.SH
+ Object
+.B _OBJ_DEF Object
+.BR
+
+.PP
+.SS
 .B Object
 
  This is the base object, the parent of all other objects.
@@ -122,6 +134,14 @@ The following messages are part of the Core API of the Citron Programming Langua
 .SS
 .B [Object] unpack: [Object:{Ref*}]
  Element-wise object assign
+.BR
+
+.PP
+.SS
+.B [Object] iHash
+
+ fallback hashing
+ returns the hash of the object's string form.
 .BR
 
 .PP
@@ -189,6 +209,13 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
+.B [Object] id
+
+ returns a unique identifier for the object
+.BR
+
+.PP
+.SS
 .B [Object] myself
 
  Returns the object itself.
@@ -227,7 +254,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
  Usage:
 
- a := Array < 'hello' ; 'world' ; True ; Nil ; 666.
+ a is Array < 'hello' ; 'world' ; True ; Nil ; 666.
  a do pop shift unshift: 'hi', push: 999, done.
 
  Because of 'chain mode' you can do 'a do pop shift' etc, instead of
@@ -259,7 +286,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
  Usage:
 
- var str := 'write:'.
+ var str is 'write:'.
  Pen message: 'write:' arguments: (Array < 'Hello World').
 
  This will print the string 'Hello world' on the screen using a dynamically
@@ -299,6 +326,13 @@ The following messages are part of the Core API of the Citron Programming Langua
  Default isNil implementation.
 
  Always returns boolean object False.
+.BR
+
+.PP
+.SS
+.SH
+ Boolean
+.B _OBJ_DEF Boolean
 .BR
 
 .PP
@@ -414,7 +448,7 @@ The following messages are part of the Core API of the Citron Programming Langua
  Returns the opposite of the current value.
 
  Usage:
- True := False not.
+ True is False not.
 .BR
 
 .PP
@@ -424,7 +458,7 @@ The following messages are part of the Core API of the Citron Programming Langua
  'Flips a coin'. Returns a random boolean value True or False.
 
  Usage:
- coinLandsOn := (Boolean flip).
+ coinLandsOn is (Boolean flip).
 .BR
 
 .PP
@@ -494,6 +528,13 @@ The following messages are part of the Core API of the Citron Programming Langua
 .B [Boolean] toNumber
 
  Returns 0 if boolean is False and 1 otherwise.
+.BR
+
+.PP
+.SS
+.SH
+ Number
+.B _OBJ_DEF Number
 .BR
 
 .PP
@@ -648,7 +689,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
  Usage:
 
- x := 5.
+ x is 5.
  x *=: 2. #x is now 10.
 
  Use this message to apply the operation to the object itself instead
@@ -672,7 +713,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
  Usage:
 
- x := 10.
+ x is 10.
  x /=: 2. #x will now be 5.
 
  Use this message to apply the operation to the object itself instead
@@ -681,14 +722,14 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B [Number] % [modulo]
+.B [Number] mod: [modulo]
 
  Returns the modulo of the number. This message will return a new
  object representing the modulo of the recipient.
 
  Usage:
 
- x := 11 % 3. #x will now be 2
+ x is 11 mod: 3. #x will now be 2
 
  Use this message to apply the operation of division to the
  object itself instead of generating a new one.
@@ -703,7 +744,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
  Usage:
 
- x := 2 toPowerOf: 8. #x will be 256
+ x is 2 toPowerOf: 8. #x will be 256
 
  The example above will raise 2 to the power of 8 resulting in
  a new Number object: 256.
@@ -719,7 +760,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
  Usage:
 
- hope := 0.1.
+ hope is 0.1.
  ( hope pos ) ifTrue: { Pen write: 'Still a little hope for humanity'. }.
 
  The example above will print the message because hope is higher than 0.
@@ -736,7 +777,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
  Usage:
 
- hope := -1.
+ hope is -1.
  (hope neg) ifTrue: { Pen write: 'No hope left'. }.
 
  The example above will print the message because the value of the variable
@@ -751,8 +792,8 @@ The following messages are part of the Core API of the Citron Programming Langua
 
  Usage:
 
- x := 6 max: 4. #x is 6
- x := 6 max: 7. #x is 7
+ x is 6 max: 4. #x is 6
+ x is 6 max: 7. #x is 7
 .BR
 
 .PP
@@ -763,8 +804,8 @@ The following messages are part of the Core API of the Citron Programming Langua
 
  Usage:
 
- x := 6 min: 4. #x is 4
- x := 6 min: 7. #x is 7
+ x is 6 min: 4. #x is 4
+ x is 6 min: 7. #x is 7
 .BR
 
 .PP
@@ -800,8 +841,8 @@ The following messages are part of the Core API of the Citron Programming Langua
 
  Usage:
 
- x := 4.5
- y := x floor. #y will be 4
+ x is 4.5
+ y is x floor. #y will be 4
 
  The example above applies the floor function to the recipient (4.5)
  returning a new number object (4).
@@ -816,7 +857,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
  Usage:
 
- x := 4.5.
+ x is 4.5.
  y = x ceil. #y will be 5
 
  The example above applies the ceiling function to the recipient (4.5)
@@ -838,8 +879,8 @@ The following messages are part of the Core API of the Citron Programming Langua
 
  Usage:
 
- x := -7.
- y := x abs. #y will be 7
+ x is -7.
+ y is x abs. #y will be 7
 
  The example above strips the sign off the value -7 resulting
  in 7.
@@ -853,8 +894,8 @@ The following messages are part of the Core API of the Citron Programming Langua
 
  Usage:
 
- x := 49.
- y := x sqrt. #y will be 7
+ x is 49.
+ y is x sqrt. #y will be 7
 
  The example above takes the square root of 49, resulting in the
  number 7.
@@ -951,6 +992,13 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
+.SH
+ String
+.B _OBJ_DEF String
+.BR
+
+.PP
+.SS
 .B String
 
  Literal:
@@ -1023,7 +1071,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
  Usage:
 
- x := 'Hello '.
+ x is 'Hello '.
  x append: 'World'.
  Pen write: x. #Hello World
 
@@ -1049,8 +1097,8 @@ The following messages are part of the Core API of the Citron Programming Langua
 
  Usage:
 
- fmt := 'Hello, %s! %d is a number!'
- str := fmt formatObjects: (Array new < 'World', 23).
+ fmt is 'Hello, %s! %d is a number!'
+ str is fmt formatObjects: (Array new < 'World', 23).
 .BR
 
 .PP
@@ -1060,8 +1108,8 @@ The following messages are part of the Core API of the Citron Programming Langua
  format a format string based off a map
 
  e.g.
-  format := 'this \'%{string}\' contains some wierd %{shit}.'.
-  fmtd := format formatMap: (Map new put: 'shit' at: 'shit', put: format at: 'string').
+  format is 'this \'%{string}\' contains some wierd %{shit}.'.
+  fmtd is format formatMap: (Map new put: 'shit' at: 'shit', put: format at: 'string').
   # 'this \'this \'%{string}\' contains some wierd %{shit}.\' contains some weird shit.'
 .BR
 
@@ -1249,7 +1297,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
  Usage:
 
- var match := 'Hello World' containsPattern: '[:space:]'.
+ var match is 'Hello World' containsPattern: '[:space:]'.
  #match will be True because there is a space in 'Hello World'
 .BR
 
@@ -1277,7 +1325,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
  Usage:
 
- message := ' hello world  '.
+ message is ' hello world  '.
  message leftTrim.
 
  The example above will remove all the whitespace at the left of the
@@ -1292,7 +1340,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
  Usage:
 
- message := ' hello world  '.
+ message is ' hello world  '.
  message rightTrim.
 
  The example above will remove all the whitespace at the right of the
@@ -1330,7 +1378,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
  Usage:
 
- a := 'abc' characters.
+ a is 'abc' characters.
  a count. #3
 .BR
 
@@ -1386,41 +1434,8 @@ The following messages are part of the Core API of the Citron Programming Langua
 
  Usage:
 
- a := 'Array < 1 ; 2 ; 3' eval.
- x := a @ 2. #3
-.BR
-
-.PP
-.SS
-.B [String] unsafeExec
-
- Evaluates the contents of the string as code.
- This is the unsafe version of the eval message.
-
-
-tr_object* ctr_string_eval(ctr_object* myself, ctr_argument* argumentList) {
-tr_tnode* parsedCode;
-har* pathString;
-tr_object* result;
-tr_object* code;
-ctr_command_security_profile ^= CTR_SECPRO_EVAL;
-thString = ctr_heap_allocate_tracked(sizeof(char)*5);
-mcpy(pathString, "exec", 4);
-mcpy(pathString+4,"\0",1);
-r_argument* newArgumentList = ctr_heap_allocate( sizeof( ctr_argument ) );
-wArgumentList->object = myself;
-code = ctr_string_append( ctr_build_string_from_cstring( "^ " ), newArgumentList );
-newArgumentList->object = ctr_build_string_from_cstring( "." ); //We expect the code to be correct.
-de = ctr_string_append( code, newArgumentList );
-r_program_length = code->value.svalue->vlen;
-rsedCode = ctr_cparse_parse(code->value.svalue->value, pathString);
-r_cwlk_subprogram++;
-sult = ctr_cwlk_run(parsedCode);
-r_cwlk_subprogram--;
- ( result == NULL ) result = CtrStdNil;
-r_heap_free( newArgumentList );
-r_command_security_profile ^= CTR_SECPRO_EVAL;
-turn result;
+ a is 'Array < 1 ; 2 ; 3' eval.
+ x is a @ 2. #3
 .BR
 
 .PP
@@ -1448,6 +1463,13 @@ turn result;
 
 .PP
 .SS
+.SH
+ Tuple
+.B _OBJ_DEF Tuple
+.BR
+
+.PP
+.SS
 .B Tuple
 
  Literal:
@@ -1458,6 +1480,13 @@ turn result;
 
  [ 1 , 2 , 3 ]
  []
+.BR
+
+.PP
+.SS
+.SH
+ CodeBlock
+.B _OBJ_DEF CodeBlock
 .BR
 
 .PP
@@ -1484,11 +1513,6 @@ turn result;
 
 .PP
 .SS
-.B Captures all const qualified values and adds them to private space
-.BR
-
-.PP
-.SS
 .B [Block] unpack: [String:Ref]
  Assign ref to block
 .BR
@@ -1500,6 +1524,9 @@ turn result;
  Runs a block of code using the specified object as a parameter.
  If you run a block using the messages 'run' or 'applyTo:', me/my will
  refer to the block itself instead of the containing object.
+
+ the passed 'my' will be respected first,
+ and if lookup fails, it will be swapped for the block itself
 .BR
 
 .PP
@@ -1511,7 +1538,7 @@ turn result;
 
  Usage:
 
- x := 0.
+ x is 0.
  { ^(x < 6). } whileFalse:
  { x add: 1. }. #increment x until it reaches 6.
 
@@ -1529,7 +1556,7 @@ turn result;
 
  Usage:
 
- x := 0.
+ x is 0.
  { ^(x > 5). }
  whileFalse: { x add: 1. }. #increment x until it reaches 6.
 
@@ -1564,7 +1591,7 @@ turn result;
 
  Usage:
 
- shout := { Pen write: (my message + '!!!'). }.
+ shout is { Pen write: (my message + '!!!'). }.
  shout set: 'message' value: 'hello'.
  shout run.
 
@@ -1578,6 +1605,11 @@ turn result;
  multiplier to use in the formula. This way, you could create a block
  building 'formula blocks'. This is how you implement & use closures
  in Citron.
+
+ There is no need to capture values with this message if you don't require the
+ name of the variable to be anything specific.
+ In such circumstances, you may use the automatic capture qualifier `const`
+ to capture the value directly where it is needed.
 .BR
 
 .PP
@@ -1610,7 +1642,7 @@ turn result;
 
  #Raise error on division by zero.
  {
-    var z := 4 / 0.
+    var z is 4 / 0.
  } catch: { :errorMessage
     Pen write: e, brk.
  }, run.
@@ -1627,21 +1659,28 @@ turn result;
 
 .PP
 .SS
+.SH
+ Array
+.B _OBJ_DEF Array
+.BR
+
+.PP
+.SS
 .B [Array] new
 
  Creates a new Array.
 
  Usage:
 
- a := Array new.
+ a is Array new.
 
  or, the short form:
 
- a := Array ← 1 ; 2 ; 3.  
+ a is Array ← 1 ; 2 ; 3.  
 
  or (if you prefer ASCII only symbols):
 
- a := Array < 1 ; 2 ; 3.
+ a is Array < 1 ; 2 ; 3.
 .BR
 
 .PP
@@ -1666,7 +1705,7 @@ turn result;
 
  Usage:
 
- numbers := Array new.
+ numbers is Array new.
  numbers push: 3.
 .BR
 
@@ -1678,8 +1717,8 @@ turn result;
 
  Usage:
 
- a := Array ← 8 ; 4 ; 2 ; 16.  
- m := a min. #2
+ a is Array ← 8 ; 4 ; 2 ; 16.  
+ m is a min. #2
 .BR
 
 .PP
@@ -1690,8 +1729,8 @@ turn result;
 
  Usage:
 
- a := Array ← 8 ; 4 ; 2 ; 16.  
- m := a max. #16
+ a is Array ← 8 ; 4 ; 2 ; 16.  
+ m is a max. #16
 .BR
 
 .PP
@@ -1703,8 +1742,8 @@ turn result;
 
  Usage:
 
- a := Array ← 1 ; 2 ; 3.  
- s := a sum. #6
+ a is Array ← 1 ; 2 ; 3.  
+ s is a sum. #6
 
  In the example above, the sum of array will be stored in s and
  it's value will be 6.
@@ -1720,8 +1759,8 @@ turn result;
 
  Usage:
 
- a := Array ← 2 ; 4 ; 8.  
- p := a product. #64
+ a is Array ← 2 ; 4 ; 8.  
+ p is a product. #64
 
  In the example above, the product of the array will be calculated
  because the array receives the message 'product'. The product of the elements
@@ -1772,6 +1811,58 @@ turn result;
 
 .PP
 .SS
+.B [Array] map_v: [Block].
+
+ Iterates over the array. Passing each element as a value to the
+ specified block.
+ The map message will pass only the value.
+
+ Usage:
+
+ files map_v: showName.
+ files map_v: {
+   :filename
+   Pen write: filename, brk.
+ }.
+.BR
+
+.PP
+.SS
+.B * [Array] each_v: [Block].
+*
+*  Alias for [Array] map_v: [Block].
+.BR
+
+.PP
+.SS
+.B [Array] from: [Number] lengthMax: [Number]
+
+  makes n-tuple-wise iterations
+ If `fill` is specified, that will be used to fill when we are elements short
+ Else Nil will be passed
+.BR
+
+.PP
+.SS
+.B [Array] every: [Number] do: [Block] fill: [Object].
+ [Array] every: [Number] do: [Block].
+
+  makes n-tuple-wise iterations
+ If `fill` is specified, that will be used to fill when we are elements short
+ Else Nil will be passed
+.BR
+
+.PP
+.SS
+.B [Array] chunks: [Number]
+ [Array] chunks: [Number] fill: [Object]
+  makes a bunch of n-tuples
+ If `fill` is specified, that will be used to fill when we are elements short
+ Else Nil will be passed
+.BR
+
+.PP
+.SS
 .B [Array] ← [Element1] ; [Element2] ; ...  
 
  Creates a new instance of an array and initializes this
@@ -1780,11 +1871,11 @@ turn result;
 
  Usage:
 
- a := Array ← 1 ; 2 ; 3.  
+ a is Array ← 1 ; 2 ; 3.  
 
- or if you like ASCII-only:
+ or if ASCII-only is preferred:
 
- a := Array < 1 ; 2 ; 3.
+ a is Array < 1 ; 2 ; 3.
 
  Note that the ; symbol here is an alias for 'push:'.
 .BR
@@ -1798,7 +1889,7 @@ turn result;
 
  Usage:
 
- a := Array new.
+ a is Array new.
  a push: 1.
  a unshift: 3. #now contains: 3,1
 .BR
@@ -1817,7 +1908,7 @@ turn result;
 
  Usage:
 
- collection := Array new.
+ collection is Array new.
  collection push: 1, push: 2, push 3.
  collection join: ','. # results in string: '1,2,3'
 .BR
@@ -1831,7 +1922,7 @@ turn result;
 
  Usage:
 
- fruits := Array ← 'apples' ; 'oranges' ; 'bananas'.  
+ fruits is Array ← 'apples' ; 'oranges' ; 'bananas'.  
  fruits at: 1. #returns 'oranges'
 .BR
 
@@ -1867,7 +1958,7 @@ turn result;
 
  Usage:
 
- fruits := Array new.
+ fruits is Array new.
  fruits put: 'apples' at: 5.
 .BR
 
@@ -1898,6 +1989,34 @@ turn result;
 
  Copies part of an array indicated by from and to and
  returns a new array consisting of a copy of this region.
+.BR
+
+.PP
+.SS
+.B [Array] skip: [n:Number]
+
+ Skips the first n elements of the array
+.BR
+
+.PP
+.SS
+.B * [Array] zip
+*
+* zip array.
+* Works on the inner elements of the array.
+* If the element is an array, it is expanded exactly once.
+* And if the element is not an array, it is used as-is
+*
+.BR
+
+.PP
+.SS
+.B [Array] zipWith: [Block]
+
+ zip array according to the return of the block
+ Works on the inner elements of the array.
+ If the element is an array, it is expanded exactly once.
+ And if the element is not an array, it is used as-is
 .BR
 
 .PP
@@ -1973,7 +2092,7 @@ turn result;
 
 .PP
 .SS
-.B [Array] filter: [Block]
+.B [Array] filter: [Block<i,v>]
 
  Include the element iff block returns True for the element
 .BR
@@ -2002,10 +2121,10 @@ turn result;
 
  Usage:
 
- a := Array ← 'hello' ; 'world'.  
- b := a toString.
- c := b eval.
- x := c @ 1. #world
+ a is Array ← 'hello' ; 'world'.  
+ b is a toString.
+ c is b eval.
+ x is c @ 1. #world
 
  toString messages are implicitly send by some objects, for instance when
  attempting to write an Array using a Pen.
@@ -2024,13 +2143,20 @@ turn result;
 
 .PP
 .SS
+.SH
+ Map
+.B _OBJ_DEF Map
+.BR
+
+.PP
+.SS
 .B Map
 
  Creates a Map object.
 
  Usage:
 
- files := Map new.
+ files is Map new.
  files put: 'readme.txt' at: 'textfile'.
 .BR
 
@@ -2050,6 +2176,17 @@ turn result;
  Usage:
 
  map put: 'hello' at: 'world'.
+.BR
+
+.PP
+.SS
+.B [Map] deleteAt: [key]
+
+ deletes an entry (Noop if not in the map)
+
+ Usage:
+
+ map deleteAt: 'world'.
 .BR
 
 .PP
@@ -2079,6 +2216,14 @@ turn result;
 
  Iterates over the map, passing key-value pairs to the specified block.
  Note that within an each/map block, 'me' and 'my' refer to the collection.
+.BR
+
+.PP
+.SS
+.B [Map] fmap: [Block<value>]
+
+ Iterates over the map, passing the value to the function, and replacing it with the result
+ (Or itself if a value is not returned)
 .BR
 
 .PP
@@ -2116,9 +2261,9 @@ turn result;
 
  Usage
 
- m := (Map new) put: 'hello' at: 'world'.
- x := m toString
- m := x eval.
+ m is (Map new) put: 'hello' at: 'world'.
+ x is m toString
+ m is x eval.
 
  The toString method is automatically invoked when attempting to
  print a Map:
@@ -2147,6 +2292,13 @@ turn result;
 .SS
 .B [Map] unpack: [Map:{Ref:string}]
  Key-wise assign
+.BR
+
+.PP
+.SS
+.SH
+ Iterator
+.B _OBJ_DEF Iterator
 .BR
 
 .PP
@@ -2183,12 +2335,20 @@ turn result;
 .SS
 .B [Iterator] next
 
- gives the next value or throws an exception (to signal the end of the iterator)
+ gives the next value or breaks (to signal the end of the iterator)
 .BR
 
 .PP
 .SS
-.B [Iterator] each: [Block<value>]
+.B [Iterator] each: [Block<nil,value,iterator>]
+
+ Runs the block for each value in the iterator while stepping through it
+ Sends Nil for the index.
+.BR
+
+.PP
+.SS
+.B [Iterator] each_v: [Block<value>]
 
  Runs the block for each value in the iterator while stepping through it
 .BR
@@ -2198,7 +2358,26 @@ turn result;
 .B [Iterator] fmap: [b:Block<value>]
  Equivalent to [Array] fmap: [Block<value>]
 
- transforms the iterator with the block to an array
+ transforms the iterator with the block to another iterator
+This function does not evaluate anything from the iterator
+.BR
+
+.PP
+.SS
+.B [Iterator] filter: [b:Block<nil,value>]
+
+ XXX XXX XXX :: Unimplemented
+ Equivalent to [Array] filter: [Block<index,value>]
+
+ filters the iterator with the block's return value as the predicate to an array
+ this function does not evaluate anything from the iterator.
+.BR
+
+.PP
+.SS
+.B [Iterator] foldl: [Block] accumulator: [Object]
+
+ reduces an iterator according to a block (which takes an accumulator and the value, and returns the next acc) from the left (index 0)
 .BR
 
 .PP
@@ -2254,6 +2433,13 @@ turn result;
 
 .PP
 .SS
+.SH
+ File
+.B _OBJ_DEF File
+.BR
+
+.PP
+.SS
 .B File
 
  Represents a File object.
@@ -2304,7 +2490,7 @@ turn result;
 
  Usage:
 
- data := File new: '/path/to/mydata.csv', read.
+ data is File new: '/path/to/mydata.csv', read.
 
  In the example above we read the contents of the entire CSV file callled mydata.csv
  in the variable called data.
@@ -2319,7 +2505,7 @@ turn result;
  responds to this message for convience reasons, however for big files it might
  be a better idea to use the streaming API if possible (see readBytes etc.).
 
- data := '<xml>hello</xml>'.
+ data is '<xml>hello</xml>'.
  File new: 'myxml.xml', write: data.
 
  In the example above we write the XML snippet in variable data to a file
@@ -2378,7 +2564,7 @@ turn result;
 
  Usage:
 
- f := File new: '/path/to/file'.
+ f is File new: '/path/to/file'.
  f open: 'r+'. #opens file for reading and writing
 
  The example above opens the file in f for reading and writing.
@@ -2392,7 +2578,7 @@ turn result;
 
  Usage:
 
- f := File new: '/path/to/file.txt'.
+ f is File new: '/path/to/file.txt'.
  f open: 'r+'.
  f close.
 
@@ -2407,9 +2593,9 @@ turn result;
 
  Usage:
 
- f := File new: '/path/to/file.txt'.
+ f is File new: '/path/to/file.txt'.
  f open: 'r+'.
- x := f readBytes: 10.
+ x is f readBytes: 10.
  f close.
 
  The example above reads 10 bytes from the file represented by f
@@ -2425,9 +2611,9 @@ turn result;
 
  Usage:
 
- f := File new: '/path/to/file.txt'.
+ f is File new: '/path/to/file.txt'.
  f open: 'r+'.
- n := f writeBytes: 'Hello World'.
+ n is f writeBytes: 'Hello World'.
  f close.
 
  The example above writes 'Hello World' to the specified file as bytes.
@@ -2459,9 +2645,9 @@ turn result;
  Usage:
 
  file open: 'r'.
- x := file readBytes: 10. #read 10 bytes
+ x is file readBytes: 10. #read 10 bytes
  file rewind.        #rewind, set pointer to begin again
- y := file readBytes: 10. #re-read same 10 bytes
+ y is file readBytes: 10. #re-read same 10 bytes
 
  The example above reads the same sequence of 10 bytes twice, resulting
  in variable x and y being equal.
@@ -2478,12 +2664,19 @@ turn result;
 
  file open: 'r'.
  file end.
- x := file seek: -10, readBytes: 10.
+ x is file seek: -10, readBytes: 10.
 
  The example above will read the last 10 bytes of the file. This is
  accomplished by first moving the file pointer to the end of the file,
  then putting it back 10 bytes (negative number), and then reading 10
  bytes.
+.BR
+
+.PP
+.SS
+.SH
+ Broom
+.B _OBJ_DEF Broom
 .BR
 
 .PP
@@ -2555,6 +2748,20 @@ turn result;
 
 .PP
 .SS
+.B [Broom] autoAlloc: [Boolean]
+
+ Set whether the max allowed memory cap is enforced or not
+.BR
+
+.PP
+.SS
+.SH
+ Shell
+.B _OBJ_DEF Shell
+.BR
+
+.PP
+.SS
 .B [Shell] call: [String]
 
  Performs a Shell operation. The Shell object uses a fluid API, so you can
@@ -2571,6 +2778,13 @@ turn result;
  The example above will output the specified message to the console.
  Every message you send will be turned into a string and dispatched to
  the 'call:' message.
+.BR
+
+.PP
+.SS
+.SH
+ Slurp
+.B _OBJ_DEF Slurp
 .BR
 
 .PP
@@ -2608,6 +2822,13 @@ turn result;
 
 .PP
 .SS
+.SH
+ Program
+.B _OBJ_DEF Program
+.BR
+
+.PP
+.SS
 .B [Program] argument: [Number]
 
  Obtains an argument from the CLI invocation.
@@ -2635,7 +2856,7 @@ turn result;
 
  Usage:
 
- x := Command env: 'MY_PATH_VAR'.
+ x is Command env: 'MY_PATH_VAR'.
 .BR
 
 .PP
@@ -2647,7 +2868,7 @@ turn result;
 
 .PP
 .SS
-.B Program changeDirectory: [path:String]
+.B [Program] changeDirectory: [path:String]
 
  chdir to path, returns the past directory on success
 .BR
@@ -2663,7 +2884,7 @@ turn result;
  Usage:
 
  Pen write: 'What is your name ?'.
- x := Command waitForInput.
+ x is Command waitForInput.
  Pen write: 'Hello ' + x + ' !', brk.
 
  The example above asks the user for his/her name and
@@ -2686,7 +2907,7 @@ turn result;
 
  Usage (for instance to read raw CGI post):
 
- post := Program input.
+ post is Program input.
 .BR
 
 .PP
@@ -2791,7 +3012,7 @@ turn result;
 
  Usage:
 
- child := Program new: { :program
+ child is Program new: { :program
  	Pen write: 'Child', brk.
  }.
  Pen write: 'Parent'.
@@ -2799,7 +3020,7 @@ turn result;
 
 .PP
 .SS
-.B [Command] message: [String].
+.B [Program] message: [String].
 
  Sends a message to another program, i.e. a child or a parent that is
  running at the same time.
@@ -2807,7 +3028,7 @@ turn result;
 
 .PP
 .SS
-.B [Command] listen: [Block].
+.B [Program] listen: [Block].
 
  Stops the current flow of the program and starts listening for
  messages from other programs that are running at the same time.
@@ -2817,7 +3038,7 @@ turn result;
 
 .PP
 .SS
-.B [Command] join
+.B [Program] join
 
  Rejoins the program with the main program.
  This message will cause the current program to stop and wait
@@ -2826,7 +3047,7 @@ turn result;
 
 .PP
 .SS
-.B Object fromComputer: [String] [port: [Number] [inet6: [Boolean]]]
+.B [Object] fromComputer: [String] [port: [Number] [inet6: [Boolean]]]
 
  Creates a remote object from the server specified by the
  ip address.
@@ -2834,14 +3055,14 @@ turn result;
 
 .PP
 .SS
-.B Program port: [Number].
+.B [Program] port: [Number].
 
  Sets the port to use for remote connections.
 .BR
 
 .PP
 .SS
-.B Program connectionLimit: [Number].
+.B [Program] connectionLimit: [Number].
 
  Sets the maximum number of connections and requests that will be
  accepted by the current program.
@@ -2849,10 +3070,17 @@ turn result;
 
 .PP
 .SS
-.B Program serve: [Object].
+.B [Program] serve: [Object].
 
  Serves an object. Client programs can now communicate with this object
  and send messages to it.
+.BR
+
+.PP
+.SS
+.SH
+ Dice
+.B _OBJ_DEF Dice
 .BR
 
 .PP
@@ -2878,6 +3106,13 @@ turn result;
 
 .PP
 .SS
+.SH
+ Clock
+.B _OBJ_DEF Clock
+.BR
+
+.PP
+.SS
 .B [Clock] wait: [Number]
 
  Waits X useconds.
@@ -2897,8 +3132,8 @@ turn result;
  Syncs a clock. Copies the time AND zone from the other clock.
 
  Usage:
- clock := Clock new: timeStamp.
- copyClock := Clock new like: clock.
+ clock is Clock new: timeStamp.
+ copyClock is Clock new like: clock.
 .BR
 
 .PP
@@ -3123,6 +3358,13 @@ turn result;
 
 .PP
 .SS
+.SH
+ Pen
+.B _OBJ_DEF Pen
+.BR
+
+.PP
+.SS
 .B [Pen] write: [String]
 
  Writes string to console.
@@ -3130,9 +3372,23 @@ turn result;
 
 .PP
 .SS
+.B [Pen] writeln: [String]
+
+ Writes string to console, with a newline at the end.
+.BR
+
+.PP
+.SS
 .B [Pen] brk
 
  Outputs a newline character.
+.BR
+
+.PP
+.SS
+.SH
+ Reflect
+.B _OBJ_DEF Reflect
 .BR
 
 .PP
@@ -3193,7 +3449,7 @@ turn result;
 
 .PP
 .SS
-.B Reflect objectExists: [Object]
+.B [Reflect] objectExists: [Object]
 
  returns whether the object exists
 .BR
@@ -3263,6 +3519,13 @@ turn result;
 
 .PP
 .SS
+.B [Reflect] typeOf: [Object]
+
+ returns a type constructor suited for the object
+.BR
+
+.PP
+.SS
 .B [Reflect] parentOf: [o:Object]
 
  gets the first immediate parent of o.
@@ -3274,19 +3537,19 @@ turn result;
 
  gets the method r from object o, AS IS
  The returned block will not contain any references to o.
- So a context must be supplied.
+ So a context must be supplied. (Takes a 'self' argument first)
 .BR
 
 .PP
 .SS
-.B Reflect run: [Block] forObject: [object:Object] arguments: [Array]
+.B [Reflect] run: [Block] forObject: [object:Object] arguments: [Array]
 
  runs a block with its 'me'/'my' set to object
 .BR
 
 .PP
 .SS
-.B Reflect runHere: [Block] forObject: [o:Object] arguments: [Array]
+.B [Reflect] runHere: [Block] forObject: [o:Object] arguments: [Array]
 
  runs a block with its 'me'/'my' set to object, without switching contexts
 .BR
@@ -3298,6 +3561,100 @@ turn result;
  captures a method from an object as a closure
 
  (Reflect closure: 'closure:of:' of: Reflect) applyTo: 'toString' and: 10. #'10'
+.BR
+
+.PP
+.SS
+.B [Reflect] getProperty: [p:String] ofObject: [o:Object]
+
+ returns the property p of object o.
+ this will produce an error should said property not exist.
+
+ Reflect getProperty: 'end' ofObject: Eval
+.BR
+
+.PP
+.SS
+.B [Reflect] disableInstrumentation
+ Sends a message to an object with some arguments bypassing the instrumentor
+.BR
+
+.PP
+.SS
+.B [Reflect] enableInstrumentation
+ Sends a message to an object with some arguments bypassing the instrumentor
+.BR
+
+.PP
+.SS
+.B [Reflect] registerInstrumentor: [Block<object, message, arguments>:<object, message, arguments>]
+
+ register to an event that fires every time a message is sent.
+ This instrumentor will have to handle all message sending operations
+ using `[Reflect] disableInstrumentation` and '[Reflect] enableInstrumentation'.
+ return value is used as the result of the message, unless it is the instrumentor function,
+ In which case, the message is handed down to the object raw
+.BR
+
+.PP
+.SS
+.B [Reflect] currentInstrumentor
+
+ gets the current instrumentor instance, or Nil if none exists
+.BR
+
+.PP
+.SS
+.B @Experimental
+
+ [Reflect] runAtGlobal: [Block] arguments: [[Object]]
+
+ Runs a block at global context passing it the arguments
+.BR
+
+.PP
+.SS
+.SH
+ Fiber
+.B _OBJ_DEF Fiber
+.BR
+
+.PP
+.SS
+.B Fiber new: [Block]
+
+ Creates a new Fiber object that does (Block) upon control being yielded to it
+
+ Fiber is a co-processing method in citron.
+ Think software level threads
+.BR
+
+.PP
+.SS
+.B [Fiber] yield
+
+ yield control from the current object
+.BR
+
+.PP
+.SS
+.B [Fiber] yield: [Object]
+
+yield control and pass an object along
+.BR
+
+.PP
+.SS
+.B [Fiber] waitForAll
+
+ Wait until all fibers return
+.BR
+
+.PP
+.SS
+.B [Fiber] yielded
+
+ get the object that the last fiber yielded, or Nil if no object was yielded
 .BR
 
 .PP

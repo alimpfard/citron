@@ -208,7 +208,7 @@ arc4random(void)
 }
 
     void
-arc4random_buf(void *_buf, ctr_size n)
+arc4random_buf(void *_buf, size_t n)
 {
     u_char *buf = (u_char *)_buf;
 
@@ -275,6 +275,7 @@ arc4random_uniform(u_int32_t upper_bound)
 #define CTR_GC_BACKLOG_MAX 32
 
 ctr_object* gc_checked[CTR_GC_BACKLOG_MAX];//32 backward spanning last_checked pointers.
+/**@I_OBJ_DEF Broom*/
 
 /**
  * @internal
@@ -579,6 +580,7 @@ ctr_object* ctr_gc_setautoalloc(ctr_object* myself, ctr_argument* argumentList) 
   return myself;
 }
 
+/**@I_OBJ_DEF Shell*/
 
 /**
  * [Shell] call: [String]
@@ -719,6 +721,7 @@ ctr_object* ctr_slurp_respond_to_and(ctr_object* myself, ctr_argument* argumentL
     ctr_heap_free( newArgumentList );
     return myself;
 }
+/**@I_OBJ_DEF Slurp*/
 
 /**
  * [Slurp] obtain.
@@ -762,6 +765,7 @@ ctr_object* ctr_slurp_obtain( ctr_object* myself, ctr_argument* argumentList ) {
     ctr_internal_object_delete_property( myself, key, CTR_CATEGORY_PRIVATE_PROPERTY );
     return commandObj;
 }
+/**@I_OBJ_DEF Program*/
 
 /**
  * [Program] argument: [Number]
@@ -842,7 +846,7 @@ ctr_object* ctr_command_set_env(ctr_object* myself, ctr_argument* argumentList) 
 }
 
 /**
- * Program changeDirectory: [path:String]
+ * [Program] changeDirectory: [path:String]
  *
  * chdir to path, returns the past directory on success
  */
@@ -1209,7 +1213,7 @@ ctr_object* ctr_command_fork(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 /**
- * [Command] message: [String].
+ * [Program] message: [String].
  *
  * Sends a message to another program, i.e. a child or a parent that is
  * running at the same time.
@@ -1235,7 +1239,7 @@ ctr_object* ctr_command_message(ctr_object* myself, ctr_argument* argumentList) 
 }
 
 /**
- * [Command] listen: [Block].
+ * [Program] listen: [Block].
  *
  * Stops the current flow of the program and starts listening for
  * messages from other programs that are running at the same time.
@@ -1287,7 +1291,7 @@ ctr_object* ctr_command_listen(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 /**
- * [Command] join
+ * [Program] join
  *
  * Rejoins the program with the main program.
  * This message will cause the current program to stop and wait
@@ -1373,7 +1377,7 @@ ctr_object* ctr_command_crit(ctr_object* myself, ctr_argument* argumentList ) {
 
 
 /**
- * Object fromComputer: [String] [port: [Number] [inet6: [Boolean]]]
+ * [Object] fromComputer: [String] [port: [Number] [inet6: [Boolean]]]
  *
  * Creates a remote object from the server specified by the
  * ip address.
@@ -1410,7 +1414,7 @@ ctr_object* ctr_command_remote(ctr_object* myself, ctr_argument* argumentList ) 
 }
 
 /**
- * Program port: [Number].
+ * [Program] port: [Number].
  *
  * Sets the port to use for remote connections.
  */
@@ -1422,7 +1426,7 @@ ctr_object* ctr_command_default_port(ctr_object* myself, ctr_argument* argumentL
 }
 
 /**
- * Program connectionLimit: [Number].
+ * [Program] connectionLimit: [Number].
  *
  * Sets the maximum number of connections and requests that will be
  * accepted by the current program.
@@ -1435,7 +1439,7 @@ ctr_object* ctr_command_accept_number(ctr_object* myself, ctr_argument* argument
 }
 
 /**
- * Program serve: [Object].
+ * [Program] serve: [Object].
  *
  * Serves an object. Client programs can now communicate with this object
  * and send messages to it.
@@ -1509,6 +1513,7 @@ ctr_object* ctr_command_accept(ctr_object* myself, ctr_argument* argumentList ) 
     close(listenfd);
     return 0;
 }
+/**@I_OBJ_DEF Dice*/
 
 /**
  * [Dice] rollWithSides: [Number]
@@ -1537,6 +1542,7 @@ ctr_object* ctr_dice_throw(ctr_object* myself, ctr_argument* argumentList) {
 ctr_object* ctr_dice_rand(ctr_object* myself, ctr_argument* argumentList) {
     return ctr_build_number_from_float( (ctr_number) (arc4random()) );
 }
+/**@I_OBJ_DEF Clock*/
 
 
 /**
@@ -2090,6 +2096,7 @@ ctr_object* ctr_clock_time_exec_s( ctr_object* myself, ctr_argument* argumentLis
     ctr_heap_free(args);
     return ctr_build_number_from_float((((double)(end-init))/(double)CLOCKS_PER_SEC));
 }
+/**@I_OBJ_DEF Pen*/
 
 /**
  * [Pen] write: [String]

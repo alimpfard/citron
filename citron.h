@@ -21,7 +21,7 @@
 #define CTR_TOKEN_PAROPEN 4
 #define CTR_TOKEN_PARCLOSE 5
 #define CTR_TOKEN_BLOCKOPEN 6
-#define CTR_TOKEN_BLOCKOPEN_AUTOCAPTURE 7
+#define CTR_TOKEN_BLOCKOPEN_MAP 7
 #define CTR_TOKEN_BLOCKCLOSE 8
 #define CTR_TOKEN_COLON 9
 #define CTR_TOKEN_DOT 10
@@ -698,12 +698,14 @@ ctr_object* ctr_map_to_string(ctr_object* myself, ctr_argument* argumentList);
 
 ctr_object* ctr_iter_range;
 ctr_object* ctr_iter_urange;
+ctr_object* ctr_iter_repeat;
 
 ctr_object* ctr_iterator_make(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_iterator_set_seed(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_iterator_set_func(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_iterator_make_range(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_iterator_make_uncapped_range(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_iterator_make_repeat(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_iterator_next(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_iterator_each(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_iterator_each_v(ctr_object* myself, ctr_argument* argumentList);

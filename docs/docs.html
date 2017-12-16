@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.22.3 -->
-<!-- CreationDate: Sun Sep 10 07:44:59 2017 -->
+<!-- CreationDate: Mon Dec 11 01:01:34 2017 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -13,27 +13,103 @@
        table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
        h1      { text-align: center }
 </style>
-<title></title>
+<title>man</title>
+
 </head>
 <body>
+
+<h1 align="center">man</h1>
+
+<a href="#NAME">NAME</a><br>
+<a href="#SYNOPSIS">SYNOPSIS</a><br>
+<a href="#DESCRIPTION">DESCRIPTION</a><br>
+<a href="#REFERENCE MANUAL">REFERENCE MANUAL</a><br>
+<a href="#Nil">Nil</a><br>
+<a href="#Object">Object</a><br>
+<a href="#Boolean">Boolean</a><br>
+<a href="#Number">Number</a><br>
+<a href="#String">String</a><br>
+<a href="#Tuple">Tuple</a><br>
+<a href="#CodeBlock">CodeBlock</a><br>
+<a href="#Array">Array</a><br>
+<a href="#Map">Map</a><br>
+<a href="#Iterator">Iterator</a><br>
+<a href="#File">File</a><br>
+<a href="#Broom">Broom</a><br>
+<a href="#Shell">Shell</a><br>
+<a href="#Slurp">Slurp</a><br>
+<a href="#Program">Program</a><br>
+<a href="#Dice">Dice</a><br>
+<a href="#Clock">Clock</a><br>
+<a href="#Pen">Pen</a><br>
+<a href="#Reflect">Reflect</a><br>
+<a href="#Fiber">Fiber</a><br>
+<a href="#BUGS">BUGS</a><br>
+<a href="#AUTHOR">AUTHOR</a><br>
 
 <hr>
 
 
-<p style="margin-top: 1em">ctr &minus; run a Citron program
-ctr [PROGRAM] Citron is general purpose programming language
-for UNIX-like operating systems. Citron has 5 literals: <br>
-- Nil <br>
+<h2>NAME
+<a name="NAME"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">ctr &minus; run
+a Citron program</p>
+
+<p style="margin-left:11%; margin-top: 1em">citron &minus;
+interface to citron eval</p>
+
+<h2>SYNOPSIS
+<a name="SYNOPSIS"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">ctr
+[PROGRAM]</p>
+
+<p style="margin-left:11%; margin-top: 1em">citron
+[arguments]</p>
+
+<h2>DESCRIPTION
+<a name="DESCRIPTION"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Citron is a
+general purpose programming language for UNIX&minus;like
+operating systems.</p>
+
+<h2>REFERENCE MANUAL
+<a name="REFERENCE MANUAL"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Citron has 5
+literals:</p>
+
+<p style="margin-left:17%;">- Nil <br>
 - Booleans (True, False) <br>
 - Numbers (1, -2, 3.5) <br>
 - Strings &rsquo;All Strings are UTF8!&rsquo; <br>
 - Code Blocks { parameters code }</p>
 
-<p style="margin-top: 1em">The following messages are part
-of the Core API of the Citron Programming Language:</p>
+<p style="margin-left:11%; margin-top: 1em">The following
+messages are part of the Core API of the Citron Programming
+Language:</p>
 
-<p style="margin-top: 1em">Nil represents
-&rsquo;nothing&rsquo; or NULL in other languages. <br>
+<h2>Nil
+<a name="Nil"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
+Nil</b></p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Nil</b> <br>
+Nil represents &rsquo;nothing&rsquo; or NULL in other
+languages. <br>
 Any object property that has not been assigned a value <br>
 will contain Nil. Unlike some other programming languages
 <br>
@@ -41,64 +117,134 @@ Citron has no concept of &rsquo;undefined&rsquo; or isset,
 Nil is actually the <br>
 same as &rsquo;undefined&rsquo; or not set.</p>
 
-<p style="margin-top: 1em">Literal:</p>
+<p style="margin-left:11%; margin-top: 1em">Literal:</p>
 
-<p style="margin-top: 1em">Nil</p>
+<p style="margin-left:11%; margin-top: 1em">Nil</p>
 
-<p style="margin-top: 1em">Nil always answers this message
-with a boolean object &rsquo;True&rsquo;.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Nil]
+isNil</b> <br>
+Nil always answers this message with a boolean object
+&rsquo;True&rsquo;.</p>
 
-<p style="margin-top: 1em">Returns the string
-representation of Nil: &rsquo;Nil&rsquo;.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Nil]
+toString</b> <br>
+Returns the string representation of Nil:
+&rsquo;Nil&rsquo;.</p>
 
-<p style="margin-top: 1em">Returns the numerical
-representation of Nil: 0.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Nil]
+toNumber</b> <br>
+Returns the numerical representation of Nil: 0.</p>
 
-<p style="margin-top: 1em">Returns the boolean
-representation of Nil: False.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Nil]
+toBoolean</b> <br>
+Returns the boolean representation of Nil: False.</p>
 
-<p style="margin-top: 1em">This is the base object, the
-parent of all other objects. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Nil]
+unpack: [Ref:string]</b> <br>
+Assigns Nil into Ref</p>
+
+<h2>Object
+<a name="Object"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
+Object</b></p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Object</b>
+<br>
+This is the base object, the parent of all other objects.
+<br>
 It contains essential object oriented programming
 features.</p>
 
-<p style="margin-top: 1em">Creates a new Object hiding some
-parameters.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>Object cnew:
+[Block]</b> <br>
+Object constructor with some initial parameters. <br>
+Object is passed to the block as me/my</p>
 
-<p style="margin-top: 1em">Returns a string representation
-of the type of object.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>Object
+genAccessors: [String]</b> <br>
+generate reader/writer methods for property. <br>
+creates the property is it doesn&rsquo;t exist</p>
 
-<p style="margin-top: 1em">Returns a string representation
-of a generic object. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>Object
+genReader: [String]</b> <br>
+generate reader method for property. <br>
+creates the property is it doesn&rsquo;t exist</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Object
+genWriter: [String]</b> <br>
+generate writer method for property. <br>
+does not create the property is it doesn&rsquo;t exist</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Object]
+unpack: [Object:{Ref*}]</b> <br>
+Element-wise object assign</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Object]
+iHash</b> <br>
+fallback hashing <br>
+returns the hash of the object&rsquo;s string form.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Object] new
+hiding:</b> <br>
+Creates a new Object hiding some parameters.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Object
+swapRefs: [Object]</b> <br>
+swap two objects with each other. <br>
+Effectively &rsquo;xchg %ra, %rb&rsquo;</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Object]
+type</b> <br>
+Returns a string representation of the type of object.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Object]
+toString</b> <br>
+Returns a string representation of a generic object. <br>
 This string representation will be:</p>
 
-<p style="margin-top: 1em">[Object]</p>
+<p style="margin-left:11%; margin-top: 1em">[Object]</p>
 
-<p style="margin-top: 1em">Returns a numerical
-representation of the object. This basic behavior, part <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Object]
+toNumber</b> <br>
+Returns a numerical representation of the object. This basic
+behavior, part <br>
 of any object will just return 1. Other objects typically
 override this <br>
 behavior with more useful implementations.</p>
 
-<p style="margin-top: 1em">Returns a boolean representation
-of the object. This basic behavior, part <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Object]
+toBoolean</b> <br>
+Returns a boolean representation of the object. This basic
+behavior, part <br>
 of any object will just return True. Other objects typically
 override this <br>
 behavior with more useful implementations.</p>
 
-<p style="margin-top: 1em">Tests whether the current
-instance is the same as <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Object]
+equals: [other]</b> <br>
+Tests whether the current instance is the same as <br>
 the argument.</p>
 
-<p style="margin-top: 1em">Alias: =</p>
+<p style="margin-left:11%; margin-top: 1em">Alias: =</p>
 
-<p style="margin-top: 1em">Usage: <br>
+<p style="margin-left:11%; margin-top: 1em">Usage: <br>
 object equals: other</p>
 
-<p style="margin-top: 1em">Returns the object itself.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Object]
+id</b> <br>
+returns a unique identifier for the object</p>
 
-<p style="margin-top: 1em">Teaches any object to repsond to
-the first specified message just like <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Object]
+myself</b> <br>
+Returns the object itself.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Object]
+learn: [String] means: [String].</b> <br>
+Teaches any object to repsond to the first specified message
+just like <br>
 it would upon receiving the second. This allows you to map
 existing <br>
 responses to new messages. You can use this to translate
@@ -112,51 +258,57 @@ course the mapping itself <br>
 has a cost, but the mapped calls will be
 &rsquo;toll-free&rsquo;.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">#in this example we&rsquo;ll map
-a message to a Dutch word:</p>
+<p style="margin-left:11%; margin-top: 1em">#in this
+example we&rsquo;ll map a message to a Dutch word:</p>
 
-<p style="margin-top: 1em">Boolean learn:
+<p style="margin-left:11%; margin-top: 1em">Boolean learn:
 &rsquo;alsWaar:&rsquo; <br>
 means: &rsquo;ifTrue:&rsquo;.</p>
 
-<p style="margin-top: 1em">(2 &gt; 1) alsWaar: { <br>
+<p style="margin-left:11%; margin-top: 1em">(2 &gt; 1)
+alsWaar: { <br>
 Pen write: &rsquo;alsWaar means ifTrue in Dutch&rsquo;. <br>
 }</p>
 
-<p style="margin-top: 1em">Activates &rsquo;chain
-mode&rsquo;. If chain mode is active, all messages will <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Object]
+do</b> <br>
+Activates &rsquo;chain mode&rsquo;. If chain mode is active,
+all messages will <br>
 return the recipient object regardless of their return
 signature.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">a := Array &lt;
+<p style="margin-left:11%; margin-top: 1em">a := Array &lt;
 &rsquo;hello&rsquo; ; &rsquo;world&rsquo; ; True ; Nil ;
 666. <br>
 a do pop shift unshift: &rsquo;hi&rsquo;, push: 999,
 done.</p>
 
-<p style="margin-top: 1em">Because of &rsquo;chain
-mode&rsquo; you can do &rsquo;a do pop shift&rsquo; etc,
-instead of</p>
+<p style="margin-left:11%; margin-top: 1em">Because of
+&rsquo;chain mode&rsquo; you can do &rsquo;a do pop
+shift&rsquo; etc, instead of</p>
 
-<p style="margin-top: 1em">a pop. <br>
+<p style="margin-left:11%; margin-top: 1em">a pop. <br>
 a shift. <br>
 etc..</p>
 
-<p style="margin-top: 1em">The &rsquo;do&rsquo; message
-tells the object to always return itself and disgard <br>
+<p style="margin-left:11%; margin-top: 1em">The
+&rsquo;do&rsquo; message tells the object to always return
+itself and disgard <br>
 the original return value until the message
 &rsquo;done&rsquo; has been received.</p>
 
-<p style="margin-top: 1em">Deactivates &rsquo;chain
-mode&rsquo;.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Object]
+done</b> <br>
+Deactivates &rsquo;chain mode&rsquo;.</p>
 
-<p style="margin-top: 1em">Sends a custom or
-&rsquo;dynamic&rsquo; message to an object. This takes a
-string containing <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Object]
+message: [String] arguments: [Array]</b> <br>
+Sends a custom or &rsquo;dynamic&rsquo; message to an
+object. This takes a string containing <br>
 the message to be send to the object and an array listing
 the arguments at the <br>
 correct indexes. If the array fails to provide the correct
@@ -166,594 +318,840 @@ object. If something other <br>
 than an Array is provided an error will be thrown as
 well.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">var str := &rsquo;write:&rsquo;.
-<br>
+<p style="margin-left:11%; margin-top: 1em">var str :=
+&rsquo;write:&rsquo;. <br>
 Pen message: &rsquo;write:&rsquo; arguments: (Array &lt;
 &rsquo;Hello World&rsquo;).</p>
 
-<p style="margin-top: 1em">This will print the string
-&rsquo;Hello world&rsquo; on the screen using a dynamically
-<br>
+<p style="margin-left:11%; margin-top: 1em">This will print
+the string &rsquo;Hello world&rsquo; on the screen using a
+dynamically <br>
 crafted message.</p>
 
-<p style="margin-top: 1em">Makes the object respond to a
-new kind of message. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Object] on:
+[String] do: [Block]</b> <br>
+Makes the object respond to a new kind of message. <br>
 Use the semicolons to indicate the positions of the
 arguments to be <br>
 passed.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">object on: &rsquo;greet&rsquo;
-do: { ... }. <br>
+<p style="margin-left:11%; margin-top: 1em">object on:
+&rsquo;greet&rsquo; do: { ... }. <br>
 object on: &rsquo;between:and:&rsquo; do: { ... }.</p>
 
-<p style="margin-top: 1em">Variations:</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Object]
+respondTo: [String]</b> <br>
+Variations:</p>
 
-<p style="margin-top: 1em">[Object] respondTo: [String]
-with: [String] <br>
+<p style="margin-left:11%; margin-top: 1em">[Object]
+respondTo: [String] with: [String] <br>
 [Object] respondTo: [String] with: [String] and:
 [String]</p>
 
-<p style="margin-top: 1em">Default respond-to implemention,
-does nothing.</p>
+<p style="margin-left:11%; margin-top: 1em">Default
+respond-to implementation, does nothing.</p>
 
-<p style="margin-top: 1em">Default isNil
-implementation.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Object]
+isNil</b> <br>
+Default isNil implementation.</p>
 
-<p style="margin-top: 1em">Always returns boolean object
-False.</p>
+<p style="margin-left:11%; margin-top: 1em">Always returns
+boolean object False.</p>
 
-<p style="margin-top: 1em">Literal:</p>
+<h2>Boolean
+<a name="Boolean"></a>
+</h2>
 
-<p style="margin-top: 1em">True <br>
+
+<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
+Boolean</b></p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Boolean</b>
+<br>
+Literal:</p>
+
+<p style="margin-left:11%; margin-top: 1em">True <br>
 False</p>
 
-<p style="margin-top: 1em">Tests whether the other object
-(as a boolean) has the <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Boolean]
+unpack: [String:Ref]</b> <br>
+Assign ref to boolean</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Boolean] =
+[other]</b> <br>
+Tests whether the other object (as a boolean) has the <br>
 same value (boolean state True or False) as the current
 one.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">(True = False) ifFalse: { Pen
-write: &rsquo;This is not True!&rsquo;. }.</p>
+<p style="margin-left:11%; margin-top: 1em">(True = False)
+ifFalse: { Pen write: &rsquo;This is not True!&rsquo;.
+}.</p>
 
-<p style="margin-top: 1em">Tests whether the other object
-(as a boolean) has the <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Boolean] !=
+[other]</b> <br>
+Tests whether the other object (as a boolean) has the <br>
 same value (boolean state True or False) as the current
 one.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">(True != False) ifTrue: { Pen
-write: &rsquo;This is not True!&rsquo;. }.</p>
+<p style="margin-left:11%; margin-top: 1em">(True != False)
+ifTrue: { Pen write: &rsquo;This is not True!&rsquo;. }.</p>
 
-<p style="margin-top: 1em">Simple cast function.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Boolean]
+toString</b> <br>
+Simple cast function.</p>
 
-<p style="margin-top: 1em">Breaks out of the current block
-and bubbles up to the parent block if <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Boolean]
+break</b> <br>
+Breaks out of the current block and bubbles up to the parent
+block if <br>
 the value of the receiver equals boolean True.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">(iteration &gt; 10) break.
-#breaks out of loop after 10 iterations</p>
+<p style="margin-left:11%; margin-top: 1em">(iteration &gt;
+10) break. #breaks out of loop after 10 iterations</p>
 
-<p style="margin-top: 1em">Skips the remainder of the
-current block in a loop, continues to the next <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Boolean]
+continue</b> <br>
+Skips the remainder of the current block in a loop,
+continues to the next <br>
 iteration.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">(iteration &gt; 10)
-continue.</p>
+<p style="margin-left:11%; margin-top: 1em">(iteration &gt;
+10) continue.</p>
 
-<p style="margin-top: 1em">Executes a block of code if the
-value of the boolean <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Boolean]
+ifTrue: [block]</b> <br>
+Executes a block of code if the value of the boolean <br>
 object is True.</p>
 
-<p style="margin-top: 1em">Usage: <br>
+<p style="margin-left:11%; margin-top: 1em">Usage: <br>
 (some expression) ifTrue: { ... }.</p>
 
-<p style="margin-top: 1em">You can also use ifFalse and
-ifTrue with other objects because the <br>
+<p style="margin-left:11%; margin-top: 1em">You can also
+use ifFalse and ifTrue with other objects because the <br>
 Object instance also responds to these messages.</p>
 
-<p style="margin-top: 1em">Executes a block of code if the
-value of the boolean <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Boolean]
+ifFalse: [block]</b> <br>
+Executes a block of code if the value of the boolean <br>
 object is True.</p>
 
-<p style="margin-top: 1em">Usage: <br>
+<p style="margin-left:11%; margin-top: 1em">Usage: <br>
 (some expression) ifFalse: { ... }.</p>
 
-<p style="margin-top: 1em">You can also use ifFalse and
-ifTrue with other objects because the <br>
+<p style="margin-left:11%; margin-top: 1em">You can also
+use ifFalse and ifTrue with other objects because the <br>
 Object instance also responds to these messages.</p>
 
-<p style="margin-top: 1em">Returns the opposite of the
-current value.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[b:Object]
+or: [Block|Object]</b> <br>
+Evaluates and returns the block if b evaluates to false,
+else returns b</p>
 
-<p style="margin-top: 1em">Usage: <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Boolean]
+not</b> <br>
+Returns the opposite of the current value.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Usage: <br>
 True := False not.</p>
 
-<p style="margin-top: 1em">&rsquo;Flips a coin&rsquo;.
-Returns a random boolean value True or False.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Boolean]
+flip</b> <br>
+&rsquo;Flips a coin&rsquo;. Returns a random boolean value
+True or False.</p>
 
-<p style="margin-top: 1em">Usage: <br>
+<p style="margin-left:11%; margin-top: 1em">Usage: <br>
 coinLandsOn := (Boolean flip).</p>
 
-<p style="margin-top: 1em">Returns argument #1 if boolean
-value is True and argument #2 otherwise.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Boolean]
+either: [this] or: [that]</b> <br>
+Returns argument #1 if boolean value is True and argument #2
+otherwise.</p>
 
-<p style="margin-top: 1em">Usage: <br>
+<p style="margin-left:11%; margin-top: 1em">If either
+object is a block, it will be executed and its result
+returned if <br>
+it is supposed to be returned.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Usage: <br>
 Pen write: &rsquo;the coin lands on: &rsquo; + (Boolean flip
-either: &rsquo;head&rsquo; or: &rsquo;tail&rsquo;).</p>
+either: &rsquo;head&rsquo; or: &rsquo;tail&rsquo;). <br>
+Pen write: &rsquo;the coin lands on: &rsquo; + (Boolean flip
+either: {^&rsquo;head&rsquo; * 10000.} or:
+&rsquo;tail&rsquo;).</p>
 
-<p style="margin-top: 1em">Returns True if both the object
-value is True and the <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Boolean]
+&amp; [other]</b> <br>
+Returns True if both the object value is True and the <br>
 argument is True as well.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">a &amp; b</p>
+<p style="margin-left:11%; margin-top: 1em">a &amp; b</p>
 
-<p style="margin-top: 1em">Returns True if the object value
-is False and the <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Boolean] !
+[other]</b> <br>
+Returns True if the object value is False and the <br>
 argument is False as well.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">a ! b</p>
+<p style="margin-left:11%; margin-top: 1em">a ! b</p>
 
-<p style="margin-top: 1em">Returns True if either the
-object value is True or the <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Boolean] |
+[other]</b> <br>
+Returns True if either the object value is True or the <br>
 argument is True or both are True.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">a | b</p>
+<p style="margin-left:11%; margin-top: 1em">a | b</p>
 
-<p style="margin-top: 1em">Returns True if either the
-object value is True or the <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Boolean] ?
+[other]</b> <br>
+Returns True if either the object value is True or the <br>
 argument is True but not both.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">a ? b</p>
+<p style="margin-left:11%; margin-top: 1em">a ? b</p>
 
-<p style="margin-top: 1em">Returns 0 if boolean is False
-and 1 otherwise.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Boolean]
+toNumber</b> <br>
+Returns 0 if boolean is False and 1 otherwise.</p>
 
-<p style="margin-top: 1em">Literal:</p>
+<h2>Number
+<a name="Number"></a>
+</h2>
 
-<p style="margin-top: 1em">0 <br>
+
+<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
+Number</b></p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Number</b>
+<br>
+Literal:</p>
+
+<p style="margin-left:11%; margin-top: 1em">0 <br>
 1 <br>
 -8 <br>
 2.5</p>
 
-<p style="margin-top: 1em">Represents a number object in
-Citron.</p>
+<p style="margin-left:11%; margin-top: 1em">Represents a
+number object in Citron.</p>
 
-<p style="margin-top: 1em">Returns True if the number is
-higher than other number.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+unpack: [String:Ref]</b> <br>
+Assign ref to number</p>
 
-<p style="margin-top: 1em">Returns True if the number is
-higher than or equal to other number.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+&gt; [other]</b> <br>
+Returns True if the number is higher than other number.</p>
 
-<p style="margin-top: 1em">Returns True if the number is
-less than other number.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+&gt;=: [other]</b> <br>
+Returns True if the number is higher than or equal to other
+number.</p>
 
-<p style="margin-top: 1em">Returns True if the number is
-less than or equal to other number.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+&lt; [other]</b> <br>
+Returns True if the number is less than other number.</p>
 
-<p style="margin-top: 1em">Returns True if the number
-equals the other number.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+&lt;=: [other]</b> <br>
+Returns True if the number is less than or equal to other
+number.</p>
 
-<p style="margin-top: 1em">Returns True if the number does
-not equal the other number.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number] =
+[other]</b> <br>
+Returns True if the number equals the other number.</p>
 
-<p style="margin-top: 1em">Returns True if the number
-instance has a value between the two <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number] !=:
+[other]</b> <br>
+Returns True if the number does not equal the other
+number.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+between: [low] and: [high]</b> <br>
+Returns True if the number instance has a value between the
+two <br>
 specified values.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">q between: x and: y</p>
+<p style="margin-left:11%; margin-top: 1em">q between: x
+and: y</p>
 
-<p style="margin-top: 1em">Returns True if the number is
-odd and False otherwise.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+odd</b> <br>
+Returns True if the number is odd and False otherwise.</p>
 
-<p style="margin-top: 1em">Returns True if the number is
-even and False otherwise.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+even</b> <br>
+Returns True if the number is even and False otherwise.</p>
 
-<p style="margin-top: 1em">Adds the other number to the
-current one. Returns a new <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number] +
+[Number]</b> <br>
+Adds the other number to the current one. Returns a new <br>
 number object.</p>
 
-<p style="margin-top: 1em">Increases the number ITSELF by
-the specified amount, this message will change the <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number] +=:
+[Number]</b> <br>
+Increases the number ITSELF by the specified amount, this
+message will change the <br>
 value of the number object itself instead of returning a new
 number.</p>
 
-<p style="margin-top: 1em">Subtracts the other number from
-the current one. Returns a new <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number] -
+[Number]</b> <br>
+Subtracts the other number from the current one. Returns a
+new <br>
 number object.</p>
 
-<p style="margin-top: 1em">Decreases the number ITSELF by
-the specified amount, this message will change the <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number] -=:
+[number]</b> <br>
+Decreases the number ITSELF by the specified amount, this
+message will change the <br>
 value of the number object itself instead of returning a new
 number.</p>
 
-<p style="margin-top: 1em">Multiplies the number by the
-specified multiplier. Returns a new <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number] *
+[Number or Block]</b> <br>
+Multiplies the number by the specified multiplier. Returns a
+new <br>
 number object.</p>
 
-<p style="margin-top: 1em">Runs the block of code a
-&rsquo;Number&rsquo; of times. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+times: [Block]</b> <br>
+Runs the block of code a &rsquo;Number&rsquo; of times. <br>
 This is the most basic form of a loop.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">7 times: { :i Pen write: i.
-}.</p>
+<p style="margin-left:11%; margin-top: 1em">7 times: { :i
+Pen write: i. }.</p>
 
-<p style="margin-top: 1em">The example above runs the block
-7 times. The current iteration <br>
+<p style="margin-left:11%; margin-top: 1em">The example
+above runs the block 7 times. The current iteration <br>
 number is passed to the block as a parameter (i in this
 example).</p>
 
-<p style="margin-top: 1em">Multiplies the number ITSELF by
-multiplier, this message will change the <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number] *=:
+[Number]</b> <br>
+Multiplies the number ITSELF by multiplier, this message
+will change the <br>
 value of the number object itself instead of returning a new
 number.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">x := 5. <br>
+<p style="margin-left:11%; margin-top: 1em">x := 5. <br>
 x *=: 2. #x is now 10.</p>
 
-<p style="margin-top: 1em">Use this message to apply the
-operation to the object itself instead <br>
+<p style="margin-left:11%; margin-top: 1em">Use this
+message to apply the operation to the object itself instead
+<br>
 of creating and returning a new object.</p>
 
-<p style="margin-top: 1em">Divides the number by the
-specified divider. Returns a new <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number] /
+[Number]</b> <br>
+Divides the number by the specified divider. Returns a new
+<br>
 number object.</p>
 
-<p style="margin-top: 1em">Divides the number ITSELF by
-divider, this message will change the <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number] /=:
+[Number]</b> <br>
+Divides the number ITSELF by divider, this message will
+change the <br>
 value of the number object itself instead of returning a new
 number.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">x := 10. <br>
+<p style="margin-left:11%; margin-top: 1em">x := 10. <br>
 x /=: 2. #x will now be 5.</p>
 
-<p style="margin-top: 1em">Use this message to apply the
-operation to the object itself instead <br>
+<p style="margin-left:11%; margin-top: 1em">Use this
+message to apply the operation to the object itself instead
+<br>
 of generating a new object.</p>
 
-<p style="margin-top: 1em">Returns the modulo of the
-number. This message will return a new <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+mod: [modulo]</b> <br>
+Returns the modulo of the number. This message will return a
+new <br>
 object representing the modulo of the recipient.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">x := 11 % 3. #x will now be
-2</p>
+<p style="margin-left:11%; margin-top: 1em">x := 11 mod: 3.
+#x will now be 2</p>
 
-<p style="margin-top: 1em">Use this message to apply the
-operation of division to the <br>
+<p style="margin-left:11%; margin-top: 1em">Use this
+message to apply the operation of division to the <br>
 object itself instead of generating a new one.</p>
 
-<p style="margin-top: 1em">Returns a new object
-representing the <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+toPowerOf: [power]</b> <br>
+Returns a new object representing the <br>
 number to the specified power.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">x := 2 toPowerOf: 8. #x will be
-256</p>
+<p style="margin-left:11%; margin-top: 1em">x := 2
+toPowerOf: 8. #x will be 256</p>
 
-<p style="margin-top: 1em">The example above will raise 2
-to the power of 8 resulting in <br>
+<p style="margin-left:11%; margin-top: 1em">The example
+above will raise 2 to the power of 8 resulting in <br>
 a new Number object: 256.</p>
 
-<p style="margin-top: 1em">Returns a boolean indicating
-wether the number is positive. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+pos</b> <br>
+Returns a boolean indicating wether the number is positive.
+<br>
 This message will return a boolean object &rsquo;True&rsquo;
 if the recipient is <br>
 positive and &rsquo;False&rsquo; otherwise.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">hope := 0.1. <br>
+<p style="margin-left:11%; margin-top: 1em">hope := 0.1.
+<br>
 ( hope pos ) ifTrue: { Pen write: &rsquo;Still a little hope
 for humanity&rsquo;. }.</p>
 
-<p style="margin-top: 1em">The example above will print the
-message because hope is higher than 0.</p>
+<p style="margin-left:11%; margin-top: 1em">The example
+above will print the message because hope is higher than
+0.</p>
 
-<p style="margin-top: 1em">Returns a boolean indicating
-wether the number is negative. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+neg</b> <br>
+Returns a boolean indicating wether the number is negative.
+<br>
 This message will return a boolean object &rsquo;True&rsquo;
 if the recipient is <br>
 negative and &rsquo;False&rsquo; otherwise. It&rsquo;s the
 eaxct opposite of the &rsquo;positive&rsquo; <br>
 message.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">hope := -1. <br>
+<p style="margin-left:11%; margin-top: 1em">hope := -1.
+<br>
 (hope neg) ifTrue: { Pen write: &rsquo;No hope left&rsquo;.
 }.</p>
 
-<p style="margin-top: 1em">The example above will print the
-message because the value of the variable <br>
+<p style="margin-left:11%; margin-top: 1em">The example
+above will print the message because the value of the
+variable <br>
 hope is less than 0.</p>
 
-<p style="margin-top: 1em">Returns the biggest number of
-the two.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+max: [other]</b> <br>
+Returns the biggest number of the two.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">x := 6 max: 4. #x is 6 <br>
+<p style="margin-left:11%; margin-top: 1em">x := 6 max: 4.
+#x is 6 <br>
 x := 6 max: 7. #x is 7</p>
 
-<p style="margin-top: 1em">Returns a the smallest
-number.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+min: [other]</b> <br>
+Returns a the smallest number.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">x := 6 min: 4. #x is 4 <br>
+<p style="margin-left:11%; margin-top: 1em">x := 6 min: 4.
+#x is 4 <br>
 x := 6 min: 7. #x is 7</p>
 
-<p style="margin-top: 1em">Calculates the factorial of a
-number.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+factorial</b> <br>
+Calculates the factorial of a number.</p>
 
-<p style="margin-top: 1em">Runs the specified block for
-each step it takes to go from <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number] to:
+[number] step: [step] do: [block]</b> <br>
+Runs the specified block for each step it takes to go from
+<br>
 the start value to the target value using the specified step
 size. <br>
 This is basically how you write for-loops in Citron.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">1 to: 5 step: 1 do: { :step Pen
-write: &rsquo;this is step #&rsquo;+step. }.</p>
+<p style="margin-left:11%; margin-top: 1em">1 to: 5 step: 1
+do: { :step Pen write: &rsquo;this is step #&rsquo;+step.
+}.</p>
 
-<p style="margin-top: 1em">Gives the largest integer less
-than the recipient.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number] to:
+[number] step: [step]</b></p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+floor</b> <br>
+Gives the largest integer less than the recipient.</p>
 
-<p style="margin-top: 1em">x := 4.5 <br>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
+
+<p style="margin-left:11%; margin-top: 1em">x := 4.5 <br>
 y := x floor. #y will be 4</p>
 
-<p style="margin-top: 1em">The example above applies the
-floor function to the recipient (4.5) <br>
+<p style="margin-left:11%; margin-top: 1em">The example
+above applies the floor function to the recipient (4.5) <br>
 returning a new number object (4).</p>
 
-<p style="margin-top: 1em">Rounds up the recipient number
-and returns the next higher integer number <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+ceil</b> <br>
+Rounds up the recipient number and returns the next higher
+integer number <br>
 as a result.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">x := 4.5. <br>
+<p style="margin-left:11%; margin-top: 1em">x := 4.5. <br>
 y = x ceil. #y will be 5</p>
 
-<p style="margin-top: 1em">The example above applies the
-ceiling function to the recipient (4.5) <br>
+<p style="margin-left:11%; margin-top: 1em">The example
+above applies the ceiling function to the recipient (4.5)
+<br>
 returning a new number object (5).</p>
 
-<p style="margin-top: 1em">Returns the rounded number.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+round</b> <br>
+Returns the rounded number.</p>
 
-<p style="margin-top: 1em">Returns the absolute (unsigned,
-positive) value of the number.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+abs</b> <br>
+Returns the absolute (unsigned, positive) value of the
+number.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">x := -7. <br>
+<p style="margin-left:11%; margin-top: 1em">x := -7. <br>
 y := x abs. #y will be 7</p>
 
-<p style="margin-top: 1em">The example above strips the
-sign off the value -7 resulting <br>
+<p style="margin-left:11%; margin-top: 1em">The example
+above strips the sign off the value -7 resulting <br>
 in 7.</p>
 
-<p style="margin-top: 1em">Returns the square root of the
-recipient.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+sqrt</b> <br>
+Returns the square root of the recipient.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">x := 49. <br>
+<p style="margin-left:11%; margin-top: 1em">x := 49. <br>
 y := x sqrt. #y will be 7</p>
 
-<p style="margin-top: 1em">The example above takes the
-square root of 49, resulting in the <br>
+<p style="margin-left:11%; margin-top: 1em">The example
+above takes the square root of 49, resulting in the <br>
 number 7.</p>
 
-<p style="margin-top: 1em">Returns the exponent of the
-number.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+exp</b> <br>
+Returns the exponent of the number.</p>
 
-<p style="margin-top: 1em">Returns the sine of the
-number.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+sin</b> <br>
+Returns the sine of the number.</p>
 
-<p style="margin-top: 1em">Returns the cosine of the
-number.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+cos</b> <br>
+Returns the cosine of the number.</p>
 
-<p style="margin-top: 1em">Caculates the tangent of a
-number.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+tan</b> <br>
+Caculates the tangent of a number.</p>
 
-<p style="margin-top: 1em">Caculates the arctangent of a
-number.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+atan</b> <br>
+Caculates the arctangent of a number.</p>
 
-<p style="margin-top: 1em">Calculates the logarithm of a
-number.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+log</b> <br>
+Calculates the logarithm of a number.</p>
 
-<p style="margin-top: 1em">Converts a number to a single
-byte.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+shiftRight: [Number]</b> <br>
+Only with integers</p>
 
-<p style="margin-top: 1em">Wrapper for cast function.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+shiftLeft: [Number]</b></p>
 
-<p style="margin-top: 1em">Casts a number to a boolean
-object.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+integerOr: [Number]</b></p>
 
-<p style="margin-top: 1em">Literal:</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+integerAnd: [Number]</b></p>
 
-<p style="margin-top: 1em">&rsquo;Hello World, this is a
-String.&rsquo;</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+integerXor: [Number]</b></p>
 
-<p style="margin-top: 1em">A sequence of characters. In
-Citron, strings are UTF-8 aware. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+toByte</b> <br>
+Converts a number to a single byte.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+toString</b> <br>
+Wrapper for cast function.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+toBoolean</b> <br>
+Casts a number to a boolean object.</p>
+
+<h2>String
+<a name="String"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
+String</b></p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>String</b>
+<br>
+Literal:</p>
+
+<p style="margin-left:11%; margin-top: 1em">&rsquo;Hello
+World, this is a String.&rsquo;</p>
+
+<p style="margin-left:11%; margin-top: 1em">A sequence of
+characters. In Citron, strings are UTF-8 aware. <br>
 You may only use single quotes. To escape a character use
 the <br>
-backslash &rsquo;\&rsquo; character.</p>
+backslash &rsquo;&acute; character.</p>
 
-<p style="margin-top: 1em">Returns the number of bytes in a
-string, as opposed to <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+isConstructible: [Object]</b> <br>
+returns whether object is constructible from string</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+unpack: [String:Ref]</b> <br>
+Assign ref to string</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+bytes</b> <br>
+Returns the number of bytes in a string, as opposed to <br>
 length which returns the number of UTF-8 code points
 (symbols or characters).</p>
 
-<p style="margin-top: 1em">Returns True if the other string
-is the same (in bytes).</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[String] =
+[other]</b> <br>
+Returns True if the other string is the same (in bytes).</p>
 
-<p style="margin-top: 1em">Returns True if the other string
-is not the same (in bytes).</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[String] !=
+[other]</b> <br>
+Returns True if the other string is not the same (in
+bytes).</p>
 
-<p style="margin-top: 1em">Returns the length of the string
-in symbols. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+length</b> <br>
+Returns the length of the string in symbols. <br>
 This message is UTF-8 unicode aware. A 4 byte character will
 be counted as ONE.</p>
 
-<p style="margin-top: 1em">Appends other string to self and
-returns the resulting <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[String] +
+[other]</b> <br>
+Appends other string to self and returns the resulting <br>
 string as a new object.</p>
 
-<p style="margin-top: 1em">Appends the specified string to
-itself. This is different from the &rsquo;+&rsquo; <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+append: [String].</b> <br>
+Appends the specified string to itself. This is different
+from the &rsquo;+&rsquo; <br>
 message, the &rsquo;+&rsquo; message adds the specified
 string while creating a new string. <br>
 Appends on the other hand modifies the original string.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">x := &rsquo;Hello &rsquo;. <br>
+<p style="margin-left:11%; margin-top: 1em">x :=
+&rsquo;Hello &rsquo;. <br>
 x append: &rsquo;World&rsquo;. <br>
 Pen write: x. #Hello World</p>
 
-<p style="margin-top: 1em">Instead of using the append
-message you may also use its short form, <br>
+<p style="margin-left:11%; margin-top: 1em">Instead of
+using the append message you may also use its short form,
+<br>
 like this:</p>
 
-<p style="margin-top: 1em">x +=: &rsquo;World&rsquo;.</p>
+<p style="margin-left:11%; margin-top: 1em">x +=:
+&rsquo;World&rsquo;.</p>
 
-<p style="margin-top: 1em">Returns a portion of a string
-defined by from-to values. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+multiply: [Number].</b> <br>
+Appends the specified string to itself as many times as
+[Number] <br>
+alias: *</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+formatObjects: [Array].</b> <br>
+Creates a string with the template format and the specified
+objects</p>
+
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
+
+<p style="margin-left:11%; margin-top: 1em">fmt :=
+&rsquo;Hello, %s! %d is a number!&rsquo; <br>
+str := fmt formatObjects: (Array new &lt;
+&rsquo;World&rsquo;, 23).</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+formatMap: [Map]</b> <br>
+format a format string based off a map</p>
+
+<p style="margin-left:11%; margin-top: 1em">e.g. <br>
+format := &rsquo;this &acute;%{string}&acute; contains some
+wierd %{shit}.&rsquo;. <br>
+fmtd := format formatMap: (Map new put: &rsquo;shit&rsquo;
+at: &rsquo;shit&rsquo;, put: format at:
+&rsquo;string&rsquo;). <br>
+# &rsquo;this &acute;this &acute;%{string}&acute; contains
+some wierd %{shit}.&acute; contains some weird
+shit.&rsquo;</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+from: [position] to: [destination]</b> <br>
+Returns a portion of a string defined by from-to values.
+<br>
 This message is UTF-8 unicode aware.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">&rsquo;hello&rsquo; from: 2 to:
-3. #ll</p>
 
-<p style="margin-top: 1em">Returns a portion of a string
-defined by from <br>
+<p style="margin-left:11%; margin-top: 1em">&rsquo;hello&rsquo;
+from: 2 to: 3. #ll</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+from: [start] length: [length]</b> <br>
+Returns a portion of a string defined by from <br>
 and length values. <br>
 This message is UTF-8 unicode aware.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">&rsquo;hello&rsquo; from: 2
-length: 3. #llo</p>
 
-<p style="margin-top: 1em">Returns a string without the
-first X characters.</p>
+<p style="margin-left:11%; margin-top: 1em">&rsquo;hello&rsquo;
+from: 2 length: 3. #llo</p>
 
-<p style="margin-top: 1em">Returns the character at the
-specified position (UTF8 aware). <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+skip: [number]</b> <br>
+Returns a string without the first X characters.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+sliceFrom: [number] length: [number]</b> <br>
+slice a string from,length and return the sliced. modifies
+string</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String] at:
+[position]</b> <br>
+Returns the character at the specified position (UTF8
+aware). <br>
 You may also use the alias &rsquo;@&rsquo;.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">(&rsquo;hello&rsquo; at: 2). #l
-<br>
+
+<p style="margin-left:11%; margin-top: 1em">(&rsquo;hello&rsquo;
+at: 2). #l <br>
 (&rsquo;hello&rsquo; @ 2). #l</p>
 
-<p style="margin-top: 1em">Returns the byte at the
-specified position (in bytes). <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+byteAt: [position]</b> <br>
+Returns the byte at the specified position (in bytes). <br>
 Note that you cannot use the &rsquo;@&rsquo; message here
 because that will <br>
 return the unicode point at the specified position, not the
 byte.</p>
 
-<p style="margin-top: 1em">Usage: <br>
+<p style="margin-left:11%; margin-top: 1em">Usage: <br>
 (&rsquo;abc&rsquo; byteAt: 1). #98</p>
 
-<p style="margin-top: 1em">Returns the index (character
-number, not the byte!) of the <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+indexOf: [subject]</b> <br>
+Returns the index (character number, not the byte!) of the
+<br>
 needle in the haystack.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">&rsquo;find the needle&rsquo;
-indexOf: &rsquo;needle&rsquo;. #9</p>
+<p style="margin-left:11%; margin-top: 1em">&rsquo;find the
+needle&rsquo; indexOf: &rsquo;needle&rsquo;. #9</p>
 
-<p style="margin-top: 1em">Returns a new uppercased version
-of the string. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+upper</b> <br>
+Returns a new uppercased version of the string. <br>
 Note that this is just basic ASCII case functionality, this
 should only <br>
 be used for internal keys and as a basic utility function.
 This function <br>
 DOES NOT WORK WITH UTF8 characters !</p>
 
-<p style="margin-top: 1em">Returns a new lowercased version
-of the string. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+lower</b> <br>
+Returns a new lowercased version of the string. <br>
 Note that this is just basic ASCII case functionality, this
 should only <br>
 be used for internal keys and as a basic utility function.
 This function <br>
 DOES NOT WORK WITH UTF8 characters !</p>
 
-<p style="margin-top: 1em">Converts the first character of
-the recipient to lowercase and <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+lower1st</b> <br>
+Converts the first character of the recipient to lowercase
+and <br>
 returns the resulting string object.</p>
 
-<p style="margin-top: 1em">Converts the first character of
-the recipient to uppercase and <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+upper1st</b> <br>
+Converts the first character of the recipient to uppercase
+and <br>
 returns the resulting string object.</p>
 
-<p style="margin-top: 1em">Returns the index (character
-number, not the byte!) of the <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+lastIndexOf: [subject]</b> <br>
+Returns the index (character number, not the byte!) of the
+<br>
 needle in the haystack.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">&rsquo;find the needle&rsquo;
-lastIndexOf: &rsquo;needle&rsquo;. #9</p>
+<p style="margin-left:11%; margin-top: 1em">&rsquo;find the
+needle&rsquo; lastIndexOf: &rsquo;needle&rsquo;. #9</p>
 
-<p style="margin-top: 1em">Replaces needle with replacement
-in original string and returns <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+replace: [string] with: [other]</b> <br>
+Replaces needle with replacement in original string and
+returns <br>
 the result as a new string object.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">&rsquo;LiLo BootLoader&rsquo;
-replace: &rsquo;L&rsquo; with: &rsquo;l&rsquo;. #lilo
-Bootloader</p>
+<p style="margin-left:11%; margin-top: 1em">&rsquo;LiLo
+BootLoader&rsquo; replace: &rsquo;L&rsquo; with:
+&rsquo;l&rsquo;. #lilo Bootloader</p>
 
-<p style="margin-top: 1em">Matches the POSIX regular
-expression in the first argument against <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+findPattern: [String] do: [Block] options: [String].</b>
+<br>
+Matches the POSIX or PCRE (depending on the #defines)
+regular expression in the first argument against <br>
 the string and executes the specified block on every match
 passing <br>
 an array containing the matches.</p>
 
-<p style="margin-top: 1em">The options parameter can be
-used to pass specific flags to the <br>
+<p style="margin-left:11%; margin-top: 1em">The options
+parameter can be used to pass specific flags to the <br>
 regular expression engine. As of the moment of writing this
 functionality <br>
 has not been implemented yet. The only flag you can set at
@@ -761,200 +1159,291 @@ this moment is <br>
 the &rsquo;ignore&rsquo; flag, just a test flag. This flag
 does not execute the block.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">&rsquo;hello world&rsquo;
-findPattern: &rsquo;([hl])&rsquo; do: { :arr <br>
+<p style="margin-left:11%; margin-top: 1em">&rsquo;hello
+world&rsquo; findPattern: &rsquo;([hl])&rsquo; do: { :arr
+<br>
 Pen write: (arr join: &rsquo;|&rsquo;), brk. <br>
 } options: &rsquo;&rsquo;.</p>
 
-<p style="margin-top: 1em">On every match the block gets
-executed and the matches are <br>
+<p style="margin-left:11%; margin-top: 1em">On every match
+the block gets executed and the matches are <br>
 passed to the block as arguments. You can also use this
 feature to replace <br>
 parts of the string, simply return the replacement string in
 your block.</p>
 
-<p style="margin-top: 1em">Same as findPattern:do:options:
-but without the options, no flags will <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+findPattern: [String] do: [Block].</b> <br>
+Same as findPattern:do:options: but without the options, no
+flags will <br>
 be send to the regex engine.</p>
 
-<p style="margin-top: 1em">Returns True if the other string
-is a substring.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+contains: [String]</b> <br>
+Returns True if the other string is a substring.</p>
 
-<p style="margin-top: 1em">Tests the pattern against the
-string and returns True if there is a match <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+containsPattern: [String].</b> <br>
+Tests the pattern against the string and returns True if
+there is a match <br>
 and False otherwise.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">var match := &rsquo;Hello
-World&rsquo; containsPattern: &rsquo;[:space:]&rsquo;. <br>
+<p style="margin-left:11%; margin-top: 1em">var match :=
+&rsquo;Hello World&rsquo; containsPattern:
+&rsquo;[:space:]&rsquo;. <br>
 #match will be True because there is a space in &rsquo;Hello
 World&rsquo;</p>
 
-<p style="margin-top: 1em">Trims a string. Removes
-surrounding white space characters <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+trim</b> <br>
+Trims a string. Removes surrounding white space characters
+<br>
 from string and returns the result as a new string
 object.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">&rsquo; hello &rsquo; trim.
-#hello</p>
+<p style="margin-left:11%; margin-top: 1em">&rsquo; hello
+&rsquo; trim. #hello</p>
 
-<p style="margin-top: 1em">The example above will strip all
-white space characters from the <br>
+<p style="margin-left:11%; margin-top: 1em">The example
+above will strip all white space characters from the <br>
 recipient on both sides of the text. Also see: leftTrim and
 rightTrim <br>
 for variations of this message.</p>
 
-<p style="margin-top: 1em">Removes all the whitespace at
-the left side of the string.</p>
-
-<p style="margin-top: 1em">Usage:</p>
-
-<p style="margin-top: 1em">message := &rsquo; hello world
-&rsquo;. <br>
-message leftTrim.</p>
-
-<p style="margin-top: 1em">The example above will remove
-all the whitespace at the left of the <br>
-string but leave the spaces at the right side intact.</p>
-
-<p style="margin-top: 1em">Removes all the whitespace at
-the right side of the string.</p>
-
-<p style="margin-top: 1em">Usage:</p>
-
-<p style="margin-top: 1em">message := &rsquo; hello world
-&rsquo;. <br>
-message rightTrim.</p>
-
-<p style="margin-top: 1em">The example above will remove
-all the whitespace at the right of the <br>
-string but leave the spaces at the left side intact.</p>
-
-<p style="margin-top: 1em">Converts string to a number.</p>
-
-<p style="margin-top: 1em">Converts string to boolean</p>
-
-<p style="margin-top: 1em">Converts a string to an array by
-splitting the string using <br>
-the specified delimiter (also a string).</p>
-
-<p style="margin-top: 1em">Splits the string in UTF-8
-characters and returns <br>
-those as an array.</p>
-
-<p style="margin-top: 1em">Usage:</p>
-
-<p style="margin-top: 1em">a := &rsquo;abc&rsquo;
-characters. <br>
-a count. #3</p>
-
-<p style="margin-top: 1em">Returns an array of bytes
-representing the string.</p>
-
-<p style="margin-top: 1em">Appends a raw byte to a
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+leftTrim</b> <br>
+Removes all the whitespace at the left side of the
 string.</p>
 
-<p style="margin-top: 1em">Escapes HTML chars.</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">Returns the hash of the
-recipient String using the specified key. <br>
+<p style="margin-left:11%; margin-top: 1em">message :=
+&rsquo; hello world &rsquo;. <br>
+message leftTrim.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The example
+above will remove all the whitespace at the left of the <br>
+string but leave the spaces at the right side intact.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+rightTrim</b> <br>
+Removes all the whitespace at the right side of the
+string.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
+
+<p style="margin-left:11%; margin-top: 1em">message :=
+&rsquo; hello world &rsquo;. <br>
+message rightTrim.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The example
+above will remove all the whitespace at the right of the
+<br>
+string but leave the spaces at the left side intact.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+toNumber</b> <br>
+Converts string to a number.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+toBoolean</b> <br>
+Converts string to boolean</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+split: [String]</b> <br>
+Converts a string to an array by splitting the string using
+<br>
+the specified delimiter (also a string).</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+characters.</b> <br>
+Splits the string in UTF-8 characters and returns <br>
+those as an array.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
+
+<p style="margin-left:11%; margin-top: 1em">a :=
+&rsquo;abc&rsquo; characters. <br>
+a count. #3</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+toByteArray</b> <br>
+Returns an array of bytes representing the string.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+appendByte: [Number].</b> <br>
+Appends a raw byte to a string.</p>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String(length=1)]
+charSub: [Number | String(length=1)]</b> <br>
+works on the underlaying character.</p>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String(length=1)]
+charAdd: [Number | String(length=1)]</b> <br>
+works on the underlaying character.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+htmlEscape</b> <br>
+Escapes HTML chars.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+hashWithKey: [String]</b> <br>
+Returns the hash of the recipient String using the specified
+key. <br>
 The default hash in Citron is the SipHash which is also used
 internally. <br>
 SipHash can protect against hash flooding attacks.</p>
 
-<p style="margin-top: 1em">Evaluates the contents of the
-string as code. <br>
-In contrast to other languages, an eval statement can only
-<br>
-execute a very limited set of messages. Typically only Array
-and <br>
-Map building can be performed using eval. Using eval in
-Citron can <br>
-therefore be considered &rsquo;safe&rsquo;.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+eval</b> <br>
+Evaluates the contents of the string as code.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">a := &rsquo;Array &lt; 1 ; 2 ;
-3&rsquo; eval. <br>
+<p style="margin-left:11%; margin-top: 1em">a :=
+&rsquo;Array &lt; 1 ; 2 ; 3&rsquo; eval. <br>
 x := a @ 2. #3</p>
 
-<p style="margin-top: 1em">Escapes all single quotes in a
-string. Sending this message to a <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+escapeQuotes.</b> <br>
+Escapes all single quotes in a string. Sending this message
+to a <br>
 string will cause all single quotes (&rsquo;) to be replaced
-with (\&rsquo;).</p>
+with (&acute;).</p>
 
-<p style="margin-top: 1em">Returns a randomized string with
-the specified length using the pool of <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+randomizeBytesWithLength: [Number].</b> <br>
+Returns a randomized string with the specified length using
+the pool of <br>
 bytes contained in the String object.</p>
 
-<p style="margin-top: 1em">Literal:</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+reverse</b> <br>
+reverse the string</p>
 
-<p style="margin-top: 1em">{ parameters (if any) here...
-code here... }</p>
+<h2>Tuple
+<a name="Tuple"></a>
+</h2>
 
-<p style="margin-top: 1em">each parameter has to be
-prefixed with <br>
+
+<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
+Tuple</b></p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Tuple</b>
+<br>
+Literal:</p>
+
+<p style="margin-left:11%; margin-top: 1em">[ item , item ,
+... ] or []</p>
+
+<p style="margin-left:11%; margin-top: 1em">Examples:</p>
+
+<p style="margin-left:11%; margin-top: 1em">[ 1 , 2 , 3 ]
+<br>
+[]</p>
+
+<h2>CodeBlock
+<a name="CodeBlock"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
+CodeBlock</b></p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Block</b>
+<br>
+Literal:</p>
+
+<p style="margin-left:11%; margin-top: 1em">{ parameters
+(if any) here... code here... }</p>
+
+<p style="margin-left:11%; margin-top: 1em">each parameter
+has to be prefixed with <br>
 a colon (:).</p>
 
-<p style="margin-top: 1em">Examples:</p>
+<p style="margin-left:11%; margin-top: 1em">Examples:</p>
 
-<p style="margin-top: 1em">{ Pen write: &rsquo;a simple
-code block&rsquo;. } run. <br>
+<p style="margin-left:11%; margin-top: 1em">{ Pen write:
+&rsquo;a simple code block&rsquo;. } run. <br>
 { :param Pen write: param. } applyTo: &rsquo;write
 this!&rsquo;. <br>
 { :a :b ^ a + b. } applyTo: 1 and: 2. <br>
 { :a :b :c ^ a + b + c. } applyTo: 1 and: 2 and: 3.</p>
 
-<p style="margin-top: 1em">Runs a block of code using the
-specified object as a parameter. <br>
+<p style="margin-left:11%; margin-top: 1em">to enable
+context auto-capture, <br>
+qualify captures with the &rsquo;const&rsquo; modifier</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Block]
+unpack: [String:Ref]</b> <br>
+Assign ref to block</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Block]
+applyTo: [object]</b> <br>
+Runs a block of code using the specified object as a
+parameter. <br>
 If you run a block using the messages &rsquo;run&rsquo; or
 &rsquo;applyTo:&rsquo;, me/my will <br>
 refer to the block itself instead of the containing
 object.</p>
 
-<p style="margin-top: 1em">Runs a block of code, depending
-on the outcome runs the other block <br>
+<p style="margin-left:11%; margin-top: 1em">the passed
+&rsquo;my&rsquo; will be respected first, <br>
+and if lookup fails, it will be swapped for the block
+itself</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Block]
+whileTrue: [block]</b> <br>
+Runs a block of code, depending on the outcome runs the
+other block <br>
 as long as the result of the first one equals boolean
 True.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">x := 0. <br>
+<p style="margin-left:11%; margin-top: 1em">x := 0. <br>
 { ^(x &lt; 6). } whileFalse: <br>
 { x add: 1. }. #increment x until it reaches 6.</p>
 
-<p style="margin-top: 1em">Here we increment variable x by
-one until it reaches 6. <br>
+<p style="margin-left:11%; margin-top: 1em">Here we
+increment variable x by one until it reaches 6. <br>
 While the number x is lower than 6 we keep incrementing it.
 <br>
 Don&rsquo;t forget to use the return ^ symbol in the first
 block.</p>
 
-<p style="margin-top: 1em">Runs a block of code, depending
-on the outcome runs the other block <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Block]
+whileFalse: [block]</b> <br>
+Runs a block of code, depending on the outcome runs the
+other block <br>
 as long as the result of the first one equals to False.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">x := 0. <br>
+<p style="margin-left:11%; margin-top: 1em">x := 0. <br>
 { ^(x &gt; 5). } <br>
 whileFalse: { x add: 1. }. #increment x until it reaches
 6.</p>
 
-<p style="margin-top: 1em">Here we increment variable x by
-one until it reaches 6. <br>
+<p style="margin-left:11%; margin-top: 1em">Here we
+increment variable x by one until it reaches 6. <br>
 While the number x is not higher than 5 we keep incrementing
 it. <br>
 Don&rsquo;t forget to use the return ^ symbol in the first
 block.</p>
 
-<p style="margin-top: 1em">Sending the unary message
-&rsquo;run&rsquo; to a block will cause it to execute. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Block]
+run</b> <br>
+Sending the unary message &rsquo;run&rsquo; to a block will
+cause it to execute. <br>
 The run message takes no arguments, if you want to use the
 block as a function <br>
 and send arguments, consider using the applyTo-family of
@@ -962,29 +1451,32 @@ messages instead. <br>
 This message just simply runs the block of code without any
 arguments.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">{ Pen write: &rsquo;Hello
-World&rsquo;. } run. #prints &rsquo;Hello World&rsquo;</p>
+<p style="margin-left:11%; margin-top: 1em">{ Pen write:
+&rsquo;Hello World&rsquo;. } run. #prints &rsquo;Hello
+World&rsquo;</p>
 
-<p style="margin-top: 1em">The example above will run the
-code inside the block and display <br>
+<p style="margin-left:11%; margin-top: 1em">The example
+above will run the code inside the block and display <br>
 the greeting.</p>
 
-<p style="margin-top: 1em">Sets a variable in a block of
-code. This how you can get closure-like <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Block] set:
+[name] value: [object]</b> <br>
+Sets a variable in a block of code. This how you can get
+closure-like <br>
 functionality.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">shout := { Pen write: (my
-message + &rsquo;!!!&rsquo;). }. <br>
+<p style="margin-left:11%; margin-top: 1em">shout := { Pen
+write: (my message + &rsquo;!!!&rsquo;). }. <br>
 shout set: &rsquo;message&rsquo; value: &rsquo;hello&rsquo;.
 <br>
 shout run.</p>
 
-<p style="margin-top: 1em">Here we assign a block to a
-variable named &rsquo;shout&rsquo;. <br>
+<p style="margin-left:11%; margin-top: 1em">Here we assign
+a block to a variable named &rsquo;shout&rsquo;. <br>
 We assign the string &rsquo;hello&rsquo; to the variable
 &rsquo;message&rsquo; inside the block. <br>
 When we invoke the block &rsquo;shout&rsquo; by sending the
@@ -992,131 +1484,183 @@ run message without any <br>
 arguments it will display the string:
 &rsquo;hello!!!&rsquo;.</p>
 
-<p style="margin-top: 1em">Similarly, you could use this
-technique to create a block that returns a <br>
+<p style="margin-left:11%; margin-top: 1em">Similarly, you
+could use this technique to create a block that returns a
+<br>
 block that applies a formula (for instance simple
 multiplication) and then set the <br>
 multiplier to use in the formula. This way, you could create
 a block <br>
 building &rsquo;formula blocks&rsquo;. This is how you
-implement use closures <br>
+implement &amp; use closures <br>
 in Citron.</p>
 
-<p style="margin-top: 1em">Sets error flag on a block of
-code. <br>
+<p style="margin-left:11%; margin-top: 1em">There is no
+need to capture values with this message if you don&rsquo;t
+require the <br>
+name of the variable to be anything specific. <br>
+In such circumstances, you may use the automatic capture
+qualifier &lsquo;const&lsquo; <br>
+to capture the value directly where it is needed.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Block]
+error: [object].</b> <br>
+Sets error flag on a block of code. <br>
 This will throw an error / exception. <br>
 You can attach an object to the error, for instance <br>
 an error message.</p>
 
-<p style="margin-top: 1em">Example:</p>
+<p style="margin-left:11%; margin-top: 1em">Example:</p>
 
-<p style="margin-top: 1em">{ <br>
+<p style="margin-left:11%; margin-top: 1em">{ <br>
 thisBlock error: &rsquo;oops!&rsquo;. <br>
 } catch: { :errorMessage <br>
 Pen write: errorMessage. <br>
 }, run.</p>
 
-<p style="margin-top: 1em">Associates an error clause to a
-block. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Block]
+catch: [otherBlock]</b> <br>
+Associates an error clause to a block. <br>
 If an error (exception) occurs within the block this block
 will be <br>
 executed.</p>
 
-<p style="margin-top: 1em">Example:</p>
+<p style="margin-left:11%; margin-top: 1em">Example:</p>
 
-<p style="margin-top: 1em">#Raise error on division by
-zero. <br>
+<p style="margin-left:11%; margin-top: 1em">#Raise error on
+division by zero. <br>
 { <br>
 var z := 4 / 0. <br>
 } catch: { :errorMessage <br>
 Pen write: e, brk. <br>
 }, run.</p>
 
-<p style="margin-top: 1em">Returns a string representation
-of the Block. This basic behavior, part <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Block]
+toString</b> <br>
+Returns a string representation of the Block. This basic
+behavior, part <br>
 of any object will just return [Block]. Other objects
 typically override this <br>
 behavior with more useful implementations.</p>
 
-<p style="margin-top: 1em">Creates a new Array.</p>
+<h2>Array
+<a name="Array"></a>
+</h2>
 
-<p style="margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">a := Array new.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
+Array</b></p>
 
-<p style="margin-top: 1em">or, the short form:</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+new</b> <br>
+Creates a new Array.</p>
 
-<p style="margin-top: 1em">a := Array &acirc; 1 ; 2 ;
-3.</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">or (if you prefer ASCII only
-symbols):</p>
+<p style="margin-left:11%; margin-top: 1em">a := Array
+new.</p>
 
-<p style="margin-top: 1em">a := Array &lt; 1 ; 2 ; 3.</p>
+<p style="margin-left:11%; margin-top: 1em">or, the short
+form:</p>
 
-<p style="margin-top: 1em">Returns the string
-&rsquo;Array&rsquo;.</p>
+<p style="margin-left:11%; margin-top: 1em">a := Array
+&acirc; 1 ; 2 ; 3.</p>
 
-<p style="margin-top: 1em">Pushes an element on top of the
-array.</p>
+<p style="margin-left:11%; margin-top: 1em">or (if you
+prefer ASCII only symbols):</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">a := Array &lt;
+1 ; 2 ; 3.</p>
 
-<p style="margin-top: 1em">numbers := Array new. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+copy</b> <br>
+shallow copy of the array</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+type</b> <br>
+Returns the string &rsquo;Array&rsquo;.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+push: [Element]</b> <br>
+Pushes an element on top of the array.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
+
+<p style="margin-left:11%; margin-top: 1em">numbers :=
+Array new. <br>
 numbers push: 3.</p>
 
-<p style="margin-top: 1em">Returns the minimum value from
-an array.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+min</b> <br>
+Returns the minimum value from an array.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">a := Array &acirc; 8 ; 4 ; 2 ;
-16. <br>
+<p style="margin-left:11%; margin-top: 1em">a := Array
+&acirc; 8 ; 4 ; 2 ; 16. <br>
 m := a min. #2</p>
 
-<p style="margin-top: 1em">Returns the maximum value from
-an array.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+max</b> <br>
+Returns the maximum value from an array.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">a := Array &acirc; 8 ; 4 ; 2 ;
-16. <br>
+<p style="margin-left:11%; margin-top: 1em">a := Array
+&acirc; 8 ; 4 ; 2 ; 16. <br>
 m := a max. #16</p>
 
-<p style="margin-top: 1em">Takes the sum of an array. This
-message will calculate the <br>
-sum of the numerical elements in the array.</p>
-
-<p style="margin-top: 1em">Usage:</p>
-
-<p style="margin-top: 1em">a := Array &acirc; 1 ; 2 ; 3.
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+sum</b> <br>
+Takes the sum of an array. This message will calculate the
 <br>
+sum of the elements in the array.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
+
+<p style="margin-left:11%; margin-top: 1em">a := Array
+&acirc; 1 ; 2 ; 3. <br>
 s := a sum. #6</p>
 
-<p style="margin-top: 1em">In the example above, the sum of
-array will be stored in s and <br>
+<p style="margin-left:11%; margin-top: 1em">In the example
+above, the sum of array will be stored in s and <br>
 it&rsquo;s value will be 6.</p>
 
-<p style="margin-top: 1em">Takes the product of an array.
-On receiving this message, the <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+product</b> <br>
+Takes the product of an array. On receiving this message,
+the <br>
 Array recipient object will calculate the product of its
 <br>
 numerical elements.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">a := Array &acirc; 2 ; 4 ; 8.
-<br>
+<p style="margin-left:11%; margin-top: 1em">a := Array
+&acirc; 2 ; 4 ; 8. <br>
 p := a product. #64</p>
 
-<p style="margin-top: 1em">In the example above, the
-product of the array will be calculated <br>
+<p style="margin-left:11%; margin-top: 1em">In the example
+above, the product of the array will be calculated <br>
 because the array receives the message
 &rsquo;product&rsquo;. The product of the elements <br>
 ( 2 * 4 * 8 = 64 ) will be stored in p.</p>
 
-<p style="margin-top: 1em">Iterates over the array. Passing
-each element as a key-value pair to the <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Array] *
+[o:Number | Array]</b> <br>
+Repeats the array o times if o is a number, and generates an
+array multiplication <br>
+for myself and o if o is an array</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+intersperse: [o: Object]</b> <br>
+places an &rsquo;o&rsquo; between all array elements <br>
+returns an array</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array] map:
+[Block].</b> <br>
+Iterates over the array. Passing each element as a key-value
+pair to the <br>
 specified block. <br>
 The map message will pass the following arguments to the
 block, the key, <br>
@@ -1125,241 +1669,603 @@ argument might seem <br>
 redundant but allows for a more functional programming
 style.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">files map: showName. <br>
+<p style="margin-left:11%; margin-top: 1em">files map:
+showName. <br>
 files map: { <br>
 :key :filename :files <br>
 Pen write: filename, brk. <br>
 }.</p>
 
-<p style="margin-top: 1em">Alias for [Array] map:
-[Block].</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+each: [Block].</b> <br>
+Alias for [Array] map: [Block].</p>
 
-<p style="margin-top: 1em">Creates a new instance of an
-array and initializes this <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+map_v: [Block].</b> <br>
+Iterates over the array. Passing each element as a value to
+the <br>
+specified block. <br>
+The map message will pass only the value.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
+
+<p style="margin-left:11%; margin-top: 1em">files map_v:
+showName. <br>
+files map_v: { <br>
+:filename <br>
+Pen write: filename, brk. <br>
+}.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>* [Array]
+each_v: [Block].</b> <br>
+* * Alias for [Array] map_v: [Block].</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+from: [Number] lengthMax: [Number]</b> <br>
+makes n-tuple-wise iterations <br>
+If &lsquo;fill&lsquo; is specified, that will be used to
+fill when we are elements short <br>
+Else Nil will be passed</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+every: [Number] do: [Block] fill: [Object].</b> <br>
+[Array] every: [Number] do: [Block].</p>
+
+<p style="margin-left:11%; margin-top: 1em">makes
+n-tuple-wise iterations <br>
+If &lsquo;fill&lsquo; is specified, that will be used to
+fill when we are elements short <br>
+Else Nil will be passed</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+chunks: [Number]</b> <br>
+[Array] chunks: [Number] fill: [Object] <br>
+makes a bunch of n-tuples <br>
+If &lsquo;fill&lsquo; is specified, that will be used to
+fill when we are elements short <br>
+Else Nil will be passed</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+&acirc; [Element1] ; [Element2] ; ...</b> <br>
+Creates a new instance of an array and initializes this <br>
 array with a first element, useful for literal-like Array
 <br>
 notations.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">a := Array &acirc; 1 ; 2 ;
-3.</p>
+<p style="margin-left:11%; margin-top: 1em">a := Array
+&acirc; 1 ; 2 ; 3.</p>
 
-<p style="margin-top: 1em">or if you like ASCII-only:</p>
+<p style="margin-left:11%; margin-top: 1em">or if
+ASCII-only is preferred:</p>
 
-<p style="margin-top: 1em">a := Array &lt; 1 ; 2 ; 3.</p>
+<p style="margin-left:11%; margin-top: 1em">a := Array &lt;
+1 ; 2 ; 3.</p>
 
-<p style="margin-top: 1em">Note that the ; symbol here is
-an alias for &rsquo;push:&rsquo;.</p>
+<p style="margin-left:11%; margin-top: 1em">Note that the ;
+symbol here is an alias for &rsquo;push:&rsquo;.</p>
 
-<p style="margin-top: 1em">Unshift operation for array.
-<br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+unshift: [Element].</b> <br>
+Unshift operation for array. <br>
 Adds the specified element to the beginning of the
 array.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">a := Array new. <br>
+<p style="margin-left:11%; margin-top: 1em">a := Array new.
+<br>
 a push: 1. <br>
 a unshift: 3. #now contains: 3,1</p>
 
-<p style="margin-top: 1em">Joins the elements of an array
-together in a string <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+reverse</b></p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+join: [Glue].</b> <br>
+Joins the elements of an array together in a string <br>
 separated by a specified glue string.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">collection := Array new. <br>
+<p style="margin-left:11%; margin-top: 1em">collection :=
+Array new. <br>
 collection push: 1, push: 2, push 3. <br>
 collection join: &rsquo;,&rsquo;. # results in string:
 &rsquo;1,2,3&rsquo;</p>
 
-<p style="margin-top: 1em">Returns the element in the array
-at the specified index. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Array] at:
+[Index]</b> <br>
+Returns the element in the array at the specified index.
+<br>
 Note that the fisrt index of the array is index 0.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">fruits := Array &acirc;
-&rsquo;apples&rsquo; ; &rsquo;oranges&rsquo; ;
+<p style="margin-left:11%; margin-top: 1em">fruits := Array
+&acirc; &rsquo;apples&rsquo; ; &rsquo;oranges&rsquo; ;
 &rsquo;bananas&rsquo;. <br>
 fruits at: 1. #returns &rsquo;oranges&rsquo;</p>
 
-<p style="margin-top: 1em">Alias for [Array] at:
-[Index]</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+indexOf: [Object]</b> <br>
+Returns the index of the first occurence of object <br>
+-1 if not found</p>
 
-<p style="margin-top: 1em">Puts a value in the array at the
-specified index. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+contains: [Object]</b> <br>
+Returns whether the array contains the object or not</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array] @
+[Index]</b> <br>
+Alias for [Array] at: [Index]</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array] put:
+[Element] at: [Index]</b> <br>
+Puts a value in the array at the specified index. <br>
 Array will be automatically expanded if the index is higher
 than <br>
-the maximum index of the array.</p>
+the maximum index of the array, unless the array is
+immutable</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">fruits := Array new. <br>
+<p style="margin-left:11%; margin-top: 1em">fruits := Array
+new. <br>
 fruits put: &rsquo;apples&rsquo; at: 5.</p>
 
-<p style="margin-top: 1em">Pops off the last element of the
-array.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+pop</b> <br>
+Pops off the last element of the array.</p>
 
-<p style="margin-top: 1em">Shifts off the first element of
-the array.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+shift</b> <br>
+Shifts off the first element of the array.</p>
 
-<p style="margin-top: 1em">Returns the number of elements
-in the array.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+count</b> <br>
+Returns the number of elements in the array.</p>
 
-<p style="margin-top: 1em">Copies part of an array
-indicated by from and to and <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+from: [Begin] length: [End]</b> <br>
+Copies part of an array indicated by from and to and <br>
 returns a new array consisting of a copy of this region.</p>
 
-<p style="margin-top: 1em">Returns a new array, containing
-elements of itself and the other <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+skip: [n:Number]</b> <br>
+Skips the first n elements of the array</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>* [Array]
+zip</b> <br>
+* * zip array. * Works on the inner elements of the array. *
+If the element is an array, it is expanded exactly once. *
+And if the element is not an array, it is used as-is *</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+zipWith: [Block]</b> <br>
+zip array according to the return of the block <br>
+Works on the inner elements of the array. <br>
+If the element is an array, it is expanded exactly once.
+<br>
+And if the element is not an array, it is used as-is</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+head</b> <br>
+see also (tail, init, last)</p>
+
+<p style="margin-left:11%; margin-top: 1em">returns the
+first element of the array <br>
+Does generate exceptions when array is empty</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+tail</b> <br>
+see also (head, init, last)</p>
+
+<p style="margin-left:11%; margin-top: 1em">returns all of
+the array sans the first element <br>
+Does not generate exceptions when array is empty</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+init</b> <br>
+see also (head, tail, last)</p>
+
+<p style="margin-left:11%; margin-top: 1em">returns all of
+the array sans the last element <br>
+Does not generate exceptions when array is empty</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+last</b> <br>
+see also (head, tail, init)</p>
+
+<p style="margin-left:11%; margin-top: 1em">returns all of
+the array sans the last element <br>
+Does generate exceptions when array is empty</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array] +
+[Array]</b> <br>
+Returns a new array, containing elements of itself and the
+other <br>
 array.</p>
 
-<p style="margin-top: 1em">Sorts the contents of an array
-using a sort block. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>Array fmap:
+[Block]</b> <br>
+Maps a function over the block. this function should accept
+a single value.</p>
+
+<p style="margin-left:11%; margin-top: 1em">[1,2,3,4] fmap:
+{:v ^v + 1.}. #=&gt; Array new &lt; 2 ; 3 ; 4 ; 5</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Array imap:
+[Block]</b> <br>
+Maps a function over the block. this function should accept
+an index and a value.</p>
+
+<p style="margin-left:11%; margin-top: 1em">[1,2,3,4] imap:
+{:i:v ^v + i.}. #=&gt; Array new &lt; 1 ; 3 ; 5 ; 7</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Array foldl:
+[Block] accumulator: [Object]</b> <br>
+reduces an array according to a block (which takes an
+accumulator and the value, and returns the next acc) from
+the left (index 0)</p>
+
+<p style="margin-left:11%; margin-top: 1em">([1,2,3,4])
+foldl: {:acc:v ^acc + v.} accumulator: 0. #=&gt; Equivalent
+to ([1,2,3,4]) sum.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+filter: [Block&lt;i,v&gt;]</b> <br>
+Include the element iff block returns True for the
+element</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>* [Array]
+unpack: [Array:{Ref:string}]</b> <br>
+* Element-wise assign</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+sort: [Block]</b> <br>
+Sorts the contents of an array using a sort block. <br>
 Uses qsort.</p>
 
-<p style="margin-top: 1em">Returns a string representation
-of the array and its contents. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+toString</b> <br>
+Returns a string representation of the array and its
+contents. <br>
 This representation will be encoded in the Citron language
 itself and is <br>
 therefore evallable.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">a := Array &acirc;
-&rsquo;hello&rsquo; ; &rsquo;world&rsquo;. <br>
+<p style="margin-left:11%; margin-top: 1em">a := Array
+&acirc; &rsquo;hello&rsquo; ; &rsquo;world&rsquo;. <br>
 b := a toString. <br>
 c := b eval. <br>
 x := c @ 1. #world</p>
 
-<p style="margin-top: 1em">toString messages are implicitly
-send by some objects, for instance when <br>
+<p style="margin-left:11%; margin-top: 1em">toString
+messages are implicitly send by some objects, for instance
+when <br>
 attempting to write an Array using a Pen.</p>
 
-<p style="margin-top: 1em">You can also use the alias
-&rsquo;serialize&rsquo;.</p>
+<p style="margin-left:11%; margin-top: 1em">You can also
+use the alias &rsquo;serialize&rsquo;.</p>
 
-<p style="margin-top: 1em">Alias for [Array] toString.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+serialize</b> <br>
+Alias for [Array] toString.</p>
 
-<p style="margin-top: 1em">See &rsquo;Map serialize&rsquo;
-for the reason for this alias.</p>
+<p style="margin-left:11%; margin-top: 1em">See &rsquo;Map
+serialize&rsquo; for the reason for this alias.</p>
 
-<p style="margin-top: 1em">Creates a Map object.</p>
+<h2>Map
+<a name="Map"></a>
+</h2>
 
-<p style="margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">files := Map new. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
+Map</b></p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Map</b> <br>
+Creates a Map object.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
+
+<p style="margin-left:11%; margin-top: 1em">files := Map
+new. <br>
 files put: &rsquo;readme.txt&rsquo; at:
 &rsquo;textfile&rsquo;.</p>
 
-<p style="margin-top: 1em">Returns the string
-&rsquo;Map&rsquo;.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Map]
+type</b> <br>
+Returns the string &rsquo;Map&rsquo;.</p>
 
-<p style="margin-top: 1em">Puts a key-value pair in a
-map.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Map] put:
+[Element] at: [Key]</b> <br>
+Puts a key-value pair in a map.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">map put: &rsquo;hello&rsquo; at:
+<p style="margin-left:11%; margin-top: 1em">map put:
+&rsquo;hello&rsquo; at: &rsquo;world&rsquo;.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Map]
+deleteAt: [key]</b> <br>
+deletes an entry (Noop if not in the map)</p>
+
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
+
+<p style="margin-left:11%; margin-top: 1em">map deleteAt:
 &rsquo;world&rsquo;.</p>
 
-<p style="margin-top: 1em">Retrieves the value specified by
-the key from the map.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Map] at:
+[Key]</b> <br>
+Retrieves the value specified by the key from the map.</p>
 
-<p style="margin-top: 1em">Alias for [Map] at: [Key].</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Map] @
+[Key]</b> <br>
+Alias for [Map] at: [Key].</p>
 
-<p style="margin-top: 1em">Returns the number of elements
-in the map.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Map]
+count</b> <br>
+Returns the number of elements in the map.</p>
 
-<p style="margin-top: 1em">Iterates over the map, passing
-key-value pairs to the specified block. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Map] each:
+[Block]</b> <br>
+Iterates over the map, passing key-value pairs to the
+specified block. <br>
 Note that within an each/map block, &rsquo;me&rsquo; and
 &rsquo;my&rsquo; refer to the collection.</p>
 
-<p style="margin-top: 1em">Returns a string representation
-of a map encoded in Citron itself. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Map] fmap:
+[Block&lt;value&gt;]</b> <br>
+Iterates over the map, passing the value to the function,
+and replacing it with the result <br>
+(Or itself if a value is not returned)</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Map] kvmap:
+[Block]</b> <br>
+Iterates over the map, passing a tuple of [key, value] to
+the specified block. <br>
+And constructs a new Map based off the returned kv-tuple
+<br>
+Note that within an each/map block, &rsquo;me&rsquo; and
+&rsquo;my&rsquo; refer to the collection.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Map]
+kvlist: [Block]</b> <br>
+Iterates over the map, passing a tuple of [key, value] to
+the specified block. <br>
+And constructs a new list based off the returned kv-tuple
+<br>
+Note that within an each/map block, &rsquo;me&rsquo; and
+&rsquo;my&rsquo; refer to the collection.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Map]
+flip</b> <br>
+flips the keys and the values of the map. (same-value keys
+will be overwritten)</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Map]
+toString</b> <br>
+Returns a string representation of a map encoded in Citron
+itself. <br>
 This will give you an <br>
 evallable representation of the map and all of its
 members.</p>
 
-<p style="margin-top: 1em">Usage</p>
+<p style="margin-left:11%; margin-top: 1em">Usage</p>
 
-<p style="margin-top: 1em">m := (Map new) put:
-&rsquo;hello&rsquo; at: &rsquo;world&rsquo;. <br>
+<p style="margin-left:11%; margin-top: 1em">m := (Map new)
+put: &rsquo;hello&rsquo; at: &rsquo;world&rsquo;. <br>
 x := m toString <br>
 m := x eval.</p>
 
-<p style="margin-top: 1em">The toString method is
-automatically invoked when attempting to <br>
+<p style="margin-left:11%; margin-top: 1em">The toString
+method is automatically invoked when attempting to <br>
 print a Map:</p>
 
-<p style="margin-top: 1em">Pen write: (Map new). #prints
-Map new.</p>
+<p style="margin-left:11%; margin-top: 1em">Pen write: (Map
+new). #prints Map new.</p>
 
-<p style="margin-top: 1em">You can also use the alias
-&rsquo;serialize&rsquo;.</p>
+<p style="margin-left:11%; margin-top: 1em">You can also
+use the alias &rsquo;serialize&rsquo;.</p>
 
-<p style="margin-top: 1em">Alias for [Map] toString. <br>
-A toString message, sometimes implicitly send by other
-messages like <br>
+<p style="margin-left:11%; margin-top: 1em"><b>* [Map]
+serialize</b> <br>
+* * Alias for [Map] toString. * A toString message,
+sometimes implicitly send by other messages like *
 &rsquo;Pen write:&rsquo; will give you a serialized version
-of the Map or Array. <br>
-This is far more useful than a &rsquo;dumb&rsquo; textual
-description of the object like <br>
+of the Map or Array. * This is far more useful than a
+&rsquo;dumb&rsquo; textual description of the object like *
 &rsquo;array&rsquo; or &rsquo;object&rsquo;. However, when
-working with very large Maps or Arrays <br>
-accidentally dumping the entire contents can be annoying, in
-this case you can <br>
-override the toString behaviour but you don&rsquo;t have to
-remap the original, you <br>
-can just use this alias. Also, this alias can be used if you
-want to make <br>
-the serialization more explicit.</p>
+working with very large Maps or Arrays * accidentally
+dumping the entire contents can be annoying, in this case
+you can * override the toString behaviour but you
+don&rsquo;t have to remap the original, you * can just use
+this alias. Also, this alias can be used if you want to make
+* the serialization more explicit.</p>
 
-<p style="margin-top: 1em">Represents a File object. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Map]
+unpack: [Map:{Ref:string}]</b> <br>
+Key-wise assign</p>
+
+<h2>Iterator
+<a name="Iterator"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
+Iterator</b></p>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>Iterator</b>
+<br>
+Iterator (range), an object that supports next and current,
+<br>
+and steps through some values before (optionally) reaching
+an end</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
+setFunc: [f:Block]</b> <br>
+sets the iterator step function.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
+rangeFrom: [f:Number] to: [t:Number] step: [s:Number]</b>
+<br>
+makes a range iterator in range [f,t] with steps of s</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
+rangeFrom: [f:(supports +)] step: [s:(supports +)]</b> <br>
+makes a range iterator in range [f,inf) with steps of s <br>
+works on all objects that support the message
+&rsquo;+&rsquo;</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
+next</b> <br>
+gives the next value or breaks (to signal the end of the
+iterator)</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
+each: [Block&lt;nil,value,iterator&gt;]</b> <br>
+Runs the block for each value in the iterator while stepping
+through it <br>
+Sends Nil for the index.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
+each_v: [Block&lt;value&gt;]</b> <br>
+Runs the block for each value in the iterator while stepping
+through it</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
+fmap: [b:Block&lt;value&gt;]</b> <br>
+Equivalent to [Array] fmap: [Block&lt;value&gt;]</p>
+
+<p style="margin-left:11%; margin-top: 1em">transforms the
+iterator with the block to another iterator This function
+does not evaluate anything from the iterator</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
+filter: [b:Block&lt;nil,value&gt;]</b> <br>
+XXX XXX XXX :: Unimplemented <br>
+Equivalent to [Array] filter: [Block&lt;index,value&gt;]</p>
+
+<p style="margin-left:11%; margin-top: 1em">filters the
+iterator with the block&rsquo;s return value as the
+predicate to an array <br>
+this function does not evaluate anything from the
+iterator.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
+foldl: [Block] accumulator: [Object]</b> <br>
+reduces an iterator according to a block (which takes an
+accumulator and the value, and returns the next acc) from
+the left (index 0)</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
+count</b> <br>
+Steps through the iterator until it ends and returns the
+count. <br>
+resets the state of the iterator</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
+take: [t:Number]</b> <br>
+takes at most &lt;t&gt; number of elements from the
+Iterator</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
+takeWhile: [predicate:Block]</b> <br>
+takes values as long as predicate returns true.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
+endBlock</b> <br>
+returns a block that throws an IteratorEndException.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
+endIf: [clause:Block]</b> <br>
+ends the Iterator if clause returns True</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
+toArray</b> <br>
+Collects all of the iterator values into an array</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
+skip: [n:Number]</b> <br>
+skips n iterations and returns the nth value <br>
+does not reset the evaluation. (iterator will advance to
+index n)</p>
+
+<h2>File
+<a name="File"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
+File</b></p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>File</b>
+<br>
+Represents a File object. <br>
 Creates a new file object based on the specified path.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">File new:
+<p style="margin-left:11%; margin-top: 1em">File new:
 &rsquo;/example/path/to/file.txt&rsquo;.</p>
 
-<p style="margin-top: 1em">Represents a File object. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[File]
+tempFileLike: [String]</b> <br>
+Represents a File object. <br>
 Creates a new temporary file object based on the specified
 path. <br>
 replacing XXXX with some chars. <br>
 Usage:</p>
 
-<p style="margin-top: 1em">File tempFileLike:
+<p style="margin-left:11%; margin-top: 1em">File
+tempFileLike:
 &rsquo;/example/path/to/fileXXXXXXXX.txt&rsquo;.</p>
 
-<p style="margin-top: 1em">Returns the path of a file. The
-file object will respond to this <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[File]
+path</b> <br>
+Returns the path of a file. The file object will respond to
+this <br>
 message by returning a string object describing the full
 path to the <br>
 recipient.</p>
 
-<p style="margin-top: 1em">Reads contents of a file. Send
-this message to a file to read the entire contents in <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[File]
+realPath</b> <br>
+Returns the real path of a file. The file object will
+respond to this <br>
+message by returning a string object describing the absolute
+path to the <br>
+recipient.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[File]
+read</b> <br>
+Reads contents of a file. Send this message to a file to
+read the entire contents in <br>
 one go. For big files you might want to prefer a streaming
 approach to avoid <br>
 memory exhaustion (see readBytes etc).</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">data := File new:
-&rsquo;/path/to/mydata.csv&rsquo;, read.</p>
+<p style="margin-left:11%; margin-top: 1em">data := File
+new: &rsquo;/path/to/mydata.csv&rsquo;, read.</p>
 
-<p style="margin-top: 1em">In the example above we read the
-contents of the entire CSV file callled mydata.csv <br>
+<p style="margin-left:11%; margin-top: 1em">In the example
+above we read the contents of the entire CSV file callled
+mydata.csv <br>
 in the variable called data.</p>
 
-<p style="margin-top: 1em">Writes content to a file. Send
-this message to a file object to write the <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[File]
+write: [String]</b> <br>
+Writes content to a file. Send this message to a file object
+to write the <br>
 entire contents of the specified string to the file in one
 go. The file object <br>
 responds to this message for convience reasons, however for
@@ -1367,221 +2273,295 @@ big files it might <br>
 be a better idea to use the streaming API if possible (see
 readBytes etc.).</p>
 
-<p style="margin-top: 1em">data :=
+<p style="margin-left:11%; margin-top: 1em">data :=
 &rsquo;&lt;xml&gt;hello&lt;/xml&gt;&rsquo;. <br>
 File new: &rsquo;myxml.xml&rsquo;, write: data.</p>
 
-<p style="margin-top: 1em">In the example above we write
-the XML snippet in variable data to a file <br>
+<p style="margin-left:11%; margin-top: 1em">In the example
+above we write the XML snippet in variable data to a file
+<br>
 called myxml.xml in the current working directory.</p>
 
-<p style="margin-top: 1em">Appends content to a file. The
-file object responds to this message like it <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[File]
+append: [String]</b> <br>
+Appends content to a file. The file object responds to this
+message like it <br>
 responds to the write-message, however in this case the
 contents of the string <br>
 will be appended to the existing content inside the
 file.</p>
 
-<p style="margin-top: 1em">Returns True if the file exists
-and False otherwise.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[File]
+exists</b> <br>
+Returns True if the file exists and False otherwise.</p>
 
-<p style="margin-top: 1em">Includes the file as a piece of
-executable code.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[File]
+include</b> <br>
+Includes the file as a piece of executable code.</p>
 
-<p style="margin-top: 1em">Deletes the file.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[File]
+runHere</b> <br>
+Includes the file as a piece of executable code.</p>
 
-<p style="margin-top: 1em">Returns the size of the
-file.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[File]
+delete</b> <br>
+Deletes the file.</p>
 
-<p style="margin-top: 1em">Open a file with using the
-specified mode.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[File]
+size</b> <br>
+Returns the size of the file.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[File] open:
+[string]</b> <br>
+Open a file with using the specified mode.</p>
 
-<p style="margin-top: 1em">f := File new:
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
+
+<p style="margin-left:11%; margin-top: 1em">f := File new:
 &rsquo;/path/to/file&rsquo;. <br>
 f open: &rsquo;r+&rsquo;. #opens file for reading and
 writing</p>
 
-<p style="margin-top: 1em">The example above opens the file
-in f for reading and writing.</p>
+<p style="margin-left:11%; margin-top: 1em">The example
+above opens the file in f for reading and writing.</p>
 
-<p style="margin-top: 1em">Closes the file represented by
-the recipient.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[File]
+close.</b> <br>
+Closes the file represented by the recipient.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">f := File new:
+<p style="margin-left:11%; margin-top: 1em">f := File new:
 &rsquo;/path/to/file.txt&rsquo;. <br>
 f open: &rsquo;r+&rsquo;. <br>
 f close.</p>
 
-<p style="margin-top: 1em">The example above opens and
-closes a file.</p>
+<p style="margin-left:11%; margin-top: 1em">The example
+above opens and closes a file.</p>
 
-<p style="margin-top: 1em">Reads a number of bytes from the
-file.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[File]
+readBytes: [Number].</b> <br>
+Reads a number of bytes from the file.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">f := File new:
+<p style="margin-left:11%; margin-top: 1em">f := File new:
 &rsquo;/path/to/file.txt&rsquo;. <br>
 f open: &rsquo;r+&rsquo;. <br>
 x := f readBytes: 10. <br>
 f close.</p>
 
-<p style="margin-top: 1em">The example above reads 10 bytes
-from the file represented by f <br>
+<p style="margin-left:11%; margin-top: 1em">The example
+above reads 10 bytes from the file represented by f <br>
 and puts them in buffer x.</p>
 
-<p style="margin-top: 1em">Takes a string and writes the
-bytes in the string to the file <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[File]
+writeBytes: [String].</b> <br>
+Takes a string and writes the bytes in the string to the
+file <br>
 object. Returns the number of bytes actually written.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">f := File new:
+<p style="margin-left:11%; margin-top: 1em">f := File new:
 &rsquo;/path/to/file.txt&rsquo;. <br>
 f open: &rsquo;r+&rsquo;. <br>
 n := f writeBytes: &rsquo;Hello World&rsquo;. <br>
 f close.</p>
 
-<p style="margin-top: 1em">The example above writes
-&rsquo;Hello World&rsquo; to the specified file as bytes.
-<br>
+<p style="margin-left:11%; margin-top: 1em">The example
+above writes &rsquo;Hello World&rsquo; to the specified file
+as bytes. <br>
 The number of bytes written is returned in variable n.</p>
 
-<p style="margin-top: 1em">Moves the file pointer to the
-specified position in the file <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[File] seek:
+[Number].</b> <br>
+Moves the file pointer to the specified position in the file
+<br>
 (relative to the current position).</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">file open: &rsquo;r&rsquo;,
-seek: 10.</p>
+<p style="margin-left:11%; margin-top: 1em">file open:
+&rsquo;r&rsquo;, seek: 10.</p>
 
-<p style="margin-top: 1em">The example above opens a file
-for reading and moves the <br>
+<p style="margin-left:11%; margin-top: 1em">The example
+above opens a file for reading and moves the <br>
 pointer to position 10 (meaning 10 bytes from the beginning
 of the file). <br>
 The seek value may be negative.</p>
 
-<p style="margin-top: 1em">Rewinds the file. Moves the file
-pointer to the beginning of the file.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[File]
+rewind.</b> <br>
+Rewinds the file. Moves the file pointer to the beginning of
+the file.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">file open: &rsquo;r&rsquo;. <br>
+<p style="margin-left:11%; margin-top: 1em">file open:
+&rsquo;r&rsquo;. <br>
 x := file readBytes: 10. #read 10 bytes <br>
 file rewind. #rewind, set pointer to begin again <br>
 y := file readBytes: 10. #re-read same 10 bytes</p>
 
-<p style="margin-top: 1em">The example above reads the same
-sequence of 10 bytes twice, resulting <br>
+<p style="margin-left:11%; margin-top: 1em">The example
+above reads the same sequence of 10 bytes twice, resulting
+<br>
 in variable x and y being equal.</p>
 
-<p style="margin-top: 1em">Moves the file pointer to the
-end of the file. Use this in combination with <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[File]
+end.</b> <br>
+Moves the file pointer to the end of the file. Use this in
+combination with <br>
 negative seek operations.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">file open: &rsquo;r&rsquo;. <br>
+<p style="margin-left:11%; margin-top: 1em">file open:
+&rsquo;r&rsquo;. <br>
 file end. <br>
 x := file seek: -10, readBytes: 10.</p>
 
-<p style="margin-top: 1em">The example above will read the
-last 10 bytes of the file. This is <br>
+<p style="margin-left:11%; margin-top: 1em">The example
+above will read the last 10 bytes of the file. This is <br>
 accomplished by first moving the file pointer to the end of
 the file, <br>
 then putting it back 10 bytes (negative number), and then
 reading 10 <br>
 bytes.</p>
 
-<p style="margin-top: 1em">GarbageCollector, to invoke
-use:</p>
+<h2>Broom
+<a name="Broom"></a>
+</h2>
 
-<p style="margin-top: 1em">[Broom] sweep.</p>
 
-<p style="margin-top: 1em">Returns the number of objects
-collected.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
+Broom</b></p>
 
-<p style="margin-top: 1em">Returns the total number of
-objects considered in the latest collect <br>
+<p style="margin-left:11%; margin-top: 1em"><b>Broom</b>
+<br>
+GarbageCollector, to invoke use:</p>
+
+<p style="margin-left:11%; margin-top: 1em">[Broom]
+sweep.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Broom]
+dust</b> <br>
+Returns the number of objects collected.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Broom]
+objectCount</b> <br>
+Returns the total number of objects considered in the latest
+collect <br>
 cycle.</p>
 
-<p style="margin-top: 1em">Returns the total number of
-objects that have been marked during the <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Broom]
+keptCount</b> <br>
+Returns the total number of objects that have been marked
+during the <br>
 latest cycle and have therefore been allowed to stay in
 memory.</p>
 
-<p style="margin-top: 1em">Returns the amount of allocated
-memory.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Broom]
+keptAlloc</b> <br>
+Returns the amount of allocated memory.</p>
 
-<p style="margin-top: 1em">Returns the total number of
-objects that have a sticky flag. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Broom]
+stickyCount</b> <br>
+Returns the total number of objects that have a sticky flag.
+<br>
 These objects will never be removed.</p>
 
-<p style="margin-top: 1em">Sets the memory limit, if this
-limit gets exceeded the program will produce <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Broom]
+memoryLimit</b> <br>
+Sets the memory limit, if this limit gets exceeded the
+program will produce <br>
 an out-of-memory error.</p>
 
-<p style="margin-top: 1em">Selects mode of operation for
-GC.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Broom]
+mode: [Number]</b> <br>
+Selects mode of operation for GC.</p>
 
-<p style="margin-top: 1em">Available Modes: <br>
+<p style="margin-left:11%; margin-top: 1em">Available
+Modes: <br>
 0 - No Garbage Collection <br>
 1 - Activate Garbage Collector <br>
 4 - Activate Garbage Collector for every single step
 (testing only)</p>
 
-<p style="margin-top: 1em">Performs a Shell operation. The
-Shell object uses a fluid API, so you can <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Broom]
+autoAlloc: [Boolean]</b> <br>
+Set whether the max allowed memory cap is enforced or
+not</p>
+
+<h2>Shell
+<a name="Shell"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
+Shell</b></p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Shell]
+call: [String]</b> <br>
+Performs a Shell operation. The Shell object uses a fluid
+API, so you can <br>
 mix shell code with programming logic. For instance to list
 the contents <br>
 of a directory use:</p>
 
-<p style="margin-top: 1em">Shell ls</p>
+<p style="margin-left:11%; margin-top: 1em">Shell ls</p>
 
-<p style="margin-top: 1em">This will output the contents of
-the current working directly, you <br>
+<p style="margin-left:11%; margin-top: 1em">This will
+output the contents of the current working directly, you
+<br>
 can also pass keyword messages like so:</p>
 
-<p style="margin-top: 1em">Shell echo: &rsquo;Hello from
-the Shell!&rsquo;.</p>
+<p style="margin-left:11%; margin-top: 1em">Shell echo:
+&rsquo;Hello from the Shell!&rsquo;.</p>
 
-<p style="margin-top: 1em">The example above will output
-the specified message to the console. <br>
+<p style="margin-left:11%; margin-top: 1em">The example
+above will output the specified message to the console. <br>
 Every message you send will be turned into a string and
 dispatched to <br>
 the &rsquo;call:&rsquo; message.</p>
 
-<p style="margin-top: 1em">Obtains the string generated
-using the Slurp object. <br>
+<h2>Slurp
+<a name="Slurp"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
+Slurp</b></p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Slurp]
+obtain.</b> <br>
+Obtains the string generated using the Slurp object. <br>
 A Slurp object collects all messages send to it and flushes
 its buffer while <br>
 returning the resulting string after an &rsquo;obtain&rsquo;
 message has been received.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">Slurp hello world. <br>
+<p style="margin-left:11%; margin-top: 1em">Slurp hello
+world. <br>
 Pen write: (Slurp obtain).</p>
 
-<p style="margin-top: 1em">This will output: &rsquo;hello
-world&rsquo;. <br>
+<p style="margin-left:11%; margin-top: 1em">This will
+output: &rsquo;hello world&rsquo;. <br>
 Use the Slurp object to integrate verbose shell commands,
 other programming languages <br>
 (like SQL) etc into your main program without overusing
 strings.</p>
 
-<p style="margin-top: 1em">Example:</p>
+<p style="margin-left:11%; margin-top: 1em">Example:</p>
 
-<p style="margin-top: 1em">query select: &rsquo;*&rsquo;,
-from users where: &rsquo;id = 2&rsquo;.</p>
+<p style="margin-left:11%; margin-top: 1em">query select:
+&rsquo;*&rsquo;, from users where: &rsquo;id = 2&rsquo;.</p>
 
-<p style="margin-top: 1em">Note that we can&rsquo;t use the
-= and * unfortunately right now <br>
+<p style="margin-left:11%; margin-top: 1em">Note that we
+can&rsquo;t use the = and * unfortunately right now <br>
 because = is also a method in the main object. While * can
 be used <br>
 theoretically, it expects an identifier, and
@@ -1600,74 +2580,110 @@ alleviated in future versions) it&rsquo;s quite comfortable
 and readable to interweave <br>
 an external language in your Citron script code.</p>
 
-<p style="margin-top: 1em">Obtains an argument from the CLI
-invocation.</p>
+<h2>Program
+<a name="Program"></a>
+</h2>
 
-<p style="margin-top: 1em">Returns the number of CLI
-arguments passed to the script.</p>
 
-<p style="margin-top: 1em">Exits program immediately.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
+Program</b></p>
 
-<p style="margin-top: 1em">Returns the value of an
-environment variable.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+argument: [Number]</b> <br>
+Obtains an argument from the CLI invocation.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+argCount</b> <br>
+Returns the number of CLI arguments passed to the
+script.</p>
 
-<p style="margin-top: 1em">x := Command env:
-&rsquo;MY_PATH_VAR&rsquo;.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+exit</b> <br>
+Exits program immediately.</p>
 
-<p style="margin-top: 1em">Sets the value of an environment
-variable.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+env: [String]</b> <br>
+Returns the value of an environment variable.</p>
 
-<p style="margin-top: 1em">Ask a question on the
-command-line, resumes program <br>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
+
+<p style="margin-left:11%; margin-top: 1em">x := Command
+env: &rsquo;MY_PATH_VAR&rsquo;.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+env: [Key] val: [Value]</b> <br>
+Sets the value of an environment variable.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+changeDirectory: [path:String]</b> <br>
+chdir to path, returns the past directory on success</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+waitForInput</b> <br>
+Ask a question on the command-line, resumes program <br>
 only after pressing the enter key. <br>
 Only reads up to 100 characters.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">Pen write: &rsquo;What is your
-name ?&rsquo;. <br>
+<p style="margin-left:11%; margin-top: 1em">Pen write:
+&rsquo;What is your name ?&rsquo;. <br>
 x := Command waitForInput. <br>
 Pen write: &rsquo;Hello &rsquo; + x + &rsquo; !&rsquo;,
 brk.</p>
 
-<p style="margin-top: 1em">The example above asks the user
-for his/her name and <br>
+<p style="margin-left:11%; margin-top: 1em">The example
+above asks the user for his/her name and <br>
 then displays the input received.</p>
 
-<p style="margin-top: 1em">Reads all raw input from
-STDIN.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+getCharacter</b> <br>
+reads a character from STDIN. <br>
+Will only return after reading one ASCII character and a
+return.</p>
 
-<p style="margin-top: 1em">Usage (for instance to read raw
-CGI post):</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+input.</b> <br>
+Reads all raw input from STDIN.</p>
 
-<p style="margin-top: 1em">post := Program input.</p>
+<p style="margin-left:11%; margin-top: 1em">Usage (for
+instance to read raw CGI post):</p>
 
-<p style="margin-top: 1em">This method is part of the
-security profiles feature of Citron. <br>
+<p style="margin-left:11%; margin-top: 1em">post := Program
+input.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+forbidShell</b> <br>
+This method is part of the security profiles feature of
+Citron. <br>
 This will forbid the program to execute any shell
 operations. All <br>
 external libraries and plugins are assumed to respect this
 setting as well.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">Program forbidShell.</p>
+<p style="margin-left:11%; margin-top: 1em">Program
+forbidShell.</p>
 
-<p style="margin-top: 1em">This method is part of the
-security profiles feature of Citron. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+forbidFileWrite</b> <br>
+This method is part of the security profiles feature of
+Citron. <br>
 This will forbid the program to modify, create or delete any
 files. All <br>
 external libraries and plugins are assumed to respect this
 setting as well.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">Program forbidFileWrite.</p>
+<p style="margin-left:11%; margin-top: 1em">Program
+forbidFileWrite.</p>
 
-<p style="margin-top: 1em">This method is part of the
-security profiles feature of Citron. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+forbidFileRead</b> <br>
+This method is part of the security profiles feature of
+Citron. <br>
 This will forbid the program to read any files. In fact this
 will prevent you from <br>
 creating the file object at all. <br>
@@ -1679,39 +2695,50 @@ Forbidding a program to read files also has the effect to
 forbid including other <br>
 source files.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">Program forbidFileRead.</p>
+<p style="margin-left:11%; margin-top: 1em">Program
+forbidFileRead.</p>
 
-<p style="margin-top: 1em">This method is part of the
-security profiles feature of Citron. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+forbidInclude</b> <br>
+This method is part of the security profiles feature of
+Citron. <br>
 This will forbid the program to include any other files. All
 <br>
 external libraries and plugins are assumed to respect this
 setting as well.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">Program forbidInclude.</p>
+<p style="margin-left:11%; margin-top: 1em">Program
+forbidInclude.</p>
 
-<p style="margin-top: 1em">This method is part of the
-security profiles feature of Citron. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+forbidFork.</b></p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+remainingMessages: [Number]</b> <br>
+This method is part of the security profiles feature of
+Citron. <br>
 This will initiate a countdown for the program, you can
 specify the maximum quota of <br>
 messages the program may process, once this quota has been
 exhausted the program will <br>
 be killed entirely (no exception).</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">Program remainingMessages:
-100.</p>
+<p style="margin-left:11%; margin-top: 1em">Program
+remainingMessages: 100.</p>
 
-<p style="margin-top: 1em">Flushes the STDOUT output
-buffer.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+flush.</b> <br>
+Flushes the STDOUT output buffer.</p>
 
-<p style="margin-top: 1em">Forks the program into two
-programs. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+new: [Block].</b> <br>
+Forks the program into two programs. <br>
 Creates another program that will run at the same time as
 the <br>
 current program. Both the parent and the child will obtain a
@@ -1724,8 +2751,8 @@ obtain its version of the program instance as the return
 value of the <br>
 new: message.</p>
 
-<p style="margin-top: 1em">Note that spawning a new program
-will leak memory. <br>
+<p style="margin-left:11%; margin-top: 1em">Note that
+spawning a new program will leak memory. <br>
 The file descriptors used to setup communication between
 parent and <br>
 child will be removed when the main program ends but any
@@ -1734,149 +2761,221 @@ program will add a descriptor pair to the set. This is a
 limitation <br>
 in the current implementation.</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">child := Program new: {
-:program</p>
+<p style="margin-left:11%; margin-top: 1em">child :=
+Program new: { :program</p>
 
 <table width="100%" border="0" rules="none" frame="void"
        cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="15%"></td>
-<td width="8%">
+<td width="8%"></td>
+<td width="7%"></td>
+<td width="85%">
 
 
-<p>Pen write: &rsquo;Child&rsquo;, brk.</p></td>
-<td width="77%">
-</td></tr>
+<p>Pen write: &rsquo;Child&rsquo;, brk.</p></td></tr>
 </table>
 
-<p>}. <br>
+<p style="margin-left:11%;">}. <br>
 Pen write: &rsquo;Parent&rsquo;.</p>
 
-<p style="margin-top: 1em">Sends a message to another
-program, i.e. a child or a parent that is <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+message: [String].</b> <br>
+Sends a message to another program, i.e. a child or a parent
+that is <br>
 running at the same time.</p>
 
-<p style="margin-top: 1em">Stops the current flow of the
-program and starts listening for <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+listen: [Block].</b> <br>
+Stops the current flow of the program and starts listening
+for <br>
 messages from other programs that are running at the same
 time. <br>
 Upon receiving a message, the specified block will be
 invocated <br>
 and passed the message that has been received.</p>
 
-<p style="margin-top: 1em">Rejoins the program with the
-main program. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+join</b> <br>
+Rejoins the program with the main program. <br>
 This message will cause the current program to stop and wait
 <br>
 for the child program to end.</p>
 
-<p style="margin-top: 1em">Creates a remote object from the
-server specified by the <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Object]
+fromComputer: [String] [port: [Number] [inet6:
+[Boolean]]]</b> <br>
+Creates a remote object from the server specified by the
+<br>
 ip address.</p>
 
-<p style="margin-top: 1em">Sets the port to use for remote
-connections.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+port: [Number].</b> <br>
+Sets the port to use for remote connections.</p>
 
-<p style="margin-top: 1em">Sets the maximum number of
-connections and requests that will be <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+connectionLimit: [Number].</b> <br>
+Sets the maximum number of connections and requests that
+will be <br>
 accepted by the current program.</p>
 
-<p style="margin-top: 1em">Serves an object. Client
-programs can now communicate with this object <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+serve: [Object].</b> <br>
+Serves an object. Client programs can now communicate with
+this object <br>
 and send messages to it.</p>
 
-<p style="margin-top: 1em">Rolls the dice, generates a
-pseudo random number.</p>
+<h2>Dice
+<a name="Dice"></a>
+</h2>
 
-<p style="margin-top: 1em">Rolls a standard dice with 6
-sides.</p>
 
-<p style="margin-top: 1em">Generates a random number, the
-traditional way (like rand()).</p>
+<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
+Dice</b></p>
 
-<p style="margin-top: 1em">Waits X seconds.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Dice]
+rollWithSides: [Number]</b> <br>
+Rolls the dice, generates a pseudo random number.</p>
 
-<p style="margin-top: 1em">Creates a new clock instance
-from a UNIX time stamp.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Dice]
+roll</b> <br>
+Rolls a standard dice with 6 sides.</p>
 
-<p style="margin-top: 1em">Syncs a clock. Copies the time
-AND zone from the other clock.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Dice]
+rawRandomNumber</b> <br>
+Generates a random number, the traditional way (like
+rand()).</p>
 
-<p style="margin-top: 1em">Usage: <br>
+<h2>Clock
+<a name="Clock"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
+Clock</b></p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+wait: [Number]</b> <br>
+Waits X useconds.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock] new:
+[Number].</b> <br>
+Creates a new clock instance from a UNIX time stamp.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+like: [Clock]</b> <br>
+Syncs a clock. Copies the time AND zone from the other
+clock.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Usage: <br>
 clock := Clock new: timeStamp. <br>
 copyClock := Clock new like: clock.</p>
 
-<p style="margin-top: 1em">Sets the time zone of the
-clock.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+zone: [String]</b> <br>
+Sets the time zone of the clock.</p>
 
-<p style="margin-top: 1em">Returns time zone of the
-clock.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+zone</b> <br>
+Returns time zone of the clock.</p>
 
-<p style="margin-top: 1em">Sets the year of the clock.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+zone: [Number]</b> <br>
+Sets the year of the clock.</p>
 
-<p style="margin-top: 1em">Sets the month of the clock.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+zone: [Number]</b> <br>
+Sets the month of the clock.</p>
 
-<p style="margin-top: 1em">Sets the day of the clock.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+zone: [Number]</b> <br>
+Sets the day of the clock.</p>
 
-<p style="margin-top: 1em">Sets the hour of the clock.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+zone: [Number]</b> <br>
+Sets the hour of the clock.</p>
 
-<p style="margin-top: 1em">Sets the minute of the
-clock.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+zone: [Number]</b> <br>
+Sets the minute of the clock.</p>
 
-<p style="margin-top: 1em">Sets the second of the
-clock.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+zone: [Number]</b> <br>
+Sets the second of the clock.</p>
 
-<p style="margin-top: 1em">Returns year of the clock.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+year</b> <br>
+Returns year of the clock.</p>
 
-<p style="margin-top: 1em">Returns month of the clock.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+month</b> <br>
+Returns month of the clock.</p>
 
-<p style="margin-top: 1em">Returns day of the clock.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+day</b> <br>
+Returns day of the clock.</p>
 
-<p style="margin-top: 1em">Returns hour of the clock.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+hour</b> <br>
+Returns hour of the clock.</p>
 
-<p style="margin-top: 1em">Returns minute of the clock.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+minute</b> <br>
+Returns minute of the clock.</p>
 
-<p style="margin-top: 1em">Returns second of the clock.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+second</b> <br>
+Returns second of the clock.</p>
 
-<p style="margin-top: 1em">Returns day number of the
-year.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+yearday</b> <br>
+Returns day number of the year.</p>
 
-<p style="margin-top: 1em">Returns the week day number of
-the clock.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+weekday</b> <br>
+Returns the week day number of the clock.</p>
 
-<p style="margin-top: 1em">Returns the UNIX time stamp
-representation of the time. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+time.</b> <br>
+Returns the UNIX time stamp representation of the time. <br>
 Note: this is the time OF CREATION OF THE OBJECT. To get the
 actual time use:</p>
 
-<p style="margin-top: 1em">[Clock] new time.</p>
+<p style="margin-left:11%; margin-top: 1em">[Clock] new
+time.</p>
 
-<p style="margin-top: 1em">Returns the week number of the
-clock.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+week</b> <br>
+Returns the week number of the clock.</p>
 
-<p style="margin-top: 1em">Returns a string describing the
-date and time represented by the clock object <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+format: [String]</b> <br>
+Returns a string describing the date and time represented by
+the clock object <br>
 according to the specified format. See strftime for format
 syntax details.</p>
 
-<p style="margin-top: 1em">Returns a string describing the
-date and time <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+toString</b> <br>
+Returns a string describing the date and time <br>
 represented by the clock object.</p>
 
-<p style="margin-top: 1em">Adds the number to the clock,
-updating its time accordingly. <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock] add:
+[Number].</b> <br>
+Adds the number to the clock, updating its time accordingly.
+<br>
 Note that this is typically used with a qualifier. <br>
 If the qualifier is &rsquo;hours&rsquo; the number is
 treated as hours and <br>
 the specified number of hours will be added to the time.</p>
 
-<p style="margin-top: 1em">The Clock object understands the
-following qualifiers <br>
+<p style="margin-left:11%; margin-top: 1em">The Clock
+object understands the following qualifiers <br>
 if the selected language is English:</p>
 
-<p style="margin-top: 1em">sec, second, seconds, <br>
+<p style="margin-left:11%; margin-top: 1em">sec, second,
+seconds, <br>
 min, minute, minutes, <br>
 hrs, hour, hours, <br>
 day, days, <br>
@@ -1884,153 +2983,289 @@ week, weeks, <br>
 month, months, <br>
 year, years</p>
 
-<p style="margin-top: 1em">Note that it does not matter
-which form you use, 2 hour means <br>
+<p style="margin-left:11%; margin-top: 1em">Note that it
+does not matter which form you use, 2 hour means <br>
 the same as 2 hours (plural).</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">clock add: 3 minutes. #adds 3
-minutes <br>
+<p style="margin-left:11%; margin-top: 1em">clock add: 3
+minutes. #adds 3 minutes <br>
 clock add: 1 hour. #adds 1 hour <br>
 clock add: 2 second. #adds 2 seconds</p>
 
-<p style="margin-top: 1em">Same as &rsquo;[Clock]
-add:&rsquo; but subtracts the number instead of adding it to
-<br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+subtract: [Number].</b> <br>
+Same as &rsquo;[Clock] add:&rsquo; but subtracts the number
+instead of adding it to <br>
 the clock&rsquo;s time.</p>
 
-<p style="margin-top: 1em">Creates a new clock, by default
-a clock will be set to <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+new</b> <br>
+Creates a new clock, by default a clock will be set to <br>
 the UTC timezone having the current time.</p>
 
-<p style="margin-top: 1em">Writes string to console.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+processorClock</b> <br>
+returns the number of processor ticks since the beginning of
+this program. <br>
+Note that this will be reset depending on the processor</p>
 
-<p style="margin-top: 1em">Outputs a newline character.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+ticksPerSecond</b> <br>
+returns the count of processor ticks in a second</p>
 
-<p style="margin-top: 1em">Returns the value of the
-specified GET parameter from the HTTP query string. <br>
-For example if the query string of an url is:
-?search=glasses <br>
-then the value of:</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+timeExecutionOf: [Block]</b> <br>
+How long does the execution of the block take? (returns in
+cpu ticks)</p>
 
-<p style="margin-top: 1em">item := Request get:
-&rsquo;search&rsquo;.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Clock]
+executionSeconds: [Block]</b> <br>
+How long does the execution of the block take? (returns in
+seconds)</p>
 
-<p style="margin-top: 1em">would be
-&rsquo;glasses&rsquo;.</p>
+<h2>Pen
+<a name="Pen"></a>
+</h2>
 
-<p style="margin-top: 1em">Returns an array of strings
-extracted from the query string. <br>
-For example if the query string contains:
-?option=a&amp;option=b</p>
 
-<p style="margin-top: 1em">Request getArray:
-&rsquo;option&rsquo;.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
+Pen</b></p>
 
-<p style="margin-top: 1em">will contain two elements:
-&rsquo;a&rsquo; and &rsquo;b&rsquo;. Note that <br>
-this also works with array-like notation:
-?option[]=&rsquo;a&rsquo;&amp;option[]=b:</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Pen] write:
+[String]</b> <br>
+Writes string to console.</p>
 
-<p style="margin-top: 1em">Request getArray:
-&rsquo;option[]&rsquo;.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Pen]
+writeln: [String]</b> <br>
+Writes string to console, with a newline at the end.</p>
 
-<p style="margin-top: 1em">will return the same array.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Pen]
+brk</b> <br>
+Outputs a newline character.</p>
 
-<p style="margin-top: 1em">Obtains a string from the HTTP
-POST payload. Just like &rsquo;get:&rsquo; but for <br>
-POST variables. See &rsquo;Request get:&rsquo; for
-details.</p>
+<h2>Reflect
+<a name="Reflect"></a>
+</h2>
 
-<p style="margin-top: 1em">Obtains an array from the HTTP
-POST payload. Just like &rsquo;getArray:&rsquo; but for <br>
-POST variables. See &rsquo;Request getArray:&rsquo; for
-details.</p>
 
-<p style="margin-top: 1em">Obtains a string from the HTTP
-COOKIE payload. Just like &rsquo;get:&rsquo; but for <br>
-COOKIE variables. See &rsquo;Request get:&rsquo; for
-details.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
+Reflect</b></p>
 
-<p style="margin-top: 1em">Obtains an array from the HTTP
-COOKIE payload. Just like &rsquo;getArray:&rsquo; but for
+<p style="margin-left:11%; margin-top: 1em"><b>Reflect
+addGlobalVariable: [name:String]</b> <br>
+adds a variable named &lt;name&gt; to the global context</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Reflect
+addLocalVariable: [name:String]</b> <br>
+adds a variable named &lt;name&gt; to the Local context</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Reflect
+addPrivateVariable: [name:String]</b> <br>
+adds a variable named &lt;name&gt; to this context</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Reflect set:
+[name:String] to: [Object]</b> <br>
+dynamically sets a binding</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Reflect
+getContext</b> <br>
+returns all the context keys</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Reflect
+getMethodsOf: [Object]</b> <br>
+returns all the method names of object</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Reflect
+getPropertiesOf: [Object]</b> <br>
+returns all the property names of object</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+getObject: [s:String]</b> <br>
+looks for the object &lsquo;s&lsquo; in the current context
+or any of the contexts beneath</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+objectExists: [Object]</b> <br>
+returns whether the object exists</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+addArgumentTo: [Block] named: [s:String]</b> <br>
+adds a new argument &lsquo;s&lsquo; to the block</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+copyBlock: [b:Block]</b> <br>
+copies block b to a new context</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+newSharedObject</b> <br>
+makes a memmapped object. (Automatic destructor exists)</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+link: [o:Object] to: [p:Object]</b> <br>
+casts o to object type p</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+objectExists: [o:String]</b> <br>
+checks whether the object named o exists</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+isObject: [o:Object] linkedTo: [p:Object]</b> <br>
+checks whether p is anywhere in o&rsquo;s link chain</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+isObject: [o:Object] childOf: [p:Object]</b> <br>
+returns whether p is the parent of o</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+generateLinkTree: [o:Object]</b> <br>
+generates a linear tree, representing the chain of
+inheritance for object o</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+primitiveLinkOf: [o:Object]</b> <br>
+gets the first primitive object associated with o in its
+link chain</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+typeOf: [Object]</b> <br>
+returns a type constructor suited for the object</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+parentOf: [o:Object]</b> <br>
+gets the first immediate parent of o.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+getResponder: [r:String] ofObject: [o:Object]</b> <br>
+gets the method r from object o, AS IS <br>
+The returned block will not contain any references to o.
 <br>
-COOKIE variables. See &rsquo;Request getArray:&rsquo; for
-details.</p>
+So a context must be supplied. (Takes a &rsquo;self&rsquo;
+argument first)</p>
 
-<p style="margin-top: 1em">Returns array containing the
-path to the uploaded temporay file (0) and <br>
-the desired name of the uploaded file (1).</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+run: [Block] forObject: [object:Object] arguments:
+[Array]</b> <br>
+runs a block with its &rsquo;me&rsquo;/&rsquo;my&rsquo; set
+to object</p>
 
-<p style="margin-top: 1em">Sets a server option, available
-server option for SCGI server include:</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+runHere: [Block] forObject: [o:Object] arguments:
+[Array]</b> <br>
+runs a block with its &rsquo;me&rsquo;/&rsquo;my&rsquo; set
+to object, without switching contexts</p>
 
-<p style="margin-top: 1em">- minidle, minimum number of
-idle processes <br>
-- maxidle, maximum number of idle processes <br>
-- maxproc, maximum number of processes <br>
-- maxreq, maximum number of concurrent requests to allow</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+closure: [String] of: [Object]</b> <br>
+captures a method from an object as a closure</p>
 
-<p style="margin-top: 1em">Usage:</p>
+<p style="margin-left:11%; margin-top: 1em">(Reflect
+closure: &rsquo;closure:of:&rsquo; of: Reflect) applyTo:
+&rsquo;toString&rsquo; and: 10. #&rsquo;10&rsquo;</p>
 
-<p style="margin-top: 1em">Request <br>
-serverOption: &rsquo;minidle&rsquo; is: 8, <br>
-serverOption: &rsquo;maxreq&rsquo; is: 100.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+getProperty: [p:String] ofObject: [o:Object]</b> <br>
+returns the property p of object o. <br>
+this will produce an error should said property not
+exist.</p>
 
-<p style="margin-top: 1em">This sets the minimum number of
-idle processes to 8 and the <br>
-maximum number of concurrent requests to 100, you can chain
+<p style="margin-left:11%; margin-top: 1em">Reflect
+getProperty: &rsquo;end&rsquo; ofObject: Eval</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+disableInstrumentation</b> <br>
+Sends a message to an object with some arguments bypassing
+the instrumentor</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+enableInstrumentation</b> <br>
+Sends a message to an object with some arguments bypassing
+the instrumentor</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+registerInstrumentor: [Block&lt;object, message,
+arguments&gt;:&lt;object, message, arguments&gt;]</b> <br>
+register to an event that fires every time a message is
+sent. <br>
+This instrumentor will have to handle all message sending
+operations <br>
+using &lsquo;[Reflect] disableInstrumentation&lsquo; and
+&rsquo;[Reflect] enableInstrumentation&rsquo;. <br>
+return value is used as the result of the message, unless it
+is the instrumentor function, <br>
+In which case, the message is handed down to the object
+raw</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+currentInstrumentor</b> <br>
+gets the current instrumentor instance, or Nil if none
+exists</p>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>@Experimental</b>
 <br>
-multiple options using a comma (,).</p>
+[Reflect] runAtGlobal: [Block] arguments: [[Object]]</p>
 
-<p style="margin-top: 1em">Sets up Storm Server. <br>
-Storm Server is an SCGI server. Both the Request Object
-Plugin and Storm Server <br>
-are based on S. Losen&rsquo;s CCGI library
-(http://libccgi.sourceforge.net/doc.html) <br>
-licensed LGPL.</p>
+<p style="margin-left:11%; margin-top: 1em">Runs a block at
+global context passing it the arguments</p>
 
-<p style="margin-top: 1em">To set up a Storm Server,
-specify host (i.e. &rsquo;localhost&rsquo;), <br>
-a port to listen to (i.e. 9000) a pid file
-&rsquo;/var/run/mypid.pid&rsquo; and a <br>
-callback block.</p>
+<h2>Fiber
+<a name="Fiber"></a>
+</h2>
 
-<p style="margin-top: 1em">Usage:</p>
 
-<p style="margin-top: 1em">Request
-host:&rsquo;localhost&rsquo; listen:4000
-pid:&rsquo;/var/run/storm.pid&rsquo; callback: { <br>
-Pen write: &rsquo;Content-type: text/html\n\n&rsquo;. <br>
-var fname := Command env: &rsquo;DOCUMENT_URI&rsquo;. <br>
-var script := File new: &rsquo;/var/www/webapp&rsquo;+fname.
-<br>
-script include. <br>
-}.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
+Fiber</b></p>
 
-<p style="margin-top: 1em">Here we set up a server
-listening to port 4000. The callback prints out <br>
-the content type header. Then, we extract the DOCUMENT URI,
-i.e. &rsquo;/hello.ctr&rsquo; <br>
-and map this to a path
-&rsquo;/var/www/webapp/hello.ctr&rsquo;</p>
+<p style="margin-left:11%; margin-top: 1em"><b>Fiber new:
+[Block]</b> <br>
+Creates a new Fiber object that does (Block) upon control
+being yielded to it</p>
 
-<p style="margin-top: 1em">By default there is no output
-buffering, either create another callback or <br>
-simply override the &rsquo;&lt;&rsquo; or &rsquo;Pen&rsquo;
-object to buffer instead of outputting <br>
-directly.</p>
+<p style="margin-left:11%; margin-top: 1em">Fiber is a
+co-processing method in citron. <br>
+Think software level threads</p>
 
-<p style="margin-top: 1em">This is a preliminary version
-(&lt; 1.0) of Citron, there might still be very serious
-bugs. Please refrain from using this version in a production
-environment. This version of Citron is still considered
-&rsquo;alpha&rsquo; stage and cannot be expected to be
-reliable.</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Fiber]
+yield</b> <br>
+yield control from the current object</p>
 
-<p style="margin-top: 1em">AnotherTest and the Citron
-Community (Nil)</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Fiber]
+yield: [Object]</b> <br>
+yield control and pass an object along</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Fiber]
+waitForAll</b> <br>
+Wait until all fibers return</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Fiber]
+yielded</b> <br>
+get the object that the last fiber yielded, or Nil if no
+object was yielded</p>
+
+<h2>BUGS
+<a name="BUGS"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">This is a
+preliminary version (&lt; 1.0) of Citron, there might still
+be very serious bugs. Please refrain from using this version
+in a production environment. This version of Citron is still
+considered &rsquo;alpha&rsquo; stage and cannot be expected
+to be reliable.</p>
+
+<h2>AUTHOR
+<a name="AUTHOR"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">AnotherTest and
+the Citron Community (Nil)</p>
+
+
+<p style="margin-left:11%; margin-top: 1em">devanothertest@gmail.com</p>
 <hr>
 </body>
 </html>

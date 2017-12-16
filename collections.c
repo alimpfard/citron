@@ -10,6 +10,7 @@
 
 #include "citron.h"
 #include "siphash.h"
+/**@I_OBJ_DEF Array*/
 
 /**
  * [Array] new
@@ -1408,6 +1409,8 @@ ctr_object* ctr_array_column( ctr_object* myself, ctr_argument* argumentList ) {
  * See 'Map serialize' for the reason for this alias.
  */
 
+/**@I_OBJ_DEF Map*/
+
 /**
  * Map
  *
@@ -1926,6 +1929,7 @@ ctr_object* ctr_map_assign(ctr_object* myself, ctr_argument* argumentList) {
   ctr_heap_free( newArgumentList );
   return myself;
 }
+/**@I_OBJ_DEF Iterator*/
 
 /**
  * Iterator
@@ -1937,8 +1941,9 @@ ctr_object* ctr_map_assign(ctr_object* myself, ctr_argument* argumentList) {
 struct ctr_iters_type {
   ctr_object** ctr_iterator_range_func;
   ctr_object** ctr_iterator_uncapped_range_func;
+  ctr_object** ctr_iterator_repeat_func;
 };
-struct ctr_iters_type ctr_iterators = {&ctr_iter_range, &ctr_iter_urange};
+struct ctr_iters_type ctr_iterators = {&ctr_iter_range, &ctr_iter_urange, &ctr_iter_repeat};
 
 ctr_object* ctr_iterator_make(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* instance = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
@@ -2021,6 +2026,19 @@ ctr_object* ctr_iterator_set_func(ctr_object* myself, ctr_argument* argumentList
   //   CTR_CATEGORY_PRIVATE_PROPERTY
   // );
   return myself;
+}
+
+/**
+ * [Iterator] repeat: [Object]
+ *
+ * An iterator that keeps repeating the same value.
+ *
+ */
+ctr_object* ctr_iterator_make_repeat(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* instance = ctr_iterator_make(myself, NULL);
+  ctr_iterator_set_seed(instance, argumentList);
+  ctr_iterator_set_func_(instance, *ctr_iterators.ctr_iterator_repeat_func, NULL, NULL);
+  return instance;
 }
 
 /**

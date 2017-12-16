@@ -156,18 +156,24 @@ ctr_object* ctr_cwlk_assignment(ctr_tnode* node) {
     ctr_tnode* value = valueListItem->node;
     ctr_object* x;
     ctr_object* result;
+    char ret;
     if (CtrStdFlow == NULL) {
         ctr_callstack[ctr_callstack_index++] = assignee;
     }
     x = ctr_cwlk_expr(value, &wasReturn);
-    if (assignee->modifier == 1) {
-        result = ctr_assign_value_to_my(ctr_build_string(assignee->value, assignee->vlen), x);
-    } else if (assignee->modifier == 2) {
-        result = ctr_assign_value_to_local(ctr_build_string(assignee->value, assignee->vlen), x);
-    } else if (assignee->modifier == 3) {
-        result = ctr_assign_value(ctr_build_string(assignee->value, assignee->vlen), x);  //Handle lexical scoping
+    if(assignee->type == CTR_AST_NODE_REFERENCE) {
+      if (assignee->modifier == 1) {
+          result = ctr_assign_value_to_my(ctr_build_string(assignee->value, assignee->vlen), x);
+      } else if (assignee->modifier == 2) {
+          result = ctr_assign_value_to_local(ctr_build_string(assignee->value, assignee->vlen), x);
+      } else if (assignee->modifier == 3) {
+          result = ctr_assign_value(ctr_build_string(assignee->value, assignee->vlen), x);  //Handle lexical scoping
+      } else {
+          result = ctr_assign_value(ctr_build_string(assignee->value, assignee->vlen), x);
+      }
     } else {
-        result = ctr_assign_value(ctr_build_string(assignee->value, assignee->vlen), x);
+      ctr_send_message_variadic(x, "unpack:", 7, 1, ctr_cwlk_expr(assignee, &ret));
+      result = x;
     }
     if (CtrStdFlow == NULL) {
         ctr_callstack_index--;

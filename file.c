@@ -17,6 +17,7 @@
 #include <dirent.h>
 #include "citron.h"
 #include "siphash.h"
+/**@I_OBJ_DEF File*/
 
 /**
  * File

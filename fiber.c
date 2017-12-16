@@ -208,7 +208,16 @@ void ctr_fiber_begin_init(void);
 
 
 ctr_object* CtrStdFiber; //Namespace for all fibers, conatining all the relevant functions
+/**@I_OBJ_DEF Fiber*/
 
+/**
+ * Fiber new: [Block]
+ *
+ * Creates a new Fiber object that does (Block) upon control being yielded to it
+ *
+ * Fiber is a co-processing method in citron.
+ * Think software level threads
+ */
 ctr_object* ctr_fiber_create(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* ctrl = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
   ctrl->link = CtrStdFiber;
@@ -222,12 +231,28 @@ ctr_object* ctr_fiber_spawn(ctr_object* myself, ctr_argument* argumentList) {
   //ctr_internal_object_add_property(fiberObj, ctr_build_string_from_cstring("fiberId"), ctr_build_number_from_float(fiber), CTR_CATEGORY_PRIVATE_PROPERTY);
   return fiberObj;
 }
+
+/**
+ * [Fiber] yield
+ *
+ * yield control from the current object
+ */
+/**
+* [Fiber] yield: [Object]
+*
+* yield control and pass an object along
+*/
 ctr_object* ctr_fiber_yield(ctr_object* myself, ctr_argument* argumentList) {
   //int fiber = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("fiberId"), CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue;
   FIBER_YIELDED = argumentList->object; // record the output, or set to NULL
   fiberYield();
   return myself; //Won't really reach here until the end of the fiber chain
 }
+/**
+ * [Fiber] waitForAll
+ *
+ * Wait until all fibers return
+ */
 ctr_object* ctr_fiber_join_all(ctr_object* myself, ctr_argument* argumentList) {
   return ctr_build_bool(waitForAllFibers());
 }
@@ -237,6 +262,11 @@ ctr_object* ctr_fiber_join_times(ctr_object* myself, ctr_argument* argumentList)
 ctr_object* ctr_fiber_tostring(ctr_object* myself, ctr_argument* argumentList) {
   return ctr_build_string_from_cstring("[Fiber]");
 }
+/**
+ * [Fiber] yielded
+ *
+ * get the object that the last fiber yielded, or Nil if no object was yielded
+ */
 ctr_object* ctr_fiber_yielded(ctr_object* myself, ctr_argument* argumentList) {
   return FIBER_YIELDED == NULL? CtrStdNil : FIBER_YIELDED;
 }

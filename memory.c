@@ -37,7 +37,7 @@ size_t     numberOfMemBlocks = 0;
 size_t     maxNumberOfMemBlocks = 0;
 
 void sttrace_print(void* ptr) {
-  return;
+  if(likely(ptr)) return;
   printf("MEMORY ALLOC %p\n", ptr);
   void *array[99999];
   size_t size;

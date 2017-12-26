@@ -5,6 +5,8 @@ contextPurity is False. #This is not a pure context, since objects are mutated i
 #Pen write: 'Extensions: ' + (File extensionsPath), brk.
 File new: (File extensionsPath) + '/extensions/fileutils.ctr', include.
 
+inp is ''.
+
 ImportLib Queue.
 ImportLib LRArray.
 
@@ -91,8 +93,13 @@ Eval on: 'Commands' do: {
     ^Map new
       put: {:args Eval end.} at: 'q',
       put: {:args ^Reflect strTypeOf: (args eval).} at: 't',
-      put: {:args Reflect addGlobalVariable: (args split: ' ', at: 0). ^'bind :: ' + args trim + ' bound to Nil'.} at: 'bind',
       put: {:args ^(args trim = '') either: {^Eval startEvalServer.} or: {^Eval startEvalServerOnPort: args eval.}.} at: 'server',
+      put: {:args ^'Interpreter metacommands help:
+      + q -- Quit
+      + t <expression> -- type of expression
+      + server [<port>] -- make an eval server on port <port>, or a random port.
+      + !server -- kill the eval server
+      + h -- show this help'.} at: 'h',
       put: {^Eval stopEvalServer.} at: '!server'.
   }.
   ^my commands.
@@ -107,12 +114,20 @@ Eval on: 'doMeta:' do: {:str:ptr
 
 Eval on: 'evaluate:' do: { :str
   var eval_result_x is Nil.
-  (str at: 0, = ':')
+  ^(str at: 0, = ':')
     either:
       ({ ^eval_result_x is Eval doMeta: (str skip: 1). } catch: {:e Eval handleException: e.})
     or:
-      ({ Eval instrument. ^eval_result_x is str eval. } catch: {:e Eval handleException: e.}).
-  ^(eval_result_x toString containsPattern: '^\\[\\w*?\\]') either: '' or: eval_result_x.
+      ({
+          Eval instrument.
+          ^(str startsWith: 'import') not
+            either: ({
+                ^Reflect runAtGlobal: {:str ^str eval.} arguments: str. 
+                } catch: {:e Eval handleException.}
+            ) or: ({
+                ^str eval.
+                } catch: {:e Eval handleException.}).
+        }).
 }.
 Eval on: 'evaluateFile:' do: { :fl
   {
@@ -131,17 +146,6 @@ Eval on: 'queueHasItem' do: {
   ^(my evalQueue count !=: 0).
 }.
 Eval on: 'dequeue' do: { ^my evalQueue dequeue. }.
-Eval on: 'setGlobalVars:' do: { :t my globalvars is t. }.
-Eval on: 'globalvars' do: {^my globalvars. }.
-Eval on: 'handleGlobalVars:' do: { :inp
-  var repl is inp.
-  (my globalvars) ifTrue: {
-    inp findPattern: '^\\s*\\bvar\\s+\\b(.*)\\b'
-                 do: { :name var n is name at: 1. Reflect addGlobalVariable: n. }.
-    }.
-    #Pen write: repl, brk.
-    ^inp.
-}.
 Eval on: 'pushHist:' do: {:h
   my history push: h.
 }.
@@ -162,12 +166,6 @@ Eval onlyRelevantArgs.
 var args is Array new.
 
 #global vars for evaler
-var ra is Nil.
-var rb is Nil.
-var rc is Nil.
-var rd is Nil.
-var re is Nil.
-var rf is Nil.
 var _  is Nil.
 var __ is Nil.
 
@@ -210,11 +208,9 @@ Reflect disableInstrumentation.
           indent: 2 write: '-h : show this help\n',
           indent: 2 write: '-f : evaluate file. many can be passed, evals in passed order\n',
           indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
-          indent: 2 write: '--global-vars : variables in a single line are global, but this leaks a minute amount of memory.\n',
           indent: 2 write: '-enoquit : Do not quit the interpreter on errors\n',
           indent: 2 write: '-finstr : Enable instrumentation (advanced debug feature).\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
-        P red write: 'new Global variables can be created using Reflection.', brk.
         P resetColor.
         Program exit.
     # when passed -p, get the next arg, and set the prompt to that.
@@ -247,12 +243,8 @@ Reflect disableInstrumentation.
         { ^(Eval argCount > 0). } whileTrue: { args push: Eval shiftArgs. }. #consume all other arguments.
         # if it ends in a dot, delete it.
         value findPattern: '(.*)\\.' do: {:p value is p at: 1.}.
-        value is Eval handleGlobalVars: value.
         Pen write: (Eval evaluate: value).
         Program exit.
-    }, case: '--global-vars' do: {
-        args pop. #consume option.
-        Eval setGlobalVars: True.
     }, case: '-enoquit' do: {
         args pop.
         Eval equit: True.
@@ -266,10 +258,6 @@ Pen green. ?>Project Citron : The Programming Language (V<?. Pen write:(Reflect 
 ?>Eval Mode, parameters related to eval are in the Eval namespace.
 run with '-h' to read the eval mode help.
 <?.
-(Eval globalvars) do ifFalse: {
-    Pen write: 'local variables will not be reflected upon,\nso to get new global variables, use '. Pen green.
-    Pen write: 'Reflect addGlobalVariable: \'name\'', brk.
-} done.
 
 Eval on: 'repl' do: {
   {^True.} whileTrue: {
@@ -283,7 +271,7 @@ Eval on: 'repl' do: {
     Pen cyan write: (Eval prompt), resetColor.
 
     # get input, get rid of the trailing \n. If empty, don't bother evaluating.
-    var inp is Program waitForInput.
+    inp is Program waitForInput.
     (inp trim = '') continue.
 
     {^Eval queryState: inp.} whileFalse: {
@@ -298,7 +286,6 @@ Eval on: 'repl' do: {
       inp is inp from: 0 length: (inp length - 1).
     }.
 
-    inp is Eval handleGlobalVars: inp.
     # Syntactic errors will not be passed to the eval. # TODO: handle that.
     'Pen %s write: (var ret is Eval evaluate: inp) toString' formatObjects: [(Eval color)], eval.
     Pen resetColor.

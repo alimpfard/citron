@@ -1158,6 +1158,8 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_AT_SYMBOL ), &ctr_string_at );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_BYTE_AT ), &ctr_string_byte_at );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_INDEX_OF ), &ctr_string_index_of );
+    ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( "startsWith:" ), &ctr_string_starts_with );
+    ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( "endsWith:" ), &ctr_string_ends_with );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_LAST_INDEX_OF ), &ctr_string_last_index_of );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_REPLACE_WITH ), &ctr_string_replace_with );
     ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring( CTR_DICT_SPLIT ), &ctr_string_split );
@@ -1232,6 +1234,10 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "imap:" ), &ctr_array_imap );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "foldl:accumulator:" ), &ctr_array_foldl );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "filter:" ), &ctr_array_filter );
+    ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "fmap:from:" ), &ctr_array_select_from_if );
+    ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "fmap:from:filter:" ), &ctr_array_select_from_if );
+    ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "copy" ), &ctr_array_copy );
+    ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "items" ), &ctr_array_copy );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( "reverse" ), &ctr_array_reverse );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( CTR_DICT_UNSHIFT ), &ctr_array_unshift );
     ctr_internal_create_func(CtrStdArray, ctr_build_string_from_cstring( CTR_DICT_SHIFT ), &ctr_array_shift );
@@ -1308,7 +1314,10 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("endIf:"), &ctr_iterator_end_check );
     ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("takeWhile:"), &ctr_iterator_takewhile );
     ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("toArray"), &ctr_iterator_to_array );
+    ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("items"), &ctr_iterator_to_array );
     ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring("skip:"), &ctr_iterator_skip );
+    ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring(CTR_DICT_TOSTRING), &ctr_iterator_to_string );
+    ctr_internal_create_func(CtrStdIter, ctr_build_string_from_cstring(CTR_DICT_TYPE), &CTR_DICT_TYPE );
 
     ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring( "Iterator" ), CtrStdIter, 0 );
     CtrStdIter->link = CtrStdObject;
@@ -1386,6 +1395,7 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdFile, ctr_build_string_from_cstring( CTR_DICT_LIST ), &ctr_file_list );
     ctr_internal_create_func(CtrStdFile, ctr_build_string_from_cstring( "typeOf:" ), &ctr_file_type );
     ctr_internal_create_func(CtrStdFile, ctr_build_string_from_cstring( CTR_DICT_TMPFILE ), &ctr_file_tmp );
+    ctr_internal_create_func(CtrStdFile, ctr_build_string_from_cstring( "unpack:" ), &ctr_file_assign );
     ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring( CTR_DICT_FILE ), CtrStdFile, 0);
     CtrStdFile->link = CtrStdObject;
     CtrStdFile->info.sticky = 1;
@@ -1562,6 +1572,7 @@ void ctr_initialize_world() {
 
     // Fiber
     ctr_fiber_begin_init();
+    initiailize_base_extensions();
 
     /* Other objects */
     CtrStdBreak = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
@@ -1681,7 +1692,7 @@ no_instrum:;
            }
            methodObject = ctr_get_responder(receiverObject, message, vlen);
            if (!methodObject) {
-               if(strcmp(message, "respondTo:") == 0) {
+               if(strcmp(message, "respondTo:and:") == 0) {
                    // printf("Requested message to catch-all in:\n");
                    // ctr_print_stack_trace();
                    return receiverObject;
@@ -1695,13 +1706,7 @@ no_instrum:;
                mesgArgument = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
                mesgArgument->object = ctr_build_string(message, vlen);
                mesgArgument->next = argumentList;
-               if (argCount == 0 || argCount > 2) {
-                   returnValue = ctr_send_message(receiverObject, CTR_DICT_RESPOND_TO, strlen(CTR_DICT_RESPOND_TO),  mesgArgument);
-               } else if (argCount == 1) {
-                   returnValue = ctr_send_message(receiverObject, CTR_DICT_RESPOND_TO_AND, strlen(CTR_DICT_RESPOND_TO_AND),  mesgArgument);
-               } else if (argCount == 2) {
-                   returnValue = ctr_send_message(receiverObject, CTR_DICT_RESPOND_TO_AND_AND, strlen(CTR_DICT_RESPOND_TO_AND_AND),  mesgArgument);
-               }
+               returnValue = ctr_send_message(receiverObject, argCount==0?CTR_DICT_RESPOND_TO:CTR_DICT_RESPOND_TO_AND, strlen(argCount==0?CTR_DICT_RESPOND_TO:CTR_DICT_RESPOND_TO_AND),  mesgArgument);
                ctr_heap_free( mesgArgument );
                msg->info.sticky = 0;
                if (receiverObject->info.chainMode == 1) return receiverObject;

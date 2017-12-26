@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.22.3 -->
-<!-- CreationDate: Mon Dec 11 01:15:14 2017 -->
+<!-- CreationDate: Sun Dec 17 00:43:31 2017 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -13,17 +13,20 @@
        table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
        h1      { text-align: center }
 </style>
-<title>Citron v0.0.6.6</title>
+<title>Citron v0.0.6.7</title>
 
 </head>
 <body>
 
-<h1 align="center">Citron v0.0.6.6</h1>
+<h1 align="center">Citron v0.0.6.7</h1>
 
 <a href="#NAME">NAME</a><br>
 <a href="#SYNOPSIS">SYNOPSIS</a><br>
 <a href="#DESCRIPTION">DESCRIPTION</a><br>
 <a href="#REFERENCE MANUAL">REFERENCE MANUAL</a><br>
+<a href="#BASIC INSTRUCTIONS">BASIC INSTRUCTIONS</a><br>
+<a href="#ASSIGNMENT">ASSIGNMENT</a><br>
+<a href="#CORE MESSAGES">CORE MESSAGES</a><br>
 <a href="#Nil">Nil</a><br>
 <a href="#Object">Object</a><br>
 <a href="#Boolean">Boolean</a><br>
@@ -95,6 +98,155 @@ literals:</p>
 - Strings &rsquo;All Strings are UTF8!&rsquo; <br>
 - Code Blocks { parameters code }</p>
 
+<h2>BASIC INSTRUCTIONS
+<a name="BASIC INSTRUCTIONS"></a>
+</h2>
+
+
+<h2>ASSIGNMENT
+<a name="ASSIGNMENT"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Assignment in
+Citron has a few forms, a simple binding (variable is
+expression) or (variable := expression) a strictly private
+binding (variable =&gt; expression) [Which can be used in
+constructor messages] and a decomposition binding whose
+explanation follows:</p>
+
+<p style="margin-left:11%; margin-top: 1em">Every object
+that implements the &rsquo;unpack:&rsquo; method, hereon
+called &rsquo;decomposable&rsquo; and
+&rsquo;algebraic&rsquo;, is mostly a wrapper around smaller
+parts, for instance, an array is a container that only
+conatins some Objects. It does not change the objects, nor
+does it have any other property that can cause us to be
+unable to recreate those objects given said array. hence, we
+can deconstruct the array into its creating objects.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Consider an
+object. an object can be called a mapping from its property
+names as keys, to their values as, well, values. much like a
+Map. However, since the object&lsquo;s methods require a
+reference to it, they cannot be safely deconstructed.</p>
+
+<p style="margin-left:11%; margin-top: 1em">this concept
+(algebraic decomposition) is done by creating a wireframe of
+sorts, and telling the object to deconstruct itself based
+off that wireframe. E.g.</p>
+
+<p style="margin-left:11%; margin-top: 1em">var
+<b>testMap</b> is Map cnew: {</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="7%">
+</td>
+<td width="8%">
+</td>
+<td width="77%">
+
+
+<p><b>test</b> =&gt; [1,2,3,4,5].</p></td></tr>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="7%">
+</td>
+<td width="8%">
+</td>
+<td width="77%">
+
+
+<p><b>key1</b> =&gt; Map new put: <b>me</b> at:
+&rsquo;test&rsquo;.</p> </td></tr>
+</table>
+
+<p style="margin-left:11%;">}. <br>
+(Map cnew: {</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="7%">
+</td>
+<td width="8%">
+</td>
+<td width="77%">
+
+
+<p><i>#Take the third element from the right, and bind it
+to &rsquo;a&rsquo;</i></p></td></tr>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="7%">
+</td>
+<td width="8%">
+</td>
+<td width="77%">
+
+
+<p><b>test</b> =&gt; [&rsquo;*_&rsquo;, &rsquo;a&rsquo;,
+&rsquo;_&rsquo;, &rsquo;_&rsquo;].</p></td></tr>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="7%">
+</td>
+<td width="8%">
+</td>
+<td width="77%">
+
+
+<p><i>#Take the value at &rsquo;key1&rsquo;,</i></p></td></tr>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="7%">
+</td>
+<td width="8%">
+</td>
+<td width="77%">
+
+
+<p><i>#take its&rsquo; value at &rsquo;test&rsquo;,</i></p></td></tr>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="7%">
+</td>
+<td width="8%">
+</td>
+<td width="77%">
+
+
+<p><i>#take its&rsquo; value at &rsquo;test&rsquo; and bind
+it to &rsquo;b&rsquo;.</i></p></td></tr>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="7%">
+</td>
+<td width="8%">
+</td>
+<td width="77%">
+
+
+<p><b>key1</b> =&gt; Map cnew: {<b>test</b> =&gt; (Map
+cnew: {<b>test</b> =&gt; &rsquo;b&rsquo;.}).}</p></td></tr>
+</table>
+
+<p style="margin-left:11%;">}) is <b>testMap</b>.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Returning
+algebraic object types from functions, is often used to
+return several values from said function. :: TODO : Finish
+this section.</p>
+
+<h2>CORE MESSAGES
+<a name="CORE MESSAGES"></a>
+</h2>
+
+
 <p style="margin-left:11%; margin-top: 1em">The following
 messages are part of the Core API of the Citron Programming
 Language:</p>
@@ -141,7 +293,9 @@ Returns the boolean representation of Nil: False.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Nil]
 unpack: [Ref:string]</b> <br>
-Assigns Nil into Ref</p>
+Assigns Nil into Ref <br>
+(Always prefer using algebraic deconstruction assignments:
+look at section &rsquo;Assignment&rsquo;)</p>
 
 <h2>Object
 <a name="Object"></a>
@@ -180,7 +334,9 @@ does not create the property is it doesn&rsquo;t exist</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Object]
 unpack: [Object:{Ref*}]</b> <br>
-Element-wise object assign</p>
+Element-wise object assign <br>
+(Always prefer using algebraic deconstruction assignments:
+look at section &rsquo;Assignment&rsquo;)</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Object]
 iHash</b> <br>
@@ -379,7 +535,9 @@ False</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Boolean]
 unpack: [String:Ref]</b> <br>
-Assign ref to boolean</p>
+Assign ref to boolean <br>
+(Always prefer using algebraic deconstruction assignments:
+look at section &rsquo;Assignment&rsquo;)</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Boolean] =
 [other]</b> <br>
@@ -553,7 +711,9 @@ number object in Citron.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Number]
 unpack: [String:Ref]</b> <br>
-Assign ref to number</p>
+Assign ref to number <br>
+(Always prefer using algebraic deconstruction assignments:
+look at section &rsquo;Assignment&rsquo;)</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Number]
 &gt; [other]</b> <br>
@@ -937,7 +1097,9 @@ returns whether object is constructible from string</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[String]
 unpack: [String:Ref]</b> <br>
-Assign ref to string</p>
+Assign ref to string <br>
+(Always prefer using algebraic deconstruction assignments:
+look at section &rsquo;Assignment&rsquo;)</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[String]
 bytes</b> <br>
@@ -1384,7 +1546,9 @@ qualify captures with the &rsquo;const&rsquo; modifier</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Block]
 unpack: [String:Ref]</b> <br>
-Assign ref to block</p>
+Assign ref to block <br>
+(Always prefer using algebraic deconstruction assignments:
+look at section &rsquo;Assignment&rsquo;)</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Block]
 applyTo: [object]</b> <br>
@@ -1921,9 +2085,11 @@ filter: [Block&lt;i,v&gt;]</b> <br>
 Include the element iff block returns True for the
 element</p>
 
-<p style="margin-left:11%; margin-top: 1em"><b>* [Array]
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
 unpack: [Array:{Ref:string}]</b> <br>
-* Element-wise assign</p>
+Element-wise assign <br>
+(Always prefer using algebraic deconstruction assignments:
+look at section &rsquo;Assignment&rsquo;)</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Array]
 sort: [Block]</b> <br>
@@ -2090,8 +2256,19 @@ this alias. Also, this alias can be used if you want to make
 * the serialization more explicit.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Map]
-unpack: [Map:{Ref:string}]</b> <br>
-Key-wise assign</p>
+unpack: [Map:{Ref:AlternativeName}]</b> <br>
+Key-wise assign Give alternative names as the values of the
+constructor</p>
+
+<p style="margin-left:11%; margin-top: 1em">e.g. (Map new
+put: &rsquo;Hello&rsquo; at: &rsquo;test0&rsquo;, put:
+&rsquo;World&rsquo; at: &rsquo;test1&rsquo;) unpack: (Map
+cnew: {my test0 is &rsquo;a&rsquo;. my test1 is
+&rsquo;b&rsquo;.})</p>
+
+<p style="margin-left:11%; margin-top: 1em">(Always prefer
+using algebraic deconstruction assignments: look at section
+&rsquo;Assignment&rsquo;)</p>
 
 <h2>Iterator
 <a name="Iterator"></a>
@@ -2112,6 +2289,10 @@ an end</p>
 <p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
 setFunc: [f:Block]</b> <br>
 sets the iterator step function.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
+repeat: [Object]</b> <br>
+An iterator that keeps repeating the same value.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
 rangeFrom: [f:Number] to: [t:Number] step: [s:Number]</b>
@@ -2235,6 +2416,12 @@ this <br>
 message by returning a string object describing the full
 path to the <br>
 recipient.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[File]
+unpack: [String:Ref]</b> <br>
+Assigns the file instance to the reference <br>
+(Always prefer using algebraic deconstruction assignments:
+look at section &rsquo;Assignment&rsquo;)</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[File]
 realPath</b> <br>
@@ -2450,6 +2637,12 @@ dust</b> <br>
 Returns the number of objects collected.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Broom]
+unpack: [String:Ref]</b> <br>
+assigns the instance to the reference <br>
+(Always prefer using algebraic deconstruction assignments:
+look at section &rsquo;Assignment&rsquo;)</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Broom]
 objectCount</b> <br>
 Returns the total number of objects considered in the latest
 collect <br>
@@ -2526,6 +2719,12 @@ Every message you send will be turned into a string and
 dispatched to <br>
 the &rsquo;call:&rsquo; message.</p>
 
+<p style="margin-left:11%; margin-top: 1em"><b>[Shell]
+unpack: [String:Ref]</b> <br>
+assigns the instance to the reference <br>
+(Always prefer using algebraic deconstruction assignments:
+look at section &rsquo;Assignment&rsquo;)</p>
+
 <h2>Slurp
 <a name="Slurp"></a>
 </h2>
@@ -2596,6 +2795,12 @@ Obtains an argument from the CLI invocation.</p>
 argCount</b> <br>
 Returns the number of CLI arguments passed to the
 script.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+unpack: [String:Ref]</b> <br>
+assigns the instance to the reference <br>
+(Always prefer using algebraic deconstruction assignments:
+look at section &rsquo;Assignment&rsquo;)</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Program]
 exit</b> <br>
@@ -2770,8 +2975,7 @@ Program new: { :program</p>
        cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
 <td width="8%"></td>
-<td width="7%"></td>
-<td width="85%">
+<td width="92%">
 
 
 <p>Pen write: &rsquo;Child&rsquo;, brk.</p></td></tr>
@@ -3240,9 +3444,19 @@ waitForAll</b> <br>
 Wait until all fibers return</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Fiber]
+waitFor:</b> <br>
+Wait until fiber returns</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Fiber]
 yielded</b> <br>
 get the object that the last fiber yielded, or Nil if no
 object was yielded</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Fiber]
+unpack: [String:Ref]</b> <br>
+Assigns the fiber instance to the reference <br>
+(Always prefer using algebraic deconstruction assignments:
+look at section &rsquo;Assignment&rsquo;)</p>
 
 <h2>BUGS
 <a name="BUGS"></a>

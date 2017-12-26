@@ -20,7 +20,7 @@ FunctionThunk on: 'initWithName:obj:cif:' do: {:name:sym:cif
 FunctionThunk on: 'toString' do: {
   ^'DefinedFunction<%s at: %s | CIF = %s>' % [my name, my symbol, my cif].
 }.
-FunctionThunk on: 'applyTo:' do: {:args
+FunctionThunk on: '$' do: {:args
   ^my cif call: my symbol withArgs: args.
 }.
 var extern_define is {:path:symbol:return:argtypes
@@ -28,7 +28,7 @@ var extern_define is {:path:symbol:return:argtypes
   const loadedFuncs put: lib at: path.
   var sym is lib message: symbol arguments: [].
   var cif is CIF new setABI: 0 return: (CTypeTypeMap at: return) argTypes: (argtypes fmap: {:v ^CTypeTypeMap at: v.}).
-  ^[(const LoadedLibrary new initWithPath: path obj: lib), (const FunctionThunk new initWithName: symbol obj: sym cif: cif)].
+  ^const FunctionThunk new initWithName: symbol obj: sym cif: cif.
 }.
-extern_define on: 'fromLibrary:loadFunction:return:argTypes:' do: (extern_define &method: 'applyTo:and:and:and:').
 import export: extern_define as: 'extern_define'.
+^extern_define.

@@ -1,13 +1,6 @@
-var fun is {
-    ↑Map cnew: {
-        test => 4.
-        whatever => [64,87,'oi', 'io'].
-        w00t => 5.
-        lol => 100000.
-    }.
+ra is Object new.
+ra on: 'respondTo:and:' do: {:mesg:*args
+    Pen writeln: '@ID(%s) called with (%:L)' % [mesg, ', ', args].
+    ^'lol'.
 }.
-(Map cnew: {
-    test => 'lol'.
-    whatever => ['*_', 'meh', '_'].
-}) is fun run.
-Pen writeln: [lol, meh].
+ra test: 53 fool: 69.

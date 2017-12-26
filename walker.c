@@ -8,6 +8,8 @@
 
 #include "citron.h"
 
+int ctr_cwlk_replace_refs = 0;
+
 /**
  * CTRWalkerReturn
  *
@@ -172,7 +174,10 @@ ctr_object* ctr_cwlk_assignment(ctr_tnode* node) {
           result = ctr_assign_value(ctr_build_string(assignee->value, assignee->vlen), x);
       }
     } else {
+      int old_replace = ctr_cwlk_replace_refs;
+      ctr_cwlk_replace_refs = 1;
       ctr_send_message_variadic(x, "unpack:", 7, 1, ctr_cwlk_expr(assignee, &ret));
+      ctr_cwlk_replace_refs = old_replace;
       result = x;
     }
     if (CtrStdFlow == NULL) {
@@ -208,6 +213,10 @@ ctr_object* ctr_cwlk_expr(ctr_tnode* node, char* wasReturn) {
             result = ctr_build_block(node);
             break;
         case CTR_AST_NODE_REFERENCE:
+            if (ctr_cwlk_replace_refs) {
+              result = ctr_build_string(node->value, node->vlen);
+              break;
+            }
             if (CtrStdFlow == NULL) {
                 ctr_callstack[ctr_callstack_index++] = node;
             }

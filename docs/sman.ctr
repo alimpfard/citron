@@ -36,7 +36,52 @@ Citron has 5 literals:
 - Code Blocks { parameters code }
 .br
 
+.SH BASIC INSTRUCTIONS
+.SH ASSIGNMENT
 .RE
+Assignment in Citron has a few forms, a simple binding (variable is expression) or (variable := expression)
+a strictly private binding (variable => expression) [Which can be used in constructor messages]
+and a decomposition binding whose explanation follows:
+
+
+Every object that implements the 'unpack:' method, hereon called 'decomposable' and 'algebraic',
+is mostly a wrapper around smaller parts, for instance, an array is a container that only conatins some Objects.
+It does not change the objects, nor does it have any other property that can cause us to be unable to recreate those objects
+given said array. hence, we can deconstruct the array into its creating objects.
+
+
+Consider an object. an object can be called a mapping from its property names as keys, to their values as, well, values.
+much like a Map. However, since the object`s methods require a reference to it, they cannot be safely deconstructed.
+
+
+this concept (algebraic decomposition) is done by creating a wireframe of sorts, and telling the object to deconstruct itself
+based off that wireframe.
+E.g.
+
+.pp
+.nf
+.rs
+var \fBtestMap\fR is Map cnew: {
+		\fBtest\fR => [1,2,3,4,5].
+		\fBkey1\fR => Map new put: \fBme\fR at: 'test'.
+}.
+.re
+.rs
+(Map cnew: {
+		\fI#Take the third element from the right, and bind it to 'a'
+		\fBtest\fR => ['*_', 'a', '_', '_'].
+		\fI#Take the value at 'key1',
+		#take its' value at 'test',
+		#take its' value at 'test' and bind it to 'b'.\fR
+		\fBkey1\fR => Map cnew: {\fBtest\fR => (Map cnew: {\fBtest\fR => 'b'.}).}
+}) is \fBtestMap\fR.
+.fi
+.RE
+.pp
+
+Returning algebraic object types from functions, is often used to return several values from said function.
+:: TODO : Finish this section.
+.SH CORE MESSAGES
 The following messages are part of the Core API of the Citron Programming Language:
 .br
 .PP

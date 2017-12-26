@@ -1,6 +1,7 @@
 CFLAGS = -Wall -Wextra -Wno-unused-parameter -mtune=native -march=native -g3 -O1 -D withTermios -D forLinux -D CTR_STD_EXTENSION_PATH=\"`pwd`\"
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
-       world.o lexer.o parser.o walker.o reflect.o fiber.o importlib.o citron.o
+       world.o lexer.o parser.o walker.o reflect.o fiber.o importlib.o\
+	   base_extensions.o citron.o
 
 LOBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
         world.o lexer.o parser.o walker.o reflect.o fiber.o importlib.o citron_lib.o

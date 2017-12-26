@@ -2,7 +2,7 @@ Broom memoryLimit: 1024 * 1024 * 128.
 
 rept is 1000.
 
-ptr is CTypes fromString: ''.
+ptr is CTypes pointer.
 int is CTypes sint.
 cif is CIF new setABI: 0 return: Nil argTypes: [].
 ll is CTypes loadLibrary: '/lib64/libpython3.so'.
@@ -16,7 +16,7 @@ ptime is 0.
 pbest is 10 toPowerOf: 10.
 rept times: {:i
   ptr destruct.
-  ptr is CTypes fromString: 'len( "    " * $$i )'.
+  ptr is 'len( "    " * $$i )'.
   ptime +=: (var bestc is (Clock timeExecutionOf: {
       cif call: pyrun withArgs: [ptr].
   })).
@@ -29,15 +29,14 @@ cif call: pyfinalize withArgs: [].
 Broom sweep.
 
 ll is CTypes loadLibrary: Nil.
-ptr is CTypes fromString: ''.
+ptr is ''.
 cif setABI: 0 return: Nil argTypes: [ptr].
 execstr is ll execute_string.
 
 rtime is 0.
 rbest is 10 toPowerOf: 10.
 rept times:{:i
-  ptr destruct.
-  ptr is CTypes fromString: '\'    \' * $$i length'.
+  ptr is '\'    \' * $$i length'.
   rtime +=: (var bestc is (Clock timeExecutionOf: {
         cif call: execstr withArgs: [ptr].
   })).

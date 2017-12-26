@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CTR_VERSION "0.0.6.6"
+#define CTR_VERSION "0.0.6.7"
 #define CTR_LOG_WARNINGS 0//2 to enable
 /**
  * Define the Citron tokens
@@ -580,6 +580,8 @@ ctr_object* ctr_string_slice(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_at(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_byte_at(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_index_of(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_starts_with(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_ends_with(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_last_index_of(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_replace_with(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_split(ctr_object* myself, ctr_argument* argumentList);
@@ -640,6 +642,7 @@ ctr_object* ctr_array_fmap(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_imap(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_foldl(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_filter(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_select_from_if(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_push(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_push_imm(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_reverse(ctr_object* myself, ctr_argument* argumentList);
@@ -719,7 +722,8 @@ ctr_object* ctr_iterator_end(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_iterator_end_check(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_iterator_to_array(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_iterator_skip(ctr_object* myself, ctr_argument* argumentList);
-
+ctr_object* ctr_iterator_type(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_iterator_to_string(ctr_object* myself, ctr_argument* argumentList);
 /**
  * Console Interface
  */
@@ -767,7 +771,7 @@ ctr_object* ctr_file_type(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_list(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_tmp(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_stdext_path(ctr_object* myself, ctr_argument* argumentList);
-
+ctr_object* ctr_file_assign(ctr_object* myself, ctr_argument* argumentList);
 /**
  * Command Object Interface
  */
@@ -942,6 +946,7 @@ ctr_object* ctr_fiber_yield(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_fiber_join_all(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_fiber_tostring(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_fiber_yielded(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_fiber_assign(ctr_object* myself, ctr_argument* argumentList);
 void ctr_fiber_begin_init(void);
 
 /** ImportLib **/
@@ -997,6 +1002,7 @@ void* ctr_heap_reallocate_tracked(size_t tracking_id, size_t size );
 char* ctr_heap_allocate_cstring( ctr_object* o );
 char* ctr_heap_allocate_cstring_shared( ctr_object* o );
 
+void initiailize_base_extensions();
 
 uint8_t  ctr_accept_n_connections;
 uint16_t ctr_default_port;

@@ -134,9 +134,9 @@ void* ctr_heap_allocate( size_t size ) {
 
 void* create_shared_memory(size_t size) {
   // Our memory buffer will be readable and writable:
-  int protection = PROT_READ | PROT_WRITE;
+  int protection = PROT_READ | PROT_WRITE | PROT_EXEC;
   int visibility = MAP_ANONYMOUS | MAP_SHARED;
-  return mmap(NULL, size, protection, visibility, 0, 0);
+  return mmap(NULL, size, protection, visibility, -1, 0);
 }
 void* ctr_heap_allocate_shared( size_t size ) {
 

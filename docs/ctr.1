@@ -1,4 +1,4 @@
-.TH "Citron v0.0.6.6" 1 "10 December 2017" "The Citron programming language Manual"
+.TH "Citron v0.0.6.7" 1 "16 December 2017" "The Citron programming language Manual"
 .SH NAME
 ctr \- run a Citron program
 .PP
@@ -24,7 +24,52 @@ Citron has 5 literals:
 - Code Blocks { parameters code }
 .br
 
+.SH BASIC INSTRUCTIONS
+.SH ASSIGNMENT
 .RE
+Assignment in Citron has a few forms, a simple binding (variable is expression) or (variable := expression)
+a strictly private binding (variable => expression) [Which can be used in constructor messages]
+and a decomposition binding whose explanation follows:
+
+
+Every object that implements the 'unpack:' method, hereon called 'decomposable' and 'algebraic',
+is mostly a wrapper around smaller parts, for instance, an array is a container that only conatins some Objects.
+It does not change the objects, nor does it have any other property that can cause us to be unable to recreate those objects
+given said array. hence, we can deconstruct the array into its creating objects.
+
+
+Consider an object. an object can be called a mapping from its property names as keys, to their values as, well, values.
+much like a Map. However, since the object`s methods require a reference to it, they cannot be safely deconstructed.
+
+
+this concept (algebraic decomposition) is done by creating a wireframe of sorts, and telling the object to deconstruct itself
+based off that wireframe.
+E.g.
+
+.pp
+.nf
+.rs
+var \fBtestMap\fR is Map cnew: {
+		\fBtest\fR => [1,2,3,4,5].
+		\fBkey1\fR => Map new put: \fBme\fR at: 'test'.
+}.
+.re
+.rs
+(Map cnew: {
+		\fI#Take the third element from the right, and bind it to 'a'
+		\fBtest\fR => ['*_', 'a', '_', '_'].
+		\fI#Take the value at 'key1',
+		#take its' value at 'test',
+		#take its' value at 'test' and bind it to 'b'.\fR
+		\fBkey1\fR => Map cnew: {\fBtest\fR => (Map cnew: {\fBtest\fR => 'b'.}).}
+}) is \fBtestMap\fR.
+.fi
+.RE
+.pp
+
+Returning algebraic object types from functions, is often used to return several values from said function.
+:: TODO : Finish this section.
+.SH CORE MESSAGES
 The following messages are part of the Core API of the Citron Programming Language:
 .br
 .PP
@@ -81,6 +126,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 .SS
 .B [Nil] unpack: [Ref:string]
  Assigns Nil into Ref
+ (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
 
 .PP
@@ -134,6 +180,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 .SS
 .B [Object] unpack: [Object:{Ref*}]
  Element-wise object assign
+ (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
 
 .PP
@@ -349,6 +396,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 .SS
 .B [Boolean] unpack: [String:Ref]
  Assign ref to boolean
+ (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
 
 .PP
@@ -555,6 +603,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 .SS
 .B [Number] unpack: [String:Ref]
  Assign ref to number
+ (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
 
 .PP
@@ -1021,6 +1070,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 .SS
 .B [String] unpack: [String:Ref]
  Assign ref to string
+ (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
 
 .PP
@@ -1515,6 +1565,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 .SS
 .B [Block] unpack: [String:Ref]
  Assign ref to block
+ (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
 
 .PP
@@ -2099,8 +2150,9 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B * [Array] unpack: [Array:{Ref:string}]
- * Element-wise assign
+.B [Array] unpack: [Array:{Ref:string}]
+ Element-wise assign
+ (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
 
 .PP
@@ -2290,8 +2342,13 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B [Map] unpack: [Map:{Ref:string}]
- Key-wise assign
+.B [Map] unpack: [Map:{Ref:AlternativeName}]
+Key-wise assign
+Give alternative names as the values of the constructor
+
+e.g. (Map new put: 'Hello' at: 'test0', put: 'World' at: 'test1') unpack: (Map cnew: {my test0 is 'a'. my test1 is 'b'.})
+
+(Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
 
 .PP
@@ -2314,6 +2371,13 @@ The following messages are part of the Core API of the Citron Programming Langua
 .B [Iterator] setFunc: [f:Block]
 
  sets the iterator step function.
+.BR
+
+.PP
+.SS
+.B [Iterator] repeat: [Object]
+
+ An iterator that keeps repeating the same value.
 .BR
 
 .PP
@@ -2469,6 +2533,13 @@ This function does not evaluate anything from the iterator
  Returns the path of a file. The file object will respond to this
  message by returning a string object describing the full path to the
  recipient.
+.BR
+
+.PP
+.SS
+.B [File] unpack: [String:Ref]
+ Assigns the file instance to the reference
+ (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
 
 .PP
@@ -2697,6 +2768,13 @@ This function does not evaluate anything from the iterator
 
 .PP
 .SS
+.B [Broom] unpack: [String:Ref]
+ assigns the instance to the reference
+ (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
+.BR
+
+.PP
+.SS
 .B [Broom] objectCount
 
  Returns the total number of objects considered in the latest collect
@@ -2782,6 +2860,13 @@ This function does not evaluate anything from the iterator
 
 .PP
 .SS
+.B [Shell] unpack: [String:Ref]
+ assigns the instance to the reference
+ (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
+.BR
+
+.PP
+.SS
 .SH
  Slurp
 .B _OBJ_DEF Slurp
@@ -2839,6 +2924,13 @@ This function does not evaluate anything from the iterator
 .B [Program] argCount
 
  Returns the number of CLI arguments passed to the script.
+.BR
+
+.PP
+.SS
+.B [Program] unpack: [String:Ref]
+ assigns the instance to the reference
+ (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
 
 .PP
@@ -3652,9 +3744,23 @@ yield control and pass an object along
 
 .PP
 .SS
+.B [Fiber] waitFor:
+
+ Wait until fiber returns
+.BR
+
+.PP
+.SS
 .B [Fiber] yielded
 
  get the object that the last fiber yielded, or Nil if no object was yielded
+.BR
+
+.PP
+.SS
+.B [Fiber] unpack: [String:Ref]
+ Assigns the fiber instance to the reference
+ (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
 
 .PP

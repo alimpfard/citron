@@ -1160,7 +1160,7 @@ ctr_object* ctr_reflect_get_instrumentor(ctr_object* myself, ctr_argument* argum
 ctr_object* ctr_reflect_run_glob(ctr_object* myself, ctr_argument* argumentList) {
   int old_index = ctr_context_id;
   ctr_context_id = 0;
-  ctr_object* ret = ctr_block_run(argumentList->object, argumentList->next, argumentList->object);
+  ctr_object* ret = ctr_block_run_here(argumentList->object, argumentList->next, argumentList->object);
   ctr_context_id = old_index;
   return ret;
 }

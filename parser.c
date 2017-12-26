@@ -570,7 +570,7 @@ ctr_tnode* ctr_cparse_expr(int mode) {
 
     /* user tries to put colon directly after recipient */
     if ( t2 == CTR_TOKEN_COLON ) {
-        ctr_cparse_emit_error_unexpected( t2, "Recipient cannot be followed by colon.\n" );
+        ctr_cparse_emit_error_unexpected( t2, "Recipient cannot be followed by a colon.\n" );
     }
 
     if ( t2 == CTR_TOKEN_ASSIGNMENT ) {

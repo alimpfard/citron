@@ -54,7 +54,7 @@ ctr_object* ctr_file_stdext_path(ctr_object* myself, ctr_argument* argumentList)
  * replacing XXXX with some chars.
  * Usage:
  *
- * File tempFileLike: '/example/path/to/fileXXXXXXXX.txt'.
+ * File tempFileLike: '/example/path/to/fileXXXXXXXX'.
  */
 
 ctr_object* ctr_file_tmp(ctr_object* myself, ctr_argument* argumentList) {
@@ -71,7 +71,7 @@ ctr_object* ctr_file_tmp(ctr_object* myself, ctr_argument* argumentList) {
     f = fdopen(fd, "rb");
     if (f == NULL) {
         char* buf = ctr_heap_allocate(sizeof(char)*1024);
-        sprintf(buf, "%d: %d", fd, errno);
+        sprintf(buf, "%d: %d", fd, strerror(errno));
         CtrStdFlow = ctr_build_string_from_cstring(buf);
         ctr_heap_free(buf);
         return CtrStdFlow;
@@ -96,6 +96,15 @@ ctr_object* ctr_file_path(ctr_object* myself, ctr_argument* argumentList) {
     ctr_object* path = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring( "path" ), 0);
     if (path == NULL) return CtrStdNil;
     return path;
+}
+
+/**
+ * [File] unpack: [String:Ref]
+ * Assigns the file instance to the reference
+ * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
+ */
+ctr_object* ctr_file_assign(ctr_object* myself, ctr_argument* argumentList) {
+    return ctr_object_assign(myself, argumentList);
 }
 
 /**
@@ -280,7 +289,9 @@ ctr_object* ctr_file_include(ctr_object* myself, ctr_argument* argumentList) {
     parsedCode = ctr_cparse_parse(prg, pathString);
     ctr_heap_free( prg );
     ctr_cwlk_subprogram++;
+    ctr_open_context();
     ctr_cwlk_run(parsedCode);
+    ctr_close_context();
     ctr_cwlk_subprogram--;
     return myself;
 }

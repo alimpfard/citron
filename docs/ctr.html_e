@@ -1,0 +1,3485 @@
+&lt;!-- Creator     : groff version 1.22.3 --&gt;
+&lt;!-- CreationDate: Sun Dec 17 00:22:15 2017 --&gt;
+&lt;!DOCTYPE html PUBLIC &quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;
+&quot;http://www.w3.org/TR/html4/loose.dtd&quot;&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta name=&quot;generator&quot; content=&quot;groff -Thtml, see www.gnu.org&quot;&gt;
+&lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; charset=US-ASCII&quot;&gt;
+&lt;meta name=&quot;Content-Style&quot; content=&quot;text/css&quot;&gt;
+&lt;style type=&quot;text/css&quot;&gt;
+       p       { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       pre     { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       h1      { text-align: center }
+&lt;/style&gt;
+&lt;title&gt;Citron v0.0.6.7&lt;/title&gt;
+
+&lt;/head&gt;
+&lt;body&gt;
+
+&lt;h1 align=&quot;center&quot;&gt;Citron v0.0.6.7&lt;/h1&gt;
+
+&lt;a href=&quot;#NAME&quot;&gt;NAME&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#SYNOPSIS&quot;&gt;SYNOPSIS&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#DESCRIPTION&quot;&gt;DESCRIPTION&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#REFERENCE MANUAL&quot;&gt;REFERENCE MANUAL&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#BASIC INSTRUCTIONS&quot;&gt;BASIC INSTRUCTIONS&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#ASSIGNMENT&quot;&gt;ASSIGNMENT&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#CORE MESSAGES&quot;&gt;CORE MESSAGES&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#Nil&quot;&gt;Nil&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#Object&quot;&gt;Object&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#Boolean&quot;&gt;Boolean&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#Number&quot;&gt;Number&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#String&quot;&gt;String&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#Tuple&quot;&gt;Tuple&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#CodeBlock&quot;&gt;CodeBlock&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#Array&quot;&gt;Array&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#Map&quot;&gt;Map&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#Iterator&quot;&gt;Iterator&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#File&quot;&gt;File&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#Broom&quot;&gt;Broom&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#Shell&quot;&gt;Shell&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#Slurp&quot;&gt;Slurp&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#Program&quot;&gt;Program&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#Dice&quot;&gt;Dice&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#Clock&quot;&gt;Clock&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#Pen&quot;&gt;Pen&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#Reflect&quot;&gt;Reflect&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#Fiber&quot;&gt;Fiber&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#BUGS&quot;&gt;BUGS&lt;/a&gt;&lt;br&gt;
+&lt;a href=&quot;#AUTHOR&quot;&gt;AUTHOR&lt;/a&gt;&lt;br&gt;
+
+&lt;hr&gt;
+
+
+&lt;h2&gt;NAME
+&lt;a name=&quot;NAME&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;ctr &amp;minus; run
+a Citron program&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;citron &amp;minus;
+interface to citron eval&lt;/p&gt;
+
+&lt;h2&gt;SYNOPSIS
+&lt;a name=&quot;SYNOPSIS&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;ctr
+[PROGRAM]&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;citron
+[arguments]&lt;/p&gt;
+
+&lt;h2&gt;DESCRIPTION
+&lt;a name=&quot;DESCRIPTION&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Citron is a
+general purpose programming language for UNIX&amp;minus;like
+operating systems.&lt;/p&gt;
+
+&lt;h2&gt;REFERENCE MANUAL
+&lt;a name=&quot;REFERENCE MANUAL&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Citron has 5
+literals:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:17%;&quot;&gt;- Nil &lt;br&gt;
+- Booleans (True, False) &lt;br&gt;
+- Numbers (1, -2, 3.5) &lt;br&gt;
+- Strings &amp;rsquo;All Strings are UTF8!&amp;rsquo; &lt;br&gt;
+- Code Blocks { parameters code }&lt;/p&gt;
+
+&lt;h2&gt;BASIC INSTRUCTIONS
+&lt;a name=&quot;BASIC INSTRUCTIONS&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;h2&gt;ASSIGNMENT
+&lt;a name=&quot;ASSIGNMENT&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Assignment in
+Citron has a few forms, a simple binding (variable is
+expression) or (variable := expression) a strictly private
+binding (variable =&amp;gt; expression) [Which can be used in
+constructor messages] and a decomposition binding whose
+explanation follows:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Every object
+that implements the &amp;rsquo;unpack:&amp;rsquo; method, hereon
+called &amp;rsquo;decomposable&amp;rsquo; and
+&amp;rsquo;algebraic&amp;rsquo;, is mostly a wrapper around smaller
+parts, for instance, an array is a container that only
+conatins some Objects it does not change the objects, or
+have any other property that can cause us to be unable to
+recreate those objects given said array. hence, we can
+deconstruct the array into its creating objects.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Consider an
+object. an object can be called a mapping from its property
+names as keys, to their values as, well, values. much like a
+Map. However, since the object&amp;lsquo;s methods require a
+reference to it, they cannot be safely deconstructed.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;this concept
+(algebraic decomposition) is done by creating a wireframe of
+sorts, and telling the object to deconstruct itself based
+off that wireframe. E.g.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;var
+&lt;b&gt;testMap&lt;/b&gt; is Map cnew: {&lt;/p&gt;
+
+&lt;table width=&quot;100%&quot; border=&quot;0&quot; rules=&quot;none&quot; frame=&quot;void&quot;
+       cellspacing=&quot;0&quot; cellpadding=&quot;0&quot;&gt;
+&lt;tr valign=&quot;top&quot; align=&quot;left&quot;&gt;
+&lt;td width=&quot;8%&quot;&gt;&lt;/td&gt;
+&lt;td width=&quot;7%&quot;&gt;
+&lt;/td&gt;
+&lt;td width=&quot;8%&quot;&gt;
+&lt;/td&gt;
+&lt;td width=&quot;77%&quot;&gt;
+
+
+&lt;p&gt;&lt;b&gt;test&lt;/b&gt; =&amp;gt; [1,2,3,4,5].&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign=&quot;top&quot; align=&quot;left&quot;&gt;
+&lt;td width=&quot;8%&quot;&gt;&lt;/td&gt;
+&lt;td width=&quot;7%&quot;&gt;
+&lt;/td&gt;
+&lt;td width=&quot;8%&quot;&gt;
+&lt;/td&gt;
+&lt;td width=&quot;77%&quot;&gt;
+
+
+&lt;p&gt;&lt;b&gt;key1&lt;/b&gt; =&amp;gt; Map new put: &lt;b&gt;me&lt;/b&gt; at:
+&amp;rsquo;test&amp;rsquo;.&lt;/p&gt; &lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+&lt;p style=&quot;margin-left:11%;&quot;&gt;}. &lt;br&gt;
+(Map cnew: {&lt;/p&gt;
+
+&lt;table width=&quot;100%&quot; border=&quot;0&quot; rules=&quot;none&quot; frame=&quot;void&quot;
+       cellspacing=&quot;0&quot; cellpadding=&quot;0&quot;&gt;
+&lt;tr valign=&quot;top&quot; align=&quot;left&quot;&gt;
+&lt;td width=&quot;8%&quot;&gt;&lt;/td&gt;
+&lt;td width=&quot;7%&quot;&gt;
+&lt;/td&gt;
+&lt;td width=&quot;8%&quot;&gt;
+&lt;/td&gt;
+&lt;td width=&quot;77%&quot;&gt;
+
+
+&lt;p&gt;&lt;i&gt;#Take the third element from the right, and bind it
+to &amp;rsquo;a&amp;rsquo;&lt;/i&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign=&quot;top&quot; align=&quot;left&quot;&gt;
+&lt;td width=&quot;8%&quot;&gt;&lt;/td&gt;
+&lt;td width=&quot;7%&quot;&gt;
+&lt;/td&gt;
+&lt;td width=&quot;8%&quot;&gt;
+&lt;/td&gt;
+&lt;td width=&quot;77%&quot;&gt;
+
+
+&lt;p&gt;&lt;b&gt;test&lt;/b&gt; =&amp;gt; [&amp;rsquo;*_&amp;rsquo;, &amp;rsquo;a&amp;rsquo;,
+&amp;rsquo;_&amp;rsquo;, &amp;rsquo;_&amp;rsquo;].&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign=&quot;top&quot; align=&quot;left&quot;&gt;
+&lt;td width=&quot;8%&quot;&gt;&lt;/td&gt;
+&lt;td width=&quot;7%&quot;&gt;
+&lt;/td&gt;
+&lt;td width=&quot;8%&quot;&gt;
+&lt;/td&gt;
+&lt;td width=&quot;77%&quot;&gt;
+
+
+&lt;p&gt;&lt;i&gt;#Take the value at &amp;rsquo;key1&amp;rsquo;,&lt;/i&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign=&quot;top&quot; align=&quot;left&quot;&gt;
+&lt;td width=&quot;8%&quot;&gt;&lt;/td&gt;
+&lt;td width=&quot;7%&quot;&gt;
+&lt;/td&gt;
+&lt;td width=&quot;8%&quot;&gt;
+&lt;/td&gt;
+&lt;td width=&quot;77%&quot;&gt;
+
+
+&lt;p&gt;&lt;i&gt;#take its&amp;rsquo; value at &amp;rsquo;test&amp;rsquo;,&lt;/i&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign=&quot;top&quot; align=&quot;left&quot;&gt;
+&lt;td width=&quot;8%&quot;&gt;&lt;/td&gt;
+&lt;td width=&quot;7%&quot;&gt;
+&lt;/td&gt;
+&lt;td width=&quot;8%&quot;&gt;
+&lt;/td&gt;
+&lt;td width=&quot;77%&quot;&gt;
+
+
+&lt;p&gt;&lt;i&gt;#take its&amp;rsquo; value at &amp;rsquo;test&amp;rsquo; and bind
+it to &amp;rsquo;b&amp;rsquo;.&lt;/i&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign=&quot;top&quot; align=&quot;left&quot;&gt;
+&lt;td width=&quot;8%&quot;&gt;&lt;/td&gt;
+&lt;td width=&quot;7%&quot;&gt;
+&lt;/td&gt;
+&lt;td width=&quot;8%&quot;&gt;
+&lt;/td&gt;
+&lt;td width=&quot;77%&quot;&gt;
+
+
+&lt;p&gt;&lt;b&gt;key1&lt;/b&gt; =&amp;gt; Map cnew: {&lt;b&gt;test&lt;/b&gt; =&amp;gt; (Map
+cnew: {&lt;b&gt;test&lt;/b&gt; =&amp;gt; &amp;rsquo;b&amp;rsquo;.}).}&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+&lt;p style=&quot;margin-left:11%;&quot;&gt;}) is &lt;b&gt;testMap&lt;/b&gt;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Returning
+algebraic object types from functions, is often used to
+return several values from said function. :: TODO : Finish
+this section.&lt;/p&gt;
+
+&lt;h2&gt;CORE MESSAGES
+&lt;a name=&quot;CORE MESSAGES&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The following
+messages are part of the Core API of the Citron Programming
+Language:&lt;/p&gt;
+
+&lt;h2&gt;Nil
+&lt;a name=&quot;Nil&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;_OBJ_DEF
+Nil&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Nil&lt;/b&gt; &lt;br&gt;
+Nil represents &amp;rsquo;nothing&amp;rsquo; or NULL in other
+languages. &lt;br&gt;
+Any object property that has not been assigned a value &lt;br&gt;
+will contain Nil. Unlike some other programming languages
+&lt;br&gt;
+Citron has no concept of &amp;rsquo;undefined&amp;rsquo; or isset,
+Nil is actually the &lt;br&gt;
+same as &amp;rsquo;undefined&amp;rsquo; or not set.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Literal:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Nil&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Nil]
+isNil&lt;/b&gt; &lt;br&gt;
+Nil always answers this message with a boolean object
+&amp;rsquo;True&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Nil]
+toString&lt;/b&gt; &lt;br&gt;
+Returns the string representation of Nil:
+&amp;rsquo;Nil&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Nil]
+toNumber&lt;/b&gt; &lt;br&gt;
+Returns the numerical representation of Nil: 0.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Nil]
+toBoolean&lt;/b&gt; &lt;br&gt;
+Returns the boolean representation of Nil: False.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Nil]
+unpack: [Ref:string]&lt;/b&gt; &lt;br&gt;
+Assigns Nil into Ref &lt;br&gt;
+(Always prefer using algebraic deconstruction assignments:
+look at section &amp;rsquo;Assignment&amp;rsquo;)&lt;/p&gt;
+
+&lt;h2&gt;Object
+&lt;a name=&quot;Object&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;_OBJ_DEF
+Object&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Object&lt;/b&gt;
+&lt;br&gt;
+This is the base object, the parent of all other objects.
+&lt;br&gt;
+It contains essential object oriented programming
+features.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Object cnew:
+[Block]&lt;/b&gt; &lt;br&gt;
+Object constructor with some initial parameters. &lt;br&gt;
+Object is passed to the block as me/my&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Object
+genAccessors: [String]&lt;/b&gt; &lt;br&gt;
+generate reader/writer methods for property. &lt;br&gt;
+creates the property is it doesn&amp;rsquo;t exist&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Object
+genReader: [String]&lt;/b&gt; &lt;br&gt;
+generate reader method for property. &lt;br&gt;
+creates the property is it doesn&amp;rsquo;t exist&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Object
+genWriter: [String]&lt;/b&gt; &lt;br&gt;
+generate writer method for property. &lt;br&gt;
+does not create the property is it doesn&amp;rsquo;t exist&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Object]
+unpack: [Object:{Ref*}]&lt;/b&gt; &lt;br&gt;
+Element-wise object assign &lt;br&gt;
+(Always prefer using algebraic deconstruction assignments:
+look at section &amp;rsquo;Assignment&amp;rsquo;)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Object]
+iHash&lt;/b&gt; &lt;br&gt;
+fallback hashing &lt;br&gt;
+returns the hash of the object&amp;rsquo;s string form.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Object] new
+hiding:&lt;/b&gt; &lt;br&gt;
+Creates a new Object hiding some parameters.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Object
+swapRefs: [Object]&lt;/b&gt; &lt;br&gt;
+swap two objects with each other. &lt;br&gt;
+Effectively &amp;rsquo;xchg %ra, %rb&amp;rsquo;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Object]
+type&lt;/b&gt; &lt;br&gt;
+Returns a string representation of the type of object.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Object]
+toString&lt;/b&gt; &lt;br&gt;
+Returns a string representation of a generic object. &lt;br&gt;
+This string representation will be:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;[Object]&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Object]
+toNumber&lt;/b&gt; &lt;br&gt;
+Returns a numerical representation of the object. This basic
+behavior, part &lt;br&gt;
+of any object will just return 1. Other objects typically
+override this &lt;br&gt;
+behavior with more useful implementations.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Object]
+toBoolean&lt;/b&gt; &lt;br&gt;
+Returns a boolean representation of the object. This basic
+behavior, part &lt;br&gt;
+of any object will just return True. Other objects typically
+override this &lt;br&gt;
+behavior with more useful implementations.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Object]
+equals: [other]&lt;/b&gt; &lt;br&gt;
+Tests whether the current instance is the same as &lt;br&gt;
+the argument.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Alias: =&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage: &lt;br&gt;
+object equals: other&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Object]
+id&lt;/b&gt; &lt;br&gt;
+returns a unique identifier for the object&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Object]
+myself&lt;/b&gt; &lt;br&gt;
+Returns the object itself.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Object]
+learn: [String] means: [String].&lt;/b&gt; &lt;br&gt;
+Teaches any object to repsond to the first specified message
+just like &lt;br&gt;
+it would upon receiving the second. This allows you to map
+existing &lt;br&gt;
+responses to new messages. You can use this to translate
+messages into your native &lt;br&gt;
+language. After mapping, sending the alias message will be
+just as fast &lt;br&gt;
+as sending the original message. You can use this to create
+programs &lt;br&gt;
+in your native language without sacrficing performance. Of
+course the mapping itself &lt;br&gt;
+has a cost, but the mapped calls will be
+&amp;rsquo;toll-free&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;#in this
+example we&amp;rsquo;ll map a message to a Dutch word:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Boolean learn:
+&amp;rsquo;alsWaar:&amp;rsquo; &lt;br&gt;
+means: &amp;rsquo;ifTrue:&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;(2 &amp;gt; 1)
+alsWaar: { &lt;br&gt;
+Pen write: &amp;rsquo;alsWaar means ifTrue in Dutch&amp;rsquo;. &lt;br&gt;
+}&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Object]
+do&lt;/b&gt; &lt;br&gt;
+Activates &amp;rsquo;chain mode&amp;rsquo;. If chain mode is active,
+all messages will &lt;br&gt;
+return the recipient object regardless of their return
+signature.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;a is Array &amp;lt;
+&amp;rsquo;hello&amp;rsquo; ; &amp;rsquo;world&amp;rsquo; ; True ; Nil ;
+666. &lt;br&gt;
+a do pop shift unshift: &amp;rsquo;hi&amp;rsquo;, push: 999,
+done.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Because of
+&amp;rsquo;chain mode&amp;rsquo; you can do &amp;rsquo;a do pop
+shift&amp;rsquo; etc, instead of&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;a pop. &lt;br&gt;
+a shift. &lt;br&gt;
+etc..&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The
+&amp;rsquo;do&amp;rsquo; message tells the object to always return
+itself and disgard &lt;br&gt;
+the original return value until the message
+&amp;rsquo;done&amp;rsquo; has been received.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Object]
+done&lt;/b&gt; &lt;br&gt;
+Deactivates &amp;rsquo;chain mode&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Object]
+message: [String] arguments: [Array]&lt;/b&gt; &lt;br&gt;
+Sends a custom or &amp;rsquo;dynamic&amp;rsquo; message to an
+object. This takes a string containing &lt;br&gt;
+the message to be send to the object and an array listing
+the arguments at the &lt;br&gt;
+correct indexes. If the array fails to provide the correct
+indexes this will &lt;br&gt;
+generate an out-of-bounds error coming from the Array
+object. If something other &lt;br&gt;
+than an Array is provided an error will be thrown as
+well.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;var str is
+&amp;rsquo;write:&amp;rsquo;. &lt;br&gt;
+Pen message: &amp;rsquo;write:&amp;rsquo; arguments: (Array &amp;lt;
+&amp;rsquo;Hello World&amp;rsquo;).&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;This will print
+the string &amp;rsquo;Hello world&amp;rsquo; on the screen using a
+dynamically &lt;br&gt;
+crafted message.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Object] on:
+[String] do: [Block]&lt;/b&gt; &lt;br&gt;
+Makes the object respond to a new kind of message. &lt;br&gt;
+Use the semicolons to indicate the positions of the
+arguments to be &lt;br&gt;
+passed.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;object on:
+&amp;rsquo;greet&amp;rsquo; do: { ... }. &lt;br&gt;
+object on: &amp;rsquo;between:and:&amp;rsquo; do: { ... }.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Object]
+respondTo: [String]&lt;/b&gt; &lt;br&gt;
+Variations:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;[Object]
+respondTo: [String] with: [String] &lt;br&gt;
+[Object] respondTo: [String] with: [String] and:
+[String]&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Default
+respond-to implementation, does nothing.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Object]
+isNil&lt;/b&gt; &lt;br&gt;
+Default isNil implementation.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Always returns
+boolean object False.&lt;/p&gt;
+
+&lt;h2&gt;Boolean
+&lt;a name=&quot;Boolean&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;_OBJ_DEF
+Boolean&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Boolean&lt;/b&gt;
+&lt;br&gt;
+Literal:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;True &lt;br&gt;
+False&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Boolean]
+unpack: [String:Ref]&lt;/b&gt; &lt;br&gt;
+Assign ref to boolean &lt;br&gt;
+(Always prefer using algebraic deconstruction assignments:
+look at section &amp;rsquo;Assignment&amp;rsquo;)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Boolean] =
+[other]&lt;/b&gt; &lt;br&gt;
+Tests whether the other object (as a boolean) has the &lt;br&gt;
+same value (boolean state True or False) as the current
+one.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;(True = False)
+ifFalse: { Pen write: &amp;rsquo;This is not True!&amp;rsquo;.
+}.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Boolean] !=
+[other]&lt;/b&gt; &lt;br&gt;
+Tests whether the other object (as a boolean) has the &lt;br&gt;
+same value (boolean state True or False) as the current
+one.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;(True != False)
+ifTrue: { Pen write: &amp;rsquo;This is not True!&amp;rsquo;. }.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Boolean]
+toString&lt;/b&gt; &lt;br&gt;
+Simple cast function.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Boolean]
+break&lt;/b&gt; &lt;br&gt;
+Breaks out of the current block and bubbles up to the parent
+block if &lt;br&gt;
+the value of the receiver equals boolean True.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;(iteration &amp;gt;
+10) break. #breaks out of loop after 10 iterations&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Boolean]
+continue&lt;/b&gt; &lt;br&gt;
+Skips the remainder of the current block in a loop,
+continues to the next &lt;br&gt;
+iteration.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;(iteration &amp;gt;
+10) continue.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Boolean]
+ifTrue: [block]&lt;/b&gt; &lt;br&gt;
+Executes a block of code if the value of the boolean &lt;br&gt;
+object is True.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage: &lt;br&gt;
+(some expression) ifTrue: { ... }.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;You can also
+use ifFalse and ifTrue with other objects because the &lt;br&gt;
+Object instance also responds to these messages.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Boolean]
+ifFalse: [block]&lt;/b&gt; &lt;br&gt;
+Executes a block of code if the value of the boolean &lt;br&gt;
+object is True.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage: &lt;br&gt;
+(some expression) ifFalse: { ... }.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;You can also
+use ifFalse and ifTrue with other objects because the &lt;br&gt;
+Object instance also responds to these messages.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[b:Object]
+or: [Block|Object]&lt;/b&gt; &lt;br&gt;
+Evaluates and returns the block if b evaluates to false,
+else returns b&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Boolean]
+not&lt;/b&gt; &lt;br&gt;
+Returns the opposite of the current value.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage: &lt;br&gt;
+True is False not.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Boolean]
+flip&lt;/b&gt; &lt;br&gt;
+&amp;rsquo;Flips a coin&amp;rsquo;. Returns a random boolean value
+True or False.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage: &lt;br&gt;
+coinLandsOn is (Boolean flip).&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Boolean]
+either: [this] or: [that]&lt;/b&gt; &lt;br&gt;
+Returns argument #1 if boolean value is True and argument #2
+otherwise.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;If either
+object is a block, it will be executed and its result
+returned if &lt;br&gt;
+it is supposed to be returned.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage: &lt;br&gt;
+Pen write: &amp;rsquo;the coin lands on: &amp;rsquo; + (Boolean flip
+either: &amp;rsquo;head&amp;rsquo; or: &amp;rsquo;tail&amp;rsquo;). &lt;br&gt;
+Pen write: &amp;rsquo;the coin lands on: &amp;rsquo; + (Boolean flip
+either: {^&amp;rsquo;head&amp;rsquo; * 10000.} or:
+&amp;rsquo;tail&amp;rsquo;).&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Boolean]
+&amp;amp; [other]&lt;/b&gt; &lt;br&gt;
+Returns True if both the object value is True and the &lt;br&gt;
+argument is True as well.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;a &amp;amp; b&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Boolean] !
+[other]&lt;/b&gt; &lt;br&gt;
+Returns True if the object value is False and the &lt;br&gt;
+argument is False as well.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;a ! b&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Boolean] |
+[other]&lt;/b&gt; &lt;br&gt;
+Returns True if either the object value is True or the &lt;br&gt;
+argument is True or both are True.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;a | b&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Boolean] ?
+[other]&lt;/b&gt; &lt;br&gt;
+Returns True if either the object value is True or the &lt;br&gt;
+argument is True but not both.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;a ? b&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Boolean]
+toNumber&lt;/b&gt; &lt;br&gt;
+Returns 0 if boolean is False and 1 otherwise.&lt;/p&gt;
+
+&lt;h2&gt;Number
+&lt;a name=&quot;Number&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;_OBJ_DEF
+Number&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Number&lt;/b&gt;
+&lt;br&gt;
+Literal:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;0 &lt;br&gt;
+1 &lt;br&gt;
+-8 &lt;br&gt;
+2.5&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Represents a
+number object in Citron.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+unpack: [String:Ref]&lt;/b&gt; &lt;br&gt;
+Assign ref to number &lt;br&gt;
+(Always prefer using algebraic deconstruction assignments:
+look at section &amp;rsquo;Assignment&amp;rsquo;)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+&amp;gt; [other]&lt;/b&gt; &lt;br&gt;
+Returns True if the number is higher than other number.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+&amp;gt;=: [other]&lt;/b&gt; &lt;br&gt;
+Returns True if the number is higher than or equal to other
+number.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+&amp;lt; [other]&lt;/b&gt; &lt;br&gt;
+Returns True if the number is less than other number.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+&amp;lt;=: [other]&lt;/b&gt; &lt;br&gt;
+Returns True if the number is less than or equal to other
+number.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number] =
+[other]&lt;/b&gt; &lt;br&gt;
+Returns True if the number equals the other number.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number] !=:
+[other]&lt;/b&gt; &lt;br&gt;
+Returns True if the number does not equal the other
+number.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+between: [low] and: [high]&lt;/b&gt; &lt;br&gt;
+Returns True if the number instance has a value between the
+two &lt;br&gt;
+specified values.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;q between: x
+and: y&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+odd&lt;/b&gt; &lt;br&gt;
+Returns True if the number is odd and False otherwise.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+even&lt;/b&gt; &lt;br&gt;
+Returns True if the number is even and False otherwise.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number] +
+[Number]&lt;/b&gt; &lt;br&gt;
+Adds the other number to the current one. Returns a new &lt;br&gt;
+number object.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number] +=:
+[Number]&lt;/b&gt; &lt;br&gt;
+Increases the number ITSELF by the specified amount, this
+message will change the &lt;br&gt;
+value of the number object itself instead of returning a new
+number.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number] -
+[Number]&lt;/b&gt; &lt;br&gt;
+Subtracts the other number from the current one. Returns a
+new &lt;br&gt;
+number object.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number] -=:
+[number]&lt;/b&gt; &lt;br&gt;
+Decreases the number ITSELF by the specified amount, this
+message will change the &lt;br&gt;
+value of the number object itself instead of returning a new
+number.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number] *
+[Number or Block]&lt;/b&gt; &lt;br&gt;
+Multiplies the number by the specified multiplier. Returns a
+new &lt;br&gt;
+number object.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+times: [Block]&lt;/b&gt; &lt;br&gt;
+Runs the block of code a &amp;rsquo;Number&amp;rsquo; of times. &lt;br&gt;
+This is the most basic form of a loop.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;7 times: { :i
+Pen write: i. }.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The example
+above runs the block 7 times. The current iteration &lt;br&gt;
+number is passed to the block as a parameter (i in this
+example).&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number] *=:
+[Number]&lt;/b&gt; &lt;br&gt;
+Multiplies the number ITSELF by multiplier, this message
+will change the &lt;br&gt;
+value of the number object itself instead of returning a new
+number.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;x is 5. &lt;br&gt;
+x *=: 2. #x is now 10.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Use this
+message to apply the operation to the object itself instead
+&lt;br&gt;
+of creating and returning a new object.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number] /
+[Number]&lt;/b&gt; &lt;br&gt;
+Divides the number by the specified divider. Returns a new
+&lt;br&gt;
+number object.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number] /=:
+[Number]&lt;/b&gt; &lt;br&gt;
+Divides the number ITSELF by divider, this message will
+change the &lt;br&gt;
+value of the number object itself instead of returning a new
+number.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;x is 10. &lt;br&gt;
+x /=: 2. #x will now be 5.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Use this
+message to apply the operation to the object itself instead
+&lt;br&gt;
+of generating a new object.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+mod: [modulo]&lt;/b&gt; &lt;br&gt;
+Returns the modulo of the number. This message will return a
+new &lt;br&gt;
+object representing the modulo of the recipient.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;x is 11 mod: 3.
+#x will now be 2&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Use this
+message to apply the operation of division to the &lt;br&gt;
+object itself instead of generating a new one.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+toPowerOf: [power]&lt;/b&gt; &lt;br&gt;
+Returns a new object representing the &lt;br&gt;
+number to the specified power.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;x is 2
+toPowerOf: 8. #x will be 256&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The example
+above will raise 2 to the power of 8 resulting in &lt;br&gt;
+a new Number object: 256.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+pos&lt;/b&gt; &lt;br&gt;
+Returns a boolean indicating wether the number is positive.
+&lt;br&gt;
+This message will return a boolean object &amp;rsquo;True&amp;rsquo;
+if the recipient is &lt;br&gt;
+positive and &amp;rsquo;False&amp;rsquo; otherwise.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;hope is 0.1.
+&lt;br&gt;
+( hope pos ) ifTrue: { Pen write: &amp;rsquo;Still a little hope
+for humanity&amp;rsquo;. }.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The example
+above will print the message because hope is higher than
+0.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+neg&lt;/b&gt; &lt;br&gt;
+Returns a boolean indicating wether the number is negative.
+&lt;br&gt;
+This message will return a boolean object &amp;rsquo;True&amp;rsquo;
+if the recipient is &lt;br&gt;
+negative and &amp;rsquo;False&amp;rsquo; otherwise. It&amp;rsquo;s the
+eaxct opposite of the &amp;rsquo;positive&amp;rsquo; &lt;br&gt;
+message.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;hope is -1.
+&lt;br&gt;
+(hope neg) ifTrue: { Pen write: &amp;rsquo;No hope left&amp;rsquo;.
+}.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The example
+above will print the message because the value of the
+variable &lt;br&gt;
+hope is less than 0.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+max: [other]&lt;/b&gt; &lt;br&gt;
+Returns the biggest number of the two.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;x is 6 max: 4.
+#x is 6 &lt;br&gt;
+x is 6 max: 7. #x is 7&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+min: [other]&lt;/b&gt; &lt;br&gt;
+Returns a the smallest number.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;x is 6 min: 4.
+#x is 4 &lt;br&gt;
+x is 6 min: 7. #x is 7&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+factorial&lt;/b&gt; &lt;br&gt;
+Calculates the factorial of a number.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number] to:
+[number] step: [step] do: [block]&lt;/b&gt; &lt;br&gt;
+Runs the specified block for each step it takes to go from
+&lt;br&gt;
+the start value to the target value using the specified step
+size. &lt;br&gt;
+This is basically how you write for-loops in Citron.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;1 to: 5 step: 1
+do: { :step Pen write: &amp;rsquo;this is step #&amp;rsquo;+step.
+}.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number] to:
+[number] step: [step]&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+floor&lt;/b&gt; &lt;br&gt;
+Gives the largest integer less than the recipient.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;x is 4.5 &lt;br&gt;
+y is x floor. #y will be 4&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The example
+above applies the floor function to the recipient (4.5) &lt;br&gt;
+returning a new number object (4).&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+ceil&lt;/b&gt; &lt;br&gt;
+Rounds up the recipient number and returns the next higher
+integer number &lt;br&gt;
+as a result.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;x is 4.5. &lt;br&gt;
+y = x ceil. #y will be 5&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The example
+above applies the ceiling function to the recipient (4.5)
+&lt;br&gt;
+returning a new number object (5).&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+round&lt;/b&gt; &lt;br&gt;
+Returns the rounded number.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+abs&lt;/b&gt; &lt;br&gt;
+Returns the absolute (unsigned, positive) value of the
+number.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;x is -7. &lt;br&gt;
+y is x abs. #y will be 7&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The example
+above strips the sign off the value -7 resulting &lt;br&gt;
+in 7.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+sqrt&lt;/b&gt; &lt;br&gt;
+Returns the square root of the recipient.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;x is 49. &lt;br&gt;
+y is x sqrt. #y will be 7&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The example
+above takes the square root of 49, resulting in the &lt;br&gt;
+number 7.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+exp&lt;/b&gt; &lt;br&gt;
+Returns the exponent of the number.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+sin&lt;/b&gt; &lt;br&gt;
+Returns the sine of the number.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+cos&lt;/b&gt; &lt;br&gt;
+Returns the cosine of the number.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+tan&lt;/b&gt; &lt;br&gt;
+Caculates the tangent of a number.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+atan&lt;/b&gt; &lt;br&gt;
+Caculates the arctangent of a number.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+log&lt;/b&gt; &lt;br&gt;
+Calculates the logarithm of a number.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+shiftRight: [Number]&lt;/b&gt; &lt;br&gt;
+Only with integers&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+shiftLeft: [Number]&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+integerOr: [Number]&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+integerAnd: [Number]&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+integerXor: [Number]&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+toByte&lt;/b&gt; &lt;br&gt;
+Converts a number to a single byte.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+toString&lt;/b&gt; &lt;br&gt;
+Wrapper for cast function.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Number]
+toBoolean&lt;/b&gt; &lt;br&gt;
+Casts a number to a boolean object.&lt;/p&gt;
+
+&lt;h2&gt;String
+&lt;a name=&quot;String&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;_OBJ_DEF
+String&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;String&lt;/b&gt;
+&lt;br&gt;
+Literal:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&amp;rsquo;Hello
+World, this is a String.&amp;rsquo;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;A sequence of
+characters. In Citron, strings are UTF-8 aware. &lt;br&gt;
+You may only use single quotes. To escape a character use
+the &lt;br&gt;
+backslash &amp;rsquo;&amp;acute; character.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+isConstructible: [Object]&lt;/b&gt; &lt;br&gt;
+returns whether object is constructible from string&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+unpack: [String:Ref]&lt;/b&gt; &lt;br&gt;
+Assign ref to string &lt;br&gt;
+(Always prefer using algebraic deconstruction assignments:
+look at section &amp;rsquo;Assignment&amp;rsquo;)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+bytes&lt;/b&gt; &lt;br&gt;
+Returns the number of bytes in a string, as opposed to &lt;br&gt;
+length which returns the number of UTF-8 code points
+(symbols or characters).&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String] =
+[other]&lt;/b&gt; &lt;br&gt;
+Returns True if the other string is the same (in bytes).&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String] !=
+[other]&lt;/b&gt; &lt;br&gt;
+Returns True if the other string is not the same (in
+bytes).&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+length&lt;/b&gt; &lt;br&gt;
+Returns the length of the string in symbols. &lt;br&gt;
+This message is UTF-8 unicode aware. A 4 byte character will
+be counted as ONE.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String] +
+[other]&lt;/b&gt; &lt;br&gt;
+Appends other string to self and returns the resulting &lt;br&gt;
+string as a new object.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+append: [String].&lt;/b&gt; &lt;br&gt;
+Appends the specified string to itself. This is different
+from the &amp;rsquo;+&amp;rsquo; &lt;br&gt;
+message, the &amp;rsquo;+&amp;rsquo; message adds the specified
+string while creating a new string. &lt;br&gt;
+Appends on the other hand modifies the original string.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;x is
+&amp;rsquo;Hello &amp;rsquo;. &lt;br&gt;
+x append: &amp;rsquo;World&amp;rsquo;. &lt;br&gt;
+Pen write: x. #Hello World&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Instead of
+using the append message you may also use its short form,
+&lt;br&gt;
+like this:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;x +=:
+&amp;rsquo;World&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+multiply: [Number].&lt;/b&gt; &lt;br&gt;
+Appends the specified string to itself as many times as
+[Number] &lt;br&gt;
+alias: *&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+formatObjects: [Array].&lt;/b&gt; &lt;br&gt;
+Creates a string with the template format and the specified
+objects&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;fmt is
+&amp;rsquo;Hello, %s! %d is a number!&amp;rsquo; &lt;br&gt;
+str is fmt formatObjects: (Array new &amp;lt;
+&amp;rsquo;World&amp;rsquo;, 23).&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+formatMap: [Map]&lt;/b&gt; &lt;br&gt;
+format a format string based off a map&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;e.g. &lt;br&gt;
+format is &amp;rsquo;this &amp;acute;%{string}&amp;acute; contains some
+wierd %{shit}.&amp;rsquo;. &lt;br&gt;
+fmtd is format formatMap: (Map new put: &amp;rsquo;shit&amp;rsquo;
+at: &amp;rsquo;shit&amp;rsquo;, put: format at:
+&amp;rsquo;string&amp;rsquo;). &lt;br&gt;
+# &amp;rsquo;this &amp;acute;this &amp;acute;%{string}&amp;acute; contains
+some wierd %{shit}.&amp;acute; contains some weird
+shit.&amp;rsquo;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+from: [position] to: [destination]&lt;/b&gt; &lt;br&gt;
+Returns a portion of a string defined by from-to values.
+&lt;br&gt;
+This message is UTF-8 unicode aware.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&amp;rsquo;hello&amp;rsquo;
+from: 2 to: 3. #ll&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+from: [start] length: [length]&lt;/b&gt; &lt;br&gt;
+Returns a portion of a string defined by from &lt;br&gt;
+and length values. &lt;br&gt;
+This message is UTF-8 unicode aware.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&amp;rsquo;hello&amp;rsquo;
+from: 2 length: 3. #llo&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+skip: [number]&lt;/b&gt; &lt;br&gt;
+Returns a string without the first X characters.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+sliceFrom: [number] length: [number]&lt;/b&gt; &lt;br&gt;
+slice a string from,length and return the sliced. modifies
+string&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String] at:
+[position]&lt;/b&gt; &lt;br&gt;
+Returns the character at the specified position (UTF8
+aware). &lt;br&gt;
+You may also use the alias &amp;rsquo;@&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;(&amp;rsquo;hello&amp;rsquo;
+at: 2). #l &lt;br&gt;
+(&amp;rsquo;hello&amp;rsquo; @ 2). #l&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+byteAt: [position]&lt;/b&gt; &lt;br&gt;
+Returns the byte at the specified position (in bytes). &lt;br&gt;
+Note that you cannot use the &amp;rsquo;@&amp;rsquo; message here
+because that will &lt;br&gt;
+return the unicode point at the specified position, not the
+byte.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage: &lt;br&gt;
+(&amp;rsquo;abc&amp;rsquo; byteAt: 1). #98&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+indexOf: [subject]&lt;/b&gt; &lt;br&gt;
+Returns the index (character number, not the byte!) of the
+&lt;br&gt;
+needle in the haystack.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&amp;rsquo;find the
+needle&amp;rsquo; indexOf: &amp;rsquo;needle&amp;rsquo;. #9&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+upper&lt;/b&gt; &lt;br&gt;
+Returns a new uppercased version of the string. &lt;br&gt;
+Note that this is just basic ASCII case functionality, this
+should only &lt;br&gt;
+be used for internal keys and as a basic utility function.
+This function &lt;br&gt;
+DOES NOT WORK WITH UTF8 characters !&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+lower&lt;/b&gt; &lt;br&gt;
+Returns a new lowercased version of the string. &lt;br&gt;
+Note that this is just basic ASCII case functionality, this
+should only &lt;br&gt;
+be used for internal keys and as a basic utility function.
+This function &lt;br&gt;
+DOES NOT WORK WITH UTF8 characters !&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+lower1st&lt;/b&gt; &lt;br&gt;
+Converts the first character of the recipient to lowercase
+and &lt;br&gt;
+returns the resulting string object.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+upper1st&lt;/b&gt; &lt;br&gt;
+Converts the first character of the recipient to uppercase
+and &lt;br&gt;
+returns the resulting string object.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+lastIndexOf: [subject]&lt;/b&gt; &lt;br&gt;
+Returns the index (character number, not the byte!) of the
+&lt;br&gt;
+needle in the haystack.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&amp;rsquo;find the
+needle&amp;rsquo; lastIndexOf: &amp;rsquo;needle&amp;rsquo;. #9&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+replace: [string] with: [other]&lt;/b&gt; &lt;br&gt;
+Replaces needle with replacement in original string and
+returns &lt;br&gt;
+the result as a new string object.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&amp;rsquo;LiLo
+BootLoader&amp;rsquo; replace: &amp;rsquo;L&amp;rsquo; with:
+&amp;rsquo;l&amp;rsquo;. #lilo Bootloader&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+findPattern: [String] do: [Block] options: [String].&lt;/b&gt;
+&lt;br&gt;
+Matches the POSIX or PCRE (depending on the #defines)
+regular expression in the first argument against &lt;br&gt;
+the string and executes the specified block on every match
+passing &lt;br&gt;
+an array containing the matches.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The options
+parameter can be used to pass specific flags to the &lt;br&gt;
+regular expression engine. As of the moment of writing this
+functionality &lt;br&gt;
+has not been implemented yet. The only flag you can set at
+this moment is &lt;br&gt;
+the &amp;rsquo;ignore&amp;rsquo; flag, just a test flag. This flag
+does not execute the block.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&amp;rsquo;hello
+world&amp;rsquo; findPattern: &amp;rsquo;([hl])&amp;rsquo; do: { :arr
+&lt;br&gt;
+Pen write: (arr join: &amp;rsquo;|&amp;rsquo;), brk. &lt;br&gt;
+} options: &amp;rsquo;&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;On every match
+the block gets executed and the matches are &lt;br&gt;
+passed to the block as arguments. You can also use this
+feature to replace &lt;br&gt;
+parts of the string, simply return the replacement string in
+your block.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+findPattern: [String] do: [Block].&lt;/b&gt; &lt;br&gt;
+Same as findPattern:do:options: but without the options, no
+flags will &lt;br&gt;
+be send to the regex engine.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+contains: [String]&lt;/b&gt; &lt;br&gt;
+Returns True if the other string is a substring.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+containsPattern: [String].&lt;/b&gt; &lt;br&gt;
+Tests the pattern against the string and returns True if
+there is a match &lt;br&gt;
+and False otherwise.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;var match is
+&amp;rsquo;Hello World&amp;rsquo; containsPattern:
+&amp;rsquo;[:space:]&amp;rsquo;. &lt;br&gt;
+#match will be True because there is a space in &amp;rsquo;Hello
+World&amp;rsquo;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+trim&lt;/b&gt; &lt;br&gt;
+Trims a string. Removes surrounding white space characters
+&lt;br&gt;
+from string and returns the result as a new string
+object.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&amp;rsquo; hello
+&amp;rsquo; trim. #hello&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The example
+above will strip all white space characters from the &lt;br&gt;
+recipient on both sides of the text. Also see: leftTrim and
+rightTrim &lt;br&gt;
+for variations of this message.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+leftTrim&lt;/b&gt; &lt;br&gt;
+Removes all the whitespace at the left side of the
+string.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;message is
+&amp;rsquo; hello world &amp;rsquo;. &lt;br&gt;
+message leftTrim.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The example
+above will remove all the whitespace at the left of the &lt;br&gt;
+string but leave the spaces at the right side intact.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+rightTrim&lt;/b&gt; &lt;br&gt;
+Removes all the whitespace at the right side of the
+string.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;message is
+&amp;rsquo; hello world &amp;rsquo;. &lt;br&gt;
+message rightTrim.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The example
+above will remove all the whitespace at the right of the
+&lt;br&gt;
+string but leave the spaces at the left side intact.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+toNumber&lt;/b&gt; &lt;br&gt;
+Converts string to a number.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+toBoolean&lt;/b&gt; &lt;br&gt;
+Converts string to boolean&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+split: [String]&lt;/b&gt; &lt;br&gt;
+Converts a string to an array by splitting the string using
+&lt;br&gt;
+the specified delimiter (also a string).&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+characters.&lt;/b&gt; &lt;br&gt;
+Splits the string in UTF-8 characters and returns &lt;br&gt;
+those as an array.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;a is
+&amp;rsquo;abc&amp;rsquo; characters. &lt;br&gt;
+a count. #3&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+toByteArray&lt;/b&gt; &lt;br&gt;
+Returns an array of bytes representing the string.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+appendByte: [Number].&lt;/b&gt; &lt;br&gt;
+Appends a raw byte to a string.&lt;/p&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String(length=1)]
+charSub: [Number | String(length=1)]&lt;/b&gt; &lt;br&gt;
+works on the underlaying character.&lt;/p&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String(length=1)]
+charAdd: [Number | String(length=1)]&lt;/b&gt; &lt;br&gt;
+works on the underlaying character.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+htmlEscape&lt;/b&gt; &lt;br&gt;
+Escapes HTML chars.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+hashWithKey: [String]&lt;/b&gt; &lt;br&gt;
+Returns the hash of the recipient String using the specified
+key. &lt;br&gt;
+The default hash in Citron is the SipHash which is also used
+internally. &lt;br&gt;
+SipHash can protect against hash flooding attacks.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+eval&lt;/b&gt; &lt;br&gt;
+Evaluates the contents of the string as code.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;a is
+&amp;rsquo;Array &amp;lt; 1 ; 2 ; 3&amp;rsquo; eval. &lt;br&gt;
+x is a @ 2. #3&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+escapeQuotes.&lt;/b&gt; &lt;br&gt;
+Escapes all single quotes in a string. Sending this message
+to a &lt;br&gt;
+string will cause all single quotes (&amp;rsquo;) to be replaced
+with (&amp;acute;).&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+randomizeBytesWithLength: [Number].&lt;/b&gt; &lt;br&gt;
+Returns a randomized string with the specified length using
+the pool of &lt;br&gt;
+bytes contained in the String object.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[String]
+reverse&lt;/b&gt; &lt;br&gt;
+reverse the string&lt;/p&gt;
+
+&lt;h2&gt;Tuple
+&lt;a name=&quot;Tuple&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;_OBJ_DEF
+Tuple&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Tuple&lt;/b&gt;
+&lt;br&gt;
+Literal:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;[ item , item ,
+... ] or []&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Examples:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;[ 1 , 2 , 3 ]
+&lt;br&gt;
+[]&lt;/p&gt;
+
+&lt;h2&gt;CodeBlock
+&lt;a name=&quot;CodeBlock&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;_OBJ_DEF
+CodeBlock&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Block&lt;/b&gt;
+&lt;br&gt;
+Literal:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;{ parameters
+(if any) here... code here... }&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;each parameter
+has to be prefixed with &lt;br&gt;
+a colon (:).&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Examples:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;{ Pen write:
+&amp;rsquo;a simple code block&amp;rsquo;. } run. &lt;br&gt;
+{ :param Pen write: param. } applyTo: &amp;rsquo;write
+this!&amp;rsquo;. &lt;br&gt;
+{ :a :b ^ a + b. } applyTo: 1 and: 2. &lt;br&gt;
+{ :a :b :c ^ a + b + c. } applyTo: 1 and: 2 and: 3.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;to enable
+context auto-capture, &lt;br&gt;
+qualify captures with the &amp;rsquo;const&amp;rsquo; modifier&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Block]
+unpack: [String:Ref]&lt;/b&gt; &lt;br&gt;
+Assign ref to block &lt;br&gt;
+(Always prefer using algebraic deconstruction assignments:
+look at section &amp;rsquo;Assignment&amp;rsquo;)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Block]
+applyTo: [object]&lt;/b&gt; &lt;br&gt;
+Runs a block of code using the specified object as a
+parameter. &lt;br&gt;
+If you run a block using the messages &amp;rsquo;run&amp;rsquo; or
+&amp;rsquo;applyTo:&amp;rsquo;, me/my will &lt;br&gt;
+refer to the block itself instead of the containing
+object.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;the passed
+&amp;rsquo;my&amp;rsquo; will be respected first, &lt;br&gt;
+and if lookup fails, it will be swapped for the block
+itself&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Block]
+whileTrue: [block]&lt;/b&gt; &lt;br&gt;
+Runs a block of code, depending on the outcome runs the
+other block &lt;br&gt;
+as long as the result of the first one equals boolean
+True.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;x is 0. &lt;br&gt;
+{ ^(x &amp;lt; 6). } whileFalse: &lt;br&gt;
+{ x add: 1. }. #increment x until it reaches 6.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Here we
+increment variable x by one until it reaches 6. &lt;br&gt;
+While the number x is lower than 6 we keep incrementing it.
+&lt;br&gt;
+Don&amp;rsquo;t forget to use the return ^ symbol in the first
+block.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Block]
+whileFalse: [block]&lt;/b&gt; &lt;br&gt;
+Runs a block of code, depending on the outcome runs the
+other block &lt;br&gt;
+as long as the result of the first one equals to False.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;x is 0. &lt;br&gt;
+{ ^(x &amp;gt; 5). } &lt;br&gt;
+whileFalse: { x add: 1. }. #increment x until it reaches
+6.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Here we
+increment variable x by one until it reaches 6. &lt;br&gt;
+While the number x is not higher than 5 we keep incrementing
+it. &lt;br&gt;
+Don&amp;rsquo;t forget to use the return ^ symbol in the first
+block.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Block]
+run&lt;/b&gt; &lt;br&gt;
+Sending the unary message &amp;rsquo;run&amp;rsquo; to a block will
+cause it to execute. &lt;br&gt;
+The run message takes no arguments, if you want to use the
+block as a function &lt;br&gt;
+and send arguments, consider using the applyTo-family of
+messages instead. &lt;br&gt;
+This message just simply runs the block of code without any
+arguments.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;{ Pen write:
+&amp;rsquo;Hello World&amp;rsquo;. } run. #prints &amp;rsquo;Hello
+World&amp;rsquo;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The example
+above will run the code inside the block and display &lt;br&gt;
+the greeting.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Block] set:
+[name] value: [object]&lt;/b&gt; &lt;br&gt;
+Sets a variable in a block of code. This how you can get
+closure-like &lt;br&gt;
+functionality.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;shout is { Pen
+write: (my message + &amp;rsquo;!!!&amp;rsquo;). }. &lt;br&gt;
+shout set: &amp;rsquo;message&amp;rsquo; value: &amp;rsquo;hello&amp;rsquo;.
+&lt;br&gt;
+shout run.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Here we assign
+a block to a variable named &amp;rsquo;shout&amp;rsquo;. &lt;br&gt;
+We assign the string &amp;rsquo;hello&amp;rsquo; to the variable
+&amp;rsquo;message&amp;rsquo; inside the block. &lt;br&gt;
+When we invoke the block &amp;rsquo;shout&amp;rsquo; by sending the
+run message without any &lt;br&gt;
+arguments it will display the string:
+&amp;rsquo;hello!!!&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Similarly, you
+could use this technique to create a block that returns a
+&lt;br&gt;
+block that applies a formula (for instance simple
+multiplication) and then set the &lt;br&gt;
+multiplier to use in the formula. This way, you could create
+a block &lt;br&gt;
+building &amp;rsquo;formula blocks&amp;rsquo;. This is how you
+implement &amp;amp; use closures &lt;br&gt;
+in Citron.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;There is no
+need to capture values with this message if you don&amp;rsquo;t
+require the &lt;br&gt;
+name of the variable to be anything specific. &lt;br&gt;
+In such circumstances, you may use the automatic capture
+qualifier &amp;lsquo;const&amp;lsquo; &lt;br&gt;
+to capture the value directly where it is needed.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Block]
+error: [object].&lt;/b&gt; &lt;br&gt;
+Sets error flag on a block of code. &lt;br&gt;
+This will throw an error / exception. &lt;br&gt;
+You can attach an object to the error, for instance &lt;br&gt;
+an error message.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Example:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;{ &lt;br&gt;
+thisBlock error: &amp;rsquo;oops!&amp;rsquo;. &lt;br&gt;
+} catch: { :errorMessage &lt;br&gt;
+Pen write: errorMessage. &lt;br&gt;
+}, run.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Block]
+catch: [otherBlock]&lt;/b&gt; &lt;br&gt;
+Associates an error clause to a block. &lt;br&gt;
+If an error (exception) occurs within the block this block
+will be &lt;br&gt;
+executed.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Example:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;#Raise error on
+division by zero. &lt;br&gt;
+{ &lt;br&gt;
+var z is 4 / 0. &lt;br&gt;
+} catch: { :errorMessage &lt;br&gt;
+Pen write: e, brk. &lt;br&gt;
+}, run.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Block]
+toString&lt;/b&gt; &lt;br&gt;
+Returns a string representation of the Block. This basic
+behavior, part &lt;br&gt;
+of any object will just return [Block]. Other objects
+typically override this &lt;br&gt;
+behavior with more useful implementations.&lt;/p&gt;
+
+&lt;h2&gt;Array
+&lt;a name=&quot;Array&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;_OBJ_DEF
+Array&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+new&lt;/b&gt; &lt;br&gt;
+Creates a new Array.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;a is Array
+new.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;or, the short
+form:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;a is Array
+&amp;acirc; 1 ; 2 ; 3.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;or (if you
+prefer ASCII only symbols):&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;a is Array &amp;lt;
+1 ; 2 ; 3.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+copy&lt;/b&gt; &lt;br&gt;
+shallow copy of the array&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+type&lt;/b&gt; &lt;br&gt;
+Returns the string &amp;rsquo;Array&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+push: [Element]&lt;/b&gt; &lt;br&gt;
+Pushes an element on top of the array.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;numbers is
+Array new. &lt;br&gt;
+numbers push: 3.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+min&lt;/b&gt; &lt;br&gt;
+Returns the minimum value from an array.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;a is Array
+&amp;acirc; 8 ; 4 ; 2 ; 16. &lt;br&gt;
+m is a min. #2&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+max&lt;/b&gt; &lt;br&gt;
+Returns the maximum value from an array.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;a is Array
+&amp;acirc; 8 ; 4 ; 2 ; 16. &lt;br&gt;
+m is a max. #16&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+sum&lt;/b&gt; &lt;br&gt;
+Takes the sum of an array. This message will calculate the
+&lt;br&gt;
+sum of the elements in the array.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;a is Array
+&amp;acirc; 1 ; 2 ; 3. &lt;br&gt;
+s is a sum. #6&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;In the example
+above, the sum of array will be stored in s and &lt;br&gt;
+it&amp;rsquo;s value will be 6.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+product&lt;/b&gt; &lt;br&gt;
+Takes the product of an array. On receiving this message,
+the &lt;br&gt;
+Array recipient object will calculate the product of its
+&lt;br&gt;
+numerical elements.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;a is Array
+&amp;acirc; 2 ; 4 ; 8. &lt;br&gt;
+p is a product. #64&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;In the example
+above, the product of the array will be calculated &lt;br&gt;
+because the array receives the message
+&amp;rsquo;product&amp;rsquo;. The product of the elements &lt;br&gt;
+( 2 * 4 * 8 = 64 ) will be stored in p.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array] *
+[o:Number | Array]&lt;/b&gt; &lt;br&gt;
+Repeats the array o times if o is a number, and generates an
+array multiplication &lt;br&gt;
+for myself and o if o is an array&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+intersperse: [o: Object]&lt;/b&gt; &lt;br&gt;
+places an &amp;rsquo;o&amp;rsquo; between all array elements &lt;br&gt;
+returns an array&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array] map:
+[Block].&lt;/b&gt; &lt;br&gt;
+Iterates over the array. Passing each element as a key-value
+pair to the &lt;br&gt;
+specified block. &lt;br&gt;
+The map message will pass the following arguments to the
+block, the key, &lt;br&gt;
+the value and a reference to the array itself. The last
+argument might seem &lt;br&gt;
+redundant but allows for a more functional programming
+style.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;files map:
+showName. &lt;br&gt;
+files map: { &lt;br&gt;
+:key :filename :files &lt;br&gt;
+Pen write: filename, brk. &lt;br&gt;
+}.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+each: [Block].&lt;/b&gt; &lt;br&gt;
+Alias for [Array] map: [Block].&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+map_v: [Block].&lt;/b&gt; &lt;br&gt;
+Iterates over the array. Passing each element as a value to
+the &lt;br&gt;
+specified block. &lt;br&gt;
+The map message will pass only the value.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;files map_v:
+showName. &lt;br&gt;
+files map_v: { &lt;br&gt;
+:filename &lt;br&gt;
+Pen write: filename, brk. &lt;br&gt;
+}.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;* [Array]
+each_v: [Block].&lt;/b&gt; &lt;br&gt;
+* * Alias for [Array] map_v: [Block].&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+from: [Number] lengthMax: [Number]&lt;/b&gt; &lt;br&gt;
+makes n-tuple-wise iterations &lt;br&gt;
+If &amp;lsquo;fill&amp;lsquo; is specified, that will be used to
+fill when we are elements short &lt;br&gt;
+Else Nil will be passed&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+every: [Number] do: [Block] fill: [Object].&lt;/b&gt; &lt;br&gt;
+[Array] every: [Number] do: [Block].&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;makes
+n-tuple-wise iterations &lt;br&gt;
+If &amp;lsquo;fill&amp;lsquo; is specified, that will be used to
+fill when we are elements short &lt;br&gt;
+Else Nil will be passed&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+chunks: [Number]&lt;/b&gt; &lt;br&gt;
+[Array] chunks: [Number] fill: [Object] &lt;br&gt;
+makes a bunch of n-tuples &lt;br&gt;
+If &amp;lsquo;fill&amp;lsquo; is specified, that will be used to
+fill when we are elements short &lt;br&gt;
+Else Nil will be passed&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+&amp;acirc; [Element1] ; [Element2] ; ...&lt;/b&gt; &lt;br&gt;
+Creates a new instance of an array and initializes this &lt;br&gt;
+array with a first element, useful for literal-like Array
+&lt;br&gt;
+notations.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;a is Array
+&amp;acirc; 1 ; 2 ; 3.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;or if
+ASCII-only is preferred:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;a is Array &amp;lt;
+1 ; 2 ; 3.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Note that the ;
+symbol here is an alias for &amp;rsquo;push:&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+unshift: [Element].&lt;/b&gt; &lt;br&gt;
+Unshift operation for array. &lt;br&gt;
+Adds the specified element to the beginning of the
+array.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;a is Array new.
+&lt;br&gt;
+a push: 1. &lt;br&gt;
+a unshift: 3. #now contains: 3,1&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+reverse&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+join: [Glue].&lt;/b&gt; &lt;br&gt;
+Joins the elements of an array together in a string &lt;br&gt;
+separated by a specified glue string.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;collection is
+Array new. &lt;br&gt;
+collection push: 1, push: 2, push 3. &lt;br&gt;
+collection join: &amp;rsquo;,&amp;rsquo;. # results in string:
+&amp;rsquo;1,2,3&amp;rsquo;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array] at:
+[Index]&lt;/b&gt; &lt;br&gt;
+Returns the element in the array at the specified index.
+&lt;br&gt;
+Note that the fisrt index of the array is index 0.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;fruits is Array
+&amp;acirc; &amp;rsquo;apples&amp;rsquo; ; &amp;rsquo;oranges&amp;rsquo; ;
+&amp;rsquo;bananas&amp;rsquo;. &lt;br&gt;
+fruits at: 1. #returns &amp;rsquo;oranges&amp;rsquo;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+indexOf: [Object]&lt;/b&gt; &lt;br&gt;
+Returns the index of the first occurence of object &lt;br&gt;
+-1 if not found&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+contains: [Object]&lt;/b&gt; &lt;br&gt;
+Returns whether the array contains the object or not&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array] @
+[Index]&lt;/b&gt; &lt;br&gt;
+Alias for [Array] at: [Index]&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array] put:
+[Element] at: [Index]&lt;/b&gt; &lt;br&gt;
+Puts a value in the array at the specified index. &lt;br&gt;
+Array will be automatically expanded if the index is higher
+than &lt;br&gt;
+the maximum index of the array, unless the array is
+immutable&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;fruits is Array
+new. &lt;br&gt;
+fruits put: &amp;rsquo;apples&amp;rsquo; at: 5.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+pop&lt;/b&gt; &lt;br&gt;
+Pops off the last element of the array.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+shift&lt;/b&gt; &lt;br&gt;
+Shifts off the first element of the array.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+count&lt;/b&gt; &lt;br&gt;
+Returns the number of elements in the array.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+from: [Begin] length: [End]&lt;/b&gt; &lt;br&gt;
+Copies part of an array indicated by from and to and &lt;br&gt;
+returns a new array consisting of a copy of this region.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+skip: [n:Number]&lt;/b&gt; &lt;br&gt;
+Skips the first n elements of the array&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;* [Array]
+zip&lt;/b&gt; &lt;br&gt;
+* * zip array. * Works on the inner elements of the array. *
+If the element is an array, it is expanded exactly once. *
+And if the element is not an array, it is used as-is *&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+zipWith: [Block]&lt;/b&gt; &lt;br&gt;
+zip array according to the return of the block &lt;br&gt;
+Works on the inner elements of the array. &lt;br&gt;
+If the element is an array, it is expanded exactly once.
+&lt;br&gt;
+And if the element is not an array, it is used as-is&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+head&lt;/b&gt; &lt;br&gt;
+see also (tail, init, last)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;returns the
+first element of the array &lt;br&gt;
+Does generate exceptions when array is empty&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+tail&lt;/b&gt; &lt;br&gt;
+see also (head, init, last)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;returns all of
+the array sans the first element &lt;br&gt;
+Does not generate exceptions when array is empty&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+init&lt;/b&gt; &lt;br&gt;
+see also (head, tail, last)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;returns all of
+the array sans the last element &lt;br&gt;
+Does not generate exceptions when array is empty&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+last&lt;/b&gt; &lt;br&gt;
+see also (head, tail, init)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;returns all of
+the array sans the last element &lt;br&gt;
+Does generate exceptions when array is empty&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array] +
+[Array]&lt;/b&gt; &lt;br&gt;
+Returns a new array, containing elements of itself and the
+other &lt;br&gt;
+array.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Array fmap:
+[Block]&lt;/b&gt; &lt;br&gt;
+Maps a function over the block. this function should accept
+a single value.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;[1,2,3,4] fmap:
+{:v ^v + 1.}. #=&amp;gt; Array new &amp;lt; 2 ; 3 ; 4 ; 5&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Array imap:
+[Block]&lt;/b&gt; &lt;br&gt;
+Maps a function over the block. this function should accept
+an index and a value.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;[1,2,3,4] imap:
+{:i:v ^v + i.}. #=&amp;gt; Array new &amp;lt; 1 ; 3 ; 5 ; 7&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Array foldl:
+[Block] accumulator: [Object]&lt;/b&gt; &lt;br&gt;
+reduces an array according to a block (which takes an
+accumulator and the value, and returns the next acc) from
+the left (index 0)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;([1,2,3,4])
+foldl: {:acc:v ^acc + v.} accumulator: 0. #=&amp;gt; Equivalent
+to ([1,2,3,4]) sum.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+filter: [Block&amp;lt;i,v&amp;gt;]&lt;/b&gt; &lt;br&gt;
+Include the element iff block returns True for the
+element&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+unpack: [Array:{Ref:string}]&lt;/b&gt; &lt;br&gt;
+Element-wise assign &lt;br&gt;
+(Always prefer using algebraic deconstruction assignments:
+look at section &amp;rsquo;Assignment&amp;rsquo;)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+sort: [Block]&lt;/b&gt; &lt;br&gt;
+Sorts the contents of an array using a sort block. &lt;br&gt;
+Uses qsort.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+toString&lt;/b&gt; &lt;br&gt;
+Returns a string representation of the array and its
+contents. &lt;br&gt;
+This representation will be encoded in the Citron language
+itself and is &lt;br&gt;
+therefore evallable.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;a is Array
+&amp;acirc; &amp;rsquo;hello&amp;rsquo; ; &amp;rsquo;world&amp;rsquo;. &lt;br&gt;
+b is a toString. &lt;br&gt;
+c is b eval. &lt;br&gt;
+x is c @ 1. #world&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;toString
+messages are implicitly send by some objects, for instance
+when &lt;br&gt;
+attempting to write an Array using a Pen.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;You can also
+use the alias &amp;rsquo;serialize&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Array]
+serialize&lt;/b&gt; &lt;br&gt;
+Alias for [Array] toString.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;See &amp;rsquo;Map
+serialize&amp;rsquo; for the reason for this alias.&lt;/p&gt;
+
+&lt;h2&gt;Map
+&lt;a name=&quot;Map&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;_OBJ_DEF
+Map&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Map&lt;/b&gt; &lt;br&gt;
+Creates a Map object.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;files is Map
+new. &lt;br&gt;
+files put: &amp;rsquo;readme.txt&amp;rsquo; at:
+&amp;rsquo;textfile&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Map]
+type&lt;/b&gt; &lt;br&gt;
+Returns the string &amp;rsquo;Map&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Map] put:
+[Element] at: [Key]&lt;/b&gt; &lt;br&gt;
+Puts a key-value pair in a map.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;map put:
+&amp;rsquo;hello&amp;rsquo; at: &amp;rsquo;world&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Map]
+deleteAt: [key]&lt;/b&gt; &lt;br&gt;
+deletes an entry (Noop if not in the map)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;map deleteAt:
+&amp;rsquo;world&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Map] at:
+[Key]&lt;/b&gt; &lt;br&gt;
+Retrieves the value specified by the key from the map.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Map] @
+[Key]&lt;/b&gt; &lt;br&gt;
+Alias for [Map] at: [Key].&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Map]
+count&lt;/b&gt; &lt;br&gt;
+Returns the number of elements in the map.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Map] each:
+[Block]&lt;/b&gt; &lt;br&gt;
+Iterates over the map, passing key-value pairs to the
+specified block. &lt;br&gt;
+Note that within an each/map block, &amp;rsquo;me&amp;rsquo; and
+&amp;rsquo;my&amp;rsquo; refer to the collection.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Map] fmap:
+[Block&amp;lt;value&amp;gt;]&lt;/b&gt; &lt;br&gt;
+Iterates over the map, passing the value to the function,
+and replacing it with the result &lt;br&gt;
+(Or itself if a value is not returned)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Map] kvmap:
+[Block]&lt;/b&gt; &lt;br&gt;
+Iterates over the map, passing a tuple of [key, value] to
+the specified block. &lt;br&gt;
+And constructs a new Map based off the returned kv-tuple
+&lt;br&gt;
+Note that within an each/map block, &amp;rsquo;me&amp;rsquo; and
+&amp;rsquo;my&amp;rsquo; refer to the collection.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Map]
+kvlist: [Block]&lt;/b&gt; &lt;br&gt;
+Iterates over the map, passing a tuple of [key, value] to
+the specified block. &lt;br&gt;
+And constructs a new list based off the returned kv-tuple
+&lt;br&gt;
+Note that within an each/map block, &amp;rsquo;me&amp;rsquo; and
+&amp;rsquo;my&amp;rsquo; refer to the collection.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Map]
+flip&lt;/b&gt; &lt;br&gt;
+flips the keys and the values of the map. (same-value keys
+will be overwritten)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Map]
+toString&lt;/b&gt; &lt;br&gt;
+Returns a string representation of a map encoded in Citron
+itself. &lt;br&gt;
+This will give you an &lt;br&gt;
+evallable representation of the map and all of its
+members.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;m is (Map new)
+put: &amp;rsquo;hello&amp;rsquo; at: &amp;rsquo;world&amp;rsquo;. &lt;br&gt;
+x is m toString &lt;br&gt;
+m is x eval.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The toString
+method is automatically invoked when attempting to &lt;br&gt;
+print a Map:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Pen write: (Map
+new). #prints Map new.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;You can also
+use the alias &amp;rsquo;serialize&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;* [Map]
+serialize&lt;/b&gt; &lt;br&gt;
+* * Alias for [Map] toString. * A toString message,
+sometimes implicitly send by other messages like *
+&amp;rsquo;Pen write:&amp;rsquo; will give you a serialized version
+of the Map or Array. * This is far more useful than a
+&amp;rsquo;dumb&amp;rsquo; textual description of the object like *
+&amp;rsquo;array&amp;rsquo; or &amp;rsquo;object&amp;rsquo;. However, when
+working with very large Maps or Arrays * accidentally
+dumping the entire contents can be annoying, in this case
+you can * override the toString behaviour but you
+don&amp;rsquo;t have to remap the original, you * can just use
+this alias. Also, this alias can be used if you want to make
+* the serialization more explicit.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Map]
+unpack: [Map:{Ref:AlternativeName}]&lt;/b&gt; &lt;br&gt;
+Key-wise assign Give alternative names as the values of the
+constructor&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;e.g. (Map new
+put: &amp;rsquo;Hello&amp;rsquo; at: &amp;rsquo;test0&amp;rsquo;, put:
+&amp;rsquo;World&amp;rsquo; at: &amp;rsquo;test1&amp;rsquo;) unpack: (Map
+cnew: {my test0 is &amp;rsquo;a&amp;rsquo;. my test1 is
+&amp;rsquo;b&amp;rsquo;.})&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;(Always prefer
+using algebraic deconstruction assignments: look at section
+&amp;rsquo;Assignment&amp;rsquo;)&lt;/p&gt;
+
+&lt;h2&gt;Iterator
+&lt;a name=&quot;Iterator&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;_OBJ_DEF
+Iterator&lt;/b&gt;&lt;/p&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Iterator&lt;/b&gt;
+&lt;br&gt;
+Iterator (range), an object that supports next and current,
+&lt;br&gt;
+and steps through some values before (optionally) reaching
+an end&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Iterator]
+setFunc: [f:Block]&lt;/b&gt; &lt;br&gt;
+sets the iterator step function.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Iterator]
+repeat: [Object]&lt;/b&gt; &lt;br&gt;
+An iterator that keeps repeating the same value.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Iterator]
+rangeFrom: [f:Number] to: [t:Number] step: [s:Number]&lt;/b&gt;
+&lt;br&gt;
+makes a range iterator in range [f,t] with steps of s&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Iterator]
+rangeFrom: [f:(supports +)] step: [s:(supports +)]&lt;/b&gt; &lt;br&gt;
+makes a range iterator in range [f,inf) with steps of s &lt;br&gt;
+works on all objects that support the message
+&amp;rsquo;+&amp;rsquo;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Iterator]
+next&lt;/b&gt; &lt;br&gt;
+gives the next value or breaks (to signal the end of the
+iterator)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Iterator]
+each: [Block&amp;lt;nil,value,iterator&amp;gt;]&lt;/b&gt; &lt;br&gt;
+Runs the block for each value in the iterator while stepping
+through it &lt;br&gt;
+Sends Nil for the index.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Iterator]
+each_v: [Block&amp;lt;value&amp;gt;]&lt;/b&gt; &lt;br&gt;
+Runs the block for each value in the iterator while stepping
+through it&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Iterator]
+fmap: [b:Block&amp;lt;value&amp;gt;]&lt;/b&gt; &lt;br&gt;
+Equivalent to [Array] fmap: [Block&amp;lt;value&amp;gt;]&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;transforms the
+iterator with the block to another iterator This function
+does not evaluate anything from the iterator&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Iterator]
+filter: [b:Block&amp;lt;nil,value&amp;gt;]&lt;/b&gt; &lt;br&gt;
+XXX XXX XXX :: Unimplemented &lt;br&gt;
+Equivalent to [Array] filter: [Block&amp;lt;index,value&amp;gt;]&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;filters the
+iterator with the block&amp;rsquo;s return value as the
+predicate to an array &lt;br&gt;
+this function does not evaluate anything from the
+iterator.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Iterator]
+foldl: [Block] accumulator: [Object]&lt;/b&gt; &lt;br&gt;
+reduces an iterator according to a block (which takes an
+accumulator and the value, and returns the next acc) from
+the left (index 0)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Iterator]
+count&lt;/b&gt; &lt;br&gt;
+Steps through the iterator until it ends and returns the
+count. &lt;br&gt;
+resets the state of the iterator&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Iterator]
+take: [t:Number]&lt;/b&gt; &lt;br&gt;
+takes at most &amp;lt;t&amp;gt; number of elements from the
+Iterator&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Iterator]
+takeWhile: [predicate:Block]&lt;/b&gt; &lt;br&gt;
+takes values as long as predicate returns true.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Iterator]
+endBlock&lt;/b&gt; &lt;br&gt;
+returns a block that throws an IteratorEndException.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Iterator]
+endIf: [clause:Block]&lt;/b&gt; &lt;br&gt;
+ends the Iterator if clause returns True&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Iterator]
+toArray&lt;/b&gt; &lt;br&gt;
+Collects all of the iterator values into an array&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Iterator]
+skip: [n:Number]&lt;/b&gt; &lt;br&gt;
+skips n iterations and returns the nth value &lt;br&gt;
+does not reset the evaluation. (iterator will advance to
+index n)&lt;/p&gt;
+
+&lt;h2&gt;File
+&lt;a name=&quot;File&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;_OBJ_DEF
+File&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;File&lt;/b&gt;
+&lt;br&gt;
+Represents a File object. &lt;br&gt;
+Creates a new file object based on the specified path.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;File new:
+&amp;rsquo;/example/path/to/file.txt&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[File]
+tempFileLike: [String]&lt;/b&gt; &lt;br&gt;
+Represents a File object. &lt;br&gt;
+Creates a new temporary file object based on the specified
+path. &lt;br&gt;
+replacing XXXX with some chars. &lt;br&gt;
+Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;File
+tempFileLike:
+&amp;rsquo;/example/path/to/fileXXXXXXXX.txt&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[File]
+path&lt;/b&gt; &lt;br&gt;
+Returns the path of a file. The file object will respond to
+this &lt;br&gt;
+message by returning a string object describing the full
+path to the &lt;br&gt;
+recipient.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[File]
+unpack: [String:Ref]&lt;/b&gt; &lt;br&gt;
+Assigns the file instance to the reference &lt;br&gt;
+(Always prefer using algebraic deconstruction assignments:
+look at section &amp;rsquo;Assignment&amp;rsquo;)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[File]
+realPath&lt;/b&gt; &lt;br&gt;
+Returns the real path of a file. The file object will
+respond to this &lt;br&gt;
+message by returning a string object describing the absolute
+path to the &lt;br&gt;
+recipient.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[File]
+read&lt;/b&gt; &lt;br&gt;
+Reads contents of a file. Send this message to a file to
+read the entire contents in &lt;br&gt;
+one go. For big files you might want to prefer a streaming
+approach to avoid &lt;br&gt;
+memory exhaustion (see readBytes etc).&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;data is File
+new: &amp;rsquo;/path/to/mydata.csv&amp;rsquo;, read.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;In the example
+above we read the contents of the entire CSV file callled
+mydata.csv &lt;br&gt;
+in the variable called data.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[File]
+write: [String]&lt;/b&gt; &lt;br&gt;
+Writes content to a file. Send this message to a file object
+to write the &lt;br&gt;
+entire contents of the specified string to the file in one
+go. The file object &lt;br&gt;
+responds to this message for convience reasons, however for
+big files it might &lt;br&gt;
+be a better idea to use the streaming API if possible (see
+readBytes etc.).&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;data is
+&amp;rsquo;&amp;lt;xml&amp;gt;hello&amp;lt;/xml&amp;gt;&amp;rsquo;. &lt;br&gt;
+File new: &amp;rsquo;myxml.xml&amp;rsquo;, write: data.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;In the example
+above we write the XML snippet in variable data to a file
+&lt;br&gt;
+called myxml.xml in the current working directory.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[File]
+append: [String]&lt;/b&gt; &lt;br&gt;
+Appends content to a file. The file object responds to this
+message like it &lt;br&gt;
+responds to the write-message, however in this case the
+contents of the string &lt;br&gt;
+will be appended to the existing content inside the
+file.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[File]
+exists&lt;/b&gt; &lt;br&gt;
+Returns True if the file exists and False otherwise.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[File]
+include&lt;/b&gt; &lt;br&gt;
+Includes the file as a piece of executable code.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[File]
+runHere&lt;/b&gt; &lt;br&gt;
+Includes the file as a piece of executable code.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[File]
+delete&lt;/b&gt; &lt;br&gt;
+Deletes the file.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[File]
+size&lt;/b&gt; &lt;br&gt;
+Returns the size of the file.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[File] open:
+[string]&lt;/b&gt; &lt;br&gt;
+Open a file with using the specified mode.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;f is File new:
+&amp;rsquo;/path/to/file&amp;rsquo;. &lt;br&gt;
+f open: &amp;rsquo;r+&amp;rsquo;. #opens file for reading and
+writing&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The example
+above opens the file in f for reading and writing.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[File]
+close.&lt;/b&gt; &lt;br&gt;
+Closes the file represented by the recipient.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;f is File new:
+&amp;rsquo;/path/to/file.txt&amp;rsquo;. &lt;br&gt;
+f open: &amp;rsquo;r+&amp;rsquo;. &lt;br&gt;
+f close.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The example
+above opens and closes a file.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[File]
+readBytes: [Number].&lt;/b&gt; &lt;br&gt;
+Reads a number of bytes from the file.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;f is File new:
+&amp;rsquo;/path/to/file.txt&amp;rsquo;. &lt;br&gt;
+f open: &amp;rsquo;r+&amp;rsquo;. &lt;br&gt;
+x is f readBytes: 10. &lt;br&gt;
+f close.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The example
+above reads 10 bytes from the file represented by f &lt;br&gt;
+and puts them in buffer x.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[File]
+writeBytes: [String].&lt;/b&gt; &lt;br&gt;
+Takes a string and writes the bytes in the string to the
+file &lt;br&gt;
+object. Returns the number of bytes actually written.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;f is File new:
+&amp;rsquo;/path/to/file.txt&amp;rsquo;. &lt;br&gt;
+f open: &amp;rsquo;r+&amp;rsquo;. &lt;br&gt;
+n is f writeBytes: &amp;rsquo;Hello World&amp;rsquo;. &lt;br&gt;
+f close.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The example
+above writes &amp;rsquo;Hello World&amp;rsquo; to the specified file
+as bytes. &lt;br&gt;
+The number of bytes written is returned in variable n.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[File] seek:
+[Number].&lt;/b&gt; &lt;br&gt;
+Moves the file pointer to the specified position in the file
+&lt;br&gt;
+(relative to the current position).&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;file open:
+&amp;rsquo;r&amp;rsquo;, seek: 10.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The example
+above opens a file for reading and moves the &lt;br&gt;
+pointer to position 10 (meaning 10 bytes from the beginning
+of the file). &lt;br&gt;
+The seek value may be negative.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[File]
+rewind.&lt;/b&gt; &lt;br&gt;
+Rewinds the file. Moves the file pointer to the beginning of
+the file.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;file open:
+&amp;rsquo;r&amp;rsquo;. &lt;br&gt;
+x is file readBytes: 10. #read 10 bytes &lt;br&gt;
+file rewind. #rewind, set pointer to begin again &lt;br&gt;
+y is file readBytes: 10. #re-read same 10 bytes&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The example
+above reads the same sequence of 10 bytes twice, resulting
+&lt;br&gt;
+in variable x and y being equal.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[File]
+end.&lt;/b&gt; &lt;br&gt;
+Moves the file pointer to the end of the file. Use this in
+combination with &lt;br&gt;
+negative seek operations.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;file open:
+&amp;rsquo;r&amp;rsquo;. &lt;br&gt;
+file end. &lt;br&gt;
+x is file seek: -10, readBytes: 10.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The example
+above will read the last 10 bytes of the file. This is &lt;br&gt;
+accomplished by first moving the file pointer to the end of
+the file, &lt;br&gt;
+then putting it back 10 bytes (negative number), and then
+reading 10 &lt;br&gt;
+bytes.&lt;/p&gt;
+
+&lt;h2&gt;Broom
+&lt;a name=&quot;Broom&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;_OBJ_DEF
+Broom&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Broom&lt;/b&gt;
+&lt;br&gt;
+GarbageCollector, to invoke use:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;[Broom]
+sweep.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Broom]
+dust&lt;/b&gt; &lt;br&gt;
+Returns the number of objects collected.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Broom]
+unpack: [String:Ref]&lt;/b&gt; &lt;br&gt;
+assigns the instance to the reference &lt;br&gt;
+(Always prefer using algebraic deconstruction assignments:
+look at section &amp;rsquo;Assignment&amp;rsquo;)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Broom]
+objectCount&lt;/b&gt; &lt;br&gt;
+Returns the total number of objects considered in the latest
+collect &lt;br&gt;
+cycle.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Broom]
+keptCount&lt;/b&gt; &lt;br&gt;
+Returns the total number of objects that have been marked
+during the &lt;br&gt;
+latest cycle and have therefore been allowed to stay in
+memory.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Broom]
+keptAlloc&lt;/b&gt; &lt;br&gt;
+Returns the amount of allocated memory.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Broom]
+stickyCount&lt;/b&gt; &lt;br&gt;
+Returns the total number of objects that have a sticky flag.
+&lt;br&gt;
+These objects will never be removed.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Broom]
+memoryLimit&lt;/b&gt; &lt;br&gt;
+Sets the memory limit, if this limit gets exceeded the
+program will produce &lt;br&gt;
+an out-of-memory error.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Broom]
+mode: [Number]&lt;/b&gt; &lt;br&gt;
+Selects mode of operation for GC.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Available
+Modes: &lt;br&gt;
+0 - No Garbage Collection &lt;br&gt;
+1 - Activate Garbage Collector &lt;br&gt;
+4 - Activate Garbage Collector for every single step
+(testing only)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Broom]
+autoAlloc: [Boolean]&lt;/b&gt; &lt;br&gt;
+Set whether the max allowed memory cap is enforced or
+not&lt;/p&gt;
+
+&lt;h2&gt;Shell
+&lt;a name=&quot;Shell&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;_OBJ_DEF
+Shell&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Shell]
+call: [String]&lt;/b&gt; &lt;br&gt;
+Performs a Shell operation. The Shell object uses a fluid
+API, so you can &lt;br&gt;
+mix shell code with programming logic. For instance to list
+the contents &lt;br&gt;
+of a directory use:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Shell ls&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;This will
+output the contents of the current working directly, you
+&lt;br&gt;
+can also pass keyword messages like so:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Shell echo:
+&amp;rsquo;Hello from the Shell!&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The example
+above will output the specified message to the console. &lt;br&gt;
+Every message you send will be turned into a string and
+dispatched to &lt;br&gt;
+the &amp;rsquo;call:&amp;rsquo; message.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Shell]
+unpack: [String:Ref]&lt;/b&gt; &lt;br&gt;
+assigns the instance to the reference &lt;br&gt;
+(Always prefer using algebraic deconstruction assignments:
+look at section &amp;rsquo;Assignment&amp;rsquo;)&lt;/p&gt;
+
+&lt;h2&gt;Slurp
+&lt;a name=&quot;Slurp&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;_OBJ_DEF
+Slurp&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Slurp]
+obtain.&lt;/b&gt; &lt;br&gt;
+Obtains the string generated using the Slurp object. &lt;br&gt;
+A Slurp object collects all messages send to it and flushes
+its buffer while &lt;br&gt;
+returning the resulting string after an &amp;rsquo;obtain&amp;rsquo;
+message has been received.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Slurp hello
+world. &lt;br&gt;
+Pen write: (Slurp obtain).&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;This will
+output: &amp;rsquo;hello world&amp;rsquo;. &lt;br&gt;
+Use the Slurp object to integrate verbose shell commands,
+other programming languages &lt;br&gt;
+(like SQL) etc into your main program without overusing
+strings.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Example:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;query select:
+&amp;rsquo;*&amp;rsquo;, from users where: &amp;rsquo;id = 2&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Note that we
+can&amp;rsquo;t use the = and * unfortunately right now &lt;br&gt;
+because = is also a method in the main object. While * can
+be used &lt;br&gt;
+theoretically, it expects an identifier, and
+&amp;rsquo;from&amp;rsquo; is not a real &lt;br&gt;
+identifier, it&amp;rsquo;s just another unary message, so
+instead of using a binary &lt;br&gt;
+* we simply use a keyword message select: with argument
+&amp;rsquo;*&amp;rsquo; and then &lt;br&gt;
+proceed our SQL query with a comma (,) to chain the rest.
+&lt;br&gt;
+This is an artifact of the fact that the DSL has to be
+embedded within &lt;br&gt;
+the language of Citron. However even with these restrictions
+(some of which might be &lt;br&gt;
+alleviated in future versions) it&amp;rsquo;s quite comfortable
+and readable to interweave &lt;br&gt;
+an external language in your Citron script code.&lt;/p&gt;
+
+&lt;h2&gt;Program
+&lt;a name=&quot;Program&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;_OBJ_DEF
+Program&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+argument: [Number]&lt;/b&gt; &lt;br&gt;
+Obtains an argument from the CLI invocation.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+argCount&lt;/b&gt; &lt;br&gt;
+Returns the number of CLI arguments passed to the
+script.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+unpack: [String:Ref]&lt;/b&gt; &lt;br&gt;
+assigns the instance to the reference &lt;br&gt;
+(Always prefer using algebraic deconstruction assignments:
+look at section &amp;rsquo;Assignment&amp;rsquo;)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+exit&lt;/b&gt; &lt;br&gt;
+Exits program immediately.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+env: [String]&lt;/b&gt; &lt;br&gt;
+Returns the value of an environment variable.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;x is Command
+env: &amp;rsquo;MY_PATH_VAR&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+env: [Key] val: [Value]&lt;/b&gt; &lt;br&gt;
+Sets the value of an environment variable.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+changeDirectory: [path:String]&lt;/b&gt; &lt;br&gt;
+chdir to path, returns the past directory on success&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+waitForInput&lt;/b&gt; &lt;br&gt;
+Ask a question on the command-line, resumes program &lt;br&gt;
+only after pressing the enter key. &lt;br&gt;
+Only reads up to 100 characters.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Pen write:
+&amp;rsquo;What is your name ?&amp;rsquo;. &lt;br&gt;
+x is Command waitForInput. &lt;br&gt;
+Pen write: &amp;rsquo;Hello &amp;rsquo; + x + &amp;rsquo; !&amp;rsquo;,
+brk.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The example
+above asks the user for his/her name and &lt;br&gt;
+then displays the input received.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+getCharacter&lt;/b&gt; &lt;br&gt;
+reads a character from STDIN. &lt;br&gt;
+Will only return after reading one ASCII character and a
+return.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+input.&lt;/b&gt; &lt;br&gt;
+Reads all raw input from STDIN.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage (for
+instance to read raw CGI post):&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;post is Program
+input.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+forbidShell&lt;/b&gt; &lt;br&gt;
+This method is part of the security profiles feature of
+Citron. &lt;br&gt;
+This will forbid the program to execute any shell
+operations. All &lt;br&gt;
+external libraries and plugins are assumed to respect this
+setting as well.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Program
+forbidShell.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+forbidFileWrite&lt;/b&gt; &lt;br&gt;
+This method is part of the security profiles feature of
+Citron. &lt;br&gt;
+This will forbid the program to modify, create or delete any
+files. All &lt;br&gt;
+external libraries and plugins are assumed to respect this
+setting as well.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Program
+forbidFileWrite.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+forbidFileRead&lt;/b&gt; &lt;br&gt;
+This method is part of the security profiles feature of
+Citron. &lt;br&gt;
+This will forbid the program to read any files. In fact this
+will prevent you from &lt;br&gt;
+creating the file object at all. &lt;br&gt;
+This will also prevent you from reading environment
+variables. &lt;br&gt;
+All external libraries and plugins are assumed to respect
+this setting as well. &lt;br&gt;
+Forbidding a program to read files also has the effect to
+forbid including other &lt;br&gt;
+source files.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Program
+forbidFileRead.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+forbidInclude&lt;/b&gt; &lt;br&gt;
+This method is part of the security profiles feature of
+Citron. &lt;br&gt;
+This will forbid the program to include any other files. All
+&lt;br&gt;
+external libraries and plugins are assumed to respect this
+setting as well.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Program
+forbidInclude.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+forbidFork.&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+remainingMessages: [Number]&lt;/b&gt; &lt;br&gt;
+This method is part of the security profiles feature of
+Citron. &lt;br&gt;
+This will initiate a countdown for the program, you can
+specify the maximum quota of &lt;br&gt;
+messages the program may process, once this quota has been
+exhausted the program will &lt;br&gt;
+be killed entirely (no exception).&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Program
+remainingMessages: 100.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+flush.&lt;/b&gt; &lt;br&gt;
+Flushes the STDOUT output buffer.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+new: [Block].&lt;/b&gt; &lt;br&gt;
+Forks the program into two programs. &lt;br&gt;
+Creates another program that will run at the same time as
+the &lt;br&gt;
+current program. Both the parent and the child will obtain a
+reference &lt;br&gt;
+to the newly created program. The child will obtain a
+reference to &lt;br&gt;
+itself passed as a parameter to the code block while the
+parent will &lt;br&gt;
+obtain its version of the program instance as the return
+value of the &lt;br&gt;
+new: message.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Note that
+spawning a new program will leak memory. &lt;br&gt;
+The file descriptors used to setup communication between
+parent and &lt;br&gt;
+child will be removed when the main program ends but any
+newly created &lt;br&gt;
+program will add a descriptor pair to the set. This is a
+limitation &lt;br&gt;
+in the current implementation.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;child is
+Program new: { :program&lt;/p&gt;
+
+&lt;table width=&quot;100%&quot; border=&quot;0&quot; rules=&quot;none&quot; frame=&quot;void&quot;
+       cellspacing=&quot;0&quot; cellpadding=&quot;0&quot;&gt;
+&lt;tr valign=&quot;top&quot; align=&quot;left&quot;&gt;
+&lt;td width=&quot;8%&quot;&gt;&lt;/td&gt;
+&lt;td width=&quot;92%&quot;&gt;
+
+
+&lt;p&gt;Pen write: &amp;rsquo;Child&amp;rsquo;, brk.&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+&lt;p style=&quot;margin-left:11%;&quot;&gt;}. &lt;br&gt;
+Pen write: &amp;rsquo;Parent&amp;rsquo;.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+message: [String].&lt;/b&gt; &lt;br&gt;
+Sends a message to another program, i.e. a child or a parent
+that is &lt;br&gt;
+running at the same time.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+listen: [Block].&lt;/b&gt; &lt;br&gt;
+Stops the current flow of the program and starts listening
+for &lt;br&gt;
+messages from other programs that are running at the same
+time. &lt;br&gt;
+Upon receiving a message, the specified block will be
+invocated &lt;br&gt;
+and passed the message that has been received.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+join&lt;/b&gt; &lt;br&gt;
+Rejoins the program with the main program. &lt;br&gt;
+This message will cause the current program to stop and wait
+&lt;br&gt;
+for the child program to end.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Object]
+fromComputer: [String] [port: [Number] [inet6:
+[Boolean]]]&lt;/b&gt; &lt;br&gt;
+Creates a remote object from the server specified by the
+&lt;br&gt;
+ip address.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+port: [Number].&lt;/b&gt; &lt;br&gt;
+Sets the port to use for remote connections.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+connectionLimit: [Number].&lt;/b&gt; &lt;br&gt;
+Sets the maximum number of connections and requests that
+will be &lt;br&gt;
+accepted by the current program.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Program]
+serve: [Object].&lt;/b&gt; &lt;br&gt;
+Serves an object. Client programs can now communicate with
+this object &lt;br&gt;
+and send messages to it.&lt;/p&gt;
+
+&lt;h2&gt;Dice
+&lt;a name=&quot;Dice&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;_OBJ_DEF
+Dice&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Dice]
+rollWithSides: [Number]&lt;/b&gt; &lt;br&gt;
+Rolls the dice, generates a pseudo random number.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Dice]
+roll&lt;/b&gt; &lt;br&gt;
+Rolls a standard dice with 6 sides.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Dice]
+rawRandomNumber&lt;/b&gt; &lt;br&gt;
+Generates a random number, the traditional way (like
+rand()).&lt;/p&gt;
+
+&lt;h2&gt;Clock
+&lt;a name=&quot;Clock&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;_OBJ_DEF
+Clock&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+wait: [Number]&lt;/b&gt; &lt;br&gt;
+Waits X useconds.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock] new:
+[Number].&lt;/b&gt; &lt;br&gt;
+Creates a new clock instance from a UNIX time stamp.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+like: [Clock]&lt;/b&gt; &lt;br&gt;
+Syncs a clock. Copies the time AND zone from the other
+clock.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage: &lt;br&gt;
+clock is Clock new: timeStamp. &lt;br&gt;
+copyClock is Clock new like: clock.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+zone: [String]&lt;/b&gt; &lt;br&gt;
+Sets the time zone of the clock.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+zone&lt;/b&gt; &lt;br&gt;
+Returns time zone of the clock.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+zone: [Number]&lt;/b&gt; &lt;br&gt;
+Sets the year of the clock.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+zone: [Number]&lt;/b&gt; &lt;br&gt;
+Sets the month of the clock.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+zone: [Number]&lt;/b&gt; &lt;br&gt;
+Sets the day of the clock.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+zone: [Number]&lt;/b&gt; &lt;br&gt;
+Sets the hour of the clock.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+zone: [Number]&lt;/b&gt; &lt;br&gt;
+Sets the minute of the clock.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+zone: [Number]&lt;/b&gt; &lt;br&gt;
+Sets the second of the clock.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+year&lt;/b&gt; &lt;br&gt;
+Returns year of the clock.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+month&lt;/b&gt; &lt;br&gt;
+Returns month of the clock.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+day&lt;/b&gt; &lt;br&gt;
+Returns day of the clock.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+hour&lt;/b&gt; &lt;br&gt;
+Returns hour of the clock.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+minute&lt;/b&gt; &lt;br&gt;
+Returns minute of the clock.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+second&lt;/b&gt; &lt;br&gt;
+Returns second of the clock.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+yearday&lt;/b&gt; &lt;br&gt;
+Returns day number of the year.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+weekday&lt;/b&gt; &lt;br&gt;
+Returns the week day number of the clock.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+time.&lt;/b&gt; &lt;br&gt;
+Returns the UNIX time stamp representation of the time. &lt;br&gt;
+Note: this is the time OF CREATION OF THE OBJECT. To get the
+actual time use:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;[Clock] new
+time.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+week&lt;/b&gt; &lt;br&gt;
+Returns the week number of the clock.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+format: [String]&lt;/b&gt; &lt;br&gt;
+Returns a string describing the date and time represented by
+the clock object &lt;br&gt;
+according to the specified format. See strftime for format
+syntax details.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+toString&lt;/b&gt; &lt;br&gt;
+Returns a string describing the date and time &lt;br&gt;
+represented by the clock object.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock] add:
+[Number].&lt;/b&gt; &lt;br&gt;
+Adds the number to the clock, updating its time accordingly.
+&lt;br&gt;
+Note that this is typically used with a qualifier. &lt;br&gt;
+If the qualifier is &amp;rsquo;hours&amp;rsquo; the number is
+treated as hours and &lt;br&gt;
+the specified number of hours will be added to the time.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;The Clock
+object understands the following qualifiers &lt;br&gt;
+if the selected language is English:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;sec, second,
+seconds, &lt;br&gt;
+min, minute, minutes, &lt;br&gt;
+hrs, hour, hours, &lt;br&gt;
+day, days, &lt;br&gt;
+week, weeks, &lt;br&gt;
+month, months, &lt;br&gt;
+year, years&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Note that it
+does not matter which form you use, 2 hour means &lt;br&gt;
+the same as 2 hours (plural).&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Usage:&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;clock add: 3
+minutes. #adds 3 minutes &lt;br&gt;
+clock add: 1 hour. #adds 1 hour &lt;br&gt;
+clock add: 2 second. #adds 2 seconds&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+subtract: [Number].&lt;/b&gt; &lt;br&gt;
+Same as &amp;rsquo;[Clock] add:&amp;rsquo; but subtracts the number
+instead of adding it to &lt;br&gt;
+the clock&amp;rsquo;s time.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+new&lt;/b&gt; &lt;br&gt;
+Creates a new clock, by default a clock will be set to &lt;br&gt;
+the UTC timezone having the current time.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+processorClock&lt;/b&gt; &lt;br&gt;
+returns the number of processor ticks since the beginning of
+this program. &lt;br&gt;
+Note that this will be reset depending on the processor&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+ticksPerSecond&lt;/b&gt; &lt;br&gt;
+returns the count of processor ticks in a second&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+timeExecutionOf: [Block]&lt;/b&gt; &lt;br&gt;
+How long does the execution of the block take? (returns in
+cpu ticks)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Clock]
+executionSeconds: [Block]&lt;/b&gt; &lt;br&gt;
+How long does the execution of the block take? (returns in
+seconds)&lt;/p&gt;
+
+&lt;h2&gt;Pen
+&lt;a name=&quot;Pen&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;_OBJ_DEF
+Pen&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Pen] write:
+[String]&lt;/b&gt; &lt;br&gt;
+Writes string to console.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Pen]
+writeln: [String]&lt;/b&gt; &lt;br&gt;
+Writes string to console, with a newline at the end.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Pen]
+brk&lt;/b&gt; &lt;br&gt;
+Outputs a newline character.&lt;/p&gt;
+
+&lt;h2&gt;Reflect
+&lt;a name=&quot;Reflect&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;_OBJ_DEF
+Reflect&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Reflect
+addGlobalVariable: [name:String]&lt;/b&gt; &lt;br&gt;
+adds a variable named &amp;lt;name&amp;gt; to the global context&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Reflect
+addLocalVariable: [name:String]&lt;/b&gt; &lt;br&gt;
+adds a variable named &amp;lt;name&amp;gt; to the Local context&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Reflect
+addPrivateVariable: [name:String]&lt;/b&gt; &lt;br&gt;
+adds a variable named &amp;lt;name&amp;gt; to this context&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Reflect set:
+[name:String] to: [Object]&lt;/b&gt; &lt;br&gt;
+dynamically sets a binding&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Reflect
+getContext&lt;/b&gt; &lt;br&gt;
+returns all the context keys&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Reflect
+getMethodsOf: [Object]&lt;/b&gt; &lt;br&gt;
+returns all the method names of object&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Reflect
+getPropertiesOf: [Object]&lt;/b&gt; &lt;br&gt;
+returns all the property names of object&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Reflect]
+getObject: [s:String]&lt;/b&gt; &lt;br&gt;
+looks for the object &amp;lsquo;s&amp;lsquo; in the current context
+or any of the contexts beneath&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Reflect]
+objectExists: [Object]&lt;/b&gt; &lt;br&gt;
+returns whether the object exists&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Reflect]
+addArgumentTo: [Block] named: [s:String]&lt;/b&gt; &lt;br&gt;
+adds a new argument &amp;lsquo;s&amp;lsquo; to the block&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Reflect]
+copyBlock: [b:Block]&lt;/b&gt; &lt;br&gt;
+copies block b to a new context&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Reflect]
+newSharedObject&lt;/b&gt; &lt;br&gt;
+makes a memmapped object. (Automatic destructor exists)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Reflect]
+link: [o:Object] to: [p:Object]&lt;/b&gt; &lt;br&gt;
+casts o to object type p&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Reflect]
+objectExists: [o:String]&lt;/b&gt; &lt;br&gt;
+checks whether the object named o exists&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Reflect]
+isObject: [o:Object] linkedTo: [p:Object]&lt;/b&gt; &lt;br&gt;
+checks whether p is anywhere in o&amp;rsquo;s link chain&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Reflect]
+isObject: [o:Object] childOf: [p:Object]&lt;/b&gt; &lt;br&gt;
+returns whether p is the parent of o&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Reflect]
+generateLinkTree: [o:Object]&lt;/b&gt; &lt;br&gt;
+generates a linear tree, representing the chain of
+inheritance for object o&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Reflect]
+primitiveLinkOf: [o:Object]&lt;/b&gt; &lt;br&gt;
+gets the first primitive object associated with o in its
+link chain&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Reflect]
+typeOf: [Object]&lt;/b&gt; &lt;br&gt;
+returns a type constructor suited for the object&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Reflect]
+parentOf: [o:Object]&lt;/b&gt; &lt;br&gt;
+gets the first immediate parent of o.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Reflect]
+getResponder: [r:String] ofObject: [o:Object]&lt;/b&gt; &lt;br&gt;
+gets the method r from object o, AS IS &lt;br&gt;
+The returned block will not contain any references to o.
+&lt;br&gt;
+So a context must be supplied. (Takes a &amp;rsquo;self&amp;rsquo;
+argument first)&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Reflect]
+run: [Block] forObject: [object:Object] arguments:
+[Array]&lt;/b&gt; &lt;br&gt;
+runs a block with its &amp;rsquo;me&amp;rsquo;/&amp;rsquo;my&amp;rsquo; set
+to object&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Reflect]
+runHere: [Block] forObject: [o:Object] arguments:
+[Array]&lt;/b&gt; &lt;br&gt;
+runs a block with its &amp;rsquo;me&amp;rsquo;/&amp;rsquo;my&amp;rsquo; set
+to object, without switching contexts&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Reflect]
+closure: [String] of: [Object]&lt;/b&gt; &lt;br&gt;
+captures a method from an object as a closure&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;(Reflect
+closure: &amp;rsquo;closure:of:&amp;rsquo; of: Reflect) applyTo:
+&amp;rsquo;toString&amp;rsquo; and: 10. #&amp;rsquo;10&amp;rsquo;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Reflect]
+getProperty: [p:String] ofObject: [o:Object]&lt;/b&gt; &lt;br&gt;
+returns the property p of object o. &lt;br&gt;
+this will produce an error should said property not
+exist.&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Reflect
+getProperty: &amp;rsquo;end&amp;rsquo; ofObject: Eval&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Reflect]
+disableInstrumentation&lt;/b&gt; &lt;br&gt;
+Sends a message to an object with some arguments bypassing
+the instrumentor&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Reflect]
+enableInstrumentation&lt;/b&gt; &lt;br&gt;
+Sends a message to an object with some arguments bypassing
+the instrumentor&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Reflect]
+registerInstrumentor: [Block&amp;lt;object, message,
+arguments&amp;gt;:&amp;lt;object, message, arguments&amp;gt;]&lt;/b&gt; &lt;br&gt;
+register to an event that fires every time a message is
+sent. &lt;br&gt;
+This instrumentor will have to handle all message sending
+operations &lt;br&gt;
+using &amp;lsquo;[Reflect] disableInstrumentation&amp;lsquo; and
+&amp;rsquo;[Reflect] enableInstrumentation&amp;rsquo;. &lt;br&gt;
+return value is used as the result of the message, unless it
+is the instrumentor function, &lt;br&gt;
+In which case, the message is handed down to the object
+raw&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Reflect]
+currentInstrumentor&lt;/b&gt; &lt;br&gt;
+gets the current instrumentor instance, or Nil if none
+exists&lt;/p&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;@Experimental&lt;/b&gt;
+&lt;br&gt;
+[Reflect] runAtGlobal: [Block] arguments: [[Object]]&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Runs a block at
+global context passing it the arguments&lt;/p&gt;
+
+&lt;h2&gt;Fiber
+&lt;a name=&quot;Fiber&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;_OBJ_DEF
+Fiber&lt;/b&gt;&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;Fiber new:
+[Block]&lt;/b&gt; &lt;br&gt;
+Creates a new Fiber object that does (Block) upon control
+being yielded to it&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;Fiber is a
+co-processing method in citron. &lt;br&gt;
+Think software level threads&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Fiber]
+yield&lt;/b&gt; &lt;br&gt;
+yield control from the current object&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Fiber]
+yield: [Object]&lt;/b&gt; &lt;br&gt;
+yield control and pass an object along&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Fiber]
+waitForAll&lt;/b&gt; &lt;br&gt;
+Wait until all fibers return&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Fiber]
+waitFor:&lt;/b&gt; &lt;br&gt;
+Wait until fiber returns&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Fiber]
+yielded&lt;/b&gt; &lt;br&gt;
+get the object that the last fiber yielded, or Nil if no
+object was yielded&lt;/p&gt;
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;&lt;b&gt;[Fiber]
+unpack: [String:Ref]&lt;/b&gt; &lt;br&gt;
+Assigns the fiber instance to the reference &lt;br&gt;
+(Always prefer using algebraic deconstruction assignments:
+look at section &amp;rsquo;Assignment&amp;rsquo;)&lt;/p&gt;
+
+&lt;h2&gt;BUGS
+&lt;a name=&quot;BUGS&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;This is a
+preliminary version (&amp;lt; 1.0) of Citron, there might still
+be very serious bugs. Please refrain from using this version
+in a production environment. This version of Citron is still
+considered &amp;rsquo;alpha&amp;rsquo; stage and cannot be expected
+to be reliable.&lt;/p&gt;
+
+&lt;h2&gt;AUTHOR
+&lt;a name=&quot;AUTHOR&quot;&gt;&lt;/a&gt;
+&lt;/h2&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;AnotherTest and
+the Citron Community (Nil)&lt;/p&gt;
+
+
+&lt;p style=&quot;margin-left:11%; margin-top: 1em&quot;&gt;devanothertest@gmail.com&lt;/p&gt;
+&lt;hr&gt;
+&lt;/body&gt;
+&lt;/html&gt;

@@ -1,0 +1,26 @@
+CTypes.
+
+var rl is CTypes loadLibrary: 'libreadline.so'.
+var int is CTypes sint.
+var pointer is CTypes pointer.
+var cif is CIF new .
+var readline is rl readline.
+var rlcomp is rl rl_completion_entry_function.
+Pen writeln: rlcomp.
+rlcomp derefSet: (CTypes closureOf: {:ch:i ^'test'.} withCIF: (CIF new setABI: 0 return: pointer argTypes: [pointer, int])).
+var rlbk is rl rl_bind_key.
+var glfns is Reflect getMethodsOf: Reflect.
+var glfnsi is -1.
+var keyhandler is {:count:key
+  (glfns count = glfnsi) ifTrue: {glfnsi is -1.}.
+  Pen writeln: (glfns at: (glfnsi +=: 1)).
+  ^0.
+}.
+keyhandler set: ':cCallInterface' value: (CIF new setABI: 0 return: int argTypes: [int, int]).
+cif setABI: 0 return: int argTypes: [int, pointer].
+# Pen write: (cif call: rlbk withArgs: [('\t' toByteArray at: 0), keyhandler]), brk.
+readline is {:prompt
+  ^CTypes string set: (const cif setABI: 0 return: const pointer argTypes: [const pointer],
+   call: const readline withArgs: [prompt]), get.
+}.
+Pen writeln: 'You said %s' % [(readline applyTo: 'say shit: ')].

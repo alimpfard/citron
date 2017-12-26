@@ -50,7 +50,7 @@ ctr_object* ctr_array_new(ctr_object* myclass, ctr_argument* argumentList) {
 ctr_object* ctr_array_copy(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* arr = ctr_array_new(CtrStdArray, NULL);
   ctr_argument* pushArg = ctr_heap_allocate(sizeof(ctr_argument));
-  for(ctr_size i=0; i<myself->value.avalue->length; i++) {
+  for(ctr_size i=0; i<myself->value.avalue->head-myself->value.avalue->tail; i++) {
     pushArg->object = *(myself->value.avalue->elements+i);
     ctr_array_push(arr, pushArg);
   }
@@ -614,7 +614,13 @@ ctr_object* ctr_array_get(ctr_object* myself, ctr_argument* argumentList) {
     long long i;
     if (getIndex->info.type != CTR_OBJECT_TYPE_OTNUMBER) {
         //printf("Index must be number.\n"); exit(1);
-        CtrStdFlow = ctr_build_string_from_cstring("Array index must be a number.");
+        char buf[1024];
+        char* typename = ctr_heap_allocate_cstring(ctr_internal_cast2string(ctr_send_message(getIndex, "type", 4, NULL))),
+            * value = ctr_heap_allocate_cstring(ctr_internal_cast2string(getIndex));
+        sprintf(buf, "Array index must be a number (not %s type %d(%s)).", value, getIndex->info.type, typename);
+        CtrStdFlow = ctr_build_string_from_cstring(buf);
+        ctr_heap_free(typename);
+        ctr_heap_free(value);
         return CtrStdNil;
     }
     i = (int) getIndex->value.nvalue;
@@ -1193,10 +1199,105 @@ ctr_object* ctr_array_imap(ctr_object* myself, ctr_argument* argumentList) {
     return newArr;
   }
 
-  /**
-   * [Array] unpack: [Array:{Ref:string}]
-   * Element-wise assign
-   */
+/**
+ * CtrArrayToArgumentList
+ * @internal
+ *
+ * unpacks an array to an argumentlist
+ */
+ctr_argument* ctr_array_to_argument_list(ctr_object* arr, ctr_argument* provided) {
+  ctr_size i = arr->value.avalue->tail, arr_max_len = arr->value.avalue->head-arr->value.avalue->tail;
+  if(!provided) provided = ctr_heap_allocate(sizeof(ctr_argument));
+  ctr_argument* arg = provided;
+  while(provided) {
+    if(!provided->next) break;
+    if (i>=arr_max_len)
+      provided->object = NULL;
+    else
+      provided->object = arr->value.avalue->elements[i];
+    provided = provided->next;
+    i++;
+  }
+  while(i<arr_max_len) {
+    provided->next = ctr_heap_allocate(sizeof(ctr_argument));
+    provided->object = arr->value.avalue->elements[i];
+    provided = provided->next;
+  }
+  return arg;
+}
+void ctr_deallocate_argument_list(ctr_argument* argumentList) {
+  ctr_argument* arg;
+  while(argumentList) {
+    arg = argumentList->next;
+    ctr_heap_free(argumentList);
+    argumentList = arg;
+  }
+}
+void ctr_nullify_argument_list(ctr_argument* argumentList) {
+  ctr_argument* arg;
+  while(argumentList) {
+    arg = argumentList->next;
+    argumentList->object = NULL;
+    argumentList = arg;
+  }
+}
+/**
+ * [Array] fmap: [Block] from: [Block|Array|Map|supports `items`] [filter: [Block]]
+ * @Experimental
+ * list comprehension
+ */
+ ctr_object* ctr_array_select_from_if(ctr_object* myself, ctr_argument* argumentList) {
+   ctr_object *selector = argumentList->object,
+              *from     = argumentList->next->object,
+              *ifexp    = argumentList->next->next&&argumentList->next->next->object?argumentList->next->next->object:NULL,
+              *result   = ctr_array_new(CtrStdArray, NULL),
+              *elem, *old_from;
+   ctr_argument* argument = ctr_heap_allocate(sizeof(ctr_argument));
+   restart:;
+   if(from->info.type == CTR_OBJECT_TYPE_OTBLOCK)
+     from = ctr_block_run(from, NULL, NULL);
+   if (from->info.type == CTR_OBJECT_TYPE_OTARRAY) {
+     printf("%p\n", from);
+     for (ctr_size i=from->value.avalue->tail; i<from->value.avalue->head; i++) {
+       elem = from->value.avalue->elements[i];
+       if(elem->info.type == CTR_OBJECT_TYPE_OTARRAY)
+        argument = ctr_array_to_argument_list(elem, argument);
+       else {
+         ctr_nullify_argument_list(argument);
+         argument->object = elem;
+       }
+       if (ifexp) {
+         ctr_object* clause = ctr_internal_cast2bool(ctr_block_run(ifexp, argument, ifexp));
+         if (!clause->value.bvalue) continue;
+       }
+       ctr_object* maybe = ctr_block_run(selector, argument, selector);
+       argument->object = maybe;
+       ctr_array_push(result, argument);
+     }
+     ctr_deallocate_argument_list(argument);
+     return result;
+   } else if (ctr_internal_has_responder(from, ctr_build_string_from_cstring("items"))) {
+     from = ctr_send_message(from, "items", 5, NULL);
+     if(from->info.type != CTR_OBJECT_TYPE_OTARRAY) {
+       ctr_deallocate_argument_list(argument);
+       CtrStdFlow = ctr_build_string_from_cstring("Generator 'items' does not return a valid value.");
+       return CtrStdNil;
+     }
+     argumentList->next->object = from;
+     return ctr_array_select_from_if(myself, argumentList);
+   }
+ }
+
+/**
+ * [Array] from: [Block|Array|Map|supports `each`] [if: [Block]]
+ * @Experimental
+ * list comprehension
+ */
+/**
+ * [Array] unpack: [Array:{Ref:string}]
+ * Element-wise assign
+ * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
+ */
 
   ctr_object* ctr_array_assign(ctr_object* myself, ctr_argument* argumentList) {
     ctr_object* to = argumentList->object;
@@ -1325,7 +1426,11 @@ ctr_object* ctr_array_to_string( ctr_object* myself, ctr_argument* argumentList 
     }
     for(i=myself->value.avalue->tail; i<myself->value.avalue->head; i++) {
         arrayElement = *( myself->value.avalue->elements + i );
-        if (arrayElement == myself) {
+        if(!arrayElement) {
+          newArgumentList->object = ctr_build_string_from_cstring("':NULLPtr:'");
+          string = ctr_string_append( string, newArgumentList );
+        }
+        else if (arrayElement == myself) {
           newArgumentList->object = ctr_build_string_from_cstring("':selfReference:'");
           string = ctr_string_append( string, newArgumentList );
         }
@@ -1894,9 +1999,14 @@ ctr_object* ctr_map_to_string( ctr_object* myself, ctr_argument* argumentList) {
 }
 
 /**
- * [Map] unpack: [Map:{Ref:string}]
- * Key-wise assign
- */
+* [Map] unpack: [Map:{Ref:AlternativeName}]
+* Key-wise assign
+* Give alternative names as the values of the constructor
+*
+* e.g. (Map new put: 'Hello' at: 'test0', put: 'World' at: 'test1') unpack: (Map cnew: {my test0 is 'a'. my test1 is 'b'.})
+*
+* (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
+*/
 
 ctr_object* ctr_map_assign(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* to = argumentList->object;
@@ -1951,6 +2061,14 @@ ctr_object* ctr_iterator_make(ctr_object* myself, ctr_argument* argumentList) {
   return instance;
 }
 
+ctr_object* ctr_iterator_type(ctr_object* myself, ctr_argument* argumentList) {
+  return ctr_build_string_from_cstring("Iterator");
+}
+ctr_object* ctr_iterator_to_string(ctr_object* myself, ctr_argument* argumentList) {
+  char buf[10240];
+  ctr_size size = sprintf(buf, "[Iterator <%llu>]", myself);
+  return ctr_build_string(buf, size);
+}
 /**
  * @internal
  *

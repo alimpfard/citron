@@ -77,8 +77,7 @@ ctr_object* FIBER_YIELDED = NULL; //to pass values around
  static ucontext_t mainContext;
 
  // Sets all the fibers to be initially inactive
- void initFibers()
- {
+ void initFibers() {
  	int i;
  	for ( i = 0; i < MAX_FIBERS; ++ i )
  	{
@@ -89,8 +88,7 @@ ctr_object* FIBER_YIELDED = NULL; //to pass values around
  }
 
  // Switches from a fiber to main or from main to a fiber
- void fiberYield()
- {
+ void fiberYield() {
  	// If we are in a fiber, switch to the main process
  	if ( inFiber )
  	{
@@ -135,8 +133,7 @@ ctr_object* FIBER_YIELDED = NULL; //to pass values around
  // Records when the fiber has started and when it is done
  // so that we know when to free its resources. It is called in the fiber's
  // context of execution.
- static void fiberStart( ctr_object* block )
- {
+ static void fiberStart( ctr_object* block ) {
  	fiberList[currentFiber].active = 1;
  	if(FIBER_YIELDED != NULL) ctr_block_run_variadic(block, 1, FIBER_YIELDED);
   else                      ctr_block_run_variadic(block, 0);
@@ -146,8 +143,7 @@ ctr_object* FIBER_YIELDED = NULL; //to pass values around
  	fiberYield();
  }
 
- int spawnFiber( ctr_object* block )
- {
+ int spawnFiber( ctr_object* block ) {
  	if ( numFibers == MAX_FIBERS ) return LF_MAXFIBERS;
 
  	// Add the new function to the end of the fiber list
@@ -159,8 +155,7 @@ ctr_object* FIBER_YIELDED = NULL; //to pass values around
  	fiberList[numFibers].context.uc_stack.ss_size = FIBER_STACK;
  	fiberList[numFibers].context.uc_stack.ss_flags = 0;
 
- 	if ( fiberList[numFibers].context.uc_stack.ss_sp == 0 )
- 	{
+ 	if ( fiberList[numFibers].context.uc_stack.ss_sp == 0 ) {
  		LF_DEBUG_OUT( "Error: Could not allocate stack.", 0 );
  		return LF_MALLOCERROR;
  	}
@@ -172,8 +167,7 @@ ctr_object* FIBER_YIELDED = NULL; //to pass values around
  	return LF_NOERROR;
  }
 
- int waitForAllFibers()
- {
+ int waitForAllFibers() {
  	int fibersRemaining = 0;
 
  	// If we are in a fiber, wait for all the *other* fibers to quit
@@ -183,9 +177,22 @@ ctr_object* FIBER_YIELDED = NULL; //to pass values around
 
  	// Execute the fibers until they quit
  	while ( numFibers > fibersRemaining )
- 	{
  		fiberYield();
- 	}
+
+ 	return LF_NOERROR;
+ }
+
+ int waitForFiber(int id) {
+ 	int fibersRemaining = id;
+
+ 	// If we are in a fiber, wait for all the *other* fibers to quit
+ 	if ( inFiber ) fibersRemaining = id + 1;
+
+ 	LF_DEBUG_OUT( "Waiting until there are only %d threads remaining...", fibersRemaining );
+
+ 	// Execute the fibers until they quit
+ 	while ( numFibers > fibersRemaining )
+ 		fiberYield();
 
  	return LF_NOERROR;
  }
@@ -228,7 +235,7 @@ ctr_object* ctr_fiber_spawn(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* blk = argumentList->object;
   if(blk == NULL || blk->info.type != CTR_OBJECT_TYPE_OTBLOCK) {CtrStdFlow = ctr_build_string_from_cstring("Fiber's spawning requires a block."); return myself;}
   int fiber = spawnFiber(argumentList->object);
-  //ctr_internal_object_add_property(fiberObj, ctr_build_string_from_cstring("fiberId"), ctr_build_number_from_float(fiber), CTR_CATEGORY_PRIVATE_PROPERTY);
+  ctr_internal_object_add_property(fiberObj, ctr_build_string_from_cstring("fiberId"), ctr_build_number_from_float(numFibers), CTR_CATEGORY_PRIVATE_PROPERTY);
   return fiberObj;
 }
 
@@ -256,6 +263,15 @@ ctr_object* ctr_fiber_yield(ctr_object* myself, ctr_argument* argumentList) {
 ctr_object* ctr_fiber_join_all(ctr_object* myself, ctr_argument* argumentList) {
   return ctr_build_bool(waitForAllFibers());
 }
+/**
+ * [Fiber] waitFor:
+ *
+ * Wait until fiber returns
+ */
+ctr_object* ctr_fiber_join(ctr_object* myself, ctr_argument* argumentList) {
+  waitForFiber((int)ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("fiberId"), CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue);
+  return myself;
+}
 ctr_object* ctr_fiber_join_times(ctr_object* myself, ctr_argument* argumentList) {
   return ctr_build_bool(yieldNTimes((int)ctr_internal_cast2number(argumentList->object)->value.nvalue));
 }
@@ -271,6 +287,14 @@ ctr_object* ctr_fiber_yielded(ctr_object* myself, ctr_argument* argumentList) {
   return FIBER_YIELDED == NULL? CtrStdNil : FIBER_YIELDED;
 }
 
+/**
+ * [Fiber] unpack: [String:Ref]
+ * Assigns the fiber instance to the reference
+ * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
+ */
+ctr_object* ctr_fiber_assign(ctr_object* myself, ctr_argument* argumentList) {
+    return ctr_object_assign(myself, argumentList);
+}
 
 void ctr_fiber_begin_init() {
   initFibers();
@@ -283,7 +307,9 @@ void ctr_fiber_begin_init() {
   ctr_internal_create_func(CtrStdFiber, ctr_build_string_from_cstring("yielded"), &ctr_fiber_yielded);
   ctr_internal_create_func(CtrStdFiber, ctr_build_string_from_cstring("yieldTimes:"), &ctr_fiber_join_times);
   ctr_internal_create_func(CtrStdFiber, ctr_build_string_from_cstring("waitForAll"), &ctr_fiber_join_all);
-  ctr_internal_object_add_property(CtrStdFiber, ctr_build_string_from_cstring("fiberId"), ctr_build_number_from_float(-1), CTR_CATEGORY_PRIVATE_PROPERTY);
+  ctr_internal_create_func(CtrStdFiber, ctr_build_string_from_cstring("waitFor:"), &ctr_fiber_join);
+  ctr_internal_create_func(CtrStdFiber, ctr_build_string_from_cstring("unpack:"), &ctr_fiber_assign);
+  ctr_internal_object_add_property(CtrStdFiber, ctr_build_string_from_cstring("fiberId"), ctr_build_number_from_float(numFibers), CTR_CATEGORY_PRIVATE_PROPERTY);
   CtrStdFiber->info.sticky = 1;
 
   ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Fiber"), CtrStdFiber, 0);

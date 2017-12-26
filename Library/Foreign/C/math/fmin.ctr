@@ -1,0 +1,4 @@
+var fmin is CTypes loadLibrary: Nil, fmin.
+import export: {:arg0:arg1
+  ^CIF new setABI: 0 return: CTypes float argTypes: [(CTypes float)] * 2, call: const fmin withArgs: [arg0, arg1].
+} as: 'fmin'.

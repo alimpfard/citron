@@ -506,6 +506,15 @@ ctr_object* ctr_gc_dust(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 /**
+ * [Broom] unpack: [String:Ref]
+ * assigns the instance to the reference
+ * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
+ */
+ctr_object* ctr_gc_assign(ctr_object* myself, ctr_argument* argumentList) {
+    return ctr_object_assign(myself, argumentList);
+}
+
+/**
  * [Broom] objectCount
  *
  * Returns the total number of objects considered in the latest collect
@@ -629,6 +638,14 @@ ctr_object* ctr_shell_call(ctr_object* myself, ctr_argument* argumentList) {
     return outputString;
 }
 
+/**
+ * [Shell] unpack: [String:Ref]
+ * assigns the instance to the reference
+ * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
+ */
+ctr_object* ctr_shell_assign(ctr_object* myself, ctr_argument* argumentList) {
+  return ctr_object_assign(myself, argumentList);
+}
 /**
  * @internal
  *
@@ -786,6 +803,15 @@ ctr_object* ctr_command_argument(ctr_object* myself, ctr_argument* argumentList)
  */
 ctr_object* ctr_command_num_of_args(ctr_object* myself, ctr_argument* argumentList) {
     return ctr_build_number_from_float( (ctr_number) ctr_argc );
+}
+
+/**
+ * [Program] unpack: [String:Ref]
+ * assigns the instance to the reference
+ * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
+ */
+ctr_object* ctr_program_assign(ctr_object* myself, ctr_argument* argumentList) {
+  return ctr_object_assign(myself, argumentList);
 }
 
 /**
@@ -977,7 +1003,11 @@ void ctr_int_handler(int isig) {
     switch(isig) {
       case SIGINT:
       case SIGTERM:
-      case SIGHUP: exit(1);
+      case SIGSEGV:
+      case SIGBUS:
+      case SIGQUIT:
+      case SIGHUP:
+      printf("Got signal '%s', quitting\n", strsignal(isig));exit(isig);
       default: return;
     }
   }

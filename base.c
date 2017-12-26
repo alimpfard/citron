@@ -79,6 +79,7 @@ ctr_object* ctr_nil_to_boolean(ctr_object* myself, ctr_argument* ctr_argumentLis
 /**
  * [Nil] unpack: [Ref:string]
  * Assigns Nil into Ref
+ * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */
 
 ctr_object* ctr_nil_assign(ctr_object* myself, ctr_argument* argumentList) { if (!ctr_reflect_check_bind_valid(myself, argumentList->object)) return CtrStdNil;
@@ -246,6 +247,7 @@ ctr_object* ctr_object_attr_writer(ctr_object* myself, ctr_argument* argumentLis
 /**
  * [Object] unpack: [Object:{Ref*}]
  * Element-wise object assign
+ * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */
 
 ctr_object* ctr_object_assign(ctr_object* myself, ctr_argument* argumentList) { if (!ctr_reflect_check_bind_valid(myself, argumentList->object)) return CtrStdNil;
@@ -825,6 +827,7 @@ ctr_object* ctr_build_bool(int truth) {
 /**
  * [Boolean] unpack: [String:Ref]
  * Assign ref to boolean
+ * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */
 
 ctr_object* ctr_bool_assign(ctr_object* myself, ctr_argument* argumentList) { if (!ctr_reflect_check_bind_valid(myself, argumentList->object)) return CtrStdNil;
@@ -1141,6 +1144,7 @@ ctr_object* ctr_build_number(char* n) {
 /**
  * [Number] unpack: [String:Ref]
  * Assign ref to number
+ * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */
 
 ctr_object* ctr_number_assign(ctr_object* myself, ctr_argument* argumentList) { if (!ctr_reflect_check_bind_valid(myself, argumentList->object)) return CtrStdNil;
@@ -1946,6 +1950,7 @@ ctr_object* ctr_string_is_ctor(ctr_object* myself, ctr_argument* argumentList) {
 /**
  * [String] unpack: [String:Ref]
  * Assign ref to string
+ * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */
 
 ctr_object* ctr_string_assign(ctr_object* myself, ctr_argument* argumentList) {
@@ -2128,10 +2133,26 @@ ctr_object* ctr_string_multiply(ctr_object* myself, ctr_argument* argumentList) 
  *
  * Creates a string with the template format and the specified objects
  *
+ * Alias: %
  * Usage:
  *
  * fmt := 'Hello, %s! %d is a number!'
  * str := fmt formatObjects: (Array new < 'World', 23).
+ *
+ *
+ * formatObjects format specifiers:
+ * %[opts]<format type>
+ * opts:
+ *  `:` get the element and use it as a delimiter for the next element (list)
+ *  `.<number>` string padding (works for anything but L)
+ * types:
+ *  `s` string
+ *  `d` number (citron number : real)
+ *  `L` list
+ *  `%` literal percent sign
+ *  `c|i|x` C number (int) cast to char|int|hex
+ *  `f` C float
+ *   otherwise used as parameter for printf-style format
  */
  int ctr_str_count_substr(char *str, char* substr, int overlap) {
   if (strlen(substr) == 0) return -1; // forbid empty substr
@@ -2161,10 +2182,25 @@ ctr_object* ctr_string_format(ctr_object* myself, ctr_argument* argumentList) {
   int specnum = -1;
   int fmtct = 0;
   ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
+  ctr_object *cp_delim_opt = ctr_build_string_from_cstring(", "), *cp_len_opt = NULL;
+  /*
+  0 - no opt
+  1 - opt delimiter (cp_delim_opt) for %:L (list)
+  2 - opt len (cp_len_opt) for %.*s -- TODO: Implement.
+  */
+  unsigned int in_opt_mode = 0;
   for (int i = 0; i<len; i++,c=*(fmt+i)) {
+    in_opt_mode = 0;
     if(c == '%') {
       if (i > len-2) {
-        CtrStdFlow = ctr_build_string_from_cstring("Malformed format string.");
+        error_out:;
+        char errf[1024];
+        sprintf(errf, "Malformed format string at index %d(%c)", i, c);
+        CtrStdFlow = ctr_build_string_from_cstring(errf);
+        return myself;
+        error_out_wrong_args:;
+        sprintf(errf, "Incorrect format args for spec %d(%c)", specnum, c);
+        CtrStdFlow = ctr_build_string_from_cstring(errf);
         return myself;
       }
       if (fmtct) {
@@ -2174,6 +2210,33 @@ ctr_object* ctr_string_format(ctr_object* myself, ctr_argument* argumentList) {
       }
       specnum++;
       c=*(fmt+1+(i++));
+      if (c == ':') {
+        if (in_opt_mode != 0) goto error_out;
+        in_opt_mode = 1;
+        c = *(fmt+1+i++);
+      }
+      if (c == '.') {
+        if ((c=*(fmt+i)) == '*') {
+          if (in_opt_mode != 0) goto error_out;
+          in_opt_mode = 2;
+          c = *(fmt+1+i++);
+        }
+      }
+      if (c == 'L') {
+        if (in_opt_mode&1) {
+          args->object = ctr_build_number_from_float(specnum++);
+          cp_delim_opt = ctr_array_get(objects, args);
+        }
+        args->object = ctr_build_number_from_float(specnum);
+        ctr_object* arr = ctr_array_get(objects, args);
+        if (arr->info.type != CTR_OBJECT_TYPE_OTARRAY) goto error_out_wrong_args;
+        for (ctr_size i=arr->value.avalue->tail; i<arr->value.avalue->head; i++) {
+          args->object = arr->value.avalue->elements[i];
+          ctr_string_append(buffer, args);
+          if(i != arr->value.avalue->head-1) {args->object = cp_delim_opt; ctr_string_append(buffer, args);}
+        }
+        continue;
+      }
       if (c == 's') {
         args->object = ctr_build_number_from_float(specnum);
         args->object = ctr_send_message(ctr_array_get(objects, args), "toString", 8, NULL);
@@ -2506,6 +2569,32 @@ ctr_object* ctr_string_index_of(ctr_object* myself, ctr_argument* argumentList) 
     byte_index = (uintptr_t) p - (uintptr_t) (myself->value.svalue->value);
     uchar_index = ctr_getutf8len(myself->value.svalue->value, byte_index);
     return ctr_build_number_from_float((ctr_number) uchar_index);
+}
+
+/**
+ * [String] startsWith: [String]
+ *
+ * Returns whether the string starts with the arg
+ *
+ */
+ctr_object* ctr_string_starts_with(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* pre = ctr_internal_cast2string(argumentList->object);
+  size_t lenpre = ctr_string_length(pre, NULL)->value.nvalue,
+         lenstr = ctr_string_length(myself, NULL)->value.nvalue;
+  return lenstr < lenpre ? ctr_build_bool(0) : ctr_build_bool(strncmp(pre->value.svalue->value, myself->value.svalue->value, lenpre) == 0);
+}
+
+/**
+ * [String] endsWith: [String]
+ *
+ * Returns whether the string ends with the arg
+ *
+ */
+ctr_object* ctr_string_ends_with(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* post = ctr_internal_cast2string(argumentList->object);
+  size_t lenpost= ctr_string_length(post, NULL)->value.nvalue,
+         lenstr = ctr_string_length(myself, NULL)->value.nvalue;
+  return lenstr < lenpost ? ctr_build_bool(0) : ctr_build_bool(memcmp(post->value.svalue->value, myself->value.svalue->value+(lenstr-lenpost), lenpost) == 0);
 }
 
 /**
@@ -3722,6 +3811,7 @@ void ctr_capture_refs_(ctr_tnode* ti, ctr_object* block, int noerror) {
 /**
  * [Block] unpack: [String:Ref]
  * Assign ref to block
+ * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */
 
 ctr_object* ctr_block_assign(ctr_object* myself, ctr_argument* argumentList) { if (!ctr_reflect_check_bind_valid(myself, argumentList->object)) return CtrStdNil;

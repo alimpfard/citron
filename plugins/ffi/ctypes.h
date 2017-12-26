@@ -57,7 +57,10 @@ enum ctr_ctype {
   CTR_CTYPE_POINTER,
   CTR_CTYPE_CIF,
   CTR_CTYPE_DYN_LIB,
-  CTR_CTYPE_STRUCT
+  CTR_CTYPE_STRUCT,
+  //convenience
+  CTR_CTYPE_STRING,
+  CTR_CTYPE_FUNCTION_POINTER
 };
 typedef enum ctr_ctype ctr_ctype;
 
@@ -185,10 +188,21 @@ CTR_CT_SIMPLE_TYPE_FUNC_STR(dynamic_lib);
 //Dynamic Library
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(struct);
 
+//String
+CTR_CT_SIMPLE_TYPE_FUNC_MAKE(string);
+CTR_CT_SIMPLE_TYPE_FUNC_SET(string);
+CTR_CT_SIMPLE_TYPE_FUNC_STR(string);
+
+//Function
+CTR_CT_SIMPLE_TYPE_FUNC_MAKE(functionptr);
+CTR_CT_SIMPLE_TYPE_FUNC_SET(functionptr);
+CTR_CT_SIMPLE_TYPE_FUNC_STR(functionptr);
+
 //FFI bindings
 CTR_CT_FFI_BIND(prep_cif);
 CTR_CT_FFI_BIND(cif_new);
 CTR_CT_FFI_BIND(call);
 
+ffi_type* ctr_ctypes_ffi_convert_to_ffi_type(ctr_object* type);
 ctr_object* ctr_ctypes_get_first_meta(ctr_object* object, ctr_object* last);
 #endif

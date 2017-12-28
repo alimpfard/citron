@@ -25,4 +25,4 @@ txt equals Word Salad = True
 txt equals Ceasar Salad = False
 txt does not equal Word Salad = False
 txt does not equal Ceasar Salad = True
-No memory leaks here
+Leaking memory...

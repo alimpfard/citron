@@ -1,45 +1,23 @@
 #!/bin/sh
 
-set -x
-set -v
+# set -v
+# set -x
 
+echo "Where is your libffi? tell me, please!"
+ffi_path="/usr/local/lib";
+LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$ffi_path";
 OS=`uname -s`
-LDFLAGS='-shared'
-if [ "$OS" = "Darwin" ]; then
-  LDFLAGS='-shared -undefined dynamic_lookup'
-fi
-#Remove .so
-find . -name "*.so" -exec rm {} +
-
-#For plugin test, compile Percolator plugin
-cd plugins/percolator;
-cc -c percolator.c -Wall -Werror -fPIC -o percolator.o
-cc ${LDFLAGS} -o libctrpercolator.so percolator.o
-cd ..
-cd ..
-cp plugins/percolator/libctrpercolator.so mods/percolator/libctrpercolator.so
-
-#request test
-cd plugins/request/ccgi-1.2;
-cc -c ccgi.c -Wall	-Werror -fPIC -o ccgi.o
-cc -c prefork.c -Wall -Werror -fPIC -o prefork.o
-cd ..
-cc -c request.c -Wall -Werror -fPIC -o request.o
-cc ${LDFLAGS} -o libctrrequest.so request.o ccgi-1.2/ccgi.o ccgi-1.2/prefork.o
-cd ..
-cd ..
-cp plugins/request/libctrrequest.so mods/request/libctrrequest.so
-
-
-make clean;
-./mk.sh
-
+# make clean;
+# make;
+failing=()
 j=1
+useless_input="test
+";
 for i in $(find tests -name 'test*.ctr'); do
 	fitem=$i
 	echo -n "$fitem interpret";
 	fexpect="${i%%.ctr}.exp"
-	result=`echo "test" | ./ctr ${fitem}`
+	result=`echo "$useless_input" | ./ctr ${fitem}`
 	expected=`cat $fexpect`
 	if [ "$result" = "$expected" ]; then
 		echo "[$j]"
@@ -51,10 +29,10 @@ for i in $(find tests -name 'test*.ctr'); do
 		echo ""
 		echo "BUT GOT:"
 		echo $result
-		exit 1
+		failing+=("$fitem");
 	fi
 	headline=$(head -n 1 $fitem)
 done
 echo ""
-echo "All tests passed."
+echo Tests failing: $failing
 exit 0

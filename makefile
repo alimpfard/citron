@@ -15,9 +15,9 @@ COBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
 all: CFALGS := $(CFLAGS) -O3
 all:ctr
 
-install: ctr
-	cp ./ctr /usr/bin/ctr
-
+install: 
+	echo -e "install directly from source not allowed.\nUse citron_autohell instead for installs"
+	exit 1;
 ctr:	$(OBJS)
 	$(CC) $(OBJS) -rdynamic -lm -ldl -lbsd -lpcre -o ctr
 

@@ -1,2 +1,10 @@
 Parse error, unexpected ^ ( tests/test0147.ctr: 3 )
 Expected a message recipient.
+Parse error, unexpected ^ ( tests/test0147.ctr: 3 )
+Expected a dot (.).
+Parse error, unexpected } ( tests/test0147.ctr: 3 )
+Expected a message recipient.
+Parse error, unexpected } ( tests/test0147.ctr: 3 )
+Expected a dot (.).
+aaa
+Got signal 'Segmentation fault', quitting

@@ -1,2 +1,4 @@
 Parse error, unexpected . ( tests/test0149.ctr: 3 )
 Expected ).
+Parse error, unexpected end of program ( tests/test0149.ctr: 4 )
+Expected a dot (.).

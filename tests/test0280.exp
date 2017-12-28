@@ -1,0 +1,1 @@
+(Map new) put:'key' at:'test', put:'123' at:123

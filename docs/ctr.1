@@ -1,4 +1,4 @@
-.TH "Citron v0.0.6.7" 1 "16 December 2017" "The Citron programming language Manual"
+.TH "Citron v0.0.6.7" 1 "27 December 2017" "The Citron programming language Manual"
 .SH NAME
 ctr \- run a Citron program
 .PP
@@ -1145,10 +1145,26 @@ The following messages are part of the Core API of the Citron Programming Langua
 
  Creates a string with the template format and the specified objects
 
+ Alias: %
  Usage:
 
  fmt is 'Hello, %s! %d is a number!'
  str is fmt formatObjects: (Array new < 'World', 23).
+
+
+ formatObjects format specifiers:
+ %[opts]<format type>
+ opts:
+  `:` get the element and use it as a delimiter for the next element (list)
+  `.<number>` string padding (works for anything but L)
+ types:
+  `s` string
+  `d` number (citron number : real)
+  `L` list
+  `%` literal percent sign
+  `c|i|x` C number (int) cast to char|int|hex
+  `f` C float
+   otherwise used as parameter for printf-style format
 .BR
 
 .PP
@@ -1237,6 +1253,20 @@ The following messages are part of the Core API of the Citron Programming Langua
  Usage:
 
  'find the needle' indexOf: 'needle'. #9
+.BR
+
+.PP
+.SS
+.B [String] startsWith: [String]
+
+ Returns whether the string starts with the arg
+.BR
+
+.PP
+.SS
+.B [String] endsWith: [String]
+
+ Returns whether the string ends with the arg
 .BR
 
 .PP
@@ -2150,6 +2180,20 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
+.B [Array] fmap: [Block] from: [Block|Array|Map|supports `items`] [filter: [Block]]
+ @Experimental
+ list comprehension
+.BR
+
+.PP
+.SS
+.B [Array] from: [Block|Array|Map|supports `each`] [if: [Block]]
+ @Experimental
+ list comprehension
+.BR
+
+.PP
+.SS
 .B [Array] unpack: [Array:{Ref:string}]
  Element-wise assign
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
@@ -2523,7 +2567,7 @@ This function does not evaluate anything from the iterator
  replacing XXXX with some chars.
  Usage:
 
- File tempFileLike: '/example/path/to/fileXXXXXXXX.txt'.
+ File tempFileLike: '/example/path/to/fileXXXXXXXX'.
 .BR
 
 .PP

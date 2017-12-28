@@ -1,2 +1,3 @@
-Parse error, unexpected := ( tests/test0194.ctr: 1 )
-Invalid left-hand assignment.
+Uncaught error has occurred.
+Number cannot be constructed by 2
+#1 2 (tests/test0194.ctr: 1)

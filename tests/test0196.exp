@@ -1,4 +1,4 @@
-Uncatched error has occurred.
+Uncaught error has occurred.
 Key not found: name
 #5 name (tests/test0196.ctr: 11)
 #4 `name (tests/test0196.ctr: 20)

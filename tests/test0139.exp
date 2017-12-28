@@ -1,1 +1,2 @@
-Out of memory. Failed to allocate 56 bytes.
+Out of memory. Failed to allocate 64 bytes.
+#1 a (tests/test0139.ctr: 3)

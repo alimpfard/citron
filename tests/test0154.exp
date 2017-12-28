@@ -1,2 +1,5 @@
 Parse error, unexpected } ( tests/test0154.ctr: 3 )
 Expected a message recipient.
+Parse error, unexpected . ( tests/test0154.ctr: 3 )
+Expected a message recipient.
+Got signal 'Segmentation fault', quitting

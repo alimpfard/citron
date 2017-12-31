@@ -1,0 +1,5 @@
+Broom autoAlloc: True.
+BigInteger.
+x is 2 toBigInt.
+21 times: { x *=: x. }.
+Pen writeln: '21 times x*=:x xi=2 has %s digits' % [(x toString length)].

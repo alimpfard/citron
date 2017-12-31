@@ -173,7 +173,7 @@ struct ctr_argument {
 	struct ctr_argument* next;
 };
 typedef struct ctr_argument ctr_argument;
-
+typedef void(*voidptrfn_t(void*));
 /**
  * Root Object
  */
@@ -201,6 +201,7 @@ struct ctr_object {
 		struct ctr_resource* rvalue;
 		struct ctr_object* (*fvalue) (struct ctr_object* myself, struct ctr_argument* argumentList);
 	} value;
+	voidptrfn_t* release_hook;
 	struct ctr_object* gnext;
 };
 typedef struct ctr_object ctr_object;
@@ -301,6 +302,7 @@ ctr_object* CtrStdExit;
 ctr_object* CtrStdReflect;
 ctr_object* CtrStdReflect_cons;
 ctr_object* CtrStdFiber;
+ctr_object* CtrStdThread;
 ctr_object* ctr_first_object;
 
 /**
@@ -948,6 +950,16 @@ ctr_object* ctr_fiber_tostring(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_fiber_yielded(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_fiber_assign(ctr_object* myself, ctr_argument* argumentList);
 void ctr_fiber_begin_init(void);
+
+ctr_object* ctr_thread_make(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_thread_make_set_target(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_thread_set_target(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_thread_run(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_thread_join(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_thread_id(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_thread_name(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_thread_names(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_thread_to_string(ctr_object* myself, ctr_argument* argumentList);
 
 /** ImportLib **/
 ctr_object* CtrStdImportLib;

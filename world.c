@@ -684,6 +684,7 @@ ctr_object* ctr_internal_create_mapped_object(int type, int shared) {
     o->methods->size = 0;
     o->properties->head = NULL;
     o->methods->head = NULL;
+    o->release_hook = NULL;
     o->info.type = type;
     o->info.sticky = 0;
     o->info.mark = 0;
@@ -1556,6 +1557,23 @@ void ctr_initialize_world() {
     ctr_internal_create_func(CtrStdObject, ctr_build_string_from_cstring("&method:"), &ctr_reflect_object_delegate_get_responder);
     ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Reflect"), CtrStdReflect, 0);
     CtrStdReflect->info.sticky = 1;
+
+    CtrStdThread = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+    CtrStdThread->link = CtrStdObject;
+    CtrStdThread->info.sticky = 1;
+
+    ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("new"), &ctr_thread_make);
+    ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("new:"), &ctr_thread_make_set_target);
+    ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("new:args:"), &ctr_thread_make_set_target);
+    ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("target:"), &ctr_thread_set_target);
+    ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("run"), &ctr_thread_run);
+    ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("join"), &ctr_thread_join);
+    ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("id"), &ctr_thread_id);
+    ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("name:"), &ctr_thread_names);
+    ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("name"), &ctr_thread_name);
+    ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring(CTR_DICT_TOSTRING), &ctr_thread_to_string);
+
+    ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Thread"), CtrStdThread, 0);
 
     CtrStdReflect_cons = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
     CtrStdReflect_cons->link = CtrStdObject;

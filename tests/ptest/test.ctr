@@ -1,0 +1,12 @@
+var th is Thread new: {
+    Pen writeln: '\nThread %s finished in %s ticks' % [(Thread name), (Clock timeExecutionOf: {
+        500 times: {:i
+            Pen write: i + ', '.
+        }.
+    })].
+}.
+Pen writeln: 'Thread %s finished in %s ticks.' % [(Thread name), (Clock timeExecutionOf: {
+    th run.
+    Clock wait: 300000.
+    th join.
+})].

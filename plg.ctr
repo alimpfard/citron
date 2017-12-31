@@ -1,6 +1,0 @@
-ra is Object new.
-ra on: 'respondTo:and:' do: {:mesg:*args
-    Pen writeln: '@ID(%s) called with (%:L)' % [mesg, ', ', args].
-    ^'lol'.
-}.
-ra test: 53 fool: 69.

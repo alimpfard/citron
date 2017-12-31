@@ -3978,15 +3978,15 @@ ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object*
         if (my) result = my; else result = myself;
     }
     ctr_close_context();
-    if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak && CtrStdFlow != CtrStdContinue) {
+    if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak && CtrStdFlow != CtrStdContinue && CtrStdFlow != CtrStdExit) {
         ctr_object* catchBlock = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring( "catch" ), 0);
         if (catchBlock != NULL) {
             ctr_argument* a = (ctr_argument*) ctr_heap_allocate( sizeof( ctr_argument ) );
             a->object = CtrStdFlow;
             CtrStdFlow = NULL;
-            ctr_block_run(catchBlock, a, my);
+            ctr_object* alternative = ctr_block_run(catchBlock, a, my);
             ctr_heap_free( a );
-            result = myself;
+            result = alternative;
         }
     }
     //ctr_block_run_cache_result_if_expensive(myself, argList, result);

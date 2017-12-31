@@ -1,12 +1,8 @@
 
-ctr_object *
-ctr_ccomp_get_stub (ctr_function_ptr_t func, ctr_object * receiver,
-		    ctr_argument * args)
-{
-  switch (func)
-    {
+ctr_object* ctr_ccomp_get_stub(ctr_function_ptr_t func, ctr_object* receiver, ctr_argument* args) {
+  switch (func) {
     case &ctr_nil_is_nil:
-      return ctr_build_bool (1);
+      return ctr_build_bool(1);
 
     case &ctr_nil_assign:
     case &ctr_block_error:
@@ -71,9 +67,9 @@ ctr_ccomp_get_stub (ctr_function_ptr_t func, ctr_object * receiver,
     case &ctr_block_runIt:
     case &ctr_block_run:
       int cc = CTR_CCOMP_SIMULATION;
-      CTR_CCOMP_SIMULATION = 1;	//enable simulation
-      ctr_object *result = ctr_send_message (receiver, args);
-      CTR_CCOMP_SIMULATION = cc;	//set it back to its original value
+      CTR_CCOMP_SIMULATION = 1; //enable simulation
+      ctr_object* result = ctr_send_message(receiver, args);
+      CTR_CCOMP_SIMULATION = cc; //set it back to its original value
       return result;
 
     case &ctr_object_remote:
@@ -404,5 +400,5 @@ ctr_ccomp_get_stub (ctr_function_ptr_t func, ctr_object * receiver,
     case &ctr_dice_rand:
     default:
       return CtrStdObject;
-    }
+  }
 }

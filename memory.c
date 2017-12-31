@@ -15,9 +15,10 @@
  * Heap Object, represents dynamic memory.
  */
 
-struct memBlock {
-    size_t size;
-    void* space;
+struct memBlock
+{
+  size_t size;
+  void *space;
 };
 
 //struct memBlockCache_node {
@@ -32,13 +33,16 @@ struct memBlock {
 
 typedef struct memBlock memBlock;
 
-memBlock*  memBlocks = NULL;
-size_t     numberOfMemBlocks = 0;
-size_t     maxNumberOfMemBlocks = 0;
+memBlock *memBlocks = NULL;
+size_t numberOfMemBlocks = 0;
+size_t maxNumberOfMemBlocks = 0;
 
-void sttrace_print(void* ptr) {
-  if(likely(ptr)) return;
-  printf("MEMORY ALLOC %p\n", ptr);
+void
+sttrace_print (void *ptr)
+{
+  if (likely (ptr))
+    return;
+  printf ("MEMORY ALLOC %p\n", ptr);
   void *array[99999];
   size_t size;
   char **strings;
@@ -48,7 +52,7 @@ void sttrace_print(void* ptr) {
   strings = backtrace_symbols (array, size);
 
   for (i = 0; i < size; i++)
-     printf ("%s\n", strings[i]);
+    printf ("%s\n", strings[i]);
 
   free (strings);
 }
@@ -76,102 +80,123 @@ void sttrace_print(void* ptr) {
  *
  * @return void*
  */
-void* ctr_heap_allocate( size_t size ) {
-    //if (memBlockCache.length > 0) {
-    //  struct memBlockCache_node* last_node = memBlockCache.node;
-    //  struct memBlockCache_node* node_after_last = NULL;
-    //  while (last_node->block->size != (size + sizeof(size_t))) {
-    //    node_after_last = last_node;
-    //    if(last_node->next == NULL)  goto cache_miss;
-    //    last_node=last_node->next;
-    //  }
-    //  if (node_after_last)
-    //    node_after_last->next = last_node->next;
-    //  else
-    //    memBlockCache.node = last_node->next;
-    //  memBlockCache.length--;
-    //  memBlock* block = last_node->block;
-    //  free(last_node);
-    //  return block;
-    //}
-  cache_miss:;
-    void* slice_of_memory;
-    size_t* block_width;
-    int q = sizeof( size_t );
-    size += q;
-
-    /* Check whether we can afford to allocate this much */
-    ctr_gc_alloc += size;
-
-    if (ctr_gc_memlimit < ctr_gc_alloc) {
-      ctr_gc_sweep(0);
-      if(ctr_gc_memlimit < ctr_gc_alloc)
-      if (CTR_LIMIT_MEM) {
-          printf( "Out of memory. Failed to allocate %lu bytes.\n", size );
-          ctr_print_stack_trace();
-          exit(1);
-        } else {
-          ctr_gc_memlimit *= 2;
-        }
-    }
-
-    /* Perform allocation and check result */
-    slice_of_memory = calloc( size, 1 );
-
-    if ( slice_of_memory == NULL ) {
-        printf( "Out of memory. Failed to allocate %lu bytes (malloc failed). \n", size );
-        exit(1);
-    }
-
-    /* Store the width of the memory block in the slice itself so we can always find it */
-    block_width = (size_t*) slice_of_memory;
-    *(block_width) = size;
-    /* Now move the new memory pointer behind the blockwidth */
-    slice_of_memory = (void*) ((char*) slice_of_memory + q);
-    sttrace_print(slice_of_memory);
-    return slice_of_memory;
-}
-
-void* create_shared_memory(size_t size) {
-  // Our memory buffer will be readable and writable:
-  int protection = PROT_READ | PROT_WRITE | PROT_EXEC;
-  int visibility = MAP_ANONYMOUS | MAP_SHARED;
-  return mmap(NULL, size, protection, visibility, -1, 0);
-}
-void* ctr_heap_allocate_shared( size_t size ) {
-
-  void* slice_of_memory;
-  size_t* block_width;
-  int q = sizeof( size_t );
+void *
+ctr_heap_allocate (size_t size)
+{
+  //if (memBlockCache.length > 0) {
+  //  struct memBlockCache_node* last_node = memBlockCache.node;
+  //  struct memBlockCache_node* node_after_last = NULL;
+  //  while (last_node->block->size != (size + sizeof(size_t))) {
+  //    node_after_last = last_node;
+  //    if(last_node->next == NULL)  goto cache_miss;
+  //    last_node=last_node->next;
+  //  }
+  //  if (node_after_last)
+  //    node_after_last->next = last_node->next;
+  //  else
+  //    memBlockCache.node = last_node->next;
+  //  memBlockCache.length--;
+  //  memBlock* block = last_node->block;
+  //  free(last_node);
+  //  return block;
+  //}
+cache_miss:;
+  void *slice_of_memory;
+  size_t *block_width;
+  int q = sizeof (size_t);
   size += q;
 
   /* Check whether we can afford to allocate this much */
   ctr_gc_alloc += size;
 
-  if (ctr_gc_memlimit < ctr_gc_alloc) {
-    if (CTR_LIMIT_MEM) {
-        printf( "Out of memory. Failed to allocate %lu bytes.\n", size );
-        ctr_print_stack_trace();
-        exit(1);
-      } else {
-        ctr_gc_memlimit *= 2;
-      }
-  }
+  if (ctr_gc_memlimit < ctr_gc_alloc)
+    {
+      ctr_gc_sweep (0);
+      if (ctr_gc_memlimit < ctr_gc_alloc)
+	if (CTR_LIMIT_MEM)
+	  {
+	    printf ("Out of memory. Failed to allocate %lu bytes.\n", size);
+	    ctr_print_stack_trace ();
+	    exit (1);
+	  }
+	else
+	  {
+	    ctr_gc_memlimit *= 2;
+	  }
+    }
 
   /* Perform allocation and check result */
-  slice_of_memory = create_shared_memory( size );
+  slice_of_memory = calloc (size, 1);
 
-  if ( slice_of_memory == NULL ) {
-      printf( "Out of memory. Failed to allocate %lu bytes (malloc failed). \n", size );
-      exit(1);
-  }
+  if (slice_of_memory == NULL)
+    {
+      printf
+	("Out of memory. Failed to allocate %lu bytes (malloc failed). \n",
+	 size);
+      exit (1);
+    }
 
   /* Store the width of the memory block in the slice itself so we can always find it */
-  block_width = (size_t*) slice_of_memory;
+  block_width = (size_t *) slice_of_memory;
   *(block_width) = size;
   /* Now move the new memory pointer behind the blockwidth */
-  slice_of_memory = (void*) ((char*) slice_of_memory + q);
-  sttrace_print(slice_of_memory);
+  slice_of_memory = (void *) ((char *) slice_of_memory + q);
+  sttrace_print (slice_of_memory);
+  return slice_of_memory;
+}
+
+void *
+create_shared_memory (size_t size)
+{
+  // Our memory buffer will be readable and writable:
+  int protection = PROT_READ | PROT_WRITE | PROT_EXEC;
+  int visibility = MAP_ANONYMOUS | MAP_SHARED;
+  return mmap (NULL, size, protection, visibility, -1, 0);
+}
+
+void *
+ctr_heap_allocate_shared (size_t size)
+{
+
+  void *slice_of_memory;
+  size_t *block_width;
+  int q = sizeof (size_t);
+  size += q;
+
+  /* Check whether we can afford to allocate this much */
+  ctr_gc_alloc += size;
+
+  if (ctr_gc_memlimit < ctr_gc_alloc)
+    {
+      if (CTR_LIMIT_MEM)
+	{
+	  printf ("Out of memory. Failed to allocate %lu bytes.\n", size);
+	  ctr_print_stack_trace ();
+	  exit (1);
+	}
+      else
+	{
+	  ctr_gc_memlimit *= 2;
+	}
+    }
+
+  /* Perform allocation and check result */
+  slice_of_memory = create_shared_memory (size);
+
+  if (slice_of_memory == NULL)
+    {
+      printf
+	("Out of memory. Failed to allocate %lu bytes (malloc failed). \n",
+	 size);
+      exit (1);
+    }
+
+  /* Store the width of the memory block in the slice itself so we can always find it */
+  block_width = (size_t *) slice_of_memory;
+  *(block_width) = size;
+  /* Now move the new memory pointer behind the blockwidth */
+  slice_of_memory = (void *) ((char *) slice_of_memory + q);
+  sttrace_print (slice_of_memory);
   return slice_of_memory;
 }
 
@@ -179,53 +204,69 @@ void* ctr_heap_allocate_shared( size_t size ) {
  * Allocates memory on heap and tracks it for clean-up when
  * the program ends.
  */
-void* ctr_heap_allocate_tracked( size_t size ) {
-    void* space;
-    space = ctr_heap_allocate( size );
-    if ( numberOfMemBlocks >= maxNumberOfMemBlocks ) {
-        if ( memBlocks == NULL ) {
-            memBlocks = ctr_heap_allocate( sizeof( memBlock ) );
-            maxNumberOfMemBlocks = 1;
-        } else {
-            maxNumberOfMemBlocks += 10;
-            memBlocks = ctr_heap_reallocate( memBlocks, ( sizeof( memBlock ) * ( maxNumberOfMemBlocks ) ) );
-        }
+void *
+ctr_heap_allocate_tracked (size_t size)
+{
+  void *space;
+  space = ctr_heap_allocate (size);
+  if (numberOfMemBlocks >= maxNumberOfMemBlocks)
+    {
+      if (memBlocks == NULL)
+	{
+	  memBlocks = ctr_heap_allocate (sizeof (memBlock));
+	  maxNumberOfMemBlocks = 1;
+	}
+      else
+	{
+	  maxNumberOfMemBlocks += 10;
+	  memBlocks =
+	    ctr_heap_reallocate (memBlocks,
+				 (sizeof (memBlock) *
+				  (maxNumberOfMemBlocks)));
+	}
     }
-    memBlocks[ numberOfMemBlocks ].space = space;
-    memBlocks[ numberOfMemBlocks ].size  = size;
-    numberOfMemBlocks ++;
-    return space;
+  memBlocks[numberOfMemBlocks].space = space;
+  memBlocks[numberOfMemBlocks].size = size;
+  numberOfMemBlocks++;
+  return space;
 }
 
 /**
  * Reallocates tracked memory on heap.
  * You need to provide a tracking ID.
  */
-void* ctr_heap_reallocate_tracked( size_t tracking_id, size_t size ) {
-    void* space;
-    space = memBlocks[ tracking_id ].space;
-    space = ctr_heap_reallocate( space, size );
-    memBlocks[ tracking_id ].space = space;
-    memBlocks[ tracking_id ].size  = size;
-    return space;
+void *
+ctr_heap_reallocate_tracked (size_t tracking_id, size_t size)
+{
+  void *space;
+  space = memBlocks[tracking_id].space;
+  space = ctr_heap_reallocate (space, size);
+  memBlocks[tracking_id].space = space;
+  memBlocks[tracking_id].size = size;
+  return space;
 }
 
 /**
  * Returns the latest tracking ID after tracking allocation.
  */
-size_t ctr_heap_get_latest_tracking_id() {
-    return numberOfMemBlocks - 1;
+size_t
+ctr_heap_get_latest_tracking_id ()
+{
+  return numberOfMemBlocks - 1;
 }
 
 /**
  * Frees all tracked memory blocks.
  */
-void ctr_heap_free_rest() {
-    size_t i;
-    for ( i = 0; i < numberOfMemBlocks; i ++) {
-        ctr_heap_free( memBlocks[i].space );
+void
+ctr_heap_free_rest ()
+{
+  size_t i;
+  for (i = 0; i < numberOfMemBlocks; i++)
+    {
+      ctr_heap_free (memBlocks[i].space);
     }
-    //ctr_heap_free( memBlocks );
+  //ctr_heap_free( memBlocks );
 }
 
 
@@ -239,51 +280,57 @@ void ctr_heap_free_rest() {
  *
  * @return void
  */
-void ctr_heap_free( void* ptr ) {
-    //struct memBlockCache_node* node = memBlockCache.node;
-    //struct memBlockCache_node* lnode = node;
-    //for(;node!=NULL;lnode=node,node=node->next)
-    //  if(node->block->space == ptr) {
-    //    printf("Found matching %p in linked list. two requests for free, freeing %i bytes\n", node->block->space, node->block->size);
-    //    lnode->next = node->next;
-    //    free(node->block);
-    //    free(node);
-    //    memBlockCache.length--;
-    //    return;
-    //  }
-    //if (memBlockCache.length < CTR_MEMBLOCK_CACHE_MAX) {
-    //  struct memBlockCache_node* new_node = malloc(sizeof(struct memBlockCache_node));
-    //  new_node->next = memBlockCache.node;
-    //  new_node->block = (memBlock*)(ptr + sizeof(size_t));
-    //  memBlockCache.length++;
-    //  memBlockCache.node = new_node;
-    //  //ctr_gc_alloc -= new_node->block->size;
-    //  return;
-    //}
-    size_t* block_width;
-    int q = sizeof( size_t );
-    size_t size;
+void
+ctr_heap_free (void *ptr)
+{
+  //struct memBlockCache_node* node = memBlockCache.node;
+  //struct memBlockCache_node* lnode = node;
+  //for(;node!=NULL;lnode=node,node=node->next)
+  //  if(node->block->space == ptr) {
+  //    printf("Found matching %p in linked list. two requests for free, freeing %i bytes\n", node->block->space, node->block->size);
+  //    lnode->next = node->next;
+  //    free(node->block);
+  //    free(node);
+  //    memBlockCache.length--;
+  //    return;
+  //  }
+  //if (memBlockCache.length < CTR_MEMBLOCK_CACHE_MAX) {
+  //  struct memBlockCache_node* new_node = malloc(sizeof(struct memBlockCache_node));
+  //  new_node->next = memBlockCache.node;
+  //  new_node->block = (memBlock*)(ptr + sizeof(size_t));
+  //  memBlockCache.length++;
+  //  memBlockCache.node = new_node;
+  //  //ctr_gc_alloc -= new_node->block->size;
+  //  return;
+  //}
+  size_t *block_width;
+  int q = sizeof (size_t);
+  size_t size;
 
-    /* find the correct size of this memory block and move pointer back */
-    block_width = (size_t*) ((char*) ptr - q);
-    size = *block_width;
-    free( (void*)block_width );
-    ctr_gc_alloc -= size;
+  /* find the correct size of this memory block and move pointer back */
+  block_width = (size_t *) ((char *) ptr - q);
+  size = *block_width;
+  free ((void *) block_width);
+  ctr_gc_alloc -= size;
 }
-void ctr_heap_free_shared( void* ptr ) {
 
-    size_t* block_width;
-    int q = sizeof( size_t );
-    size_t size;
+void
+ctr_heap_free_shared (void *ptr)
+{
 
-    /* find the correct size of this memory block and move pointer back */
-    ptr = (void*) ((char*) ptr - q);
-    block_width = (size_t*) ptr;
-    size = *(block_width);
+  size_t *block_width;
+  int q = sizeof (size_t);
+  size_t size;
 
-    munmap( ptr, size ); //so god help me
-    ctr_gc_alloc -= size;
+  /* find the correct size of this memory block and move pointer back */
+  ptr = (void *) ((char *) ptr - q);
+  block_width = (size_t *) ptr;
+  size = *(block_width);
+
+  munmap (ptr, size);		//so god help me
+  ctr_gc_alloc -= size;
 }
+
 /**
  * Memory Management Adjust Memory Block Size (re-allocation)
  * Re-allocates Memory Block.
@@ -292,33 +339,35 @@ void ctr_heap_free_shared( void* ptr ) {
  * the purpose for allocation, this function will attempt to
  * re-allocate the memory block.
  */
-void* ctr_heap_reallocate(void* oldptr, size_t size ) {
+void *
+ctr_heap_reallocate (void *oldptr, size_t size)
+{
 
-    char* nptr;
-    size_t  old_size;
-    size_t* block_width;
+  char *nptr;
+  size_t old_size;
+  size_t *block_width;
 
-    /* correct the required size of the new block to include block width */
-    int q = sizeof( size_t );
-    size += q;
-    /* move the pointer back to begining of block */
-    oldptr = (void*) ((char*) oldptr - q);
-    /* read memory size at beginning of old block */
-    block_width = (size_t*) oldptr;
-    old_size = *(block_width);
+  /* correct the required size of the new block to include block width */
+  int q = sizeof (size_t);
+  size += q;
+  /* move the pointer back to begining of block */
+  oldptr = (void *) ((char *) oldptr - q);
+  /* read memory size at beginning of old block */
+  block_width = (size_t *) oldptr;
+  old_size = *(block_width);
 
-    /* update the ledger */
-    ctr_gc_alloc = ( ctr_gc_alloc - old_size ) + size;
-    /* re-allocate memory */
-    nptr = realloc( oldptr, size );
+  /* update the ledger */
+  ctr_gc_alloc = (ctr_gc_alloc - old_size) + size;
+  /* re-allocate memory */
+  nptr = realloc (oldptr, size);
 
-    /* store the size of the new block at the beginning */
-    block_width = (size_t*) nptr;
-    *(block_width) = size;
-    /* 'hop' the memory pointer over the block width part */
-    nptr = (void*) ((char*) nptr + q);
+  /* store the size of the new block at the beginning */
+  block_width = (size_t *) nptr;
+  *(block_width) = size;
+  /* 'hop' the memory pointer over the block width part */
+  nptr = (void *) ((char *) nptr + q);
 
-    return (void*) nptr;
+  return (void *) nptr;
 }
 
 /**
@@ -340,31 +389,36 @@ void* ctr_heap_reallocate(void* oldptr, size_t size ) {
  *
  * @return char*
  */
-char* ctr_heap_allocate_cstring( ctr_object* stringObject ) {
-    char*    cstring;
-    char*    stringBytes;
-    ctr_size length;
+char *
+ctr_heap_allocate_cstring (ctr_object * stringObject)
+{
+  char *cstring;
+  char *stringBytes;
+  ctr_size length;
 
-    stringBytes = stringObject->value.svalue->value;
-    length      = stringObject->value.svalue->vlen;
-    cstring     = ctr_heap_allocate( ( length + 1 ) * sizeof( char ) );
+  stringBytes = stringObject->value.svalue->value;
+  length = stringObject->value.svalue->vlen;
+  cstring = ctr_heap_allocate ((length + 1) * sizeof (char));
 
-    strncpy( cstring, stringBytes, length );
-    cstring[length] = '\0';
+  strncpy (cstring, stringBytes, length);
+  cstring[length] = '\0';
 
-    return cstring;
+  return cstring;
 }
-char* ctr_heap_allocate_cstring_shared( ctr_object* stringObject ) {
-    char*    cstring;
-    char*    stringBytes;
-    ctr_size length;
 
-    stringBytes = stringObject->value.svalue->value;
-    length      = stringObject->value.svalue->vlen;
-    cstring     = ctr_heap_allocate_shared( ( length + 1 ) * sizeof( char ) );
+char *
+ctr_heap_allocate_cstring_shared (ctr_object * stringObject)
+{
+  char *cstring;
+  char *stringBytes;
+  ctr_size length;
 
-    strncpy( cstring, stringBytes, length );
-    cstring[length] = '\0';
+  stringBytes = stringObject->value.svalue->value;
+  length = stringObject->value.svalue->vlen;
+  cstring = ctr_heap_allocate_shared ((length + 1) * sizeof (char));
 
-    return cstring;
+  strncpy (cstring, stringBytes, length);
+  cstring[length] = '\0';
+
+  return cstring;
 }

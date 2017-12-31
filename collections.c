@@ -105,8 +105,8 @@ ctr_array_push (ctr_object * myself, ctr_argument * argumentList)
       myself->value.avalue->elements =
 	(ctr_object **) ctr_heap_reallocate (myself->value.avalue->elements,
 					     (sizeof (ctr_object *) *
-					      (myself->value.avalue->
-					       length)));
+					      (myself->value.
+					       avalue->length)));
     }
   pushValue = argumentList->object;
   *(myself->value.avalue->elements + myself->value.avalue->head) = pushValue;
@@ -124,8 +124,8 @@ ctr_array_push_imm (ctr_object * myself, ctr_argument * argumentList)
       myself->value.avalue->elements =
 	(ctr_object **) ctr_heap_reallocate (myself->value.avalue->elements,
 					     (sizeof (ctr_object *) *
-					      (myself->value.avalue->
-					       length)));
+					      (myself->value.
+					       avalue->length)));
     }
   pushValue = argumentList->object;
   *(myself->value.avalue->elements + myself->value.avalue->head) = pushValue;
@@ -644,11 +644,11 @@ ctr_array_unshift (ctr_object * myself, ctr_argument * argumentList)
 	{
 	  myself->value.avalue->length = myself->value.avalue->length * 3;
 	  myself->value.avalue->elements =
-	    (ctr_object **) ctr_heap_reallocate (myself->value.avalue->
-						 elements,
+	    (ctr_object **) ctr_heap_reallocate (myself->value.
+						 avalue->elements,
 						 (sizeof (ctr_object *) *
-						  (myself->value.avalue->
-						   length)));
+						  (myself->value.
+						   avalue->length)));
 	}
       myself->value.avalue->head++;
       memmove (myself->value.avalue->elements + 1,
@@ -1052,8 +1052,8 @@ ctr_array_zip (ctr_object * myself, ctr_argument * argumentList)
       arredes.max =
 	arredes.elem->info.type ==
 	CTR_OBJECT_TYPE_OTARRAY ? (int) (arredes.elem->value.avalue->head -
-					 arredes.elem->value.avalue->
-					 tail) : -1;
+					 arredes.elem->value.
+					 avalue->tail) : -1;
       all_iter *= (arredes.max > -1 ? arredes.max : 1);
       elem_indices[i] = arredes;
     }
@@ -1069,8 +1069,8 @@ ctr_array_zip (ctr_object * myself, ctr_argument * argumentList)
 	  if (arrdes.max > -1)
 	    {
 	      elem =
-		arrdes.elem->value.avalue->elements[arrdes.elem->value.
-						    avalue->tail +
+		arrdes.elem->value.avalue->elements[arrdes.elem->
+						    value.avalue->tail +
 						    arrdes.state];
 	      if (!did_shit)
 		{
@@ -1165,8 +1165,8 @@ ctr_array_zip_with (ctr_object * myself, ctr_argument * argumentList)
 	  if (arrdes.max > -1)
 	    {
 	      elem =
-		arrdes.elem->value.avalue->elements[arrdes.elem->value.
-						    avalue->tail +
+		arrdes.elem->value.avalue->elements[arrdes.elem->
+						    value.avalue->tail +
 						    arrdes.state];
 	      if (!did_shit)
 		{
@@ -1292,14 +1292,9 @@ ctr_object *
 ctr_array_last (ctr_object * myself, ctr_argument * argumentList)
 {
   return ctr_send_message_variadic (myself, "at:", 3, 1,
-				    ctr_build_number_from_float (myself->
-								 value.
-								 avalue->
-								 head -
-								 myself->
-								 value.
-								 avalue->
-								 tail - 1));
+				    ctr_build_number_from_float
+				    (myself->value.avalue->head -
+				     myself->value.avalue->tail - 1));
 }
 
 /**
@@ -1556,8 +1551,8 @@ ctr_array_select_from_if (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *selector = argumentList->object,
     *from = argumentList->next->object,
     *ifexp = argumentList->next->next
-    && argumentList->next->next->object ? argumentList->next->next->
-    object : NULL, *result =
+    && argumentList->next->next->object ? argumentList->next->
+    next->object : NULL, *result =
     ctr_array_new (CtrStdArray, NULL), *elem, *old_from;
   ctr_argument *argument = ctr_heap_allocate (sizeof (ctr_argument));
 restart:;
@@ -1667,26 +1662,19 @@ ctr_array_assign (ctr_object * myself, ctr_argument * argumentList)
 	      saw_catch_all = 1;
 	      accArg->object = ctr_send_message_variadic (accArg->object, "skip:", 5, 1, ctr_build_number_from_float (1));	//skip the '*'
 	      accArg->object->info.raw = 1;
-	      int skip =
-		ctr_array_count (myself,
-				 NULL)->value.nvalue -
+	      int skip = ctr_array_count (myself,
+					  NULL)->value.nvalue -
 		to->value.avalue->head - i;
 	      to_elem =
 		ctr_send_message_variadic (myself, "from:length:", 12, 2,
 					   ctr_build_number_from_float (other
 									-
-									to->
-									value.
-									avalue->
-									tail),
+									to->value.avalue->tail),
 					   ctr_build_number_from_float (skip +
 									other
 									-
-									to->
-									value.
-									avalue->
-									tail +
-									1));
+									to->value.avalue->tail
+									+ 1));
 	      to_elem->value.avalue->immutable =
 		myself->value.avalue->immutable;
 	      other += skip + other - to->value.avalue->tail;
@@ -1794,16 +1782,14 @@ ctr_array_to_string (ctr_object * myself, ctr_argument * argumentList)
   if (myself->value.avalue->tail == myself->value.avalue->head)
     {
       newArgumentList->object =
-	ctr_build_string_from_cstring (myself->value.avalue->
-				       immutable ? "[" :
+	ctr_build_string_from_cstring (myself->value.avalue->immutable ? "[" :
 				       CTR_DICT_CODEGEN_ARRAY_NEW);
       string = ctr_string_append (string, newArgumentList);
     }
   else
     {
       newArgumentList->object =
-	ctr_build_string_from_cstring (myself->value.avalue->
-				       immutable ? "[" :
+	ctr_build_string_from_cstring (myself->value.avalue->immutable ? "[" :
 				       CTR_DICT_CODEGEN_ARRAY_NEW_PUSH);
       string = ctr_string_append (string, newArgumentList);
     }
@@ -1857,8 +1843,8 @@ ctr_array_to_string (ctr_object * myself, ctr_argument * argumentList)
       if ((i + 1) < myself->value.avalue->head)
 	{
 	  newArgumentList->object =
-	    ctr_build_string_from_cstring (myself->value.avalue->
-					   immutable ? ", " : " ; ");
+	    ctr_build_string_from_cstring (myself->value.
+					   avalue->immutable ? ", " : " ; ");
 	  string = ctr_string_append (string, newArgumentList);
 	}
     }
@@ -2766,14 +2752,14 @@ ctr_iterator_make_uncapped_range (ctr_object * myself,
 ctr_object *
 ctr_iterator_next (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object *iter =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("func"),
-				       0);
-  ctr_object *seed =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("seed"),
-				       0);
+  ctr_object *iter = ctr_internal_object_find_property (myself,
+							ctr_build_string_from_cstring
+							("func"),
+							0);
+  ctr_object *seed = ctr_internal_object_find_property (myself,
+							ctr_build_string_from_cstring
+							("seed"),
+							0);
   if (!iter)
     {
       CtrStdFlow =
@@ -2808,14 +2794,14 @@ ctr_iterator_each (ctr_object * myself, ctr_argument * argumentList)
   arg->next->next = ctr_heap_allocate (sizeof (ctr_argument));
   int oldsticky = myself->info.sticky;
   myself->info.sticky = 1;
-  ctr_object *iter =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("func"),
-				       0);
-  ctr_object *value =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("seed"),
-				       0);
+  ctr_object *iter = ctr_internal_object_find_property (myself,
+							ctr_build_string_from_cstring
+							("func"),
+							0);
+  ctr_object *value = ctr_internal_object_find_property (myself,
+							 ctr_build_string_from_cstring
+							 ("seed"),
+							 0);
   ctr_object *seed_str = ctr_build_string_from_cstring ("seed");
   while (1)
     {
@@ -2850,10 +2836,10 @@ ctr_iterator_each_v (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *dothis = argumentList->object;
   ctr_argument *arg = ctr_heap_allocate (sizeof (ctr_argument));
   ctr_object *seed_str = ctr_build_string_from_cstring ("seed");
-  ctr_object *iter =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("func"),
-				       0);
+  ctr_object *iter = ctr_internal_object_find_property (myself,
+							ctr_build_string_from_cstring
+							("func"),
+							0);
   ctr_object *value = ctr_internal_object_find_property (myself, seed_str, 0);
   int oldsticky = myself->info.sticky;
   myself->info.sticky = 1;
@@ -2966,14 +2952,14 @@ ctr_iterator_foldl (ctr_object * myself, ctr_argument * argumentList)
     (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   accArg->next = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   accArg->object = accumulator;
-  ctr_object *iter =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("func"),
-				       0);
-  ctr_object *value =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("seed"),
-				       0);
+  ctr_object *iter = ctr_internal_object_find_property (myself,
+							ctr_build_string_from_cstring
+							("func"),
+							0);
+  ctr_object *value = ctr_internal_object_find_property (myself,
+							 ctr_build_string_from_cstring
+							 ("seed"),
+							 0);
   ctr_object *seed_str = ctr_build_string_from_cstring ("seed");
   ctr_argument *arg = ctr_heap_allocate (sizeof (ctr_argument));
   int oldsticky = myself->info.sticky;
@@ -3007,19 +2993,19 @@ ctr_object *
 ctr_iterator_count (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *ret = ctr_build_number_from_float (0);
-  ctr_object *seed =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("seed"),
-				       0);
+  ctr_object *seed = ctr_internal_object_find_property (myself,
+							ctr_build_string_from_cstring
+							("seed"),
+							0);
   ctr_argument *arg = ctr_heap_allocate (sizeof (ctr_argument));
-  ctr_object *iter =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("func"),
-				       0);
-  ctr_object *value =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("seed"),
-				       0);
+  ctr_object *iter = ctr_internal_object_find_property (myself,
+							ctr_build_string_from_cstring
+							("func"),
+							0);
+  ctr_object *value = ctr_internal_object_find_property (myself,
+							 ctr_build_string_from_cstring
+							 ("seed"),
+							 0);
   ctr_object *seed_str = ctr_build_string_from_cstring ("seed");
   arg->object = ctr_build_number_from_float (1);
   int oldsticky = myself->info.sticky;
@@ -3055,14 +3041,14 @@ ctr_iterator_take (ctr_object * myself, ctr_argument * argumentList)
   int count = ctr_internal_cast2number (argumentList->object)->value.nvalue;
   ctr_object *ret = ctr_array_new (CtrStdArray, NULL);
   ctr_argument *arg = ctr_heap_allocate (sizeof (ctr_argument));
-  ctr_object *iter =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("func"),
-				       0);
-  ctr_object *value =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("seed"),
-				       0);
+  ctr_object *iter = ctr_internal_object_find_property (myself,
+							ctr_build_string_from_cstring
+							("func"),
+							0);
+  ctr_object *value = ctr_internal_object_find_property (myself,
+							 ctr_build_string_from_cstring
+							 ("seed"),
+							 0);
   ctr_object *seed_str = ctr_build_string_from_cstring ("seed");
   int oldsticky = myself->info.sticky;
   myself->info.sticky = 1;
@@ -3093,20 +3079,20 @@ ctr_iterator_takewhile (ctr_object * myself, ctr_argument * argumentList)
 {
 
   ctr_object *pred = argumentList->object;
-  ctr_object *last_seed =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("seed"),
-				       0);
+  ctr_object *last_seed = ctr_internal_object_find_property (myself,
+							     ctr_build_string_from_cstring
+							     ("seed"),
+							     0);
   ctr_object *ret = ctr_array_new (CtrStdArray, NULL);
   ctr_argument *arg = ctr_heap_allocate (sizeof (ctr_argument));
-  ctr_object *iter =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("func"),
-				       0);
-  ctr_object *value =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("seed"),
-				       0);
+  ctr_object *iter = ctr_internal_object_find_property (myself,
+							ctr_build_string_from_cstring
+							("func"),
+							0);
+  ctr_object *value = ctr_internal_object_find_property (myself,
+							 ctr_build_string_from_cstring
+							 ("seed"),
+							 0);
   ctr_object *seed_str = ctr_build_string_from_cstring ("seed");
   int oldsticky = myself->info.sticky;
   myself->info.sticky = 1;
@@ -3179,14 +3165,14 @@ ctr_iterator_to_array (ctr_object * myself, ctr_argument * argumentList)
 
   ctr_object *ret = ctr_array_new (CtrStdArray, NULL);
   ctr_argument *arg = ctr_heap_allocate (sizeof (ctr_argument));
-  ctr_object *iter =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("func"),
-				       0);
-  ctr_object *value =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("seed"),
-				       0);
+  ctr_object *iter = ctr_internal_object_find_property (myself,
+							ctr_build_string_from_cstring
+							("func"),
+							0);
+  ctr_object *value = ctr_internal_object_find_property (myself,
+							 ctr_build_string_from_cstring
+							 ("seed"),
+							 0);
   ctr_object *seed_str = ctr_build_string_from_cstring ("seed");
   int oldsticky = myself->info.sticky;
   myself->info.sticky = 1;

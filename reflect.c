@@ -29,9 +29,8 @@ ctr_reflect_add_glob (ctr_object * myself, ctr_argument * argumentList)
   instance->link = CtrStdNil;
   instance->info.sticky = 0;
   ctr_internal_object_add_property (CtrStdWorld,
-				    ctr_internal_cast2string (argumentList->
-							      object),
-				    instance, 0);
+				    ctr_internal_cast2string
+				    (argumentList->object), instance, 0);
   return instance;
 }
 
@@ -48,9 +47,9 @@ ctr_reflect_add_local (ctr_object * myself, ctr_argument * argumentList)
     ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
   instance->link = CtrStdObject;
   ctr_internal_object_add_property (ctr_contexts[ctr_context_id],
-				    ctr_internal_cast2string (argumentList->
-							      object),
-				    instance, CTR_CATEGORY_PUBLIC_PROPERTY);
+				    ctr_internal_cast2string
+				    (argumentList->object), instance,
+				    CTR_CATEGORY_PUBLIC_PROPERTY);
   return CtrStdNil;
 }
 
@@ -67,9 +66,9 @@ ctr_reflect_add_my (ctr_object * myself, ctr_argument * argumentList)
     ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
   instance->link = CtrStdObject;
   ctr_internal_object_add_property (ctr_contexts[ctr_context_id],
-				    ctr_internal_cast2string (argumentList->
-							      object),
-				    instance, CTR_CATEGORY_PRIVATE_PROPERTY);
+				    ctr_internal_cast2string
+				    (argumentList->object), instance,
+				    CTR_CATEGORY_PRIVATE_PROPERTY);
   return CtrStdNil;
 }
 
@@ -83,8 +82,8 @@ ctr_reflect_set_to (ctr_object * myself, ctr_argument * argumentList)
 {
   CTR_ENSURE_TYPE_STRING (argumentList->object);
   ctr_internal_object_set_property (CtrStdWorld,
-				    ctr_internal_cast2string (argumentList->
-							      object),
+				    ctr_internal_cast2string
+				    (argumentList->object),
 				    argumentList->next->object, 0);
   return CtrStdNil;
 }
@@ -335,10 +334,8 @@ ctr_reflect_cb_ac (ctr_object * myself, ctr_argument * argumentList)
 		      && *(param->value) ==
 		      '*') ? ctr_build_string (param->value + 1,
 					       param->vlen -
-					       1) : ctr_build_string (param->
-								      value,
-								      param->
-								      vlen);
+					       1) :
+	ctr_build_string (param->value, param->vlen);
       ctr_send_message (arglist, "push:", 5, args);
       parameterList = parameterList->next;
       if (parameterList == NULL)
@@ -601,9 +598,9 @@ ctr_reflect_unparse (ctr_object * arr, int type)
 	    ctr_invoke_variadic (fmt, &ctr_string_append, 1,
 				 ctr_build_string_from_cstring
 				 (" message: '"));
-	    ctr_object *msg =
-	      ctr_invoke_variadic (arr, &ctr_array_get, 1,
-				   ctr_build_number_from_float (1));
+	    ctr_object *msg = ctr_invoke_variadic (arr, &ctr_array_get, 1,
+						   ctr_build_number_from_float
+						   (1));
 	    ctr_invoke_variadic (fmt, &ctr_string_append, 1, ctr_invoke_variadic (msg, &ctr_array_get, 1, ctr_build_number_from_float (0)));	// message name
 	    ctr_invoke_variadic (fmt, &ctr_string_append, 1,
 				 ctr_build_string_from_cstring
@@ -1414,15 +1411,14 @@ ctr_reflect_get_property (ctr_object * myself, ctr_argument * argumentList)
   if (ret)
     return ret;
   ctr_object *ns_type =
-    ns->lexical_name ? ns->
-    lexical_name :
+    ns->lexical_name ? ns->lexical_name :
     ctr_internal_cast2string (ctr_send_message (ns, "type", 4, NULL));
-  int len =
-    snprintf (NULL, 0,
-	      "Attempt to read nonexistent property '%.*s' of Object %p (namely '%.*s' in this context)",
-	      (int) (name->value.svalue->vlen), name->value.svalue->value, ns,
-	      (int) (ns_type->value.svalue->vlen),
-	      ns_type->value.svalue->value);
+  int len = snprintf (NULL, 0,
+		      "Attempt to read nonexistent property '%.*s' of Object %p (namely '%.*s' in this context)",
+		      (int) (name->value.svalue->vlen),
+		      name->value.svalue->value, ns,
+		      (int) (ns_type->value.svalue->vlen),
+		      ns_type->value.svalue->value);
   char *buf = malloc (len);
   sprintf (buf,
 	   "Attempt to read nonexistent property '%.*s' of Object %p (namely '%.*s' in this context)",

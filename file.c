@@ -106,10 +106,10 @@ ctr_file_tmp (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_file_path (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object *path =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("path"),
-				       0);
+  ctr_object *path = ctr_internal_object_find_property (myself,
+							ctr_build_string_from_cstring
+							("path"),
+							0);
   if (path == NULL)
     return CtrStdNil;
   return path;
@@ -136,10 +136,10 @@ ctr_file_assign (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_file_rpath (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object *path =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("path"),
-				       0);
+  ctr_object *path = ctr_internal_object_find_property (myself,
+							ctr_build_string_from_cstring
+							("path"),
+							0);
   if (path == NULL)
     return CtrStdNil;
   char *cpath = ctr_heap_allocate_cstring (path);
@@ -167,10 +167,10 @@ ctr_file_rpath (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_file_read (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object *path =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("path"),
-				       0);
+  ctr_object *path = ctr_internal_object_find_property (myself,
+							ctr_build_string_from_cstring
+							("path"),
+							0);
   ctr_object *str;
   ctr_size vlen, fileLen;
   char *pathString;
@@ -226,10 +226,10 @@ ctr_file_write (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_check_permission (CTR_SECPRO_NO_FILE_WRITE);
   ctr_object *str = ctr_internal_cast2string (argumentList->object);
-  ctr_object *path =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("path"),
-				       0);
+  ctr_object *path = ctr_internal_object_find_property (myself,
+							ctr_build_string_from_cstring
+							("path"),
+							0);
   FILE *f;
   ctr_size vlen;
   char *pathString;
@@ -265,10 +265,10 @@ ctr_file_append (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_check_permission (CTR_SECPRO_NO_FILE_WRITE);
   ctr_object *str = ctr_internal_cast2string (argumentList->object);
-  ctr_object *path =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("path"),
-				       0);
+  ctr_object *path = ctr_internal_object_find_property (myself,
+							ctr_build_string_from_cstring
+							("path"),
+							0);
   ctr_size vlen;
   char *pathString;
   FILE *f;
@@ -300,10 +300,10 @@ ctr_file_append (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_file_exists (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object *path =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("path"),
-				       0);
+  ctr_object *path = ctr_internal_object_find_property (myself,
+							ctr_build_string_from_cstring
+							("path"),
+							0);
   ctr_size vlen;
   char *pathString;
   FILE *f;
@@ -333,10 +333,10 @@ ctr_object *
 ctr_file_include (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_check_permission (CTR_SECPRO_NO_INCLUDE);
-  ctr_object *path =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("path"),
-				       0);
+  ctr_object *path = ctr_internal_object_find_property (myself,
+							ctr_build_string_from_cstring
+							("path"),
+							0);
   ctr_tnode *parsedCode;
   ctr_size vlen;
   char *pathString;
@@ -368,10 +368,10 @@ ctr_object *
 ctr_file_include_here (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_check_permission (CTR_SECPRO_NO_INCLUDE);
-  ctr_object *path =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("path"),
-				       0);
+  ctr_object *path = ctr_internal_object_find_property (myself,
+							ctr_build_string_from_cstring
+							("path"),
+							0);
   ctr_tnode *parsedCode;
   ctr_size vlen;
   char *pathString;
@@ -401,10 +401,10 @@ ctr_object *
 ctr_file_delete (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_check_permission (CTR_SECPRO_NO_FILE_WRITE);
-  ctr_object *path =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("path"),
-				       0);
+  ctr_object *path = ctr_internal_object_find_property (myself,
+							ctr_build_string_from_cstring
+							("path"),
+							0);
   ctr_size vlen;
   char *pathString;
   int r;
@@ -433,10 +433,10 @@ ctr_file_delete (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_file_size (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object *path =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("path"),
-				       0);
+  ctr_object *path = ctr_internal_object_find_property (myself,
+							ctr_build_string_from_cstring
+							("path"),
+							0);
   ctr_size vlen;
   char *pathString;
   FILE *f;
@@ -477,10 +477,10 @@ ctr_file_size (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_file_open (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object *pathObj =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("path"),
-				       0);
+  ctr_object *pathObj = ctr_internal_object_find_property (myself,
+							   ctr_build_string_from_cstring
+							   ("path"),
+							   0);
   char *mode;
   char *path;
   FILE *handle;

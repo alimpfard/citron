@@ -455,8 +455,8 @@ ctr_internal_object_find_property_ignore (ctr_object * owner,
 	    {
 	      if ((t =
 		   ctr_internal_object_is_equal (key,
-						 *(hide_obj->value.avalue->
-						   elements + i))))
+						 *(hide_obj->value.
+						   avalue->elements + i))))
 		{
 		  did_skip = i;
 		  //printf("Found object at %d\n",did_skip);

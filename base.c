@@ -1032,8 +1032,8 @@ ctr_bool_assign (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_bool_eq (ctr_object * myself, ctr_argument * argumentList)
 {
-  return ctr_build_bool (ctr_internal_cast2bool (argumentList->object)->
-			 value.bvalue == myself->value.bvalue);
+  return ctr_build_bool (ctr_internal_cast2bool (argumentList->object)->value.
+			 bvalue == myself->value.bvalue);
 }
 
 
@@ -1050,8 +1050,8 @@ ctr_bool_eq (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_bool_neq (ctr_object * myself, ctr_argument * argumentList)
 {
-  return ctr_build_bool (ctr_internal_cast2bool (argumentList->object)->
-			 value.bvalue != myself->value.bvalue);
+  return ctr_build_bool (ctr_internal_cast2bool (argumentList->object)->value.
+			 bvalue != myself->value.bvalue);
 }
 
 /**
@@ -2165,8 +2165,8 @@ ctr_number_shr (ctr_object * myself, ctr_argument * argumentList)
   return
     ctr_build_number_from_float ((((int) (myself->value.nvalue)) >>
 				  (int) ((ctr_internal_cast2number
-					  (argumentList->object))->
-					 value.nvalue)));
+					  (argumentList->object))->value.
+					 nvalue)));
 }
 
 /**
@@ -2179,8 +2179,8 @@ ctr_number_shl (ctr_object * myself, ctr_argument * argumentList)
   return
     ctr_build_number_from_float ((((int) (myself->value.nvalue)) <<
 				  (int) ((ctr_internal_cast2number
-					  (argumentList->object))->
-					 value.nvalue)));
+					  (argumentList->object))->value.
+					 nvalue)));
 }
 
 /**
@@ -2193,8 +2193,8 @@ ctr_number_or (ctr_object * myself, ctr_argument * argumentList)
   return
     ctr_build_number_from_float ((((int) (myself->value.nvalue)) |
 				  (int) ((ctr_internal_cast2number
-					  (argumentList->object))->
-					 value.nvalue)));
+					  (argumentList->object))->value.
+					 nvalue)));
 }
 
 /**
@@ -2207,8 +2207,8 @@ ctr_number_and (ctr_object * myself, ctr_argument * argumentList)
   return
     ctr_build_number_from_float ((((int) (myself->value.nvalue)) &
 				  (int) ((ctr_internal_cast2number
-					  (argumentList->object))->
-					 value.nvalue)));
+					  (argumentList->object))->value.
+					 nvalue)));
 }
 
 /**
@@ -2221,8 +2221,8 @@ ctr_number_xor (ctr_object * myself, ctr_argument * argumentList)
   return
     ctr_build_number_from_float ((((int) (myself->value.nvalue)) ^
 				  (int) ((ctr_internal_cast2number
-					  (argumentList->object))->
-					 value.nvalue)));
+					  (argumentList->object))->value.
+					 nvalue)));
 }
 
 /**
@@ -3080,15 +3080,9 @@ ctr_string_slice (ctr_object * myself, ctr_argument * argumentList)
 	    getBytesUtf8 (myself->value.svalue->value, 0,
 			  argumentList->object->value.nvalue)), (b =
 								 getBytesUtf8
-								 (myself->
-								  value.
-								  svalue->
-								  value, a,
-								  argumentList->
-								  next->
-								  object->
-								  value.
-								  nvalue)));
+								 (myself->value.svalue->value,
+								  a,
+								  argumentList->next->object->value.nvalue)));
   myself->value.svalue->vlen -= b;
   return result;
 }
@@ -3660,8 +3654,8 @@ ctr_string_contains (ctr_object * myself, ctr_argument * argumentList)
 {
   return
     ctr_build_bool (ctr_internal_cast2number
-		    (ctr_string_index_of (myself, argumentList))->
-		    value.nvalue > -1);
+		    (ctr_string_index_of (myself, argumentList))->value.
+		    nvalue > -1);
 }
 
 /**
@@ -4138,15 +4132,15 @@ ctr_string_csub (ctr_object * myself, ctr_argument * argumentList)
 			      ctr_build_number_from_float
 			      (ctr_invoke_variadic
 			       (myself, &ctr_string_byte_at, 1,
-				ctr_build_number_from_float (0))->
-			       value.nvalue -
+				ctr_build_number_from_float (0))->value.
+			       nvalue -
 			       (v ?
 				ctr_invoke_variadic (argumentList->object,
 						     &ctr_string_byte_at, 1,
 						     ctr_build_number_from_float
-						     (0))->
-				value.nvalue : argumentList->object->
-				value.nvalue)));
+						     (0))->value.
+				nvalue : argumentList->object->value.
+				nvalue)));
 }
 
 /**
@@ -4180,15 +4174,15 @@ ctr_string_cadd (ctr_object * myself, ctr_argument * argumentList)
 			      ctr_build_number_from_float
 			      (ctr_invoke_variadic
 			       (myself, &ctr_string_byte_at, 1,
-				ctr_build_number_from_float (0))->
-			       value.nvalue +
+				ctr_build_number_from_float (0))->value.
+			       nvalue +
 			       (v ?
 				ctr_invoke_variadic (argumentList->object,
 						     &ctr_string_byte_at, 1,
 						     ctr_build_number_from_float
-						     (0))->
-				value.nvalue : argumentList->object->
-				value.nvalue)));
+						     (0))->value.
+				nvalue : argumentList->object->value.
+				nvalue)));
 }
 
 /**

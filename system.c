@@ -425,8 +425,8 @@ ctr_gc_sweep (int all)
 		{
 		  if (currentObject->value.svalue->vlen > 0)
 		    {
-		      free_heap_maybe_shared (currentObject->value.svalue->
-					      value);
+		      free_heap_maybe_shared (currentObject->value.
+					      svalue->value);
 		    }
 		  free_heap_maybe_shared (currentObject->value.svalue);
 		}
@@ -439,8 +439,9 @@ ctr_gc_sweep (int all)
 	      if (currentObject->value.rvalue != NULL)
 		{
 		  if (currentObject->release_hook)
-		    ((voidptrfn_t *) currentObject->
-		     release_hook) (currentObject->value.rvalue->ptr);
+		    ((voidptrfn_t *)
+		     currentObject->release_hook) (currentObject->value.
+						   rvalue->ptr);
 		  free_heap_maybe_shared (currentObject->value.rvalue);
 		}
 	      break;
@@ -560,9 +561,8 @@ ctr_gc_sweep_this (ctr_object * myself, ctr_argument * argumentList)
 	  if (currentObject->value.rvalue != NULL)
 	    {
 	      if (currentObject->release_hook)
-		((voidptrfn_t *) currentObject->release_hook) (currentObject->
-							       value.rvalue->
-							       ptr);
+		((voidptrfn_t *) currentObject->
+		 release_hook) (currentObject->value.rvalue->ptr);
 	      free_heap_maybe_shared (currentObject->value.rvalue);
 	    }
 	  break;
@@ -1580,8 +1580,8 @@ ctr_command_join (ctr_object * myself, ctr_argument * argumentList)
   pid = (int) ctr_internal_object_find_property (myself,
 						 ctr_build_string_from_cstring
 						 ("pid"),
-						 CTR_CATEGORY_PRIVATE_PROPERTY)->
-    value.nvalue;
+						 CTR_CATEGORY_PRIVATE_PROPERTY)->value.
+    nvalue;
   fclose (*((FILE **) rs->ptr + 0));
   fclose (*((FILE **) rs->ptr + 3));
   waitpid (pid, 0, 0);
@@ -1605,10 +1605,10 @@ ctr_object *
 ctr_command_sig (ctr_object * myself, ctr_argument * argumentList)
 {
   int sig = ctr_internal_cast2number (argumentList->object)->value.nvalue;
-  ctr_object *pid_o =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("pid"),
-				       0);
+  ctr_object *pid_o = ctr_internal_object_find_property (myself,
+							 ctr_build_string_from_cstring
+							 ("pid"),
+							 0);
   if (!pid_o)
     {
       CtrStdFlow =
@@ -1695,8 +1695,8 @@ ctr_command_remote (ctr_object * myself, ctr_argument * argumentList)
     inet6 = ctr_build_bool (1);
   ctr_internal_object_set_property (remoteObj,
 				    ctr_build_string_from_cstring ("@"),
-				    ctr_internal_cast2string (argumentList->
-							      object),
+				    ctr_internal_cast2string
+				    (argumentList->object),
 				    CTR_CATEGORY_PRIVATE_PROPERTY);
   ctr_internal_object_set_property (remoteObj,
 				    ctr_build_string_from_cstring (":"),
@@ -1845,8 +1845,8 @@ ctr_dice_sides (ctr_object * myself, ctr_argument * argumentList)
   return ctr_build_number_from_float ((ctr_number) 1 +
 				      arc4random_uniform ((uint32_t)
 							  (ceil
-							   (arg->value.
-							    nvalue))));
+							   (arg->
+							    value.nvalue))));
 }
 
 /**
@@ -1903,8 +1903,8 @@ ctr_clock_new_set (ctr_object * myself, ctr_argument * argumentList)
   ctr_internal_object_add_property (clock,
 				    ctr_build_string_from_cstring
 				    (CTR_DICT_TIME),
-				    ctr_internal_cast2number (argumentList->
-							      object),
+				    ctr_internal_cast2number
+				    (argumentList->object),
 				    CTR_CATEGORY_PRIVATE_PROPERTY);
   return clock;
 }
@@ -2087,8 +2087,8 @@ ctr_clock_set_zone (ctr_object * myself, ctr_argument * argumentList)
   ctr_internal_object_set_property (myself,
 				    ctr_build_string_from_cstring
 				    (CTR_DICT_ZONE),
-				    ctr_internal_cast2string (argumentList->
-							      object),
+				    ctr_internal_cast2string
+				    (argumentList->object),
 				    CTR_CATEGORY_PRIVATE_PROPERTY);
   return myself;
 }

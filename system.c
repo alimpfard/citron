@@ -17,6 +17,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <pthread.h>
 
 #ifdef withTermios
 #include <termios.h>
@@ -34,7 +35,6 @@ static struct termios oldTermios, newTermios;
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <pthread.h>
 
 struct arc4_stream {
     u_int8_t i;
@@ -393,7 +393,10 @@ void ctr_gc_sweep( int all ) {
                     free_heap_maybe_shared( currentObject->value.avalue );
                     break;
                 case CTR_OBJECT_TYPE_OTEX:
-                    if (currentObject->value.rvalue != NULL) free_heap_maybe_shared( currentObject->value.rvalue );
+                    if (currentObject->value.rvalue != NULL) {
+                      if (currentObject->release_hook) ((voidptrfn_t*)currentObject->release_hook)(currentObject->value.rvalue->ptr);
+                      free_heap_maybe_shared( currentObject->value.rvalue );
+                    }
                     break;
             }
             free_heap_maybe_shared( currentObject );
@@ -487,7 +490,10 @@ ctr_object* ctr_gc_sweep_this( ctr_object* myself, ctr_argument* argumentList ) 
                     free_heap_maybe_shared( currentObject->value.avalue );
                     break;
                 case CTR_OBJECT_TYPE_OTEX:
-                    if (currentObject->value.rvalue != NULL) free_heap_maybe_shared( currentObject->value.rvalue );
+                    if (currentObject->value.rvalue != NULL) {
+                      if (currentObject->release_hook) ((voidptrfn_t*)currentObject->release_hook)(currentObject->value.rvalue->ptr);
+                      free_heap_maybe_shared( currentObject->value.rvalue );
+                    }
                     break;
             }
             free_heap_maybe_shared( currentObject );
@@ -649,7 +655,7 @@ ctr_object* ctr_shell_assign(ctr_object* myself, ctr_argument* argumentList) {
 /**
  * @internal
  *
- * Shell Object uses a fluid API.
+ * Shell Objects use a fluid API.
  */
 ctr_object* ctr_shell_respond_to_and(ctr_object* myself, ctr_argument* argumentList) {
     ctr_object*   commandObj;
@@ -679,17 +685,16 @@ ctr_object* ctr_shell_respond_to_and(ctr_object* myself, ctr_argument* argumentL
 /**
  * @internal
  *
- * Shell Object uses a fluid API.
+ * Shell Objects use a fluid API.
  */
 ctr_object* ctr_shell_respond_to(ctr_object* myself, ctr_argument* argumentList) {
-    ctr_shell_call(myself, argumentList);
-    return myself;
+    return ctr_shell_call(myself, argumentList);
 }
 
 /**
  * @internal
  *
- * Shell Object uses a fluid API.
+ * Slurp Objects use a fluid API.
  */
 ctr_object* ctr_slurp_respond_to(ctr_object* myself, ctr_argument* argumentList) {
     ctr_argument* newArgumentList;
@@ -1221,7 +1226,7 @@ ctr_object* ctr_command_fork(ctr_object* myself, ctr_argument* argumentList) {
         fclose(*((FILE**)rs->ptr + 2));
         ctr_heap_free( newArgumentList );
         ctr_heap_free( ps);
-        //CtrStdFlow = CtrStdExit;
+        CtrStdFlow = CtrStdExit;
         return CtrStdNil;
     } else {
         ctr_internal_object_set_property(
@@ -2218,7 +2223,7 @@ ctr_object* ctr_console_clear(ctr_object* myself, ctr_argument* argumentList) {
 
 ctr_object* ctr_console_clear_line(ctr_object* myself, ctr_argument* argumentList) {
     char* line = "\033[2K\r";
-    fwrite( line, sizeof(char), strlen(line), stdout);
+    fwrite( line, sizeof(char), 0, stdout);
     return myself;
 }
 #else
@@ -2230,7 +2235,270 @@ ctr_object* ctr_console_clear(ctr_object* myself, ctr_argument* argumentList) {
 
 ctr_object* ctr_console_clear_line(ctr_object* myself, ctr_argument* argumentList) {
     char* line = "";
-    fwrite( line, sizeof(char), strlen(line), stdout);
+    fwrite( line, sizeof(char), 0, stdout);
     return myself;
 }
 #endif
+
+/**@I_OBJ_DEF Thread*/
+
+typedef struct {
+  ctr_object* retval;
+  ctr_object* stdFlow;
+} ctr_thread_return_t;
+
+typedef struct {
+  ctr_object* target;
+  ctr_object* args;
+  ctr_thread_return_t* last_result;//please leave null
+  pthread_mutex_t* mutex;
+  pthread_t* thread;
+} ctr_thread_t;
+
+void* ctr_run_thread_func(ctr_thread_t* threadt) {
+  ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
+  (void)ctr_array_to_argument_list(threadt->args, args);
+  pthread_mutex_lock(threadt->mutex);
+  ctr_object* result = ctr_block_run(threadt->target, args, threadt->target);
+  pthread_mutex_unlock(threadt->mutex);
+  ctr_deallocate_argument_list(args);
+  ctr_thread_return_t* rv = ctr_heap_allocate(sizeof(ctr_thread_return_t));
+  rv->retval = result;
+  rv->stdFlow = CtrStdFlow;
+  threadt->last_result = rv;
+  pthread_exit(rv);
+}
+void ctr_thread_free_res(void* res) {
+  if(likely(res)) {
+    ctr_thread_t* tres = res;
+    pthread_mutex_destroy(tres->mutex);
+    if(tres->last_result) ctr_heap_free(tres->last_result);
+    ctr_heap_free(res);
+  }
+}
+ctr_size thread_current_number=1;
+/**
+ * [Thread] new
+ *
+ * creates a new thread (no target)
+ */
+ctr_object* ctr_thread_make(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* inst = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+  inst->link = myself;
+  inst->value.rvalue = ctr_heap_allocate(sizeof(ctr_resource));
+  inst->release_hook = &ctr_thread_free_res;
+  return inst;
+}
+/**
+ * [Thread] target: [Block]
+ *
+ * set the target of the thread instance
+ */
+ctr_object* ctr_thread_set_target(ctr_object* myself, ctr_argument* argumentList) {
+    pthread_t* thread;
+    int err;
+    if(!myself->value.rvalue->ptr) {
+      ctr_thread_t* thdesc = ctr_heap_allocate(sizeof(ctr_thread_t));
+      pthread_mutex_t* mutex = ctr_heap_allocate(sizeof(pthread_mutex_t));
+      if((err=pthread_mutex_init(mutex, NULL)) != 0) {
+        //Error
+        printf("Bitching about mutex %p (cannot init (%s))\n", mutex, strerror(err));
+      }
+      thread = ctr_heap_allocate(sizeof(pthread_t));
+      thdesc->mutex = mutex;
+      thdesc->thread = thread;
+      myself->value.rvalue->ptr = thdesc;
+    }
+    ((ctr_thread_t*)myself->value.rvalue->ptr)->target = argumentList->object;
+    pthread_mutex_lock(((ctr_thread_t*)myself->value.rvalue->ptr)->mutex);
+    pthread_create(thread, NULL, ctr_run_thread_func, myself->value.rvalue->ptr);
+    char name[16];
+    char pname[16];
+    pthread_getname_np(pthread_self(), pname, 16);
+    sprintf(name, "%.*s-%.*d", 15-sizeof(ctr_size), pname, sizeof(ctr_size), thread_current_number%(sizeof(ctr_size))); thread_current_number++;
+    if((err=pthread_setname_np(*thread, name))!=0) {
+      //
+    }
+    return myself;
+}
+/**
+ * [Thread] args: [Block]
+ *
+ * set the args of the thread instance
+ */
+ctr_object* ctr_thread_set_args(ctr_object* myself, ctr_argument* argumentList) {
+    pthread_t* thread;
+    int err;
+    if(!myself->value.rvalue->ptr) {
+      ctr_thread_t* thdesc = ctr_heap_allocate(sizeof(ctr_thread_t));
+      pthread_mutex_t* mutex = ctr_heap_allocate(sizeof(pthread_mutex_t));
+      if((err=pthread_mutex_init(mutex, NULL)) != 0) {
+        //Error
+        printf("Bitching about mutex %p (cannot init (%s))\n", mutex, strerror(err));
+      }
+      thread = ctr_heap_allocate(sizeof(pthread_t));
+      thdesc->mutex = mutex;
+      thdesc->thread = thread;
+      myself->value.rvalue->ptr = thdesc;
+    }
+    ((ctr_thread_t*)myself->value.rvalue->ptr)->args = argumentList->object;
+    pthread_mutex_lock(((ctr_thread_t*)myself->value.rvalue->ptr)->mutex);
+    pthread_create(thread, NULL, ctr_run_thread_func, myself->value.rvalue->ptr);
+    char name[16];
+    char pname[16];
+    pthread_getname_np(pthread_self(), pname, 16);
+    sprintf(name, "%.*s-%.*d", 15-sizeof(ctr_size), pname, sizeof(ctr_size), thread_current_number%(sizeof(ctr_size))); thread_current_number++;
+    if((err=pthread_setname_np(*thread, name))!=0) {
+      //
+    }
+    return myself;
+}
+/**
+ * [Thread] new: [Block] [args: [Array]]
+ *
+ * create a new thread with a target and optionally some arguments
+ */
+ctr_object* ctr_thread_make_set_target(ctr_object* myself, ctr_argument* argumentList) {
+    ctr_object* inst = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+    inst->link = myself;
+    inst->value.rvalue = ctr_heap_allocate(sizeof(ctr_resource));
+    inst->release_hook = &ctr_thread_free_res;
+    pthread_t* thread;
+    ctr_thread_t* thdesc = ctr_heap_allocate(sizeof(ctr_thread_t));
+    pthread_mutex_t* mutex = ctr_heap_allocate(sizeof(pthread_mutex_t));
+    int err;
+    if((err=pthread_mutex_init(mutex, NULL)) != 0) {
+      //Error
+      printf("Bitching about mutex %p (cannot init (%s))\n", mutex, strerror(err));
+    }
+    thread = ctr_heap_allocate(sizeof(pthread_t));
+    thdesc->mutex = mutex;
+    thdesc->thread = thread;
+    if(argumentList->next && argumentList->next->object) thdesc->args = argumentList->next->object;
+    else thdesc->args = NULL;
+    inst->value.rvalue->ptr = thdesc;
+    ((ctr_thread_t*)inst->value.rvalue->ptr)->target = argumentList->object;
+    pthread_mutex_lock(((ctr_thread_t*)inst->value.rvalue->ptr)->mutex);
+    pthread_create(thread, NULL, ctr_run_thread_func, inst->value.rvalue->ptr);
+    char name[16];
+    char pname[16];
+    pthread_getname_np(pthread_self(), pname, 16);
+    sprintf(name, "%.*s-%.*d", 15-sizeof(ctr_size), pname, sizeof(ctr_size), thread_current_number%(sizeof(ctr_size))); thread_current_number++;
+    if((err=pthread_setname_np(*thread, name))!=0) {
+      //
+    }
+    return inst;
+}
+/**
+ * [Thread] run
+ *
+ * runs the thread
+ */
+ctr_object* ctr_thread_run(ctr_object* myself, ctr_argument* argumentList) {
+  if (!myself->value.rvalue->ptr) {
+    CtrStdFlow = ctr_build_string_from_cstring("Attempt to run a thread without a target");
+    return CtrStdFlow;
+  }
+  pthread_mutex_unlock(((ctr_thread_t*)myself->value.rvalue->ptr)->mutex);
+  return myself;
+}
+/**
+ * [Thread] join
+ *
+ * joins the thread
+ */
+ctr_object* ctr_thread_join(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_thread_return_t* retval;
+  // pthread_mutex_lock(((ctr_thread_t*)myself->value.rvalue->ptr)->mutex);//get the mutex
+  if(pthread_join(*(((ctr_thread_t*)myself->value.rvalue->ptr)->thread), &retval) != 0) {
+    CtrStdFlow = ctr_build_string_from_cstring("Thread could not join");
+    return CtrStdNil;
+  }
+  if (retval == PTHREAD_CANCELED || !retval) {
+    ctr_heap_free(retval);
+    return CtrStdNil;
+  }
+  else {
+    if (retval->stdFlow) {
+      ctr_heap_free(retval);
+      CtrStdFlow = retval->stdFlow;
+      return CtrStdNil;
+    }
+    ctr_heap_free(retval);
+    return retval->retval;
+  }
+}
+/**
+ * [Thread] id
+ *
+ * returns the thread ID
+ */
+ ctr_object* ctr_thread_id(ctr_object* myself, ctr_argument* argumentList) {
+   pthread_t id = pthread_self();
+   return ctr_build_number_from_float(*(uint64_t*)&id);
+ }
+/**
+ * [Thread] name [: [String]]
+ *
+ * returns the name of a thread (or alternatively sets it)
+ */
+ ctr_object* ctr_thread_name(ctr_object* myself, ctr_argument* argumentList) {
+   pthread_t* threadt;
+   if(myself->value.rvalue)
+    threadt = ((ctr_thread_t*)myself->value.rvalue->ptr)->thread;
+   else
+    threadt = pthread_self();
+     char name[16];
+     int err;
+     if((err=pthread_getname_np(*threadt, name, 16)) != 0) {
+       char errbuf[1024];
+       sprintf(errbuf, "Error when reading thread name: %s", strerror(err));
+       // CtrStdFlow = ctr_build_string_from_cstring(errbuf);
+       return CtrStdNil;
+     }
+     return ctr_build_string_from_cstring(name);
+ }
+ctr_object* ctr_thread_names(ctr_object* myself, ctr_argument* argumentList) {
+   pthread_t* threadt;
+   if(myself->value.rvalue)
+    threadt = ((ctr_thread_t*)myself->value.rvalue->ptr)->thread;
+   else
+    threadt = pthread_self();
+     ctr_object* str;
+     if((str=ctr_internal_cast2string(argumentList->object))->value.svalue->vlen > 15) {
+       CtrStdFlow = ctr_build_string_from_cstring("Thread names may at most be 15 bytes in length");
+       return CtrStdNil;
+     }
+     char* name = ctr_heap_allocate_cstring(str);
+     int err;
+     if((err=pthread_setname_np(*threadt, name)) != 0) {
+       char errbuf[1024];
+       sprintf(errbuf, "Error when setting thread name: %s", strerror(err));
+       CtrStdFlow = ctr_build_string_from_cstring(errbuf);
+       return CtrStdNil;
+     }
+     ctr_heap_free(name);
+     return myself;
+ }
+ctr_object* ctr_thread_to_string(ctr_object* myself, ctr_argument* argumentList) {
+  pthread_t* threadt;
+  if(myself->value.rvalue) {
+    if(!myself->value.rvalue->ptr)
+      return ctr_build_string_from_cstring("<Uninitialized Thread>");
+   threadt = ((ctr_thread_t*)myself->value.rvalue->ptr)->thread;
+  }
+  else {
+    threadt = pthread_self();
+  }
+  char name[16];
+  int err;
+  if((err=pthread_getname_np(*threadt, name, 16)) != 0) {
+    char errbuf[1024];
+    sprintf(errbuf, "Error when reading thread name: %s", strerror(err));
+    // CtrStdFlow = ctr_build_string_from_cstring(errbuf);
+    return CtrStdNil;
+  }
+  char buf[64];
+  sprintf(buf, "<Thread %s>", name);
+  return ctr_build_string_from_cstring(buf);
+}

@@ -19,15 +19,15 @@ install:
 	echo -e "install directly from source not allowed.\nUse citron_autohell instead for installs"
 	exit 1;
 ctr:	$(OBJS)
-	$(CC) $(OBJS) -rdynamic -lm -ldl -lbsd -lpcre -o ctr
+	$(CC) $(OBJS) -rdynamic -lm -ldl -lbsd -lpcre -lpthread -o ctr
 
 libctr: CFLAGS := $(CFLAGS) -fPIC -D CTR_STD_EXTENSION_PATH='".."'
 libctr: $(OBJS)
-	$(CC) $(OBJS) -shared -export-dynamic -fPIC -ldl -lbsd -lpcre -o python/libctr.so
+	$(CC) $(OBJS) -shared -export-dynamic -fPIC -ldl -lbsd -lpcre -lpthread -o python/libctr.so
 
 compiler: CFLAGS := $(CFLAGS) -D comp=1
 compiler: $(COBJS)
-	$(CC) $(COBJS) -rdynamic -lm -ldl -lbsd -lpcre -lprofiler -o ctrc
+	$(CC) $(COBJS) -rdynamic -lm -ldl -lbsd -lpcre -lprofiler -lpthread -o ctrc
 .c.o:
 	$(CC) $(CFLAGS) -c $<
 

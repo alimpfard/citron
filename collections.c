@@ -1206,6 +1206,7 @@ ctr_object* ctr_array_imap(ctr_object* myself, ctr_argument* argumentList) {
  * unpacks an array to an argumentlist
  */
 ctr_argument* ctr_array_to_argument_list(ctr_object* arr, ctr_argument* provided) {
+  if(!arr) return NULL;
   ctr_size i = arr->value.avalue->tail, arr_max_len = arr->value.avalue->head-arr->value.avalue->tail;
   if(!provided) provided = ctr_heap_allocate(sizeof(ctr_argument));
   ctr_argument* arg = provided;
@@ -1219,8 +1220,12 @@ ctr_argument* ctr_array_to_argument_list(ctr_object* arr, ctr_argument* provided
     i++;
   }
   while(i<arr_max_len) {
+    provided->object = arr->value.avalue->elements[i++];
+    if(likely(i==arr_max_len)) {
+      provided->next = NULL;
+      break;
+    }
     provided->next = ctr_heap_allocate(sizeof(ctr_argument));
-    provided->object = arr->value.avalue->elements[i];
     provided = provided->next;
   }
   return arg;

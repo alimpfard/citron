@@ -2,7 +2,7 @@ Object on: 'arrow:' do: {:name
   ^Reflect getProperty: name ofObject: me.
 }.
 
-Object learn: '→' means: 'arrow:'.
+Object learn: '~' means: 'arrow:'.
 
 Object on: 'farrow:' do: {:name
   ^Reflect closure: name of: me.

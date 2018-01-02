@@ -7,9 +7,7 @@
 #include <stdint.h>
 #include <regex.h>
 
-
 #include "citron.h"
-
 
 int ctr_clex_bflmt = 255;
 ctr_size ctr_clex_tokvlen = 0;	/* length of the string value of a token */
@@ -64,9 +62,7 @@ ctr_clex_is_delimiter (char symbol)
 {
 
   return (symbol == '('
-	  || symbol == ')'
-	  || symbol == ','
-	  || symbol == '.' || symbol == ':' || symbol == ' ');
+	  || symbol == ')' || symbol == ',' || symbol == '.' || symbol == ':' || symbol == ' ');
 }
 
 /**
@@ -109,7 +105,6 @@ ctr_clex_tok_value ()
 {
   return ctr_clex_buffer;
 }
-
 
 char *
 ctr_clex_tok_describe (int token)
@@ -183,7 +178,6 @@ ctr_clex_tok_describe (int token)
   return description;
 }
 
-
 /**
  * CTRLexerTokenValueLength
  *
@@ -226,9 +220,9 @@ check_next_line_empty ()
       {
 	regex_t pattern;
 	if (regcomp (&pattern, "^$", 0))
-	  ctr_clex_emit_error
-	    ("PCRE could not compile regex, please turn regexLineCheck off.");
-	int x = regexec (&pattern, ctr_code + 1, 0, NULL, 0) == REG_NOMATCH;
+	  ctr_clex_emit_error ("PCRE could not compile regex, please turn regexLineCheck off.");
+	int x = regexec (&pattern, ctr_code + 1, 0, NULL,
+			 0) == REG_NOMATCH;
 	regfree (&pattern);
 	return x;
       }
@@ -296,7 +290,7 @@ ctr_clex_is_valid_digit_in_base (char c, int b)
       else if ((c >= 'A') && (c < 'A' + (b - 10)))
 	return 1;
     }
-  return 0;			//unsupported base or not a digit
+  return 0;	//unsupported base or not a digit
 }
 
 /**
@@ -349,14 +343,12 @@ ctr_clex_tok ()
     }
 
   /* if verbatim mode is on and we passed the '>' verbatim write message, insert a 'fake quote' (?>') */
-  if (ctr_clex_verbatim_mode == 1
-      && ctr_clex_verbatim_mode_insert_quote == (uintptr_t) ctr_code)
+  if (ctr_clex_verbatim_mode == 1 && ctr_clex_verbatim_mode_insert_quote == (uintptr_t) ctr_code)
     {
       return CTR_TOKEN_QUOTE;
     }
 
-  if (*ctr_code == '\n' && check_next_line_empty ()
-      && oneLineExpressions->value)
+  if (*ctr_code == '\n' && check_next_line_empty () && oneLineExpressions->value)
     {
       ctr_code++;
       return CTR_TOKEN_DOT;
@@ -456,9 +448,7 @@ ctr_clex_tok ()
       return CTR_TOKEN_RET;
     }
   //↑
-  if ((ctr_code + 2) < ctr_eofcode
-      && (uint8_t) c == 226
-      && ((uint8_t) * (ctr_code + 1) == 134)
+  if ((ctr_code + 2) < ctr_eofcode && (uint8_t) c == 226 && ((uint8_t) * (ctr_code + 1) == 134)
       && ((uint8_t) * (ctr_code + 2) == 145))
     {
       ctr_code += 3;
@@ -469,8 +459,7 @@ ctr_clex_tok ()
       ctr_code++;
       return CTR_TOKEN_QUOTE;
     }
-  if ((c == '-' && (ctr_code + 1) < ctr_eofcode && isdigit (*(ctr_code + 1)))
-      || isdigit (c))
+  if ((c == '-' && (ctr_code + 1) < ctr_eofcode && isdigit (*(ctr_code + 1))) || isdigit (c))
     {
       int xnum_likely = c == '0';
       int base = 10;
@@ -498,8 +487,7 @@ ctr_clex_tok ()
 	  c = toupper (*ctr_code);
 	}
       if (c == '.' && (ctr_code + 1 <= ctr_eofcode)
-	  && !ctr_clex_is_valid_digit_in_base (toupper (*(ctr_code + 1)),
-					       base))
+	  && !ctr_clex_is_valid_digit_in_base (toupper (*(ctr_code + 1)), base))
 	{
 	  return CTR_TOKEN_NUMBER;
 	}
@@ -591,8 +579,7 @@ ctr_clex_tok ()
 			  c != ',' &&
 			  c != '^' &&
 			  (!((ctr_code + 2) < ctr_eofcode
-			     && (uint8_t) c == 226
-			     && ((uint8_t) * (ctr_code + 1) == 134)
+			     && (uint8_t) c == 226 && ((uint8_t) * (ctr_code + 1) == 134)
 			     && ((uint8_t) * (ctr_code + 2) == 145))) &&
 			  (c != ':') && c != '\'') && ctr_code != ctr_eofcode)
     {
@@ -601,15 +588,13 @@ ctr_clex_tok ()
       i++;
       if (i > ctr_clex_bflmt)
 	{
-	  ctr_clex_emit_error
-	    ("Token Buffer Exausted. Tokens may not exceed 255 bytes");
+	  ctr_clex_emit_error ("Token Buffer Exausted. Tokens may not exceed 255 bytes");
 	}
       ctr_code++;
       c = *ctr_code;
     }
   return CTR_TOKEN_REF;
 }
-
 
 /**
  * CTRLexerStringReader
@@ -639,32 +624,34 @@ ctr_clex_readstr ()
   c = *ctr_code;
   escape = 0;
   beginbuff = strbuff;
-  while ((			/* reading string in non-verbatim mode, read until the first non-escaped quote */
+  while ((	/* reading string in non-verbatim mode, read until the first non-escaped quote */
 	   ctr_clex_verbatim_mode == 0 && (c != '\'' || escape == 1)) || (	/* reading string in verbatim mode, read until the '<?' sequence */
 									   ctr_clex_verbatim_mode
 									   ==
 									   1
 									   &&
-									   !(c
-									     ==
-									     '<'
-									     &&
-									     ((ctr_code + 1) < ctr_eofcode) && *(ctr_code + 1) == '?') && (ctr_code < ctr_eofcode)))
+									   !
+									   (c
+									    ==
+									    '<'
+									    &&
+									    ((ctr_code + 1) <
+									     ctr_eofcode)
+									    && *(ctr_code +
+										 1) == '?')
+									   && (ctr_code <
+									       ctr_eofcode)))
     {
 
       /* enter interpolation mode ( $$x ) */
       if (!ctr_clex_verbatim_mode &&
-	  !escape &&
-	  c == '$' &&
-	  ((ctr_code + 1) < ctr_eofcode) && *(ctr_code + 1) == '$')
+	  !escape && c == '$' && ((ctr_code + 1) < ctr_eofcode) && *(ctr_code + 1) == '$')
 	{
 	  int q = 2;
 	  while ((ctr_code + q) < ctr_eofcode && !isspace (*(ctr_code + q))
-		 && *(ctr_code + q) != '$' && *(ctr_code + q) != '\''
-		 && q < 255)
+		 && *(ctr_code + q) != '$' && *(ctr_code + q) != '\'' && q < 255)
 	    q++;
-	  if (isspace (*(ctr_code + q)) || *(ctr_code + q) == '$'
-	      || *(ctr_code + q) == '\'')
+	  if (isspace (*(ctr_code + q)) || *(ctr_code + q) == '$' || *(ctr_code + q) == '\'')
 	    {
 	      ivarname = ctr_heap_allocate (q);
 	      ivarlen = q - 2;
@@ -705,12 +692,10 @@ ctr_clex_readstr ()
 	      break;
 	    case 'x':
 	      c = 0;
-	      while (ctr_clex_is_valid_digit_in_base
-		     (toupper (*(ctr_code + 1)), 16))
+	      while (ctr_clex_is_valid_digit_in_base (toupper (*(ctr_code + 1)), 16))
 		{
 		  char t = *(ctr_code + 1);
-		  c = c * 16 + (t >= '0'
-				&& t <= '9' ? t - '0' : toupper (t) - 'A');
+		  c = c * 16 + (t >= '0' && t <= '9' ? t - '0' : toupper (t) - 'A');
 		  ctr_code++;
 		}
 	      break;
@@ -728,8 +713,7 @@ ctr_clex_readstr ()
       if (ctr_clex_tokvlen >= memblock)
 	{
 	  memblock += page;
-	  beginbuff =
-	    (char *) ctr_heap_reallocate_tracked (tracking_id, memblock);
+	  beginbuff = (char *) ctr_heap_reallocate_tracked (tracking_id, memblock);
 	  if (beginbuff == NULL)
 	    {
 	      ctr_clex_emit_error ("Out of memory");
@@ -746,11 +730,11 @@ ctr_clex_readstr ()
   if (ctr_clex_verbatim_mode)
     {
       if (ctr_code >= ctr_eofcode)
-	{			/* if we reached EOF in verbatim mode, append closing sequence '<?.' */
+	{	/* if we reached EOF in verbatim mode, append closing sequence '<?.' */
 	  strncpy (ctr_code, "<?.", 3);
 	  ctr_eofcode += 3;
 	}
-      ctr_code++;		/* in verbatim mode, hop over the trailing ? as well */
+      ctr_code++;	/* in verbatim mode, hop over the trailing ? as well */
     }
   ctr_clex_verbatim_mode = 0;	/* always turn verbatim mode off */
   ctr_clex_verbatim_mode_insert_quote = 0;	/* erase verbatim mode pointer overlay for fake quote */

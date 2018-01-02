@@ -30,7 +30,7 @@ initialize ()
   flexibleConstructs = &f;
   regexLineCheck = &r;
 
-  ctr_gc_mode = 1;		/* default GC mode: activate GC */
+  ctr_gc_mode = 1;	/* default GC mode: activate GC */
   ctr_gc_memlimit = 8388608;
   ctr_callstack_index = 0;
   ctr_source_map_head = NULL;

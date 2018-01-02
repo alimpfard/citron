@@ -112,18 +112,18 @@ ctr_heap_allocate (size_t size)
     {
       ctr_gc_sweep (0);
       if (ctr_gc_memlimit < ctr_gc_alloc)
-      	{
-      	  if (CTR_LIMIT_MEM)
-      	    {
-      	      printf ("Out of memory. Failed to allocate %lu bytes.\n", size);
-      	      ctr_print_stack_trace ();
-      	      exit (1);
-      	    }
-      	  else
-      	    {
-      	      ctr_gc_memlimit *= 2;
-      	    }
-      	}
+	{
+	  if (CTR_LIMIT_MEM)
+	    {
+	      printf ("Out of memory. Failed to allocate %lu bytes.\n", size);
+	      ctr_print_stack_trace ();
+	      exit (1);
+	    }
+	  else
+	    {
+	      ctr_gc_memlimit *= 2;
+	    }
+	}
     }
 
   /* Perform allocation and check result */
@@ -131,9 +131,7 @@ ctr_heap_allocate (size_t size)
 
   if (slice_of_memory == NULL)
     {
-      printf
-	("Out of memory. Failed to allocate %lu bytes (malloc failed). \n",
-	 size);
+      printf ("Out of memory. Failed to allocate %lu bytes (malloc failed). \n", size);
       exit (1);
     }
 
@@ -186,9 +184,7 @@ ctr_heap_allocate_shared (size_t size)
 
   if (slice_of_memory == NULL)
     {
-      printf
-	("Out of memory. Failed to allocate %lu bytes (malloc failed). \n",
-	 size);
+      printf ("Out of memory. Failed to allocate %lu bytes (malloc failed). \n", size);
       exit (1);
     }
 
@@ -220,10 +216,7 @@ ctr_heap_allocate_tracked (size_t size)
       else
 	{
 	  maxNumberOfMemBlocks += 10;
-	  memBlocks =
-	    ctr_heap_reallocate (memBlocks,
-				 (sizeof (memBlock) *
-				  (maxNumberOfMemBlocks)));
+	  memBlocks = ctr_heap_reallocate (memBlocks, (sizeof (memBlock) * (maxNumberOfMemBlocks)));
 	}
     }
   memBlocks[numberOfMemBlocks].space = space;
@@ -269,7 +262,6 @@ ctr_heap_free_rest ()
     }
   //ctr_heap_free( memBlocks );
 }
-
 
 /**
  * Heap free memory
@@ -328,7 +320,7 @@ ctr_heap_free_shared (void *ptr)
   block_width = (size_t *) ptr;
   size = *(block_width);
 
-  munmap (ptr, size);		//so god help me
+  munmap (ptr, size);	//so god help me
   ctr_gc_alloc -= size;
 }
 

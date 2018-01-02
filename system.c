@@ -278,7 +278,6 @@ arc4random_uniform (u_int32_t upper_bound)
   return (r % upper_bound);
 }
 
-
 #endif
 #include "citron.h"
 #include "siphash.h"
@@ -361,13 +360,11 @@ ctr_gc_sweep (int all)
   while (currentObject)
     {
       ctr_gc_object_counter++;
-      if ((currentObject->info.mark == 0 && currentObject->info.sticky == 0)
-	  || all)
+      if ((currentObject->info.mark == 0 && currentObject->info.sticky == 0) || all)
 	{
 	  // if (currentObject->info.type == CTR_OBJECT_TYPE_OTEX) ctr_send_message(currentObject, "destruct", 8, NULL);
 	  void (*free_heap_maybe_shared) (void *) =
-	    currentObject->info.shared ==
-	    0 ? &ctr_heap_free : &ctr_heap_free_shared;
+	    currentObject->info.shared == 0 ? &ctr_heap_free : &ctr_heap_free_shared;
 	  ctr_gc_dust_counter++;
 	  /* remove from linked list */
 	  if (previousObject)
@@ -425,8 +422,7 @@ ctr_gc_sweep (int all)
 		{
 		  if (currentObject->value.svalue->vlen > 0)
 		    {
-		      free_heap_maybe_shared (currentObject->value.
-					      svalue->value);
+		      free_heap_maybe_shared (currentObject->value.svalue->value);
 		    }
 		  free_heap_maybe_shared (currentObject->value.svalue);
 		}
@@ -440,8 +436,7 @@ ctr_gc_sweep (int all)
 		{
 		  if (currentObject->release_hook)
 		    ((voidptrfn_t *)
-		     currentObject->release_hook) (currentObject->value.
-						   rvalue->ptr);
+		     currentObject->release_hook) (currentObject->value.rvalue->ptr);
 		  free_heap_maybe_shared (currentObject->value.rvalue);
 		}
 	      break;
@@ -516,8 +511,7 @@ ctr_gc_sweep_this (ctr_object * myself, ctr_argument * argumentList)
     {
       ctr_gc_object_counter++;
       void (*free_heap_maybe_shared) (void *) =
-	currentObject->info.shared ==
-	0 ? &ctr_heap_free : &ctr_heap_free_shared;
+	currentObject->info.shared == 0 ? &ctr_heap_free : &ctr_heap_free_shared;
       ctr_gc_dust_counter++;
       if (currentObject->methods->head)
 	{
@@ -561,8 +555,7 @@ ctr_gc_sweep_this (ctr_object * myself, ctr_argument * argumentList)
 	  if (currentObject->value.rvalue != NULL)
 	    {
 	      if (currentObject->release_hook)
-		((voidptrfn_t *) currentObject->
-		 release_hook) (currentObject->value.rvalue->ptr);
+		((voidptrfn_t *) currentObject->release_hook) (currentObject->value.rvalue->ptr);
 	      free_heap_maybe_shared (currentObject->value.rvalue);
 	    }
 	  break;
@@ -651,8 +644,7 @@ ctr_gc_sticky_count (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_gc_setmemlimit (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_gc_memlimit =
-    (uint64_t) ctr_internal_cast2number (argumentList->object)->value.nvalue;
+  ctr_gc_memlimit = (uint64_t) ctr_internal_cast2number (argumentList->object)->value.nvalue;
   return myself;
 }
 
@@ -669,8 +661,7 @@ ctr_gc_setmemlimit (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_gc_setmode (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_gc_mode =
-    (int) ctr_internal_cast2number (argumentList->object)->value.nvalue;
+  ctr_gc_mode = (int) ctr_internal_cast2number (argumentList->object)->value.nvalue;
   return myself;
 }
 
@@ -682,8 +673,7 @@ ctr_gc_setmode (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_gc_setautoalloc (ctr_object * myself, ctr_argument * argumentList)
 {
-  CTR_LIMIT_MEM =
-    !(ctr_internal_cast2bool (argumentList->object)->value.bvalue);
+  CTR_LIMIT_MEM = !(ctr_internal_cast2bool (argumentList->object)->value.bvalue);
   return myself;
 }
 
@@ -722,12 +712,10 @@ ctr_shell_call (ctr_object * myself, ctr_argument * argumentList)
   char *comString = ctr_heap_allocate (sizeof (char) * (vlen + 1));
   memcpy (comString, arg->value.svalue->value, vlen);
   memcpy (comString + vlen, "\0", 1);
-  newArgumentList =
-    (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+  newArgumentList = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   if (!(stream = popen (comString, "r")))
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring ("Unable to execute command.");
+      CtrStdFlow = ctr_build_string_from_cstring ("Unable to execute command.");
     }
   outputString = ctr_build_empty_string ();
   while (fgets (outputBuffer, 512, stream))
@@ -779,8 +767,7 @@ ctr_shell_respond_to_and (ctr_object * myself, ctr_argument * argumentList)
   strncpy (command + (prefix->value.svalue->vlen),
 	   suffix->value.svalue->value, suffix->value.svalue->vlen);
   commandObj = ctr_build_string (command, len);
-  newArgumentList =
-    (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+  newArgumentList = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   newArgumentList->object = commandObj;
   result = ctr_shell_call (myself, newArgumentList);
   ctr_heap_free (newArgumentList);
@@ -813,16 +800,12 @@ ctr_slurp_respond_to (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *key;
   newCommandObj = argumentList->object;
   key = ctr_build_string_from_cstring ("command");
-  commandObj =
-    ctr_internal_object_find_property (myself, key,
-				       CTR_CATEGORY_PRIVATE_PROPERTY);
-  newArgumentList =
-    (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+  commandObj = ctr_internal_object_find_property (myself, key, CTR_CATEGORY_PRIVATE_PROPERTY);
+  newArgumentList = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   if (commandObj == NULL)
     {
       commandObj = ctr_build_empty_string ();
-      ctr_internal_object_set_property (myself, key, commandObj,
-					CTR_CATEGORY_PRIVATE_PROPERTY);
+      ctr_internal_object_set_property (myself, key, commandObj, CTR_CATEGORY_PRIVATE_PROPERTY);
     }
   else
     {
@@ -845,8 +828,7 @@ ctr_slurp_respond_to_and (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *str;
   ctr_argument *newArgumentList;
-  newArgumentList =
-    (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+  newArgumentList = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   str = ctr_internal_cast2string (argumentList->object);
   if ((str->value.svalue->vlen > 0)
       && *(str->value.svalue->value + (str->value.svalue->vlen - 1)) == ':')
@@ -910,14 +892,12 @@ ctr_slurp_obtain (ctr_object * myself, ctr_argument * argumentList)
   commandObj =
     ctr_internal_object_find_property (myself,
 				       ctr_build_string_from_cstring
-				       ("command"),
-				       CTR_CATEGORY_PRIVATE_PROPERTY);
+				       ("command"), CTR_CATEGORY_PRIVATE_PROPERTY);
   if (commandObj == NULL)
     {
       commandObj = ctr_build_empty_string ();
     }
-  ctr_internal_object_delete_property (myself, key,
-				       CTR_CATEGORY_PRIVATE_PROPERTY);
+  ctr_internal_object_delete_property (myself, key, CTR_CATEGORY_PRIVATE_PROPERTY);
   return commandObj;
 }
 
@@ -989,11 +969,8 @@ ctr_command_get_env (ctr_object * myself, ctr_argument * argumentList)
   char *envVal;
   ctr_check_permission (CTR_SECPRO_NO_FILE_READ);
   envVarNameObj = ctr_internal_cast2string (argumentList->object);
-  envVarNameStr =
-    ctr_heap_allocate ((envVarNameObj->value.svalue->vlen +
-			1) * sizeof (char));
-  strncpy (envVarNameStr, envVarNameObj->value.svalue->value,
-	   envVarNameObj->value.svalue->vlen);
+  envVarNameStr = ctr_heap_allocate ((envVarNameObj->value.svalue->vlen + 1) * sizeof (char));
+  strncpy (envVarNameStr, envVarNameObj->value.svalue->value, envVarNameObj->value.svalue->vlen);
   *(envVarNameStr + (envVarNameObj->value.svalue->vlen)) = '\0';
   envVal = getenv (envVarNameStr);
   ctr_heap_free (envVarNameStr);
@@ -1041,8 +1018,7 @@ ctr_command_chdir (ctr_object * myself, ctr_argument * argumentList)
   if (!curpath)
     {
       CtrStdFlow =
-	ctr_build_string_from_cstring
-	("Could not extends real path of current directory");
+	ctr_build_string_from_cstring ("Could not extends real path of current directory");
       return CtrStdNil;
     }
   ctr_object *lpath = ctr_build_string_from_cstring (curpath);
@@ -1052,9 +1028,7 @@ ctr_command_chdir (ctr_object * myself, ctr_argument * argumentList)
       ctr_heap_free (path);
       return lpath;
     }
-  ctr_object *err =
-    ctr_build_string_from_cstring
-    ("Error occurred while changing directory: ");
+  ctr_object *err = ctr_build_string_from_cstring ("Error occurred while changing directory: ");
   ctr_invoke_variadic (err, &ctr_string_append, 1,
 		       ctr_build_string_from_cstring (strerror (errno)));
   CtrStdFlow = err;
@@ -1178,8 +1152,8 @@ ctr_int_handler (int isig)
   //printf("%i\n", isig);
   if (ctr_global_interrupt_handler != NULL)
     {
-      ctr_invoke_variadic (ctr_global_interrupt_handler, &ctr_block_runIt, 1,
-			   ctr_build_number_from_float (isig));
+      ctr_invoke_variadic (ctr_global_interrupt_handler,
+			   &ctr_block_runIt, 1, ctr_build_number_from_float (isig));
       if (CtrStdFlow)
 	CtrStdFlow = CtrStdExit;	//exit on exception in interrupt handler
     }
@@ -1219,23 +1193,19 @@ ctr_check_permission (uint8_t operationID)
 	}
       if (operationID == CTR_SECPRO_NO_FILE_WRITE)
 	{
-	  reason =
-	    "This program is not allowed to modify or delete any files or folders.";
+	  reason = "This program is not allowed to modify or delete any files or folders.";
 	}
       if (operationID == CTR_SECPRO_NO_FILE_READ)
 	{
-	  reason =
-	    "This program is not allowed to perform any file operations.";
+	  reason = "This program is not allowed to perform any file operations.";
 	}
       if (operationID == CTR_SECPRO_NO_INCLUDE)
 	{
-	  reason =
-	    "This program is not allowed to include any other files for code execution.";
+	  reason = "This program is not allowed to include any other files for code execution.";
 	}
       if (operationID == CTR_SECPRO_FORK)
 	{
-	  reason =
-	    "This program is not allowed to spawn other processes or serve remote objects.";
+	  reason = "This program is not allowed to spawn other processes or serve remote objects.";
 	}
       printf ("%s\n", reason);
       exit (1);
@@ -1272,8 +1242,7 @@ ctr_command_forbid_shell (ctr_object * myself, ctr_argument * argumentList)
  * Program forbidFileWrite.
  */
 ctr_object *
-ctr_command_forbid_file_write (ctr_object * myself,
-			       ctr_argument * argumentList)
+ctr_command_forbid_file_write (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_command_security_profile |= CTR_SECPRO_NO_FILE_WRITE;
   return myself;
@@ -1295,8 +1264,7 @@ ctr_command_forbid_file_write (ctr_object * myself,
  * Program forbidFileRead.
  */
 ctr_object *
-ctr_command_forbid_file_read (ctr_object * myself,
-			      ctr_argument * argumentList)
+ctr_command_forbid_file_read (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_command_security_profile |= CTR_SECPRO_NO_FILE_READ;
   return myself;
@@ -1351,8 +1319,7 @@ ctr_command_countdown (ctr_object * myself, ctr_argument * argumentList)
       exit (1);
     }
   ctr_command_security_profile |= CTR_SECPRO_COUNTDOWN;
-  ctr_command_maxtick =
-    (uint64_t) ctr_internal_cast2number (argumentList->object)->value.nvalue;
+  ctr_command_maxtick = (uint64_t) ctr_internal_cast2number (argumentList->object)->value.nvalue;
   return myself;
 }
 
@@ -1449,8 +1416,10 @@ ctr_command_fork (ctr_object * myself, ctr_argument * argumentList)
   else
     {
       ctr_internal_object_set_property (child,
-					ctr_build_string_from_cstring ("pid"),
-					ctr_build_number_from_float ((ctr_number) p), CTR_CATEGORY_PRIVATE_PROPERTY);
+					ctr_build_string_from_cstring
+					("pid"),
+					ctr_build_number_from_float ((ctr_number) p),
+					CTR_CATEGORY_PRIVATE_PROPERTY);
       close (*(ps + 1));
       close (*(ps + 2));
       *((FILE **) rs->ptr + 3) = fdopen (*(ps + 3), "wb");
@@ -1515,8 +1484,7 @@ ctr_command_listen (ctr_object * myself, ctr_argument * argumentList)
   if (r == NULL)
     {
       CtrStdFlow =
-	ctr_build_string_from_cstring
-	("The main program is not allowed to wait for messages.");
+	ctr_build_string_from_cstring ("The main program is not allowed to wait for messages.");
       return CtrStdFlow;
     }
   if (r->type == 3)
@@ -1573,15 +1541,13 @@ ctr_command_join (ctr_object * myself, ctr_argument * argumentList)
     return CtrStdNil;
   if (rs->type == 3)
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring ("a child process can not join.");
+      CtrStdFlow = ctr_build_string_from_cstring ("a child process can not join.");
       return CtrStdNil;
     }
   pid = (int) ctr_internal_object_find_property (myself,
 						 ctr_build_string_from_cstring
 						 ("pid"),
-						 CTR_CATEGORY_PRIVATE_PROPERTY)->value.
-    nvalue;
+						 CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue;
   fclose (*((FILE **) rs->ptr + 0));
   fclose (*((FILE **) rs->ptr + 3));
   waitpid (pid, 0, 0);
@@ -1594,8 +1560,7 @@ ctr_command_pid (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *pidObject;
   pidObject = ctr_internal_object_find_property (myself,
 						 ctr_build_string_from_cstring
-						 ("pid"),
-						 CTR_CATEGORY_PRIVATE_PROPERTY);
+						 ("pid"), CTR_CATEGORY_PRIVATE_PROPERTY);
   if (pidObject == NULL)
     return CtrStdNil;
   return ctr_internal_cast2number (pidObject);
@@ -1606,14 +1571,11 @@ ctr_command_sig (ctr_object * myself, ctr_argument * argumentList)
 {
   int sig = ctr_internal_cast2number (argumentList->object)->value.nvalue;
   ctr_object *pid_o = ctr_internal_object_find_property (myself,
-							 ctr_build_string_from_cstring
-							 ("pid"),
+							 ctr_build_string_from_cstring ("pid"),
 							 0);
   if (!pid_o)
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring
-	("Cannot send a signal to a non-program object");
+      CtrStdFlow = ctr_build_string_from_cstring ("Cannot send a signal to a non-program object");
       return CtrStdNil;
     }
   int pid = pid_o->value.nvalue;
@@ -1628,18 +1590,15 @@ ctr_command_sig (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_command_sigmap (ctr_object * myself, ctr_argument * argumentList)
 {
-  return myself;		//TODO: Implement
+  return myself;	//TODO: Implement
 }
 
 ctr_object *
-ctr_command_log_generic (ctr_object * myself, ctr_argument * argumentList,
-			 int level)
+ctr_command_log_generic (ctr_object * myself, ctr_argument * argumentList, int level)
 {
   char *message;
   ctr_check_permission (CTR_SECPRO_COUNTDOWN);
-  message =
-    ctr_heap_allocate_cstring (ctr_internal_cast2string
-			       (argumentList->object));
+  message = ctr_heap_allocate_cstring (ctr_internal_cast2string (argumentList->object));
   syslog (level, "%s", message);
   ctr_heap_free (message);
   return myself;
@@ -1669,7 +1628,6 @@ ctr_command_crit (ctr_object * myself, ctr_argument * argumentList)
   return ctr_command_log_generic (myself, argumentList, LOG_EMERG);
 }
 
-
 /**
  * [Object] fromComputer: [String] [port: [Number] [inet6: [Boolean]]]
  *
@@ -1680,8 +1638,7 @@ ctr_object *
 ctr_command_remote (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_check_permission (CTR_SECPRO_COUNTDOWN);
-  ctr_object *remoteObj =
-    ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
+  ctr_object *remoteObj = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
   remoteObj->link = CtrStdObject;
   remoteObj->info.remote = 1;
   ctr_object *port, *inet6;
@@ -1696,16 +1653,13 @@ ctr_command_remote (ctr_object * myself, ctr_argument * argumentList)
   ctr_internal_object_set_property (remoteObj,
 				    ctr_build_string_from_cstring ("@"),
 				    ctr_internal_cast2string
-				    (argumentList->object),
-				    CTR_CATEGORY_PRIVATE_PROPERTY);
+				    (argumentList->object), CTR_CATEGORY_PRIVATE_PROPERTY);
   ctr_internal_object_set_property (remoteObj,
 				    ctr_build_string_from_cstring (":"),
-				    ctr_internal_cast2number (port),
-				    CTR_CATEGORY_PRIVATE_PROPERTY);
+				    ctr_internal_cast2number (port), CTR_CATEGORY_PRIVATE_PROPERTY);
   ctr_internal_object_set_property (remoteObj,
 				    ctr_build_string_from_cstring ("%"),
-				    ctr_internal_cast2bool (inet6),
-				    CTR_CATEGORY_PRIVATE_PROPERTY);
+				    ctr_internal_cast2bool (inet6), CTR_CATEGORY_PRIVATE_PROPERTY);
   return remoteObj;
 }
 
@@ -1717,8 +1671,7 @@ ctr_command_remote (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_command_default_port (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_default_port =
-    (uint16_t) ctr_internal_cast2number (argumentList->object)->value.nvalue;
+  ctr_default_port = (uint16_t) ctr_internal_cast2number (argumentList->object)->value.nvalue;
   return myself;
 }
 
@@ -1768,13 +1721,11 @@ ctr_command_accept (ctr_object * myself, ctr_argument * argumentList)
   bind (listenfd, (struct sockaddr *) &serv_addr, sizeof (serv_addr));
   if (listen (listenfd, 10) == -1)
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring ("Unable to listen to socket.");
+      CtrStdFlow = ctr_build_string_from_cstring ("Unable to listen to socket.");
       return CtrStdNil;
     }
   x = 0;
-  while (1
-	 && (ctr_accept_n_connections == 0 || (x < ctr_accept_n_connections)))
+  while (1 && (ctr_accept_n_connections == 0 || (x < ctr_accept_n_connections)))
     {
       x++;
       while ((connfd = accept (listenfd, (struct sockaddr *) NULL, NULL)) == -1);	// accept awaiting request
@@ -1791,25 +1742,21 @@ ctr_command_accept (ctr_object * myself, ctr_argument * argumentList)
       stringObj = ctr_string_ltrim (ctr_build_string_from_cstring (dataBuff), NULL);	//TODO:  JSON?
       if (stringObj->value.svalue->vlen >= 6
 	  && strncmp (stringObj->value.svalue->value, "Array ", 6) == 0)
-	{			//it was a correct message
+	{	//it was a correct message
 	  messageDescriptorArray = ctr_string_eval (stringObj, NULL);
 	  if (messageDescriptorArray->info.type == CTR_OBJECT_TYPE_OTARRAY)
 	    {
-	      messageSelector =
-		ctr_array_shift (messageDescriptorArray, NULL);
+	      messageSelector = ctr_array_shift (messageDescriptorArray, NULL);
 	    }
 	  else
 	    {
-	      messageSelector =
-		ctr_internal_cast2string (messageDescriptorArray);
+	      messageSelector = ctr_internal_cast2string (messageDescriptorArray);
 	    }
 	  callArgument = ctr_heap_allocate (sizeof (ctr_argument));
 	  callArgument->object = messageSelector;
 	  callArgument->next = ctr_heap_allocate (sizeof (ctr_argument));
 	  callArgument->next->object = messageDescriptorArray;
-	  answerObj =
-	    ctr_internal_cast2string (ctr_object_message
-				      (responder, callArgument));
+	  answerObj = ctr_internal_cast2string (ctr_object_message (responder, callArgument));
 	  ctr_heap_free (callArgument->next);
 	  ctr_heap_free (callArgument);
 	}
@@ -1817,12 +1764,10 @@ ctr_command_accept (ctr_object * myself, ctr_argument * argumentList)
 	{
 	  answerObj =
 	    ctr_internal_cast2string (ctr_send_message_variadic
-				      (responder, "handleRequest:", 14, 1,
-				       stringObj));
+				      (responder, "handleRequest:", 14, 1, stringObj));
 	}
       //write( connfd, (ctr_size*) &answerObj->value.svalue->vlen, sizeof(ctr_size) );
-      write (connfd, answerObj->value.svalue->value,
-	     answerObj->value.svalue->vlen);
+      write (connfd, answerObj->value.svalue->value, answerObj->value.svalue->vlen);
       ctr_heap_free (dataBuff);
       close (connfd);
     }
@@ -1842,11 +1787,9 @@ ctr_object *
 ctr_dice_sides (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *arg = ctr_internal_cast2number (argumentList->object);
-  return ctr_build_number_from_float ((ctr_number) 1 +
-				      arc4random_uniform ((uint32_t)
-							  (ceil
-							   (arg->
-							    value.nvalue))));
+  return ctr_build_number_from_float ((ctr_number) 1 + arc4random_uniform ((uint32_t)
+									   (ceil
+									    (arg->value.nvalue))));
 }
 
 /**
@@ -1857,8 +1800,7 @@ ctr_dice_sides (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_dice_throw (ctr_object * myself, ctr_argument * argumentList)
 {
-  return ctr_build_number_from_float ((ctr_number) 1 +
-				      arc4random_uniform ((uint32_t) 6));
+  return ctr_build_number_from_float ((ctr_number) 1 + arc4random_uniform ((uint32_t) 6));
 }
 
 /**
@@ -1873,7 +1815,6 @@ ctr_dice_rand (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**@I_OBJ_DEF Clock*/
-
 
 /**
  * [Clock] wait: [Number]
@@ -1904,8 +1845,7 @@ ctr_clock_new_set (ctr_object * myself, ctr_argument * argumentList)
 				    ctr_build_string_from_cstring
 				    (CTR_DICT_TIME),
 				    ctr_internal_cast2number
-				    (argumentList->object),
-				    CTR_CATEGORY_PRIVATE_PROPERTY);
+				    (argumentList->object), CTR_CATEGORY_PRIVATE_PROPERTY);
   return clock;
 }
 
@@ -1913,34 +1853,30 @@ ctr_clock_new_set (ctr_object * myself, ctr_argument * argumentList)
  * @internal
  */
 ctr_object *
-ctr_clock_get_time (ctr_object * myself, ctr_argument * argumentList,
-		    char part)
+ctr_clock_get_time (ctr_object * myself, ctr_argument * argumentList, char part)
 {
   struct tm *date;
   time_t timeStamp;
   ctr_object *answer;
   char *zone;
-  timeStamp =
-    (time_t)
+  timeStamp = (time_t)
     ctr_internal_cast2number (ctr_internal_object_find_property
 			      (myself,
-			       ctr_build_string_from_cstring (CTR_DICT_TIME),
-			       CTR_CATEGORY_PRIVATE_PROPERTY))->value.nvalue;
+			       ctr_build_string_from_cstring
+			       (CTR_DICT_TIME), CTR_CATEGORY_PRIVATE_PROPERTY))->value.nvalue;
   zone =
     ctr_heap_allocate_cstring (ctr_internal_cast2string
 			       (ctr_internal_object_find_property
 				(myself,
 				 ctr_build_string_from_cstring
-				 (CTR_DICT_ZONE),
-				 CTR_CATEGORY_PRIVATE_PROPERTY)));
+				 (CTR_DICT_ZONE), CTR_CATEGORY_PRIVATE_PROPERTY)));
   setenv ("TZ", zone, 1);
   date = localtime (&timeStamp);
   setenv ("TZ", "UTC", 1);
   switch (part)
     {
     case 'Y':
-      answer =
-	ctr_build_number_from_float ((ctr_number) date->tm_year + 1900);
+      answer = ctr_build_number_from_float ((ctr_number) date->tm_year + 1900);
       break;
     case 'm':
       answer = ctr_build_number_from_float ((ctr_number) date->tm_mon + 1);
@@ -1966,59 +1902,47 @@ ctr_clock_get_time (ctr_object * myself, ctr_argument * argumentList,
  * @internal
  */
 ctr_object *
-ctr_clock_set_time (ctr_object * myself, ctr_argument * argumentList,
-		    char part)
+ctr_clock_set_time (ctr_object * myself, ctr_argument * argumentList, char part)
 {
   struct tm *date;
   time_t timeStamp;
   ctr_object *key;
   char *zone;
   key = ctr_build_string_from_cstring (CTR_DICT_TIME);
-  timeStamp =
-    (time_t)
-    ctr_internal_cast2number (ctr_internal_object_find_property
-			      (myself, key, 0))->value.nvalue;
+  timeStamp = (time_t)
+    ctr_internal_cast2number (ctr_internal_object_find_property (myself, key, 0))->value.nvalue;
   zone =
     ctr_heap_allocate_cstring (ctr_internal_cast2string
 			       (ctr_internal_object_find_property
 				(myself,
 				 ctr_build_string_from_cstring
-				 (CTR_DICT_ZONE),
-				 CTR_CATEGORY_PRIVATE_PROPERTY)));
+				 (CTR_DICT_ZONE), CTR_CATEGORY_PRIVATE_PROPERTY)));
   setenv ("TZ", zone, 1);
   date = localtime (&timeStamp);
   switch (part)
     {
     case 'Y':
-      date->tm_year =
-	ctr_internal_cast2number (argumentList->object)->value.nvalue - 1900;
+      date->tm_year = ctr_internal_cast2number (argumentList->object)->value.nvalue - 1900;
       break;
     case 'm':
-      date->tm_mon =
-	ctr_internal_cast2number (argumentList->object)->value.nvalue - 1;
+      date->tm_mon = ctr_internal_cast2number (argumentList->object)->value.nvalue - 1;
       break;
     case 'd':
-      date->tm_mday =
-	ctr_internal_cast2number (argumentList->object)->value.nvalue;
+      date->tm_mday = ctr_internal_cast2number (argumentList->object)->value.nvalue;
       break;
     case 'H':
-      date->tm_hour =
-	ctr_internal_cast2number (argumentList->object)->value.nvalue;
+      date->tm_hour = ctr_internal_cast2number (argumentList->object)->value.nvalue;
       break;
     case 'i':
-      date->tm_min =
-	ctr_internal_cast2number (argumentList->object)->value.nvalue;
+      date->tm_min = ctr_internal_cast2number (argumentList->object)->value.nvalue;
       break;
     case 's':
-      date->tm_sec =
-	ctr_internal_cast2number (argumentList->object)->value.nvalue;
+      date->tm_sec = ctr_internal_cast2number (argumentList->object)->value.nvalue;
       break;
     }
   ctr_heap_free (zone);
-  ctr_internal_object_set_property (myself, key,
-				    ctr_build_number_from_float ((double_t)
-								 mktime
-								 (date)), 0);
+  ctr_internal_object_set_property (myself, key, ctr_build_number_from_float ((double_t)
+									      mktime (date)), 0);
   setenv ("TZ", "UTC", 1);
   return myself;
 }
@@ -2042,8 +1966,7 @@ ctr_clock_like (ctr_object * myself, ctr_argument * argumentList)
   time =
     ctr_internal_object_find_property (otherClock,
 				       ctr_build_string_from_cstring
-				       (CTR_DICT_TIME),
-				       CTR_CATEGORY_PRIVATE_PROPERTY);
+				       (CTR_DICT_TIME), CTR_CATEGORY_PRIVATE_PROPERTY);
   if (time == NULL)
     {
       time = ctr_build_number_from_float (0);
@@ -2055,8 +1978,7 @@ ctr_clock_like (ctr_object * myself, ctr_argument * argumentList)
   zone =
     ctr_internal_object_find_property (otherClock,
 				       ctr_build_string_from_cstring
-				       (CTR_DICT_ZONE),
-				       CTR_CATEGORY_PRIVATE_PROPERTY);
+				       (CTR_DICT_ZONE), CTR_CATEGORY_PRIVATE_PROPERTY);
   if (zone == NULL)
     {
       zone = ctr_build_string_from_cstring ("UTC");
@@ -2067,12 +1989,10 @@ ctr_clock_like (ctr_object * myself, ctr_argument * argumentList)
     }
   ctr_internal_object_set_property (myself,
 				    ctr_build_string_from_cstring
-				    (CTR_DICT_ZONE), zone,
-				    CTR_CATEGORY_PRIVATE_PROPERTY);
+				    (CTR_DICT_ZONE), zone, CTR_CATEGORY_PRIVATE_PROPERTY);
   ctr_internal_object_set_property (myself,
 				    ctr_build_string_from_cstring
-				    (CTR_DICT_TIME), time,
-				    CTR_CATEGORY_PRIVATE_PROPERTY);
+				    (CTR_DICT_TIME), time, CTR_CATEGORY_PRIVATE_PROPERTY);
   return myself;
 }
 
@@ -2088,8 +2008,7 @@ ctr_clock_set_zone (ctr_object * myself, ctr_argument * argumentList)
 				    ctr_build_string_from_cstring
 				    (CTR_DICT_ZONE),
 				    ctr_internal_cast2string
-				    (argumentList->object),
-				    CTR_CATEGORY_PRIVATE_PROPERTY);
+				    (argumentList->object), CTR_CATEGORY_PRIVATE_PROPERTY);
   return myself;
 }
 
@@ -2103,8 +2022,7 @@ ctr_clock_get_zone (ctr_object * myself, ctr_argument * argumentList)
 {
   return ctr_internal_object_find_property (myself,
 					    ctr_build_string_from_cstring
-					    (CTR_DICT_ZONE),
-					    CTR_CATEGORY_PRIVATE_PROPERTY);
+					    (CTR_DICT_ZONE), CTR_CATEGORY_PRIVATE_PROPERTY);
 }
 
 /**
@@ -2249,12 +2167,10 @@ ctr_clock_yearday (ctr_object * myself, ctr_argument * argumentList)
 {
   struct tm *date;
   time_t timeStamp;
-  timeStamp =
-    (time_t)
+  timeStamp = (time_t)
     ctr_internal_cast2number (ctr_internal_object_find_property
 			      (myself,
-			       ctr_build_string_from_cstring (CTR_DICT_TIME),
-			       0))->value.nvalue;
+			       ctr_build_string_from_cstring (CTR_DICT_TIME), 0))->value.nvalue;
   date = localtime (&timeStamp);
   return ctr_build_number_from_float ((double_t) date->tm_yday);
 }
@@ -2269,12 +2185,10 @@ ctr_clock_weekday (ctr_object * myself, ctr_argument * argumentList)
 {
   struct tm *date;
   time_t timeStamp;
-  timeStamp =
-    (time_t)
+  timeStamp = (time_t)
     ctr_internal_cast2number (ctr_internal_object_find_property
 			      (myself,
-			       ctr_build_string_from_cstring (CTR_DICT_TIME),
-			       0))->value.nvalue;
+			       ctr_build_string_from_cstring (CTR_DICT_TIME), 0))->value.nvalue;
   date = localtime (&timeStamp);
   return ctr_build_number_from_float ((double_t) date->tm_wday);
 }
@@ -2291,12 +2205,10 @@ ctr_object *
 ctr_clock_time (ctr_object * myself, ctr_argument * argumentList)
 {
   time_t timeStamp;
-  timeStamp =
-    (time_t)
+  timeStamp = (time_t)
     ctr_internal_cast2number (ctr_internal_object_find_property
 			      (myself,
-			       ctr_build_string_from_cstring (CTR_DICT_TIME),
-			       0))->value.nvalue;
+			       ctr_build_string_from_cstring (CTR_DICT_TIME), 0))->value.nvalue;
   return ctr_build_number_from_float ((double_t) timeStamp);
 }
 
@@ -2311,12 +2223,10 @@ ctr_clock_week (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *weekNumber;
   char *str;
   time_t timeStamp;
-  timeStamp =
-    (time_t)
+  timeStamp = (time_t)
     ctr_internal_cast2number (ctr_internal_object_find_property
 			      (myself,
-			       ctr_build_string_from_cstring (CTR_DICT_TIME),
-			       0))->value.nvalue;
+			       ctr_build_string_from_cstring (CTR_DICT_TIME), 0))->value.nvalue;
   str = ctr_heap_allocate (4);
   strftime (str, 3, "%W", localtime (&timeStamp));
   weekNumber = ctr_internal_cast2number (ctr_build_string_from_cstring (str));
@@ -2338,22 +2248,17 @@ ctr_clock_format (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *answer;
   time_t timeStamp;
   char *format;
-  format =
-    ctr_heap_allocate_cstring (ctr_internal_cast2string
-			       (argumentList->object));
+  format = ctr_heap_allocate_cstring (ctr_internal_cast2string (argumentList->object));
   zone =
     ctr_heap_allocate_cstring (ctr_internal_cast2string
 			       (ctr_internal_object_find_property
 				(myself,
 				 ctr_build_string_from_cstring
-				 (CTR_DICT_ZONE),
-				 CTR_CATEGORY_PRIVATE_PROPERTY)));
-  timeStamp =
-    (time_t)
+				 (CTR_DICT_ZONE), CTR_CATEGORY_PRIVATE_PROPERTY)));
+  timeStamp = (time_t)
     ctr_internal_cast2number (ctr_internal_object_find_property
 			      (myself,
-			       ctr_build_string_from_cstring (CTR_DICT_TIME),
-			       0))->value.nvalue;
+			       ctr_build_string_from_cstring (CTR_DICT_TIME), 0))->value.nvalue;
   description = ctr_heap_allocate (41);
   setenv ("TZ", zone, 1);
   strftime (description, 40, format, localtime (&timeStamp));
@@ -2377,8 +2282,7 @@ ctr_clock_to_string (ctr_object * myself, ctr_argument * argumentList)
   ctr_argument *newArgumentList;
   ctr_object *answer;
   newArgumentList = ctr_heap_allocate (sizeof (ctr_argument));
-  newArgumentList->object =
-    ctr_build_string_from_cstring ("%Y-%m-%d %H:%M:%S");
+  newArgumentList->object = ctr_build_string_from_cstring ("%Y-%m-%d %H:%M:%S");
   answer = ctr_clock_format (myself, newArgumentList);
   ctr_heap_free (newArgumentList);
   return answer;
@@ -2392,22 +2296,18 @@ ctr_clock_init (ctr_object * clock)
 {
   ctr_internal_object_add_property (clock,
 				    ctr_build_string_from_cstring
-				    (CTR_DICT_TIME),
-				    ctr_build_number_from_float ((double_t)
-								 time (NULL)),
-				    0);
+				    (CTR_DICT_TIME), ctr_build_number_from_float ((double_t)
+										  time (NULL)), 0);
   ctr_internal_object_add_property (clock,
 				    ctr_build_string_from_cstring
-				    (CTR_DICT_ZONE),
-				    ctr_build_string_from_cstring ("UTC"), 0);
+				    (CTR_DICT_ZONE), ctr_build_string_from_cstring ("UTC"), 0);
 }
 
 /**
  * @internal
  */
 ctr_object *
-ctr_clock_change (ctr_object * myself, ctr_argument * argumentList,
-		  uint8_t forward)
+ctr_clock_change (ctr_object * myself, ctr_argument * argumentList, uint8_t forward)
 {
   ctr_number number;
   ctr_object *numberObject;
@@ -2423,8 +2323,7 @@ ctr_clock_change (ctr_object * myself, ctr_argument * argumentList,
   qual =
     ctr_internal_object_find_property (argumentList->object,
 				       ctr_build_string_from_cstring
-				       (CTR_DICT_QUALIFICATION),
-				       CTR_CATEGORY_PRIVATE_PROPERTY);
+				       (CTR_DICT_QUALIFICATION), CTR_CATEGORY_PRIVATE_PROPERTY);
   if (qual == NULL)
     {
       return myself;
@@ -2435,8 +2334,7 @@ ctr_clock_change (ctr_object * myself, ctr_argument * argumentList,
   timeObject =
     ctr_internal_object_find_property (myself,
 				       ctr_build_string_from_cstring
-				       (CTR_DICT_TIME),
-				       CTR_CATEGORY_PRIVATE_PROPERTY);
+				       (CTR_DICT_TIME), CTR_CATEGORY_PRIVATE_PROPERTY);
   if (timeObject == NULL)
     {
       return myself;
@@ -2447,13 +2345,11 @@ ctr_clock_change (ctr_object * myself, ctr_argument * argumentList,
 			       (ctr_internal_object_find_property
 				(myself,
 				 ctr_build_string_from_cstring
-				 (CTR_DICT_ZONE),
-				 CTR_CATEGORY_PRIVATE_PROPERTY)));
+				 (CTR_DICT_ZONE), CTR_CATEGORY_PRIVATE_PROPERTY)));
   setenv ("TZ", zone, 1);
   date = localtime (&time);
   if (strncmp (unit, CTR_DICT_HOURS, l) == 0
-      || strncmp (unit, CTR_DICT_HOUR, l) == 0
-      || strncmp (unit, CTR_DICT_HOURS_ABBR, l) == 0)
+      || strncmp (unit, CTR_DICT_HOUR, l) == 0 || strncmp (unit, CTR_DICT_HOURS_ABBR, l) == 0)
     {
       date->tm_hour += number;
     }
@@ -2469,32 +2365,27 @@ ctr_clock_change (ctr_object * myself, ctr_argument * argumentList,
     {
       date->tm_sec += number;
     }
-  else if (strncmp (unit, CTR_DICT_DAYS, l) == 0
-	   || strncmp (unit, CTR_DICT_DAY, l) == 0)
+  else if (strncmp (unit, CTR_DICT_DAYS, l) == 0 || strncmp (unit, CTR_DICT_DAY, l) == 0)
     {
       date->tm_mday += number;
     }
-  else if (strncmp (unit, CTR_DICT_MONTHS, l) == 0
-	   || strncmp (unit, CTR_DICT_MONTH, l) == 0)
+  else if (strncmp (unit, CTR_DICT_MONTHS, l) == 0 || strncmp (unit, CTR_DICT_MONTH, l) == 0)
     {
       date->tm_mon += number;
     }
-  else if (strncmp (unit, CTR_DICT_YEARS, l) == 0
-	   || strncmp (unit, CTR_DICT_YEAR, l) == 0)
+  else if (strncmp (unit, CTR_DICT_YEARS, l) == 0 || strncmp (unit, CTR_DICT_YEAR, l) == 0)
     {
       date->tm_year += number;
     }
-  else if (strncmp (unit, CTR_DICT_WEEKS, l) == 0
-	   || strncmp (unit, CTR_DICT_WEEK, l) == 0)
+  else if (strncmp (unit, CTR_DICT_WEEKS, l) == 0 || strncmp (unit, CTR_DICT_WEEK, l) == 0)
     {
       date->tm_mday += number * 7;
     }
   ctr_internal_object_set_property (myself,
 				    ctr_build_string_from_cstring
-				    (CTR_DICT_TIME),
-				    ctr_build_number_from_float ((ctr_number)
-								 mktime
-								 (date)),
+				    (CTR_DICT_TIME), ctr_build_number_from_float ((ctr_number)
+										  mktime
+										  (date)),
 				    CTR_CATEGORY_PRIVATE_PROPERTY);
   setenv ("TZ", "UTC", 1);
   ctr_heap_free (zone);
@@ -2582,8 +2473,7 @@ ctr_clock_processor_time (ctr_object * myself, ctr_argument * argumentList)
  * returns the count of processor ticks in a second
  */
 ctr_object *
-ctr_clock_processor_ticks_ps (ctr_object * myself,
-			      ctr_argument * argumentList)
+ctr_clock_processor_ticks_ps (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *tps = ctr_build_number_from_float ((double) CLOCKS_PER_SEC);
   return tps;
@@ -2618,9 +2508,7 @@ ctr_clock_time_exec_s (ctr_object * myself, ctr_argument * argumentList)
   ctr_block_runIt (argumentList->object, args);
   long int end = clock ();
   ctr_heap_free (args);
-  return
-    ctr_build_number_from_float ((((double) (end - init)) /
-				  (double) CLOCKS_PER_SEC));
+  return ctr_build_number_from_float ((((double) (end - init)) / (double) CLOCKS_PER_SEC));
 }
 
 /**@I_OBJ_DEF Pen*/
@@ -2635,8 +2523,7 @@ ctr_console_write (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *argument1 = argumentList->object;
   ctr_object *strObject = ctr_internal_cast2string (argument1);
-  fwrite (strObject->value.svalue->value, strObject->value.svalue->vlen, 1,
-	  stdout);
+  fwrite (strObject->value.svalue->value, strObject->value.svalue->vlen, 1, stdout);
   return myself;
 }
 
@@ -2650,8 +2537,7 @@ ctr_console_writeln (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *argument1 = argumentList->object;
   ctr_object *strObject = ctr_internal_cast2string (argument1);
-  fwrite (strObject->value.svalue->value, strObject->value.svalue->vlen, 1,
-	  stdout);
+  fwrite (strObject->value.svalue->value, strObject->value.svalue->vlen, 1, stdout);
   fwrite ("\n", 1, 1, stdout);
   return myself;
 }
@@ -2671,56 +2557,49 @@ ctr_console_brk (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_console_red (ctr_object * myself, ctr_argument * argumentList)
 {
-  fwrite (CTR_ANSI_COLOR_RED, sizeof (char), strlen (CTR_ANSI_COLOR_RED),
-	  stdout);
+  fwrite (CTR_ANSI_COLOR_RED, sizeof (char), strlen (CTR_ANSI_COLOR_RED), stdout);
   return myself;
 }
 
 ctr_object *
 ctr_console_green (ctr_object * myself, ctr_argument * argumentList)
 {
-  fwrite (CTR_ANSI_COLOR_GREEN, sizeof (char), strlen (CTR_ANSI_COLOR_GREEN),
-	  stdout);
+  fwrite (CTR_ANSI_COLOR_GREEN, sizeof (char), strlen (CTR_ANSI_COLOR_GREEN), stdout);
   return myself;
 }
 
 ctr_object *
 ctr_console_yellow (ctr_object * myself, ctr_argument * argumentList)
 {
-  fwrite (CTR_ANSI_COLOR_YELLOW, sizeof (char),
-	  strlen (CTR_ANSI_COLOR_YELLOW), stdout);
+  fwrite (CTR_ANSI_COLOR_YELLOW, sizeof (char), strlen (CTR_ANSI_COLOR_YELLOW), stdout);
   return myself;
 }
 
 ctr_object *
 ctr_console_blue (ctr_object * myself, ctr_argument * argumentList)
 {
-  fwrite (CTR_ANSI_COLOR_BLUE, sizeof (char), strlen (CTR_ANSI_COLOR_BLUE),
-	  stdout);
+  fwrite (CTR_ANSI_COLOR_BLUE, sizeof (char), strlen (CTR_ANSI_COLOR_BLUE), stdout);
   return myself;
 }
 
 ctr_object *
 ctr_console_magenta (ctr_object * myself, ctr_argument * argumentList)
 {
-  fwrite (CTR_ANSI_COLOR_MAGENTA, sizeof (char),
-	  strlen (CTR_ANSI_COLOR_MAGENTA), stdout);
+  fwrite (CTR_ANSI_COLOR_MAGENTA, sizeof (char), strlen (CTR_ANSI_COLOR_MAGENTA), stdout);
   return myself;
 }
 
 ctr_object *
 ctr_console_cyan (ctr_object * myself, ctr_argument * argumentList)
 {
-  fwrite (CTR_ANSI_COLOR_CYAN, sizeof (char), strlen (CTR_ANSI_COLOR_CYAN),
-	  stdout);
+  fwrite (CTR_ANSI_COLOR_CYAN, sizeof (char), strlen (CTR_ANSI_COLOR_CYAN), stdout);
   return myself;
 }
 
 ctr_object *
 ctr_console_reset (ctr_object * myself, ctr_argument * argumentList)
 {
-  fwrite (CTR_ANSI_COLOR_RESET, sizeof (char), strlen (CTR_ANSI_COLOR_RESET),
-	  stdout);
+  fwrite (CTR_ANSI_COLOR_RESET, sizeof (char), strlen (CTR_ANSI_COLOR_RESET), stdout);
   return myself;
 }
 
@@ -2852,8 +2731,7 @@ ctr_thread_set_target (ctr_object * myself, ctr_argument * argumentList)
       if ((err = pthread_mutex_init (mutex, NULL)) != 0)
 	{
 	  //Error
-	  printf ("Bitching about mutex %p (cannot init (%s))\n", mutex,
-		  strerror (err));
+	  printf ("Bitching about mutex %p (cannot init (%s))\n", mutex, strerror (err));
 	}
       thread = ctr_heap_allocate (sizeof (pthread_t));
       thdesc->mutex = mutex;
@@ -2862,8 +2740,7 @@ ctr_thread_set_target (ctr_object * myself, ctr_argument * argumentList)
     }
   ((ctr_thread_t *) myself->value.rvalue->ptr)->target = argumentList->object;
   pthread_mutex_lock (((ctr_thread_t *) myself->value.rvalue->ptr)->mutex);
-  pthread_create (thread, NULL, ctr_run_thread_func,
-		  myself->value.rvalue->ptr);
+  pthread_create (thread, NULL, ctr_run_thread_func, myself->value.rvalue->ptr);
   char name[16];
   char pname[16];
   pthread_getname_np (pthread_self (), pname, 16);
@@ -2894,8 +2771,7 @@ ctr_thread_set_args (ctr_object * myself, ctr_argument * argumentList)
       if ((err = pthread_mutex_init (mutex, NULL)) != 0)
 	{
 	  //Error
-	  printf ("Bitching about mutex %p (cannot init (%s))\n", mutex,
-		  strerror (err));
+	  printf ("Bitching about mutex %p (cannot init (%s))\n", mutex, strerror (err));
 	}
       thread = ctr_heap_allocate (sizeof (pthread_t));
       thdesc->mutex = mutex;
@@ -2904,8 +2780,7 @@ ctr_thread_set_args (ctr_object * myself, ctr_argument * argumentList)
     }
   ((ctr_thread_t *) myself->value.rvalue->ptr)->args = argumentList->object;
   pthread_mutex_lock (((ctr_thread_t *) myself->value.rvalue->ptr)->mutex);
-  pthread_create (thread, NULL, ctr_run_thread_func,
-		  myself->value.rvalue->ptr);
+  pthread_create (thread, NULL, ctr_run_thread_func, myself->value.rvalue->ptr);
   char name[16];
   char pname[16];
   pthread_getname_np (pthread_self (), pname, 16);
@@ -2938,8 +2813,7 @@ ctr_thread_make_set_target (ctr_object * myself, ctr_argument * argumentList)
   if ((err = pthread_mutex_init (mutex, NULL)) != 0)
     {
       //Error
-      printf ("Bitching about mutex %p (cannot init (%s))\n", mutex,
-	      strerror (err));
+      printf ("Bitching about mutex %p (cannot init (%s))\n", mutex, strerror (err));
     }
   thread = ctr_heap_allocate (sizeof (pthread_t));
   thdesc->mutex = mutex;
@@ -2975,9 +2849,7 @@ ctr_thread_run (ctr_object * myself, ctr_argument * argumentList)
 {
   if (!myself->value.rvalue->ptr)
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring
-	("Attempt to run a thread without a target");
+      CtrStdFlow = ctr_build_string_from_cstring ("Attempt to run a thread without a target");
       return CtrStdFlow;
     }
   pthread_mutex_unlock (((ctr_thread_t *) myself->value.rvalue->ptr)->mutex);
@@ -2994,8 +2866,7 @@ ctr_thread_join (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_thread_return_t *retval;
   // pthread_mutex_lock(((ctr_thread_t*)myself->value.rvalue->ptr)->mutex);//get the mutex
-  if (pthread_join
-      (*(((ctr_thread_t *) myself->value.rvalue->ptr)->thread), &retval) != 0)
+  if (pthread_join (*(((ctr_thread_t *) myself->value.rvalue->ptr)->thread), &retval) != 0)
     {
       CtrStdFlow = ctr_build_string_from_cstring ("Thread could not join");
       return CtrStdNil;
@@ -3064,13 +2935,9 @@ ctr_thread_names (ctr_object * myself, ctr_argument * argumentList)
   else
     threadt = pthread_self ();
   ctr_object *str;
-  if ((str =
-       ctr_internal_cast2string (argumentList->object))->value.svalue->vlen >
-      15)
+  if ((str = ctr_internal_cast2string (argumentList->object))->value.svalue->vlen > 15)
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring
-	("Thread names may at most be 15 bytes in length");
+      CtrStdFlow = ctr_build_string_from_cstring ("Thread names may at most be 15 bytes in length");
       return CtrStdNil;
     }
   char *name = ctr_heap_allocate_cstring (str);

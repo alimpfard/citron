@@ -40,13 +40,10 @@ ctr_cparse_emit_error_unexpected (int t, char *hint)
 ctr_tnode *
 ctr_cparse_create_node (int type)
 {
-  ctr_tnode *node =
-    (ctr_tnode *) ctr_heap_allocate_tracked (sizeof (ctr_tnode));
+  ctr_tnode *node = (ctr_tnode *) ctr_heap_allocate_tracked (sizeof (ctr_tnode));
   if (ctr_source_mapping)
     {
-      ctr_source_map *m =
-	(ctr_source_map *)
-	ctr_heap_allocate_tracked (sizeof (ctr_source_map));
+      ctr_source_map *m = (ctr_source_map *) ctr_heap_allocate_tracked (sizeof (ctr_source_map));
       m->line = ctr_clex_line_number;
       m->node = node;
       if (ctr_source_map_head)
@@ -108,8 +105,7 @@ ctr_cparse_message (int mode)
       m->type = CTR_AST_NODE_BINMESSAGE;
       m->value = msg;
       m->vlen = msgpartlen;
-      li =
-	(ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
+      li = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
       li->node = ctr_cparse_expr (2);
       m->nodes = li;
       return m;
@@ -134,9 +130,7 @@ ctr_cparse_message (int mode)
       first = 1;
       while (1)
 	{
-	  li =
-	    (ctr_tlistitem *)
-	    ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
+	  li = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
 	  li->node = ctr_cparse_expr (1);
 	  if (first)
 	    {
@@ -206,8 +200,7 @@ ctr_cparse_messages (ctr_tnode * r, int mode)
   ctr_tnode *node;
   /* explicit chaining (,) only allowed for keyword message: Console write: 3 factorial, write: 3 factorial is not possible otherwise. */
   while ((t == CTR_TOKEN_REF
-	  || (t == CTR_TOKEN_CHAIN && node
-	      && node->type == CTR_AST_NODE_KWMESSAGE)))
+	  || (t == CTR_TOKEN_CHAIN && node && node->type == CTR_AST_NODE_KWMESSAGE)))
     {
       if (t == CTR_TOKEN_CHAIN)
 	{
@@ -217,8 +210,7 @@ ctr_cparse_messages (ctr_tnode * r, int mode)
 	      ctr_cparse_emit_error_unexpected (t, "Expected message.\n");
 	    }
 	}
-      li =
-	(ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
+      li = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
       ctr_clex_putback ();
       node = ctr_cparse_message (mode);
       if (node->type == -1)
@@ -261,11 +253,10 @@ ctr_cparse_tuple ()
   ctr_tnode *paramList;
   ctr_tlistitem *previousListItem;
   int t;
-  ctr_clex_tok ();		//eat the [
+  ctr_clex_tok ();	//eat the [
   r = ctr_cparse_create_node (CTR_AST_NODE);
   r->type = CTR_AST_NODE_IMMUTABLE;
-  codeBlockPart1 =
-    (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
+  codeBlockPart1 = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
   r->nodes = codeBlockPart1;
   paramList = ctr_cparse_create_node (CTR_AST_NODE);
   codeBlockPart1->node = paramList;
@@ -275,13 +266,13 @@ ctr_cparse_tuple ()
   ctr_clex_putback ();
   if (t == CTR_TOKEN_TUPCLOSE)
     {
-      ctr_clex_tok ();		//eat the ending ]
+      ctr_clex_tok ();	//eat the ending ]
       return r;
     }
   else
     {
-      ctr_tlistitem *paramListItem =
-	(ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
+      ctr_tlistitem *paramListItem = (ctr_tlistitem *)
+	ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
       paramList->nodes = paramListItem;
       paramListItem->node = ctr_cparse_expr (CTR_AST_NODE_IMMUTABLE);
       previousListItem = paramListItem;
@@ -289,8 +280,8 @@ ctr_cparse_tuple ()
   while ((t = ctr_clex_tok ()) == CTR_TOKEN_CHAIN)
     {
       /* okay we have new parameter, load it */
-      ctr_tlistitem *paramListItem =
-	(ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
+      ctr_tlistitem *paramListItem = (ctr_tlistitem *)
+	ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
       paramListItem->node = ctr_cparse_expr (CTR_AST_NODE_IMMUTABLE);
       previousListItem->next = paramListItem;
       previousListItem = paramListItem;
@@ -358,11 +349,9 @@ ctr_cparse_block_ (int autocap)
   ctr_clex_tok ();
   r = ctr_cparse_create_node (CTR_AST_NODE);
   r->type = CTR_AST_NODE_CODEBLOCK;
-  codeBlockPart1 =
-    (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
+  codeBlockPart1 = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
   r->nodes = codeBlockPart1;
-  codeBlockPart2 =
-    (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
+  codeBlockPart2 = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
   r->nodes->next = codeBlockPart2;
   paramList = ctr_cparse_create_node (CTR_AST_NODE);
   codeList = ctr_cparse_create_node (CTR_AST_NODE);
@@ -376,8 +365,8 @@ ctr_cparse_block_ (int autocap)
     {
       /* okay we have new parameter, load it */
       t = ctr_clex_tok ();
-      ctr_tlistitem *paramListItem =
-	(ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
+      ctr_tlistitem *paramListItem = (ctr_tlistitem *)
+	ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
       ctr_tnode *paramItem = ctr_cparse_create_node (CTR_AST_NODE);
       long l = ctr_clex_tok_value_length ();
       paramItem->value = ctr_heap_allocate_tracked (sizeof (char) * l);
@@ -412,8 +401,7 @@ ctr_cparse_block_ (int autocap)
       if (t == CTR_TOKEN_BLOCKCLOSE)
 	break;
       ctr_clex_putback ();
-      codeListItem =
-	(ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
+      codeListItem = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
       codeNode = ctr_cparse_create_node (CTR_AST_NODE);
       if (t == CTR_TOKEN_RET)
 	{
@@ -445,7 +433,6 @@ ctr_cparse_block_ (int autocap)
   r->modifier = /*CTR_MODIFIER_AUTOCAPTURE */ autocap == 1;
   return r;
 }
-
 
 /**
  * CTRParserReference
@@ -490,8 +477,8 @@ ctr_cparse_ref ()
       r->modifier = 2;
       r->vlen = ctr_clex_tok_value_length ();
     }
-  if (strncmp (ctr_clex_keyword_const, tmp, ctr_clex_keyword_const_len) == 0
-      && r->vlen == ctr_clex_keyword_const_len)
+  if (strncmp (ctr_clex_keyword_const, tmp, ctr_clex_keyword_const_len) ==
+      0 && r->vlen == ctr_clex_keyword_const_len)
     {
       int t = ctr_clex_tok ();
       if (t != CTR_TOKEN_REF)
@@ -527,10 +514,9 @@ ctr_cparse_string ()
   r->value = ctr_heap_allocate_tracked (sizeof (char) * vlen);
   memcpy (r->value, n, vlen);
   r->vlen = vlen;
-  ctr_clex_tok ();		/* eat trailing quote. */
+  ctr_clex_tok ();	/* eat trailing quote. */
   return r;
 }
-
 
 /**
  * CTRParserNumber
@@ -662,8 +648,7 @@ ctr_cparse_assignment (ctr_tnode * r)
   ctr_clex_tok ();
   a = ctr_cparse_create_node (CTR_AST_NODE);
   li = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
-  liAssignExpr =
-    (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
+  liAssignExpr = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
   a->type = CTR_AST_NODE_EXPRASSIGNMENT;
   a->nodes = li;
   li->node = r;
@@ -692,8 +677,7 @@ ctr_cparse_expr (int mode)
   /* user tries to put colon directly after recipient */
   if (t2 == CTR_TOKEN_COLON)
     {
-      ctr_cparse_emit_error_unexpected (t2,
-					"Recipient cannot be followed by a colon.\n");
+      ctr_cparse_emit_error_unexpected (t2, "Recipient cannot be followed by a colon.\n");
     }
 
   if (t2 == CTR_TOKEN_ASSIGNMENT)
@@ -708,29 +692,25 @@ ctr_cparse_expr (int mode)
     {
       if (r->type != CTR_AST_NODE_REFERENCE)
 	{
-	  ctr_cparse_emit_error_unexpected (t2,
-					    "Invalid left-hand assignment.\n");
+	  ctr_cparse_emit_error_unexpected (t2, "Invalid left-hand assignment.\n");
 	  exit (1);
 	}
-      r->modifier = 1;		//set private
+      r->modifier = 1;	//set private
       e = ctr_cparse_assignment (r);	//go as usual
     }
   else if (t2 != CTR_TOKEN_DOT &&
-	   t2 != CTR_TOKEN_PARCLOSE &&
-	   (t2 != CTR_TOKEN_CHAIN && mode != CTR_AST_NODE_IMMUTABLE))
+	   t2 != CTR_TOKEN_PARCLOSE && (t2 != CTR_TOKEN_CHAIN && mode != CTR_AST_NODE_IMMUTABLE))
     {
       e = ctr_cparse_create_node (CTR_AST_NODE);
       e->type = CTR_AST_NODE_EXPRMESSAGE;
-      nodes =
-	ctr_cparse_messages (r, mode == CTR_AST_NODE_IMMUTABLE ? 0 : mode);
+      nodes = ctr_cparse_messages (r, mode == CTR_AST_NODE_IMMUTABLE ? 0 : mode);
       if (nodes == NULL)
 	{
 	  ctr_clex_tok ();
 	  ctr_clex_putback ();
-	  return r;		/* no messages, then just return receiver (might be in case of argument). */
+	  return r;	/* no messages, then just return receiver (might be in case of argument). */
 	}
-      rli =
-	(ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
+      rli = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
       rli->node = r;
       rli->next = nodes;
       e->nodes = rli;
@@ -784,8 +764,7 @@ ctr_cparse_fin ()
 ctr_tlistitem *
 ctr_cparse_statement ()
 {
-  ctr_tlistitem *li =
-    (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
+  ctr_tlistitem *li = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
   int t = ctr_clex_tok ();
   ctr_clex_putback ();
   if (t == CTR_TOKEN_FIN)

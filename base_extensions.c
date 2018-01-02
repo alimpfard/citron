@@ -8,8 +8,7 @@
 ctr_object *
 ctr_block_let (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object *defs = argumentList->object, *block =
-    argumentList->next->object;
+  ctr_object *defs = argumentList->object, *block = argumentList->next->object;
   ctr_object *result;
   ctr_open_context ();
   if (myself->info.type == CTR_OBJECT_TYPE_OTARRAY)
@@ -17,8 +16,7 @@ ctr_block_let (ctr_object * myself, ctr_argument * argumentList)
       for (ctr_size i = 0;
 	   i < myself->value.avalue->head - myself->value.avalue->tail
 	   && (defs->info.type == CTR_OBJECT_TYPE_OTARRAY
-	       && i < defs->value.avalue->head - defs->value.avalue->tail);
-	   i++)
+	       && i < defs->value.avalue->head - defs->value.avalue->tail); i++)
 	{
 	  switch (defs->info.type)
 	    {
@@ -27,8 +25,7 @@ ctr_block_let (ctr_object * myself, ctr_argument * argumentList)
 					 defs->value.avalue->elements[i]);
 	      break;
 	    default:
-	      ctr_assign_value_to_local (myself->value.avalue->elements[i],
-					 defs);
+	      ctr_assign_value_to_local (myself->value.avalue->elements[i], defs);
 	      break;
 	    }
 	}
@@ -48,6 +45,5 @@ void
 initiailize_base_extensions ()
 {
   ctr_internal_create_func (CtrStdObject,
-			    ctr_build_string_from_cstring ("letEqual:in:"),
-			    &ctr_block_let);
+			    ctr_build_string_from_cstring ("letEqual:in:"), &ctr_block_let);
 }

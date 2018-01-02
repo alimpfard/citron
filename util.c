@@ -168,9 +168,7 @@ ctr_internal_plugin_find (ctr_object * key)
   modNameLow = modName;
   for (; *modNameLow; ++modNameLow)
     *modNameLow = tolower (*modNameLow);
-  snprintf (pathNameMod, 1024,
-	    (CTR_STD_EXTENSION_PATH "/mods/%s/libctr%s.so"), modName,
-	    modName);
+  snprintf (pathNameMod, 1024, (CTR_STD_EXTENSION_PATH "/mods/%s/libctr%s.so"), modName, modName);
   ctr_heap_free (modName);
   realPathModName = realpath (pathNameMod, NULL);
   if (access (realPathModName, F_OK) == -1)

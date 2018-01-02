@@ -1,6 +1,10 @@
 #ifndef REVERSE_SIZES_H
 #define REVERSE_SIZES_H
 
+#include <stdint.h>
+#include <stdlib.h>
+#include <ffi.h>
+
 struct reverse_ffi_type_size_map_item {
     ffi_type* type;
     size_t size;

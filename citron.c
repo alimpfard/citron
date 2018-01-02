@@ -45,8 +45,7 @@ ctr_cli_read_args (int argc, char *argv[])
       ctr_cli_welcome ();
       exit (0);
     }
-  ctr_mode_input_file =
-    (char *) ctr_heap_allocate_tracked (sizeof (char) * 255);
+  ctr_mode_input_file = (char *) ctr_heap_allocate_tracked (sizeof (char) * 255);
   strncpy (ctr_mode_input_file, argv[1], 254);
 }
 
@@ -58,8 +57,8 @@ ctr_cli_read_args (int argc, char *argv[])
 int
 main (int argc, char *argv[])
 {
-  volatile char *prg;
-  volatile ctr_tnode *program;
+  char *prg;
+  ctr_tnode *program;
   uint64_t program_text_size = 0;
 
   //pragma rules
@@ -72,11 +71,11 @@ main (int argc, char *argv[])
   flexibleConstructs = &f;
   regexLineCheck = &r;
 
-  ctr_gc_mode = 1;		/* default GC mode: activate GC */
+  ctr_gc_mode = 1;	/* default GC mode: activate GC */
   ctr_argc = argc;
   ctr_argv = argv;
   ctr_gc_memlimit = 8388608;
-  CTR_LIMIT_MEM = 1;		//enfore GC
+  CTR_LIMIT_MEM = 1;	//enfore GC
   ctr_callstack_index = 0;
   ctr_source_map_head = NULL;
   ctr_source_mapping = 0;
@@ -118,21 +117,22 @@ main (int argc, char *argv[])
       //ctr_internal_debug_tree(program,1); /*-- for debugging */
       ctr_initialize_world ();
       ctr_cwlk_run (program);
-    }
-  ctr_gc_sweep (1);
-  ctr_heap_free (prg);
-  ctr_heap_free_rest ();
-  //For memory profiling
-  if (ctr_gc_alloc != 0 && (CTR_LOG_WARNINGS & 1) == 1)
-    {
-      printf ("[WARNING] Citron has detected an internal memory leak of: %"
-	      PRIu64 " bytes.\n", ctr_gc_alloc);
-      exit (1);
-    }
-  //exit(0);
+      ctr_gc_sweep (1);
+      ctr_heap_free (prg);
+      ctr_heap_free_rest ();
+      //For memory profiling
+      if (ctr_gc_alloc != 0 && (CTR_LOG_WARNINGS & 1) == 1)
+	{
+	  printf
+	    ("[WARNING] Citron has detected an internal memory leak of: %"
+	     PRIu64 " bytes.\n", ctr_gc_alloc);
+	  exit (1);
+	}
+      //exit(0);
 #if (DO_PROFILE)
-  ProfilerStop ();
+      ProfilerStop ();
 #endif
+    }
   return 0;
 }
 
@@ -149,9 +149,9 @@ initialize (int extensions)
   flexibleConstructs = &f;
   regexLineCheck = &r;
 
-  ctr_gc_mode = 1;		/* default GC mode: activate GC */
+  ctr_gc_mode = 1;	/* default GC mode: activate GC */
   ctr_gc_memlimit = 32 * 1024 * 1024;	// 32 MB
-  CTR_LIMIT_MEM = 1;		//enfore GC
+  CTR_LIMIT_MEM = 1;	//enfore GC
   ctr_callstack_index = 0;
   ctr_source_map_head = NULL;
   ctr_source_mapping = 0;
@@ -174,8 +174,7 @@ initialize (int extensions)
     {
       ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
       args->object =
-	ctr_build_string_from_cstring (CTR_STD_EXTENSION_PATH
-				       "/extensions/fileutils.ctr");
+	ctr_build_string_from_cstring (CTR_STD_EXTENSION_PATH "/extensions/fileutils.ctr");
       ctr_object *futi = ctr_send_message (CtrStdFile, "new:", 4, args);
       ctr_heap_free (args);
       ctr_file_include (futi, NULL);

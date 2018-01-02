@@ -99,19 +99,15 @@ ctr_nil_assign (ctr_object * myself, ctr_argument * argumentList)
     return CtrStdNil;
   if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTSTRING)
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring ("Nil cannot be constructed by ");
+      CtrStdFlow = ctr_build_string_from_cstring ("Nil cannot be constructed by ");
       ctr_string_append (CtrStdFlow, argumentList);
       return myself;
     }
-  if (ctr_internal_object_is_equal
-      (argumentList->object, ctr_build_string_from_cstring ("_"))
-      || ctr_internal_object_is_equal (argumentList->object,
-				       ctr_build_empty_string ()))
+  if (ctr_internal_object_is_equal (argumentList->object, ctr_build_string_from_cstring ("_"))
+      || ctr_internal_object_is_equal (argumentList->object, ctr_build_empty_string ()))
     return myself;
   ctr_internal_object_set_property (ctr_contexts[ctr_context_id],
-				    ctr_internal_cast2string
-				    (argumentList->object), CtrStdNil, 0);
+				    ctr_internal_cast2string (argumentList->object), CtrStdNil, 0);
   return myself;
 }
 
@@ -162,26 +158,21 @@ ctr_object_attr_accessor (ctr_object * myself, ctr_argument * argumentList)
   if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTARRAY)
     {
       ctr_object *name = ctr_internal_cast2string (argumentList->object);
-      ctr_object *property =
-	ctr_internal_object_find_property (myself, name, 0);
+      ctr_object *property = ctr_internal_object_find_property (myself, name, 0);
       if (property == NULL)
 	ctr_internal_object_set_property (myself, name, CtrStdNil, 0);
 
       ctr_argument *arglist = ctr_heap_allocate (sizeof (ctr_argument));
       arglist->next = ctr_heap_allocate (sizeof (ctr_argument));
       char *mname = ctr_heap_allocate (sizeof (char) * 512);
-      sprintf (mname, "{:x my %.*s is x.}", name->value.svalue->vlen,
-	       name->value.svalue->value);
+      sprintf (mname, "{:x my %.*s is x.}", name->value.svalue->vlen, name->value.svalue->value);
       arglist->object = ctr_build_string_from_cstring (":");
       arglist->object = ctr_string_concat (name, arglist);
-      arglist->next->object =
-	ctr_string_eval (ctr_build_string_from_cstring (mname), NULL);
+      arglist->next->object = ctr_string_eval (ctr_build_string_from_cstring (mname), NULL);
       ctr_object_on_do (myself, arglist);
-      sprintf (mname, "{^my %.*s.}", name->value.svalue->vlen,
-	       name->value.svalue->value);
+      sprintf (mname, "{^my %.*s.}", name->value.svalue->vlen, name->value.svalue->value);
       arglist->object = name;
-      arglist->next->object =
-	ctr_string_eval (ctr_build_string_from_cstring (mname), NULL);
+      arglist->next->object = ctr_string_eval (ctr_build_string_from_cstring (mname), NULL);
       ctr_object_on_do (myself, arglist);
       ctr_heap_free (arglist->next);
       ctr_heap_free (arglist);
@@ -191,8 +182,7 @@ ctr_object_attr_accessor (ctr_object * myself, ctr_argument * argumentList)
   else
     {
       ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
-      ctr_argument *elnumArg =
-	(ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+      ctr_argument *elnumArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
       ctr_size i;
       for (i = argumentList->object->value.avalue->tail;
 	   i < argumentList->object->value.avalue->head; i++)
@@ -219,19 +209,16 @@ ctr_object_attr_reader (ctr_object * myself, ctr_argument * argumentList)
   if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTARRAY)
     {
       ctr_object *name = ctr_internal_cast2string (argumentList->object);
-      ctr_object *property =
-	ctr_internal_object_find_property (myself, name, 0);
+      ctr_object *property = ctr_internal_object_find_property (myself, name, 0);
       if (property == NULL)
 	ctr_internal_object_set_property (myself, name, CtrStdNil, 0);
       ctr_argument *arglist = ctr_heap_allocate (sizeof (ctr_argument));
       arglist->next = ctr_heap_allocate (sizeof (ctr_argument));
       char *mname = ctr_heap_allocate (sizeof (char) * 512);
-      sprintf (mname, "{^my %.*s.}", name->value.svalue->vlen,
-	       name->value.svalue->value);
+      sprintf (mname, "{^my %.*s.}", name->value.svalue->vlen, name->value.svalue->value);
       arglist->object = ctr_build_string_from_cstring (":");
       arglist->object = ctr_string_concat (name, arglist);
-      arglist->next->object =
-	ctr_string_eval (ctr_build_string_from_cstring (mname), NULL);
+      arglist->next->object = ctr_string_eval (ctr_build_string_from_cstring (mname), NULL);
       ctr_object_on_do (myself, arglist);
       ctr_heap_free (arglist->next);
       ctr_heap_free (arglist);
@@ -241,8 +228,7 @@ ctr_object_attr_reader (ctr_object * myself, ctr_argument * argumentList)
   else
     {
       ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
-      ctr_argument *elnumArg =
-	(ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+      ctr_argument *elnumArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
       ctr_size i;
       for (i = argumentList->object->value.avalue->tail;
 	   i < argumentList->object->value.avalue->head; i++)
@@ -272,11 +258,9 @@ ctr_object_attr_writer (ctr_object * myself, ctr_argument * argumentList)
       ctr_argument *arglist = ctr_heap_allocate (sizeof (ctr_argument));
       arglist->next = ctr_heap_allocate (sizeof (ctr_argument));
       char *mname = ctr_heap_allocate (sizeof (char) * 512);
-      sprintf (mname, "{:x my %.*s is x.}", name->value.svalue->vlen,
-	       name->value.svalue->value);
+      sprintf (mname, "{:x my %.*s is x.}", name->value.svalue->vlen, name->value.svalue->value);
       arglist->object = name;
-      arglist->next->object =
-	ctr_string_eval (ctr_build_string_from_cstring (mname), NULL);
+      arglist->next->object = ctr_string_eval (ctr_build_string_from_cstring (mname), NULL);
       ctr_object_on_do (myself, arglist);
       ctr_heap_free (arglist->next);
       ctr_heap_free (arglist);
@@ -286,8 +270,7 @@ ctr_object_attr_writer (ctr_object * myself, ctr_argument * argumentList)
   else
     {
       ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
-      ctr_argument *elnumArg =
-	(ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+      ctr_argument *elnumArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
       ctr_size i;
       for (i = argumentList->object->value.avalue->tail;
 	   i < argumentList->object->value.avalue->head; i++)
@@ -348,8 +331,7 @@ ctr_object_make_hiding (ctr_object * myself, ctr_argument * argumentList)
       CtrStdFlow = ctr_build_string_from_cstring ("Hiding expects array.");
       return CtrStdFlow;
     }
-  ctr_object *instance =
-    ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
+  ctr_object *instance = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
   instance->link = myself;
   ctr_size length = (int) ctr_array_count (hide_arr, NULL)->value.nvalue;
   if (length > 0)
@@ -371,9 +353,7 @@ ctr_object_swap (ctr_object * myself, ctr_argument * argumentList)
 {
   if (argumentList == NULL || argumentList->object == NULL)
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring
-	("Cannot swap with Effectively nothing.");
+      CtrStdFlow = ctr_build_string_from_cstring ("Cannot swap with Effectively nothing.");
       return CtrStdNil;
     }
   //LONG AF
@@ -421,12 +401,9 @@ ctr_object_swap (ctr_object * myself, ctr_argument * argumentList)
       || argumentList->object == CtrStdBreak
       || argumentList->object == CtrStdContinue
       || argumentList->object == CtrStdExit
-      || argumentList->object == CtrStdReflect
-      || argumentList->object == CtrStdFiber)
+      || argumentList->object == CtrStdReflect || argumentList->object == CtrStdFiber)
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring
-	("Cannot swap literals/language constants.");
+      CtrStdFlow = ctr_build_string_from_cstring ("Cannot swap literals/language constants.");
       return CtrStdNil;
     }
   ctr_object tmp = *myself;
@@ -564,16 +541,14 @@ ctr_object_myself (ctr_object * myself, ctr_argument * argumentList)
  * }
  */
 ctr_object *
-ctr_object_learn_meaning (ctr_object * myself,
-			  ctr_argument * ctr_argumentList)
+ctr_object_learn_meaning (ctr_object * myself, ctr_argument * ctr_argumentList)
 {
   char *current_method_name_str;
   ctr_size current_method_name_len;
   ctr_size i = 0;
   ctr_size len = 0;
   ctr_mapitem *current_method = myself->methods->head;
-  ctr_object *target_method_name =
-    ctr_internal_cast2string (ctr_argumentList->next->object);
+  ctr_object *target_method_name = ctr_internal_cast2string (ctr_argumentList->next->object);
   char *target_method_name_str = target_method_name->value.svalue->value;
   ctr_size target_method_name_len = target_method_name->value.svalue->vlen;
   ctr_object *alias = ctr_internal_cast2string (ctr_argumentList->object);
@@ -591,8 +566,7 @@ ctr_object_learn_meaning (ctr_object * myself,
 	}
       if (strncmp (current_method_name_str, target_method_name_str, len) == 0)
 	{
-	  ctr_internal_object_add_property (myself, alias,
-					    current_method->value, 1);
+	  ctr_internal_object_add_property (myself, alias, current_method->value, 1);
 	  break;
 	}
       current_method = current_method->next;
@@ -600,7 +574,6 @@ ctr_object_learn_meaning (ctr_object * myself,
     }
   return myself;
 }
-
 
 /**
  * [Object] do
@@ -665,8 +638,7 @@ ctr_object_message (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *arr = argumentList->next->object;
   if (arr->info.type != CTR_OBJECT_TYPE_OTARRAY)
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring ("Dynamic message expects array.");
+      CtrStdFlow = ctr_build_string_from_cstring ("Dynamic message expects array.");
       return CtrStdNil;
     }
   ctr_size length = (int) ctr_array_count (arr, NULL)->value.nvalue;
@@ -686,9 +658,8 @@ ctr_object_message (ctr_object * myself, ctr_argument * argumentList)
     }
   ctr_heap_free (index);
   char *flatMessage = ctr_heap_allocate_cstring (message);
-  ctr_object *answer =
-    ctr_send_message (myself, flatMessage, message->value.svalue->vlen,
-		      args);
+  ctr_object *answer = ctr_send_message (myself, flatMessage, message->value.svalue->vlen,
+					 args);
   cur = args;
   if (length == 0)
     {
@@ -729,9 +700,7 @@ ctr_object_on_do (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *methodName = argumentList->object;
   if (methodName->info.type != CTR_OBJECT_TYPE_OTSTRING)
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring
-	("Expected on: argument to be of type string.");
+      CtrStdFlow = ctr_build_string_from_cstring ("Expected on: argument to be of type string.");
       CtrStdFlow->info.sticky = 1;
       return myself;
     }
@@ -739,16 +708,13 @@ ctr_object_on_do (ctr_object * myself, ctr_argument * argumentList)
   methodBlock = nextArgument->object;
   if (methodBlock->info.type != CTR_OBJECT_TYPE_OTBLOCK)
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring
-	("Expected argument do: to be of type block.");
+      CtrStdFlow = ctr_build_string_from_cstring ("Expected argument do: to be of type block.");
       CtrStdFlow->info.sticky = 1;
       return myself;
     }
   ctr_internal_object_add_property (myself, methodName, methodBlock, 1);
   return myself;
 }
-
 
 ctr_object *
 ctr_sock_error (int fd, int want2close)
@@ -782,20 +748,18 @@ ctr_object_send2remote (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *portObj;
   ipObj = ctr_internal_object_find_property (myself,
 					     ctr_build_string_from_cstring
-					     ("%"),
-					     CTR_CATEGORY_PRIVATE_PROPERTY);
+					     ("%"), CTR_CATEGORY_PRIVATE_PROPERTY);
   if (ipObj != NULL)
     {
       inet_family_is_v6 = (int) (ipObj->value.bvalue);
-      ipObj = NULL;		//restore to initial state.
+      ipObj = NULL;	//restore to initial state.
     }
   union ctr_socket_addr_inet serv_addr;
   struct hostent *server;
   uint16_t port;
   ipObj = ctr_internal_object_find_property (myself,
 					     ctr_build_string_from_cstring
-					     ("@"),
-					     CTR_CATEGORY_PRIVATE_PROPERTY);
+					     ("@"), CTR_CATEGORY_PRIVATE_PROPERTY);
   portObj =
     ctr_internal_object_find_property (myself,
 				       ctr_build_string_from_cstring
@@ -828,8 +792,7 @@ ctr_object_send2remote (ctr_object * myself, ctr_argument * argumentList)
     server = gethostbyname2 (ip, AF_INET);
   if (server == NULL)
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring ("ERROR : No such host found.");
+      CtrStdFlow = ctr_build_string_from_cstring ("ERROR : No such host found.");
       return CtrStdFlow;
     }
   memset ((char *) &serv_addr, 0, sizeof (serv_addr));
@@ -855,16 +818,14 @@ ctr_object_send2remote (ctr_object * myself, ctr_argument * argumentList)
     c = connect (sockfd, (struct sockaddr *) &(serv_addr.serv_addr6),
 		 sizeof (serv_addr.serv_addr6));
   else
-    c = connect (sockfd, (struct sockaddr *) &(serv_addr.serv_addr),
-		 sizeof (serv_addr.serv_addr));
+    c = connect (sockfd, (struct sockaddr *) &(serv_addr.serv_addr), sizeof (serv_addr.serv_addr));
   printf ("conn %d\n", c);
   if (c != 0)
     return ctr_sock_error (sockfd, 1);
   //c = send(sockfd, (size_t*) &messageObj->value.svalue->vlen, sizeof(size_t), 0);
   //if ( c < 0 ) ctr_sock_error( sockfd, 1 );
   //printf("%s\n", messageObj->value.svalue->value);
-  c = send (sockfd, messageObj->value.svalue->value,
-	    messageObj->value.svalue->vlen, 0);
+  c = send (sockfd, messageObj->value.svalue->value, messageObj->value.svalue->vlen, 0);
   printf ("send %d\n", c);
   if (c < 0)
     ctr_sock_error (sockfd, 1);
@@ -911,7 +872,6 @@ ctr_object_respond (ctr_object * myself, ctr_argument * argumentList)
   ctr_heap_free (newArgumentList);
   return answer;
 }
-
 
 ctr_object *
 ctr_object_respond_and (ctr_object * myself, ctr_argument * argumentList)
@@ -980,8 +940,7 @@ ctr_object_is_nil (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_build_bool (int truth)
 {
-  ctr_object *boolObject =
-    ctr_internal_create_object (CTR_OBJECT_TYPE_OTBOOL);
+  ctr_object *boolObject = ctr_internal_create_object (CTR_OBJECT_TYPE_OTBOOL);
   if (truth)
     boolObject->value.bvalue = 1;
   else
@@ -1004,18 +963,14 @@ ctr_bool_assign (ctr_object * myself, ctr_argument * argumentList)
     return CtrStdNil;
   if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTSTRING)
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring ("Boolean cannot be constructed by ");
+      CtrStdFlow = ctr_build_string_from_cstring ("Boolean cannot be constructed by ");
       ctr_string_append (CtrStdFlow, argumentList);
       return myself;
     }
-  if (ctr_internal_object_is_equal
-      (argumentList->object, ctr_build_string_from_cstring ("_"))
-      || ctr_internal_object_is_equal (argumentList->object,
-				       ctr_build_empty_string ()))
+  if (ctr_internal_object_is_equal (argumentList->object, ctr_build_string_from_cstring ("_"))
+      || ctr_internal_object_is_equal (argumentList->object, ctr_build_empty_string ()))
     return myself;
-  ctr_internal_object_add_property (ctr_contexts[ctr_context_id],
-				    argumentList->object, myself, 0);
+  ctr_internal_object_add_property (ctr_contexts[ctr_context_id], argumentList->object, myself, 0);
   return myself;
 }
 
@@ -1032,10 +987,10 @@ ctr_bool_assign (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_bool_eq (ctr_object * myself, ctr_argument * argumentList)
 {
-  return ctr_build_bool (ctr_internal_cast2bool (argumentList->object)->value.
-			 bvalue == myself->value.bvalue);
+  return
+    ctr_build_bool (ctr_internal_cast2bool (argumentList->object)->value.bvalue ==
+		    myself->value.bvalue);
 }
-
 
 /**
  * [Boolean] != [other]
@@ -1050,8 +1005,9 @@ ctr_bool_eq (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_bool_neq (ctr_object * myself, ctr_argument * argumentList)
 {
-  return ctr_build_bool (ctr_internal_cast2bool (argumentList->object)->value.
-			 bvalue != myself->value.bvalue);
+  return
+    ctr_build_bool (ctr_internal_cast2bool (argumentList->object)->value.bvalue !=
+		    myself->value.bvalue);
 }
 
 /**
@@ -1131,8 +1087,7 @@ ctr_bool_if_true (ctr_object * myself, ctr_argument * argumentList)
   if (myself->value.bvalue)
     {
       ctr_object *codeBlock = argumentList->object;
-      ctr_argument *arguments =
-	(ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+      ctr_argument *arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
       arguments->object = myself;
       result = ctr_block_run (codeBlock, arguments, NULL);
       ctr_heap_free (arguments);
@@ -1141,7 +1096,7 @@ ctr_bool_if_true (ctr_object * myself, ctr_argument * argumentList)
       return result;
     }
   if (CtrStdFlow == CtrStdBreak)
-    CtrStdFlow = NULL;		/* consume break */
+    CtrStdFlow = NULL;	/* consume break */
   return myself;
 }
 
@@ -1164,8 +1119,7 @@ ctr_bool_if_false (ctr_object * myself, ctr_argument * argumentList)
   if (!myself->value.bvalue)
     {
       ctr_object *codeBlock = argumentList->object;
-      ctr_argument *arguments =
-	(ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+      ctr_argument *arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
       arguments->object = myself;
       result = ctr_block_run (codeBlock, arguments, NULL);
       if (result != codeBlock)
@@ -1174,7 +1128,7 @@ ctr_bool_if_false (ctr_object * myself, ctr_argument * argumentList)
       return result;
     }
   if (CtrStdFlow == CtrStdBreak)
-    CtrStdFlow = NULL;		/* consume break */
+    CtrStdFlow = NULL;	/* consume break */
   return myself;
 }
 
@@ -1190,8 +1144,7 @@ ctr_object_elvis_op (ctr_object * myself, ctr_argument * argumentList)
   if (ctr_send_message (myself, "toBoolean", 9, NULL)->value.bvalue)
     return myself;
   return argumentList->object->info.type ==
-    CTR_OBJECT_TYPE_OTBLOCK ? ctr_block_runIt (argumentList->object,
-					       NULL) : argumentList->object;
+    CTR_OBJECT_TYPE_OTBLOCK ? ctr_block_runIt (argumentList->object, NULL) : argumentList->object;
 }
 
 /**
@@ -1367,8 +1320,7 @@ ctr_bool_to_number (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_build_number (char *n)
 {
-  ctr_object *numberObject =
-    ctr_internal_create_object (CTR_OBJECT_TYPE_OTNUMBER);
+  ctr_object *numberObject = ctr_internal_create_object (CTR_OBJECT_TYPE_OTNUMBER);
   if (strncmp (n, "0x", 2) == 0)
     numberObject->value.nvalue = (double) strtol (n, NULL, 0);
   else
@@ -1390,18 +1342,14 @@ ctr_number_assign (ctr_object * myself, ctr_argument * argumentList)
     return CtrStdNil;
   if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTSTRING)
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring ("Number cannot be constructed by ");
+      CtrStdFlow = ctr_build_string_from_cstring ("Number cannot be constructed by ");
       ctr_string_append (CtrStdFlow, argumentList);
       return myself;
     }
-  if (ctr_internal_object_is_equal
-      (argumentList->object, ctr_build_string_from_cstring ("_"))
-      || ctr_internal_object_is_equal (argumentList->object,
-				       ctr_build_empty_string ()))
+  if (ctr_internal_object_is_equal (argumentList->object, ctr_build_string_from_cstring ("_"))
+      || ctr_internal_object_is_equal (argumentList->object, ctr_build_empty_string ()))
     return myself;
-  ctr_internal_object_add_property (ctr_contexts[ctr_context_id],
-				    argumentList->object, myself, 0);
+  ctr_internal_object_add_property (ctr_contexts[ctr_context_id], argumentList->object, myself, 0);
   return myself;
 }
 
@@ -1413,8 +1361,7 @@ ctr_object *
 ctr_build_number_from_string (char *str, ctr_size length)
 {
   char *numCStr;
-  ctr_object *numberObject =
-    ctr_internal_create_object (CTR_OBJECT_TYPE_OTNUMBER);
+  ctr_object *numberObject = ctr_internal_create_object (CTR_OBJECT_TYPE_OTNUMBER);
   /* turn string into a C-string before feeding it to atof */
   int stringNumberLength = (length <= 40) ? length : 40;
   /* max length is 40 (and that's probably even too long... ) */
@@ -1436,8 +1383,7 @@ ctr_build_number_from_string (char *str, ctr_size length)
 ctr_object *
 ctr_build_number_from_float (ctr_number f)
 {
-  ctr_object *numberObject =
-    ctr_internal_create_object (CTR_OBJECT_TYPE_OTNUMBER);
+  ctr_object *numberObject = ctr_internal_create_object (CTR_OBJECT_TYPE_OTNUMBER);
   numberObject->value.nvalue = f;
   numberObject->link = CtrStdNumber;
   return numberObject;
@@ -1536,11 +1482,9 @@ ctr_number_between (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *otherNum = ctr_internal_cast2number (argumentList->object);
   ctr_argument *nextArgumentItem = argumentList->next;
-  ctr_object *nextArgument =
-    ctr_internal_cast2number (nextArgumentItem->object);
+  ctr_object *nextArgument = ctr_internal_cast2number (nextArgumentItem->object);
   return ctr_build_bool ((myself->value.nvalue >= otherNum->value.nvalue)
-			 && (myself->value.nvalue <=
-			     nextArgument->value.nvalue));
+			 && (myself->value.nvalue <= nextArgument->value.nvalue));
 }
 
 /**
@@ -1700,7 +1644,7 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
     }
   ctr_heap_free (arguments);
   if (CtrStdFlow == CtrStdBreak)
-    CtrStdFlow = NULL;		/* consume break */
+    CtrStdFlow = NULL;	/* consume break */
   block->info.mark = 0;
   block->info.sticky = 0;
   return myself;
@@ -1938,10 +1882,8 @@ ctr_object *
 ctr_number_to_step_do (ctr_object * myself, ctr_argument * argumentList)
 {
   double startValue = myself->value.nvalue;
-  double endValue =
-    ctr_internal_cast2number (argumentList->object)->value.nvalue;
-  double incValue =
-    ctr_internal_cast2number (argumentList->next->object)->value.nvalue;
+  double endValue = ctr_internal_cast2number (argumentList->object)->value.nvalue;
+  double incValue = ctr_internal_cast2number (argumentList->next->object)->value.nvalue;
   double curValue = startValue;
   ctr_object *codeBlock = argumentList->next->next->object;
   ctr_argument *arguments;
@@ -1954,8 +1896,7 @@ ctr_number_to_step_do (ctr_object * myself, ctr_argument * argumentList)
       CtrStdFlow = ctr_build_string_from_cstring ("Expected block.");
       return myself;
     }
-  while (((forward && curValue <= endValue)
-	  || (!forward && curValue >= endValue)) && !CtrStdFlow)
+  while (((forward && curValue <= endValue) || (!forward && curValue >= endValue)) && !CtrStdFlow)
     {
       arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
       arguments->object = ctr_build_number_from_float (curValue);
@@ -1966,7 +1907,7 @@ ctr_number_to_step_do (ctr_object * myself, ctr_argument * argumentList)
       curValue += incValue;
     }
   if (CtrStdFlow == CtrStdBreak)
-    CtrStdFlow = NULL;		/* consume break */
+    CtrStdFlow = NULL;	/* consume break */
   return myself;
 }
 
@@ -1978,8 +1919,7 @@ ctr_object *
 ctr_number_to_step (ctr_object * myself, ctr_argument * argumentList)
 {
   return ctr_invoke_variadic (CtrStdIter, &ctr_iterator_make_range, 3,
-			      myself, argumentList->object,
-			      argumentList->next->object);
+			      myself, argumentList->object, argumentList->next->object);
 }
 
 /**
@@ -2008,8 +1948,7 @@ ctr_number_qualify (ctr_object * myself, ctr_argument * argumentList)
 				    ctr_build_string_from_cstring
 				    ("qualification"),
 				    ctr_internal_cast2string
-				    (argumentList->object),
-				    CTR_CATEGORY_PRIVATE_PROPERTY);
+				    (argumentList->object), CTR_CATEGORY_PRIVATE_PROPERTY);
   return myself;
 }
 
@@ -2165,8 +2104,7 @@ ctr_number_shr (ctr_object * myself, ctr_argument * argumentList)
   return
     ctr_build_number_from_float ((((int) (myself->value.nvalue)) >>
 				  (int) ((ctr_internal_cast2number
-					  (argumentList->object))->value.
-					 nvalue)));
+					  (argumentList->object))->value.nvalue)));
 }
 
 /**
@@ -2179,8 +2117,7 @@ ctr_number_shl (ctr_object * myself, ctr_argument * argumentList)
   return
     ctr_build_number_from_float ((((int) (myself->value.nvalue)) <<
 				  (int) ((ctr_internal_cast2number
-					  (argumentList->object))->value.
-					 nvalue)));
+					  (argumentList->object))->value.nvalue)));
 }
 
 /**
@@ -2193,8 +2130,7 @@ ctr_number_or (ctr_object * myself, ctr_argument * argumentList)
   return
     ctr_build_number_from_float ((((int) (myself->value.nvalue)) |
 				  (int) ((ctr_internal_cast2number
-					  (argumentList->object))->value.
-					 nvalue)));
+					  (argumentList->object))->value.nvalue)));
 }
 
 /**
@@ -2207,8 +2143,7 @@ ctr_number_and (ctr_object * myself, ctr_argument * argumentList)
   return
     ctr_build_number_from_float ((((int) (myself->value.nvalue)) &
 				  (int) ((ctr_internal_cast2number
-					  (argumentList->object))->value.
-					 nvalue)));
+					  (argumentList->object))->value.nvalue)));
 }
 
 /**
@@ -2221,8 +2156,7 @@ ctr_number_xor (ctr_object * myself, ctr_argument * argumentList)
   return
     ctr_build_number_from_float ((((int) (myself->value.nvalue)) ^
 				  (int) ((ctr_internal_cast2number
-					  (argumentList->object))->value.
-					 nvalue)));
+					  (argumentList->object))->value.nvalue)));
 }
 
 /**
@@ -2320,14 +2254,11 @@ ctr_number_to_boolean (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_build_string (char *stringValue, long size)
 {
-  ctr_object *stringObject =
-    ctr_internal_create_object (CTR_OBJECT_TYPE_OTSTRING);
+  ctr_object *stringObject = ctr_internal_create_object (CTR_OBJECT_TYPE_OTSTRING);
   if (size != 0)
     {
-      stringObject->value.svalue->value =
-	ctr_heap_allocate (size * sizeof (char));
-      memcpy (stringObject->value.svalue->value, stringValue,
-	      (sizeof (char) * size));
+      stringObject->value.svalue->value = ctr_heap_allocate (size * sizeof (char));
+      memcpy (stringObject->value.svalue->value, stringValue, (sizeof (char) * size));
     }
   else
     stringObject->value.svalue->value = NULL;
@@ -2338,7 +2269,7 @@ ctr_build_string (char *stringValue, long size)
 
 ctr_object *
 ctr_build_string_from_cformat (char *format, int count, ...)
-{				//TODO: Infer count from format
+{  //TODO: Infer count from format
   va_list ap;
   va_start (ap, count);
   int len = vsnprintf (NULL, 0, format, ap);
@@ -2363,15 +2294,13 @@ ctr_string_is_ctor (ctr_object * myself, ctr_argument * argumentList)
       ctr_object *myarr = ctr_string_characters (myself, NULL);
       return
 	ctr_build_bool (ctr_internal_object_is_constructible_
-			(myarr, argumentList->object,
-			 argumentList->object->info.raw));
+			(myarr, argumentList->object, argumentList->object->info.raw));
     }
 
   if (argumentList->object->info.type == CTR_OBJECT_TYPE_OTSTRING)
     return
       ctr_build_bool (ctr_internal_object_is_constructible_
-		      (myself, argumentList->object,
-		       argumentList->object->info.raw));
+		      (myself, argumentList->object, argumentList->object->info.raw));
 
   return ctr_build_bool (0);
 }
@@ -2394,18 +2323,14 @@ ctr_string_assign (ctr_object * myself, ctr_argument * argumentList)
     return CtrStdNil;
   if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTSTRING)
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring ("String cannot be constructed by ");
+      CtrStdFlow = ctr_build_string_from_cstring ("String cannot be constructed by ");
       ctr_string_append (CtrStdFlow, argumentList);
       return myself;
     }
-  if (ctr_internal_object_is_equal
-      (argumentList->object, ctr_build_string_from_cstring ("_"))
-      || ctr_internal_object_is_equal (argumentList->object,
-				       ctr_build_empty_string ()))
+  if (ctr_internal_object_is_equal (argumentList->object, ctr_build_string_from_cstring ("_"))
+      || ctr_internal_object_is_equal (argumentList->object, ctr_build_empty_string ()))
     return myself;
-  ctr_internal_object_add_property (ctr_contexts[ctr_context_id],
-				    argumentList->object, myself, 0);
+  ctr_internal_object_add_property (ctr_contexts[ctr_context_id], argumentList->object, myself, 0);
   return myself;
 }
 
@@ -2463,8 +2388,7 @@ ctr_string_eq (ctr_object * myself, ctr_argument * argumentList)
   return
     ctr_build_bool ((strncmp
 		     (other->value.svalue->value,
-		      myself->value.svalue->value,
-		      myself->value.svalue->vlen) == 0));
+		      myself->value.svalue->value, myself->value.svalue->vlen) == 0));
 }
 
 /**
@@ -2484,8 +2408,7 @@ ctr_string_neq (ctr_object * myself, ctr_argument * argumentList)
     ctr_build_bool (!
 		    (strncmp
 		     (other->value.svalue->value,
-		      myself->value.svalue->value,
-		      myself->value.svalue->vlen) == 0));
+		      myself->value.svalue->value, myself->value.svalue->vlen) == 0));
 }
 
 /**
@@ -2511,8 +2434,7 @@ ctr_string_length (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_string_concat (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object *strObject =
-    ctr_internal_create_object (CTR_OBJECT_TYPE_OTSTRING);
+  ctr_object *strObject = ctr_internal_create_object (CTR_OBJECT_TYPE_OTSTRING);
   ctr_size n1;
   ctr_size n2;
   char *dest;
@@ -2634,7 +2556,7 @@ int
 ctr_str_count_substr (char *str, char *substr, int overlap)
 {
   if (strlen (substr) == 0)
-    return -1;			// forbid empty substr
+    return -1;	// forbid empty substr
 
   int count = 0;
   int increment = overlap ? 1 : strlen (substr);
@@ -2652,12 +2574,11 @@ ctr_string_format (ctr_object * myself, ctr_argument * argumentList)
   int wefoold = ctr_str_count_substr (myself->value.svalue->value, "%%", 0);
   specifier_count = specifier_count - wefoold * 2;
   if (specifier_count == 0)
-    return myself;		//if no specifier, just spit the format string back out
+    return myself;	//if no specifier, just spit the format string back out
   if (specifier_count > specified_count)
     {
       CtrStdFlow =
-	ctr_build_string_from_cstring
-	("Format string requires more objects than was passed.");
+	ctr_build_string_from_cstring ("Format string requires more objects than was passed.");
       return myself;
     }
   int len = myself->value.svalue->vlen;
@@ -2668,8 +2589,7 @@ ctr_string_format (ctr_object * myself, ctr_argument * argumentList)
   int specnum = -1;
   int fmtct = 0;
   ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
-  ctr_object *cp_delim_opt =
-    ctr_build_string_from_cstring (", "), *cp_len_opt = NULL;
+  ctr_object *cp_delim_opt = ctr_build_string_from_cstring (", "), *cp_len_opt = NULL;
   /*
      0 - no opt
      1 - opt delimiter (cp_delim_opt) for %:L (list)
@@ -2689,8 +2609,7 @@ ctr_string_format (ctr_object * myself, ctr_argument * argumentList)
 	      CtrStdFlow = ctr_build_string_from_cstring (errf);
 	      return myself;
 	    error_out_wrong_args:;
-	      sprintf (errf, "Incorrect format args for spec %d(%c)",
-		       specnum, c);
+	      sprintf (errf, "Incorrect format args for spec %d(%c)", specnum, c);
 	      CtrStdFlow = ctr_build_string_from_cstring (errf);
 	      return myself;
 	    }
@@ -2730,8 +2649,7 @@ ctr_string_format (ctr_object * myself, ctr_argument * argumentList)
 	      ctr_object *arr = ctr_array_get (objects, args);
 	      if (arr->info.type != CTR_OBJECT_TYPE_OTARRAY)
 		goto error_out_wrong_args;
-	      for (ctr_size i = arr->value.avalue->tail;
-		   i < arr->value.avalue->head; i++)
+	      for (ctr_size i = arr->value.avalue->tail; i < arr->value.avalue->head; i++)
 		{
 		  args->object = arr->value.avalue->elements[i];
 		  ctr_string_append (buffer, args);
@@ -2746,18 +2664,14 @@ ctr_string_format (ctr_object * myself, ctr_argument * argumentList)
 	  if (c == 's')
 	    {
 	      args->object = ctr_build_number_from_float (specnum);
-	      args->object =
-		ctr_send_message (ctr_array_get (objects, args),
-				  "toString", 8, NULL);
+	      args->object = ctr_send_message (ctr_array_get (objects, args), "toString", 8, NULL);
 	      ctr_string_append (buffer, args);
 	      continue;
 	    }
 	  if (c == 'd')
 	    {
 	      args->object = ctr_build_number_from_float (specnum);
-	      args->object =
-		ctr_send_message (ctr_array_get (objects, args),
-				  "toNumber", 8, NULL);
+	      args->object = ctr_send_message (ctr_array_get (objects, args), "toNumber", 8, NULL);
 	      ctr_string_append (buffer, args);
 	      continue;
 	    }
@@ -2766,21 +2680,17 @@ ctr_string_format (ctr_object * myself, ctr_argument * argumentList)
 	      args->object = ctr_build_number_from_float (specnum);
 	      args->object =
 		ctr_number_uint_binrep (ctr_send_message
-					(ctr_array_get (objects, args),
-					 "toNumber", 8, NULL), NULL);
+					(ctr_array_get (objects, args), "toNumber", 8, NULL), NULL);
 	      ctr_string_append (buffer, args);
 	      continue;
 	    }
 	  if (c == 'c')
 	    {
 	      args->object = ctr_build_number_from_float (specnum);
-	      args->object =
-		ctr_send_message (ctr_array_get (objects, args),
-				  "toNumber", 8, NULL);
+	      args->object = ctr_send_message (ctr_array_get (objects, args), "toNumber", 8, NULL);
 	      char buf[2];
 	      sprintf (buf, "%c", (int) args->object->value.nvalue);
-	      ctr_invoke_variadic (buffer, &ctr_string_append, 1,
-				   ctr_build_string (buf, 1));
+	      ctr_invoke_variadic (buffer, &ctr_string_append, 1, ctr_build_string (buf, 1));
 	      continue;
 	    }
 	  if (c == '%')
@@ -2806,27 +2716,24 @@ ctr_string_format (ctr_object * myself, ctr_argument * argumentList)
 		case 'i':
 		case 'x':
 		  args->object =
-		    ctr_send_message (ctr_array_get (objects, args),
-				      "toNumber", 8, NULL);
+		    ctr_send_message (ctr_array_get (objects, args), "toNumber", 8, NULL);
 		  sprintf (buf, _fmt_, (int) args->object->value.nvalue);
 		  break;
 		case 'f':
 		  args->object =
-		    ctr_send_message (ctr_array_get (objects, args),
-				      "toNumber", 8, NULL);
+		    ctr_send_message (ctr_array_get (objects, args), "toNumber", 8, NULL);
 		  sprintf (buf, _fmt_, (float) args->object->value.nvalue);
 		  break;
 		default:
 		  args->object =
-		    ctr_send_message (ctr_array_get (objects, args),
-				      "toString", 8, NULL);
+		    ctr_send_message (ctr_array_get (objects, args), "toString", 8, NULL);
 		  char *strr = ctr_heap_allocate_cstring (args->object);
 		  sprintf (buf, _fmt_, strr);
 		  ctr_heap_free (strr);
 		  break;
 		}
-	      ctr_invoke_variadic (buffer, &ctr_string_append, 1,
-				   ctr_build_string_from_cstring (buf));
+	      ctr_invoke_variadic (buffer, &ctr_string_append,
+				   1, ctr_build_string_from_cstring (buf));
 	    }
 	}
       else
@@ -2860,7 +2767,7 @@ ctr_string_format_map (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *objects = argumentList->object;
   int specifier_count = ctr_str_count_substr (myself->value.svalue->value, "%{", 0);	//doesn't make sense to overlap
   if (specifier_count == 0)
-    return myself;		//if no specifier, just spit the format string back out
+    return myself;	//if no specifier, just spit the format string back out
   int len = myself->value.svalue->vlen;
   char *buf = ctr_heap_allocate (sizeof (char) * len);	//Eh. Why is the user passing a format string without any specifiers, but we haven't returned?
   char *fmt = myself->value.svalue->value;
@@ -3036,8 +2943,7 @@ ctr_string_skip (ctr_object * myself, ctr_argument * argumentList)
   argument1->object = argumentList->object;
   argument1->next = argument2;
   argument2->object =
-    ctr_build_number_from_float (myself->value.svalue->vlen -
-				 argumentList->object->value.nvalue);
+    ctr_build_number_from_float (myself->value.svalue->vlen - argumentList->object->value.nvalue);
   result = ctr_string_from_length (myself, argument1);
   ctr_heap_free (argument1);
   ctr_heap_free (argument2);
@@ -3082,7 +2988,8 @@ ctr_string_slice (ctr_object * myself, ctr_argument * argumentList)
 								 getBytesUtf8
 								 (myself->value.svalue->value,
 								  a,
-								  argumentList->next->object->value.nvalue)));
+								  argumentList->next->object->
+								  value.nvalue)));
   myself->value.svalue->vlen -= b;
   return result;
 }
@@ -3180,9 +3087,7 @@ ctr_string_starts_with (ctr_object * myself, ctr_argument * argumentList)
     lenstr = ctr_string_length (myself, NULL)->value.nvalue;
   return lenstr <
     lenpre ? ctr_build_bool (0) :
-    ctr_build_bool (strncmp
-		    (pre->value.svalue->value,
-		     myself->value.svalue->value, lenpre) == 0);
+    ctr_build_bool (strncmp (pre->value.svalue->value, myself->value.svalue->value, lenpre) == 0);
 }
 
 /**
@@ -3201,8 +3106,7 @@ ctr_string_ends_with (ctr_object * myself, ctr_argument * argumentList)
     lenpost ? ctr_build_bool (0) :
     ctr_build_bool (memcmp
 		    (post->value.svalue->value,
-		     myself->value.svalue->value + (lenstr - lenpost),
-		     lenpost) == 0);
+		     myself->value.svalue->value + (lenstr - lenpost), lenpost) == 0);
 }
 
 /**
@@ -3229,7 +3133,6 @@ ctr_string_to_upper (ctr_object * myself, ctr_argument * argumentList)
   ctr_heap_free (tstr);
   return newString;
 }
-
 
 /**
  * [String] lower
@@ -3345,8 +3248,7 @@ ctr_object *
 ctr_string_replace_with (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *needle = ctr_internal_cast2string (argumentList->object);
-  ctr_object *replacement =
-    ctr_internal_cast2string (argumentList->next->object);
+  ctr_object *replacement = ctr_internal_cast2string (argumentList->next->object);
   ctr_object *str;
   char *dest;
   char *odest;
@@ -3422,8 +3324,7 @@ ctr_string_replace_with (ctr_object * myself, ctr_argument * argumentList)
  */
 #ifdef POSIXRE
 ctr_object *
-ctr_string_find_pattern_options_do (ctr_object * myself,
-				    ctr_argument * argumentList)
+ctr_string_find_pattern_options_do (ctr_object * myself, ctr_argument * argumentList)
 {
   regex_t pattern;
   int reti;
@@ -3432,8 +3333,7 @@ ctr_string_find_pattern_options_do (ctr_object * myself,
   size_t i = 0;
   regmatch_t matches[511];
   char *needle = ctr_heap_allocate_cstring (argumentList->object);
-  char *options =
-    ctr_heap_allocate_cstring (argumentList->next->next->object);
+  char *options = ctr_heap_allocate_cstring (argumentList->next->next->object);
   uint8_t olen = strlen (options);
   uint8_t p = 0;
   uint8_t flagIgnore = 0;
@@ -3463,9 +3363,7 @@ ctr_string_find_pattern_options_do (ctr_object * myself,
   reti = regcomp (&pattern, needle, eflags);
   if (reti)
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring
-	("Could not compile regular expression.");
+      CtrStdFlow = ctr_build_string_from_cstring ("Could not compile regular expression.");
       return CtrStdNil;
     }
   char *haystack = ctr_heap_allocate_cstring (myself);
@@ -3483,8 +3381,7 @@ ctr_string_find_pattern_options_do (ctr_object * myself,
       regex_error = regexec (&pattern, haystack + offset, n, matches, 0);
       if (regex_error != 0)
 	break;
-      blockArguments->object =
-	ctr_array_new (CtrStdArray, arrayConstructorArgument);
+      blockArguments->object = ctr_array_new (CtrStdArray, arrayConstructorArgument);
       for (i = 0; i < n; i++)
 	{
 	  if (matches[i].rm_so == -1)
@@ -3498,10 +3395,8 @@ ctr_string_find_pattern_options_do (ctr_object * myself,
 	}
       if (matches[0].rm_eo != -1)
 	{
-	  arg->object =
-	    ctr_build_string (haystack + offset, matches[0].rm_so);
-	  ctr_object *replacement =
-	    ctr_block_run (block, blockArguments, block);
+	  arg->object = ctr_build_string (haystack + offset, matches[0].rm_so);
+	  ctr_object *replacement = ctr_block_run (block, blockArguments, block);
 	  arg->object = replacement == block ? arg->object : replacement;
 	  ctr_string_append (newString, arg);
 	  offset += matches[0].rm_eo;
@@ -3510,8 +3405,7 @@ ctr_string_find_pattern_options_do (ctr_object * myself,
   ctr_heap_free (group);
   ctr_heap_free (blockArguments);
   ctr_heap_free (arrayConstructorArgument);
-  arg->object =
-    ctr_build_string (haystack + offset, strlen (haystack + offset));
+  arg->object = ctr_build_string (haystack + offset, strlen (haystack + offset));
   ctr_string_append (newString, arg);
   ctr_heap_free (arg);
   ctr_heap_free (needle);
@@ -3522,9 +3416,8 @@ ctr_string_find_pattern_options_do (ctr_object * myself,
 }
 #else
 ctr_object *
-ctr_string_find_pattern_options_do (ctr_object * myself,
-				    ctr_argument * argumentList)
-{				//pattern, blk, options: {!=Ignore, n=newline, i=CI}
+ctr_string_find_pattern_options_do (ctr_object * myself, ctr_argument * argumentList)
+{  //pattern, blk, options: {!=Ignore, n=newline, i=CI}
   pcre *pattern;
   int reti;
   int regex_error_offset = 0;
@@ -3534,8 +3427,7 @@ ctr_string_find_pattern_options_do (ctr_object * myself,
   int first = 1;
   int matches[511];
   char *needle = ctr_heap_allocate_cstring (argumentList->object);
-  char *options =
-    ctr_heap_allocate_cstring (argumentList->next->next->object);
+  char *options = ctr_heap_allocate_cstring (argumentList->next->next->object);
   const char *err;
 
   uint8_t olen = strlen (options);
@@ -3599,11 +3491,9 @@ ctr_string_find_pattern_options_do (ctr_object * myself,
 	}
       if (matches[0] != -1)
 	{
-	  arg->object =
-	    ctr_build_string (haystack + offset, matches[1] - matches[0]);
+	  arg->object = ctr_build_string (haystack + offset, matches[1] - matches[0]);
 	  // ctr_array_unshift(blockArguments->object, arg);
-	  ctr_object *replacement =
-	    ctr_block_run (block, blockArguments, block);
+	  ctr_object *replacement = ctr_block_run (block, blockArguments, block);
 	  arg->object = replacement == block ? arg->object : replacement;
 	  ctr_string_append (newString, arg);
 	  offset += matches[1];
@@ -3613,8 +3503,7 @@ ctr_string_find_pattern_options_do (ctr_object * myself,
     }
   ctr_heap_free (group);
   ctr_heap_free (blockArguments);
-  arg->object =
-    ctr_build_string (haystack + offset, strlen (haystack + offset));
+  arg->object = ctr_build_string (haystack + offset, strlen (haystack + offset));
   ctr_string_append (newString, arg);
   // printf("-> %s\n", newString->value.svalue->value);
   ctr_heap_free (arg);
@@ -3654,8 +3543,7 @@ ctr_string_contains (ctr_object * myself, ctr_argument * argumentList)
 {
   return
     ctr_build_bool (ctr_internal_cast2number
-		    (ctr_string_index_of (myself, argumentList))->value.
-		    nvalue > -1);
+		    (ctr_string_index_of (myself, argumentList))->value.nvalue > -1);
 }
 
 /**
@@ -3683,9 +3571,7 @@ ctr_string_contains_pattern (ctr_object * myself, ctr_argument * argumentList)
   regex_error = regcomp (&pattern, needle, REG_EXTENDED);
   if (regex_error)
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring
-	("Could not compile regular expression.");
+      CtrStdFlow = ctr_build_string_from_cstring ("Could not compile regular expression.");
       answer = CtrStdNil;
     }
   else
@@ -3722,8 +3608,7 @@ ctr_string_contains_pattern (ctr_object * myself, ctr_argument * argumentList)
   char *needle = ctr_heap_allocate_cstring (argumentList->object);
   char *haystack = ctr_heap_allocate_cstring (myself);
   ctr_object *answer;
-  pattern =
-    pcre_compile (needle, PCRE_EXTENDED, &error_message, &regex_error, NULL);
+  pattern = pcre_compile (needle, PCRE_EXTENDED, &error_message, &regex_error, NULL);
   if (!pattern)
     {
       CtrStdFlow = ctr_build_string_from_cstring (error_message);
@@ -3731,9 +3616,7 @@ ctr_string_contains_pattern (ctr_object * myself, ctr_argument * argumentList)
     }
   else
     {
-      result =
-	pcre_exec (pattern, NULL, haystack, myself->value.svalue->vlen,
-		   0, 0, NULL, 0);
+      result = pcre_exec (pattern, NULL, haystack, myself->value.svalue->vlen, 0, 0, NULL, 0);
       if (!result)
 	{
 	  answer = ctr_build_bool (1);
@@ -3776,8 +3659,7 @@ ctr_string_count_of (ctr_object * myself, ctr_argument * argumentList)
   char *sub = ctr_heap_allocate_cstring (sub_o);
   char *p = myself->value.svalue->value;
   int t = myself->value.svalue->vlen;
-  int total = 0, i = 0, sublen =
-    ctr_string_length (sub_o, NULL)->value.nvalue;
+  int total = 0, i = 0, sublen = ctr_string_length (sub_o, NULL)->value.nvalue;
   while (t > i && (p = strstr (p, sub)) != NULL)
     {
       total++;
@@ -3824,7 +3706,6 @@ ctr_string_trim (ctr_object * myself, ctr_argument * argumentList)
   return newString;
 }
 
-
 /**
  * [String] leftTrim
  *
@@ -3857,10 +3738,8 @@ ctr_string_ltrim (ctr_object * myself, ctr_argument * argumentList)
   return newString;
 }
 
-
 ctr_object *
-ctr_string_padding (ctr_object * myself,
-		    ctr_argument * argumentList, int left)
+ctr_string_padding (ctr_object * myself, ctr_argument * argumentList, int left)
 {
   uint16_t padding;
   char *buffer;
@@ -3879,11 +3758,8 @@ ctr_string_padding (ctr_object * myself,
       formatObj = ctr_build_string_from_cstring ("%-");
     }
   a = ctr_heap_allocate (sizeof (ctr_argument));
-  padding =
-    (uint16_t) ctr_internal_cast2number (argumentList->object)->value.nvalue;
-  a->object =
-    ctr_internal_cast2string (ctr_build_number_from_float
-			      ((ctr_number) padding));
+  padding = (uint16_t) ctr_internal_cast2number (argumentList->object)->value.nvalue;
+  a->object = ctr_internal_cast2string (ctr_build_number_from_float ((ctr_number) padding));
   formatObj = ctr_string_concat (formatObj, a);
   a->object = ctr_build_string_from_cstring ("s");
   formatObj = ctr_string_concat (formatObj, a);
@@ -3951,8 +3827,7 @@ ctr_string_rtrim (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_string_to_number (ctr_object * myself, ctr_argument * argumentList)
 {
-  return ctr_build_number_from_string (myself->value.svalue->value,
-				       myself->value.svalue->vlen);
+  return ctr_build_number_from_string (myself->value.svalue->value, myself->value.svalue->vlen);
 }
 
 /**
@@ -4042,8 +3917,7 @@ ctr_string_characters (ctr_object * myself, ctr_argument * argumentList)
   while (i < myself->value.svalue->vlen)
     {
       charSize = ctr_utf8size (*(myself->value.svalue->value + i));
-      newArgumentList->object =
-	ctr_build_string (myself->value.svalue->value + i, charSize);
+      newArgumentList->object = ctr_build_string (myself->value.svalue->value + i, charSize);
       ctr_array_push (arr, newArgumentList);
       i += charSize;
     }
@@ -4068,8 +3942,7 @@ ctr_string_to_byte_array (ctr_object * myself, ctr_argument * argumentList)
   while (i < myself->value.svalue->vlen)
     {
       newArgumentList->object =
-	ctr_build_number_from_float ((double) (uint8_t) *
-				     (myself->value.svalue->value + i));
+	ctr_build_number_from_float ((double) (uint8_t) * (myself->value.svalue->value + i));
       ctr_array_push (arr, newArgumentList);
       i++;
     }
@@ -4087,8 +3960,7 @@ ctr_string_append_byte (ctr_object * myself, ctr_argument * argumentList)
 {
   char *dest;
   char byte;
-  byte =
-    (uint8_t) ctr_internal_cast2number (argumentList->object)->value.nvalue;
+  byte = (uint8_t) ctr_internal_cast2number (argumentList->object)->value.nvalue;
   dest = ctr_heap_allocate (myself->value.svalue->vlen + 1);
   memcpy (dest, myself->value.svalue->value, myself->value.svalue->vlen);
   *(dest + myself->value.svalue->vlen) = byte;
@@ -4112,18 +3984,14 @@ ctr_string_csub (ctr_object * myself, ctr_argument * argumentList)
   int v = argumentList->object->info.type == CTR_OBJECT_TYPE_OTSTRING;
   if (!v && argumentList->object->info.type != CTR_OBJECT_TYPE_OTNUMBER)
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring
-	("string minus expects character or number.");
+      CtrStdFlow = ctr_build_string_from_cstring ("string minus expects character or number.");
       return myself;
     }
   if (ctr_string_length (myself, NULL)->value.nvalue > 1
-      || v
-      && ctr_string_length (argumentList->object, NULL)->value.nvalue > 1)
+      || v && ctr_string_length (argumentList->object, NULL)->value.nvalue > 1)
     {
       CtrStdFlow =
-	ctr_build_string_from_cstring
-	("underlaying string for '-' must be one character only.");
+	ctr_build_string_from_cstring ("underlaying string for '-' must be one character only.");
       return myself;
     }
 
@@ -4132,15 +4000,13 @@ ctr_string_csub (ctr_object * myself, ctr_argument * argumentList)
 			      ctr_build_number_from_float
 			      (ctr_invoke_variadic
 			       (myself, &ctr_string_byte_at, 1,
-				ctr_build_number_from_float (0))->value.
-			       nvalue -
+				ctr_build_number_from_float (0))->value.nvalue -
 			       (v ?
 				ctr_invoke_variadic (argumentList->object,
 						     &ctr_string_byte_at, 1,
 						     ctr_build_number_from_float
-						     (0))->value.
-				nvalue : argumentList->object->value.
-				nvalue)));
+						     (0))->value.nvalue : argumentList->
+				object->value.nvalue)));
 }
 
 /**
@@ -4154,18 +4020,14 @@ ctr_string_cadd (ctr_object * myself, ctr_argument * argumentList)
   int v = argumentList->object->info.type == CTR_OBJECT_TYPE_OTSTRING;
   if (!v && argumentList->object->info.type != CTR_OBJECT_TYPE_OTNUMBER)
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring
-	("string minus expects character or number.");
+      CtrStdFlow = ctr_build_string_from_cstring ("string minus expects character or number.");
       return myself;
     }
   if (ctr_string_length (myself, NULL)->value.nvalue > 1
-      || v
-      && ctr_string_length (argumentList->object, NULL)->value.nvalue > 1)
+      || v && ctr_string_length (argumentList->object, NULL)->value.nvalue > 1)
     {
       CtrStdFlow =
-	ctr_build_string_from_cstring
-	("underlaying string for '-' must be one character only.");
+	ctr_build_string_from_cstring ("underlaying string for '-' must be one character only.");
       return myself;
     }
 
@@ -4174,15 +4036,13 @@ ctr_string_cadd (ctr_object * myself, ctr_argument * argumentList)
 			      ctr_build_number_from_float
 			      (ctr_invoke_variadic
 			       (myself, &ctr_string_byte_at, 1,
-				ctr_build_number_from_float (0))->value.
-			       nvalue +
+				ctr_build_number_from_float (0))->value.nvalue +
 			       (v ?
 				ctr_invoke_variadic (argumentList->object,
 						     &ctr_string_byte_at, 1,
 						     ctr_build_number_from_float
-						     (0))->value.
-				nvalue : argumentList->object->value.
-				nvalue)));
+						     (0))->value.nvalue : argumentList->
+				object->value.nvalue)));
 }
 
 /**
@@ -4296,13 +4156,11 @@ ctr_string_hash_with_key (ctr_object * myself, ctr_argument * argumentList)
   if (strlen (keyString) < 16)
     {
       ctr_heap_free (keyString);
-      CtrStdFlow =
-	ctr_build_string_from_cstring ("Key must be exactly 16 bytes long.");
+      CtrStdFlow = ctr_build_string_from_cstring ("Key must be exactly 16 bytes long.");
       return CtrStdNil;
     }
-  uint64_t t =
-    siphash24 (myself->value.svalue->value, myself->value.svalue->vlen,
-	       keyString);
+  uint64_t t = siphash24 (myself->value.svalue->value, myself->value.svalue->vlen,
+			  keyString);
   char *dest = ctr_heap_allocate (40);
   snprintf (dest, 40, "%" PRIu64, t);
   ctr_object *hash = ctr_build_string_from_cstring (dest);
@@ -4342,8 +4200,7 @@ ctr_string_eval (ctr_object * myself, ctr_argument * argumentList)
   /* add a return statement so we can catch result */
   ctr_argument *newArgumentList = ctr_heap_allocate (sizeof (ctr_argument));
   newArgumentList->object = myself;
-  code =
-    ctr_string_append (ctr_build_string_from_cstring ("^ "), newArgumentList);
+  code = ctr_string_append (ctr_build_string_from_cstring ("^ "), newArgumentList);
   newArgumentList->object = ctr_build_string_from_cstring (".");
   code = ctr_string_append (code, newArgumentList);
   ctr_program_length = code->value.svalue->vlen;
@@ -4482,8 +4339,7 @@ ctr_string_randomize_bytes (ctr_object * myself, ctr_argument * argumentList)
   char *newBuffer;
   ctr_object *answer;
   plen = myself->value.svalue->vlen;
-  len =
-    (size_t) ctr_internal_cast2number (argumentList->object)->value.nvalue;
+  len = (size_t) ctr_internal_cast2number (argumentList->object)->value.nvalue;
   if (len == 0)
     return ctr_build_empty_string ();
   buffer = ctr_heap_allocate_cstring (myself);
@@ -4539,12 +4395,10 @@ ctr_build_immutable (ctr_tnode * node)
 {
   ctr_object *tupleobj = ctr_internal_create_object (CTR_OBJECT_TYPE_OTARRAY);
   tupleobj->link = CtrStdArray;
-  tupleobj->value.avalue =
-    (ctr_collection *) ctr_heap_allocate (sizeof (ctr_collection));
+  tupleobj->value.avalue = (ctr_collection *) ctr_heap_allocate (sizeof (ctr_collection));
   tupleobj->value.avalue->immutable = 1;
   tupleobj->value.avalue->length = 1;
-  tupleobj->value.avalue->elements =
-    (ctr_object **) ctr_heap_allocate (sizeof (ctr_object *) * 1);
+  tupleobj->value.avalue->elements = (ctr_object **) ctr_heap_allocate (sizeof (ctr_object *) * 1);
   tupleobj->value.avalue->head = 0;
   tupleobj->value.avalue->tail = 0;
   ctr_object *result;
@@ -4592,8 +4446,7 @@ ctr_build_immutable (ctr_tnode * node)
 ctr_object *
 ctr_build_block (ctr_tnode * node)
 {
-  ctr_object *codeBlockObject =
-    ctr_internal_create_object (CTR_OBJECT_TYPE_OTBLOCK);
+  ctr_object *codeBlockObject = ctr_internal_create_object (CTR_OBJECT_TYPE_OTBLOCK);
   codeBlockObject->value.block = node;
   codeBlockObject->link = CtrStdBlock;
   //if(node->modifier == 1) {
@@ -4682,18 +4535,14 @@ ctr_block_assign (ctr_object * myself, ctr_argument * argumentList)
     return CtrStdNil;
   if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTSTRING)
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring ("Block cannot be constructed by ");
+      CtrStdFlow = ctr_build_string_from_cstring ("Block cannot be constructed by ");
       ctr_string_append (CtrStdFlow, argumentList);
       return myself;
     }
-  if (ctr_internal_object_is_equal
-      (argumentList->object, ctr_build_string_from_cstring ("_"))
-      || ctr_internal_object_is_equal (argumentList->object,
-				       ctr_build_empty_string ()))
+  if (ctr_internal_object_is_equal (argumentList->object, ctr_build_string_from_cstring ("_"))
+      || ctr_internal_object_is_equal (argumentList->object, ctr_build_empty_string ()))
     return myself;
-  ctr_internal_object_add_property (ctr_contexts[ctr_context_id],
-				    argumentList->object, myself, 0);
+  ctr_internal_object_add_property (ctr_contexts[ctr_context_id], argumentList->object, myself, 0);
   return myself;
 }
 
@@ -4730,18 +4579,14 @@ long ctr_block_run_cache_ready_timer = 0;
 long ctr_block_run_last_cache_lookup_time = 0;
 void
 ctr_block_run_cache_result_if_expensive (ctr_object * myself,
-					 ctr_argument * arglist,
-					 ctr_object * result)
+					 ctr_argument * arglist, ctr_object * result)
 {
-  if (clock () - ctr_block_run_cache_ready_timer >
-      ctr_block_run_last_cache_lookup_time)
+  if (clock () - ctr_block_run_cache_ready_timer > ctr_block_run_last_cache_lookup_time)
     {
-      ctr_block_run_cache_key *key =
-	ctr_heap_allocate (sizeof (ctr_block_run_cache_key));
+      ctr_block_run_cache_key *key = ctr_heap_allocate (sizeof (ctr_block_run_cache_key));
       key->block = myself;
       key->argumentList = arglist;
-      ctr_cache_item *newitem =
-	ctr_heap_allocate_tracked (sizeof (ctr_cache_item));
+      ctr_cache_item *newitem = ctr_heap_allocate_tracked (sizeof (ctr_cache_item));
       if (!ctr_block_run_cached_keyvalue_map.map)
 	{
 	  ctr_block_run_cached_keyvalue_map.map = newitem;
@@ -4790,9 +4635,8 @@ ctr_block_run_try_get_result_for (ctr_object * myself, ctr_argument * arglist)
   while (m)
     {
       if (clock () - init > ctr_block_run_last_cache_lookup_time + 10)
-	return NULL;		//cache miss on timeout
-      if (m->key->block == myself
-	  && ctr_args_eq (m->key->argumentList, arglist))
+	return NULL;	//cache miss on timeout
+      if (m->key->block == myself && ctr_args_eq (m->key->argumentList, arglist))
 	{
 	  printf ("cache hit: %p <=> %p -> %p\n", myself, arglist, m->value);
 	  ctr_block_run_last_cache_lookup_time = clock () - init;
@@ -4832,10 +4676,10 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 		{
 		  if (was_vararg)
 		    {
-		      ctr_object *arr = ctr_array_new (CtrStdArray, NULL);
-		      ctr_assign_value_to_local (ctr_build_string
-						 (parameter->value + 1,
-						  parameter->vlen - 1), arr);
+		      ctr_object *arr = ctr_array_new (CtrStdArray,
+						       NULL);
+		      ctr_assign_value_to_local
+			(ctr_build_string (parameter->value + 1, parameter->vlen - 1), arr);
 		    }
 		  if (!argList || !argList->next)
 		    break;
@@ -4849,15 +4693,13 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 	      if (parameterList->next)
 		{
 		  a = argList->object;
-		  ctr_assign_value_to_local (ctr_build_string
-					     (parameter->value,
-					      parameter->vlen), a);
+		  ctr_assign_value_to_local
+		    (ctr_build_string (parameter->value, parameter->vlen), a);
 		}
 	      else if (!parameterList->next && was_vararg)
 		{
 		  ctr_object *arr = ctr_array_new (CtrStdArray, NULL);
-		  ctr_argument *arglist__ =
-		    ctr_heap_allocate (sizeof (ctr_argument));
+		  ctr_argument *arglist__ = ctr_heap_allocate (sizeof (ctr_argument));
 		  while (argList && argList->object)
 		    {
 		      arglist__->object = argList->object;
@@ -4865,16 +4707,14 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 		      argList = argList->next;
 		    }
 		  ctr_heap_free (arglist__);
-		  ctr_assign_value_to_local (ctr_build_string
-					     (parameter->value + 1,
-					      parameter->vlen - 1), arr);
+		  ctr_assign_value_to_local
+		    (ctr_build_string (parameter->value + 1, parameter->vlen - 1), arr);
 		}
 	      else if (unlikely (!was_vararg))
 		{
 		  a = argList->object;
-		  ctr_assign_value_to_local (ctr_build_string
-					     (parameter->value,
-					      parameter->vlen), a);
+		  ctr_assign_value_to_local
+		    (ctr_build_string (parameter->value, parameter->vlen), a);
 		}
 	    }
 	  if (!argList || !argList->next)
@@ -4918,8 +4758,7 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 								  0);
       if (catchBlock != NULL)
 	{
-	  ctr_argument *a =
-	    (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+	  ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
 	  a->object = CtrStdFlow;
 	  CtrStdFlow = NULL;
 	  ctr_object *alternative = ctr_block_run (catchBlock, a, my);
@@ -4937,8 +4776,7 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
  * Run a block in the current context
  */
 ctr_object *
-ctr_block_run_here (ctr_object * myself, ctr_argument * argList,
-		    ctr_object * my)
+ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 {
   ctr_object *result;
   ctr_tnode *node = myself->value.block;
@@ -4962,15 +4800,13 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList,
 	      if (parameterList->next)
 		{
 		  a = argList->object;
-		  ctr_assign_value_to_local (ctr_build_string
-					     (parameter->value,
-					      parameter->vlen), a);
+		  ctr_assign_value_to_local
+		    (ctr_build_string (parameter->value, parameter->vlen), a);
 		}
 	      else if (!parameterList->next && was_vararg)
 		{
 		  ctr_object *arr = ctr_array_new (CtrStdArray, NULL);
-		  ctr_argument *arglist__ =
-		    ctr_heap_allocate (sizeof (ctr_argument *));
+		  ctr_argument *arglist__ = ctr_heap_allocate (sizeof (ctr_argument *));
 		  while (argList->next)
 		    {
 		      arglist__->object = argList->object;
@@ -4978,16 +4814,14 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList,
 		      argList = argList->next;
 		    }
 		  ctr_heap_free (arglist__);
-		  ctr_assign_value_to_local (ctr_build_string
-					     (parameter->value + 1,
-					      parameter->vlen - 1), arr);
+		  ctr_assign_value_to_local
+		    (ctr_build_string (parameter->value + 1, parameter->vlen - 1), arr);
 		}
 	      else if (!was_vararg)
 		{
 		  a = argList->object;
-		  ctr_assign_value_to_local (ctr_build_string
-					     (parameter->value,
-					      parameter->vlen), a);
+		  ctr_assign_value_to_local
+		    (ctr_build_string (parameter->value, parameter->vlen), a);
 		}
 	    }
 	  if (!argList->next)
@@ -5011,8 +4845,7 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList,
 	result = myself;
     }
   // ctr_close_context();
-  if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak
-      && CtrStdFlow != CtrStdContinue)
+  if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak && CtrStdFlow != CtrStdContinue)
     {
       ctr_object *catchBlock = ctr_internal_object_find_property (myself,
 								  ctr_build_string_from_cstring
@@ -5020,8 +4853,7 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList,
 								  0);
       if (catchBlock != NULL)
 	{
-	  ctr_argument *a =
-	    (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+	  ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
 	  a->object = CtrStdFlow;
 	  CtrStdFlow = NULL;
 	  ctr_block_run (catchBlock, a, my);
@@ -5058,8 +4890,7 @@ ctr_block_while_true (ctr_object * myself, ctr_argument * argumentList)
   argumentList->object->info.sticky = 1;
   while (1 && !CtrStdFlow)
     {
-      ctr_object *result =
-	ctr_internal_cast2bool (ctr_block_run (myself, argumentList, NULL));
+      ctr_object *result = ctr_internal_cast2bool (ctr_block_run (myself, argumentList, NULL));
       if (result->value.bvalue == 0 || CtrStdFlow)
 	break;
       ctr_block_run (argumentList->object, argumentList, NULL);
@@ -5067,7 +4898,7 @@ ctr_block_while_true (ctr_object * myself, ctr_argument * argumentList)
 	CtrStdFlow = NULL;	/* consume continue */
     }
   if (CtrStdFlow == CtrStdBreak)
-    CtrStdFlow = NULL;		/* consume break */
+    CtrStdFlow = NULL;	/* consume break */
   myself->info.sticky = sticky1;
   argumentList->object->info.sticky = sticky2;
   return myself;
@@ -5094,8 +4925,7 @@ ctr_block_while_false (ctr_object * myself, ctr_argument * argumentList)
 {
   while (1 && !CtrStdFlow)
     {
-      ctr_object *result =
-	ctr_internal_cast2bool (ctr_block_run (myself, argumentList, NULL));
+      ctr_object *result = ctr_internal_cast2bool (ctr_block_run (myself, argumentList, NULL));
       if (result->value.bvalue == 1 || CtrStdFlow)
 	break;
       ctr_block_run (argumentList->object, argumentList, NULL);
@@ -5103,7 +4933,7 @@ ctr_block_while_false (ctr_object * myself, ctr_argument * argumentList)
 	CtrStdFlow = NULL;	/* consume continue */
     }
   if (CtrStdFlow == CtrStdBreak)
-    CtrStdFlow = NULL;		/* consume break */
+    CtrStdFlow = NULL;	/* consume break */
   return myself;
 }
 
@@ -5128,13 +4958,12 @@ ctr_block_runIt (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *result;
   result = ctr_block_run (myself, argumentList, myself);	/* here me/my refers to block itself not object - this allows closures. */
   if (CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
-    CtrStdFlow = NULL;		/* consume break */
+    CtrStdFlow = NULL;	/* consume break */
   return result;
 }
 
 ctr_object *
-ctr_block_run_variadic_my (ctr_object * myself, ctr_object * my,
-			   int count, ...)
+ctr_block_run_variadic_my (ctr_object * myself, ctr_object * my, int count, ...)
 {
   if (count < 1)
     return ctr_block_run (myself, NULL, my);
@@ -5192,8 +5021,7 @@ ctr_block_run_variadic (ctr_object * myself, int count, ...)
 }
 
 ctr_object *
-ctr_send_message_variadic (ctr_object * myself, char *message,
-			   int msglen, int count, ...)
+ctr_send_message_variadic (ctr_object * myself, char *message, int msglen, int count, ...)
 {
   if (count < 1)
     return ctr_send_message (myself, message, msglen, NULL);
@@ -5211,8 +5039,7 @@ ctr_send_message_variadic (ctr_object * myself, char *message,
 	}
     }
   va_end (ap);
-  ctr_object *result =
-    ctr_send_message (myself, message, msglen, argumentList);
+  ctr_object *result = ctr_send_message (myself, message, msglen, argumentList);
   pass = argumentList;
   while (pass->next != NULL)
     {
@@ -5227,8 +5054,7 @@ ctr_send_message_variadic (ctr_object * myself, char *message,
 
 ctr_object *
 ctr_invoke_variadic (ctr_object * myself,
-		     ctr_object * (*fun) (ctr_object *,
-					  ctr_argument *), int count, ...)
+		     ctr_object * (*fun) (ctr_object *, ctr_argument *), int count, ...)
 {
   if (count < 1)
     return fun (myself, NULL);
@@ -5376,12 +5202,8 @@ ctr_object *
 ctr_block_catch (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *catchBlock = argumentList->object;
-  ctr_internal_object_delete_property (myself,
-				       ctr_build_string_from_cstring
-				       ("catch"), 0);
-  ctr_internal_object_add_property (myself,
-				    ctr_build_string_from_cstring
-				    ("catch"), catchBlock, 0);
+  ctr_internal_object_delete_property (myself, ctr_build_string_from_cstring ("catch"), 0);
+  ctr_internal_object_add_property (myself, ctr_build_string_from_cstring ("catch"), catchBlock, 0);
   return myself;
 }
 
@@ -5417,10 +5239,8 @@ ctr_is_primitive (ctr_object * object)
     || object == CtrStdCommand
     || object == CtrStdSlurp
     || object == CtrStdShell
-    || object == CtrStdClock
-    || object == CtrStdReflect || object == CtrStdFiber;
+    || object == CtrStdClock || object == CtrStdReflect || object == CtrStdFiber;
 }
-
 
 //Stack-trace
 ctr_object *

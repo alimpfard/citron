@@ -1,7 +1,6 @@
 
 ctr_object *
-ctr_ccomp_get_stub (ctr_function_ptr_t func, ctr_object * receiver,
-		    ctr_argument * args)
+ctr_ccomp_get_stub (ctr_function_ptr_t func, ctr_object * receiver, ctr_argument * args)
 {
   switch (func)
     {
@@ -58,7 +57,6 @@ ctr_ccomp_get_stub (ctr_function_ptr_t func, ctr_object * receiver,
     case &ctr_map_type:
     case &ctr_map_to_string:
       return CtrStdString;
-
 
     case &ctr_object_message:
     case &ctr_object_if_false:

@@ -41,8 +41,7 @@ ctr_file_new (ctr_object * myself, ctr_argument * argumentList)
   pathObject =
     ctr_build_string (argumentList->object->value.svalue->value,
 		      argumentList->object->value.svalue->vlen);
-  ctr_internal_object_add_property (s, ctr_build_string_from_cstring ("path"),
-				    pathObject, 0);
+  ctr_internal_object_add_property (s, ctr_build_string_from_cstring ("path"), pathObject, 0);
   return s;
 }
 
@@ -107,8 +106,7 @@ ctr_object *
 ctr_file_path (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *path = ctr_internal_object_find_property (myself,
-							ctr_build_string_from_cstring
-							("path"),
+							ctr_build_string_from_cstring ("path"),
 							0);
   if (path == NULL)
     return CtrStdNil;
@@ -137,8 +135,7 @@ ctr_object *
 ctr_file_rpath (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *path = ctr_internal_object_find_property (myself,
-							ctr_build_string_from_cstring
-							("path"),
+							ctr_build_string_from_cstring ("path"),
 							0);
   if (path == NULL)
     return CtrStdNil;
@@ -168,8 +165,7 @@ ctr_object *
 ctr_file_read (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *path = ctr_internal_object_find_property (myself,
-							ctr_build_string_from_cstring
-							("path"),
+							ctr_build_string_from_cstring ("path"),
 							0);
   ctr_object *str;
   ctr_size vlen, fileLen;
@@ -227,8 +223,7 @@ ctr_file_write (ctr_object * myself, ctr_argument * argumentList)
   ctr_check_permission (CTR_SECPRO_NO_FILE_WRITE);
   ctr_object *str = ctr_internal_cast2string (argumentList->object);
   ctr_object *path = ctr_internal_object_find_property (myself,
-							ctr_build_string_from_cstring
-							("path"),
+							ctr_build_string_from_cstring ("path"),
 							0);
   FILE *f;
   ctr_size vlen;
@@ -247,8 +242,7 @@ ctr_file_write (ctr_object * myself, ctr_argument * argumentList)
       CtrStdFlow->info.sticky = 1;
       return CtrStdNil;
     }
-  fwrite (str->value.svalue->value, sizeof (char), str->value.svalue->vlen,
-	  f);
+  fwrite (str->value.svalue->value, sizeof (char), str->value.svalue->vlen, f);
   fclose (f);
   return myself;
 }
@@ -266,8 +260,7 @@ ctr_file_append (ctr_object * myself, ctr_argument * argumentList)
   ctr_check_permission (CTR_SECPRO_NO_FILE_WRITE);
   ctr_object *str = ctr_internal_cast2string (argumentList->object);
   ctr_object *path = ctr_internal_object_find_property (myself,
-							ctr_build_string_from_cstring
-							("path"),
+							ctr_build_string_from_cstring ("path"),
 							0);
   ctr_size vlen;
   char *pathString;
@@ -286,8 +279,7 @@ ctr_file_append (ctr_object * myself, ctr_argument * argumentList)
       CtrStdFlow->info.sticky = 1;
       return CtrStdNil;
     }
-  fwrite (str->value.svalue->value, sizeof (char), str->value.svalue->vlen,
-	  f);
+  fwrite (str->value.svalue->value, sizeof (char), str->value.svalue->vlen, f);
   fclose (f);
   return myself;
 }
@@ -301,8 +293,7 @@ ctr_object *
 ctr_file_exists (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *path = ctr_internal_object_find_property (myself,
-							ctr_build_string_from_cstring
-							("path"),
+							ctr_build_string_from_cstring ("path"),
 							0);
   ctr_size vlen;
   char *pathString;
@@ -334,8 +325,7 @@ ctr_file_include (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_check_permission (CTR_SECPRO_NO_INCLUDE);
   ctr_object *path = ctr_internal_object_find_property (myself,
-							ctr_build_string_from_cstring
-							("path"),
+							ctr_build_string_from_cstring ("path"),
 							0);
   ctr_tnode *parsedCode;
   ctr_size vlen;
@@ -369,8 +359,7 @@ ctr_file_include_here (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_check_permission (CTR_SECPRO_NO_INCLUDE);
   ctr_object *path = ctr_internal_object_find_property (myself,
-							ctr_build_string_from_cstring
-							("path"),
+							ctr_build_string_from_cstring ("path"),
 							0);
   ctr_tnode *parsedCode;
   ctr_size vlen;
@@ -402,8 +391,7 @@ ctr_file_delete (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_check_permission (CTR_SECPRO_NO_FILE_WRITE);
   ctr_object *path = ctr_internal_object_find_property (myself,
-							ctr_build_string_from_cstring
-							("path"),
+							ctr_build_string_from_cstring ("path"),
 							0);
   ctr_size vlen;
   char *pathString;
@@ -434,8 +422,7 @@ ctr_object *
 ctr_file_size (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *path = ctr_internal_object_find_property (myself,
-							ctr_build_string_from_cstring
-							("path"),
+							ctr_build_string_from_cstring ("path"),
 							0);
   ctr_size vlen;
   char *pathString;
@@ -478,8 +465,7 @@ ctr_object *
 ctr_file_open (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *pathObj = ctr_internal_object_find_property (myself,
-							   ctr_build_string_from_cstring
-							   ("path"),
+							   ctr_build_string_from_cstring ("path"),
 							   0);
   char *mode;
   char *path;
@@ -489,8 +475,7 @@ ctr_file_open (ctr_object * myself, ctr_argument * argumentList)
   if (myself->value.rvalue != NULL)
     {
       ctr_heap_free (rs);
-      CtrStdFlow =
-	ctr_build_string_from_cstring ("File has already been opened.");
+      CtrStdFlow = ctr_build_string_from_cstring ("File has already been opened.");
       CtrStdFlow->info.sticky = 1;
       return myself;
     }
@@ -567,14 +552,11 @@ ctr_file_read_bytes (ctr_object * myself, ctr_argument * argumentList)
   buffer = (char *) ctr_heap_allocate (bytes);
   if (buffer == NULL)
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring
-	("Cannot allocate memory for file buffer.");
+      CtrStdFlow = ctr_build_string_from_cstring ("Cannot allocate memory for file buffer.");
       CtrStdFlow->info.sticky = 1;
       return ctr_build_string_from_cstring ("");
     }
-  fread (buffer, sizeof (char), (int) bytes,
-	 (FILE *) myself->value.rvalue->ptr);
+  fread (buffer, sizeof (char), (int) bytes, (FILE *) myself->value.rvalue->ptr);
   result = ctr_build_string (buffer, bytes);
   ctr_heap_free (buffer);
   return result;
@@ -610,9 +592,7 @@ ctr_file_write_bytes (ctr_object * myself, ctr_argument * argumentList)
   string2write = ctr_internal_cast2string (argumentList->object);
   buffer = ctr_heap_allocate_cstring (string2write);
   bytes = string2write->value.svalue->vlen;
-  written =
-    fwrite (buffer, sizeof (char), (int) bytes,
-	    (FILE *) myself->value.rvalue->ptr);
+  written = fwrite (buffer, sizeof (char), (int) bytes, (FILE *) myself->value.rvalue->ptr);
   ctr_heap_free (buffer);
   return ctr_build_number_from_float ((double_t) written);
 }
@@ -641,8 +621,7 @@ ctr_file_seek (ctr_object * myself, ctr_argument * argumentList)
     return myself;
   if (myself->value.rvalue->type != 1)
     return myself;
-  offset =
-    (long int) ctr_internal_cast2number (argumentList->object)->value.nvalue;
+  offset = (long int) ctr_internal_cast2number (argumentList->object)->value.nvalue;
   error = fseek ((FILE *) myself->value.rvalue->ptr, offset, SEEK_CUR);
   if (error)
     {
@@ -720,10 +699,8 @@ ctr_file_seek_end (ctr_object * myself, ctr_argument * argumentList)
   return myself;
 }
 
-
 ctr_object *
-ctr_file_lock_generic (ctr_object * myself, ctr_argument * argumentList,
-		       int lock)
+ctr_file_lock_generic (ctr_object * myself, ctr_argument * argumentList, int lock)
 {
   int b;
   int fd;
@@ -733,21 +710,15 @@ ctr_file_lock_generic (ctr_object * myself, ctr_argument * argumentList,
   ctr_object *fdObj;
   ctr_object *fdObjKey;
   ctr_check_permission (CTR_SECPRO_NO_FILE_WRITE);
-  pathObj =
-    ctr_internal_object_find_property (myself,
-				       ctr_build_string_from_cstring ("path"),
-				       0);
+  pathObj = ctr_internal_object_find_property (myself, ctr_build_string_from_cstring ("path"), 0);
   path = ctr_heap_allocate_cstring (pathObj);
   fdObjKey = ctr_build_string_from_cstring ("fileDescriptor");
-  fdObj = ctr_internal_object_find_property (myself,
-					     fdObjKey,
-					     CTR_CATEGORY_PRIVATE_PROPERTY);
+  fdObj = ctr_internal_object_find_property (myself, fdObjKey, CTR_CATEGORY_PRIVATE_PROPERTY);
   if (fdObj == NULL)
     {
       fd = open (path, O_CREAT);
       fdObj = ctr_build_number_from_float ((ctr_size) fd);
-      ctr_internal_object_set_property (myself, fdObjKey, fdObj,
-					CTR_CATEGORY_PRIVATE_PROPERTY);
+      ctr_internal_object_set_property (myself, fdObjKey, fdObj, CTR_CATEGORY_PRIVATE_PROPERTY);
     }
   else
     {
@@ -758,8 +729,7 @@ ctr_file_lock_generic (ctr_object * myself, ctr_argument * argumentList,
     {
       close (fd);
       answer = ctr_build_bool (0);
-      ctr_internal_object_delete_property (myself, fdObjKey,
-					   CTR_CATEGORY_PRIVATE_PROPERTY);
+      ctr_internal_object_delete_property (myself, fdObjKey, CTR_CATEGORY_PRIVATE_PROPERTY);
     }
   else
     {
@@ -822,23 +792,19 @@ ctr_file_list (ctr_object * myself, ctr_argument * argumentList)
 	  putArgumentList->object = ctr_build_string_from_cstring ("folder");
 	  break;
 	case DT_LNK:
-	  putArgumentList->object =
-	    ctr_build_string_from_cstring ("symbolic link");
+	  putArgumentList->object = ctr_build_string_from_cstring ("symbolic link");
 	  break;
 	case DT_CHR:
-	  putArgumentList->object =
-	    ctr_build_string_from_cstring ("character device");
+	  putArgumentList->object = ctr_build_string_from_cstring ("character device");
 	  break;
 	case DT_BLK:
-	  putArgumentList->object =
-	    ctr_build_string_from_cstring ("block device");
+	  putArgumentList->object = ctr_build_string_from_cstring ("block device");
 	  break;
 	case DT_SOCK:
 	  putArgumentList->object = ctr_build_string_from_cstring ("socket");
 	  break;
 	case DT_FIFO:
-	  putArgumentList->object =
-	    ctr_build_string_from_cstring ("named pipe");
+	  putArgumentList->object = ctr_build_string_from_cstring ("named pipe");
 	  break;
 	default:
 	  putArgumentList->object = ctr_build_string_from_cstring ("other");

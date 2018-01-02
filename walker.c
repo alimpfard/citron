@@ -23,8 +23,7 @@ ctr_cwlk_return (ctr_tnode * node)
   ctr_object *e;
   if (!node->nodes)
     {
-      printf
-	("Invalid return expression (Return statement has no structure wtf).\n");
+      printf ("Invalid return expression (Return statement has no structure wtf).\n");
       exit (1);
     }
   li = node->nodes;
@@ -61,8 +60,7 @@ ctr_cwlk_message (ctr_tnode * paramNode)
   switch (receiverNode->type)
     {
     case CTR_AST_NODE_REFERENCE:
-      recipientName =
-	ctr_build_string (receiverNode->value, receiverNode->vlen);
+      recipientName = ctr_build_string (receiverNode->value, receiverNode->vlen);
       recipientName->info.sticky = 1;
       if (CtrStdFlow == NULL)
 	{
@@ -98,9 +96,7 @@ ctr_cwlk_message (ctr_tnode * paramNode)
       r = ctr_build_string (receiverNode->value, receiverNode->vlen);
       break;
     case CTR_AST_NODE_LTRNUM:
-      r =
-	ctr_build_number_from_string (receiverNode->value,
-				      receiverNode->vlen);
+      r = ctr_build_number_from_string (receiverNode->value, receiverNode->vlen);
       break;
     case CTR_AST_NODE_IMMUTABLE:
     case CTR_AST_NODE_NESTED:
@@ -110,8 +106,7 @@ ctr_cwlk_message (ctr_tnode * paramNode)
       r = ctr_build_block (receiverNode);
       break;
     default:
-      printf ("Cannot send messages to receiver of type: %d \n",
-	      receiverNode->type);
+      printf ("Cannot send messages to receiver of type: %d \n", receiverNode->type);
       break;
     }
   while (li->next)
@@ -141,8 +136,7 @@ ctr_cwlk_message (ctr_tnode * paramNode)
 	      aItem->object = o;
 	      /* we always send at least one argument, note that if you want to modify the argumentList, be sure to take this into account */
 	      /* there is always an extra empty argument at the end */
-	      aItem->next =
-		(ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+	      aItem->next = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
 	      aItem = aItem->next;
 	      aItem->object = NULL;
 	      if (!argumentList->next)
@@ -199,15 +193,12 @@ ctr_cwlk_assignment (ctr_tnode * node)
     {
       if (assignee->modifier == 1)
 	{
-	  result =
-	    ctr_assign_value_to_my (ctr_build_string
-				    (assignee->value, assignee->vlen), x);
+	  result = ctr_assign_value_to_my (ctr_build_string (assignee->value, assignee->vlen), x);
 	}
       else if (assignee->modifier == 2)
 	{
 	  result =
-	    ctr_assign_value_to_local (ctr_build_string
-				       (assignee->value, assignee->vlen), x);
+	    ctr_assign_value_to_local (ctr_build_string (assignee->value, assignee->vlen), x);
 	}
       else if (assignee->modifier == 3)
 	{
@@ -215,17 +206,14 @@ ctr_cwlk_assignment (ctr_tnode * node)
 	}
       else
 	{
-	  result =
-	    ctr_assign_value (ctr_build_string
-			      (assignee->value, assignee->vlen), x);
+	  result = ctr_assign_value (ctr_build_string (assignee->value, assignee->vlen), x);
 	}
     }
   else
     {
       int old_replace = ctr_cwlk_replace_refs;
       ctr_cwlk_replace_refs = 1;
-      ctr_send_message_variadic (x, "unpack:", 7, 1,
-				 ctr_cwlk_expr (assignee, &ret));
+      ctr_send_message_variadic (x, "unpack:", 7, 1, ctr_cwlk_expr (assignee, &ret));
       ctr_cwlk_replace_refs = old_replace;
       result = x;
     }
@@ -277,8 +265,7 @@ ctr_cwlk_expr (ctr_tnode * node, char *wasReturn)
 	}
       if (node->modifier == 1 || node->modifier == 3)
 	{
-	  result =
-	    ctr_find_in_my (ctr_build_string (node->value, node->vlen));
+	  result = ctr_find_in_my (ctr_build_string (node->value, node->vlen));
 	}
       else
 	result = ctr_find (ctr_build_string (node->value, node->vlen));
@@ -309,8 +296,8 @@ ctr_cwlk_expr (ctr_tnode * node, char *wasReturn)
 	  printf ("Uncaught error has occurred.\n");
 	  if (CtrStdFlow->info.type == CTR_OBJECT_TYPE_OTSTRING)
 	    {
-	      fwrite (CtrStdFlow->value.svalue->value, sizeof (char),
-		      CtrStdFlow->value.svalue->vlen, stdout);
+	      fwrite (CtrStdFlow->value.svalue->value,
+		      sizeof (char), CtrStdFlow->value.svalue->vlen, stdout);
 	      printf ("\n");
 	    }
 	  ctr_print_stack_trace ();
@@ -318,8 +305,7 @@ ctr_cwlk_expr (ctr_tnode * node, char *wasReturn)
       result = ctr_build_nil ();
       break;
     default:
-      printf ("Runtime Error. Invalid parse node: %d %s \n", node->type,
-	      node->value);
+      printf ("Runtime Error. Invalid parse node: %d %s \n", node->type, node->value);
       exit (1);
       break;
     }
@@ -360,8 +346,7 @@ ctr_cwlk_run (ctr_tnode * program)
 	  break;
 	}
       /* Perform garbage collection cycle */
-      if (((ctr_gc_mode & 1) && ctr_gc_alloc > (ctr_gc_memlimit * 0.8))
-	  || ctr_gc_mode & 4)
+      if (((ctr_gc_mode & 1) && ctr_gc_alloc > (ctr_gc_memlimit * 0.8)) || ctr_gc_mode & 4)
 	{
 	  ctr_gc_internal_collect ();	//collect on limit mode
 	}

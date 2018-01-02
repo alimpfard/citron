@@ -1,6 +1,5 @@
 #include "citron.h"
 
-
 /*
  * Fiber Impl suited for citron blocks
  */
@@ -32,7 +31,6 @@
 #define MAX_FIBERS 10
 /* The size of the stack for each fiber. */
 #define FIBER_STACK (1024*1024)
-
 
 // Should be called before executing any of the other functions
 extern void initFibers ();
@@ -97,8 +95,7 @@ fiberYield ()
   if (inFiber)
     {
       // Switch to the main context
-      LF_DEBUG_OUT ("libfiber debug: Fiber %d yielding the processor...",
-		    currentFiber);
+      LF_DEBUG_OUT ("libfiber debug: Fiber %d yielding the processor...", currentFiber);
 
       swapcontext (&fiberList[currentFiber].context, &mainContext);
     }
@@ -173,10 +170,8 @@ spawnFiber (ctr_object * block)
       LF_DEBUG_OUT ("Error: Could not allocate stack.", 0);
       return LF_MALLOCERROR;
     }
-
   // Create the context. The context calls fiberStart( func ).
-  makecontext (&fiberList[numFibers].context, (void (*)(void)) &fiberStart, 1,
-	       block);
+  makecontext (&fiberList[numFibers].context, (void (*)(void)) &fiberStart, 1, block);
   ++numFibers;
 
   return LF_NOERROR;
@@ -191,8 +186,7 @@ waitForAllFibers ()
   if (inFiber)
     fibersRemaining = 1;
 
-  LF_DEBUG_OUT ("Waiting until there are only %d threads remaining...",
-		fibersRemaining);
+  LF_DEBUG_OUT ("Waiting until there are only %d threads remaining...", fibersRemaining);
 
   // Execute the fibers until they quit
   while (numFibers > fibersRemaining)
@@ -210,8 +204,7 @@ waitForFiber (int id)
   if (inFiber)
     fibersRemaining = id + 1;
 
-  LF_DEBUG_OUT ("Waiting until there are only %d threads remaining...",
-		fibersRemaining);
+  LF_DEBUG_OUT ("Waiting until there are only %d threads remaining...", fibersRemaining);
 
   // Execute the fibers until they quit
   while (numFibers > fibersRemaining)
@@ -233,18 +226,12 @@ yieldNTimes (int n)
   * //Done
   */
 
-ctr_object *ctr_fiber_spawn (ctr_object * myself,
-			     ctr_argument * argumentList);
-ctr_object *ctr_fiber_yield (ctr_object * myself,
-			     ctr_argument * argumentList);
-ctr_object *ctr_fiber_join_all (ctr_object * myself,
-				ctr_argument * argumentList);
-ctr_object *ctr_fiber_tostring (ctr_object * myself,
-				ctr_argument * argumentList);
-ctr_object *ctr_fiber_yielded (ctr_object * myself,
-			       ctr_argument * argumentList);
+ctr_object *ctr_fiber_spawn (ctr_object * myself, ctr_argument * argumentList);
+ctr_object *ctr_fiber_yield (ctr_object * myself, ctr_argument * argumentList);
+ctr_object *ctr_fiber_join_all (ctr_object * myself, ctr_argument * argumentList);
+ctr_object *ctr_fiber_tostring (ctr_object * myself, ctr_argument * argumentList);
+ctr_object *ctr_fiber_yielded (ctr_object * myself, ctr_argument * argumentList);
 void ctr_fiber_begin_init (void);
-
 
 ctr_object *CtrStdFiber;	//Namespace for all fibers, conatining all the relevant functions
 /**@I_OBJ_DEF Fiber*/
@@ -272,15 +259,15 @@ ctr_fiber_spawn (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *blk = argumentList->object;
   if (blk == NULL || blk->info.type != CTR_OBJECT_TYPE_OTBLOCK)
     {
-      CtrStdFlow =
-	ctr_build_string_from_cstring ("Fiber's spawning requires a block.");
+      CtrStdFlow = ctr_build_string_from_cstring ("Fiber's spawning requires a block.");
       return myself;
     }
   int fiber = spawnFiber (argumentList->object);
   ctr_internal_object_add_property (fiberObj,
-				    ctr_build_string_from_cstring ("fiberId"),
-				    ctr_build_number_from_float (numFibers),
-				    CTR_CATEGORY_PRIVATE_PROPERTY);
+				    ctr_build_string_from_cstring
+				    ("fiberId"),
+				    ctr_build_number_from_float
+				    (numFibers), CTR_CATEGORY_PRIVATE_PROPERTY);
   return fiberObj;
 }
 
@@ -300,7 +287,7 @@ ctr_fiber_yield (ctr_object * myself, ctr_argument * argumentList)
   //int fiber = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("fiberId"), CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue;
   FIBER_YIELDED = argumentList->object;	// record the output, or set to NULL
   fiberYield ();
-  return myself;		//Won't really reach here until the end of the fiber chain
+  return myself;	//Won't really reach here until the end of the fiber chain
 }
 
 /**
@@ -326,19 +313,16 @@ ctr_fiber_join (ctr_object * myself, ctr_argument * argumentList)
 		ctr_internal_object_find_property (myself,
 						   ctr_build_string_from_cstring
 						   ("fiberId"),
-						   CTR_CATEGORY_PRIVATE_PROPERTY)->value.
-		nvalue);
+						   CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue);
   return myself;
 }
 
 ctr_object *
 ctr_fiber_join_times (ctr_object * myself, ctr_argument * argumentList)
 {
-  return
-    ctr_build_bool (yieldNTimes
-		    ((int)
-		     ctr_internal_cast2number (argumentList->object)->value.
-		     nvalue));
+  return ctr_build_bool (yieldNTimes ((int)
+				      ctr_internal_cast2number
+				      (argumentList->object)->value.nvalue));
 }
 
 ctr_object *
@@ -376,35 +360,27 @@ ctr_fiber_begin_init ()
 
   CtrStdFiber = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
   ctr_internal_create_func (CtrStdFiber,
-			    ctr_build_string_from_cstring ("toString"),
-			    &ctr_fiber_tostring);
-  ctr_internal_create_func (CtrStdFiber,
-			    ctr_build_string_from_cstring ("new:"),
-			    &ctr_fiber_spawn);
+			    ctr_build_string_from_cstring ("toString"), &ctr_fiber_tostring);
+  ctr_internal_create_func (CtrStdFiber, ctr_build_string_from_cstring ("new:"), &ctr_fiber_spawn);
   ctr_internal_create_func (CtrStdFiber, ctr_build_string_from_cstring ("yield:"), &ctr_fiber_yield);	//with value
   ctr_internal_create_func (CtrStdFiber, ctr_build_string_from_cstring ("yield"), &ctr_fiber_yield);	//without value
   ctr_internal_create_func (CtrStdFiber,
-			    ctr_build_string_from_cstring ("yielded"),
-			    &ctr_fiber_yielded);
+			    ctr_build_string_from_cstring ("yielded"), &ctr_fiber_yielded);
   ctr_internal_create_func (CtrStdFiber,
-			    ctr_build_string_from_cstring ("yieldTimes:"),
-			    &ctr_fiber_join_times);
+			    ctr_build_string_from_cstring ("yieldTimes:"), &ctr_fiber_join_times);
   ctr_internal_create_func (CtrStdFiber,
-			    ctr_build_string_from_cstring ("waitForAll"),
-			    &ctr_fiber_join_all);
+			    ctr_build_string_from_cstring ("waitForAll"), &ctr_fiber_join_all);
   ctr_internal_create_func (CtrStdFiber,
-			    ctr_build_string_from_cstring ("waitFor:"),
-			    &ctr_fiber_join);
+			    ctr_build_string_from_cstring ("waitFor:"), &ctr_fiber_join);
   ctr_internal_create_func (CtrStdFiber,
-			    ctr_build_string_from_cstring ("unpack:"),
-			    &ctr_fiber_assign);
+			    ctr_build_string_from_cstring ("unpack:"), &ctr_fiber_assign);
   ctr_internal_object_add_property (CtrStdFiber,
-				    ctr_build_string_from_cstring ("fiberId"),
-				    ctr_build_number_from_float (numFibers),
-				    CTR_CATEGORY_PRIVATE_PROPERTY);
+				    ctr_build_string_from_cstring
+				    ("fiberId"),
+				    ctr_build_number_from_float
+				    (numFibers), CTR_CATEGORY_PRIVATE_PROPERTY);
   CtrStdFiber->info.sticky = 1;
 
   ctr_internal_object_add_property (CtrStdWorld,
-				    ctr_build_string_from_cstring ("Fiber"),
-				    CtrStdFiber, 0);
+				    ctr_build_string_from_cstring ("Fiber"), CtrStdFiber, 0);
 }

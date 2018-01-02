@@ -92,7 +92,6 @@ ctr_ccomp_env_pprint_popped (environment * env, int indent)
     }
 }
 
-
 environment *
 ctr_ccomp_env_maybe_get_ref (volatile environment * env, ctr_tnode * node)
 {
@@ -102,16 +101,13 @@ ctr_ccomp_env_maybe_get_ref (volatile environment * env, ctr_tnode * node)
       printf ("-- %d\n", ctx->index);
       if (ctx->length == node->vlen)
 	{
-	  printf ("checking '%.*s' against '%.*s'\n", node->vlen, node->value,
-		  ctx->length, ctx->binding);
-	  if (node->vlen == ctx->length
-	      && strncmp (node->value, ctx->binding, node->vlen) == 0)
+	  printf ("checking '%.*s' against '%.*s'\n", node->vlen,
+		  node->value, ctx->length, ctx->binding);
+	  if (node->vlen == ctx->length && strncmp (node->value, ctx->binding, node->vlen) == 0)
 	    return ctx;
-	  printf ("failed check against '%.*s', resuming\n", ctx->length,
-		  ctx->binding);
+	  printf ("failed check against '%.*s', resuming\n", ctx->length, ctx->binding);
 	}
-      environment *maybe_in_parent =
-	ctr_ccomp_env_maybe_get_ref (ctx->parent, node);
+      environment *maybe_in_parent = ctr_ccomp_env_maybe_get_ref (ctx->parent, node);
       if (maybe_in_parent)
 	return maybe_in_parent;
       ctx = ctx->next;
@@ -155,28 +151,24 @@ ctr_ccomp_env_update_assign (environment ** env, ctr_tlistitem * nodes)
   ctr_tnode *value = nodes->next->node;
   if (value->type == CTR_AST_NODE_REFERENCE)
     {
-      printf ("Querying environment for binding %.*s\n", value->vlen,
-	      value->value);
+      printf ("Querying environment for binding %.*s\n", value->vlen, value->value);
       ctr_tnode *alt = ctr_ccomp_env_maybe_get_ref (*env, value);
       if (alt)
 	{
-	  printf ("environment has %p for binding %.*s\n", alt, value->vlen,
-		  value->value);
+	  printf ("environment has %p for binding %.*s\n", alt, value->vlen, value->value);
 	  value = alt;
 	}
       else
-	printf ("No binding found for %.*s, assuming runtime generated\n",
-		value->vlen, value->value);
+	printf
+	  ("No binding found for %.*s, assuming runtime generated\n", value->vlen, value->value);
     }
   environment *new_env = malloc (sizeof (environment));
   new_env->binding = name->value;
   new_env->length = name->vlen;
-  printf ("Updating environment with binding %.*s = %p\n", name->vlen,
-	  name->value, value);
+  printf ("Updating environment with binding %.*s = %p\n", name->vlen, name->value, value);
   new_env->value = malloc (sizeof (value));
   memcpy (new_env->value, value, sizeof (value));
-  new_env->indeterministic_level =
-    ctr_ccomp_node_indeterministic_level (value);
+  new_env->indeterministic_level = ctr_ccomp_node_indeterministic_level (value);
   new_env->deterministic = new_env->indeterministic_level < 2 ? 1 : 0;
   printf ("\nreached conclusion %s (level %d)\n",
 	  new_env->deterministic ? "deterministic" : "indeterministic",
@@ -187,19 +179,16 @@ ctr_ccomp_env_update_assign (environment ** env, ctr_tlistitem * nodes)
 }
 
 void
-ctr_ccomp_env_update_assign_charstar (environment ** env, char *name,
-				      int length, ctr_tnode * value)
+ctr_ccomp_env_update_assign_charstar (environment ** env, char *name, int length, ctr_tnode * value)
 {
   environment *new_env = malloc (sizeof (environment));
   new_env->binding = malloc (sizeof (char) * length + 1);
   memcpy (new_env->binding, name, length);
   new_env->length = length;
-  printf ("Updating environment with binding %.*s = %p\n", name, length,
-	  value);
+  printf ("Updating environment with binding %.*s = %p\n", name, length, value);
   new_env->value = malloc (sizeof (value));
   memcpy (new_env->value, value, sizeof (value));
-  new_env->indeterministic_level =
-    ctr_ccomp_node_indeterministic_level (value);
+  new_env->indeterministic_level = ctr_ccomp_node_indeterministic_level (value);
   new_env->deterministic = new_env->indeterministic_level < 2 ? 1 : 0;
   printf ("\nreached conclusion %s (level %d)\n",
 	  new_env->deterministic ? "deterministic" : "indeterministic",
@@ -222,8 +211,7 @@ ctr_ccomp_rec_nodes_indeterministic_level (ctr_tlistitem * nodes)
   ctr_tlistitem *node = nodes;
   while (node)
     {
-      max_level =
-	fmax (max_level, ctr_ccomp_node_indeterministic_level (node->node));
+      max_level = fmax (max_level, ctr_ccomp_node_indeterministic_level (node->node));
       node = node->next;
     }
   return max_level;
@@ -234,14 +222,13 @@ int
 ctr_ccomp_node_indeterministic_level (ctr_tnode * node)
 {
   if (node == NULL)
-    return 0;			//we already have the value
+    return 0;	//we already have the value
   if (lastcci > -1)
     printf ("CHECK = %d\n", lastcci);
   printf ("CHECK : looking for deterministicness of %p\n", node);
   if (node->type >= 51 && node->type <= 84 && node->nodes)
     {
-      printf ("%s " "{\n",
-	      ctr_ast_node_names[node->type - CTR_AST_NODE_EXPRASSIGNMENT]);
+      printf ("%s " "{\n", ctr_ast_node_names[node->type - CTR_AST_NODE_EXPRASSIGNMENT]);
       //ctr_internal_debug_tree(node, 2);
       printf (" }\n");
     }
@@ -255,7 +242,7 @@ ctr_ccomp_node_indeterministic_level (ctr_tnode * node)
     case CTR_AST_NODE_ENDOFPROGRAM:
       return lastcci = 0;
     case CTR_AST_NODE_PARAMLIST:
-      {				//if we've been handed this, we have started parsing a block
+      {	//if we've been handed this, we have started parsing a block
 	ctr_tlistitem *parameterList = node->nodes;
 	if (!parameterList)
 	  return 0;
@@ -267,8 +254,9 @@ ctr_ccomp_node_indeterministic_level (ctr_tnode * node)
 	while ((param = parameterList->node) != NULL)
 	  {
 	    int vararg = *(param->value) == '*';
-	    ctr_ccomp_env_update_assign_charstar (&env, param->value + vararg,
-						  param->vlen - vararg, NULL);
+	    ctr_ccomp_env_update_assign_charstar (&env,
+						  param->value
+						  + vararg, param->vlen - vararg, NULL);
 	    parameterList = parameterList->next;
 	    if (parameterList == NULL)
 	      break;
@@ -276,16 +264,15 @@ ctr_ccomp_node_indeterministic_level (ctr_tnode * node)
 	return lastcci = 0;
       }
     case CTR_AST_NODE_NESTED:
-      return lastcci =
-	ctr_ccomp_node_indeterministic_level (node->nodes->node);
+      return lastcci = ctr_ccomp_node_indeterministic_level (node->nodes->node);
     case CTR_AST_NODE_REFERENCE:
       {
 	environment *fy = ctr_ccomp_env_maybe_get_ref (env, node);
 	if (fy)
 	  {
-	    printf ("environment had an entry for %.*s : %p (level %d)\n",
-		    fy->length, fy->binding, fy->value,
-		    fy->indeterministic_level);
+	    printf
+	      ("environment had an entry for %.*s : %p (level %d)\n",
+	       fy->length, fy->binding, fy->value, fy->indeterministic_level);
 	    return lastcci = fy->indeterministic_level;
 	  }
 	else
@@ -297,9 +284,7 @@ ctr_ccomp_node_indeterministic_level (ctr_tnode * node)
 	ctr_tlistitem *nn = node->nodes;
 	while (nn)
 	  {
-	    max_level =
-	      fmax (max_level,
-		    ctr_ccomp_rec_nodes_indeterministic_level (nn));
+	    max_level = fmax (max_level, ctr_ccomp_rec_nodes_indeterministic_level (nn));
 	    nn = nn->next;
 	  }
 	return lastcci = max_level;
@@ -325,14 +310,12 @@ ctr_ccomp_node_indeterministic_level (ctr_tnode * node)
 	  return lastcci = fmax (rec, msgs);	//whichever is worse
       }
     case CTR_AST_NODE_RETURNFROMBLOCK:
-      return lastcci =
-	ctr_ccomp_node_indeterministic_level (node->nodes->node);
+      return lastcci = ctr_ccomp_node_indeterministic_level (node->nodes->node);
     case CTR_AST_NODE_EXPRASSIGNMENT:
       ctr_ccomp_env_update_assign (&env, node->nodes);
       return lastcci = ctr_ccomp_node_indeterministic_level (node->nodes->next->node);	//assignee
     case CTR_AST_NODE_PROGRAM:
-      return lastcci =
-	ctr_ccomp_rec_nodes_indeterministic_level (node->nodes);
+      return lastcci = ctr_ccomp_rec_nodes_indeterministic_level (node->nodes);
     case CTR_AST_NODE_CODEBLOCK:
       {
 	ctr_ccomp_env_update_new_context ();
@@ -342,8 +325,7 @@ ctr_ccomp_node_indeterministic_level (ctr_tnode * node)
 	return lastcci = max;
       }
     case CTR_AST_NODE_INSTRLIST:
-      return lastcci =
-	ctr_ccomp_rec_nodes_indeterministic_level (node->nodes);
+      return lastcci = ctr_ccomp_rec_nodes_indeterministic_level (node->nodes);
     case 1:
       return lastcci = 0;
     default:
@@ -364,8 +346,7 @@ ctr_ccomp_nodes_as_literal (ctr_tlistitem * li)
   while (li)
     {
       printf (" => %p <=> %s\n", li->node,
-	      ctr_ast_node_names[li->node->type -
-				 CTR_AST_NODE_EXPRASSIGNMENT]);
+	      ctr_ast_node_names[li->node->type - CTR_AST_NODE_EXPRASSIGNMENT]);
       li->node = ctr_ccomp_as_literal (li->node);
       li = li->next;
     }
@@ -375,8 +356,7 @@ ctr_ccomp_nodes_as_literal (ctr_tlistitem * li)
 ctr_tnode *
 ctr_ccomp_as_literal (ctr_tnode * node)
 {
-  printf (" → %p >< %s\n", node,
-	  ctr_ast_node_names[node->type - CTR_AST_NODE_EXPRASSIGNMENT]);
+  printf (" → %p >< %s\n", node, ctr_ast_node_names[node->type - CTR_AST_NODE_EXPRASSIGNMENT]);
   switch (node->type)
     {
     case CTR_AST_NODE_LTRNIL:
@@ -393,8 +373,7 @@ ctr_ccomp_as_literal (ctr_tnode * node)
       return ctr_ccomp_as_literal (node->nodes->node);
     case CTR_AST_NODE_REFERENCE:
       {
-	printf ("Got a reference to turn into a literal namely %.*s\n",
-		node->vlen, node->value);
+	printf ("Got a reference to turn into a literal namely %.*s\n", node->vlen, node->value);
 	environment *_e = ctr_ccomp_env_maybe_get_ref (env, node);
 	if (_e)
 	  return _e->value;
@@ -408,8 +387,7 @@ ctr_ccomp_as_literal (ctr_tnode * node)
 	onode->nodes = malloc (sizeof (ctr_tlistitem));
 	onode->nodes->node = node->nodes->node;
 	onode->nodes->next = malloc (sizeof (ctr_tlistitem));
-	onode->nodes->next->node =
-	  ctr_ccomp_as_literal (node->nodes->next->node);
+	onode->nodes->next->node = ctr_ccomp_as_literal (node->nodes->next->node);
 	return onode;
       }
     default:
@@ -417,8 +395,7 @@ ctr_ccomp_as_literal (ctr_tnode * node)
     }
 }
 
-volatile ctr_tnode *ctr_ccomp_optimize_node_inplace (volatile ctr_tnode **
-						     node);
+volatile ctr_tnode *ctr_ccomp_optimize_node_inplace (volatile ctr_tnode ** node);
 ctr_tlistitem *
 ctr_ccomp_optimize_nodes_inplace (ctr_tlistitem * nodes)
 {
@@ -435,8 +412,7 @@ volatile ctr_tnode *
 ctr_ccomp_optimize_node_inplace (volatile ctr_tnode volatile **node)
 {
   printf ("Got a(n) %s (%p), optimization start\n",
-	  ctr_ast_node_names[(*node)->type - CTR_AST_NODE_EXPRASSIGNMENT],
-	  node);
+	  ctr_ast_node_names[(*node)->type - CTR_AST_NODE_EXPRASSIGNMENT], node);
   switch ((*node)->type)
     {
     case CTR_AST_NODE_NESTED:
@@ -462,8 +438,7 @@ ctr_ccomp_optimize_node_inplace (volatile ctr_tnode volatile **node)
       {
 	//node->nodes->node : no need to optimize a reference
 	printf ("Type = %s\n",
-		ctr_ast_node_names[(*node)->nodes->next->node->type -
-				   CTR_AST_NODE_EXPRASSIGNMENT]);
+		ctr_ast_node_names[(*node)->nodes->next->node->type - CTR_AST_NODE_EXPRASSIGNMENT]);
 	(*node)->nodes->next->node =
 	  ctr_ccomp_optimize_node_inplace (&((*node)->nodes->next->node));
 	//update the environment
@@ -474,21 +449,18 @@ ctr_ccomp_optimize_node_inplace (volatile ctr_tnode volatile **node)
       {
 	//node->nodes->node : no need to optimize the params
 	ctr_ccomp_env_update_new_context ();
-	(*node)->nodes->next =
-	  ctr_ccomp_optimize_nodes_inplace ((*node)->nodes->next);
-	ctr_ccomp_env_update_block (ctr_ccomp_env_update_pop_context (),
-				    (*node)->nodes->next->node);
+	(*node)->nodes->next = ctr_ccomp_optimize_nodes_inplace ((*node)->nodes->next);
+	ctr_ccomp_env_update_block
+	  (ctr_ccomp_env_update_pop_context (), (*node)->nodes->next->node);
 	return *node;
       }
     case CTR_AST_NODE_EXPRMESSAGE:
       {
 	int deter = 3;
-	if ((deter =
-	     ctr_ccomp_node_indeterministic_level ((*node)->nodes->node)) < 2)
+	if ((deter = ctr_ccomp_node_indeterministic_level ((*node)->nodes->node)) < 2)
 	  {
 	    printf ("proceeding optimization of %p\n", node);
-	    (*node)->nodes->node =
-	      ctr_ccomp_as_literal ((*node)->nodes->node);
+	    (*node)->nodes->node = ctr_ccomp_as_literal ((*node)->nodes->node);
 	    (*node)->nodes->next->node->nodes =
 	      ctr_ccomp_nodes_as_literal ((*node)->nodes->next->node->nodes);
 	  }
@@ -569,8 +541,7 @@ ctr_ccomp_print_series_raw (ctr_tlistitem * item, char space)
 }
 
 int
-ctr_ccomp_print_series_raw_transform (ctr_tlistitem * item, char space,
-				      char *tr, char *to)
+ctr_ccomp_print_series_raw_transform (ctr_tlistitem * item, char space, char *tr, char *to)
 {
   char i;
   char spacer[3];
@@ -588,10 +559,8 @@ ctr_ccomp_print_series_raw_transform (ctr_tlistitem * item, char space,
     }
   while (item)
     {
-      if (item->node->vlen >= trlen
-	  && strncmp (item->node->value, tr, trlen) == 0)
-	printf ("%s%.*s", to, (item->node->vlen - trlen),
-		item->node->value + trlen);
+      if (item->node->vlen >= trlen && strncmp (item->node->value, tr, trlen) == 0)
+	printf ("%s%.*s", to, (item->node->vlen - trlen), item->node->value + trlen);
       else
 	printf ("%.*s", item->node->vlen, item->node->value);
       if (item->next)
@@ -667,8 +636,7 @@ ctr_ccomp_message (ctr_tnode * paramNode)
   switch (receiverNode->type)
     {
     case CTR_AST_NODE_REFERENCE:
-      recipientName =
-	ctr_build_string (receiverNode->value, receiverNode->vlen);
+      recipientName = ctr_build_string (receiverNode->value, receiverNode->vlen);
       recipientName->info.sticky = 1;
       int can_be_self = 1;
       if (CtrStdFlow == NULL)
@@ -685,10 +653,7 @@ ctr_ccomp_message (ctr_tnode * paramNode)
 	{
 	  r = ctr_find (recipientName);
 	}
-      if (can_be_self
-	  &&
-	  (strncmp (receiverNode->value, "me", fmin (2, receiverNode->vlen))
-	   == 0))
+      if (can_be_self && (strncmp (receiverNode->value, "me", fmin (2, receiverNode->vlen)) == 0))
 	{
 	  printf ("this");
 	}
@@ -721,9 +686,7 @@ ctr_ccomp_message (ctr_tnode * paramNode)
       printf ("\'%.*s\'", receiverNode->vlen, receiverNode->value);
       break;
     case CTR_AST_NODE_LTRNUM:
-      r =
-	ctr_build_number_from_string (receiverNode->value,
-				      receiverNode->vlen);
+      r = ctr_build_number_from_string (receiverNode->value, receiverNode->vlen);
       printf ("%.*s", receiverNode->vlen, receiverNode->value);
       break;
     case CTR_AST_NODE_IMMUTABLE:
@@ -741,8 +704,7 @@ ctr_ccomp_message (ctr_tnode * paramNode)
       r = ctr_build_block (receiverNode);
       break;
     default:
-      printf ("Cannot send messages to receiver of type: %d \n",
-	      receiverNode->type);
+      printf ("Cannot send messages to receiver of type: %d \n", receiverNode->type);
       break;
     }
   int dd = 0;
@@ -776,8 +738,7 @@ ctr_ccomp_message (ctr_tnode * paramNode)
 	      aItem->object = o;
 	      /* we always send at least one argument, note that if you want to modify the argumentList, be sure to take this into account */
 	      /* there is always an extra empty argument at the end */
-	      aItem->next =
-		(ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+	      aItem->next = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
 	      aItem = aItem->next;
 	      aItem->object = NULL;
 	      if (!argumentList->next)
@@ -834,17 +795,13 @@ ctr_ccomp_assignment (ctr_tnode * node)
     {
       printf ("(this.%.*s) = ", assignee->vlen, assignee->value);
       x = ctr_ccomp_expr (value, &wasReturn);
-      result =
-	ctr_assign_value_to_my (ctr_build_string
-				(assignee->value, assignee->vlen), x);
+      result = ctr_assign_value_to_my (ctr_build_string (assignee->value, assignee->vlen), x);
     }
   else if (assignee->modifier == 2)
     {
       printf ("%.*s = ", assignee->vlen, assignee->value);
       x = ctr_ccomp_expr (value, &wasReturn);
-      result =
-	ctr_assign_value_to_local (ctr_build_string
-				   (assignee->value, assignee->vlen), x);
+      result = ctr_assign_value_to_local (ctr_build_string (assignee->value, assignee->vlen), x);
     }
   else if (assignee->modifier == 3)
     {
@@ -856,9 +813,7 @@ ctr_ccomp_assignment (ctr_tnode * node)
     {
       printf ("%.*s = ", assignee->vlen, assignee->value);
       x = ctr_ccomp_expr (value, &wasReturn);
-      result =
-	ctr_assign_value (ctr_build_string (assignee->value, assignee->vlen),
-			  x);
+      result = ctr_assign_value (ctr_build_string (assignee->value, assignee->vlen), x);
     }
   if (CtrStdFlow == NULL)
     {
@@ -921,8 +876,7 @@ ctr_ccomp_expr (ctr_tnode * node, char *wasReturn)
 	}
       if (node->modifier == 1 || node->modifier == 3)
 	{
-	  result =
-	    ctr_find_in_my (ctr_build_string (node->value, node->vlen));
+	  result = ctr_find_in_my (ctr_build_string (node->value, node->vlen));
 	  printf ("(this.%.*s)", node->vlen, node->value);
 	}
       else
@@ -968,8 +922,7 @@ ctr_ccomp_expr (ctr_tnode * node, char *wasReturn)
       result = ctr_build_nil ();
       break;
     default:
-      fprintf (stderr, "Runtime Error. Invalid parse node: %d %s \n",
-	       node->type, node->value);
+      fprintf (stderr, "Runtime Error. Invalid parse node: %d %s \n", node->type, node->value);
       exit (1);
       break;
     }

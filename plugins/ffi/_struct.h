@@ -1,3 +1,6 @@
+#include <stdbool.h>
+#include <stdlib.h>
+#include <ffi.h>
 
 typedef struct { char c; short x; } st_short;
 typedef struct { char c; int x; } st_int;
@@ -6,7 +9,7 @@ typedef struct { char c; float x; } st_float;
 typedef struct { char c; double x; } st_double;
 typedef struct { char c; void *x; } st_void_p;
 typedef struct { char c; size_t x; } st_size_t;
-typedef struct { char c; _Bool x; } st_bool;
+typedef struct { char c; bool x; } st_bool;
 
 #define SHORT_ALIGN (sizeof(st_short) - sizeof(short))
 #define INT_ALIGN (sizeof(st_int) - sizeof(int))
@@ -15,7 +18,7 @@ typedef struct { char c; _Bool x; } st_bool;
 #define DOUBLE_ALIGN (sizeof(st_double) - sizeof(double))
 #define VOID_P_ALIGN (sizeof(st_void_p) - sizeof(void *))
 #define SIZE_T_ALIGN (sizeof(st_size_t) - sizeof(size_t))
-#define BOOL_ALIGN (sizeof(st_bool) - sizeof(_Bool))
+#define BOOL_ALIGN (sizeof(st_bool) - sizeof(bool))
 
 typedef struct { char c; long long x; } s_long_long;
 #define LONG_LONG_ALIGN (sizeof(s_long_long) - sizeof(long long))

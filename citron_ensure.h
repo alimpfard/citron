@@ -1,5 +1,6 @@
 #ifndef CTR_ENSURE_TYPE_H_GUARD
 #define CTR_ENSURE_TYPE_H_GUARD
+#ifdef CTR_H_GUARD
 
 #define NEW_TYPE_TYPE(TYPE, TYPENAME) {TYPE, #TYPENAME}
 typedef struct {
@@ -65,4 +66,5 @@ static ctr_object* ctr_can_cast_to_bool(ctr_object* object) {
 #define CTR_ENSURE_TYPE_MISC(object)    do { CTR_ENSURE_NON_NULL(object); if ( object->info.type != CTR_OBJECT_TYPE_OTMISC ) CTR_TYPE_ERR(object, Miscellaneous); } while (0)
 
 
+#endif
 #endif

@@ -1263,6 +1263,127 @@ ctr_reflect_run_for_object (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
+ * [Reflect] run: [Block] inContext: [Map] arguments: [Array]
+ *
+ */
+ctr_object*
+ctr_reflect_run_for_object_in_ctx (ctr_object* myself, ctr_argument* argumentList)
+{
+  ctr_object *block = argumentList->object, *ctx = argumentList->next->object, *arguments = argumentList->next->next->object, *result = NULL;
+  ctr_argument* argList = ctr_heap_allocate(sizeof(ctr_argument));
+  (void)ctr_array_to_argument_list(arguments, argList);
+  ctr_tnode *node = block->value.block;
+  ctr_tlistitem *codeBlockParts = node->nodes;
+  ctr_tnode *codeBlockPart1 = codeBlockParts->node;
+  ctr_tnode *codeBlockPart2 = codeBlockParts->next->node;
+  ctr_tlistitem *parameterList = codeBlockPart1->nodes;
+  ctr_tnode *parameter;
+  ctr_object *a;
+  int was_vararg;
+  ctr_switch_context(ctx);
+  if (likely (parameterList && parameterList->node))
+    {
+      parameter = parameterList->node;
+      while (argList)
+	{
+	  __asm__ __volatile__ ("");
+	  if (parameter)
+	    {
+	      was_vararg = (strncmp (parameter->value, "*", 1) == 0);
+	      if (!argList->object)
+		{
+		  if (was_vararg)
+		    {
+		      ctr_object *arr = ctr_array_new (CtrStdArray,
+						       NULL);
+		      ctr_assign_value_to_local
+			(ctr_build_string (parameter->value + 1, parameter->vlen - 1), arr);
+		    }
+		  if (!argList || !argList->next)
+		    break;
+		  argList = argList->next;
+		  if (!parameterList->next)
+		    break;
+		  parameterList = parameterList->next;
+		  parameter = parameterList->node;
+		  continue;
+		}
+	      if (parameterList->next)
+		{
+		  a = argList->object;
+		  ctr_assign_value_to_local
+		    (ctr_build_string (parameter->value, parameter->vlen), a);
+		}
+	      else if (!parameterList->next && was_vararg)
+		{
+		  ctr_object *arr = ctr_array_new (CtrStdArray, NULL);
+		  ctr_argument *arglist__ = ctr_heap_allocate (sizeof (ctr_argument));
+		  while (argList && argList->object)
+		    {
+		      arglist__->object = argList->object;
+		      ctr_array_push (arr, arglist__);
+		      argList = argList->next;
+		    }
+		  ctr_heap_free (arglist__);
+		  ctr_assign_value_to_local
+		    (ctr_build_string (parameter->value + 1, parameter->vlen - 1), arr);
+		}
+	      else if (unlikely (!was_vararg))
+		{
+		  a = argList->object;
+		  ctr_assign_value_to_local
+		    (ctr_build_string (parameter->value, parameter->vlen), a);
+		}
+	    }
+	  if (!argList || !argList->next)
+	    break;
+	  argList = argList->next;
+	  if (!parameterList->next)
+	    break;
+	  parameterList = parameterList->next;
+	  parameter = parameterList->node;
+	}
+    }
+  ctr_assign_value_to_local_by_ref (ctr_build_string_from_cstring (ctr_clex_keyword_me), ctx);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
+  ctr_object *this = ctr_build_string ("thisBlock", 9);
+  ctr_assign_value_to_local (this, block);	/* otherwise running block may get gc'ed. */
+  int p = myself->properties->size - 1;
+  struct ctr_mapitem *head;
+  head = myself->properties->head;
+  while (p > -1)
+    {
+      ctr_assign_value_to_my (head->key, head->value);
+      head = head->next;
+      p--;
+    }
+  //ctr_block_run_cache_set_ready_for_comp();
+  result = ctr_cwlk_run (codeBlockPart2);
+  if (result == NULL)
+    {
+	result = block;
+    }
+  ctr_close_context ();
+  if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak
+      && CtrStdFlow != CtrStdContinue && CtrStdFlow != CtrStdExit)
+    {
+      ctr_object *catchBlock = ctr_internal_object_find_property (myself,
+								  ctr_build_string_from_cstring
+								  ("catch"),
+								  0);
+      if (catchBlock != NULL)
+	{
+	  ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+	  a->object = CtrStdFlow;
+	  CtrStdFlow = NULL;
+	  ctr_object *alternative = ctr_block_run (catchBlock, a, ctx);
+	  ctr_heap_free (a);
+	  result = alternative;
+	}
+    }
+  return result;
+}
+
+/**
  * [Reflect] runHere: [Block] forObject: [o:Object] arguments: [Array]
  *
  * runs a block with its 'me'/'my' set to object, without switching contexts

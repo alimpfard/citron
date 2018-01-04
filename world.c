@@ -13,7 +13,7 @@
 #include "citron.h"
 #include "siphash.h"
 
-static const all_signals[] = {
+static const int all_signals[] = {
 #ifdef SIGHUP
   SIGHUP,
 #endif
@@ -929,6 +929,73 @@ ctr_internal_create_mapped_object (int type, int shared)
 /**
  * @internal
  *
+ * InternalStandaloneObjectCreate
+ *
+ * Creates an object that is not connected to the rest of the objects.
+ * the caller must clean this object up.
+ */
+ctr_object *ctr_internal_create_standalone_object (int type)
+{
+  return ctr_internal_create_mapped_standalone_object (type, 0);
+}
+
+inline ctr_object *ctr_internal_create_mapped_standalone_object (int type, int shared)
+{
+  ctr_object *o;
+  o = shared ==
+    1 ? ctr_heap_allocate_shared (sizeof (ctr_object)) : ctr_heap_allocate (sizeof (ctr_object));
+  o->properties =
+    shared ==
+    1 ? ctr_heap_allocate_shared (sizeof (ctr_map)) : ctr_heap_allocate (sizeof (ctr_map));
+  o->methods =
+    shared ==
+    1 ? ctr_heap_allocate_shared (sizeof (ctr_map)) : ctr_heap_allocate (sizeof (ctr_map));
+  o->properties->size = 0;
+  o->methods->size = 0;
+  o->properties->head = NULL;
+  o->methods->head = NULL;
+  o->release_hook = NULL;
+  o->info.type = type;
+  o->info.sticky = 0;
+  o->info.mark = 0;
+  o->info.remote = 0;
+  o->info.shared = shared;
+  o->info.raw = 0;
+  if (type == CTR_OBJECT_TYPE_OTBOOL)
+    o->value.bvalue = 0;
+  if (type == CTR_OBJECT_TYPE_OTNUMBER)
+    o->value.nvalue = 0;
+  if (type == CTR_OBJECT_TYPE_OTSTRING)
+    {
+      o->value.svalue =
+	shared ==
+	1 ? ctr_heap_allocate_shared (sizeof (ctr_string)) :
+	ctr_heap_allocate (sizeof (ctr_string));
+      o->value.svalue->value = "";
+      o->value.svalue->vlen = 0;
+    }
+  o->gnext = NULL;
+  return o;
+}
+
+/**
+ * @internal
+ *
+ * InternalStandaloneObjectDelete
+ *
+ * Deletes an object that was previously made with InternalStandaloneObjectCreate
+ */
+void ctr_internal_delete_standalone_object (ctr_object* o)
+{
+  void (*free_heap_maybe_shared)(void*) = o->info.shared ? &ctr_heap_free_shared : &ctr_heap_free;
+  free_heap_maybe_shared(o->properties);
+  free_heap_maybe_shared(o->methods);
+  free_heap_maybe_shared(o);
+}
+
+/**
+ * @internal
+ *
  * InternalFunctionCreate
  *
  * Create a function and add this to the object as a method.
@@ -1036,6 +1103,25 @@ ctr_internal_cast2bool (ctr_object * o)
       return ctr_build_bool (0);
     }
   return boolObject;
+}
+
+/**
+ * @internal
+ *
+ * ContextSwitch
+ *
+ * Switches to an existing context.
+ */
+void
+ctr_switch_context (ctr_object* context)
+{
+  if (ctr_context_id >= 99999)
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("Too many nested calls.");
+      CtrStdFlow->info.sticky = 1;
+    }
+  context->info.sticky = 1;
+  ctr_contexts[++ctr_context_id] = context;
 }
 
 /**
@@ -2121,7 +2207,9 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdCommand,
 			    ctr_build_string_from_cstring ("signal:"), &ctr_command_sig);
   ctr_internal_create_func (CtrStdCommand,
-			    ctr_build_string_from_cstring (CTR_DICT_SERVE), &ctr_command_accept);
+  		    ctr_build_string_from_cstring (CTR_DICT_SERVE), &ctr_command_accept);
+  ctr_internal_create_func (CtrStdCommand,
+  		    ctr_build_string_from_cstring ("serve_ipv4:"), &ctr_command_accepti4);
   ctr_internal_create_func (CtrStdCommand,
 			    ctr_build_string_from_cstring
 			    (CTR_DICT_CONN_LIMIT), &ctr_command_accept_number);
@@ -2388,6 +2476,11 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdObject,
 			    ctr_build_string_from_cstring ("&method:"),
 			    &ctr_reflect_object_delegate_get_responder);
+
+  ctr_internal_create_func (CtrStdObject,
+			    ctr_build_string_from_cstring ("run:inContext:arguments:"),
+			    &ctr_reflect_run_for_object_in_ctx);
+
   ctr_internal_object_add_property (CtrStdWorld,
 				    ctr_build_string_from_cstring ("Reflect"), CtrStdReflect, 0);
   CtrStdReflect->info.sticky = 1;

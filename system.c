@@ -466,6 +466,7 @@ ctr_gc_sweep (int all)
 void
 ctr_gc_internal_collect ()
 {
+  if(ctr_gc_mode == 0) return;
   ctr_object *context;
   int oldcid;
   ctr_gc_dust_counter = 0;
@@ -1718,6 +1719,92 @@ ctr_command_accept (ctr_object * myself, ctr_argument * argumentList)
   serv_addr.sin6_family = AF_INET6;
   serv_addr.sin6_addr = in6addr_any;
   serv_addr.sin6_port = htons (ctr_default_port);	//atoi?
+  bind (listenfd, (struct sockaddr *) &serv_addr, sizeof (serv_addr));
+  if (listen (listenfd, 10) == -1)
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("Unable to listen to socket.");
+      return CtrStdNil;
+    }
+  x = 0;
+  while (1 && (ctr_accept_n_connections == 0 || (x < ctr_accept_n_connections)))
+    {
+      x++;
+      while ((connfd = accept (listenfd, (struct sockaddr *) NULL, NULL)) == -1);	// accept awaiting request
+      //read( connfd, &lengthBuff, sizeof(ctr_size));
+      //printf("%d", lengthBuff);
+      printf ("Accepted connection\n");
+      lengthBuff = 3000 * sizeof (ctr_size);
+      dataBuff = ctr_heap_allocate (lengthBuff + 1);
+      if ((lengthBuff = read (connfd, dataBuff, lengthBuff)) == -1)
+	{
+	  printf ("%s\n", strerror (errno));
+	  exit (1);
+	}
+      stringObj = ctr_string_ltrim (ctr_build_string_from_cstring (dataBuff), NULL);	//TODO:  JSON?
+      if (stringObj->value.svalue->vlen >= 6
+	  && strncmp (stringObj->value.svalue->value, "Array ", 6) == 0)
+	{	//it was a correct message
+	  messageDescriptorArray = ctr_string_eval (stringObj, NULL);
+	  if (messageDescriptorArray->info.type == CTR_OBJECT_TYPE_OTARRAY)
+	    {
+	      messageSelector = ctr_array_shift (messageDescriptorArray, NULL);
+	    }
+	  else
+	    {
+	      messageSelector = ctr_internal_cast2string (messageDescriptorArray);
+	    }
+	  callArgument = ctr_heap_allocate (sizeof (ctr_argument));
+	  callArgument->object = messageSelector;
+	  callArgument->next = ctr_heap_allocate (sizeof (ctr_argument));
+	  callArgument->next->object = messageDescriptorArray;
+	  answerObj = ctr_internal_cast2string (ctr_object_message (responder, callArgument));
+	  ctr_heap_free (callArgument->next);
+	  ctr_heap_free (callArgument);
+	}
+      else
+	{
+	  answerObj =
+	    ctr_internal_cast2string (ctr_send_message_variadic
+				      (responder, "handleRequest:", 14, 1, stringObj));
+	}
+      //write( connfd, (ctr_size*) &answerObj->value.svalue->vlen, sizeof(ctr_size) );
+      write (connfd, answerObj->value.svalue->value, answerObj->value.svalue->vlen);
+      ctr_heap_free (dataBuff);
+      close (connfd);
+    }
+  shutdown (listenfd, SHUT_RDWR);
+  close (listenfd);
+  return 0;
+}
+
+/**
+ * [Program] serve_ipv4: [Object].
+ *
+ * Serves an object. Client programs can now communicate with this object
+ * and send messages to it. starts the server with an ipv4 binding
+ */
+ctr_object *
+ctr_command_accepti4 (ctr_object * myself, ctr_argument * argumentList)
+{
+  int listenfd = 0, connfd = 0;
+  ctr_object *responder;
+  ctr_object *answerObj;
+  ctr_object *stringObj;
+  ctr_object *messageDescriptorArray;
+  ctr_object *messageSelector;
+  ctr_argument *callArgument;
+  char *dataBuff;
+  ctr_size lengthBuff;
+  struct sockaddr_in serv_addr;
+  uint8_t x;
+  ctr_check_permission (CTR_SECPRO_COUNTDOWN);
+  ctr_check_permission (CTR_SECPRO_FORK);
+  responder = argumentList->object;
+  listenfd = socket (AF_INET, SOCK_STREAM, 0);
+  bzero ((char *) &serv_addr, sizeof (serv_addr));
+  serv_addr.sin_family = AF_INET;
+  serv_addr.sin_addr.s_addr = INADDR_ANY;
+  serv_addr.sin_port = htons (ctr_default_port);	//atoi?
   bind (listenfd, (struct sockaddr *) &serv_addr, sizeof (serv_addr));
   if (listen (listenfd, 10) == -1)
     {

@@ -81,7 +81,7 @@ ctr_file_tmp (ctr_object * myself, ctr_argument * argumentList)
   if (f == NULL)
     {
       char *buf = ctr_heap_allocate (sizeof (char) * 1024);
-      sprintf (buf, "%d: %d", fd, strerror (errno));
+      sprintf (buf, "%d: %s", fd, strerror (errno));
       CtrStdFlow = ctr_build_string_from_cstring (buf);
       ctr_heap_free (buf);
       return CtrStdFlow;

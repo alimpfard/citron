@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <unistd.h>
-#include "SDL.h"
+#include <SDL/SDL.h>
 
 #define NEW 1
 
@@ -91,8 +91,7 @@ ctr_object* ctr_sdl_event_types_make(ctr_object* myself, int type, char* name);
 // Helper funcs
 ctr_object* ctr_sdl_evt_init(ctr_object* object, ctr_sdl_evt_t type) {
   object->value.rvalue->ptr = ctr_heap_allocate_tracked(sizeof(ctr_sdl_evt));
-  if (type != -1)
-    ((ctr_sdl_evt*)(object->value.rvalue->ptr))->type = type;
+  ((ctr_sdl_evt*)(object->value.rvalue->ptr))->type = type;
   return object;
 }
 ctr_object* ctr_sdl_create_container_of_type(ctr_sdl_t type) {
@@ -306,6 +305,7 @@ ctr_object* ctr_sdl_rect_alterh(ctr_object* myself, ctr_argument* argumentList) 
    return ctr_internal_object_find_property(myself, ctr_internal_cast2string(argumentList->object), CTR_CATEGORY_PRIVATE_PROPERTY);
  }
  ctr_object* ctr_sdl_color_to_string(ctr_object* myself, ctr_argument* argumentList) {
+   if(myself == CtrStdColor) return ctr_build_string_from_cstring("RGBA[null,null,null,null]");
    char str[512];
 
    int r,g,b,a;
@@ -387,7 +387,10 @@ ctr_object* ctr_sdl_surface_fill(ctr_object* myself, ctr_argument* argumentList)
   #else
   uint32_t color = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
   #endif
-  SDL_FillRect(surface, rect, color);
+  if(SDL_FillRect(surface, rect, color) == -1) {
+    CtrStdFlow = ctr_build_string_from_cstring("Could not fill rect.");
+    return CtrStdNil;
+  }
   return myself;
 }
 

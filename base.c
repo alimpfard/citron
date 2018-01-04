@@ -1632,16 +1632,20 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
   block->info.sticky = 1;
   t = myself->value.nvalue;
   arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+  ctr_open_context();
   for (i = 0; i < t; i++)
     {
-      indexNumber = ctr_build_number_from_float ((ctr_number) i);
+      indexNumber = ctr_internal_create_standalone_object(CTR_OBJECT_TYPE_OTNUMBER);
+      indexNumber->value.nvalue = (ctr_number)i;
       arguments->object = indexNumber;
-      ctr_block_run (block, arguments, NULL);
+      ctr_block_run_here (block, arguments, NULL);
+      ctr_internal_delete_standalone_object(indexNumber);
       if (CtrStdFlow == CtrStdContinue)
 	CtrStdFlow = NULL;	/* consume continue */
       if (CtrStdFlow)
 	break;
     }
+  ctr_close_context();
   ctr_heap_free (arguments);
   if (CtrStdFlow == CtrStdBreak)
     CtrStdFlow = NULL;	/* consume break */
@@ -1896,16 +1900,21 @@ ctr_number_to_step_do (ctr_object * myself, ctr_argument * argumentList)
       CtrStdFlow = ctr_build_string_from_cstring ("Expected block.");
       return myself;
     }
+  ctr_open_context();
+  arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   while (((forward && curValue <= endValue) || (!forward && curValue >= endValue)) && !CtrStdFlow)
     {
-      arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
-      arguments->object = ctr_build_number_from_float (curValue);
-      ctr_block_run (codeBlock, arguments, NULL);
-      ctr_heap_free (arguments);
+      ctr_object* arg = ctr_internal_create_standalone_object(CTR_OBJECT_TYPE_OTNUMBER);
+      arg->value.nvalue = (ctr_number)curValue;
+      arguments->object = arg;
+      ctr_block_run_here (codeBlock, arguments, NULL);
+      ctr_internal_delete_standalone_object(arg);
       if (CtrStdFlow == CtrStdContinue)
 	CtrStdFlow = NULL;	/* consume continue and go on */
       curValue += incValue;
     }
+  ctr_heap_free (arguments);
+  ctr_close_context();
   if (CtrStdFlow == CtrStdBreak)
     CtrStdFlow = NULL;	/* consume break */
   return myself;
@@ -3988,7 +3997,7 @@ ctr_string_csub (ctr_object * myself, ctr_argument * argumentList)
       return myself;
     }
   if (ctr_string_length (myself, NULL)->value.nvalue > 1
-      || v && ctr_string_length (argumentList->object, NULL)->value.nvalue > 1)
+      || (v && ctr_string_length (argumentList->object, NULL)->value.nvalue > 1))
     {
       CtrStdFlow =
 	ctr_build_string_from_cstring ("underlaying string for '-' must be one character only.");
@@ -4024,7 +4033,7 @@ ctr_string_cadd (ctr_object * myself, ctr_argument * argumentList)
       return myself;
     }
   if (ctr_string_length (myself, NULL)->value.nvalue > 1
-      || v && ctr_string_length (argumentList->object, NULL)->value.nvalue > 1)
+      || (v && ctr_string_length (argumentList->object, NULL)->value.nvalue > 1))
     {
       CtrStdFlow =
 	ctr_build_string_from_cstring ("underlaying string for '-' must be one character only.");
@@ -4888,15 +4897,17 @@ ctr_block_while_true (ctr_object * myself, ctr_argument * argumentList)
   sticky2 = argumentList->object->info.sticky;
   myself->info.sticky = 1;
   argumentList->object->info.sticky = 1;
+  ctr_open_context();
   while (1 && !CtrStdFlow)
     {
-      ctr_object *result = ctr_internal_cast2bool (ctr_block_run (myself, argumentList, NULL));
+      ctr_object *result = ctr_internal_cast2bool (ctr_block_run_here (myself, argumentList, NULL));
       if (result->value.bvalue == 0 || CtrStdFlow)
 	break;
-      ctr_block_run (argumentList->object, argumentList, NULL);
+      ctr_block_run_here (argumentList->object, argumentList, NULL);
       if (CtrStdFlow == CtrStdContinue)
 	CtrStdFlow = NULL;	/* consume continue */
     }
+  ctr_close_context();
   if (CtrStdFlow == CtrStdBreak)
     CtrStdFlow = NULL;	/* consume break */
   myself->info.sticky = sticky1;
@@ -4923,15 +4934,17 @@ ctr_block_while_true (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_block_while_false (ctr_object * myself, ctr_argument * argumentList)
 {
+  ctr_open_context();
   while (1 && !CtrStdFlow)
     {
-      ctr_object *result = ctr_internal_cast2bool (ctr_block_run (myself, argumentList, NULL));
+      ctr_object *result = ctr_internal_cast2bool (ctr_block_run_here (myself, argumentList, NULL));
       if (result->value.bvalue == 1 || CtrStdFlow)
 	break;
-      ctr_block_run (argumentList->object, argumentList, NULL);
+      ctr_block_run_here (argumentList->object, argumentList, NULL);
       if (CtrStdFlow == CtrStdContinue)
 	CtrStdFlow = NULL;	/* consume continue */
-    }
+}
+  ctr_close_context();
   if (CtrStdFlow == CtrStdBreak)
     CtrStdFlow = NULL;	/* consume break */
   return myself;

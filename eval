@@ -100,7 +100,9 @@ Eval on: 'Commands' do: {
       + server [<port>] -- make an eval server on port <port>, or a random port.
       + !server -- kill the eval server
       + h -- show this help'.} at: 'h',
-      put: {^Eval stopEvalServer.} at: '!server'.
+      put: {^Eval stopEvalServer.} at: '!server',
+      put: {:args ^Reflect getPropertiesOf: (args eval).} at: '!p',
+      put: {:args ^Reflect getMethodsOf: (args eval).} at: '!m'.
   }.
   ^my commands.
 }.
@@ -122,7 +124,7 @@ Eval on: 'evaluate:' do: { :str
           Eval instrument.
           ^(str startsWith: 'import') not
             either: ({
-                ^Reflect runAtGlobal: {:str ^str eval.} arguments: str. 
+                ^Reflect runAtGlobal: {:str ^str eval.} arguments: str.
                 } catch: {:e Eval handleException.}
             ) or: ({
                 ^str eval.

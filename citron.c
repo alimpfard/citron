@@ -92,6 +92,8 @@ main (int argc, char *argv[])
   ctr_clex_keyword_var_len = strlen (ctr_clex_keyword_var);
   ctr_clex_keyword_const_len = strlen (ctr_clex_keyword_const);
   ctr_internal_next_return = 0;
+  ctr_clex_quiet = 0;
+  ctr_cparse_quiet = 0;
 #if (DO_PROFILE)
   ProfilerStart ("citron.log");
 #endif
@@ -167,6 +169,8 @@ initialize (int extensions)
   ctr_clex_keyword_var_len = strlen (ctr_clex_keyword_var);
   ctr_clex_keyword_const_len = strlen (ctr_clex_keyword_const);
   ctr_mode_input_file = ctr_heap_allocate (sizeof (char) * 4);
+  ctr_clex_quiet = 0;
+  ctr_cparse_quiet = 0;
   memcpy (ctr_mode_input_file, "lib", 3);
   *(ctr_mode_input_file + 3) = '\0';
   ctr_initialize_world ();

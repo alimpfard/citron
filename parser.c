@@ -20,9 +20,12 @@ int all_plains_private = 0;
 void
 ctr_cparse_emit_error_unexpected (int t, char *hint)
 {
+  char buf[1024];
   char *message = ctr_clex_tok_describe (t);
-  printf ("Parse error, unexpected %s ( %s: %d )\n", message,
+  sprintf (buf, "Parse error, unexpected %s ( %s: %d )\n", message,
 	  ctr_cparse_current_program, ctr_clex_line_number + 1);
+  if(ctr_cparse_quiet) return;
+  memcpy(ctr_last_parser_error, buf, strlen(buf));
   if (hint)
     {
       printf ("%s", hint);
@@ -260,7 +263,7 @@ ctr_cparse_tuple ()
   r->nodes = codeBlockPart1;
   paramList = ctr_cparse_create_node (CTR_AST_NODE);
   codeBlockPart1->node = paramList;
-  paramList->type = CTR_AST_NODE_PARAMLIST;
+  paramList->type = CTR_AST_NODE_NESTED;
 
   t = ctr_clex_tok ();
   ctr_clex_putback ();

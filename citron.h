@@ -56,6 +56,7 @@
  */
 #define CTR_AST_NODE 1
 #define CTR_AST_PROGRAM 3
+#define CTR_AST_TYPE 5
 
 /**
  * Define the Citron node types for the
@@ -343,6 +344,7 @@ long    ctr_clex_tok_value_length();
 void 	ctr_clex_putback();
 char*	ctr_clex_readstr();
 char*   ctr_clex_tok_describe( int token );
+int     ctr_clex_quiet;
 char*   ctr_clex_keyword_var;
 char*   ctr_clex_keyword_me;
 char*   ctr_clex_keyword_my;
@@ -378,7 +380,9 @@ int ctr_utf8size(char c);
 ctr_tnode* ctr_cparse_parse(char* prg, char* pathString);
 ctr_tnode* ctr_cparse_expr(int mode);
 ctr_tnode* ctr_cparse_ret();
+int     ctr_cparse_quiet;
 
+static char* ctr_last_parser_error;
 /**
  * Abstract Tree Walker functions
  */
@@ -406,6 +410,9 @@ inline ctr_object* ctr_internal_cast2number(ctr_object* o);
 inline ctr_object* ctr_internal_cast2string( ctr_object* o );
 ctr_object* ctr_internal_create_object(int type);
 ctr_object* ctr_internal_create_mapped_object(int type, int shared);
+ctr_object *ctr_internal_create_standalone_object (int type);
+inline ctr_object *ctr_internal_create_mapped_standalone_object (int type, int shared);
+void ctr_internal_delete_standalone_object (ctr_object* o);
 void*       ctr_internal_plugin_find( ctr_object* key );
 ctr_object* ctr_find_(ctr_object* key, int noerror);
 ctr_object* ctr_find(ctr_object* key);
@@ -434,6 +441,7 @@ void ctr_print_stack_trace();
  */
 void ctr_open_context();
 void ctr_close_context();
+void ctr_switch_context();
 
 /**
  * Global Scoping variables
@@ -807,6 +815,7 @@ ctr_object* ctr_command_pid(ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_command_sig(ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_command_sigmap(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_command_accept(ctr_object* myself, ctr_argument* argumentList );
+ctr_object* ctr_command_accepti4(ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_command_accept_number(ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_command_remote(ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_command_default_port(ctr_object* myself, ctr_argument* argumentList );
@@ -936,6 +945,7 @@ ctr_object* ctr_reflect_instrmsg(ctr_object* myself, ctr_argument* argumentList)
 ctr_object* ctr_reflect_register_instrumentor(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_get_instrumentor(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_glob(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_run_for_object_in_ctx (ctr_object* myself, ctr_argument* argumentList);
 int ctr_internal_has_own_responder(ctr_object* myself, ctr_object* meth);
 int ctr_internal_has_responder(ctr_object* myself, ctr_object* meth);
 // ctr_object* ctr_reflect_dump_function(ctr_object* myself, ctr_argument* argumentList);

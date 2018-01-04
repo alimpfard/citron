@@ -1,84 +1,35 @@
-Broom memoryLimit: 1024 * 1024 * 1024 * 12.
-Broom mode: 0.
+Broom autoAlloc: True.
+var sdl is SDL new set: 'windowName' to: 'What? SDL? what sorcery is this?', set: 'windowWidth' to: 100, set: 'windowHeight' to: 50.
+# Map on: 'respondTo:' do: {:msg
+#   ^(msg at: 0, = '@') either: {^const me at: (msg skip: 1).} or: {^const me `respondTo: msg.}.
+# }.
+var colors is Map new
+  put: (Color rgb: [255, 0, 0]) at: 'red',
+  put: (Color rgb: [0, 255, 0]) at: 'green',
+  put: (Color rgb: [0, 0, 255]) at: 'blue',
+  put: (Color rgb: [0] * 3) at: 'black',
+  put: (Color rgb: [255] * 3) at: 'white',
+  put: (Color rgb: [255, 192, 203]) at: 'pink',
+  put: (Color rgb: [255, 0, 255]) at: 'magenta',
+  put: (Color rgb: [128, 0, 128]) at: 'purple'.
 
-var Complex is Object new genAccessors: 'real', genAccessors: 'imaginary'.
-Complex on: 'real:imaginary:' do: {:r:i
-  my real is r.
-  my imaginary is i.
+Pen writeln: (colors at: 'purple').
+[height, width] is ['windowHeight', 'windowWidth'] fmap: {:p ^Reflect getProperty: p ofObject: sdl, / 2.}.
+var rects is [[0, 0], [0, width], [height, 0], [height, width]] fmap: {:x
+  ^sdl message: 'newRectWithX:andY:andW:andH:' arguments: x reverse + [width, height].
 }.
-Complex on: 'abs' do: {^(my imaginary toPowerOf: 2) + (my real toPowerOf: 2) sqrt.}.
-Complex on: 'add:' do: {:c
-  ^Complex new real: (my real + (c real)) imaginary: (my imaginary + (c imaginary)).
+var colorFor is {:x:y
+  ^(x > y) either: (colors at: 'red') or: (colors at: 'blue').
 }.
-Complex on: 'mul:' do: {:c
-  ^Complex new real: ((my real * (c real)) - (my imaginary * (c imaginary))) imaginary: ((my real * (c imaginary)) + (my imaginary * (c real))).
-}.
-Complex learn: '*' means: 'mul:'.
-Complex learn: '+' means: 'add:'.
+var window is sdl init.
 
-
-var Mandel is {:z:maxiter
-  var c is z.
-  var ret is maxiter.
-  var iter is 0.
-  {^(iter < maxiter) & ((z abs) < 2).} whileTrue: {
-      ret is iter.
-      z is z * z + c.
-      iter +=: 1.
+(2 * width) times: {:x
+  (2 * height) times: {:y
+    window setPixelWithX: x andY: y toColor: (colorFor applyTo: x and: y).
+    Pen writeln: [x, y].
   }.
-  ^ret.
-}.
-
-var linspace is {:r:split
-  r unpack: ['init', 'end'].
-  ^Iterator rangeFrom: init to: end step: (end - init / split), toArray.
-}.
-
-var mandelSet is {:x:y:d:maxiter
-    var r1 is linspace applyTo: x and: (d at: 0).
-    var r2 is linspace applyTo: y and: (d at: 1).
-    ^[r1,r2,
-      (
-      (r1 * r2) fmap: {:v ^Mandel applyTo: (Complex new message: 'real:imaginary:' arguments: v) and: maxiter.}
-      )
-    ].
-}.
-
-var mandel is (mandelSet applyTo: [-2,0.5] and: [-1.25,1.25] and: [30,30] and: 80) @ 2.
-
-# Broom sweep.
-
-var prot is SDL new.
-var w is 100.
-var h is 100.
-var window is prot
- set: 'windowName' to: 'Razavi = Douchebag',
- set: 'windowHeight' to: h,
- set: 'windowWidth' to: w,
- init.
-
-
-nit is h.
-var c is Color rgb: [0,0,0].
-var r1 is linspace applyTo: [0,100] and: 100.
-var r2 is linspace applyTo: [0,100] and: 100.
-var space is r1 * r2.
-
-eh is 0.
-{ ^True. } whileTrue: {
-    Clock wait: 200000.
-    space each: {:i:v
-      var x is v @ 0.
-      var y is v @ 1.
-      var a is (x / 20 * 9 + (y / 20)) floor.
-      c set: 'red' to: (mandel at: a).
-      window setPixelWithX: x andY: y toColor: c.
-    }.
-    window update.
-    eh +=: 1.
-    Broom sweep: mandel.
-    mandel is (mandelSet applyTo: [(-2 + (eh / 100)),(0.5 + (eh / 100))] and: [(-1.25 + (eh / 100)),(1.25 + (eh / 100))] and: [30,30] and: 80) @ 2.
+  window update.
 }.
 
 Program waitForInput.
-SDL quit.
+sdl quit.

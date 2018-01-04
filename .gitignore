@@ -4,3 +4,5 @@
 ctr
 *.js
 *.yml
+callgrind.out.*
+cachegrind.out.*

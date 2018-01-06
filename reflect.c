@@ -1394,9 +1394,8 @@ ctr_object *ctr_reflect_run_for_object_in_ctx(ctr_object * myself,
 			parameter = parameterList->node;
 		}
 	}
-	ctr_assign_value_to_local_by_ref(ctr_build_string_from_cstring(ctr_clex_keyword_me), ctx);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
-	ctr_object *this = ctr_build_string("thisBlock", 9);
-	ctr_assign_value_to_local(this, block);	/* otherwise running block may get gc'ed. */
+	ctr_assign_value_to_local_by_ref(ctr_static_clex_keyword_me_str, ctx);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
+	ctr_assign_value_to_local(ctr_static_keyword_this, block);	/* otherwise running block may get gc'ed. */
 	int p = myself->properties->size - 1;
 	struct ctr_mapitem *head;
 	head = myself->properties->head;
@@ -1415,8 +1414,7 @@ ctr_object *ctr_reflect_run_for_object_in_ctx(ctr_object * myself,
 	    && CtrStdFlow != CtrStdContinue && CtrStdFlow != CtrStdExit) {
 		ctr_object *catchBlock =
 		    ctr_internal_object_find_property(myself,
-						      ctr_build_string_from_cstring
-						      ("catch"),
+						      ctr_static_keyword_catch,
 						      0);
 		if (catchBlock != NULL) {
 			ctr_argument *a =

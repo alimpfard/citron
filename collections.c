@@ -1641,7 +1641,7 @@ ctr_object *ctr_array_assign(ctr_object * myself, ctr_argument * argumentList)
 		}
 	} else if (to->info.type == CTR_OBJECT_TYPE_OTSTRING) {
 		if (ctr_internal_object_is_equal
-		    (argumentList->object, ctr_build_string_from_cstring("_"))
+		    (argumentList->object, ctr_static_keyword_underscore)
 		    || ctr_internal_object_is_equal(argumentList->object,
 						    ctr_build_empty_string()))
 			goto clear;

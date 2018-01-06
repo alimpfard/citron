@@ -1,6 +1,6 @@
 #!/usr/bin/env ctr
 #
-Broom autoAlloc: True.
+Broom autoAlloc: True. #Allow the memory to go sky-high
 contextPurity is False. #This is not a pure context, since objects are mutated in-between evaluations. so disallowing purely functional things.
 #Pen write: 'Extensions: ' + (File extensionsPath), brk.
 File new: (File extensionsPath) + '/extensions/fileutils.ctr', include.
@@ -99,6 +99,8 @@ Eval on: 'Commands' do: {
       + t <expression> -- type of expression
       + server [<port>] -- make an eval server on port <port>, or a random port.
       + !server -- kill the eval server
+      + !m <expression> -- methods of the expression
+      + !p <expression> -- properties of the expression
       + h -- show this help'.} at: 'h',
       put: {^Eval stopEvalServer.} at: '!server',
       put: {:args ^Reflect getPropertiesOf: (args eval).} at: '!p',
@@ -174,7 +176,7 @@ var __ is Nil.
 Reflect registerInstrumentor: {:obj:msg:args
   Reflect disableInstrumentation.
   var ret is obj message: msg arguments: args.
-  Pen green write: ('\n(%s : %s.%s(%s) => %s [%s]' formatObjects: [(Reflect generateLinkTree: obj join: '<-'), obj, msg, (args join: ', '), ret, (ret type)]), resetColor brk.
+  Pen green write: ('\n(%s : %s.%s(%s) => %s [%s]' formatObjects: [((var name is Reflect generateLinkTree: obj) join: '<-'), (name @ 0), msg, (args join: ', '), ret, (ret type)]), resetColor brk.
   Reflect enableInstrumentation.
   ^ret.
 }.

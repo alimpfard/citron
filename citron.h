@@ -435,6 +435,7 @@ void ctr_internal_create_func(ctr_object* o, ctr_object* key, ctr_object* (*func
 int ctr_is_primitive(ctr_object* object);
 ctr_object* ctr_get_stack_trace();
 void ctr_print_stack_trace();
+ctr_object* ctr_object_get_property(ctr_object* myself, ctr_argument* argumentList);
 
 /**
  * Scoping functions
@@ -1028,6 +1029,47 @@ void initiailize_base_extensions();
 
 uint8_t  ctr_accept_n_connections;
 uint16_t ctr_default_port;
+
+//set to 1 if value is an intermediate.
+//the returned value must be discarded of by the caller.
+//by ctr_internal_delete_standalone_object
+int ctr_intermediate_value_alloc_state;
+void ctr_internal_alloc_set_exported();
+void ctr_internal_alloc_set_intermediate();
+
+void ctr_inter_delete_helper(int count, ...);
+
+//XXX : Max length of varargs is 9. do not send any more!
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
+
+/* C99-style: anonymous argument referenced by __VA_ARGS__, empty arg not OK */
+
+# define N_ARGS(...) N_ARGS_HELPER1(__VA_ARGS__, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
+# define N_ARGS_HELPER1(...) N_ARGS_HELPER2(__VA_ARGS__)
+# define N_ARGS_HELPER2(x1, x2, x3, x4, x5, x6, x7, x8, x9, n, ...) n
+
+# define CTR_INTER_DELETE(...) ctr_inter_delete_helper(N_ARGS(__VA_ARGS__), ##__VA_ARGS__)
+# define CTR_INTER_CLOSE(iname, ...) ctr_intermediate_value_alloc_state = iname; CTR_INTER_DELETE(__VA_ARGS__);}
+
+#elif defined(__GNUC__)
+
+/* GCC-style: named argument, empty arg is OK */
+
+# define N_ARGS(args...) N_ARGS_HELPER1(args, 9, 8, 7, 6, 5, 4, 3, 2, 1)
+# define N_ARGS_HELPER1(args...) N_ARGS_HELPER2(args)
+# define N_ARGS_HELPER2(x1, x2, x3, x4, x5, x6, x7, x8, x9, n, x...) n
+
+# define CTR_INTER_DELETE(args...) ctr_inter_delete_helper(N_ARGS(args), args)
+# define CTR_INTER_CLOSE(iname, args...) ctr_intermediate_value_alloc_state = iname; CTR_INTER_DELETE(args);}
+
+
+#else
+
+#error I don't know how to handle varargs on your compiler.
+
+#endif
+
+#define CTR_INTER(iname) {int iname = ctr_intermediate_value_alloc_state; ctr_internal_alloc_set_intermediate();
 
 #include "citron_ensure.h"
 #include "citron_conv.h"

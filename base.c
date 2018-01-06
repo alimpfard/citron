@@ -103,13 +103,12 @@ ctr_object *ctr_nil_assign(ctr_object * myself, ctr_argument * argumentList)
 		return myself;
 	}
 	if (ctr_internal_object_is_equal
-	    (argumentList->object, ctr_build_string_from_cstring("_"))
+	    (argumentList->object, ctr_static_keyword_underscore)
 	    || ctr_internal_object_is_equal(argumentList->object,
-					    ctr_build_empty_string()))
+					    ctr_static_empty_string))
 		return myself;
 	ctr_internal_object_set_property(ctr_contexts[ctr_context_id],
-					 ctr_internal_cast2string(argumentList->
-								  object),
+					 argumentList->object,
 					 CtrStdNil, 0);
 	return myself;
 }
@@ -158,7 +157,7 @@ ctr_object *ctr_object_attr_accessor(ctr_object * myself,
 {
 	if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTARRAY) {
 		ctr_object *name =
-		    ctr_internal_cast2string(argumentList->object);
+		    (argumentList->object);
 		ctr_object *property =
 		    ctr_internal_object_find_property(myself, name, 0);
 		if (property == NULL)
@@ -170,7 +169,7 @@ ctr_object *ctr_object_attr_accessor(ctr_object * myself,
 		char *mname = ctr_heap_allocate(sizeof(char) * 512);
 		sprintf(mname, "{:x my %.*s is x.}", name->value.svalue->vlen,
 			name->value.svalue->value);
-		arglist->object = ctr_build_string_from_cstring(":");
+		arglist->object = ctr_static_keyword_colon;
 		arglist->object = ctr_string_concat(name, arglist);
 		arglist->next->object =
 		    ctr_string_eval(ctr_build_string_from_cstring(mname), NULL);
@@ -215,7 +214,7 @@ ctr_object *ctr_object_attr_reader(ctr_object * myself,
 {
 	if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTARRAY) {
 		ctr_object *name =
-		    ctr_internal_cast2string(argumentList->object);
+		    (argumentList->object);
 		ctr_object *property =
 		    ctr_internal_object_find_property(myself, name, 0);
 		if (property == NULL)
@@ -226,7 +225,7 @@ ctr_object *ctr_object_attr_reader(ctr_object * myself,
 		char *mname = ctr_heap_allocate(sizeof(char) * 512);
 		sprintf(mname, "{^my %.*s.}", name->value.svalue->vlen,
 			name->value.svalue->value);
-		arglist->object = ctr_build_string_from_cstring(":");
+		arglist->object = ctr_static_keyword_colon;
 		arglist->object = ctr_string_concat(name, arglist);
 		arglist->next->object =
 		    ctr_string_eval(ctr_build_string_from_cstring(mname), NULL);
@@ -968,7 +967,7 @@ ctr_object *ctr_bool_assign(ctr_object * myself, ctr_argument * argumentList)
 		return myself;
 	}
 	if (ctr_internal_object_is_equal
-	    (argumentList->object, ctr_build_string_from_cstring("_"))
+	    (argumentList->object, ctr_static_keyword_underscore)
 	    || ctr_internal_object_is_equal(argumentList->object,
 					    ctr_build_empty_string()))
 		return myself;
@@ -1330,7 +1329,7 @@ ctr_object *ctr_number_assign(ctr_object * myself, ctr_argument * argumentList)
 		return myself;
 	}
 	if (ctr_internal_object_is_equal
-	    (argumentList->object, ctr_build_string_from_cstring("_"))
+	    (argumentList->object, ctr_static_keyword_underscore)
 	    || ctr_internal_object_is_equal(argumentList->object,
 					    ctr_build_empty_string()))
 		return myself;
@@ -2298,7 +2297,7 @@ ctr_object *ctr_string_assign(ctr_object * myself, ctr_argument * argumentList)
 		return myself;
 	}
 	if (ctr_internal_object_is_equal
-	    (argumentList->object, ctr_build_string_from_cstring("_"))
+	    (argumentList->object, ctr_static_keyword_underscore)
 	    || ctr_internal_object_is_equal(argumentList->object,
 					    ctr_build_empty_string()))
 		return myself;
@@ -4472,7 +4471,7 @@ ctr_object *ctr_block_assign(ctr_object * myself, ctr_argument * argumentList)
 		return myself;
 	}
 	if (ctr_internal_object_is_equal
-	    (argumentList->object, ctr_build_string_from_cstring("_"))
+	    (argumentList->object, ctr_static_keyword_underscore)
 	    || ctr_internal_object_is_equal(argumentList->object,
 					    ctr_build_empty_string()))
 		return myself;
@@ -4573,8 +4572,8 @@ ctr_object *ctr_block_run(ctr_object * myself, ctr_argument * argList,
 		}
 	}
 	if (my)
-		ctr_assign_value_to_local_by_ref(ctr_build_string_from_cstring(ctr_clex_keyword_me), my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
-	ctr_object *this = ctr_build_string("thisBlock", 9);
+		ctr_assign_value_to_local_by_ref(ctr_static_clex_keyword_me_str, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
+		ctr_object* this = ctr_static_keyword_this;
 	ctr_assign_value_to_local(this, myself);	/* otherwise running block may get gc'ed. */
 	int p = myself->properties->size - 1;
 	struct ctr_mapitem *head;
@@ -4595,10 +4594,10 @@ ctr_object *ctr_block_run(ctr_object * myself, ctr_argument * argList,
 	ctr_close_context();
 	if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak
 	    && CtrStdFlow != CtrStdContinue && CtrStdFlow != CtrStdExit) {
+		ctr_object* cname = ctr_static_keyword_catch;
 		ctr_object *catchBlock =
 		    ctr_internal_object_find_property(myself,
-						      ctr_build_string_from_cstring
-						      ("catch"),
+						      cname,
 						      0);
 		if (catchBlock != NULL) {
 			ctr_argument *a =
@@ -4641,7 +4640,7 @@ ctr_object *ctr_block_run_here(ctr_object * myself, ctr_argument * argList,
 				    (strncmp(parameter->value, "*", 1) == 0);
 				if (parameterList->next) {
 					a = argList->object;
-					ctr_assign_value_to_local
+					ctr_assign_value_to_local_by_ref
 					    (ctr_build_string
 					     (parameter->value,
 					      parameter->vlen), a);
@@ -4658,13 +4657,13 @@ ctr_object *ctr_block_run_here(ctr_object * myself, ctr_argument * argList,
 						argList = argList->next;
 					}
 					ctr_heap_free(arglist__);
-					ctr_assign_value_to_local
+					ctr_assign_value_to_local_by_ref
 					    (ctr_build_string
 					     (parameter->value + 1,
 					      parameter->vlen - 1), arr);
 				} else if (!was_vararg) {
 					a = argList->object;
-					ctr_assign_value_to_local
+					ctr_assign_value_to_local_by_ref
 					    (ctr_build_string
 					     (parameter->value,
 					      parameter->vlen), a);
@@ -4680,8 +4679,8 @@ ctr_object *ctr_block_run_here(ctr_object * myself, ctr_argument * argList,
 		}
 	}
 	if (my)
-		ctr_assign_value_to_local_by_ref(ctr_build_string_from_cstring(ctr_clex_keyword_me), my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
-	ctr_assign_value_to_local(ctr_build_string_from_cstring("thisBlock"), myself);	/* otherwise running block may get gc'ed. */
+		ctr_assign_value_to_local_by_ref(ctr_static_clex_keyword_me_str, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
+	ctr_assign_value_to_local(ctr_static_keyword_this, myself);	/* otherwise running block may get gc'ed. */
 	result = ctr_cwlk_run(codeBlockPart2);
 	if (result == NULL) {
 		if (my)
@@ -4693,8 +4692,7 @@ ctr_object *ctr_block_run_here(ctr_object * myself, ctr_argument * argList,
 	    && CtrStdFlow != CtrStdContinue) {
 		ctr_object *catchBlock =
 		    ctr_internal_object_find_property(myself,
-						      ctr_build_string_from_cstring
-						      ("catch"),
+						      ctr_static_keyword_catch,
 						      0);
 		if (catchBlock != NULL) {
 			ctr_argument *a =
@@ -5038,10 +5036,9 @@ ctr_object *ctr_block_catch(ctr_object * myself, ctr_argument * argumentList)
 {
 	ctr_object *catchBlock = argumentList->object;
 	ctr_internal_object_delete_property(myself,
-					    ctr_build_string_from_cstring
-					    ("catch"), 0);
+					    ctr_static_keyword_catch, 0);
 	ctr_internal_object_add_property(myself,
-					 ctr_build_string_from_cstring("catch"),
+					 ctr_static_keyword_catch,
 					 catchBlock, 0);
 	return myself;
 }

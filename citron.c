@@ -90,6 +90,15 @@ int main(int argc, char *argv[])
 	ctr_internal_next_return = 0;
 	ctr_clex_quiet = 0;
 	ctr_cparse_quiet = 0;
+	ctr_static_clex_keyword_me_str = ctr_build_string_from_cstring(ctr_clex_keyword_me);
+	ctr_static_clex_keyword_my_str = ctr_build_string_from_cstring(ctr_clex_keyword_my);
+	ctr_static_clex_keyword_var_str = ctr_build_string_from_cstring(ctr_clex_keyword_var);
+	ctr_static_clex_keyword_const_str = ctr_build_string_from_cstring(ctr_clex_keyword_const);
+	ctr_static_keyword_catch = ctr_build_string_from_cstring("catch");
+	ctr_static_keyword_this = ctr_build_string_from_cstring("thisBlock");
+	ctr_static_keyword_underscore = ctr_build_string_from_cstring("_");
+	ctr_static_keyword_colon = ctr_build_string_from_cstring(":");
+	ctr_static_empty_string = ctr_build_empty_string();
 #if (DO_PROFILE)
 	ProfilerStart("citron.log");
 #endif
@@ -163,6 +172,15 @@ void initialize(int extensions)
 	ctr_mode_input_file = ctr_heap_allocate(sizeof(char) * 4);
 	ctr_clex_quiet = 0;
 	ctr_cparse_quiet = 0;
+	ctr_static_clex_keyword_me_str = ctr_build_string_from_cstring(ctr_clex_keyword_me);
+	ctr_static_clex_keyword_my_str = ctr_build_string_from_cstring(ctr_clex_keyword_my);
+	ctr_static_clex_keyword_var_str = ctr_build_string_from_cstring(ctr_clex_keyword_var);
+	ctr_static_clex_keyword_const_str = ctr_build_string_from_cstring(ctr_clex_keyword_const);
+	ctr_static_keyword_catch = ctr_build_string_from_cstring("catch");
+	ctr_static_keyword_this = ctr_build_string_from_cstring("thisBlock");
+	ctr_static_keyword_underscore = ctr_build_string_from_cstring("_");
+	ctr_static_keyword_colon = ctr_build_string_from_cstring(":");
+	ctr_static_empty_string = ctr_build_empty_string();
 	memcpy(ctr_mode_input_file, "lib", 3);
 	*(ctr_mode_input_file + 3) = '\0';
 	ctr_initialize_world();

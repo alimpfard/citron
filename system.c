@@ -1591,7 +1591,7 @@ ctr_object *ctr_command_remote(ctr_object * myself, ctr_argument * argumentList)
 					 (argumentList->object),
 					 CTR_CATEGORY_PRIVATE_PROPERTY);
 	ctr_internal_object_set_property(remoteObj,
-					 ctr_build_string_from_cstring(":"),
+					 ctr_static_keyword_underscore,
 					 ctr_internal_cast2number(port),
 					 CTR_CATEGORY_PRIVATE_PROPERTY);
 	ctr_internal_object_set_property(remoteObj,

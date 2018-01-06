@@ -1074,4 +1074,15 @@ void ctr_inter_delete_helper(int count, ...);
 #include "citron_ensure.h"
 #include "citron_conv.h"
 
+ctr_object
+	*ctr_static_clex_keyword_me_str,
+	*ctr_static_clex_keyword_my_str,
+	*ctr_static_clex_keyword_var_str,
+	*ctr_static_clex_keyword_const_str,
+	*ctr_static_keyword_catch,
+	*ctr_static_keyword_this,
+	*ctr_static_keyword_underscore,
+	*ctr_static_keyword_colon,
+	*ctr_static_empty_string;
+
 #endif //CTR_H_GUARD

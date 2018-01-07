@@ -127,10 +127,10 @@ Eval on: 'evaluate:' do: { :str
           ^(str startsWith: 'import') not
             either: ({
                 ^Reflect runAtGlobal: {:str ^str eval.} arguments: str.
-                } catch: {:e Eval handleException.}
+                } catch: {:e ^Eval handleException.}
             ) or: ({
                 ^str eval.
-                } catch: {:e Eval handleException.}).
+                } catch: {:e ^Eval handleException.}).
         }).
 }.
 Eval on: 'evaluateFile:' do: { :fl

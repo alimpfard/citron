@@ -628,6 +628,7 @@ ctr_object* ctr_string_assign(ctr_object* myself, ctr_argument* argumentList);
  * Block Interface
  */
 ctr_object* ctr_block_runIt(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_block_runall(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_run_variadic(ctr_object* myself, int count, ...);
 ctr_object* ctr_block_run_variadic_my(ctr_object* myself, ctr_object* my, int count, ...);
 ctr_object* ctr_block_set(ctr_object* myself, ctr_argument* argumentList);

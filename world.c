@@ -1803,6 +1803,11 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdBlock,
 			    ctr_build_string_from_cstring
 			    (CTR_DICT_APPLY_TO_AND_AND "and:and:"), &ctr_block_runIt);
+
+	ctr_internal_create_func (CtrStdBlock,
+			    ctr_build_string_from_cstring
+			    ("applyAll:"), &ctr_block_runall);
+
   ctr_internal_create_func (CtrStdBlock,
 			    ctr_build_string_from_cstring (CTR_DICT_SET_VALUE), &ctr_block_set);
   ctr_internal_create_func (CtrStdBlock,

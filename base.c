@@ -1784,6 +1784,26 @@ ctr_object *ctr_number_negative(ctr_object * myself,
 }
 
 /**
+ * [Number] negate
+ *
+ * Returns the negated value of the number object
+ *
+ * Usage:
+ *
+ * hope is -1.
+ * (hope negate neg) ifTrue: { Pen write: 'No hope left'. }.
+ *
+ * The example above will not print the message because the value of the variable
+ * hope is less than 0.
+ */
+ctr_object *
+ctr_number_negate (ctr_object * myself, ctr_argument * argumentList)
+{
+  return ctr_build_number_from_float (-myself->value.nvalue);
+}
+
+
+/**
  * [Number] max: [other]
  *
  * Returns the biggest number of the two.
@@ -4504,6 +4524,14 @@ ctr_object *ctr_block_run(ctr_object * myself, ctr_argument * argList,
 	ctr_object *a;
 	int was_vararg;
 	ctr_open_context();
+	int p = myself->properties->size - 1;
+	struct ctr_mapitem *head;
+	head = myself->properties->head;
+	while (p > -1) {
+		ctr_assign_value_to_my(head->key, head->value);
+		head = head->next;
+		p--;
+	}
 	if (likely(parameterList && parameterList->node)) {
 		parameter = parameterList->node;
 		while (argList) {
@@ -4575,14 +4603,6 @@ ctr_object *ctr_block_run(ctr_object * myself, ctr_argument * argList,
 		ctr_assign_value_to_local_by_ref(ctr_static_clex_keyword_me_str, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
 		ctr_object* this = ctr_static_keyword_this;
 	ctr_assign_value_to_local(this, myself);	/* otherwise running block may get gc'ed. */
-	int p = myself->properties->size - 1;
-	struct ctr_mapitem *head;
-	head = myself->properties->head;
-	while (p > -1) {
-		ctr_assign_value_to_my(head->key, head->value);
-		head = head->next;
-		p--;
-	}
 	//ctr_block_run_cache_set_ready_for_comp();
 	result = ctr_cwlk_run(codeBlockPart2);
 	if (result == NULL) {
@@ -4615,6 +4635,132 @@ ctr_object *ctr_block_run(ctr_object * myself, ctr_argument * argList,
 }
 
 /**
+ * [Block] applyAll: [Array]
+ *
+ * array as argument
+ */
+
+ctr_object *ctr_block_run_all(ctr_object * myself, ctr_argument * argumentList)
+{
+	ctr_object *result;
+	ctr_tnode *node = myself->value.block;
+	ctr_tlistitem *codeBlockParts = node->nodes;
+	ctr_tnode *codeBlockPart1 = codeBlockParts->node;
+	ctr_tnode *codeBlockPart2 = codeBlockParts->next->node;
+	ctr_tlistitem *parameterList = codeBlockPart1->nodes;
+	ctr_tnode *parameter;
+	ctr_object *a;
+	int was_vararg;
+	ctr_open_context();
+	int p = myself->properties->size - 1;
+	struct ctr_mapitem *head;
+	head = myself->properties->head;
+	while (p > -1) {
+		ctr_assign_value_to_my(head->key, head->value);
+		head = head->next;
+		p--;
+	}
+	ctr_argument* argList = ctr_heap_allocate(sizeof(ctr_argument));
+	ctr_array_to_argument_list(argumentList->object, argList);
+	if (likely(parameterList && parameterList->node)) {
+		parameter = parameterList->node;
+		while (argList) {
+			__asm__ __volatile__("");
+			if (parameter) {
+				was_vararg =
+				    (strncmp(parameter->value, "*", 1) == 0);
+				if (!argList->object) {
+					if (was_vararg) {
+						ctr_object *arr =
+						    ctr_array_new(CtrStdArray,
+								  NULL);
+						ctr_assign_value_to_local
+						    (ctr_build_string
+						     (parameter->value + 1,
+						      parameter->vlen - 1),
+						     arr);
+					}
+					if (!argList || !argList->next)
+						break;
+					argList = argList->next;
+					if (!parameterList->next)
+						break;
+					parameterList = parameterList->next;
+					parameter = parameterList->node;
+					continue;
+				}
+				if (parameterList->next) {
+					a = argList->object;
+					ctr_assign_value_to_local
+					    (ctr_build_string
+					     (parameter->value,
+					      parameter->vlen), a);
+				} else if (!parameterList->next && was_vararg) {
+					ctr_object *arr =
+					    ctr_array_new(CtrStdArray, NULL);
+					ctr_argument *arglist__ =
+					    ctr_heap_allocate(sizeof
+							      (ctr_argument));
+					while (argList && argList->object) {
+						arglist__->object =
+						    argList->object;
+						ctr_array_push(arr, arglist__);
+						argList = argList->next;
+					}
+					ctr_heap_free(arglist__);
+					ctr_assign_value_to_local
+					    (ctr_build_string
+					     (parameter->value + 1,
+					      parameter->vlen - 1), arr);
+				} else if (unlikely(!was_vararg)) {
+					a = argList->object;
+					ctr_assign_value_to_local
+					    (ctr_build_string
+					     (parameter->value,
+					      parameter->vlen), a);
+				}
+			}
+			if (!argList || !argList->next)
+				break;
+			argList = argList->next;
+			if (!parameterList->next)
+				break;
+			parameterList = parameterList->next;
+			parameter = parameterList->node;
+		}
+	}
+		ctr_assign_value_to_local_by_ref(ctr_static_clex_keyword_me_str, myself);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
+		ctr_object* this = ctr_static_keyword_this;
+	ctr_assign_value_to_local(this, myself);	/* otherwise running block may get gc'ed. */
+	//ctr_block_run_cache_set_ready_for_comp();
+	result = ctr_cwlk_run(codeBlockPart2);
+	if (result == NULL)
+			result = myself;
+	ctr_close_context();
+	ctr_deallocate_argument_list(argList);
+	if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak
+	    && CtrStdFlow != CtrStdContinue && CtrStdFlow != CtrStdExit) {
+		ctr_object* cname = ctr_static_keyword_catch;
+		ctr_object *catchBlock =
+		    ctr_internal_object_find_property(myself,
+						      cname,
+						      0);
+		if (catchBlock != NULL) {
+			ctr_argument *a =
+			    (ctr_argument *)
+			    ctr_heap_allocate(sizeof(ctr_argument));
+			a->object = CtrStdFlow;
+			CtrStdFlow = NULL;
+			ctr_object *alternative =
+			    ctr_block_run(catchBlock, a, myself);
+			ctr_heap_free(a);
+			result = alternative;
+		}
+	}
+	return result;
+}
+
+/**
  * @internal
  *
  * Run a block in the current context
@@ -4622,7 +4768,6 @@ ctr_object *ctr_block_run(ctr_object * myself, ctr_argument * argList,
 ctr_object *ctr_block_run_here(ctr_object * myself, ctr_argument * argList,
 			       ctr_object * my)
 {
-	CALLGRIND_START_INSTRUMENTATION;
 	ctr_object *result;
 	ctr_tnode *node = myself->value.block;
 	ctr_tlistitem *codeBlockParts = node->nodes;
@@ -4705,7 +4850,6 @@ ctr_object *ctr_block_run_here(ctr_object * myself, ctr_argument * argList,
 			result = myself;
 		}
 	}
-	CALLGRIND_STOP_INSTRUMENTATION;
 	return result;
 }
 

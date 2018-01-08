@@ -19,8 +19,8 @@ CodeBlock on: 'applyAll:' do: {:args
     }.
   }.
 }.
-CodeBlock on: 'compose:' do: {:func
-  ^{:*args
-      ^const me apply: (const func applyAll: args).
-  }.
-}.
+# CodeBlock on: 'compose:' do: {:func
+#   ^{:*args
+#       ^const me apply: (const func applyAll: args).
+#   }.
+# }.

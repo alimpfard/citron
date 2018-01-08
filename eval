@@ -11,12 +11,13 @@ ImportLib Queue.
 ImportLib LRArray.
 
 Eval is Object new.
+EvalContext is Map new.
 Eval on: 'init' do: {
   my end is False.
   my color is 'resetColor'.
   my prompt is '>>> '.
   my args is Array new.
-  my allowedColors is ('red blue magenta cyan yellow green resetColor' split: ' ') join: '|'.
+  my allowedColors is 'red blue magenta cyan yellow green resetColor' replace: ' ' with: '|'.
   my evalQueue is Queue new.
   my globalvars is False.
   my history is LRArray new init: 100.
@@ -126,11 +127,11 @@ Eval on: 'evaluate:' do: { :str
           Eval instrument.
           ^(str startsWith: 'import') not
             either: ({
-                ^Reflect runAtGlobal: {:str ^str eval.} arguments: str.
-                } catch: {:e ^Eval handleException.}
+                ^Reflect run: {:str ^str eval.} inContext: EvalContext arguments: [str].
+                } catch: {:e ^Eval handleException: e.}
             ) or: ({
                 ^str eval.
-                } catch: {:e ^Eval handleException.}).
+                } catch: {:e ^Eval handleException: e.}).
         }).
 }.
 Eval on: 'evaluateFile:' do: { :fl

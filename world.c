@@ -1293,6 +1293,7 @@ ctr_object *ctr_object_destruct(ctr_object * object, ctr_argument * nothing)
  */
 void ctr_initialize_world()
 {
+	ctr_last_parser_error = ctr_heap_allocate_tracked(sizeof(char)*2048);
 	register_signal_handlers();
 
 	int i;
@@ -1869,6 +1870,9 @@ void ctr_initialize_world()
 	ctr_internal_create_func(CtrStdBlock,
 				 ctr_build_string_from_cstring
 				 (CTR_DICT_APPLY_TO), &ctr_block_runIt);
+ ctr_internal_create_func(CtrStdBlock,
+				 ctr_build_string_from_cstring
+				 ("applyAll:"), &ctr_block_run_all);
 	ctr_internal_create_func(CtrStdBlock,
 				 ctr_build_string_from_cstring
 				 (CTR_DICT_APPLY_TO_AND), &ctr_block_runIt);

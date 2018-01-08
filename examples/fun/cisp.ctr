@@ -1,6 +1,6 @@
 Broom autoAlloc: True.
 
-import Library/Control/Applicative.
+# import Library/Control/Applicative.
 
 ['Env', 'GlobalEnv', 'Truth',
 '_eval', 'parse', 'tokenize',
@@ -12,6 +12,7 @@ Env on: 'initParams:args:outer:' do: {:params:args:outer
   my outer is outer.
   my dict is Map new.
   params toBoolean & args ifTrue: {
+    (params count !=: args count) ifTrue: {thisBlock error: 'Expected %d param(s) (%L), but got %d (%L)' % [(params count), params, (args count), args].}.
     params count times: {:i
       me put: (args at: i) at: (params at: i).
     }.
@@ -129,7 +130,7 @@ _eval is {:x:en
   }.
   var exps is x fmap: {:exp var x is _eval applyTo: exp and: const env. ^x.}.
   var proc is exps shift.
-  ^proc message: (proc appropriateApplicationMessage) arguments: exps.
+  ^proc applyAll: exps.
 }.
 
 parse is {:s ^read_from applyTo: (tokenize applyTo: s).}.
@@ -181,5 +182,5 @@ var get_input is {:inner:before
 }.
 
 {^True.} whileTrue: {
-  {Pen writeln: (repl applyTo: (get_input applyTo: '>>> ' and: 0)).} catch: {:e Pen red write: e, resetColor brk.}, run.
+  Pen writeln: (repl applyTo: (get_input applyTo: '>>> ' and: 0)).
 }.

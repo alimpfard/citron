@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CTR_VERSION "0.0.6.7"
+#define CTR_VERSION "0.0.6.8beta"
 #define CTR_LOG_WARNINGS 0//2 to enable
 /**
  * Define the Citron tokens
@@ -382,7 +382,7 @@ ctr_tnode* ctr_cparse_expr(int mode);
 ctr_tnode* ctr_cparse_ret();
 int     ctr_cparse_quiet;
 
-static char* ctr_last_parser_error;
+char* ctr_last_parser_error;
 /**
  * Abstract Tree Walker functions
  */
@@ -436,7 +436,7 @@ int ctr_is_primitive(ctr_object* object);
 ctr_object* ctr_get_stack_trace();
 void ctr_print_stack_trace();
 ctr_object* ctr_object_get_property(ctr_object* myself, ctr_argument* argumentList);
-
+ctr_argument* ctr_array_to_argument_list(ctr_object* arr, ctr_argument* provided);
 /**
  * Scoping functions
  */
@@ -562,6 +562,7 @@ ctr_object* ctr_number_between(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_to_step_do(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_positive(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_negative(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_number_negate(ctr_object * myself, ctr_argument * argumentList);
 ctr_object* ctr_number_to_byte(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_qualify(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_respond_to(ctr_object* myself, ctr_argument* argumentList);
@@ -629,6 +630,7 @@ ctr_object* ctr_string_assign(ctr_object* myself, ctr_argument* argumentList);
  * Block Interface
  */
 ctr_object* ctr_block_runIt(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_block_run_all(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_run_variadic(ctr_object* myself, int count, ...);
 ctr_object* ctr_block_run_variadic_my(ctr_object* myself, ctr_object* my, int count, ...);
 ctr_object* ctr_block_set(ctr_object* myself, ctr_argument* argumentList);

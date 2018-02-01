@@ -17,6 +17,10 @@
 #include <dirent.h>
 #include "citron.h"
 #include "siphash.h"
+
+#include <termios.h>
+static struct termios oldTermios, newTermios;
+
 /**@I_OBJ_DEF File*/
 
 /**
@@ -44,6 +48,29 @@ ctr_file_new (ctr_object * myself, ctr_argument * argumentList)
   ctr_internal_object_add_property (s, ctr_build_string_from_cstring ("path"), pathObject, 0);
   return s;
 }
+
+ctr_object *
+ctr_file_special (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object* file = ctr_file_new(myself, argumentList);
+  ctr_resource *rs = ctr_heap_allocate (sizeof (ctr_resource));
+  file->value.rvalue = rs;
+  if (ctr_internal_object_is_equal(argumentList->object, CTR_FILE_STDIN_STR)) {
+    file->value.rvalue->ptr = stdin;
+    file->value.rvalue->type = 1;
+  }
+  else if (ctr_internal_object_is_equal(argumentList->object, CTR_FILE_STDOUT_STR)) {
+    file->value.rvalue->ptr = stdout;
+    file->value.rvalue->type = 1;
+  }
+  else if (ctr_internal_object_is_equal(argumentList->object, CTR_FILE_STDERR_STR)) {
+    file->value.rvalue->ptr = stderr;
+    file->value.rvalue->type = 1;
+  }
+  else return CtrStdNil;
+  return file;
+}
+
 
 ctr_object *
 ctr_file_stdext_path (ctr_object * myself, ctr_argument * argumentList)
@@ -172,32 +199,63 @@ ctr_file_read (ctr_object * myself, ctr_argument * argumentList)
   char *pathString;
   char *buffer;
   FILE *f;
-  if (path == NULL)
-    return CtrStdNil;
-  vlen = path->value.svalue->vlen;
-  pathString = ctr_heap_allocate (sizeof (char) * (vlen + 1));
-  memcpy (pathString, path->value.svalue->value, vlen);
-  memcpy (pathString + vlen, "\0", 1);
-  f = fopen (pathString, "rb");
-  ctr_heap_free (pathString);
-  if (!f)
-    {
-      CtrStdFlow = ctr_build_string_from_cstring ("Unable to open file.");
-      CtrStdFlow->info.sticky = 1;
+  if (!myself->value.rvalue || !myself->value.rvalue->ptr){
+    if (path == NULL)
       return CtrStdNil;
+    vlen = path->value.svalue->vlen;
+    pathString = ctr_heap_allocate (sizeof (char) * (vlen + 1));
+    memcpy (pathString, path->value.svalue->value, vlen);
+    memcpy (pathString + vlen, "\0", 1);
+    f = fopen (pathString, "rb");
+    ctr_heap_free (pathString);
+    if (!f)
+      {
+        CtrStdFlow = ctr_build_string_from_cstring ("Unable to open file.");
+        CtrStdFlow->info.sticky = 1;
+        return CtrStdNil;
+      }
+    fseek (f, 0, SEEK_END);
+    fileLen = ftell (f);
+    fseek (f, 0, SEEK_SET);
+    buffer = (char *) ctr_heap_allocate (fileLen + 1);
+    if (!buffer)
+      {
+        printf ("Out of memory\n");
+        fclose (f);
+        exit (1);
+      }
+    fread (buffer, fileLen, 1, f);
+    fclose (f);
+  } else {
+    f = myself->value.rvalue->ptr;
+    if (unlikely(f != stdin)) {
+      fseek (f, 0, SEEK_END);
+      fileLen = ftell (f);
+      fseek (f, 0, SEEK_SET);
+      buffer = (char *) ctr_heap_allocate (fileLen + 1);
+      if (!buffer)
+        {
+          printf ("Out of memory\n");
+          fclose (f);
+          exit (1);
+        }
+      fread (buffer, fileLen, 1, f);
+    } else {
+      char c;
+#    ifdef withTermios
+      tcgetattr (STDIN_FILENO, &oldTermios);
+      newTermios = oldTermios;
+      cfmakeraw (&newTermios);
+      tcsetattr (STDIN_FILENO, TCSANOW, &newTermios);
+#    endif
+      while ((c = fgetc (stdin)) == EOF);
+#    ifdef withTermios
+      tcsetattr (STDIN_FILENO, TCSANOW, &oldTermios);
+#    endif
+      buffer = &c;
+      fileLen = 1;
     }
-  fseek (f, 0, SEEK_END);
-  fileLen = ftell (f);
-  fseek (f, 0, SEEK_SET);
-  buffer = (char *) ctr_heap_allocate (fileLen + 1);
-  if (!buffer)
-    {
-      printf ("Out of memory\n");
-      fclose (f);
-      exit (1);
-    }
-  fread (buffer, fileLen, 1, f);
-  fclose (f);
+  }
   str = ctr_build_string (buffer, fileLen);
   ctr_heap_free (buffer);
   return str;
@@ -427,26 +485,30 @@ ctr_file_size (ctr_object * myself, ctr_argument * argumentList)
   ctr_size vlen;
   char *pathString;
   FILE *f;
-  int prev, sz;
-  if (path == NULL)
-    return ctr_build_number_from_float (0);
-  vlen = path->value.svalue->vlen;
-  pathString = ctr_heap_allocate (sizeof (char) * (vlen + 1));
-  memcpy (pathString, path->value.svalue->value, (sizeof (char) * vlen));
-  memcpy (pathString + vlen, "\0", 1);
-  f = fopen (pathString, "r");
-  ctr_heap_free (pathString);
-  if (f == NULL)
-    return ctr_build_number_from_float (0);
-  prev = ftell (f);
-  fseek (f, 0L, SEEK_END);
-  sz = ftell (f);
-  fseek (f, prev, SEEK_SET);
-  if (f)
-    {
-      fclose (f);
-    }
-  return ctr_build_number_from_float ((ctr_number) sz);
+  if (!myself->value.rvalue || !myself->value.rvalue->ptr) {
+    int prev, sz;
+    if (path == NULL)
+      return ctr_build_number_from_float (0);
+    vlen = path->value.svalue->vlen;
+    pathString = ctr_heap_allocate (sizeof (char) * (vlen + 1));
+    memcpy (pathString, path->value.svalue->value, (sizeof (char) * vlen));
+    memcpy (pathString + vlen, "\0", 1);
+    f = fopen (pathString, "r");
+    ctr_heap_free (pathString);
+    if (f == NULL)
+      return ctr_build_number_from_float (0);
+    prev = ftell (f);
+    fseek (f, 0L, SEEK_END);
+    sz = ftell (f);
+    fseek (f, prev, SEEK_SET);
+    if (f)
+      {
+        fclose (f);
+      }
+    return ctr_build_number_from_float ((ctr_number) sz);
+  } else if (myself->value.rvalue->ptr == stdin) {
+    return ctr_build_number_from_float(!!feof(stdin)); //will return 1 if data exists, 0 otherwise
+  } else return ctr_build_number_from_float(0);
 }
 
 /**
@@ -556,7 +618,22 @@ ctr_file_read_bytes (ctr_object * myself, ctr_argument * argumentList)
       CtrStdFlow->info.sticky = 1;
       return ctr_build_string_from_cstring ("");
     }
-  fread (buffer, sizeof (char), (int) bytes, (FILE *) myself->value.rvalue->ptr);
+  if (myself->value.rvalue->ptr == stdin) {
+    for(int i=0; i<bytes; i++) {
+#    ifdef withTermios
+      tcgetattr (STDIN_FILENO, &oldTermios);
+      newTermios = oldTermios;
+      cfmakeraw (&newTermios);
+      tcsetattr (STDIN_FILENO, TCSANOW, &newTermios);
+#    endif
+      while ((buffer[i] = fgetc (stdin)) == EOF);
+#    ifdef withTermios
+      tcsetattr (STDIN_FILENO, TCSANOW, &oldTermios);
+#    endif
+    }
+  }
+  else
+    fread (buffer, sizeof (char), (int) bytes, (FILE *) myself->value.rvalue->ptr);
   result = ctr_build_string (buffer, bytes);
   ctr_heap_free (buffer);
   return result;

@@ -695,7 +695,7 @@ ctr_clex_readstr ()
 	      while (ctr_clex_is_valid_digit_in_base (toupper (*(ctr_code + 1)), 16))
 		{
 		  char t = *(ctr_code + 1);
-		  c = c * 16 + (t >= '0' && t <= '9' ? t - '0' : toupper (t) - 'A');
+		  c = c * 16 + (t >= '0' && t <= '9' ? t - '0' : 10 + toupper (t) - 'A');
 		  ctr_code++;
 		}
 	      break;

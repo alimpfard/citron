@@ -3017,6 +3017,10 @@ ctr_string_slice (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_string_at (ctr_object * myself, ctr_argument * argumentList)
 {
+  if(!myself->value.svalue->vlen) {
+    CtrStdFlow = ctr_build_string_from_cstring("Index out of bounds");
+    return ctr_build_nil();
+  }
   ctr_object *fromPos = ctr_internal_cast2number (argumentList->object);
   long a = (fromPos->value.nvalue);
   long ua = getBytesUtf8 (myself->value.svalue->value, 0, a);

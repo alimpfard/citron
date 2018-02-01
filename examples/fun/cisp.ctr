@@ -1,6 +1,7 @@
 Broom autoAlloc: True.
 
 import Library/Control/Applicative.
+import Library/Data/Array.
 
 ['Env', 'GlobalEnv', 'Truth',
 '_eval', 'parse', 'tokenize',
@@ -35,6 +36,12 @@ Env on: 'find:' do: {:k
 Env on: 'toString' do: {
   ^'(' + my dict toString + ') < ' + (my outer toString).
 }.
+
+var prettify is {:lst:it
+  (Reflect isObject: lst linkedTo: Array, not) | (lst count = 0) ifTrue: { ^lst toString. }.
+  ^'%s( %s\n%s)' % [(' ' * it), (prettify applyTo: lst head and: it), (prettify applyTo: lst tail and: it + 1)].
+}.
+
 GlobalEnv is Env new initParams: [] args: [] outer: Nil.
 var GlobalInit is Map new.
 var LastEnv is GlobalEnv.
@@ -57,10 +64,10 @@ GlobalInit do
   put: {:a:b ^[a, b].} at: 'cons',
   put: {:a ^a head.} at: 'car',
   put: {:a ^a tail.} at: 'cdr',
-  put: {:a:b ^a + b.} at: 'append',
+  put: {:a:b ^[a] + b.} at: 'append',
   put: {:*args ^args.} at: 'list',
   put: {:a ^Reflect isObject: a linkedTo: Array.} at: 'list?',
-  put: {:a ^Reflect isObject: a linkedTo: Array, & (a count = 0).} at: 'null?',
+  put: {:a ^((Reflect isObject: a linkedTo: Array) & (0 = a count)) | (a isNil).} at: 'null?',
   put: {:a ^Reflect isObject: a linkedTo: String.} at: 'symbol?',
   put: {:a ^(Reflect isObject: a linkedTo: String) | (Reflect isObject: a linkedTo: Number) | (a isNil).} at: 'atom?',
   put: { ^atom applyTo: (Program getCharacter). } at: 'read',
@@ -92,6 +99,25 @@ _eval is {:x:en
   (x count = 0) ifTrue: {#null
     ^x.
   }.
+  var locals is Env new initParams: [] args: [] outer: Nil.
+  var Vs is Array new.
+  var Ss is Array new.
+  var i is 0.
+  {^x count > 0.} whileTrue: {
+    var t is x shift.
+    (Reflect isObject: t linkedTo: String) & (t at: 0, = ':') ifTrue: {
+      Ss push: [(t skip: 1), (x shift)].
+    }, else: { Vs push: t. }.
+  }.
+  x is Vs.
+  Ss each_v: {:v
+    env put: (v @ 1) at: (v @ 0).
+  }.
+  # Pen writeln: Ss.
+  # Pen writeln: x.
+  (x @ 0 = 'local') ifTrue: {#(local value)
+    ^env at: x @ 1.
+  }.
   (x @ 0 = 'quote') | (x @ 0 = '\'') ifTrue: {#(quote (...))
     ^x at: 1.
   }.
@@ -103,7 +129,7 @@ _eval is {:x:en
     ^env at: x @ 1.
   }.
   (['define', 'defun'] contains: x @ 0) ifTrue: {#(define name expr)
-    Pen writeln: (x @ 1).
+    # Pen writeln: (x @ 1).
     env put: (_eval applyTo: x @ 2 and: env) at: x @ 1.
     ^env at: x @ 1.
   }.
@@ -133,7 +159,7 @@ _eval is {:x:en
 }.
 
 parse is {:s ^read_from applyTo: (tokenize applyTo: s).}.
-tokenize is {:s ^s replace: '(' with: ' ( ', replace: ')' with: ' ) ', split: ' ', filter: {:i:v ^v trim !=: ''.}.}.
+tokenize is {:s ^s replace: '\n' with: ' ', replace: '(' with: ' ( ', replace: ')' with: ' ) ', split: ' ', filter: {:i:v ^v trim !=: ''.}.}.
 read_from is {:tokens
   tokens count ifFalse: {thisBlock error: 'unexpected EOF while reading'.}.
   var token is tokens shift.
@@ -175,11 +201,11 @@ var get_input is {:inner:before
   Pen cyan write: inner, resetColor.
   var inp is Program waitForInput trim.
   (var ss is (inp countOf: '(') - (inp countOf: ')') + before) > 0 ifTrue: {
-    ^inp + ' ' + (get_input applyTo: ('...' * (ss + 1)) + ' ' and: ss).
+    ^inp + ' ' + (get_input applyTo: ('... ' + ('(' * ss)) + ' ' and: ss).
   }.
   ^inp.
 }.
 
 {^True.} whileTrue: {
-  {Pen writeln: (repl applyTo: (get_input applyTo: '>>> ' and: 0)).} catch: {:e Pen red write: e, resetColor brk.}, run.
+  {Pen writeln: (repl applyTo: (get_input applyTo: '>>> ' and: 0)).} catch: {:e Pen red write: e, resetColor brk. thisBlock error: e. }, run.
 }.

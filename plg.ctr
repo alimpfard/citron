@@ -1,0 +1,19 @@
+var yourstring is 'Oh no that\'s not what i meant! this is what i meant,got it?'.
+
+DIST is 1.
+
+var parts is Array new.
+yourstring findPattern: '((?:\\W+)|(?:\\w+))' do: {:part
+    parts push: part @ 1.
+}.
+
+Pen write: parts.
+
+var colorize is {:thing
+  ^'\x1b[36m' + thing + '\x1b[0m'.
+}.
+
+(parts count + (DIST * 2)) times: {:i
+    Pen clear write: '%:L' % ['', (parts imap: {:j:v ^(j - i) abs > DIST either: v lower or: (colorize applyTo: v upper).})], brk.
+    Clock wait: 100 msecs.
+}.

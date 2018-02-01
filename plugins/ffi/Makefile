@@ -10,4 +10,5 @@ link:
 	cc -shared -o libctrctypes.so -L/usr/local/lib -lffi ctypes.o structmember.o _struct.o
 
 copy:
+	mkdir -p ../../mods/ctypes
 	cp -f libctrctypes.so ../../mods/ctypes

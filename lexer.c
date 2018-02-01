@@ -725,7 +725,12 @@ ctr_clex_readstr ()
       *(strbuff) = c;
       strbuff++;
       ctr_code++;
-      c = *ctr_code;
+      if(ctr_code < ctr_eofcode)
+        c = *ctr_code;
+      else {
+        ctr_clex_emit_error("Expected closing quote");
+        c = '\'';
+      }
     }
   if (ctr_clex_verbatim_mode)
     {

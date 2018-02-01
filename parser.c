@@ -837,10 +837,12 @@ ctr_cparse_parse (char *prg, char *pathString)
 {
   ctr_tnode *program;
   ctr_clex_load (prg);
+  char* oldp = ctr_cparse_current_program;
   ctr_cparse_current_program = pathString;
   program = ctr_cparse_program ();
   program->value = pathString;
   program->vlen = strlen (pathString);
   program->type = CTR_AST_NODE_PROGRAM;
+  ctr_cparse_current_program = oldp;
   return program;
 }

@@ -8,6 +8,7 @@ ctrjson:
 	cc -c json.c -fPIC -g3 -o json.o
 	cp jansson/lib/libjansson.a .
 	cc -shared -o libctrjson.so json.o libjansson.a
+	mkdir -p ../../mods/json
 	cp -f libctrjson.so ../../mods/json
 
 clearctr: 

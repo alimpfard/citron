@@ -103,7 +103,7 @@ ctr_nil_assign (ctr_object * myself, ctr_argument * argumentList)
       ctr_string_append (CtrStdFlow, argumentList);
       return myself;
     }
-  if (ctr_internal_object_is_equal (argumentList->object, ctr_build_string_from_cstring ("_"))
+  if (ctr_internal_object_is_equal (argumentList->object, &CTR_CLEX_US)
       || ctr_internal_object_is_equal (argumentList->object, ctr_build_empty_string ()))
     return myself;
   ctr_internal_object_set_property (ctr_contexts[ctr_context_id],
@@ -967,7 +967,7 @@ ctr_bool_assign (ctr_object * myself, ctr_argument * argumentList)
       ctr_string_append (CtrStdFlow, argumentList);
       return myself;
     }
-  if (ctr_internal_object_is_equal (argumentList->object, ctr_build_string_from_cstring ("_"))
+  if (ctr_internal_object_is_equal (argumentList->object, &CTR_CLEX_US)
       || ctr_internal_object_is_equal (argumentList->object, ctr_build_empty_string ()))
     return myself;
   ctr_internal_object_add_property (ctr_contexts[ctr_context_id], argumentList->object, myself, 0);
@@ -1346,7 +1346,7 @@ ctr_number_assign (ctr_object * myself, ctr_argument * argumentList)
       ctr_string_append (CtrStdFlow, argumentList);
       return myself;
     }
-  if (ctr_internal_object_is_equal (argumentList->object, ctr_build_string_from_cstring ("_"))
+  if (ctr_internal_object_is_equal (argumentList->object, &CTR_CLEX_US)
       || ctr_internal_object_is_equal (argumentList->object, ctr_build_empty_string ()))
     return myself;
   ctr_internal_object_add_property (ctr_contexts[ctr_context_id], argumentList->object, myself, 0);
@@ -2336,7 +2336,7 @@ ctr_string_assign (ctr_object * myself, ctr_argument * argumentList)
       ctr_string_append (CtrStdFlow, argumentList);
       return myself;
     }
-  if (ctr_internal_object_is_equal (argumentList->object, ctr_build_string_from_cstring ("_"))
+  if (ctr_internal_object_is_equal (argumentList->object, &CTR_CLEX_US)
       || ctr_internal_object_is_equal (argumentList->object, ctr_build_empty_string ()))
     return myself;
   ctr_internal_object_add_property (ctr_contexts[ctr_context_id], argumentList->object, myself, 0);
@@ -4548,7 +4548,7 @@ ctr_block_assign (ctr_object * myself, ctr_argument * argumentList)
       ctr_string_append (CtrStdFlow, argumentList);
       return myself;
     }
-  if (ctr_internal_object_is_equal (argumentList->object, ctr_build_string_from_cstring ("_"))
+  if (ctr_internal_object_is_equal (argumentList->object, &CTR_CLEX_US)
       || ctr_internal_object_is_equal (argumentList->object, ctr_build_empty_string ()))
     return myself;
   ctr_internal_object_add_property (ctr_contexts[ctr_context_id], argumentList->object, myself, 0);
@@ -4736,7 +4736,7 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
 	}
     }
   if (my)
-    ctr_assign_value_to_local_by_ref (ctr_build_string_from_cstring (ctr_clex_keyword_me), my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
+    ctr_assign_value_to_local_by_ref (&CTR_CLEX_KW_ME, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
   ctr_object *this = ctr_build_string ("thisBlock", 9);
   ctr_assign_value_to_local (this, myself);	/* otherwise running block may get gc'ed. */
   int p = myself->properties->size - 1;
@@ -4859,7 +4859,7 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 	}
     }
   if (my)
-    ctr_assign_value_to_local_by_ref (ctr_build_string_from_cstring (ctr_clex_keyword_me), my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
+    ctr_assign_value_to_local_by_ref (&CTR_CLEX_KW_ME, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
   ctr_object *this = ctr_build_string ("thisBlock", 9);
   ctr_assign_value_to_local (this, myself);	/* otherwise running block may get gc'ed. */
   int p = myself->properties->size - 1;
@@ -4966,8 +4966,8 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
 	}
     }
   if (my)
-    ctr_assign_value_to_local_by_ref (ctr_build_string_from_cstring (ctr_clex_keyword_me), my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
-  ctr_assign_value_to_local (ctr_build_string_from_cstring ("thisBlock"), myself);	/* otherwise running block may get gc'ed. */
+    ctr_assign_value_to_local_by_ref (&CTR_CLEX_KW_ME, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
+  ctr_assign_value_to_local (&CTR_CLEX_KW_THIS, myself);	/* otherwise running block may get gc'ed. */
   result = ctr_cwlk_run (codeBlockPart2);
   if (result == NULL)
     {

@@ -1618,7 +1618,7 @@ ctr_array_assign (ctr_object * myself, ctr_argument * argumentList)
     }
   else if (to->info.type == CTR_OBJECT_TYPE_OTSTRING)
     {
-      if (ctr_internal_object_is_equal (argumentList->object, ctr_build_string_from_cstring ("_"))
+      if (ctr_internal_object_is_equal (argumentList->object, &CTR_CLEX_US)
 	  || ctr_internal_object_is_equal (argumentList->object, ctr_build_empty_string ()))
 	goto clear;
       ctr_internal_object_add_property (ctr_contexts[ctr_context_id], to, myself, 0);

@@ -1254,7 +1254,7 @@ ctr_find (ctr_object * key)
 ctr_object *
 ctr_find_in_my (ctr_object * key)
 {
-  ctr_object *context = ctr_find (ctr_build_string_from_cstring (ctr_clex_keyword_me));
+  ctr_object *context = ctr_find (&CTR_CLEX_KW_ME);
   ctr_object *foundObject = ctr_internal_object_find_property (context, key, 0);
   if (CtrStdFlow)
     return CtrStdNil;
@@ -1633,6 +1633,7 @@ ctr_initialize_world ()
 
   /* String */
   CtrStdString = ctr_internal_create_object (CTR_OBJECT_TYPE_OTSTRING);
+  ctr_linkstr();
   ctr_internal_create_func (CtrStdString,
 			    ctr_build_string_from_cstring (CTR_DICT_BYTES), &ctr_string_bytes);
   ctr_internal_create_func (CtrStdString,
@@ -2139,8 +2140,29 @@ ctr_initialize_world ()
 			    ctr_build_string_from_cstring (CTR_DICT_TMPFILE), &ctr_file_tmp);
   ctr_internal_create_func (CtrStdFile,
 			    ctr_build_string_from_cstring ("unpack:"), &ctr_file_assign);
+  ctr_internal_create_func (CtrStdFile,
+			    ctr_build_string_from_cstring ("special:"), &ctr_file_special);
+  CTR_FILE_STDIN  = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+  CTR_FILE_STDOUT = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+  CTR_FILE_STDERR = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+  CTR_FILE_STDIN->link = CtrStdObject;
+  CTR_FILE_STDOUT->link = CtrStdObject;
+  CTR_FILE_STDERR->link = CtrStdObject;
+  CTR_FILE_STDIN->info.sticky = 1;
+  CTR_FILE_STDOUT->info.sticky = 1;
+  CTR_FILE_STDERR->info.sticky = 1;
+  CTR_FILE_STDIN_STR  = ctr_build_string_from_cstring ("stdin");
+  CTR_FILE_STDOUT_STR = ctr_build_string_from_cstring ("stdout");
+  CTR_FILE_STDERR_STR = ctr_build_string_from_cstring ("stderr");
+  ctr_internal_object_add_property (CtrStdFile,
+			    CTR_FILE_STDIN_STR, CTR_FILE_STDIN, 0);
+  ctr_internal_object_add_property (CtrStdFile,
+          CTR_FILE_STDOUT_STR, CTR_FILE_STDOUT, 0);
+  ctr_internal_object_add_property (CtrStdFile,
+  		    CTR_FILE_STDERR_STR, CTR_FILE_STDERR, 0);
   ctr_internal_object_add_property (CtrStdWorld,
 				    ctr_build_string_from_cstring (CTR_DICT_FILE), CtrStdFile, 0);
+
   CtrStdFile->link = CtrStdObject;
   CtrStdFile->info.sticky = 1;
 
@@ -2823,7 +2845,7 @@ ctr_object *
 ctr_assign_value_to_my (ctr_object * key, ctr_object * o)
 {
   ctr_object *object = NULL;
-  ctr_object *my = ctr_find (ctr_build_string_from_cstring (ctr_clex_keyword_me));
+  ctr_object *my = ctr_find (&CTR_CLEX_KW_ME);
   if (CtrStdFlow)
     return CtrStdNil;
   key->info.sticky = 0;
@@ -2913,4 +2935,10 @@ ctr_assign_value_to_local_by_ref (ctr_object * key, ctr_object * o)
   object = o;
   ctr_internal_object_set_property (context, key, object, 0);
   return object;
+}
+
+static void ctr_linkstr() {
+  CTR_CLEX_KW_ME.link = CtrStdString;
+  CTR_CLEX_KW_THIS.link = CtrStdString;
+  CTR_CLEX_US.link = CtrStdString;
 }

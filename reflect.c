@@ -1344,7 +1344,7 @@ ctr_reflect_run_for_object_in_ctx (ctr_object* myself, ctr_argument* argumentLis
 	  parameter = parameterList->node;
 	}
     }
-  ctr_assign_value_to_local_by_ref (ctr_build_string_from_cstring (ctr_clex_keyword_me), ctx);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
+  ctr_assign_value_to_local_by_ref (&CTR_CLEX_KW_ME, ctx);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
   ctr_object *this = ctr_build_string ("thisBlock", 9);
   ctr_assign_value_to_local (this, block);	/* otherwise running block may get gc'ed. */
   int p = myself->properties->size - 1;

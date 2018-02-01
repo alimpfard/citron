@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CTR_VERSION "0.0.6.7"
+#define CTR_VERSION "0.0.6.8.0a"
 #define CTR_LOG_WARNINGS 0//2 to enable
 /**
  * Define the Citron tokens
@@ -305,7 +305,13 @@ ctr_object* CtrStdReflect_cons;
 ctr_object* CtrStdFiber;
 ctr_object* CtrStdThread;
 ctr_object* ctr_first_object;
-
+//--
+ctr_object* CTR_FILE_STDIN;
+ctr_object* CTR_FILE_STDOUT;
+ctr_object* CTR_FILE_STDERR;
+ctr_object* CTR_FILE_STDIN_STR;
+ctr_object* CTR_FILE_STDOUT_STR;
+ctr_object* CTR_FILE_STDERR_STR;
 /**
 * @internal
  * standard instrumentor, do not override.
@@ -382,7 +388,7 @@ ctr_tnode* ctr_cparse_expr(int mode);
 ctr_tnode* ctr_cparse_ret();
 int     ctr_cparse_quiet;
 
-static char* ctr_last_parser_error;
+char* ctr_last_parser_error;
 /**
  * Abstract Tree Walker functions
  */
@@ -757,6 +763,7 @@ ctr_object* ctr_console_clear_line(ctr_object* myself, ctr_argument* argumentLis
  * File Interface
  */
 ctr_object* ctr_file_new(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_file_special(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_path(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_rpath(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_read(ctr_object* myself, ctr_argument* argumentList);
@@ -1032,5 +1039,65 @@ uint16_t ctr_default_port;
 
 #include "citron_ensure.h"
 #include "citron_conv.h"
+
+static ctr_string CTR_CLEX_KW_ME_SV = {
+    .value = "me",
+    .vlen = 2
+};
+static ctr_object CTR_CLEX_KW_ME = {
+    .info = {
+        .type = CTR_OBJECT_TYPE_OTSTRING,
+        .mark = 0,
+        .sticky = 1,
+        .chainMode = 0,
+        .remote = 0,
+        .shared = 0,
+        .raw = 0
+    },
+    .value = {
+        .svalue = &CTR_CLEX_KW_ME_SV
+    }
+};
+
+static ctr_string CTR_CLEX_KW_THIS_SV = {
+    .value = "thisBlock",
+    .vlen = 9
+};
+static ctr_object CTR_CLEX_KW_THIS = {
+    .info = {
+        .type = CTR_OBJECT_TYPE_OTSTRING,
+        .mark = 0,
+        .sticky = 1,
+        .chainMode = 0,
+        .remote = 0,
+        .shared = 0,
+        .raw = 0
+    },
+    .value = {
+        .svalue = &CTR_CLEX_KW_THIS_SV
+    }
+};
+
+static ctr_string CTR_CLEX_US_SV = {
+    .value = "_",
+    .vlen = 1
+};
+static ctr_object CTR_CLEX_US = {
+    .info = {
+        .type = CTR_OBJECT_TYPE_OTSTRING,
+        .mark = 0,
+        .sticky = 1,
+        .chainMode = 0,
+        .remote = 0,
+        .shared = 0,
+        .raw = 0
+    },
+    .value = {
+        .svalue = &CTR_CLEX_US_SV
+    }
+};
+
+static inline void ctr_linkstr();
+
 
 #endif //CTR_H_GUARD

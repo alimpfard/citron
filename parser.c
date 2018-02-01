@@ -25,7 +25,8 @@ ctr_cparse_emit_error_unexpected (int t, char *hint)
   sprintf (buf, "Parse error, unexpected %s ( %s: %d )\n", message,
 	  ctr_cparse_current_program, ctr_clex_line_number + 1);
   if(ctr_cparse_quiet) return;
-  memcpy(ctr_last_parser_error, buf, strlen(buf));
+  //memcpy(ctr_last_parser_error, buf, strlen(buf));
+  printf("%s", buf);
   if (hint)
     {
       printf ("%s", hint);

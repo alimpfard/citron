@@ -190,7 +190,7 @@ execute_string (char *prg)
 {
   ctr_object *str = ctr_build_string_from_cstring (prg);
   str = ctr_string_eval (str, NULL);
-  //ctr_internal_object_set_property(CtrStdWorld, ctr_build_string_from_cstring("_"), str, 0);
+  //ctr_internal_object_set_property(CtrStdWorld, &CTR_CLEX_US, str, 0);
   if (CtrStdFlow != NULL)
     {
       str = CtrStdFlow;
@@ -205,7 +205,7 @@ execute_string_len (char *prg, int length)
 {
   ctr_object *str = ctr_build_string (prg, length);
   str = ctr_string_eval (str, NULL);
-  //ctr_internal_object_set_property(CtrStdWorld, ctr_build_string_from_cstring("_"), str, 0);
+  //ctr_internal_object_set_property(CtrStdWorld, &CTR_CLEX_US, str, 0);
   if (CtrStdFlow != NULL)
     {
       str = CtrStdFlow;

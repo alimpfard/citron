@@ -66,6 +66,7 @@ ctr_ast_parse(ctr_object* myself, ctr_argument* argumentList)
 
 ctr_object*
 ctr_ast_instrcount(ctr_object* myself, ctr_argument* argumentList) {
+  // if (myself == CtrStdAst) return ctr_build_number_from_float(0);
   if(!(myself->value.rvalue && myself->value.rvalue->ptr)) {
     CtrStdFlow = ctr_build_string_from_cstring("Null ast node");
     return CtrStdNil;
@@ -78,6 +79,7 @@ ctr_ast_instrcount(ctr_object* myself, ctr_argument* argumentList) {
 }
 ctr_object*
 ctr_ast_nth(ctr_object* myself, ctr_argument* argumentList) {
+  if (myself == CtrStdAst) return CtrStdNil;
   if(!(myself->value.rvalue && myself->value.rvalue->ptr)) {
     err:;
     CtrStdFlow = ctr_build_string_from_cstring("Null ast node or count out of range");
@@ -173,6 +175,7 @@ ctr_object* ctr_ast_tostring(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 ctr_object* ctr_ast_get_value(ctr_object* myself, ctr_argument* argumentList) {
+  if (myself == CtrStdAst) return CtrStdNil;
   if(!(myself->value.rvalue && myself->value.rvalue->ptr)) {
     CtrStdFlow = ctr_build_string_from_cstring("Null ast node");
     return CtrStdNil;
@@ -183,6 +186,7 @@ ctr_object* ctr_ast_get_value(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 ctr_object* ctr_ast_get_type(ctr_object* myself, ctr_argument* argumentList) {
+  if (myself == CtrStdAst) return CtrStdNil;
   if(!(myself->value.rvalue && myself->value.rvalue->ptr)) {
     CtrStdFlow = ctr_build_string_from_cstring("Null ast node");
     return CtrStdNil;
@@ -192,6 +196,7 @@ ctr_object* ctr_ast_get_type(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 ctr_object* ctr_ast_get_mod(ctr_object* myself, ctr_argument* argumentList) {
+  if (myself == CtrStdAst) return CtrStdNil;
   if(!(myself->value.rvalue && myself->value.rvalue->ptr)) {
     CtrStdFlow = ctr_build_string_from_cstring("Null ast node");
     return CtrStdNil;
@@ -200,6 +205,7 @@ ctr_object* ctr_ast_get_mod(ctr_object* myself, ctr_argument* argumentList) {
   return ctr_build_string_from_cstring((char*)ctr_ast_modifier_str(node->modifier));
 }
 ctr_object* ctr_ast_set_value(ctr_object* myself, ctr_argument* argumentList) {
+  if (myself == CtrStdAst) return CtrStdNil;
   if(!(myself->value.rvalue && myself->value.rvalue->ptr)) {
     CtrStdFlow = ctr_build_string_from_cstring("Null ast node");
     return CtrStdNil;
@@ -215,6 +221,7 @@ ctr_object* ctr_ast_set_value(ctr_object* myself, ctr_argument* argumentList) {
   return myself;
 }
 ctr_object* ctr_ast_set_type(ctr_object* myself, ctr_argument* argumentList) {
+  if (myself == CtrStdAst) return CtrStdNil;
   if(!(myself->value.rvalue && myself->value.rvalue->ptr)) {
     CtrStdFlow = ctr_build_string_from_cstring("Null ast node");
     return CtrStdNil;
@@ -227,6 +234,7 @@ ctr_object* ctr_ast_set_type(ctr_object* myself, ctr_argument* argumentList) {
   return myself;
 }
 ctr_object* ctr_ast_set_mod(ctr_object* myself, ctr_argument* argumentList) {
+  if (myself == CtrStdAst) return CtrStdNil;
   if(!(myself->value.rvalue && myself->value.rvalue->ptr)) {
     CtrStdFlow = ctr_build_string_from_cstring("Null ast node");
     return CtrStdNil;
@@ -239,6 +247,7 @@ ctr_object* ctr_ast_set_mod(ctr_object* myself, ctr_argument* argumentList) {
   return myself;
 }
 ctr_object* ctr_ast_evaluate(ctr_object* myself, ctr_argument* argumentList) {
+  if (myself == CtrStdAst) return CtrStdNil;
   if(!(myself->value.rvalue && myself->value.rvalue->ptr)) {
     CtrStdFlow = ctr_build_string_from_cstring("Null ast node");
     return CtrStdNil;
@@ -501,6 +510,7 @@ char* ctr_ast_pure_stringify(ctr_tnode* node)
 }
 
 ctr_object* ctr_ast_stringify(ctr_object* myself, ctr_argument* argumentList) {
+  if (myself == CtrStdAst) return CtrStdNil;
   if(!(myself->value.rvalue && myself->value.rvalue->ptr)) {
     CtrStdFlow = ctr_build_string_from_cstring("Null ast node");
     return CtrStdNil;
@@ -518,6 +528,7 @@ initiailize_base_extensions ()
   ctr_internal_create_func (CtrStdObject,
 			    ctr_build_string_from_cstring ("letEqual:in:"), &ctr_block_let);
   CtrStdAst = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+  CtrStdAst->link = CtrStdObject;
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring("instrCount"), &ctr_ast_instrcount);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring("count"), &ctr_ast_instrcount);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring("parse:"), &ctr_ast_parse);

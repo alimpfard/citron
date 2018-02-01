@@ -1906,7 +1906,14 @@ ctr_dice_rand (ctr_object * myself, ctr_argument * argumentList)
 /**
  * [Clock] wait: [Number]
  *
- * Waits X useconds.
+ * Waits X useconds* depends on qualification
+ * Quals:
+ * ns[ecs] nanosecs
+ * us[ecs] microsecs
+ * ms[ecs] milisecs
+ * se[cs] seconds
+ * mi[nutes] minutes
+ * ho[urs] hours
  */
 ctr_object *
 ctr_clock_wait (ctr_object * myself, ctr_argument * argumentList)
@@ -1914,7 +1921,48 @@ ctr_clock_wait (ctr_object * myself, ctr_argument * argumentList)
   ctr_check_permission (CTR_SECPRO_COUNTDOWN);
   ctr_object *arg = ctr_internal_cast2number (argumentList->object);
   int n = (int) arg->value.nvalue;
-  usleep (n);
+  ctr_object* qual =
+    ctr_internal_object_find_property (argumentList->object,
+               ctr_build_string_from_cstring
+               (CTR_DICT_QUALIFICATION), CTR_CATEGORY_PRIVATE_PROPERTY);
+  if(qual) {
+    char* qualf = ctr_heap_allocate_cstring(qual);
+    if (strncasecmp(qualf, "ns", 2) == 0) {
+      const struct timespec rq = {
+        .tv_sec = 0,
+        .tv_nsec = n
+      };
+      nanosleep(&rq, NULL);
+    }
+    else if (strncasecmp(qualf, "us", 2) == 0) {
+      usleep(n);
+    }
+    else if (strncasecmp(qualf, "ms", 2) == 0) {
+      usleep(n * 1000);
+    }
+    else if (strncasecmp(qualf, "se", 2) == 0) {
+      sleep(n);
+    }
+    else if (strncasecmp(qualf, "mi", 2) == 0) {
+      const struct timespec rq = {
+        .tv_sec = n * 60,
+        .tv_nsec = 0
+      };
+      nanosleep(&rq, NULL);
+    }
+    else if (strncasecmp(qualf, "ho", 2) == 0) {
+      const struct timespec rq = {
+        .tv_sec = n * 60 * 60,
+        .tv_nsec = 0
+      };
+      nanosleep(&rq, NULL);
+    }
+    else {
+      return CtrStdNil;
+    }
+  }
+  else
+    usleep (n);
   return myself;
 }
 

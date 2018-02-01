@@ -7,6 +7,7 @@ link:
 	cc -shared -o libctrsdl.so sdl.o `sdl-config --cflags --libs`
 
 copy:
+	mkdir -p ../../mods/sdl
 	cp -f libctrsdl.so ../../mods/sdl
 
 clean:

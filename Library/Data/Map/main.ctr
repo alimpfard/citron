@@ -1,0 +1,10 @@
+Map on: 'keys' do: {
+  var r is Array new.
+  me each: {:k r push: k. }.
+  ^r.
+}.
+Map on: 'values' do: {
+  var r is Array new.
+  me each: {:_:v r push: v. }.
+  ^r.
+}.

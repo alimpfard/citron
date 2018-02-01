@@ -1,0 +1,10 @@
+Array on: 'groupBy:' do: {:fn
+  var rt is Map new.
+  me each_v: {:v
+    var r is fn applyTo: v.
+    (rt contains: r)
+      ifTrue: { rt at: r, push: v. },
+      else:   { rt put: (Array < v) at: r. }.
+  }.
+  ^rt.
+}.

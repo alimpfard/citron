@@ -9,6 +9,7 @@ inp is ''.
 
 ImportLib Queue.
 ImportLib LRArray.
+import Library/Data/Map.
 
 Eval is Object new.
 Eval on: 'init' do: {
@@ -23,7 +24,7 @@ Eval on: 'init' do: {
   my commands is Nil.
   my continuation is '...'.
   me genAccessors: 'equit'.
-  me equit: False.
+  me equit: True.
   me genReader: 'eServer'.
   my instr is False.
   ^me.
@@ -125,10 +126,10 @@ Eval on: 'evaluate:' do: { :str
           ^(str startsWith: 'import') not
             either: ({
                 ^Reflect runAtGlobal: {:str ^str eval.} arguments: str.
-                } catch: {:e Eval handleException.}
+                } catch: {:e Eval handleException: e. ^Nil.}
             ) or: ({
                 ^str eval.
-                } catch: {:e Eval handleException.}).
+                } catch: {:e Eval handleException: e. ^Nil.}).
         }).
 }.
 Eval on: 'evaluateFile:' do: { :fl
@@ -180,6 +181,12 @@ Reflect registerInstrumentor: {:obj:msg:args
 }.
 Reflect disableInstrumentation.
 
+Eval on: 'tryNumrify:' do: {:s
+  var r is s.
+  {r is s toNumber.} catch: {r is s.}, run.
+  ^r.
+}.
+
 # parse arguments
 { ^(Eval argCount > 0). } whileTrue: {
     # get an option
@@ -210,7 +217,7 @@ Reflect disableInstrumentation.
           indent: 2 write: '-h : show this help\n',
           indent: 2 write: '-f : evaluate file. many can be passed, evals in passed order\n',
           indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
-          indent: 2 write: '-enoquit : Do not quit the interpreter on errors\n',
+          indent: 2 write: '-equit : Quit the interpreter on errors\n',
           indent: 2 write: '-finstr : Enable instrumentation (advanced debug feature).\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
         P resetColor.
@@ -244,12 +251,13 @@ Reflect disableInstrumentation.
         (value isNil) ifTrue: { thisBlock error: '-e requires an argument.'. }.
         { ^(Eval argCount > 0). } whileTrue: { args push: Eval shiftArgs. }. #consume all other arguments.
         # if it ends in a dot, delete it.
+        args imap: {:i:n Reflect addGlobalVariable: '$' + (i + 1). Reflect set: '$' + (i + 1) to: (Eval tryNumrify: n).}.
         value findPattern: '(.*)\\.' do: {:p value is p at: 1.}.
         Pen write: (Eval evaluate: value).
         Program exit.
-    }, case: '-enoquit' do: {
+    }, case: '-equit' do: {
         args pop.
-        Eval equit: True.
+        Eval equit: False.
     }, case: '-finstr' do: {
         args pop.
         Reflect enableInstrumentation.
@@ -261,8 +269,36 @@ Pen green. ?>Project Citron : The Programming Language (V<?. Pen write:(Reflect 
 run with '-h' to read the eval mode help.
 <?.
 
+Eval on: 'flatten:' do: {:list
+  var lst is Array new.
+  list each_v: {:l
+    (Reflect isObject: l linkedTo: Array) either: {
+      lst is lst + (Eval flatten: l).
+    } or: {
+      lst push: l.
+    }.
+  }.
+  ^lst.
+}.
+
+Eval on: 'allTheNames' do: {
+  ^(Eval Commands keys fmap: {:i ^':' + i.}) + ['var', 'my', 'is'] + (Eval flatten: Reflect getContext).
+}.
+
+Eval on: 'allTheNames:' do: {:obj
+  ^obj isNil not either: {^Reflect getMethodsOf: obj.} or: {^Eval allTheNames.}.
+}.
+
+Eval on: 'redraw:at:' do: {:inp:cursor
+  Pen write: ('\b' * cursor) + inp + ('\b' * (inp length - cursor - 1)).
+}.
+
 Eval on: 'repl' do: {
   {^True.} whileTrue: {
+    var hindex is Eval getHistory count.
+    var ncmessage is ' <- No completion'.
+    var stdin is File special: 'stdin'.
+    inp is ''.
     # break the repl when `end` is True.
     Eval break break.
     (Eval queueHasItem) ifTrue: {
@@ -272,16 +308,143 @@ Eval on: 'repl' do: {
     Eval queueHasItem continue.
     Pen cyan write: (Eval prompt), resetColor.
 
-    # get input, get rid of the trailing \n. If empty, don't bother evaluating.
-    inp is Program waitForInput.
-    (inp trim = '') continue.
-
-    {^Eval queryState: inp.} whileFalse: {
-      inp append: (inp countOf: '\'', even either: '\n' or: '') + ({
-        Pen cyan write: Eval continuation * (1 + (inp countOf: '{') - (inp countOf: '}')), resetColor.
-        ^Program waitForInput.
-        } run).
+    var inc is stdin readBytes: 1.
+    var last_was_comp is False.
+    var last_comp_entry is ''.
+    var last_comp_index is -1.
+    var last_comp_rewind is 0.
+    var last_toc is 'Object'.
+    var done is False.
+    var cursor is 0.
+    var multichar_in is Array new.
+    {^done.} whileFalse: {
+      last_comp_rewind !=: 0, ifTrue: {
+        Pen write: ('\b \b' * last_comp_rewind).
+        last_comp_rewind is 0.
       }.
+      inc = '\t' ifTrue: {
+          var candidate is 'Nil'.
+          var toc is (inp trim or: '  ') split: ' ', last.
+          last_was_comp ifTrue: {
+            var toremove is ((toc length) - (last_comp_entry length)).
+            Pen write: '\b \b' * toremove.
+            inp is inp removeFrom: (cursor - toremove) to: cursor.
+            cursor is (cursor - toremove) max: 0.
+          }.
+          toc is last_was_comp either: last_comp_entry or: toc.
+          last_comp_entry is toc.
+          last_toc is (inp trim or: 'Nil') split: ' '.
+          last_toc is (last_toc count) >=: 2, either: {^last_toc init last.} or: 'Nil'.
+          var candidates is Eval allTheNames: ({^Reflect getObject: (['my', 'var'] contains: last_toc, either: Nil or: last_toc).} catch: {^Nil.}, run), filter: {:i:n ^n startsWith: toc. }.
+          candidates count !=: 0, ifTrue: {
+            candidate is candidates @ (last_comp_index is (last_comp_index +=: 1) >=: (candidates count), either: 0 or: last_comp_index).
+            var cc is candidate skip: toc length.
+            Pen cyan write: cc, resetColor.
+            Pen yellow write: (var iis is ' [from %s]' % [last_toc]), resetColor.
+            last_comp_rewind is iis length.
+            inp is inp insert: cc at: cursor.
+            cursor +=: cc length.
+          }, else: {
+            Pen yellow write: ncmessage + '\a', resetColor.
+            last_comp_rewind is (ncmessage length).
+          }.
+          last_was_comp is True.
+          last_toc is candidate.
+        }, else: {
+          inc case: '\xd' do: {
+            # Pen brk.
+            (cursor !=: inp length) ifTrue: {
+              Pen write: (inp from: cursor length: (inp length - cursor)).
+            }.
+            var original_inp is inp.
+            inp is inp trim.
+            inp length > 0 ifTrue: {
+              (inp at: 0, = ':') ifTrue: {done is True.}, else: {
+                (inp at: (inp length - 1), !=: '.') ifTrue: {
+                  inp is inp + '.'.
+                }.
+                # Pen yellow writeln: '  [PARSING "%s"]' % [inp], resetColor.
+                # done is (([(inp countOf: '{'), (inp countOf: '['), (inp countOf: '(')] = [(inp countOf: '}'), (inp countOf: ']'), (inp countOf: ')')]) & (((inp countOf: '\'') - (inp countOf: '\\\'')) mod: 2, = 0)).
+                # Pen yellow writeln: '[PARSED "%s":%d]' % [pfinal, (pfinal instrCount)], resetColor.
+                # done ifTrue: {
+                # var pfinal is AST parse: inp.
+                # done is (pfinal count !=: 0).
+                done is True.
+                # }.
+                inp is original_inp.
+              }.
+            }, else: { Pen brk. done is True. }.
+          }, case: '\x3' do: {
+            inp is ''.
+            cursor is 0.
+            Pen red writeln: 'Interrupted', resetColor.
+            # done is True.
+          }, case: '\x8' do: {
+            cursor > 0 ifTrue: {
+              inp is inp removeFrom: (cursor - 1) to: cursor.
+              cursor -=: 1.
+              Pen write: '\x8 \x8'.
+            }, else: { Pen write: '\a'. }.
+          }, case: '\x11' do: {
+            var toc is (inp trim or: '  ') split: ' ', last.
+            var recs is '%:L' % [' ', (Eval allTheNames filter: {:_:n ^n startsWith: toc.})].
+            Pen cyan write: recs, resetColor.
+          }, case: '\x1b' do: {
+            inc is stdin readBytes: 2.
+            inc case: '\x5b\x41' do: {
+              hindex > 0 ifTrue: {
+                Pen write: '\b' * (inp length).
+                cursor is (inp is Eval getHistory at: (hindex is hindex - 1)) length.
+                Pen write: inp.
+              }.
+            }, case: '\x5b\x42' do: {
+              (hindex > 0) & (Eval getHistory count > 0) ifTrue: {
+                hindex +=: 1.
+                Pen write: '\b' * (inp length).
+                inp is Eval getHistory.
+                inp count <=: hindex, ifTrue: {hindex is inp count.}.
+                inp is inp at: hindex - 1.
+                cursor is inp length.
+                Pen write: inp.
+              }, else: {
+                hindex is 0.
+                Pen write: '\b \b' * (inp length).
+                inp is ''.
+                cursor is 0.
+              }.
+            }, case: '\x5b\x43' do: {
+              (cursor < (inp length - 1)) ifTrue: {
+                cursor +=: 1.
+                Pen write: inp @ (cursor - 1).
+              }.
+            }, case: '\x5b\x44' do: {
+              (cursor > 0) ifTrue: {
+                cursor -=: 1.
+                Pen write: '\b'.
+              }.
+            }, default: {
+              Pen write: inc toByteArray.
+            }, switch.
+          }, default: {
+            inp is inp insert: inc at: cursor.
+            Eval redraw: inp at: cursor.
+            cursor +=: 1.
+          }, switch.
+          last_was_comp is False.
+        }.
+      done break.
+      inc is stdin readBytes: 1.
+    }.
+    hindex is Eval getHistory count.
+    # Pen cyan write: ' [cursor %d in (%s)]' % [cursor, (inp)], resetColor.
+    (inp trim = '') continue.
+    Pen brk.
+    # {^Eval queryState: inp.} whileFalse: {
+    #  inp append: (inp countOf: '\'', even either: '\n' or: '') + ({
+    #    Pen cyan write: Eval continuation * (1 + (inp countOf: '{') - (inp countOf: '}')), resetColor.
+    #    ^Program waitForInput.
+    #    } run).
+    #  }.
     # if it ends in a dot, get rid of it.
     inp is inp trim.
     (inp at: (inp length - 1), = '.') ifTrue: {

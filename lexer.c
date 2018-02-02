@@ -539,20 +539,21 @@ ctr_clex_tok ()
   if (strncmp (ctr_code, "?>", 2) == 0)
     {
       ctr_clex_verbatim_mode = 1;
-      ctr_code++;
-      memcpy (ctr_clex_buffer, "?", 1);
-      ctr_clex_tokvlen = 1;
-      return CTR_TOKEN_REF;
+      ctr_code+=2;
+      // memcpy (ctr_clex_buffer, "?", 1);
+      // ctr_clex_tokvlen = 1;
+      return CTR_TOKEN_QUOTE;
     }
 
   /* if lexer is in verbatim mode and we pass the '>' symbol insert a fake quote as next token */
   if (strncmp (ctr_code, ">", 1) == 0 && ctr_clex_verbatim_mode == 1)
     {
-      ctr_clex_verbatim_mode_insert_quote = (uintptr_t) (ctr_code + 1);	/* this way because multiple invocations should return same result */
-      ctr_code++;
-      memcpy (ctr_clex_buffer, ">", 1);
-      ctr_clex_tokvlen = 1;
-      return CTR_TOKEN_REF;
+      // ctr_clex_verbatim_mode_insert_quote = (uintptr_t) (ctr_code + 1);	/* this way because multiple invocations should return same result */
+      // ctr_code++;
+      return CTR_TOKEN_QUOTE;
+      // memcpy (ctr_clex_buffer, ">", 1);
+      // ctr_clex_tokvlen = 1;
+      // return CTR_TOKEN_REF;
     }
   // if (*ctr_code == ':') {
   //   int i = 1;

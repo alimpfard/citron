@@ -1,0 +1,9 @@
+var Fire is Object new.
+Fire on: 'of:' do: {:obj
+  ^me cnew: { context => obj. }.
+}.
+Fire on: 'fire:withArgs:' do: {:meth:args
+  ^my context message: meth arguments: args.
+}.
+
+import export: Fire as: 'Fire'.

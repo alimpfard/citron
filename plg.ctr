@@ -1,0 +1,7 @@
+import Library/Extensions Library/Utils/Fire.
+
+var test is [1,2,3].
+
+var args is Iterator rangeFrom: 0 to: Program argCount step: 1, toArray fmap: {:i ^Program argument: i.}.
+
+Pen writeln: (FireL run: args for: test).

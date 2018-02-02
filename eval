@@ -264,8 +264,8 @@ Eval on: 'tryNumrify:' do: {:s
         Eval enableInstrumentation.
     }, switch. # do not consume any other option.
 }.
-Pen green. ?>Project Citron : The Programming Language (V<?. Pen write:(Reflect version) + ')' ,resetColor brk.
-?>Eval Mode, parameters related to eval are in the Eval namespace.
+Pen green write: ?>Project Citron : The Programming Language (V<?, write:(Reflect version) + ')', resetColor brk
+write: ?>Eval Mode, parameters related to eval are in the Eval namespace.
 run with '-h' to read the eval mode help.
 <?.
 
@@ -290,7 +290,13 @@ Eval on: 'allTheNames:' do: {:obj
 }.
 
 Eval on: 'redraw:at:' do: {:inp:cursor
-  Pen write: ('\b' * cursor) + inp + ('\b' * (inp length - cursor - 1)).
+  var cols is Program env: 'COLUMNS', or: '89', toNumber.
+  var remainingCols is cols - (inp length) max: 0.
+  remainingCols < 2 ifTrue: {
+    Pen write: ('\b' * cursor) + '<' + (inp is inp from: (inp length - cols) length: cols - 1) + ('\b' * (inp length - 1)).
+  }, else: {
+    Pen write: ('\b' * cursor) + inp + ('\b' * (inp length - cursor - 1)).
+  }.
 }.
 
 Eval on: 'repl' do: {
@@ -421,6 +427,23 @@ Eval on: 'repl' do: {
               (cursor > 0) ifTrue: {
                 cursor -=: 1.
                 Pen write: '\b'.
+              }.
+            }, case: '\x5b\x31' do: {
+              Pen write: '\a' * 23.
+              inc is stdin readBytes: 3.
+              (cursor > 0) ifTrue: {
+                (inc = '\x3b\x35\x44') ifTrue: {
+                  var ct is inp from: 0 to: cursor + 1.
+                  ct is (ct indexOf: ' ').# + (ct split: ' ', last length min: cursor - 1).
+                  cursor -=: ct.
+                  Pen write: '\b' * ct.
+                }, else: {
+                  (inc = '\x3b\x35\x43') ifTrue: {
+                    var ct is inp from: cursor to: (inp length), split: ' ', head length min: cursor.
+                    ct times: {:i Pen write: inp @ (cursor + i).}.
+                    cursor +=: ct.
+                  }.#, else: { Pen red write: inc. }.
+                }.
               }.
             }, default: {
               Pen write: inc toByteArray.

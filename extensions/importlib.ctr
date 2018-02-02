@@ -41,7 +41,6 @@ import on: 'respondTo:' do: {:name
     thisBlock error: ('Could not find neither a package, nor a standalone file representing $$name in the search paths: \n%s' formatObjects: [(my searchPaths fmap: {:p ^p + ' aka (' + (File new: p, realPath) + ')'.}, join: '\n')]).
   }.
   var oldp is Program changeDirectory: path.
-  var ret is ('{' + file read + '}') eval run.
+  file include.
   Program changeDirectory: oldp.
-  ^ret.
 }.

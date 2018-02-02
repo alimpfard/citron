@@ -1,0 +1,21 @@
+import fire Library/Utils/CLILoader.
+
+var FireLoader is CLILoader new.
+FireLoader on: 'run:for:' do: {:cargs:obj
+  var ppargs is me parse: cargs.
+  [args, pargs] is ppargs.
+  var meth is args shift.
+  pargs count > 0 ifTrue: {
+    pargs contains: 'list', ifTrue: {
+      Pen purple write: 'Acceptable messages for %s(subtype %s):\n' % [(obj id), (Reflect strTypeOf: obj)], resetColor writeln: (Reflect getMethodsOf: obj, join: '\n').
+      ^''.
+    }.
+    pargs contains: 'args', ifTrue: {
+      Pen writeln: '%s, %L' % [meth, args].
+      ^''.
+    }.
+  }.
+  ^const Fire of: obj, fire: meth withArgs: args.
+}.
+
+import export: FireLoader as: 'FireL'.

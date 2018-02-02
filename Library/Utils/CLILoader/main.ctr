@@ -1,0 +1,42 @@
+var CLILoader is Object new.
+CLILoader on: 'parse:' do: {:cmdargs
+  var pass_args is Array new.
+  var pure_args is Nil.
+  var uargs is cmdargs filter: {:i ^i !=: ''.}.
+  var pure_boundary is uargs indexOf: '--'.
+  pure_boundary !=: -1, ifTrue: {
+    pure_args is Nil.
+  }, else: {pure_boundary is uargs count.}.
+  var upass_args is uargs from: 0 length: pure_boundary.
+  var pure_args is uargs from: pure_boundary length: (uargs count - pure_boundary).
+  var argn is 0.
+  {^upass_args count > 0.} whileTrue: {
+    var arg is upass_args shift.
+    arg startsWith: '-', ifTrue: {
+      (arg skip: 1, lower) case: 'number' do: {
+        upass_args count > 0 ifFalse: {thisBlock error: 'Expected number, got nothing ( for argument#$$argn )'.}.
+        {
+          arg is upass_args shift toNumber.
+        } catch: { thisBlock error: 'Expected number, got $$arg ( for argument#$$argn )'.}, run.
+      }, case: 'string' do: {
+        upass_args count > 0 ifFalse: {thisBlock error: 'Expected string, got nothing ( for argument#$$argn )'.}.
+        arg is upass_args shift.
+      }, case: 'eval' do: {
+        upass_args count > 0 ifFalse: {thisBlock error: 'Expected string, got nothing ( for argument#$$argn )'.}.
+        {
+          arg is upass_args shift eval.
+        } catch: {:e thisBlock error: 'Got an exception while trying to evaluate argument#$$argn \nException was: \n\x1b[31m\t$$e \x1b[0m'.}, run.
+      }, default: {
+        (arg startsWith: '--') ifTrue: {
+          Pen cyan write: 'Did you mean to separate this arg? i.e. ', green write: '-- %s' % [(arg skip: 2)], resetColor brk.
+        }.
+        thisBlock error: 'Did not understand argument type $$arg'.
+      }, switch.
+    }.
+      pass_args push: arg.
+      argn +=: 1.
+  }.
+  ^[pass_args, pure_args].
+}.
+
+import export: CLILoader as: 'CLILoader'.

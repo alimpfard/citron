@@ -2,6 +2,7 @@
 #define REVERSE_SIZES_H
 
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <ffi.h>
 
@@ -40,7 +41,8 @@ static size_t reverse_ffi_type_size_map_lookup(ffi_type* type) {
     if(reverse_ffi_type_size_map[i].type == type) return reverse_ffi_type_size_map[i].size;
     i++;
   }
-  return -1;
+  printf("REVERSE LOOKUP %p\n", type);
+  return 0;
 }
 
 #endif /* end of include guard: REVERSE_SIZES_H */

@@ -326,13 +326,15 @@ ctr_cparse_popen ()
  * Generates a set of AST nodes to represent a block of code.
  */
 ctr_tnode *ctr_cparse_block_ (int autocap);
-inline ctr_tnode *
+__attribute__((always_inline))
+ ctr_tnode *
 ctr_cparse_block ()
 {
   return ctr_cparse_block_ (0);
 }
 
-inline ctr_tnode *
+__attribute__((always_inline))
+ ctr_tnode *
 ctr_cparse_block_capture ()
 {
   return ctr_cparse_block_ (1);
@@ -557,7 +559,7 @@ ctr_cparse_false ()
   ctr_clex_tok ();
   r = ctr_cparse_create_node (CTR_AST_NODE);
   r->type = CTR_AST_NODE_LTRBOOLFALSE;
-  r->value = ctr_heap_allocate_tracked (sizeof (char) * 4);
+  r->value = ctr_heap_allocate_tracked (sizeof (char) * 5);
   memcpy (r->value, "False", 5);
   r->vlen = 5;
   return r;

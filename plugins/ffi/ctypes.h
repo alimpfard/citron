@@ -68,7 +68,7 @@ typedef struct {
     int member_count;
     size_t size;
     ffi_type* type;
-    pad_info_node_t* padinfo;
+    pad_info_node_t** padinfo;
     void* value;
 } ctr_ctypes_ffi_struct_value;
 

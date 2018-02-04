@@ -4,3 +4,6 @@
 ctr
 *.js
 *.yml
+plg.ctr
+namedstruct.ctr
+docs

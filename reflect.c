@@ -1567,6 +1567,19 @@ ctr_reflect_run_glob (ctr_object * myself, ctr_argument * argumentList)
   return ret;
 }
 
+/**
+ * [Reflect] thisContext
+ *
+ * returns the current context as a map
+ */
+ctr_object *
+ctr_reflect_this_context(ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object* ctx_ = ctr_contexts[ctr_context_id];
+  ctx_->link = CtrStdMap;
+  return ctx_;
+}
+
 ///Trash v
 ctr_object *
 ctr_reflect_cons_value (ctr_object * myself, ctr_argument * argumentList)

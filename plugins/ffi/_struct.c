@@ -231,7 +231,7 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format, size_t* size_ou
         if(*format != 'u' && *format != 's') goto exit_error;
         format++;
         if(*format != 'i') goto exit_error;
-        this_size = sizeof(unsigned int); this_alignment = alignof(unsigned int); max_alignment = fmax(this_alignment, max_alignment);if(current_offset%this_alignment!=0) { pad = this_alignment-(current_offset%this_alignment); mc+=pad; current_offset+=pad;}
+        this_size = sizeof(uint8_t); this_alignment = alignof(uint8_t); max_alignment = fmax(this_alignment, max_alignment);if(current_offset%this_alignment!=0) { pad = this_alignment-(current_offset%this_alignment); mc+=pad; current_offset+=pad;}
         mc++;
         break;
       }
@@ -240,7 +240,7 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format, size_t* size_ou
         if(*format != 'u' && *format != 's') goto exit_error;
         format++;
         if(*format != 'i') goto exit_error;
-        this_size = sizeof(unsigned int); this_alignment = alignof(unsigned int); max_alignment = fmax(this_alignment, max_alignment);if(current_offset%this_alignment!=0) { pad = this_alignment-(current_offset%this_alignment); mc+=pad; current_offset+=pad;}
+        this_size = sizeof(uint32_t); this_alignment = alignof(uint32_t); max_alignment = fmax(this_alignment, max_alignment);if(current_offset%this_alignment!=0) { pad = this_alignment-(current_offset%this_alignment); mc+=pad; current_offset+=pad;}
         mc++;
         break;
       }
@@ -249,7 +249,7 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format, size_t* size_ou
         if(*format != 'u' && *format != 's') goto exit_error;
         format++;
         if(*format != 'i') goto exit_error;
-        this_size = sizeof(unsigned int); this_alignment = alignof(unsigned int); max_alignment = fmax(this_alignment, max_alignment);if(current_offset%this_alignment!=0) { pad = this_alignment-(current_offset%this_alignment); mc+=pad; current_offset+=pad;}
+        this_size = sizeof(uint32_t); this_alignment = alignof(uint32_t); max_alignment = fmax(this_alignment, max_alignment);if(current_offset%this_alignment!=0) { pad = this_alignment-(current_offset%this_alignment); mc+=pad; current_offset+=pad;}
         mc++;
         break;
       }
@@ -258,7 +258,7 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format, size_t* size_ou
         if(*format != 'u' && *format != 's') goto exit_error;
         format++;
         if(*format != 'i') goto exit_error;
-        this_size = sizeof(unsigned int); this_alignment = alignof(unsigned int); max_alignment = fmax(this_alignment, max_alignment);if(current_offset%this_alignment!=0) { pad = this_alignment-(current_offset%this_alignment); mc+=pad; current_offset+=pad;}
+        this_size = sizeof(uint64_t); this_alignment = alignof(uint64_t); max_alignment = fmax(this_alignment, max_alignment);if(current_offset%this_alignment!=0) { pad = this_alignment-(current_offset%this_alignment); mc+=pad; current_offset+=pad;}
         mc++;
         break;
       }
@@ -313,10 +313,16 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format, size_t* size_ou
         }
         pad_info_node_t* newinfo = ctr_heap_allocate(sizeof(pad_info_node_t));
         newinfo->pad = 1;
+        newinfo->offset = current_offset - p + pad;
         padinfo[padinfo_index++] = newinfo;
       }
       pad_info_node_t* newinfo = ctr_heap_allocate(sizeof(pad_info_node_t));
       newinfo->pad = 0;
+      newinfo->offset = current_offset;
+      if(padinfo_index>=padinfo_max) {
+        padinfo_max *= 2;
+        padinfo = ctr_heap_reallocate(padinfo, sizeof(pad_info_node_t*)*padinfo_max);
+      }
       padinfo[padinfo_index++] = newinfo;
     }
     current_offset += this_size;
@@ -332,13 +338,23 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format, size_t* size_ou
       }
       pad_info_node_t* newinfo = ctr_heap_allocate(sizeof(pad_info_node_t));
       newinfo->pad = 1;
+      newinfo->offset = current_offset - p + pad;
       padinfo[padinfo_index++] = newinfo;
     }
   }
   if (record_pads) {
     pad_info_node_t* newinfo = ctr_heap_allocate(sizeof(pad_info_node_t));
     newinfo->pad = 0;
+    newinfo->offset = current_offset;
+    if(padinfo_index>=padinfo_max) {
+      padinfo_max *= 2;
+      padinfo = ctr_heap_reallocate(padinfo, sizeof(pad_info_node_t*)*padinfo_max);
+    }
     padinfo[padinfo_index++] = newinfo;
+    if(padinfo_index>=padinfo_max) {
+      padinfo_max *= 2;
+      padinfo = ctr_heap_reallocate(padinfo, sizeof(pad_info_node_t*)*padinfo_max);
+    }
     padinfo[padinfo_index++] = NULL;  //null terminate so it can be safely read.
   }
   *size_out = current_offset;
@@ -353,7 +369,7 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format, size_t* size_ou
     return ret;
 }
 
-inline ffi_type* ctr_create_ffi_type_descriptor(char* format) {
+ffi_type* ctr_create_ffi_type_descriptor(char* format) {
   size_t size;
   struct_member_desc_t desc = ctr_ffi_type_get_member_count(format, &size, 0);
   return ctr_create_ffi_type_descriptor_(format, desc.member_count);
@@ -365,7 +381,7 @@ ffi_type* ctr_create_ffi_type_descriptor_(char* format, int member_count) {
   new_type->type = FFI_TYPE_STRUCT;
   if(member_count<0) {
     char err[512];
-    int len = sprintf(err, "Struct: Error at char %d of format string '%s' :: Unrecognized format\n", -member_count-1, format);
+    int len = sprintf(err, "Struct: Error at char %d of format string '%s' :: Unrecognized format", -member_count-1, format);
     #ifdef TEST
     perror(err);
     exit(1);
@@ -379,12 +395,14 @@ ffi_type* ctr_create_ffi_type_descriptor_(char* format, int member_count) {
   size_t this_size = 0;
   size_t this_alignment = 0;
   for(int i=0; i<member_count; i++) {
+    if(0);
     ffi_type* member = ctr_ffi_type_get_format_splat(&format, &this_size);
     if(current_offset%this_size != 0) {
       size_t pad = this_size-(current_offset%this_size);
       current_offset += pad;
-      for(int j=0; j<pad; j++)
+      for(int j=0; j<pad; j++) {
         elems[i++] = &ffi_type_uchar;//insert a bunch of pads
+      }
     }
     format++;
     elems[i] = member;

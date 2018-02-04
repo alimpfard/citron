@@ -109,6 +109,9 @@ ctr_internal_debug_tree (ctr_tnode * ti, int indent)
 	case CTR_AST_NODE_LTRNIL:
 	  str = "LTRNIL";
 	  break;
+  case CTR_AST_NODE_IMMUTABLE:
+    str = "IMMUTABLE";
+    break;
 	default:
 	  str = "UNKNW?";
 	  break;

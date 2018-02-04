@@ -283,25 +283,29 @@ ctr_file_write (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *path = ctr_internal_object_find_property (myself,
 							ctr_build_string_from_cstring ("path"),
 							0);
-  FILE *f;
-  ctr_size vlen;
-  char *pathString;
-  if (path == NULL)
-    return CtrStdNil;
-  vlen = path->value.svalue->vlen;
-  pathString = ctr_heap_allocate (vlen + 1);
-  memcpy (pathString, path->value.svalue->value, vlen);
-  memcpy (pathString + vlen, "\0", 1);
-  f = fopen (pathString, "wb+");
-  ctr_heap_free (pathString);
-  if (!f)
-    {
-      CtrStdFlow = ctr_build_string_from_cstring ("Unable to open file.");
-      CtrStdFlow->info.sticky = 1;
+  if(!myself->value.rvalue || !myself->value.rvalue->ptr) {
+    FILE *f;
+    ctr_size vlen;
+    char *pathString;
+    if (path == NULL)
       return CtrStdNil;
-    }
-  fwrite (str->value.svalue->value, sizeof (char), str->value.svalue->vlen, f);
-  fclose (f);
+    vlen = path->value.svalue->vlen;
+    pathString = ctr_heap_allocate (vlen + 1);
+    memcpy (pathString, path->value.svalue->value, vlen);
+    memcpy (pathString + vlen, "\0", 1);
+    f = fopen (pathString, "wb+");
+    ctr_heap_free (pathString);
+    if (!f)
+      {
+        CtrStdFlow = ctr_build_string_from_cstring ("Unable to open file.");
+        CtrStdFlow->info.sticky = 1;
+        return CtrStdNil;
+      }
+    fwrite (str->value.svalue->value, sizeof (char), str->value.svalue->vlen, f);
+    fclose (f);
+  } else {
+    fwrite (str->value.svalue->value, sizeof (char), str->value.svalue->vlen, myself->value.rvalue->ptr);
+  }
   return myself;
 }
 
@@ -320,25 +324,27 @@ ctr_file_append (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *path = ctr_internal_object_find_property (myself,
 							ctr_build_string_from_cstring ("path"),
 							0);
-  ctr_size vlen;
-  char *pathString;
-  FILE *f;
-  if (path == NULL)
-    return myself;
-  vlen = path->value.svalue->vlen;
-  pathString = ctr_heap_allocate (vlen + 1);
-  memcpy (pathString, path->value.svalue->value, vlen);
-  memcpy (pathString + vlen, "\0", 1);
-  f = fopen (pathString, "ab+");
-  ctr_heap_free (pathString);
-  if (!f)
-    {
-      CtrStdFlow = ctr_build_string_from_cstring ("Unable to open file.\0");
-      CtrStdFlow->info.sticky = 1;
-      return CtrStdNil;
-    }
-  fwrite (str->value.svalue->value, sizeof (char), str->value.svalue->vlen, f);
-  fclose (f);
+  if(!myself->value.rvalue || !myself->value.rvalue->ptr) {
+    ctr_size vlen;
+    char *pathString;
+    FILE *f;
+    if (path == NULL)
+      return myself;
+    vlen = path->value.svalue->vlen;
+    pathString = ctr_heap_allocate (vlen + 1);
+    memcpy (pathString, path->value.svalue->value, vlen);
+    memcpy (pathString + vlen, "\0", 1);
+    f = fopen (pathString, "ab+");
+    ctr_heap_free (pathString);
+    if (!f)
+      {
+        CtrStdFlow = ctr_build_string_from_cstring ("Unable to open file.\0");
+        CtrStdFlow->info.sticky = 1;
+        return CtrStdNil;
+      }
+    fwrite (str->value.svalue->value, sizeof (char), str->value.svalue->vlen, f);
+    fclose (f);
+  } else fwrite (str->value.svalue->value, sizeof (char), str->value.svalue->vlen, myself->value.rvalue->ptr);
   return myself;
 }
 
@@ -350,6 +356,7 @@ ctr_file_append (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_file_exists (ctr_object * myself, ctr_argument * argumentList)
 {
+  if (myself->value.rvalue && myself->value.rvalue->ptr) return ctr_build_bool(1);
   ctr_object *path = ctr_internal_object_find_property (myself,
 							ctr_build_string_from_cstring ("path"),
 							0);
@@ -396,7 +403,9 @@ ctr_file_include (ctr_object * myself, ctr_argument * argumentList)
   pathString = ctr_heap_allocate_tracked (sizeof (char) * (vlen + 1));	//needed until end, pathString appears in stracktrace
   memcpy (pathString, path->value.svalue->value, vlen);
   memcpy (pathString + vlen, "\0", 1);
-  prg = ctr_internal_readf (pathString, &program_size);
+  if (!myself->value.rvalue || !myself->value.rvalue->ptr)
+    prg = ctr_internal_readf (pathString, &program_size);
+  else return ctr_build_nil();
   parsedCode = ctr_cparse_parse (prg, pathString);
   ctr_heap_free (prg);
   ctr_cwlk_subprogram++;
@@ -448,6 +457,10 @@ ctr_object *
 ctr_file_delete (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_check_permission (CTR_SECPRO_NO_FILE_WRITE);
+  if(myself->value.rvalue && myself->value.rvalue->ptr) {
+    CtrStdFlow = ctr_build_string_from_cstring("Resource is open");
+    return ctr_build_nil();
+  }
   ctr_object *path = ctr_internal_object_find_property (myself,
 							ctr_build_string_from_cstring ("path"),
 							0);

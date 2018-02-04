@@ -1,0 +1,22 @@
+import Library/Net/WebSocket.
+
+var ws is WebSock new init.
+var port is 1024.
+var host is '0.0.0.0'.
+ws bind: host port: port.
+ws onmessage: {:ws:state:msg
+  var msg_ is 'Received %s (%d bytes)' % [(msg memberPayload readBytesAsString: msg memberPayloadLen), (msg memberPayloadLen)].
+  Pen writeln: msg_.
+  ws sendText: msg_ state: state.
+  ws closeState: state.
+  ^0.}.
+ws onopen: {:ws:state
+  Pen writeln: 'Client with socketDescriptor %d connected' % [(state memberSockfd)].
+  ^0.
+}.
+ws onclose: {:ws:state
+  Pen writeln: 'Client with socketDescriptor %d disconnected' % [(state memberSockfd)].
+  ^0.
+}.
+Pen writeln: 'Listening on %s:%s' % [host, port].
+ws wait.

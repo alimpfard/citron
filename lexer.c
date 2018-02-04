@@ -302,6 +302,10 @@ ctr_clex_is_valid_digit_in_base (char c, int b)
 int
 ctr_clex_tok ()
 {
+  if (ctr_code == ctr_eofcode)
+    {
+      return CTR_TOKEN_FIN;
+    }
   char c;
   int i, comment_mode, presetToken, pragma_mode;
   ctr_clex_tokvlen = 0;
@@ -348,7 +352,7 @@ ctr_clex_tok ()
       return CTR_TOKEN_QUOTE;
     }
 
-  if (*ctr_code == '\n' && check_next_line_empty () && oneLineExpressions->value)
+  if (ctr_code != ctr_eofcode && *ctr_code == '\n' && check_next_line_empty () && oneLineExpressions->value)
     {
       ctr_code++;
       return CTR_TOKEN_DOT;

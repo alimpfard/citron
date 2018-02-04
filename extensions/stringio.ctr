@@ -1,14 +1,15 @@
 #Reflect addGlobalVariable: 'StringIO'.
 var StringIO is Object new.
-StringIO on: 'init' do: {
-  my internalBuffer is String new.
-  my position is 0.
+StringIO on: 'new' do: {
+  ^me cnew: {
+    my internalBuffer is ''.
+    my position is 0.
+  }.
 }.
 
 StringIO on: 'write:' do: { :s
-  var str is s toString.
-  my internalBuffer append: str.
-  my position +=: str.
+  my internalBuffer append: s.
+  my position +=: str length.
 }.
 
 StringIO on: 'brk' do: {
@@ -27,9 +28,18 @@ StringIO on: 'close' do: {
   ^Nil.
 }.
 
-StringIO on: 'flush' do: {
-  my internalBuffer is String new.
+StringIO on: 'flush' do: {}.
+
+StringIO on: 'seek:' do: {:p
+  my position is my internalBuffer length min: p.
 }.
+
+StringIO on: 'rewind' do: { my position is 0. }.
+
+StringIO on: 'readBytes:' do: {:bytes
+  ^my internalBuffer from: my position lengthMax: bytes.
+}.
+
 (Reflect objectExists: 'ImportLib') ifTrue: {
   ImportLib export: StringIO as: 'StringIO' namespace: 'Extensions'.
 }.

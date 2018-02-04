@@ -27,6 +27,7 @@ typedef struct { char c; long long x; } s_long_long;
 
 typedef struct {
     unsigned int pad : 1;
+    ptrdiff_t offset;
 } pad_info_node_t;
 
 typedef struct {

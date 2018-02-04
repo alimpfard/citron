@@ -286,7 +286,7 @@ Eval on: 'allTheNames' do: {
 }.
 
 Eval on: 'allTheNames:' do: {:obj
-  ^obj isNil not either: {^Reflect getMethodsOf: obj.} or: {^Eval allTheNames.}.
+  ^obj isNil not either: {^[(False), (Reflect getMethodsOf: obj)].} or: {^[(True), (Eval allTheNames)].}.
 }.
 
 Eval on: 'redraw:at:' do: {:inp:cursor
@@ -341,7 +341,9 @@ Eval on: 'repl' do: {
           last_comp_entry is toc.
           last_toc is (inp trim or: 'Nil') split: ' '.
           last_toc is (last_toc count) >=: 2, either: {^last_toc init last.} or: 'Nil'.
-          var candidates is Eval allTheNames: ({^Reflect getObject: (['my', 'var'] contains: last_toc, either: Nil or: last_toc).} catch: {^Nil.}, run), filter: {:i:n ^n startsWith: toc. }.
+          var candidates is Eval allTheNames: ({^Reflect getObject: (['my', 'var'] contains: last_toc, either: Nil or: last_toc).} catch: {^Nil.}, run).
+          var skipthis is candidates @ 0.
+          candidates is (candidates @ 1) filter: {:_:i ^i startsWith: toc.}.
           candidates count !=: 0, ifTrue: {
             candidate is candidates @ (last_comp_index is (last_comp_index +=: 1) >=: (candidates count), either: 0 or: last_comp_index).
             var cc is candidate skip: toc length.
@@ -355,7 +357,7 @@ Eval on: 'repl' do: {
             last_comp_rewind is (ncmessage length).
           }.
           last_was_comp is True.
-          last_toc is candidate.
+          skipthis ifTrue: {last_toc is candidate.}.
         }, else: {
           inc case: '\xd' do: {
             # Pen brk.

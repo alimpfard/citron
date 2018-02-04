@@ -129,6 +129,9 @@ ctr_object* nupointer(char* p) {
   ptr->value.rvalue->ptr = x;
   return ptr;
 }
+ctr_object* nuvoid(char* p) {
+  return ctr_build_nil();
+}
 
 struct npdt_t {
   ffi_type* type;
@@ -163,6 +166,7 @@ static struct npdt_t npdtable[] = { //TODO: Fix mappings
   {NULL, NULL}
 };
 static struct nudt_t nudtable[] = { //TODO: Fix mappings
+  {&ffi_type_void,                nuvoid},
   {&ffi_type_uchar,               nuuchar},
   {&ffi_type_schar,               nuchar},
   {&ffi_type_uint8,               nuuint8},
@@ -226,6 +230,7 @@ ctr_object* nudispatch(char* p, ffi_type* type) {
     if(r)r->info.sticky=1;
     return r;
   }
+  sttrace_print(NULL);
   return NULL;
 }
 
@@ -544,7 +549,10 @@ int nppointer(char* p, ctr_object* o) {
   if(o->info.type != CTR_OBJECT_TYPE_OTEX)
     y = o;
   else
-    y = o->value.rvalue->ptr;
+    if (o->value.rvalue->type == CTR_CTYPE_STRUCT)
+      y = ((ctr_ctypes_ffi_struct_value*)(o->value.rvalue->ptr))->value;
+    else
+      y = o->value.rvalue->ptr;
   memcpy(p, &y, sizeof(void*));
   return 0;
 }

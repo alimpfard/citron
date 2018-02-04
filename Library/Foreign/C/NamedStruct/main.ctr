@@ -1,0 +1,24 @@
+var NamedStruct is Object new.
+NamedStruct on: 'sameFor:' do: {:struct
+  ^me cnew: {
+    struct => struct.
+  }.
+}.
+NamedStruct on: 'initAs:names:' do: {:desc:names
+  my struct is CTypes structWithFormat: desc.
+  var pi is my struct padInfo.
+  var oc is pi filter: {:_:i ^(i @ 0) not.}.
+  (names count !=: oc count) ifTrue: {thisBlock error: 'Expected %d name(s), but got %d' % [(oc count), (names count)].}.
+  var self is me.
+  names each: {:idx:name
+    self on: 'member' + (self transformName: name) + ':' do: {:v my struct put: v at: my struct offsets @ const idx.}.
+    self on: 'member' + (self transformName: name) do: {^my struct at: my struct offsets @ const idx.}.
+  }.
+}.
+NamedStruct on: 'struct' do: {^my struct.}.
+NamedStruct on: 'pack:' do: {:stuff my struct pack: stuff.}.
+NamedStruct on: 'unpack' do: {^my struct unpack.}.
+NamedStruct on: 'transformName:' do: {:name
+  ^name split: '_', fmap: {:s ^s upper1st.}, sum.
+}.
+import export: NamedStruct as: 'NamedStruct'.

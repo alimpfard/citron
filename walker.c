@@ -55,7 +55,7 @@ ctr_cwlk_message (ctr_tnode * paramNode)
   ctr_tlistitem *li = eitem;
   char *message;
   ctr_tlistitem *argumentList;
-  volatile ctr_object volatile *r;
+  volatile ctr_object *r;
   ctr_object *recipientName = NULL;
   switch (receiverNode->type)
     {
@@ -189,6 +189,10 @@ ctr_cwlk_assignment (ctr_tnode * node)
       ctr_callstack[ctr_callstack_index++] = assignee;
     }
   x = ctr_cwlk_expr (value, &wasReturn);
+  if (!x) {
+    CtrStdFlow = ctr_build_string_from_cstring("NULL expression");
+    return NULL;
+  }
   if (assignee->type == CTR_AST_NODE_REFERENCE)
     {
       if (assignee->modifier == 1)

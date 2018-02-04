@@ -871,7 +871,8 @@ ctr_internal_memmem (char *haystack, long hlen, char *needle, long nlen, int rev
  *
  * Creates an object.
  */
-inline ctr_object *
+__attribute__((always_inline))
+ ctr_object *
 ctr_internal_create_object (int type)
 {
   return ctr_internal_create_mapped_object (type, 0);
@@ -881,14 +882,11 @@ ctr_object *
 ctr_internal_create_mapped_object (int type, int shared)
 {
   ctr_object *o;
-  o = shared ==
-    1 ? ctr_heap_allocate_shared (sizeof (ctr_object)) : ctr_heap_allocate (sizeof (ctr_object));
+  o = shared ? ctr_heap_allocate_shared (sizeof (ctr_object)) : ctr_heap_allocate (sizeof (ctr_object));
   o->properties =
-    shared ==
-    1 ? ctr_heap_allocate_shared (sizeof (ctr_map)) : ctr_heap_allocate (sizeof (ctr_map));
+    shared ? ctr_heap_allocate_shared (sizeof (ctr_map)) : ctr_heap_allocate (sizeof (ctr_map));
   o->methods =
-    shared ==
-    1 ? ctr_heap_allocate_shared (sizeof (ctr_map)) : ctr_heap_allocate (sizeof (ctr_map));
+    shared ? ctr_heap_allocate_shared (sizeof (ctr_map)) : ctr_heap_allocate (sizeof (ctr_map));
   o->properties->size = 0;
   o->methods->size = 0;
   o->properties->head = NULL;
@@ -938,8 +936,8 @@ ctr_object *ctr_internal_create_standalone_object (int type)
 {
   return ctr_internal_create_mapped_standalone_object (type, 0);
 }
-
-inline ctr_object *ctr_internal_create_mapped_standalone_object (int type, int shared)
+__attribute__((always_inline))
+ctr_object *ctr_internal_create_mapped_standalone_object (int type, int shared)
 {
   ctr_object *o;
   o = shared ==
@@ -1043,6 +1041,7 @@ ctr_internal_cast2number (ctr_object * o)
 ctr_object *
 ctr_internal_cast2string (ctr_object * o)
 {
+  if (!o) return ctr_build_nil();
   if (o->info.type == CTR_OBJECT_TYPE_OTSTRING)
     return o;
   ctr_argument *a = ctr_heap_allocate (sizeof (ctr_argument));
@@ -2420,6 +2419,9 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdReflect,
 			    ctr_build_string_from_cstring ("getContext"),
 			    &ctr_reflect_dump_context);
+  ctr_internal_create_func (CtrStdReflect,
+			    ctr_build_string_from_cstring ("thisContext"),
+			    &ctr_reflect_this_context);
   ctr_internal_create_func (CtrStdReflect,
 			    ctr_build_string_from_cstring
 			    ("getMethodsOf:"), &ctr_reflect_dump_context_spec);

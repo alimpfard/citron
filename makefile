@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Wextra -Wno-unused-parameter -mtune=native -march=native -g3 -O1 -D withTermios -D forLinux -D CTR_STD_EXTENSION_PATH=\"`pwd`\"
+CFLAGS = -Wall -Wextra -Wno-unused-parameter -mtune=native -march=native -g3 -O0 -D withTermios -D forLinux -D CTR_STD_EXTENSION_PATH=\"`pwd`\"
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
        world.o lexer.o parser.o walker.o reflect.o fiber.o importlib.o\
 	   base_extensions.o citron.o
@@ -19,7 +19,7 @@ install:
 	echo -e "install directly from source not allowed.\nUse citron_autohell instead for installs"
 	exit 1;
 ctr:	$(OBJS)
-	$(CC) $(OBJS) -rdynamic -lm -ldl -lbsd -lpcre -lpthread -o ctr
+	$(CC) $(OBJS) -rdynamic -lm -ldl -lbsd -lpcre -lpthread ${LEXTRACF} -o ctr
 
 libctr: CFLAGS := $(CFLAGS) -fPIC -D CTR_STD_EXTENSION_PATH='".."'
 libctr: $(OBJS)

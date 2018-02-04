@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.22.3 -->
-<!-- CreationDate: Sun Dec 31 17:44:22 2017 -->
+<!-- CreationDate: Sun Feb  4 13:41:51 2018 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -13,21 +13,13 @@
        table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
        h1      { text-align: center }
 </style>
-<title>Citron v0.0.6.7</title>
+<title>Citron v0.0.6.8.0a</title>
 
 </head>
 <body>
 
-<h1 align="center">Citron v0.0.6.7</h1>
+<h1 align="center">Citron v0.0.6.8.0a</h1>
 
-<a href="#NAME">NAME</a><br>
-<a href="#SYNOPSIS">SYNOPSIS</a><br>
-<a href="#DESCRIPTION">DESCRIPTION</a><br>
-<a href="#REFERENCE MANUAL">REFERENCE MANUAL</a><br>
-<a href="#BASIC INSTRUCTIONS">BASIC INSTRUCTIONS</a><br>
-<a href="#ASSIGNMENT">ASSIGNMENT</a><br>
-<a href="#CORE MESSAGES">CORE MESSAGES</a><br>
-<a href="#Nil">Nil</a><br>
 <a href="#Object">Object</a><br>
 <a href="#Boolean">Boolean</a><br>
 <a href="#Number">Number</a><br>
@@ -48,217 +40,12 @@
 <a href="#Thread">Thread</a><br>
 <a href="#Reflect">Reflect</a><br>
 <a href="#Fiber">Fiber</a><br>
-<a href="#BUGS">BUGS</a><br>
-<a href="#AUTHOR">AUTHOR</a><br>
 
 <hr>
 
 
-<h2>NAME
-<a name="NAME"></a>
-</h2>
-
-
-<p style="margin-left:11%; margin-top: 1em">ctr &minus; run
-a Citron program</p>
-
-<p style="margin-left:11%; margin-top: 1em">citron &minus;
-interface to citron eval</p>
-
-<h2>SYNOPSIS
-<a name="SYNOPSIS"></a>
-</h2>
-
-
-<p style="margin-left:11%; margin-top: 1em">ctr
-[PROGRAM]</p>
-
-<p style="margin-left:11%; margin-top: 1em">citron
-[arguments]</p>
-
-<h2>DESCRIPTION
-<a name="DESCRIPTION"></a>
-</h2>
-
-
-<p style="margin-left:11%; margin-top: 1em">Citron is a
-general purpose programming language for UNIX&minus;like
-operating systems.</p>
-
-<h2>REFERENCE MANUAL
-<a name="REFERENCE MANUAL"></a>
-</h2>
-
-
-<p style="margin-left:11%; margin-top: 1em">Citron has 5
-literals:</p>
-
-<p style="margin-left:17%;">- Nil <br>
-- Booleans (True, False) <br>
-- Numbers (1, -2, 3.5) <br>
-- Strings &rsquo;All Strings are UTF8!&rsquo; <br>
-- Code Blocks { parameters code }</p>
-
-<h2>BASIC INSTRUCTIONS
-<a name="BASIC INSTRUCTIONS"></a>
-</h2>
-
-
-<h2>ASSIGNMENT
-<a name="ASSIGNMENT"></a>
-</h2>
-
-
-<p style="margin-left:11%; margin-top: 1em">Assignment in
-Citron has a few forms, a simple binding (variable is
-expression) or (variable := expression) a strictly private
-binding (variable =&gt; expression) [Which can be used in
-constructor messages] and a decomposition binding whose
-explanation follows:</p>
-
-<p style="margin-left:11%; margin-top: 1em">Every object
-that implements the &rsquo;unpack:&rsquo; method, hereon
-called &rsquo;decomposable&rsquo; and
-&rsquo;algebraic&rsquo;, is mostly a wrapper around smaller
-parts, for instance, an array is a container that only
-conatins some Objects. It does not change the objects, nor
-does it have any other property that can cause us to be
-unable to recreate those objects given said array. hence, we
-can deconstruct the array into its creating objects.</p>
-
-<p style="margin-left:11%; margin-top: 1em">Consider an
-object. an object can be called a mapping from its property
-names as keys, to their values as, well, values. much like a
-Map. However, since the object&lsquo;s methods require a
-reference to it, they cannot be safely deconstructed.</p>
-
-<p style="margin-left:11%; margin-top: 1em">this concept
-(algebraic decomposition) is done by creating a wireframe of
-sorts, and telling the object to deconstruct itself based
-off that wireframe. E.g.</p>
-
-<p style="margin-left:11%; margin-top: 1em">var
-<b>testMap</b> is Map cnew: {</p>
-
-<table width="100%" border="0" rules="none" frame="void"
-       cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%">
-</td>
-<td width="8%">
-</td>
-<td width="77%">
-
-
-<p><b>test</b> =&gt; [1,2,3,4,5].</p></td></tr>
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%">
-</td>
-<td width="8%">
-</td>
-<td width="77%">
-
-
-<p><b>key1</b> =&gt; Map new put: <b>me</b> at:
-&rsquo;test&rsquo;.</p> </td></tr>
-</table>
-
-<p style="margin-left:11%;">}. <br>
-(Map cnew: {</p>
-
-<table width="100%" border="0" rules="none" frame="void"
-       cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%">
-</td>
-<td width="8%">
-</td>
-<td width="77%">
-
-
-<p><i>#Take the third element from the right, and bind it
-to &rsquo;a&rsquo;</i></p></td></tr>
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%">
-</td>
-<td width="8%">
-</td>
-<td width="77%">
-
-
-<p><b>test</b> =&gt; [&rsquo;*_&rsquo;, &rsquo;a&rsquo;,
-&rsquo;_&rsquo;, &rsquo;_&rsquo;].</p></td></tr>
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%">
-</td>
-<td width="8%">
-</td>
-<td width="77%">
-
-
-<p><i>#Take the value at &rsquo;key1&rsquo;,</i></p></td></tr>
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%">
-</td>
-<td width="8%">
-</td>
-<td width="77%">
-
-
-<p><i>#take its&rsquo; value at &rsquo;test&rsquo;,</i></p></td></tr>
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%">
-</td>
-<td width="8%">
-</td>
-<td width="77%">
-
-
-<p><i>#take its&rsquo; value at &rsquo;test&rsquo; and bind
-it to &rsquo;b&rsquo;.</i></p></td></tr>
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%">
-</td>
-<td width="8%">
-</td>
-<td width="77%">
-
-
-<p><b>key1</b> =&gt; Map cnew: {<b>test</b> =&gt; (Map
-cnew: {<b>test</b> =&gt; &rsquo;b&rsquo;.}).}</p></td></tr>
-</table>
-
-<p style="margin-left:11%;">}) is <b>testMap</b>.</p>
-
-<p style="margin-left:11%; margin-top: 1em">Returning
-algebraic object types from functions, is often used to
-return several values from said function. :: TODO : Finish
-this section.</p>
-
-<h2>CORE MESSAGES
-<a name="CORE MESSAGES"></a>
-</h2>
-
-
-<p style="margin-left:11%; margin-top: 1em">The following
-messages are part of the Core API of the Citron Programming
-Language:</p>
-
-<h2>Nil
-<a name="Nil"></a>
-</h2>
-
-
-<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
-Nil</b></p>
+<p>Expected closing quote on line: 117. <br>
+Nil <b>_OBJ_DEF Nil</b></p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>Nil</b> <br>
 Nil represents &rsquo;nothing&rsquo; or NULL in other
@@ -3014,7 +2801,8 @@ Program new: { :program</p>
        cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
 <td width="8%"></td>
-<td width="92%">
+<td width="7%"></td>
+<td width="85%">
 
 
 <p>Pen write: &rsquo;Child&rsquo;, brk.</p></td></tr>
@@ -3069,6 +2857,13 @@ Serves an object. Client programs can now communicate with
 this object <br>
 and send messages to it.</p>
 
+<p style="margin-left:11%; margin-top: 1em"><b>[Program]
+serve_ipv4: [Object].</b> <br>
+Serves an object. Client programs can now communicate with
+this object <br>
+and send messages to it. starts the server with an ipv4
+binding</p>
+
 <h2>Dice
 <a name="Dice"></a>
 </h2>
@@ -3100,7 +2895,14 @@ Clock</b></p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Clock]
 wait: [Number]</b> <br>
-Waits X useconds.</p>
+Waits X useconds* depends on qualification <br>
+Quals: <br>
+ns[ecs] nanosecs <br>
+us[ecs] microsecs <br>
+ms[ecs] milisecs <br>
+se[cs] seconds <br>
+mi[nutes] minutes <br>
+ho[urs] hours</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Clock] new:
 [Number].</b> <br>
@@ -3435,6 +3237,9 @@ runs a block with its &rsquo;me&rsquo;/&rsquo;my&rsquo; set
 to object</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+run: [Block] inContext: [Map] arguments: [Array]</b></p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
 runHere: [Block] forObject: [o:Object] arguments:
 [Array]</b> <br>
 runs a block with its &rsquo;me&rsquo;/&rsquo;my&rsquo; set
@@ -3494,6 +3299,10 @@ exists</p>
 <p style="margin-left:11%; margin-top: 1em">Runs a block at
 global context passing it the arguments</p>
 
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+thisContext</b> <br>
+returns the current context as a map</p>
+
 <h2>Fiber
 <a name="Fiber"></a>
 </h2>
@@ -3537,29 +3346,6 @@ unpack: [String:Ref]</b> <br>
 Assigns the fiber instance to the reference <br>
 (Always prefer using algebraic deconstruction assignments:
 look at section &rsquo;Assignment&rsquo;)</p>
-
-<h2>BUGS
-<a name="BUGS"></a>
-</h2>
-
-
-<p style="margin-left:11%; margin-top: 1em">This is a
-preliminary version (&lt; 1.0) of Citron, there might still
-be very serious bugs. Please refrain from using this version
-in a production environment. This version of Citron is still
-considered &rsquo;alpha&rsquo; stage and cannot be expected
-to be reliable.</p>
-
-<h2>AUTHOR
-<a name="AUTHOR"></a>
-</h2>
-
-
-<p style="margin-left:11%; margin-top: 1em">AnotherTest and
-the Citron Community (Nil)</p>
-
-
-<p style="margin-left:11%; margin-top: 1em">devanothertest@gmail.com</p>
 <hr>
 </body>
 </html>

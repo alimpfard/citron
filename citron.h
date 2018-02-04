@@ -277,41 +277,41 @@ ctr_argument* CtrCompilerStub; //returned object in case of stub error
 /**
  * Core Objects
  */
-ctr_object* CtrStdWorld;
-ctr_object* CtrStdObject;
-ctr_object* CtrStdBlock;
-ctr_object* CtrStdString;
-ctr_object* CtrStdNumber;
-ctr_object* CtrStdBool;
-ctr_object* CtrStdConsole;
-ctr_object* CtrStdNil;
-ctr_object* CtrStdGC;
-ctr_object* CtrStdMap;
-ctr_object* CtrStdArray;
-ctr_object* CtrStdIter;
-ctr_object* CtrStdFile;
-ctr_object* CtrStdSystem;
-ctr_object* CtrStdDice;
-ctr_object* CtrStdCommand;
-ctr_object* CtrStdSlurp;
-ctr_object* CtrStdShell;
-ctr_object* CtrStdClock;
-ctr_object* CtrStdFlow;
-ctr_object* CtrStdBreak;
-ctr_object* CtrStdContinue;
-ctr_object* CtrStdExit;
-ctr_object* CtrStdReflect;
-ctr_object* CtrStdReflect_cons;
-ctr_object* CtrStdFiber;
-ctr_object* CtrStdThread;
-ctr_object* ctr_first_object;
+ctr_object* CtrStdWorld;          //!< Standard Object : Global Namespace
+ctr_object* CtrStdObject;         //!< Standard Object : Base Object
+ctr_object* CtrStdBlock;          //!< Standard Object : Code Block
+ctr_object* CtrStdString;         //!< Standard Object : String
+ctr_object* CtrStdNumber;         //!< Standard Object : Number
+ctr_object* CtrStdBool;           //!< Standard Object : Boolean
+ctr_object* CtrStdConsole;        //!< Standard Object : Pen
+ctr_object* CtrStdNil;            //!< Standard Object : Nil
+ctr_object* CtrStdGC;             //!< Standard Object : Broom
+ctr_object* CtrStdMap;            //!< Standard Object : Map
+ctr_object* CtrStdArray;          //!< Standard Object : Array
+ctr_object* CtrStdIter;           //!< Standard Object : Iterator
+ctr_object* CtrStdFile;           //!< Standard Object : File
+ctr_object* CtrStdSystem;         //!< Standard Object : internal
+ctr_object* CtrStdDice;           //!< Standard Object : Dice
+ctr_object* CtrStdCommand;        //!< Standard Object : Program
+ctr_object* CtrStdSlurp;          //!< Standard Object : Slurp
+ctr_object* CtrStdShell;          //!< Standard Object : Shell
+ctr_object* CtrStdClock;          //!< Standard Object : Clock
+ctr_object* CtrStdFlow;           //!< Internal Flow namespace : contains errors and flow control
+ctr_object* CtrStdBreak;          //!< Internal Flow representation for break : stop the current iteration
+ctr_object* CtrStdContinue;       //!< Internal Flow representation for continue : skip the current iteration
+ctr_object* CtrStdExit;           //!< Internal Flow representation for exit : exit program on this message
+ctr_object* CtrStdReflect;        //!< Standard Object : Reflect
+ctr_object* CtrStdReflect_cons;   //!< Standard Object : cons
+ctr_object* CtrStdFiber;          //!< Standard Object : Fiber
+ctr_object* CtrStdThread;         //!< Standard Object : Thread
+ctr_object* ctr_first_object;     //!< Internal Garbage Collector guide object
 //--
-ctr_object* CTR_FILE_STDIN;
-ctr_object* CTR_FILE_STDOUT;
-ctr_object* CTR_FILE_STDERR;
-ctr_object* CTR_FILE_STDIN_STR;
-ctr_object* CTR_FILE_STDOUT_STR;
-ctr_object* CTR_FILE_STDERR_STR;
+ctr_object* CTR_FILE_STDIN;       //!< Special Object : Standard Input File
+ctr_object* CTR_FILE_STDOUT;      //!< Special Object : Standard Output File
+ctr_object* CTR_FILE_STDERR;      //!< Special Object : Standard Error File
+ctr_object* CTR_FILE_STDIN_STR;   //!< Special Object : Standard Input in-world name
+ctr_object* CTR_FILE_STDOUT_STR;  //!< Special Object : Standard Output in-world name
+ctr_object* CTR_FILE_STDERR_STR;  //!< Special Object : Standard Error in-world name
 /**
 * @internal
  * standard instrumentor, do not override.
@@ -917,6 +917,7 @@ ctr_object* ctr_reflect_add_my(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_dump_context_spec_prop(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_dump_context_spec(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_dump_context(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_this_context(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_find_obj(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_find_obj_ex(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_new(ctr_object* myself, ctr_argument* argumentList);

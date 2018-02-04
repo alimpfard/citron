@@ -80,6 +80,7 @@ sttrace_print (void *ptr)
  *
  * @return void*
  */
+__attribute__((optimize(0)))
 void *
 ctr_heap_allocate (size_t size)
 {
@@ -100,7 +101,7 @@ ctr_heap_allocate (size_t size)
   //  free(last_node);
   //  return block;
   //}
-  void *slice_of_memory;
+  volatile void *slice_of_memory;
   size_t *block_width;
   int q = sizeof (size_t);
   size += q;
@@ -140,8 +141,8 @@ ctr_heap_allocate (size_t size)
   *(block_width) = size;
   /* Now move the new memory pointer behind the blockwidth */
   slice_of_memory = (void *) ((char *) slice_of_memory + q);
-  sttrace_print (slice_of_memory);
-  return slice_of_memory;
+  sttrace_print ((void*)slice_of_memory);
+  return (void*)slice_of_memory;
 }
 
 void *
@@ -157,7 +158,7 @@ void *
 ctr_heap_allocate_shared (size_t size)
 {
 
-  void *slice_of_memory;
+  volatile void *slice_of_memory;
   size_t *block_width;
   int q = sizeof (size_t);
   size += q;
@@ -193,8 +194,8 @@ ctr_heap_allocate_shared (size_t size)
   *(block_width) = size;
   /* Now move the new memory pointer behind the blockwidth */
   slice_of_memory = (void *) ((char *) slice_of_memory + q);
-  sttrace_print (slice_of_memory);
-  return slice_of_memory;
+  sttrace_print ((void*)slice_of_memory);
+  return (void*)slice_of_memory;
 }
 
 /**

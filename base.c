@@ -172,12 +172,12 @@ ctr_object_attr_accessor (ctr_object * myself, ctr_argument * argumentList)
       ctr_argument *arglist = ctr_heap_allocate (sizeof (ctr_argument));
       arglist->next = ctr_heap_allocate (sizeof (ctr_argument));
       char *mname = ctr_heap_allocate (sizeof (char) * 512);
-      sprintf (mname, "{:x my %.*s is x.}", name->value.svalue->vlen, name->value.svalue->value);
+      sprintf (mname, "{:x my %.*s is x.}", (int)name->value.svalue->vlen, name->value.svalue->value);
       arglist->object = ctr_build_string_from_cstring (":");
       arglist->object = ctr_string_concat (name, arglist);
       arglist->next->object = ctr_string_eval (ctr_build_string_from_cstring (mname), NULL);
       ctr_object_on_do (myself, arglist);
-      sprintf (mname, "{^my %.*s.}", name->value.svalue->vlen, name->value.svalue->value);
+      sprintf (mname, "{^my %.*s.}", (int)name->value.svalue->vlen, name->value.svalue->value);
       arglist->object = name;
       arglist->next->object = ctr_string_eval (ctr_build_string_from_cstring (mname), NULL);
       ctr_object_on_do (myself, arglist);
@@ -4240,39 +4240,6 @@ ctr_string_eval (ctr_object * myself, ctr_argument * argumentList)
   return result;
 }
 
-/*
-[String] unsafeExec
- *
- * Evaluates the contents of the string as code.
- * This is the unsafe version of the eval message.
- *
- *
- ctr_object* ctr_string_eval(ctr_object* myself, ctr_argument* argumentList) {
- ctr_tnode* parsedCode;
- char* pathString;
- ctr_object* result;
- ctr_object* code;
-//ctr_command_security_profile ^= CTR_SECPRO_EVAL;
-pathString = ctr_heap_allocate_tracked(sizeof(char)*5);
-memcpy(pathString, "exec", 4);
-memcpy(pathString+4,"\0",1);
-ctr_argument* newArgumentList = ctr_heap_allocate( sizeof( ctr_argument ) );
-newArgumentList->object = myself;
-//code = ctr_string_append( ctr_build_string_from_cstring( "^ " ), newArgumentList );
-//newArgumentList->object = ctr_build_string_from_cstring( "." ); //We expect the code to be correct.
-code = ctr_string_append( code, newArgumentList );
-ctr_program_length = code->value.svalue->vlen;
-parsedCode = ctr_cparse_parse(code->value.svalue->value, pathString);
-ctr_cwlk_subprogram++;
-result = ctr_cwlk_run(parsedCode);
-ctr_cwlk_subprogram--;
-if ( result == NULL ) result = CtrStdNil;
-ctr_heap_free( newArgumentList );
-ctr_command_security_profile ^= CTR_SECPRO_EVAL;
-return result;
-}
-*/
-
 /**
  * <b>[String] escapeQuotes.</b>
  *
@@ -5463,4 +5430,41 @@ ctr_print_stack_trace ()
 	}
       printf ("\n");
     }
+}
+
+ctr_object *
+ctr_get_last_trace(ctr_object* myself, ctr_argument* _) {
+  int line;
+  char *currentProgram;
+  ctr_source_map *mapItem;
+  ctr_tnode *stackNode;
+  stackNode = ctr_callstack[ctr_callstack_index-2];
+  mapItem = ctr_source_map_head;
+  line = -1;
+  ctr_object* ret = ctr_array_new(CtrStdArray, NULL);
+  ctr_argument* arg = ctr_heap_allocate(sizeof(ctr_argument));
+  for (int i = ctr_callstack_index; i > 0; i--)
+    {
+      stackNode = ctr_callstack[i - 1];
+      mapItem = ctr_source_map_head;
+      line = -1;
+      while (mapItem)
+	{
+	  if (line == -1 && mapItem->node == stackNode)
+	    {
+	      line = mapItem->line;
+	    }
+	  if (line > -1 && mapItem->node->type == CTR_AST_NODE_PROGRAM)
+	    {
+        currentProgram = mapItem->node->value;
+        arg->object = ctr_build_number_from_float(line+1);
+        ctr_array_push(ret, arg);
+        arg->object = ctr_build_string(currentProgram, mapItem->node->vlen);
+        ctr_array_push(ret, arg);
+        break;
+	    }
+	  mapItem = mapItem->next;
+	}
+    }
+  return ret;
 }

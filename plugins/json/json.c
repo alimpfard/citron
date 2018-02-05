@@ -109,6 +109,7 @@ ctr_object* ctr_json_parse (ctr_object* myself, ctr_argument* argumentList) {
 }
 ctr_object* ctr_json_serialize_(ctr_object* object) {
   ctr_object* obj;
+  if(!object) return ctr_build_string_from_cstring("null");
   switch (object->info.type) {
     case CTR_OBJECT_TYPE_OTNIL: {
       obj = ctr_build_string_from_cstring("null");
@@ -133,7 +134,7 @@ ctr_object* ctr_json_serialize_(ctr_object* object) {
           } else if ( arrayElement->info.type == CTR_OBJECT_TYPE_OTSTRING ) {
               newArgumentList->object = ctr_build_string_from_cstring("\"");
               string = ctr_string_append( string, newArgumentList );
-              newArgumentList->object = ctr_string_quotes_escape( arrayElement, newArgumentList );
+              newArgumentList->object = ctr_string_dquotes_escape( arrayElement, newArgumentList );
               string = ctr_string_append( string, newArgumentList );
               newArgumentList->object = ctr_build_string_from_cstring("\"");
               string = ctr_string_append( string, newArgumentList );
@@ -199,20 +200,25 @@ ctr_object* ctr_serialize_map(ctr_object* object) {
   string  = ctr_build_string_from_cstring( "{" );
   mapItem = object->properties->head;
   newArgumentList = ctr_heap_allocate( sizeof( ctr_argument ) );
+  int first = 1;
   while( mapItem ) {
-      newArgumentList->object = ctr_build_string_from_cstring("\"");
-      ctr_string_append( string, newArgumentList );
-      newArgumentList->object = ctr_internal_cast2string(mapItem->key);
-      ctr_string_append( string, newArgumentList );
-      newArgumentList->object = ctr_build_string_from_cstring("\": ");
-      ctr_string_append( string, newArgumentList );
-      newArgumentList->object = ctr_json_serialize_(mapItem->value);
-      ctr_string_append( string, newArgumentList );
-      mapItem = mapItem->next;
-      if ( mapItem ) {
-          newArgumentList->object = ctr_build_string_from_cstring( ", " );
-          ctr_string_append( string, newArgumentList );
+      int skip = strncmp(mapItem->key->value.svalue->value, "me", mapItem->key->value.svalue->vlen) == 0 || strncmp(mapItem->key->value.svalue->value, "thisBlock", mapItem->key->value.svalue->vlen) == 0;
+      if(!skip) {
+        if ( mapItem && !first ) {
+            newArgumentList->object = ctr_build_string_from_cstring( ", " );
+            ctr_string_append( string, newArgumentList );
+        }
+        if(first) first=0;
+        newArgumentList->object = ctr_build_string_from_cstring("\"");
+        ctr_string_append( string, newArgumentList );
+        newArgumentList->object = ctr_internal_cast2string(mapItem->key);
+        ctr_string_append( string, newArgumentList );
+        newArgumentList->object = ctr_build_string_from_cstring("\": ");
+        ctr_string_append( string, newArgumentList );
+        newArgumentList->object = ctr_json_serialize_(mapItem->value);
+        ctr_string_append( string, newArgumentList );
       }
+      mapItem = mapItem->next;
   }
   newArgumentList->object = ctr_build_string_from_cstring( "}" );
   ctr_string_append( string, newArgumentList );

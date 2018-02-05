@@ -1349,7 +1349,7 @@ ctr_object_destruct (ctr_object * object, ctr_argument * nothing)
 void
 ctr_initialize_world ()
 {
-  register_signal_handlers ();
+  // register_signal_handlers ();
 
   int i;
   srand ((unsigned) time (NULL));
@@ -2505,7 +2505,9 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdObject,
 			    ctr_build_string_from_cstring ("&method:"),
 			    &ctr_reflect_object_delegate_get_responder);
-
+  ctr_internal_create_func (CtrStdReflect,
+			    ctr_build_string_from_cstring ("lastTrace"),
+			    &ctr_get_last_trace);
   ctr_internal_create_func (CtrStdObject,
 			    ctr_build_string_from_cstring ("run:inContext:arguments:"),
 			    &ctr_reflect_run_for_object_in_ctx);

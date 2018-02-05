@@ -1936,14 +1936,13 @@ ctr_map_rm (ctr_object * myself, ctr_argument * argumentList)
   long keyLen;
   ctr_object *putKey = argumentList->object;
   ctr_object *putValue;
-  ctr_argument *nextArgument = argumentList->next;
   ctr_argument *emptyArgumentList = ctr_heap_allocate (sizeof (ctr_argument));
   emptyArgumentList->next = NULL;
   emptyArgumentList->object = NULL;
   ctr_object *hasher = ctr_get_responder (putKey, "iHash", 5);
   if (!hasher)
     {
-      putKey = ctr_send_message (nextArgument->object, "toString", 8, emptyArgumentList);
+      putKey = ctr_send_message (putKey, "toString", 8, emptyArgumentList);
 
       /* If developer returns something other than string (ouch, toString), then cast anyway */
       if (putKey->info.type != CTR_OBJECT_TYPE_OTSTRING)
@@ -1959,15 +1958,16 @@ ctr_map_rm (ctr_object * myself, ctr_argument * argumentList)
     }
   else
     {
-      ctr_object *putKeyHash;
-      putKeyHash = ctr_send_message (nextArgument->object, "iHash", 5, NULL);
+      ctr_number hashk;
+      ctr_object* putKeyHash = ctr_send_message (putKey, "iHash", 5, NULL);
 
       /* If developer returns something other than a number (ouch, iHash), then hash that */
       if (putKeyHash->info.type != CTR_OBJECT_TYPE_OTNUMBER)
-	putKeyHash = ctr_internal_index_hash (putKeyHash);
-      ctr_number hashk = putKeyHash->value.nvalue;
+      	hashk = ctr_internal_index_hash (putKeyHash);
+      else
+        hashk = putKeyHash->value.nvalue;
       ctr_internal_object_delete_property_with_hash (myself,
-						     nextArgument->object,
+						     putKey,
 						     *(uint64_t *) & hashk, 0);
       return myself;
     }

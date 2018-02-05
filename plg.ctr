@@ -1,7 +1,9 @@
-import Library/Extensions Library/Utils/Fire.
+#import Library/Extensions Library/Utils/Fire.
+#
+#var args is Iterator rangeFrom: 0 to: Program argCount step: 1, toArray fmap: {:i ^Program argument: i.}.
+#
+#File new: args shift, include.
+#
+#Pen writeln: (FireL run: args for: (Reflect thisContext)).
 
-var args is Iterator rangeFrom: 0 to: Program argCount step: 1, toArray fmap: {:i ^Program argument: i.}.
-
-File new: args shift, include.
-
-Pen writeln: (FireL run: args for: (Reflect thisContext)).
+AST parse: 'var a is 5.'.

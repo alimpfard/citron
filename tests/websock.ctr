@@ -1,14 +1,30 @@
 import Library/Net/WebSocket.
 
+var EvalContext is Map new.
+
+var eval is {:expr
+  var ast is AST parse: expr trim.
+  var p is Array new.
+  ast count times: {:i
+    var node is ast at: i.
+    p push: [(node unparse countOf: '.'), (JSON serialize: (node evaluate))].
+  }.
+  ^'[%L]' % [p].
+}.
+var Eval is {:expr
+  ^Reflect run: ({^eval applyTo: expr.} catch: {:e ^e.}) inContext: EvalContext arguments: [].
+}.
+
 var ws is WebSock new init.
 var port is 1024.
 var host is '0.0.0.0'.
 ws bind: host port: port.
 ws onmessage: {:ws:state:msg
-  var msg_ is 'Received %s (%d bytes)' % [(msg memberPayload readBytesAsString: msg memberPayloadLen), (msg memberPayloadLen)].
+  var result is msg memberPayload readBytesAsString: msg memberPayloadLen.
+  var msg_ is 'Received %s (%d bytes)' % [(result from: 0 lengthMax: 30), (msg memberPayloadLen)].
   Pen writeln: msg_.
-  ws sendText: msg_ state: state.
-  ws closeState: state.
+  Clock wait: 10 ms.
+  ws sendText: (Eval applyTo: result) state: state.
   ^0.}.
 ws onopen: {:ws:state
   Pen writeln: 'Client with socketDescriptor %d connected' % [(state memberSockfd)].

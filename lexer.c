@@ -596,6 +596,7 @@ ctr_clex_tok ()
 	  ctr_clex_emit_error ("Token Buffer Exausted. Tokens may not exceed 255 bytes");
 	}
       ctr_code++;
+      if(ctr_code == ctr_eofcode) return CTR_TOKEN_FIN;
       c = *ctr_code;
     }
   return CTR_TOKEN_REF;

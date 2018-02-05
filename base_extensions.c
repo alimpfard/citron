@@ -54,6 +54,7 @@ ctr_ast_parse(ctr_object* myself, ctr_argument* argumentList)
     char* prg = ctr_heap_allocate_cstring(psec);
     int last_q = ctr_cparse_quiet;
     ctr_cparse_quiet = 1;
+    ctr_program_length = psec->value.svalue->vlen+1;
     ctr_tnode* ped = ctr_cparse_parse(prg, "ASTparse");
     ctr_cparse_quiet = last_q;
     ctr_object* ast = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
@@ -322,12 +323,9 @@ char* ctr_ast_pure_stringify(ctr_tnode* node)
       break;
     }
     case CTR_AST_NODE_UNAMESSAGE: {
-      char* rr = ctr_ast_pure_stringify(node->nodes->node);
-      sprintf(buf, "%s", rr);
-      ctr_heap_free(rr);
-      int len = strlen(buf);
+      size_t len = node->vlen;
       ret = ctr_heap_allocate(sizeof(char)*len);
-      memcpy(ret, buf, len);
+      memcpy(ret, node->value, len);
       break;
     }
     case CTR_AST_NODE_BINMESSAGE: {
@@ -424,9 +422,10 @@ char* ctr_ast_pure_stringify(ctr_tnode* node)
       while(partnodes) {
         char* rr = ctr_ast_pure_stringify(partnodes->node);
         if(rr) {
-          x=sprintf(buf+x, "%s%s", rr, partnodes->node->nodes->next?", ":"");
+          x=sprintf(buf+x, "%s%s", rr, partnodes->node->nodes && partnodes->node->nodes->next?", ":"");
           ctr_heap_free(rr);
         }
+        if(!partnodes->node->nodes) break;
         partnodes = partnodes->node->nodes->next;
       }
       int len = strlen(buf);

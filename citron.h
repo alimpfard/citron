@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CTR_VERSION "0.0.6.8.0a"
+#define CTR_VERSION "0.0.6.8.5"
 #define CTR_LOG_WARNINGS 0//2 to enable
 /**
  * Define the Citron tokens
@@ -399,6 +399,7 @@ ctr_object* ctr_cwlk_expr(ctr_tnode* node, char* wasReturn);
 /**
  * Internal World functions
  */
+ctr_object* ctr_get_last_trace(ctr_object* myself, ctr_argument* argumentList);
 void        ctr_initialize_world();
 char*       ctr_internal_memmem(char* haystack, long hlen, char* needle, long nlen, int reverse );
 void        ctr_internal_object_add_property(ctr_object* owner, ctr_object* key, ctr_object* value, int m);

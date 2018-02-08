@@ -236,6 +236,10 @@ ctr_cwlk_assignment (ctr_tnode * node)
 ctr_object *
 ctr_cwlk_expr (ctr_tnode * node, char *wasReturn)
 {
+  if(!node) {
+    CtrStdFlow = ctr_build_string_from_cstring("Encounered null parse node");
+    return NULL;
+  }
   ctr_object *result;
   switch (node->type)
     {

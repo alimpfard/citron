@@ -1,5 +1,5 @@
 #include "citron.h"
-
+#include "coroutine.h"
 /**
  * [Array|String] letEqual: [Array|Object] in: [Block]
  *
@@ -521,6 +521,149 @@ ctr_object* ctr_ast_stringify(ctr_object* myself, ctr_argument* argumentList) {
   return str;
 }
 
+ctr_object* CtrStdCoro;
+ctr_object* CtrStdCoro_co;
+void* ctr_coroutine_close(struct schedule* S) {
+  coroutine_close(S);
+  return NULL;
+}
+struct ctr_coro_args_data {
+  ctr_object* co;
+  ctr_object* block;
+  ctr_argument* argumentList;
+};
+struct ctr_coro_coroutine {
+  ctr_object* scheduler;
+  ctr_object* context;
+  int context_id;
+  int co;
+  int first;
+};
+void ctr_coroutine_run_block(struct schedule* S, void* ud) {
+  struct ctr_coro_args_data* data = ud;
+  ctr_object* co = data->co;
+  ctr_object* block = data->block;
+  ctr_argument* args = data->argumentList;
+  ctr_block_run(block, args, co);
+}
+/**
+ * [Coroutine] new
+ *
+ * Makes a new coroutine scheduler
+ */
+ctr_object* ctr_coro_make(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* coro = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+  coro->link = CtrStdCoro;
+  coro->value.rvalue = ctr_heap_allocate(sizeof(ctr_resource));
+  coro->value.rvalue->ptr = coroutine_open();
+  coro->release_hook = (voidptrfn_t*)ctr_coroutine_close;
+  return coro;
+}
+/**
+ * [Coroutine] from: [Block] [arguments: [Array]]
+ *
+ * Makes a new coroutine object from the provided block, passing it the provided arguments
+ */
+ctr_object* ctr_coro_new(ctr_object* myself, ctr_argument* argumentList) {
+  if(myself == CtrStdCoro || !myself->value.rvalue || !myself->value.rvalue->ptr) {
+    CtrStdFlow = ctr_build_string_from_cstring("No scheduler is provided. Initialize one with CtrStdCoro#new");
+    return CtrStdNil;
+  }
+  struct schedule* S = myself->value.rvalue->ptr;
+  struct ctr_coro_args_data* args = ctr_heap_allocate(sizeof(*args));
+  ctr_object* coro = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+  coro->link = CtrStdCoro_co;
+  args->co = coro;
+  args->block = argumentList->object;
+  args->argumentList = ctr_array_to_argument_list(argumentList->next?argumentList->next->object:NULL, NULL);
+  int co = coroutine_new(S, ctr_coroutine_run_block, args);
+  struct ctr_coro_coroutine* sco = ctr_heap_allocate(sizeof(*sco));
+  sco->scheduler = myself;
+  sco->co = co;
+  sco->context = ctr_contexts[ctr_context_id];//ctr_heap_allocate(sizeof(ctr_object*));
+  // memmove(sco->context, ctr_contexts[ctr_context_id], sizeof(ctr_object));
+  sco->context_id = ctr_context_id;
+  sco->first = 1;
+  coro->value.rvalue = ctr_heap_allocate(sizeof(ctr_resource));
+  coro->value.rvalue->ptr = sco;
+  return coro;
+}
+ctr_object* ctr_coro_error(ctr_object* myself, ctr_argument* argList) {
+  CtrStdFlow = ctr_build_string_from_cstring("Coroutine error. Probably calling co#new");
+  return myself;
+}
+/**
+ * [Coroutine#co] await
+ *
+ * resumes the coroutine block and returns the yielded value (or the coroutine object if nothing was yielded)
+ */
+ctr_object* ctr_coro_resume(ctr_object* myself, ctr_argument* argumentList) {
+  struct ctr_coro_coroutine* sco = myself->value.rvalue->ptr;
+  int co = sco->co;
+  struct schedule* S = sco->scheduler->value.rvalue->ptr;
+  if(!coroutine_status(S,co)) {
+    // ctr_heap_free(sco->context);
+    CtrStdFlow = ctr_build_string_from_cstring("Coroutine not runnning");
+    return myself;
+  }
+  if(!sco->first) {
+    int last_context_id = ctr_context_id;
+    ctr_context_id = sco->context_id;
+    ctr_object* last_context = ctr_contexts[ctr_context_id];
+    ctr_contexts[ctr_context_id] = sco->context;
+    coroutine_resume(S, co);
+    ctr_contexts[ctr_context_id] = last_context;
+    ctr_context_id = last_context_id;
+  } else {
+    sco->first = 0;
+    coroutine_resume(S, co);
+    sco->context = ctr_contexts[ctr_context_id];
+    sco->context_id = ctr_context_id;
+    ctr_context_id = sco->context_id;
+    ctr_contexts[ctr_context_id] = sco->context;
+  }
+  ctr_object* yielded = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("yield"), 0);
+  return yielded?yielded:myself;
+}
+/**
+ * [Coroutine#co] yield[: [Object]]
+ *
+ * Yields the processor and optionally passes a value along
+ */
+ctr_object* ctr_coro_yield(ctr_object* myself, ctr_argument* argumentList) {
+  struct ctr_coro_coroutine* sco = myself->value.rvalue->ptr;
+  int co = sco->co;
+  struct schedule* S = sco->scheduler->value.rvalue->ptr;
+  if(coroutine_status(S,co) == COROUTINE_DEAD) {
+    CtrStdFlow = ctr_build_string_from_cstring("Coroutine not runnning");
+    return myself;
+  }
+  coroutine_yield(S);
+  if(argumentList->object)
+    ctr_internal_object_set_property(myself, ctr_build_string_from_cstring("yield"), argumentList->object, 0);
+  return myself;
+}
+
+ctr_object* ctr_coro_state(ctr_object* myself, ctr_argument* argumentList) {
+  struct ctr_coro_coroutine* sco = myself->value.rvalue->ptr;
+  int co = sco->co;
+  struct schedule* S = sco->scheduler->value.rvalue->ptr;
+  switch(coroutine_status(S,co)) {
+    case COROUTINE_READY: return ctr_build_string_from_cstring("Ready");
+    case COROUTINE_DEAD: return ctr_build_string_from_cstring("Finished");
+    case COROUTINE_SUSPEND: return ctr_build_string_from_cstring("Suspended");
+    case COROUTINE_RUNNING: return ctr_build_string_from_cstring("Running");
+  }
+  return CtrStdNil;
+}
+
+ctr_object* ctr_coro_isrunning(ctr_object* myself, ctr_argument* argumentList) {
+  struct ctr_coro_coroutine* sco = myself->value.rvalue->ptr;
+  int co = sco->co;
+  struct schedule* S = sco->scheduler->value.rvalue->ptr;
+  return ctr_build_bool(!!coroutine_status(S,co));
+}
+
 void
 initiailize_base_extensions ()
 {
@@ -544,4 +687,22 @@ initiailize_base_extensions ()
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring("unparse"), &ctr_ast_stringify);
 
   ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("AST"), CtrStdAst, 0);
+
+  CtrStdCoro = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
+  CtrStdCoro->link = CtrStdObject;
+  ctr_internal_create_func (CtrStdCoro, ctr_build_string_from_cstring("new"), &ctr_coro_make);
+  ctr_internal_create_func (CtrStdCoro, ctr_build_string_from_cstring("from:"), &ctr_coro_new);
+  ctr_internal_create_func (CtrStdCoro, ctr_build_string_from_cstring("from:arguments:"), &ctr_coro_new);
+  ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("CoroutineScheduler"), CtrStdCoro, 0);
+  ctr_object* ctrstdcoro_default_sched = ctr_coro_make(CtrStdCoro, NULL);
+  ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Coroutine"), ctrstdcoro_default_sched, 0);
+  CtrStdCoro_co = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
+  CtrStdCoro_co->link = CtrStdObject;
+  ctr_internal_create_func (CtrStdCoro_co, ctr_build_string_from_cstring("await"), &ctr_coro_resume);
+  ctr_internal_create_func (CtrStdCoro_co, ctr_build_string_from_cstring("run"), &ctr_coro_resume);
+  ctr_internal_create_func (CtrStdCoro_co, ctr_build_string_from_cstring("yield"), &ctr_coro_yield);
+  ctr_internal_create_func (CtrStdCoro_co, ctr_build_string_from_cstring("yield:"), &ctr_coro_yield);
+  ctr_internal_create_func (CtrStdCoro_co, ctr_build_string_from_cstring("isRunning"), &ctr_coro_isrunning);
+  ctr_internal_create_func (CtrStdCoro_co, ctr_build_string_from_cstring("state"), &ctr_coro_state);
+
 }

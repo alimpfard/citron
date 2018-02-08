@@ -1,0 +1,29 @@
+var Iterator is Object cnew: {
+  my co is Nil.
+}.
+Iterator on: 'rangeFrom:to:step:' do: {:from:to:step
+  ^me cnew: {
+    my co is Coroutine from: {:from:to:step from to: to step: step do: {:i me yield: i. }. } arguments: [from, to, step].
+  }.
+}.
+Iterator on: 'rangeFrom:step:' do: {:from:step
+  ^me cnew: {
+    my co is Coroutine from: {:from:step {^True.} whileTrue: {me yield: from. from +=: step.}.} arguments: [from, step].
+  }.
+}.
+Iterator on: 'elementsOf:' do: {:arr
+  ^me cnew: {
+    my co is Coroutine from: {:arr:elem var len is arr count. {^elem < len.} whileTrue: {me yield: (arr @ elem). elem +=: 1.}.} arguments: [arr, 0].
+  }.
+}.
+Iterator on: 'each:' do: {:blk
+  var self is me.
+  var run is True.
+  {^run.} whileTrue: ({blk applyTo: self next.} catch: {:e run is False.}).
+}.
+Iterator on: 'next' do: {
+  var self is me.
+  ^((var next is my co await) id = (me id)) either: {^self next.} or: next.
+}.
+
+import export: Iterator as: 'Iterator'.

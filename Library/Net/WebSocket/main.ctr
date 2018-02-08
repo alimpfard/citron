@@ -104,4 +104,9 @@ WebSock on: 'sendBinaryFile:state:' do: {:file:ctx
 WebSock on: 'closeState:' do: {:ctx
   my websock_cif_close call: my libwebsock_close withArgs: [(ctx struct)].
 }.
+
+Reflect objectExists: 'JSON', ifTrue: {
+  WebSock on: 'toJSON' do: { ^'{}'. }.
+}.
+
 import export: WebSock as: 'WebSock'.

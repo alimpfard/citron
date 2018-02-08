@@ -13,7 +13,7 @@ COBJS = ${OBJS} compiler.o
 all: CFALGS := $(CFLAGS) -O3
 all: ctr
 
-debug: CFLAGS := ${CFLAGS} -Og -g3 -ggdb3
+debug: CFLAGS := ${CFLAGS} -Og -g3 -ggdb3 -Wno-unused-function
 debug: ctr
 
 install: 

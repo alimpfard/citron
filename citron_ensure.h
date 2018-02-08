@@ -22,7 +22,7 @@ static const typeType_t typeType[] = {
 	NEW_TYPE_TYPE(CTR_OBJECT_TYPE_OTEX, ExternalResource)
 };
 
-static ctr_object* ctr_can_cast_to_string(ctr_object* object) {
+static inline ctr_object* ctr_can_cast_to_string(ctr_object* object) {
     ctr_object* out = ctr_internal_cast2string(object);
     if(CtrStdFlow) {
         CtrStdFlow = NULL;
@@ -30,7 +30,7 @@ static ctr_object* ctr_can_cast_to_string(ctr_object* object) {
     }
     return out;
 }
-static ctr_object* ctr_can_cast_to_number(ctr_object* object) {
+static inline ctr_object* ctr_can_cast_to_number(ctr_object* object) {
     ctr_object* out = ctr_internal_cast2number(object);
     if(CtrStdFlow) {
         CtrStdFlow = NULL;
@@ -38,7 +38,7 @@ static ctr_object* ctr_can_cast_to_number(ctr_object* object) {
     }
     return out;
 }
-static ctr_object* ctr_can_cast_to_bool(ctr_object* object) {
+static inline ctr_object* ctr_can_cast_to_bool(ctr_object* object) {
     ctr_object* out = ctr_internal_cast2bool(object);
     if(CtrStdFlow) {
         CtrStdFlow = NULL;

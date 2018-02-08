@@ -1,9 +1,11 @@
-#import Library/Extensions Library/Utils/Fire.
-#
-#var args is Iterator rangeFrom: 0 to: Program argCount step: 1, toArray fmap: {:i ^Program argument: i.}.
-#
-#File new: args shift, include.
-#
-#Pen writeln: (FireL run: args for: (Reflect thisContext)).
+import Library/Data/Iterator.
 
-AST parse: 'var a is 5.'.
+Pen writeln: 'Took %d cycles' % [(Clock timeExecutionOf: {
+    var it is Iterator elementsOf: [1,2,3,4,5].
+    it each: {:v Pen writeln: v. }.
+})].
+
+Pen writeln: 'Took %d cycles' % [(Clock timeExecutionOf: {
+    var it is [1,2,3,4,5].
+    it each_v: {:v Pen writeln: v. }.
+})].

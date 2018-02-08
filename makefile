@@ -1,14 +1,12 @@
 CFLAGS = -Wall -Wextra -Wno-unused-parameter -mtune=native -march=native -g3 -O0 -D withTermios -D forLinux -D CTR_STD_EXTENSION_PATH=\"`pwd`\"
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
        world.o lexer.o parser.o walker.o reflect.o fiber.o importlib.o\
-	   base_extensions.o citron.o
+	   coroutine.o base_extensions.o citron.o
 
 LOBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
         world.o lexer.o parser.o walker.o reflect.o fiber.o importlib.o citron_lib.o
 
-COBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
-        world.o lexer.o parser.o walker.o reflect.o fiber.o importlib.o\
-		compilerutils.o compiler.o citron.o
+COBJS = ${OBJS} compiler.o
 
 .SUFFIXES:	.o .c
 
@@ -27,7 +25,7 @@ libctr: $(OBJS)
 
 compiler: CFLAGS := $(CFLAGS) -D comp=1
 compiler: $(COBJS)
-	$(CC) $(COBJS) -rdynamic -lm -ldl -lbsd -lpcre -lprofiler -lpthread -o ctrc
+	$(CC) $(COBJS) -rdynamic -lm -ldl -lbsd -lpcre -lprofiler -lpthread ${LEXTRACF} -o ctrc
 .c.o:
 	$(CC) $(CFLAGS) -c $<
 

@@ -1,0 +1,33 @@
+var HashSet is Object new.
+var HashSetValueMarker is Object new on: '=' do: {:e ^(me id) = (e id).}.
+HashSet on: 'new' do: {
+  ^me cnew: {my map is Map new.}.
+}.
+HashSet on: 'add:' do: {:v
+  my map put: const HashSetValueMarker at: v.
+}.
+HashSet on: 'remove:' do: {:v
+  my map deleteAt: v.
+}.
+HashSet on: 'contains:' do: {:v
+  ^const HashSetValueMarker = (my map at: v).
+}.
+HashSet on: 'each:' do: {:v
+  my map each: {:k v applyTo: k.}.
+}.
+HashSet on: 'toString' do: {
+  var s is '{'.
+  my map each: {:v
+    s append: v, append: ', '.
+  }.
+  s length > 1 ifTrue: {s is s from: 0 to: s length - 2.}.
+  s append: '}'.
+  ^s.
+}.
+HashSet on: 'iHash' do: {
+  var hash is 0.
+  my map each: {:v hash +=: v iHash.}.
+  ^hash.
+}.
+HashSet on: 'type' do: {^'HashSet'.}.
+import export: HashSet as: 'HashSet'.

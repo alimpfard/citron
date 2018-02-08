@@ -2113,14 +2113,13 @@ ctr_number_log (ctr_object * myself, ctr_argument * argumentList)
 
 /**
  * <b>[Number] shiftRight: [Number]</b>
- *  Only with integers
  */
 ctr_object *
 ctr_number_shr (ctr_object * myself, ctr_argument * argumentList)
 {
   return
-    ctr_build_number_from_float ((((int) (myself->value.nvalue)) >>
-				  (int) ((ctr_internal_cast2number
+    ctr_build_number_from_float ((((unsigned long long) (myself->value.nvalue)) >>
+				  (unsigned long long) ((ctr_internal_cast2number
 					  (argumentList->object))->value.nvalue)));
 }
 
@@ -2132,47 +2131,47 @@ ctr_object *
 ctr_number_shl (ctr_object * myself, ctr_argument * argumentList)
 {
   return
-    ctr_build_number_from_float ((((int) (myself->value.nvalue)) <<
-				  (int) ((ctr_internal_cast2number
+    ctr_build_number_from_float ((((unsigned long long) (myself->value.nvalue)) <<
+				  (unsigned long long) ((ctr_internal_cast2number
 					  (argumentList->object))->value.nvalue)));
 }
 
 /**
- * <b>[Number] integerOr: [Number]</b>
+ * <b>[Number] bitOr: [Number]</b>
  *
  */
 ctr_object *
 ctr_number_or (ctr_object * myself, ctr_argument * argumentList)
 {
   return
-    ctr_build_number_from_float ((((int) (myself->value.nvalue)) |
-				  (int) ((ctr_internal_cast2number
+    ctr_build_number_from_float ((((unsigned long long) (myself->value.nvalue)) |
+				  (unsigned long long) ((ctr_internal_cast2number
 					  (argumentList->object))->value.nvalue)));
 }
 
 /**
- * <b>[Number] integerAnd: [Number]</b>
+ * <b>[Number] bitAnd: [Number]</b>
  *
  */
 ctr_object *
 ctr_number_and (ctr_object * myself, ctr_argument * argumentList)
 {
   return
-    ctr_build_number_from_float ((((int) (myself->value.nvalue)) &
-				  (int) ((ctr_internal_cast2number
+    ctr_build_number_from_float ((((unsigned long long) (myself->value.nvalue)) &
+				  (unsigned long long) ((ctr_internal_cast2number
 					  (argumentList->object))->value.nvalue)));
 }
 
 /**
- * <b>[Number] integerXor: [Number]</b>
+ * <b>[Number] bitXor: [Number]</b>
  *
  */
 ctr_object *
 ctr_number_xor (ctr_object * myself, ctr_argument * argumentList)
 {
   return
-    ctr_build_number_from_float ((((int) (myself->value.nvalue)) ^
-				  (int) ((ctr_internal_cast2number
+    ctr_build_number_from_float ((((unsigned long long) (myself->value.nvalue)) ^
+				  (unsigned long long) ((ctr_internal_cast2number
 					  (argumentList->object))->value.nvalue)));
 }
 

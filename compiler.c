@@ -11,8 +11,9 @@
 #pragma optimize 0
 
 #define malloc ctr_heap_allocate
+void ctr_ccomp_print_block (ctr_tnode * node);
 
-const char **ctr_ast_node_names[] = {
+const char *ctr_ast_node_names[] = {
   "exprassignment",
   "exprmessage",
   "unamessage",
@@ -152,11 +153,11 @@ ctr_ccomp_env_update_assign (environment ** env, ctr_tlistitem * nodes)
   if (value->type == CTR_AST_NODE_REFERENCE)
     {
       printf ("Querying environment for binding %.*s\n", value->vlen, value->value);
-      ctr_tnode *alt = ctr_ccomp_env_maybe_get_ref (*env, value);
+      environment* alt = ctr_ccomp_env_maybe_get_ref (*env, value);
       if (alt)
 	{
 	  printf ("environment has %p for binding %.*s\n", alt, value->vlen, value->value);
-	  value = alt;
+	  value = alt->value;
 	}
       else
 	printf
@@ -166,8 +167,8 @@ ctr_ccomp_env_update_assign (environment ** env, ctr_tlistitem * nodes)
   new_env->binding = name->value;
   new_env->length = name->vlen;
   printf ("Updating environment with binding %.*s = %p\n", name->vlen, name->value, value);
-  new_env->value = malloc (sizeof (value));
-  memcpy (new_env->value, value, sizeof (value));
+  new_env->value = malloc (sizeof (ctr_tnode));
+  memcpy (new_env->value, value, sizeof (ctr_tnode));
   new_env->indeterministic_level = ctr_ccomp_node_indeterministic_level (value);
   new_env->deterministic = new_env->indeterministic_level < 2 ? 1 : 0;
   printf ("\nreached conclusion %s (level %d)\n",
@@ -185,9 +186,13 @@ ctr_ccomp_env_update_assign_charstar (environment ** env, char *name, int length
   new_env->binding = malloc (sizeof (char) * length + 1);
   memcpy (new_env->binding, name, length);
   new_env->length = length;
-  printf ("Updating environment with binding %.*s = %p\n", name, length, value);
-  new_env->value = malloc (sizeof (value));
-  memcpy (new_env->value, value, sizeof (value));
+  printf ("Updating environment with binding %.*s = %p\n", length, name, value);
+  // memcpy (new_env->value, value, sizeof (ctr_tnode));
+  if(value){
+    new_env->value = malloc (sizeof (ctr_tnode));
+    *new_env->value = *value;
+  }
+  else new_env->value = NULL;
   new_env->indeterministic_level = ctr_ccomp_node_indeterministic_level (value);
   new_env->deterministic = new_env->indeterministic_level < 2 ? 1 : 0;
   printf ("\nreached conclusion %s (level %d)\n",
@@ -426,7 +431,7 @@ ctr_ccomp_optimize_node_inplace (volatile ctr_tnode volatile **node)
     case CTR_AST_NODE_INSTRLIST:
       {
 	int deter = 3;
-	if (deter = (ctr_ccomp_node_indeterministic_level (node)) < 2)
+	if ((deter = ctr_ccomp_node_indeterministic_level (node)) < 2)
 	  {
 	    printf ("proceeding optimization of %p\n", node);
 	    (*node)->nodes = ctr_ccomp_nodes_as_literal ((*node)->nodes);
@@ -456,14 +461,13 @@ ctr_ccomp_optimize_node_inplace (volatile ctr_tnode volatile **node)
       }
     case CTR_AST_NODE_EXPRMESSAGE:
       {
-	int deter = 3;
+	int deter;
 	if ((deter = ctr_ccomp_node_indeterministic_level ((*node)->nodes->node)) < 2)
 	  {
 	    printf ("proceeding optimization of %p\n", node);
 	    (*node)->nodes->node = ctr_ccomp_as_literal ((*node)->nodes->node);
-	    (*node)->nodes->next->node->nodes =
-	      ctr_ccomp_nodes_as_literal ((*node)->nodes->next->node->nodes);
 	  }
+    ctr_ccomp_optimize_nodes_inplace((*node)->nodes->next->node->nodes);
 	printf ("DETERMINISTIC STATUS OF %p = level %d\n", node, deter);
 	return *node;
       }
@@ -631,7 +635,7 @@ ctr_ccomp_message (ctr_tnode * paramNode)
   ctr_tlistitem *li = eitem;
   char *message;
   ctr_tlistitem *argumentList;
-  volatile ctr_object volatile *r;
+  volatile ctr_object *r;
   ctr_object *recipientName = NULL;
   switch (receiverNode->type)
     {

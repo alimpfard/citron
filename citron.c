@@ -103,16 +103,16 @@ main (int argc, char *argv[])
       prg = ctr_internal_readf (ctr_mode_input_file, &program_text_size);
       program = ctr_cparse_parse (prg, ctr_mode_input_file);
 #ifdef comp
-      // ctr_ccomp_env_update_new_context();
-      //printf("%d\n", ctr_ccomp_node_indeterministic_level(program));
-      // ctr_ccomp_env_update_pop_context();
-      // printf("\n\nBEFORE OPTIMIZE\n");
-      // ctr_internal_debug_tree(program,1); /*-- for debugging */
-      // ctr_ccomp_optimize_node_inplace(&program);
-      // printf("\n\nAFTER OPTIMIZE\n");
-      // ctr_internal_debug_tree(program,1); /*-- for debugging */
-      ctr_initialize_world ();
-      ctr_ccomp_run (program);
+      ctr_ccomp_env_update_new_context();
+      printf("%d\n", ctr_ccomp_node_indeterministic_level(program));
+      ctr_ccomp_env_update_pop_context();
+      printf("\n\nBEFORE OPTIMIZE\n");
+      ctr_internal_debug_tree(program,1); /*-- for debugging */
+      ctr_ccomp_optimize_node_inplace(&program);
+      printf("\n\nAFTER OPTIMIZE\n");
+      ctr_internal_debug_tree(program,1); /*-- for debugging */
+      // ctr_initialize_world ();
+      // ctr_ccomp_run (program);
 
       exit (0);
 #endif

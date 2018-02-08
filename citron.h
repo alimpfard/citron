@@ -956,6 +956,7 @@ ctr_object* ctr_reflect_register_instrumentor(ctr_object* myself, ctr_argument* 
 ctr_object* ctr_reflect_get_instrumentor(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_glob(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_for_object_in_ctx (ctr_object* myself, ctr_argument* argumentList);
+ctr_argument* ctr_array_to_argument_list (ctr_object * arr, ctr_argument * provided);
 int ctr_internal_has_own_responder(ctr_object* myself, ctr_object* meth);
 int ctr_internal_has_responder(ctr_object* myself, ctr_object* meth);
 // ctr_object* ctr_reflect_dump_function(ctr_object* myself, ctr_argument* argumentList);

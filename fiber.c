@@ -140,10 +140,7 @@ static void
 fiberStart (ctr_object * block)
 {
   fiberList[currentFiber].active = 1;
-  if (FIBER_YIELDED != NULL)
-    ctr_block_run_variadic (block, 1, FIBER_YIELDED);
-  else
-    ctr_block_run_variadic (block, 0);
+  ctr_block_runIt (block, NULL);
   fiberList[currentFiber].active = 0;
 
   // Yield control, but because active == 0, this will free the fiber
@@ -285,7 +282,8 @@ ctr_object *
 ctr_fiber_yield (ctr_object * myself, ctr_argument * argumentList)
 {
   //int fiber = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("fiberId"), CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue;
-  FIBER_YIELDED = argumentList->object;	// record the output, or set to NULL
+  // FIBER_YIELDED = argumentList->object;	// record the output, or set to NULL
+  ctr_internal_object_set_property(myself, ctr_build_string_from_cstring("yielded"), argumentList->object?argumentList->object:CtrStdNil, CTR_CATEGORY_PRIVATE_PROPERTY);
   fiberYield ();
   return myself;	//Won't really reach here until the end of the fiber chain
 }
@@ -314,7 +312,8 @@ ctr_fiber_join (ctr_object * myself, ctr_argument * argumentList)
 						   ctr_build_string_from_cstring
 						   ("fiberId"),
 						   CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue);
-  return myself;
+  ctr_object* y = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("yielded"), CTR_CATEGORY_PRIVATE_PROPERTY);
+  return y ? y : CtrStdNil;
 }
 
 ctr_object *
@@ -339,7 +338,8 @@ ctr_fiber_tostring (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_fiber_yielded (ctr_object * myself, ctr_argument * argumentList)
 {
-  return FIBER_YIELDED == NULL ? CtrStdNil : FIBER_YIELDED;
+  ctr_object* y = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("yielded"), CTR_CATEGORY_PRIVATE_PROPERTY);
+  return y ? y : CtrStdNil;
 }
 
 /**
@@ -371,7 +371,7 @@ ctr_fiber_begin_init ()
   ctr_internal_create_func (CtrStdFiber,
 			    ctr_build_string_from_cstring ("waitForAll"), &ctr_fiber_join_all);
   ctr_internal_create_func (CtrStdFiber,
-			    ctr_build_string_from_cstring ("waitFor:"), &ctr_fiber_join);
+			    ctr_build_string_from_cstring ("wait"), &ctr_fiber_join);
   ctr_internal_create_func (CtrStdFiber,
 			    ctr_build_string_from_cstring ("unpack:"), &ctr_fiber_assign);
   ctr_internal_object_add_property (CtrStdFiber,

@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Wextra -Wno-unused-parameter -mtune=native -march=native -g3 -O0 -D withTermios -D forLinux -D CTR_STD_EXTENSION_PATH=\"`pwd`\"
+CFLAGS = -Wall -Wextra -Wno-unused-parameter -mtune=native -march=native -D withTermios -D forLinux -D CTR_STD_EXTENSION_PATH=\"`pwd`\"
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
        world.o lexer.o parser.o walker.o reflect.o fiber.o importlib.o\
 	   coroutine.o base_extensions.o citron.o
@@ -11,7 +11,10 @@ COBJS = ${OBJS} compiler.o
 .SUFFIXES:	.o .c
 
 all: CFALGS := $(CFLAGS) -O3
-all:ctr
+all: ctr
+
+debug: CFLAGS := ${CFLAGS} -Og -g3 -ggdb3
+debug: ctr
 
 install: 
 	echo -e "install directly from source not allowed.\nUse citron_autohell instead for installs"

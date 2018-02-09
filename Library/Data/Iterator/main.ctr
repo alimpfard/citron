@@ -16,7 +16,7 @@ Iterator on: 'elementsOf:' do: {:arr
     my co is Coroutine from: {:arr:elem var len is arr count. {^elem < len.} whileTrue: {me yield: (arr @ elem). elem +=: 1.}.} arguments: [arr, 0].
   }.
 }.
-Iterator on: 'each:' do: {:blk
+Iterator on: 'each:_v' do: {:blk
   var self is me.
   var run is True.
   {^run.} whileTrue: ({blk applyTo: self next.} catch: {:e run is False.}).

@@ -9,45 +9,46 @@
 
 #include "citron.h"
 
-int ctr_clex_bflmt = 255;
-ctr_size ctr_clex_tokvlen = 0;	/* length of the string value of a token */
-char *ctr_clex_buffer;
-char *ctr_code;
-char *ctr_code_st;
-char *ctr_code_eoi;
-char *ctr_eofcode;
-char *ctr_clex_oldptr;
-char *ctr_clex_olderptr;
-int ctr_clex_verbatim_mode = 0;	/* flag: indicates whether lexer operates in verbatim mode or not (1 = ON, 0 = OFF) */
-uintptr_t ctr_clex_verbatim_mode_insert_quote = 0;	/* pointer to 'overlay' the 'fake quote' for verbatim mode */
-int ctr_clex_old_line_number = 0;
+static int ctr_lex_bflmt = 255;
+static ctr_size ctr_lex_tokvlen = 0;	/* length of the string value of a token */
+static char *ctr_lex_buffer;
+static char *ctr_code;
+static char *ctr_code_eoi;
+static char *ctr_eofcode;
+static char *ctr_code_st;
+static char *ctr_lex_oldptr;
+static char *ctr_lex_olderptr;
+static int ctr_lex_verbatim_mode = 0;	/* flag: indicates whether lexer operates in verbatim mode or not (1 = ON, 0 = OFF) */
+static uintptr_t ctr_lex_verbatim_mode_insert_quote = 0;	/* pointer to 'overlay' the 'fake quote' for verbatim mode */
+static int ctr_lex_line_number = 0;
+static int ctr_lex_old_line_number = 0;
 
-char *ctr_clex_desc_tok_ref = "reference";
-char *ctr_clex_desc_tok_quote = "'";
-char *ctr_clex_desc_tok_number = "number";
-char *ctr_clex_desc_tok_paropen = "(";
-char *ctr_clex_desc_tok_parclose = ")";
-char *ctr_clex_desc_tok_blockopen = "{";
-char *ctr_clex_desc_tok_blockopen_map = "{\\";
-char *ctr_clex_desc_tok_blockclose = "}";
-char *ctr_clex_desc_tok_tupopen = "[";
-char *ctr_clex_desc_tok_tupclose = "]";
-char *ctr_clex_desc_tok_colon = ":";
-char *ctr_clex_desc_tok_dot = ".";
-char *ctr_clex_desc_tok_chain = ",";
-char *ctr_clex_desc_tok_booleanyes = "True";
-char *ctr_clex_desc_tok_booleanno = "False";
-char *ctr_clex_desc_tok_nil = "Nil";
-char *ctr_clex_desc_tok_assignment = ":=";	//derp
-char *ctr_clex_desc_tok_passignment = "=>";	//REEEE
-char *ctr_clex_desc_tok_ret = "^";
-char *ctr_clex_desc_tok_ret_unicode = "↑";
-char *ctr_clex_desc_tok_fin = "end of program";
-char *ctr_clex_desc_tok_unknown = "(unknown token)";
+static char *ctr_lex_desc_tok_ref = "reference";
+static char *ctr_lex_desc_tok_quote = "'";
+static char *ctr_lex_desc_tok_number = "number";
+static char *ctr_lex_desc_tok_paropen = "(";
+static char *ctr_lex_desc_tok_parclose = ")";
+static char *ctr_lex_desc_tok_blockopen = "{";
+static char *ctr_lex_desc_tok_blockopen_map = "{\\";
+static char *ctr_lex_desc_tok_blockclose = "}";
+static char *ctr_lex_desc_tok_tupopen = "[";
+static char *ctr_lex_desc_tok_tupclose = "]";
+static char *ctr_lex_desc_tok_colon = ":";
+static char *ctr_lex_desc_tok_dot = ".";
+static char *ctr_lex_desc_tok_chain = ",";
+static char *ctr_lex_desc_tok_booleanyes = "True";
+static char *ctr_lex_desc_tok_booleanno = "False";
+static char *ctr_lex_desc_tok_nil = "Nil";
+static char *ctr_lex_desc_tok_assignment = ":=";	//derp
+static char *ctr_lex_desc_tok_passignment = "=>";	//REEEE
+static char *ctr_lex_desc_tok_ret = "^";
+static char *ctr_lex_desc_tok_ret_unicode = "↑";
+static char *ctr_lex_desc_tok_fin = "end of program";
+static char *ctr_lex_desc_tok_unknown = "(unknown token)";
 
-int ctr_string_interpolation = 0;
-char *ivarname;
-int ivarlen;
+static int ctr_string_interpolation = 0;
+static char *ivarname;
+static int ivarlen;
 
 /**
  * Lexer - is Symbol Delimiter ?
@@ -58,7 +59,7 @@ int ivarlen;
  *
  * @return uint8_t
  */
-uint8_t ctr_clex_is_delimiter(char symbol)
+static uint8_t ctr_lex_is_delimiter(char symbol)
 {
 
 	return (symbol == '('
@@ -66,19 +67,25 @@ uint8_t ctr_clex_is_delimiter(char symbol)
 		|| symbol == ':' || symbol == ' ');
 }
 
-unsigned long ctr_clex_position() {
-		return ctr_code - ctr_code_st - ctr_clex_tokvlen;
+unsigned long ctr_lex_position() {
+		return ctr_code - ctr_code_st;
 }
 
+char* ctr_lex_get_buf() { return ctr_code; }
 
+void ctr_lex_skip(int len) {
+	// printf("skipping %d\n", len);
+	ctr_code = ctr_code + len;
+	if(ctr_code > ctr_eofcode) ctr_code = ctr_eofcode;
+}
 /**
  * CTRLexerEmitError
  *
  * Displays an error message for the lexer.
  */
-void ctr_clex_emit_error(char *message)
+void ctr_lex_emit_error(char *message)
 {
-	printf("%s on line: %d. \n", message, ctr_clex_line_number);
+	printf("%s on line: %d. \n", message, ctr_lex_line_number);
 #ifdef EXIT_ON_ERROR
 	exit(1);
 #endif
@@ -89,14 +96,14 @@ void ctr_clex_emit_error(char *message)
  *
  * Loads program into memory.
  */
-void ctr_clex_load(char *prg)
+void ctr_lex_load(char *prg, ctr_size len)
 {
 	ctr_code = prg;
-	ctr_code_st = ctr_code;
-	ctr_clex_buffer = ctr_heap_allocate_tracked(ctr_clex_bflmt);
-	ctr_clex_buffer[0] = '\0';
-	ctr_eofcode = (ctr_code + ctr_program_length);
-	ctr_clex_line_number = 0;
+  ctr_code_st = ctr_code;
+	ctr_lex_buffer = ctr_heap_allocate_tracked(ctr_lex_bflmt);
+	ctr_lex_buffer[0] = '\0';
+	ctr_eofcode = (ctr_code + len);
+	ctr_lex_line_number = 0;
 }
 
 /**
@@ -105,77 +112,77 @@ void ctr_clex_load(char *prg)
  * Returns the string of characters representing the value
  * of the currently selected token.
  */
-char *ctr_clex_tok_value()
+char *ctr_lex_tok_value()
 {
-	return ctr_clex_buffer;
+	return ctr_lex_buffer;
 }
 
-char *ctr_clex_tok_describe(int token)
+char *ctr_lex_tok_describe(int token)
 {
 	char *description;
 	switch (token) {
 	case CTR_TOKEN_RET:
-		description = ctr_clex_desc_tok_ret;
+		description = ctr_lex_desc_tok_ret;
 		break;
 	case CTR_TOKEN_ASSIGNMENT:
-		description = ctr_clex_desc_tok_assignment;
+		description = ctr_lex_desc_tok_assignment;
 		break;
 	case CTR_TOKEN_PASSIGNMENT:
-		description = ctr_clex_desc_tok_passignment;
+		description = ctr_lex_desc_tok_passignment;
 		break;
 	case CTR_TOKEN_BLOCKCLOSE:
-		description = ctr_clex_desc_tok_blockclose;
+		description = ctr_lex_desc_tok_blockclose;
 		break;
 	case CTR_TOKEN_BLOCKOPEN:
-		description = ctr_clex_desc_tok_blockopen;
+		description = ctr_lex_desc_tok_blockopen;
 		break;
 	case CTR_TOKEN_BLOCKOPEN_MAP:
-		description = ctr_clex_desc_tok_blockopen_map;
+		description = ctr_lex_desc_tok_blockopen_map;
 		break;
 	case CTR_TOKEN_BOOLEANNO:
-		description = ctr_clex_desc_tok_booleanno;
+		description = ctr_lex_desc_tok_booleanno;
 		break;
 	case CTR_TOKEN_BOOLEANYES:
-		description = ctr_clex_desc_tok_booleanyes;
+		description = ctr_lex_desc_tok_booleanyes;
 		break;
 	case CTR_TOKEN_CHAIN:
-		description = ctr_clex_desc_tok_chain;
+		description = ctr_lex_desc_tok_chain;
 		break;
 	case CTR_TOKEN_COLON:
-		description = ctr_clex_desc_tok_colon;
+		description = ctr_lex_desc_tok_colon;
 		break;
 	case CTR_TOKEN_DOT:
-		description = ctr_clex_desc_tok_dot;
+		description = ctr_lex_desc_tok_dot;
 		break;
 	case CTR_TOKEN_FIN:
-		description = ctr_clex_desc_tok_fin;
+		description = ctr_lex_desc_tok_fin;
 		break;
 	case CTR_TOKEN_NIL:
-		description = ctr_clex_desc_tok_nil;
+		description = ctr_lex_desc_tok_nil;
 		break;
 	case CTR_TOKEN_NUMBER:
-		description = ctr_clex_desc_tok_number;
+		description = ctr_lex_desc_tok_number;
 		break;
 	case CTR_TOKEN_PARCLOSE:
-		description = ctr_clex_desc_tok_parclose;
+		description = ctr_lex_desc_tok_parclose;
 		break;
 	case CTR_TOKEN_PAROPEN:
-		description = ctr_clex_desc_tok_paropen;
+		description = ctr_lex_desc_tok_paropen;
 		break;
 	case CTR_TOKEN_QUOTE:
-		description = ctr_clex_desc_tok_quote;
+		description = ctr_lex_desc_tok_quote;
 		break;
 	case CTR_TOKEN_REF:
-		description = ctr_clex_desc_tok_ref;
+		description = ctr_lex_desc_tok_ref;
 		break;
 	case CTR_TOKEN_TUPOPEN:
-		description = ctr_clex_desc_tok_tupopen;
+		description = ctr_lex_desc_tok_tupopen;
 		break;
 	case CTR_TOKEN_TUPCLOSE:
-		description = ctr_clex_desc_tok_tupclose;
+		description = ctr_lex_desc_tok_tupclose;
 		break;
 	default:
-		description = ctr_clex_desc_tok_unknown;
+		description = ctr_lex_desc_tok_unknown;
 	}
 	return description;
 }
@@ -185,9 +192,9 @@ char *ctr_clex_tok_describe(int token)
  *
  * Returns the length of the value of the currently selected token.
  */
-long ctr_clex_tok_value_length()
+long ctr_lex_tok_value_length()
 {
-	return ctr_clex_tokvlen;
+	return ctr_lex_tokvlen;
 }
 
 /**
@@ -195,80 +202,19 @@ long ctr_clex_tok_value_length()
  *
  * Puts back a token and resets the pointer to the previous one.
  */
-void ctr_clex_putback()
+void ctr_lex_putback()
 {
 	if (ctr_string_interpolation > 0) {
 		ctr_string_interpolation--;
 		return;
 	}
-	ctr_code = ctr_clex_oldptr;
-	ctr_clex_oldptr = ctr_clex_olderptr;
-	ctr_clex_line_number = ctr_clex_old_line_number;
+	ctr_code = ctr_lex_oldptr;
+	ctr_lex_oldptr = ctr_lex_olderptr;
+	ctr_lex_line_number = ctr_lex_old_line_number;
 }
 
-int check_next_line_empty()
-{
-	switch (regexLineCheck->value) {
-	case 0:
-		{
-			return *(ctr_code + 1) != '\n';
-		}
-	case 1:
-		{
-			regex_t pattern;
-			if (regcomp(&pattern, "^$", 0))
-				ctr_clex_emit_error
-				    ("PCRE could not compile regex, please turn regexLineCheck off.");
-			int x = regexec(&pattern, ctr_code + 1, 0, NULL,
-					0) == REG_NOMATCH;
-			regfree(&pattern);
-			return x;
-		}
-	}
-	return 0;
-}
 
-/**
- * CTRActivatePragma
- *
- *	Activates a pragma based off its type
- *	t -> toggle, o -> one-shot (Cannot be deactivated)
- */
-void ctr_activate_pragma(ctr_code_pragma * pragma)
-{
-	switch (pragma->type) {
-	case 'o':
-		pragma->value = 1;
-		break;
-	case 't':
-		pragma->value = 1 - pragma->value;
-		break;
-	}
-}
-
-/**
- * CTRLexPragmaToken
- *
- * Reads the token after '#:' and toggles a pragma.
- *
- */
-void ctr_match_toggle_pragma()
-{
-	if (strncmp(ctr_code, ":oneLineExpressions", 19) == 0) {
-		ctr_activate_pragma(oneLineExpressions);
-		ctr_code += 18;
-	}
-	if (strncmp(ctr_code, ":regexLineCheck", 15) == 0) {
-		ctr_activate_pragma(regexLineCheck);
-		ctr_code += 14;
-	}
-	if (strncmp(ctr_code, ":flexibleConstructs", 19) == 0) {
-		ctr_activate_pragma(flexibleConstructs);
-		ctr_code += 18;
-	}
-}
-
-int ctr_clex_is_valid_digit_in_base(char c, int b)
+int ctr_lex_is_valid_digit_in_base(char c, int b)
 {
 	if (b <= 10) {
 		if ((c >= '0') && (c < ('0' + b)))
@@ -288,17 +234,17 @@ int ctr_clex_is_valid_digit_in_base(char c, int b)
  * Reads the next token from the program buffer and selects this
  * token.
  */
-int ctr_clex_tok()
+int ctr_lex_tok()
 {
 	if (ctr_code == ctr_eofcode) {
 		return CTR_TOKEN_FIN;
 	}
 	char c;
 	int i, comment_mode, presetToken, pragma_mode;
-	ctr_clex_tokvlen = 0;
-	ctr_clex_olderptr = ctr_clex_oldptr;
-	ctr_clex_oldptr = ctr_code;
-	ctr_clex_old_line_number = ctr_clex_line_number;
+	ctr_lex_tokvlen = 0;
+	ctr_lex_olderptr = ctr_lex_oldptr;
+	ctr_lex_oldptr = ctr_code;
+	ctr_lex_old_line_number = ctr_lex_line_number;
 	i = 0;
 	comment_mode = 0;
 	pragma_mode = 0;
@@ -311,13 +257,13 @@ int ctr_clex_tok()
 		break;
 	case 2:
 	case 4:
-		memcpy(ctr_clex_buffer, "+", 1);
-		ctr_clex_tokvlen = 1;
+		memcpy(ctr_lex_buffer, "+", 1);
+		ctr_lex_tokvlen = 1;
 		presetToken = CTR_TOKEN_REF;
 		break;
 	case 3:
-		memcpy(ctr_clex_buffer, ivarname, ivarlen);
-		ctr_clex_tokvlen = ivarlen;
+		memcpy(ctr_lex_buffer, ivarname, ivarlen);
+		ctr_lex_tokvlen = ivarlen;
 		presetToken = CTR_TOKEN_REF;
 		break;
 	case 5:
@@ -332,8 +278,8 @@ int ctr_clex_tok()
 	}
 
 	/* if verbatim mode is on and we passed the '>' verbatim write message, insert a 'fake quote' (?>') */
-	if (ctr_clex_verbatim_mode == 1
-	    && ctr_clex_verbatim_mode_insert_quote == (uintptr_t) ctr_code) {
+	if (ctr_lex_verbatim_mode == 1
+	    && ctr_lex_verbatim_mode_insert_quote == (uintptr_t) ctr_code) {
 		return CTR_TOKEN_QUOTE;
 	}
 
@@ -349,7 +295,7 @@ int ctr_clex_tok()
 		if (c == '\n') {
 			comment_mode = 0;
 			pragma_mode = 0;
-			ctr_clex_line_number++;
+			ctr_lex_line_number++;
 		}
 		if (c == '#') {
 			comment_mode = 1;
@@ -436,43 +382,43 @@ int ctr_clex_tok()
 	     && isdigit(*(ctr_code + 1))) || isdigit(c)) {
 		int xnum_likely = c == '0';
 		int base = 10;
-		ctr_clex_buffer[i] = c;
-		ctr_clex_tokvlen++;
+		ctr_lex_buffer[i] = c;
+		ctr_lex_tokvlen++;
 		i++;
 		ctr_code++;
 		c = toupper(*ctr_code);
 		if (xnum_likely)
 			base = c == 'X' ? 16 : 10;	//let the parser handle incorrect values
 		if (base != 10) {
-			ctr_clex_buffer[i] = c;
-			ctr_clex_tokvlen++;
+			ctr_lex_buffer[i] = c;
+			ctr_lex_tokvlen++;
 			i++;
 			ctr_code++;
 			c = toupper(*ctr_code);
 		}
-		while ((ctr_clex_is_valid_digit_in_base(c, base))) {
-			ctr_clex_buffer[i] = c;
-			ctr_clex_tokvlen++;
+		while ((ctr_lex_is_valid_digit_in_base(c, base))) {
+			ctr_lex_buffer[i] = c;
+			ctr_lex_tokvlen++;
 			i++;
 			ctr_code++;
 			c = toupper(*ctr_code);
 		}
 		if (c == '.' && (ctr_code + 1 <= ctr_eofcode)
 		    &&
-		    !ctr_clex_is_valid_digit_in_base(toupper(*(ctr_code + 1)),
+		    !ctr_lex_is_valid_digit_in_base(toupper(*(ctr_code + 1)),
 						     base)) {
 			return CTR_TOKEN_NUMBER;
 		}
 		if (c == '.') {
-			ctr_clex_buffer[i] = c;
-			ctr_clex_tokvlen++;
+			ctr_lex_buffer[i] = c;
+			ctr_lex_tokvlen++;
 			i++;
 			ctr_code++;
 			c = toupper(*ctr_code);
 		}
-		while ((ctr_clex_is_valid_digit_in_base(c, base))) {
-			ctr_clex_buffer[i] = c;
-			ctr_clex_tokvlen++;
+		while ((ctr_lex_is_valid_digit_in_base(c, base))) {
+			ctr_lex_buffer[i] = c;
+			ctr_lex_tokvlen++;
 			i++;
 			ctr_code++;
 			c = toupper(*ctr_code);
@@ -481,19 +427,19 @@ int ctr_clex_tok()
 		return CTR_TOKEN_NUMBER;
 	}
 	if (strncmp(ctr_code, "True", 4) == 0) {
-		if (ctr_clex_is_delimiter(*(ctr_code + 4))) {
+		if (ctr_lex_is_delimiter(*(ctr_code + 4))) {
 			ctr_code += 4;
 			return CTR_TOKEN_BOOLEANYES;
 		}
 	}
 	if (strncmp(ctr_code, "False", 5) == 0) {
-		if (ctr_clex_is_delimiter(*(ctr_code + 5))) {
+		if (ctr_lex_is_delimiter(*(ctr_code + 5))) {
 			ctr_code += 5;
 			return CTR_TOKEN_BOOLEANNO;
 		}
 	}
 	if (strncmp(ctr_code, "Nil", 3) == 0) {
-		if (ctr_clex_is_delimiter(*(ctr_code + 3))) {
+		if (ctr_lex_is_delimiter(*(ctr_code + 3))) {
 			ctr_code += 3;
 			return CTR_TOKEN_NIL;
 		}
@@ -501,30 +447,30 @@ int ctr_clex_tok()
 
 	/* if we encounter a '?>' sequence, switch to verbatim mode in lexer */
 	if (strncmp(ctr_code, "?>", 2) == 0) {
-		ctr_clex_verbatim_mode = 1;
+		ctr_lex_verbatim_mode = 1;
 		ctr_code += 2;
-		// memcpy (ctr_clex_buffer, "?", 1);
-		// ctr_clex_tokvlen = 1;
+		// memcpy (ctr_lex_buffer, "?", 1);
+		// ctr_lex_tokvlen = 1;
 		return CTR_TOKEN_QUOTE;
 	}
 
 	/* if lexer is in verbatim mode and we pass the '>' symbol insert a fake quote as next token */
-	if (strncmp(ctr_code, ">", 1) == 0 && ctr_clex_verbatim_mode == 1) {
-		// ctr_clex_verbatim_mode_insert_quote = (uintptr_t) (ctr_code + 1);      /* this way because multiple invocations should return same result */
+	if (strncmp(ctr_code, ">", 1) == 0 && ctr_lex_verbatim_mode == 1) {
+		// ctr_lex_verbatim_mode_insert_quote = (uintptr_t) (ctr_code + 1);      /* this way because multiple invocations should return same result */
 		// ctr_code++;
 		return CTR_TOKEN_QUOTE;
-		// memcpy (ctr_clex_buffer, ">", 1);
-		// ctr_clex_tokvlen = 1;
+		// memcpy (ctr_lex_buffer, ">", 1);
+		// ctr_lex_tokvlen = 1;
 		// return CTR_TOKEN_REF;
 	}
 	// if (*ctr_code == ':') {
 	//   int i = 1;
 	//   ctr_code++;
 	//   while(ctr_code+1!=ctr_eofcode && *(ctr_code++)==':') i++;
-	//   if(i>ctr_clex_bflmt) ctr_clex_emit_error( "Token buffer exhausted. Tokens may not exceed 255 bytes" );
-	//   ctr_clex_tokvlen = i>2 ? i-1 : i; //leave one ':' for the KWM if more than two chars
-	//   for(int v=0; v<ctr_clex_tokvlen; v++)
-	//     ctr_clex_buffer[v] = ':';
+	//   if(i>ctr_lex_bflmt) ctr_lex_emit_error( "Token buffer exhausted. Tokens may not exceed 255 bytes" );
+	//   ctr_lex_tokvlen = i>2 ? i-1 : i; //leave one ':' for the KWM if more than two chars
+	//   for(int v=0; v<ctr_lex_tokvlen; v++)
+	//     ctr_lex_buffer[v] = ':';
 	//   if(i > 2)
 	//     ctr_code -= 2;
 	//   // else
@@ -547,11 +493,11 @@ int ctr_clex_tok()
 				  && ((uint8_t) * (ctr_code + 2) == 145)))
 			       && (c != ':') && c != '\'')
 	       && ctr_code != ctr_eofcode) {
-		ctr_clex_buffer[i] = c;
-		ctr_clex_tokvlen++;
+		ctr_lex_buffer[i] = c;
+		ctr_lex_tokvlen++;
 		i++;
-		if (i > ctr_clex_bflmt) {
-			ctr_clex_emit_error
+		if (i > ctr_lex_bflmt) {
+			ctr_lex_emit_error
 			    ("Token Buffer Exausted. Tokens may not exceed 255 bytes");
 		}
 		ctr_code++;
@@ -567,7 +513,7 @@ int ctr_clex_tok()
  *
  * Reads an entire string between a pair of quotes.
  */
-char *ctr_clex_readstr()
+char *ctr_lex_readstr()
 {
 	char *strbuff;
 	char c;
@@ -582,15 +528,15 @@ char *ctr_clex_readstr()
 		ctr_string_interpolation = 0;
 	}
 
-	ctr_clex_tokvlen = 0;
+	ctr_lex_tokvlen = 0;
 	strbuff = (char *)ctr_heap_allocate_tracked(memblock);
 	tracking_id = ctr_heap_get_latest_tracking_id();
 	c = *ctr_code;
 	escape = 0;
 	beginbuff = strbuff;
 	while ((		/* reading string in non-verbatim mode, read until the first non-escaped quote */
-		       ctr_clex_verbatim_mode == 0 && (c != '\'' || escape == 1)) || (	/* reading string in verbatim mode, read until the '<?' sequence */
-											     ctr_clex_verbatim_mode
+		       ctr_lex_verbatim_mode == 0 && (c != '\'' || escape == 1)) || (	/* reading string in verbatim mode, read until the '<?' sequence */
+											     ctr_lex_verbatim_mode
 											     ==
 											     1
 											     &&
@@ -614,7 +560,7 @@ char *ctr_clex_readstr()
 	{
 
 		/* enter interpolation mode ( $$x ) */
-		if (!ctr_clex_verbatim_mode &&
+		if (!ctr_lex_verbatim_mode &&
 		    !escape && c == '$' && ((ctr_code + 1) < ctr_eofcode)
 		    && *(ctr_code + 1) == '$') {
 			int q = 2;
@@ -635,7 +581,7 @@ char *ctr_clex_readstr()
 		}
 
 		if (c == '\n')
-			ctr_clex_line_number++;
+			ctr_lex_line_number++;
 
 		if (escape == 1) {
 			switch (c) {
@@ -662,7 +608,7 @@ char *ctr_clex_readstr()
 				break;
 			case 'x':
 				c = 0;
-				while (ctr_clex_is_valid_digit_in_base
+				while (ctr_lex_is_valid_digit_in_base
 				       (toupper(*(ctr_code + 1)), 16)) {
 					char t = *(ctr_code + 1);
 					c = c * 16 + (t >= '0'
@@ -675,23 +621,23 @@ char *ctr_clex_readstr()
 			}
 		}
 
-		if (c == '\\' && escape == 0 && ctr_clex_verbatim_mode == 0) {
+		if (c == '\\' && escape == 0 && ctr_lex_verbatim_mode == 0) {
 			escape = 1;
 			ctr_code++;
 			c = *ctr_code;
 			continue;
 		}
-		ctr_clex_tokvlen++;
-		if (ctr_clex_tokvlen >= memblock) {
+		ctr_lex_tokvlen++;
+		if (ctr_lex_tokvlen >= memblock) {
 			memblock += page;
 			beginbuff =
 			    (char *)ctr_heap_reallocate_tracked(tracking_id,
 								memblock);
 			if (beginbuff == NULL) {
-				ctr_clex_emit_error("Out of memory");
+				ctr_lex_emit_error("Out of memory");
 			}
 			/* reset pointer, memory location might have been changed */
-			strbuff = beginbuff + (ctr_clex_tokvlen - 1);
+			strbuff = beginbuff + (ctr_lex_tokvlen - 1);
 		}
 		escape = 0;
 		*(strbuff) = c;
@@ -700,18 +646,18 @@ char *ctr_clex_readstr()
 		if (ctr_code < ctr_eofcode)
 			c = *ctr_code;
 		else {
-			ctr_clex_emit_error("Expected closing quote");
+			// ctr_lex_emit_error("Expected closing quote");
 			c = '\'';
 		}
 	}
-	if (ctr_clex_verbatim_mode) {
+	if (ctr_lex_verbatim_mode) {
 		if (ctr_code >= ctr_eofcode) {	/* if we reached EOF in verbatim mode, append closing sequence '<?.' */
 			strncpy(ctr_code, "<?.", 3);
 			ctr_eofcode += 3;
 		}
 		ctr_code++;	/* in verbatim mode, hop over the trailing ? as well */
 	}
-	ctr_clex_verbatim_mode = 0;	/* always turn verbatim mode off */
-	ctr_clex_verbatim_mode_insert_quote = 0;	/* erase verbatim mode pointer overlay for fake quote */
+	ctr_lex_verbatim_mode = 0;	/* always turn verbatim mode off */
+	ctr_lex_verbatim_mode_insert_quote = 0;	/* erase verbatim mode pointer overlay for fake quote */
 	return beginbuff;
 }

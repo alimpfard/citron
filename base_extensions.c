@@ -691,6 +691,96 @@ void *ctr_coroutine_close(struct schedule *S)
 	return NULL;
 }
 
+ctr_object* ctr_ast_flex(ctr_object* myself, ctr_argument* argumentList) {
+	ctr_lex_load(argumentList->object->value.svalue->value, argumentList->object->value.svalue->vlen);
+	return myself;
+}
+static char* ctr_lex_token_lookup(int tok) {
+	switch (tok) {
+		case CTR_TOKEN_REF: return "REF";
+		case CTR_TOKEN_QUOTE: return "QUOTE";
+		case CTR_TOKEN_NUMBER: return "NUMBER";
+		case CTR_TOKEN_PAROPEN: return "PAROPEN";
+		case CTR_TOKEN_PARCLOSE: return "PARCLOSE";
+		case CTR_TOKEN_BLOCKOPEN: return "BLOCKOPEN";
+		case CTR_TOKEN_BLOCKOPEN_MAP: return "BLOCKOPEN_MAP";
+		case CTR_TOKEN_BLOCKCLOSE: return "BLOCKCLOSE";
+		case CTR_TOKEN_COLON: return "COLON";
+		case CTR_TOKEN_DOT: return "DOT";
+		case CTR_TOKEN_CHAIN: return "CHAIN";
+		case CTR_TOKEN_BOOLEANYES: return "BOOLEANYES";
+		case CTR_TOKEN_BOOLEANNO: return "BOOLEANNO";
+		case CTR_TOKEN_NIL: return "NIL";
+		case CTR_TOKEN_ASSIGNMENT: return "ASSIGNMENT";
+		case CTR_TOKEN_RET: return "RET";
+		case CTR_TOKEN_TUPOPEN: return "TUPOPEN";
+		case CTR_TOKEN_TUPCLOSE: return "TUPCLOSE";
+		case CTR_TOKEN_PASSIGNMENT: return "PASSIGNMENT";
+		case CTR_TOKEN_FIN: return "FIN";
+		default: return "UNKNOWN";
+	}
+}
+ctr_object* ctr_ast_lextoken(ctr_object* myself, ctr_argument* argumentList) {
+	int tok = ctr_lex_tok();
+	char* toktype = ctr_lex_token_lookup(tok);
+	char* value = ctr_lex_tok_value();
+	size_t len = ctr_lex_tok_value_length();
+	unsigned long pos = ctr_lex_position();
+	ctr_argument* arg = ctr_heap_allocate(sizeof(*arg));
+
+	ctr_object* obj = ctr_array_new(CtrStdArray, NULL);
+	ctr_object* tokType = ctr_build_string_from_cstring(toktype);
+	arg->object = tokType;
+	ctr_array_push(obj, arg);
+	tokType = ctr_build_string(value, len);
+	arg->object = tokType;
+	ctr_array_push(obj, arg);
+	arg->object = ctr_build_number_from_float(pos);
+	ctr_array_push(obj, arg);
+	ctr_heap_free(arg);
+	return obj;
+}
+
+ctr_object* ctr_ast_lexstring(ctr_object* myself, ctr_argument* argumentList) {
+	char* toktype = "STRING";
+	char* value = ctr_lex_readstr();
+	size_t len = ctr_lex_tok_value_length();
+	unsigned long pos = ctr_lex_position();
+	ctr_argument* arg = ctr_heap_allocate(sizeof(*arg));
+
+	ctr_object* obj = ctr_array_new(CtrStdArray, NULL);
+	ctr_object* tokType = ctr_build_string_from_cstring(toktype);
+	arg->object = tokType;
+	ctr_array_push(obj, arg);
+	tokType = ctr_build_string(value, len);
+	arg->object = tokType;
+	ctr_array_push(obj, arg);
+	arg->object = ctr_build_number_from_float(pos);
+	ctr_array_push(obj, arg);
+	ctr_heap_free(arg);
+	return obj;
+}
+
+ctr_object* ctr_ast_lexbuf(ctr_object* myself, ctr_argument* argumentList) {
+	char* value = ctr_lex_get_buf();
+	ctr_object* obj = ctr_build_string_from_cstring(value);
+	return obj;
+}
+ctr_object* ctr_ast_lexpos(ctr_object* myself, ctr_argument* argumentList) {
+	ctr_size value = ctr_lex_position();
+	ctr_object* obj = ctr_build_number_from_float(value);
+	return obj;
+}
+ctr_object* ctr_ast_lexputback(ctr_object* myself, ctr_argument* argumentList) {
+	ctr_lex_putback();
+	return myself;
+}
+ctr_object* ctr_ast_lexskip(ctr_object* myself, ctr_argument* argumentList) {
+	int len = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+	ctr_lex_skip(len);
+	return myself;
+}
+
 struct ctr_coro_args_data {
 	ctr_object *co;
 	ctr_object *block;
@@ -908,7 +998,27 @@ void initiailize_base_extensions()
 	ctr_internal_create_func(CtrStdAst,
 				 ctr_build_string_from_cstring("unparse"),
 				 &ctr_ast_stringify);
-
+	ctr_internal_create_func(CtrStdAst,
+				 ctr_build_string_from_cstring("feedLexer:"),
+				 &ctr_ast_flex);
+	ctr_internal_create_func(CtrStdAst,
+				 ctr_build_string_from_cstring("token"),
+				 &ctr_ast_lextoken);
+	ctr_internal_create_func(CtrStdAst,
+				 ctr_build_string_from_cstring("lexstring"),
+				 &ctr_ast_lexstring);
+	ctr_internal_create_func(CtrStdAst,
+				 ctr_build_string_from_cstring("getlexbuf"),
+				 &ctr_ast_lexbuf);
+	ctr_internal_create_func(CtrStdAst,
+				 ctr_build_string_from_cstring("lexSkip:"),
+				 &ctr_ast_lexskip);
+	ctr_internal_create_func(CtrStdAst,
+				 ctr_build_string_from_cstring("lexpos"),
+				 &ctr_ast_lexpos);
+	ctr_internal_create_func(CtrStdAst,
+				 ctr_build_string_from_cstring("lexPutBack"),
+				 &ctr_ast_lexputback);
 	ctr_internal_object_add_property(CtrStdWorld,
 					 ctr_build_string_from_cstring("AST"),
 					 CtrStdAst, 0);

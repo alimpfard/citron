@@ -3,6 +3,10 @@ var HashSetValueMarker is Object new on: '=' do: {:e ^(me id) = (e id).}.
 HashSet on: 'new' do: {
   ^me cnew: {my map is Map new.}.
 }.
+HashSet on: 'from:' do: {:map
+  ^me cnew: {my map is map.}.
+}.
+HashSet on: '_marker' do: {^const HashSetValueMarker.}.
 HashSet on: 'add:' do: {:v
   my map put: const HashSetValueMarker at: v.
 }.
@@ -12,13 +16,16 @@ HashSet on: 'remove:' do: {:v
 HashSet on: 'contains:' do: {:v
   ^const HashSetValueMarker = (my map at: v).
 }.
-HashSet on: 'each:' do: {:v
+HashSet on: 'each_v:' do: {:v
   my map each: {:k v applyTo: k.}.
 }.
 HashSet on: 'toString' do: {
   var s is '{'.
+  var noprint is [me, my map].
   my map each: {:v
-    s append: v, append: ', '.
+    (noprint contains: v) either: { s append: ':selfReference:, '. } or: {
+      s append: v, append: ', '.
+    }.
   }.
   s length > 1 ifTrue: {s is s from: 0 to: s length - 2.}.
   s append: '}'.
@@ -26,8 +33,17 @@ HashSet on: 'toString' do: {
 }.
 HashSet on: 'iHash' do: {
   var hash is 0.
-  my map each: {:v hash +=: v iHash.}.
+  var noprint is [me, my map].
+  my map each: {:v
+    (noprint contains: v) either: { ^v id. } or: { ^v iHash. }.
+  }.
   ^hash.
+}.
+HashSet on: 'serialize' do: {
+  ^'HashSet from: (%s)' % [(my map serialize replace: 'put:([Object])' with: 'put:(HashSet _marker)')].
+}.
+HashSet on: 'count' do: {
+  ^my map count.
 }.
 HashSet on: 'type' do: {^'HashSet'.}.
 import export: HashSet as: 'HashSet'.

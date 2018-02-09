@@ -81,6 +81,7 @@ Highlight on: 'highlight:' do: {:code
             (c = '?') ifTrue: {
               this_thing append: c.
               begin is '?>'.
+              rlen -=: 1.
               True break.
             }.
           }.
@@ -92,7 +93,6 @@ Highlight on: 'highlight:' do: {:code
           }.
           (c = '\\') ifTrue: {
             in_escape ifTrue: {
-              this_thing append: '\\\\'.
               in_escape is False.
               True continue.
             }, else: {
@@ -100,7 +100,7 @@ Highlight on: 'highlight:' do: {:code
             }.
           }.
             in_escape ifTrue: {
-              this_thing append: '\\' + c.
+              this_thing append: c.
               in_escape is False.
               True continue.
             }.

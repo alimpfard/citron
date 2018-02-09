@@ -26,7 +26,7 @@ Eval on: 'init' do: {
   my history is LRArray new init: 100.
   my commands is Nil.
   my continuation is '...'.
-  my flags is Map new put: True at: 'printvs'.
+  my flags is Map new put: True at: 'printvs', put: False at: 'highlight'.
   me genAccessors: 'equit'.
   me equit: True.
   me genReader: 'eServer'.
@@ -58,6 +58,7 @@ Eval on: 'shiftArgs' do: { ^(my args shift). }.
 Eval on: 'enableFlag:' do: {:flag my flags put: True at: flag. }.
 Eval on: 'disableFlag:' do: {:flag my flags put: False at: flag. }.
 Eval on: 'getFlag:' do: {:flag ^my flags at: flag. }.
+Eval on: 'flags' do: {^my flags. }.
 Eval on: 'argCount' do: { ^(my args count). }.
 Eval on: 'onlyRelevantArgs' do: { my args do shift shift done. }. #get rid of ./ctr eval
 
@@ -229,6 +230,8 @@ Eval on: 'tryNumrify:' do: {:s
           indent: 2 write: '-c : set the result color\n',
           indent: 2 write: '-h : show this help\n',
           indent: 2 write: '-f : evaluate file. many can be passed, evals in passed order\n',
+          indent: 2 write: '-F : enables the passed flag\n',
+          indent: 2 write: '-Fs : display all the available flags\n',
           indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
           indent: 2 write: '-equit : Quit the interpreter on errors\n',
           indent: 2 write: '-finstr : Enable instrumentation (advanced debug feature).\n',
@@ -258,6 +261,15 @@ Eval on: 'tryNumrify:' do: {:s
         var file is Eval shiftArgs.
         (file isNil) ifTrue: { thisBlock error: '-f requires a file name.'. }.
         Eval enqueue: file.
+    }, case: '-F' do: {
+        args pop. #consume option.
+        var flag is Eval shiftArgs.
+        (flag isNil) ifTrue: { thisBlock error: '-F requires a flag name.'. }.
+        Eval enableFlag: flag.
+    }, case: '-Fs' do: {
+        args pop. #consume option.
+        Pen writeln: (Eval flags keys join: ', ').
+        Program exit.
     }, case: '-e' do: {
         args pop. #consume option..
         var value is Eval shiftArgs.

@@ -762,8 +762,7 @@ ctr_object* ctr_ast_lexstring(ctr_object* myself, ctr_argument* argumentList) {
 }
 
 ctr_object* ctr_ast_lexbuf(ctr_object* myself, ctr_argument* argumentList) {
-	char* value = ctr_lex_get_buf();
-	ctr_object* obj = ctr_build_string_from_cstring(value);
+	ctr_object* obj = ctr_lex_get_buf_str();
 	return obj;
 }
 ctr_object* ctr_ast_lexpos(ctr_object* myself, ctr_argument* argumentList) {

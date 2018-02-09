@@ -10,6 +10,9 @@ inp is ''.
 ImportLib Queue.
 ImportLib LRArray.
 import Library/Data/Map.
+import Library/Utils/Highlight.
+
+TerminalWidth is 85.
 
 Eval is Object new.
 Eval on: 'init' do: {
@@ -23,6 +26,7 @@ Eval on: 'init' do: {
   my history is LRArray new init: 100.
   my commands is Nil.
   my continuation is '...'.
+  my flags is Map new put: True at: 'printvs'.
   me genAccessors: 'equit'.
   me equit: True.
   me genReader: 'eServer'.
@@ -51,6 +55,9 @@ Eval on: 'color' do: { ^my color. }.
 Eval on: 'prompt' do: { ^my prompt. }.
 Eval on: 'continuation' do: { ^my continuation. }.
 Eval on: 'shiftArgs' do: { ^(my args shift). }.
+Eval on: 'enableFlag:' do: {:flag my flags put: True at: flag. }.
+Eval on: 'disableFlag:' do: {:flag my flags put: False at: flag. }.
+Eval on: 'getFlag:' do: {:flag ^my flags at: flag. }.
 Eval on: 'argCount' do: { ^(my args count). }.
 Eval on: 'onlyRelevantArgs' do: { my args do shift shift done. }. #get rid of ./ctr eval
 
@@ -92,18 +99,24 @@ Eval on: 'stopEvalServer' do: {
 Eval on: 'Commands' do: {
   my commands is my commands or: {
     ^Map new
-      put: {:args Eval end.} at: 'q',
-      put: {:args ^Reflect strTypeOf: (args eval).} at: 't',
-      put: {:args ^(args trim = '') either: {^Eval startEvalServer.} or: {^Eval startEvalServerOnPort: args eval.}.} at: 'server',
+      put: {:args Eval end. ^''.} at: 'q',
+      put: {:args my flags put: (var rs is args split: ' ') @ 1 eval at: rs @ 0. ^''.} at: '!f',
+      put: {:args ^Reflect strTypeOf: (Eval evaluate: args).} at: 't',
+      put: {:args ^(args trim = '') either: {^Eval startEvalServer.} or: {^Eval startEvalServerOnPort: (Eval evaluate: args).}.} at: 'server',
       put: {:args ^'Interpreter metacommands help:
       + q -- Quit
       + t <expression> -- type of expression
       + server [<port>] -- make an eval server on port <port>, or a random port.
       + !server -- kill the eval server
+      + !m <expression> -- evaluates and shows the methods of expression.
+      + !p <expression> -- evaluates and shows the properties of expression.
+      + !f <flag> [True/False] -- sets flag to value
+      + p <expression> -- prints the value of expression
       + h -- show this help'.} at: 'h',
       put: {^Eval stopEvalServer.} at: '!server',
-      put: {:args ^Reflect getPropertiesOf: (args eval).} at: '!p',
-      put: {:args ^Reflect getMethodsOf: (args eval).} at: '!m'.
+      put: {:args ^Reflect getPropertiesOf: (Eval evaluate: args).} at: '!p',
+      put: {:args Pen writeln: (Eval evaluate: args). ^''.} at: 'p',
+      put: {:args ^Reflect getMethodsOf: (Eval evaluate: args).} at: '!m'.
   }.
   ^my commands.
 }.
@@ -262,6 +275,11 @@ Eval on: 'tryNumrify:' do: {:s
         args pop.
         Reflect enableInstrumentation.
         Eval enableInstrumentation.
+    }, case: '-F' do: {
+        args pop.
+        var flag is Eval shiftArgs.
+        (flag isNil) ifTrue: { thisBlock error: 'Enable/Disable what flag?'. }.
+        flag startsWith: 'no-', either: { Eval disableFlag: (flag skip: 3). } or: { Eval enableFlag: flag. }.
     }, switch. # do not consume any other option.
 }.
 Pen green write: ?>Project Citron : The Programming Language (V<?, write:(Reflect version) + ')', resetColor brk
@@ -289,13 +307,28 @@ Eval on: 'allTheNames:' do: {:obj
   ^obj isNil not either: {^[(False), (Reflect getMethodsOf: obj)].} or: {^[(True), (Eval allTheNames)].}.
 }.
 
+# Eval on: 'redraw:at:' do: {:inp:cursor
+#   var cols is Program env: 'COLUMNS', or: '89', toNumber.
+#   var remainingCols is cols - (inp length) max: 0.
+#   remainingCols < 2 ifTrue: {
+#     Pen write: ('\b' * cursor) + '<' + (inp is inp from: (inp length - cols) length: cols - 1) + ('\b' * (inp length - 1)).
+#   }, else: {
+#     Pen write: ('\b' * cursor) + inp + ('\b' * (inp length - cursor - 1)).
+#   }.
+# }.
 Eval on: 'redraw:at:' do: {:inp:cursor
-  var cols is Program env: 'COLUMNS', or: '89', toNumber.
-  var remainingCols is cols - (inp length) max: 0.
-  remainingCols < 2 ifTrue: {
-    Pen write: ('\b' * cursor) + '<' + (inp is inp from: (inp length - cols) length: cols - 1) + ('\b' * (inp length - 1)).
+  var ctn is Eval prompt.
+  ctn is inp length > (TerminalWidth - (ctn length)) either: '<' or: ctn.
+  Pen clearLine.
+  inp length > 1 ifTrue: {
+    var diff is 0.
+    var iinp is (cursor > (var first_visible is (inp length - TerminalWidth - (ctn length) max: 0))) either: { ^inp skip: first_visible - 2. } or: { var tdiff is TerminalWidth - (ctn length). var f is inp skip: cursor - 1. diff is f length - tdiff. ^f from: 0 length: tdiff. }.
+    (Eval getFlag: 'highlight') ifTrue: {iinp is Highlight highlight: iinp.}.
+    Pen cyan write: ctn, resetColor.
+    # Pen for: (File special: 'stderr'), writeln: [first_visible, cursor].
+    Pen write: '%s%s' % [iinp, ('\b' * (inp length - cursor - diff - 1 max: 0))].
   }, else: {
-    Pen write: ('\b' * cursor) + inp + ('\b' * (inp length - cursor - 1)).
+    Pen cyan write: ctn, resetColor write: inp.
   }.
 }.
 
@@ -328,7 +361,7 @@ Eval on: 'repl' do: {
         Pen write: ('\b \b' * last_comp_rewind).
         last_comp_rewind is 0.
       }.
-      inc = '\t' ifTrue: {
+      inc = '\t' ifTrue: {#<Tab>
           var candidate is 'Nil'.
           var toc is (inp trim or: '  ') split: ' ', last.
           last_was_comp ifTrue: {
@@ -359,11 +392,11 @@ Eval on: 'repl' do: {
           last_was_comp is True.
           skipthis ifTrue: {last_toc is candidate.}.
         }, else: {
-          inc case: '\xd' do: {
+          inc case: '\xd' do: {#<Enter>
             # Pen brk.
-            (cursor !=: inp length) ifTrue: {
-              Pen write: (inp from: cursor length: (inp length - cursor)).
-            }.
+            # (cursor !=: inp length) ifTrue: {
+            #   Pen write: (inp from: cursor length: (inp length - cursor)).
+            # }.
             var original_inp is inp.
             inp is inp trim.
             inp length > 0 ifTrue: {
@@ -382,12 +415,12 @@ Eval on: 'repl' do: {
                 inp is original_inp.
               }.
             }, else: { Pen brk. done is True. }.
-          }, case: '\x3' do: {
+          }, case: '\x3' do: {#<^C>
             inp is ''.
             cursor is 0.
             Pen red writeln: 'Interrupted', resetColor.
-            # done is True.
-          }, case: '\x8' do: {
+            done is True.
+          }, case: '\x8' do: {#<\b>
             cursor > 0 ifTrue: {
               inp is inp removeFrom: (cursor - 1) to: cursor.
               cursor -=: 1.
@@ -401,9 +434,7 @@ Eval on: 'repl' do: {
             inc is stdin readBytes: 2.
             inc case: '\x5b\x41' do: {
               hindex > 0 ifTrue: {
-                Pen write: '\b' * (inp length).
                 cursor is (inp is Eval getHistory at: (hindex is hindex - 1)) length.
-                Pen write: inp.
               }.
             }, case: '\x5b\x42' do: {
               (hindex > 0) & (Eval getHistory count > 0) ifTrue: {
@@ -413,22 +444,19 @@ Eval on: 'repl' do: {
                 inp count <=: hindex, ifTrue: {hindex is inp count.}.
                 inp is inp at: hindex - 1.
                 cursor is inp length.
-                Pen write: inp.
               }, else: {
                 hindex is 0.
                 Pen write: '\b \b' * (inp length).
                 inp is ''.
                 cursor is 0.
               }.
-            }, case: '\x5b\x43' do: {
+            }, case: '\x5b\x43' do: { #Right Arrow
               (cursor < (inp length - 1)) ifTrue: {
                 cursor +=: 1.
-                Pen write: inp @ (cursor - 1).
               }.
             }, case: '\x5b\x44' do: {
               (cursor > 0) ifTrue: {
                 cursor -=: 1.
-                Pen write: '\b'.
               }.
             }, case: '\x5b\x31' do: {
               Pen write: '\a' * 23.
@@ -438,11 +466,9 @@ Eval on: 'repl' do: {
                   var ct is inp from: 0 to: cursor + 1.
                   ct is (ct indexOf: ' ').# + (ct split: ' ', last length min: cursor - 1).
                   cursor -=: ct.
-                  Pen write: '\b' * ct.
                 }, else: {
                   (inc = '\x3b\x35\x43') ifTrue: {
                     var ct is inp from: cursor to: (inp length), split: ' ', head length min: cursor.
-                    ct times: {:i Pen write: inp @ (cursor + i).}.
                     cursor +=: ct.
                   }.#, else: { Pen red write: inc. }.
                 }.
@@ -457,6 +483,7 @@ Eval on: 'repl' do: {
           }, switch.
           last_was_comp is False.
         }.
+      Eval redraw: inp at: cursor - 1.
       done break.
       inc is stdin readBytes: 1.
     }.
@@ -477,7 +504,8 @@ Eval on: 'repl' do: {
     }.
 
     # Syntactic errors will not be passed to the eval. # TODO: handle that.
-    'Pen %s write: (var ret is Eval evaluate: inp) toString' formatObjects: [(Eval color)], eval.
+    var ret is Eval evaluate: inp.
+    Eval getFlag: 'printvs', ifTrue: { 'Pen %s write: ret toString' formatObjects: [(Eval color)], eval. }.
     Pen resetColor.
     __ is _.
     _ is ret.

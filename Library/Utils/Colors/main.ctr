@@ -1,0 +1,23 @@
+import Library/Data/StringIO.
+
+var Colors is Map new.
+var sio is StringIO new.
+var p is Pen for: sio.
+
+['red', 'green', 'blue', 'cyan', 'magenta', 'purple', 'yellow', 'resetColor'] each_v: {:color
+  p message: color arguments: [].
+  Colors put: sio read at: color.
+  sio flush.
+}.
+Colors put: '\x1b[2m' at: 'dim', put: '\x1b[22m' at: 'undim'.
+Colors put: '\x1b[1m' at: 'bold', put: '\x1b[21m' at: 'unbold'.
+Colors put: '\x1b[92m' at: 'lightGreen'.
+Colors put: '\x1b[94m' at: 'lightBlue'.
+Colors put: '\x1b[95m' at: 'lightMagenta'.
+
+Colors on: 'respondTo:' do: {:name ^me at: name. }.
+Colors on: 'stripColors:' do: {:v
+  me each: {:_:color v is v replace: color with: ''. }.
+  ^v.
+}.
+import export: Colors as: 'Colors'.

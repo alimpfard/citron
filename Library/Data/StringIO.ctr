@@ -9,7 +9,7 @@ StringIO on: 'new' do: {
 
 StringIO on: 'write:' do: { :s
   my internalBuffer append: s.
-  my position +=: str length.
+  my position +=: s length.
 }.
 
 StringIO on: 'brk' do: {
@@ -43,6 +43,4 @@ StringIO on: 'readBytes:' do: {:bytes
   ^my internalBuffer from: my position lengthMax: bytes.
 }.
 
-(Reflect objectExists: 'ImportLib') ifTrue: {
-  ImportLib export: StringIO as: 'StringIO' namespace: 'Extensions'.
-}.
+import export: StringIO as: 'StringIO'.

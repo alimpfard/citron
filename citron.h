@@ -368,6 +368,16 @@ ctr_size ctr_program_length;
 int ctr_clex_line_number;
 int ctr_clex_char_num;
 
+unsigned long ctr_lex_position();
+void ctr_lex_load(char* prg, size_t len);
+char* ctr_lex_tok_value();
+long ctr_lex_tok_value_length();
+void ctr_lex_putback();
+int ctr_lex_tok();
+char* ctr_lex_readstr();
+char* ctr_lex_get_buf();
+void ctr_lex_skip(int len);
+
 // Pragmas
 ctr_code_pragma* oneLineExpressions;
 ctr_code_pragma* flexibleConstructs;

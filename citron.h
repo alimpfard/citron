@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CTR_VERSION "0.0.6.8.5"
+#define CTR_VERSION "0.0.6.9"
 #define CTR_LOG_WARNINGS 0//2 to enable
 /**
  * Define the Citron tokens
@@ -375,8 +375,8 @@ long ctr_lex_tok_value_length();
 void ctr_lex_putback();
 int ctr_lex_tok();
 char* ctr_lex_readstr();
-char* ctr_lex_get_buf();
 void ctr_lex_skip(int len);
+ctr_object* ctr_lex_get_buf_str();
 
 // Pragmas
 ctr_code_pragma* oneLineExpressions;

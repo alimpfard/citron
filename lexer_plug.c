@@ -72,6 +72,7 @@ unsigned long ctr_lex_position() {
 }
 
 char* ctr_lex_get_buf() { return ctr_code; }
+ctr_object* ctr_lex_get_buf_str() { return ctr_build_string(ctr_code, ctr_eofcode-ctr_code); }
 
 void ctr_lex_skip(int len) {
 	// printf("skipping %d\n", len);

@@ -26,17 +26,17 @@ Eval on: 'init' do: {
   my history is LRArray new init: 100.
   my commands is Nil.
   my continuation is '...'.
-  my flags is Map new put: True at: 'printvs', put: False at: 'highlight'.
-  me genAccessors: 'equit'.
-  me equit: True.
+  my flags is Map new
+    put: True at: 'printvs',
+    put: True at: 'highlight',
+    put: False at: 'equit',
+    put: False at: 'instr'.
   me genReader: 'eServer'.
-  my instr is False.
   ^me.
 }.
-Eval on: 'instrument' do: {my instr ifTrue: {Reflect enableInstrumentation.}.}.
-Eval on: 'enableInstrumentation' do: {my instr is True.}.
+Eval on: 'instrument' do: {me getFlag: 'instr', ifTrue: {Reflect enableInstrumentation.}.}.
 Eval on: 'handleException:' do: {:e
-  ^my equit either: {Pen red write: e, resetColor brk. ^e.} or: {thisBlock error: e.}.
+  ^me getFlag: 'equit', either: {thisBlock error: e.} or: {Pen red write: e, resetColor brk. ^e.}.
 }.
 Eval on: 'end' do: { my end is True. me stopEvalServer. }.
 Eval on: 'break' do: { my end ifTrue: {Broom sweep.}. ^my end. }.
@@ -59,6 +59,13 @@ Eval on: 'enableFlag:' do: {:flag my flags put: True at: flag. }.
 Eval on: 'disableFlag:' do: {:flag my flags put: False at: flag. }.
 Eval on: 'getFlag:' do: {:flag ^my flags at: flag. }.
 Eval on: 'flags' do: {^my flags. }.
+Eval on: 'modifyFlags:' do: {:flag
+  flag startsWith: 'no-', ifTrue: {
+    me disableFlag: (flag skip: 3).
+  }, else: {
+    me enableFlag: flag.
+  }.
+}.
 Eval on: 'argCount' do: { ^(my args count). }.
 Eval on: 'onlyRelevantArgs' do: { my args do shift shift done. }. #get rid of ./ctr eval
 
@@ -101,7 +108,7 @@ Eval on: 'Commands' do: {
   my commands is my commands or: {
     ^Map new
       put: {:args Eval end. ^''.} at: 'q',
-      put: {:args my flags put: (var rs is args split: ' ') @ 1 eval at: rs @ 0. ^''.} at: '!f',
+      put: {:args Eval modifyFlags: args. ^''.} at: '!f',
       put: {:args ^Reflect strTypeOf: (Eval evaluate: args).} at: 't',
       put: {:args ^(args trim = '') either: {^Eval startEvalServer.} or: {^Eval startEvalServerOnPort: (Eval evaluate: args).}.} at: 'server',
       put: {:args ^'Interpreter metacommands help:
@@ -111,7 +118,7 @@ Eval on: 'Commands' do: {
       + !server -- kill the eval server
       + !m <expression> -- evaluates and shows the methods of expression.
       + !p <expression> -- evaluates and shows the properties of expression.
-      + !f <flag> [True/False] -- sets flag to value
+      + !f <[no-]flag> -- modifies flag
       + p <expression> -- prints the value of expression
       + h -- show this help'.} at: 'h',
       put: {^Eval stopEvalServer.} at: '!server',
@@ -210,7 +217,7 @@ Eval on: 'tryNumrify:' do: {:s
     opt case: '-h' do: {
         args pop. #consume option.
         Pen green write: 'Citron Evaluator.\n', resetColor.
-        var P is Pen new.
+        var P is Pen.
         P on: 'indent:write:' do: {:i :w Pen write: (((Array < '  ') * i) join: ''). Pen write: w. }.
         P indent: 1 write: 'Eval mode help:', brk.
         P cyan indent: 1 write: 'Eval namespace', resetColor brk.
@@ -230,11 +237,9 @@ Eval on: 'tryNumrify:' do: {:s
           indent: 2 write: '-c : set the result color\n',
           indent: 2 write: '-h : show this help\n',
           indent: 2 write: '-f : evaluate file. many can be passed, evals in passed order\n',
-          indent: 2 write: '-F : enables the passed flag\n',
+          indent: 2 write: '-F<[no-]flag> : enables the passed flag\n',
           indent: 2 write: '-Fs : display all the available flags\n',
           indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
-          indent: 2 write: '-equit : Quit the interpreter on errors\n',
-          indent: 2 write: '-finstr : Enable instrumentation (advanced debug feature).\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
         P resetColor.
         Program exit.
@@ -261,11 +266,6 @@ Eval on: 'tryNumrify:' do: {:s
         var file is Eval shiftArgs.
         (file isNil) ifTrue: { thisBlock error: '-f requires a file name.'. }.
         Eval enqueue: file.
-    }, case: '-F' do: {
-        args pop. #consume option.
-        var flag is Eval shiftArgs.
-        (flag isNil) ifTrue: { thisBlock error: '-F requires a flag name.'. }.
-        Eval enableFlag: flag.
     }, case: '-Fs' do: {
         args pop. #consume option.
         Pen writeln: (Eval flags keys join: ', ').
@@ -280,18 +280,13 @@ Eval on: 'tryNumrify:' do: {:s
         value findPattern: '(.*)\\.' do: {:p value is p at: 1.}.
         Pen write: (Eval evaluate: value).
         Program exit.
-    }, case: '-equit' do: {
-        args pop.
-        Eval equit: False.
-    }, case: '-finstr' do: {
-        args pop.
-        Reflect enableInstrumentation.
-        Eval enableInstrumentation.
-    }, case: '-F' do: {
-        args pop.
-        var flag is Eval shiftArgs.
-        (flag isNil) ifTrue: { thisBlock error: 'Enable/Disable what flag?'. }.
-        flag startsWith: 'no-', either: { Eval disableFlag: (flag skip: 3). } or: { Eval enableFlag: flag. }.
+    }, default: {
+      opt startsWith: '-F', ifTrue: {
+        args pop. #consume option.
+        var flag is opt skip: 2.
+        (flag = '') ifTrue: { thisBlock error: '-F requires a flag name.\nSee -Fs'. }.
+        Eval modifyFlags: flag.
+      }.
     }, switch. # do not consume any other option.
 }.
 Pen green write: ?>Project Citron : The Programming Language (V<?, write:(Reflect version) + ')', resetColor brk

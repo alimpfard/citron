@@ -31,11 +31,18 @@ Highlight on: 'highlight:' do: {:code
         after_color is Colors unbold.
         this_thing is '=>'.
     }, case: 'BLOCKCLOSE' do: {
+        color is (Colors bold) + (Colors lightGreen).
+        after_color is (Colors unbold).
         this_thing is '}'.
     }, case: 'BLOCKOPEN' do: {
+        color is (Colors bold) + (Colors lightGreen).
+        after_color is (Colors unbold).
         this_thing is '{'.
     }, case: 'BLOCKOPEN_MAP' do: {
-        this_thing is '{\\'.
+        color is (Colors bold) + (Colors lightGreen).
+        after_color is (Colors unbold).
+        this_thing is ?>{\<?.
+        last_toc_override is 'BLOCKOPEN'.
     }, case: 'BOOLEANNO' do: {
     color is Colors magenta.
         this_thing is 'False'.
@@ -66,8 +73,12 @@ Highlight on: 'highlight:' do: {:code
     color is Colors green.
         this_thing is (token @ 1) .
     }, case: 'PARCLOSE' do: {
+        color is (Colors dim) + (Colors lightGreen).
+        after_color is (Colors undim).
         this_thing is ')'.
     }, case: 'PAROPEN' do: {
+        color is (Colors dim) + (Colors lightGreen).
+        after_color is (Colors undim).
         this_thing is '('.
     }, case: 'QUOTE' do: {
         this_thing is ''.

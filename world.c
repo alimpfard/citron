@@ -1298,7 +1298,7 @@ void ctr_initialize_world()
 
 	ctr_instrumentor_func = NULL;	//register instrumentors to nil
 	ctr_past_instrumentor_func = NULL;	//register instrumentors to nil
-
+	ctr_cparse_calltime_names = NULL;
 	/* Object */
 	CtrStdObject = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
 	ctr_internal_create_func(CtrStdObject,

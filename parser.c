@@ -8,7 +8,20 @@
 #include "citron.h"
 
 char *ctr_cparse_current_program;
+int do_compare_locals = 0;
 int all_plains_private = 0;
+int ctr_paramlist_has_name(char* namenode, size_t len) {
+	if(!ctr_cparse_calltime_names || len==0) return 0;
+	else {
+		ctr_tlistitem* name = ctr_cparse_calltime_names->nodes;
+		while(name) {
+			if(unlikely(name->node->vlen == len))
+				if(strncmp(name->node->value, namenode, len) == 0) return 1;
+			name = name->next;
+		}
+		return 0;
+	}
+}
 /**
  * CTRParserEmitErrorUnexpected
  *
@@ -364,6 +377,10 @@ ctr_tnode *ctr_cparse_block_(int autocap)
 	}
 	first = 1;
 	int oldallpl = all_plains_private;
+	int olddcl = do_compare_locals;
+	do_compare_locals = autocap;
+	ctr_tnode* oldcalltime = ctr_cparse_calltime_names;
+	ctr_cparse_calltime_names = paramList;
 	all_plains_private = autocap;
 	while ((first || t == CTR_TOKEN_DOT)) {
 		ctr_tlistitem *codeListItem;
@@ -400,6 +417,8 @@ ctr_tnode *ctr_cparse_block_(int autocap)
 		}
 	}
 	all_plains_private = oldallpl;
+	do_compare_locals=olddcl;
+	ctr_cparse_calltime_names = oldcalltime;
 	r->modifier = /*CTR_MODIFIER_AUTOCAPTURE */ autocap == 1;
 	return r;
 }
@@ -417,9 +436,9 @@ ctr_tnode *ctr_cparse_ref()
 	r = ctr_cparse_create_node(CTR_AST_NODE);
 	r->type = CTR_AST_NODE_REFERENCE;
 	r->vlen = ctr_clex_tok_value_length();
-	if (all_plains_private)
-		r->modifier = 3;
 	tmp = ctr_clex_tok_value();
+	if (all_plains_private)
+		r->modifier = (do_compare_locals) ? (ctr_paramlist_has_name(tmp, r->vlen) ? 0 : 3) : 3;
 	if (strncmp(ctr_clex_keyword_my, tmp, ctr_clex_keyword_my_len) == 0
 	    && r->vlen == ctr_clex_keyword_my_len) {
 		int t = ctr_clex_tok();
@@ -578,7 +597,11 @@ ctr_tnode *ctr_cparse_receiver()
 	case CTR_TOKEN_BLOCKOPEN:
 		return ctr_cparse_block();
 	case CTR_TOKEN_BLOCKOPEN_MAP:
-		return ctr_cparse_block_capture();
+		{
+			ctr_tnode* t = ctr_cparse_block_capture();
+			t->lexical = 1;
+			return t;
+	}
 	case CTR_TOKEN_PAROPEN:
 		return ctr_cparse_popen();
 	case CTR_TOKEN_TUPOPEN:

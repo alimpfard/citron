@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CTR_VERSION "0.0.6.9"
+#define CTR_VERSION "0.0.6.9-lexical-scoping"
 #define CTR_LOG_WARNINGS 0//2 to enable
 /**
  * Define the Citron tokens
@@ -238,6 +238,7 @@ struct ctr_tnode {
 	char* value;
 	ctr_size vlen;
 	struct ctr_tlistitem* nodes;
+	unsigned int lexical: 1;
 };
 typedef struct ctr_tnode ctr_tnode;
 
@@ -399,6 +400,7 @@ ctr_tnode* ctr_cparse_ret();
 int     ctr_cparse_quiet;
 
 char* ctr_last_parser_error;
+ctr_tnode* ctr_cparse_calltime_names;
 /**
  * Abstract Tree Walker functions
  */

@@ -35,7 +35,8 @@ Highlight on: 'highlight:' do: {:code
     }, case: 'BLOCKOPEN' do: {
         this_thing is '{'.
     }, case: 'BLOCKOPEN_MAP' do: {
-        this_thing is '{\\'.
+        this_thing is ?>{\<?.
+        last_toc_override is 'BLOCKOPEN'.
     }, case: 'BOOLEANNO' do: {
     color is Colors magenta.
         this_thing is 'False'.

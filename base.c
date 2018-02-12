@@ -1613,12 +1613,12 @@ ctr_object *ctr_number_times(ctr_object * myself, ctr_argument * argumentList)
 	ctr_open_context();
 	for (i = 0; i < t; i++) {
 		indexNumber =
-		    ctr_internal_create_standalone_object
-		    (CTR_OBJECT_TYPE_OTNUMBER);
+		    ctr_internal_create_standalone_object(CTR_OBJECT_TYPE_OTNUMBER);
 		indexNumber->value.nvalue = (ctr_number) i;
 		arguments->object = indexNumber;
+		ctr_transfer_object_ownership(block, indexNumber);
 		ctr_block_run_here(block, arguments, NULL);
-		ctr_internal_delete_standalone_object(indexNumber);
+		// ctr_internal_delete_standalone_object(indexNumber);
 		if (CtrStdFlow == CtrStdContinue)
 			CtrStdFlow = NULL;	/* consume continue */
 		if (CtrStdFlow)
@@ -1878,8 +1878,9 @@ ctr_object *ctr_number_to_step_do(ctr_object * myself,
 		    (CTR_OBJECT_TYPE_OTNUMBER);
 		arg->value.nvalue = (ctr_number) curValue;
 		arguments->object = arg;
+		ctr_transfer_object_ownership(codeBlock, arg);
 		ctr_block_run_here(codeBlock, arguments, NULL);
-		ctr_internal_delete_standalone_object(arg);
+		// ctr_internal_delete_standalone_object(arg);
 		if (CtrStdFlow == CtrStdContinue)
 			CtrStdFlow = NULL;	/* consume continue and go on */
 		curValue += incValue;
@@ -4670,8 +4671,8 @@ ctr_object *ctr_block_run_array(ctr_object * myself, ctr_object * argArray,
 	}
 	if (my)
 		ctr_assign_value_to_local_by_ref(&CTR_CLEX_KW_ME, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
-	ctr_object *this = ctr_build_string("thisBlock", 9);
-	ctr_assign_value_to_local(this, myself);	/* otherwise running block may get gc'ed. */
+	ctr_object *this_block = ctr_build_string("thisBlock", 9);
+	ctr_assign_value_to_local(this_block, myself);	/* otherwise running block may get gc'ed. */
 	int p = myself->properties->size - 1;
 	struct ctr_mapitem *head;
 	head = myself->properties->head;
@@ -4796,8 +4797,8 @@ ctr_object *ctr_block_run(ctr_object * myself, ctr_argument * argList,
 	}
 	if (my)
 		ctr_assign_value_to_local_by_ref(&CTR_CLEX_KW_ME, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
-	ctr_object *this = ctr_build_string("thisBlock", 9);
-	ctr_assign_value_to_local(this, myself);	/* otherwise running block may get gc'ed. */
+	ctr_object *this_block = ctr_build_string("thisBlock", 9);
+	ctr_assign_value_to_local(this_block, myself);	/* otherwise running block may get gc'ed. */
 	int p = myself->properties->size - 1;
 	struct ctr_mapitem *head;
 	head = myself->properties->head;

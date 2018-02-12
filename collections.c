@@ -714,7 +714,7 @@ ctr_object *ctr_array_get(ctr_object * myself, ctr_argument * argumentList)
 	if (getIndex->info.type != CTR_OBJECT_TYPE_OTNUMBER) {
 		//printf("Index must be number.\n"); exit(1);
 		char buf[1024];
-		char *typename =
+		char *typename_ =
 		    ctr_heap_allocate_cstring(ctr_internal_cast2string
 					      (ctr_send_message
 					       (getIndex, "type", 4, NULL))),
@@ -723,9 +723,9 @@ ctr_object *ctr_array_get(ctr_object * myself, ctr_argument * argumentList)
 					      (getIndex));
 		sprintf(buf,
 			"Array index must be a number (not %s type %d(%s)).",
-			value, getIndex->info.type, typename);
+			value, getIndex->info.type, typename_);
 		CtrStdFlow = ctr_build_string_from_cstring(buf);
-		ctr_heap_free(typename);
+		ctr_heap_free(typename_);
 		ctr_heap_free(value);
 		return CtrStdNil;
 	}
@@ -1991,7 +1991,6 @@ ctr_object *ctr_map_rm(ctr_object * myself, ctr_argument * argumentList)
  */
 ctr_object *ctr_map_get(ctr_object * myself, ctr_argument * argumentList)
 {
-
 	ctr_argument *emptyArgumentList;
 	ctr_object *searchKey;
 	ctr_object *foundObject;
@@ -2013,13 +2012,13 @@ ctr_object *ctr_map_get(ctr_object * myself, ctr_argument * argumentList)
 			foundObject = ctr_build_nil();
 		return foundObject;
 	} else {
-		ctr_object *searchKeyHash =
+		ctr_number hashk;
+		ctr_object *searchKeyHasho =
 		    ctr_send_message(searchKey, "iHash", 5, NULL);
-		if (searchKeyHash->info.type != CTR_OBJECT_TYPE_OTNUMBER) {
-			searchKeyHash =
-			    ctr_internal_index_hash((searchKeyHash));
-		}
-		ctr_number hashk = searchKeyHash->value.nvalue;
+		if (searchKeyHasho->info.type != CTR_OBJECT_TYPE_OTNUMBER) {
+			hashk =
+			    ctr_internal_index_hash((searchKeyHasho));
+		} else hashk = searchKeyHasho->value.nvalue;
 		foundObject =
 		    ctr_internal_object_find_property_with_hash(myself,
 								searchKey,

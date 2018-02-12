@@ -43,6 +43,27 @@ ctr_object *ctr_block_let(ctr_object * myself, ctr_argument * argumentList)
 	return result;
 }
 
+ctr_object* ctr_reown_obj(ctr_object* myself, ctr_argument* argumentList) {
+	ctr_object* owned = argumentList->object;
+	ctr_object* newowner = argumentList->next->object;
+	if(myself->properties->size == 0) goto exit_not_ours;
+	ctr_mapitem* my_properties = myself->properties->head;
+	int found = 0;
+	while(my_properties) {
+		if(my_properties->value == owned) {
+			found = 1;
+			ctr_internal_object_add_property_with_hash(newowner, my_properties->key, my_properties->hashKey, my_properties->value, 0);
+			ctr_internal_object_delete_property_with_hash(myself, my_properties->key, my_properties->hashKey, 0);
+			break;
+		}
+		my_properties = my_properties->next;
+	}
+	if(!found) goto exit_not_ours;
+	return myself;
+	exit_not_ours:;
+	CtrStdFlow = ctr_build_string_from_cstring("Attempt to transfer ownership of an object that we do not own");
+	return myself;
+}
 ctr_object *CtrStdAst;
 /**
  * [AST] parse: [String]
@@ -55,7 +76,7 @@ ctr_object *ctr_ast_parse(ctr_object * myself, ctr_argument * argumentList)
 	char *prg = ctr_heap_allocate_cstring(psec);
 	int last_q = ctr_cparse_quiet;
 	ctr_cparse_quiet = 1;
-	ctr_program_length = psec->value.svalue->vlen + 1;
+	ctr_program_length = psec->value.svalue->vlen;
 	ctr_tnode *ped = ctr_cparse_parse(prg, "ASTparse");
 	ctr_cparse_quiet = last_q;
 	ctr_object *ast = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
@@ -74,10 +95,10 @@ ctr_object *ctr_ast_instrcount(ctr_object * myself, ctr_argument * argumentList)
 		return CtrStdNil;
 	}
 	ctr_tnode *node = myself->value.rvalue->ptr;
-	int count = -1;
+	int count = 0;
 	ctr_tlistitem *pitem = node->nodes;
 	while (pitem) {
-		count++;
+		count += pitem->node->type != CTR_AST_NODE_ENDOFPROGRAM;
 		pitem = pitem->next;
 	}
 	return ctr_build_number_from_float(count);
@@ -111,6 +132,71 @@ ctr_object *ctr_ast_nth(ctr_object * myself, ctr_argument * argumentList)
 	ast->value.rvalue->ptr = pitem->node;
 	ast->value.rvalue->type = CTR_AST_TYPE;
 	return ast;
+}
+
+ctr_object *ctr_ast_each(ctr_object * myself, ctr_argument * argumentList)
+{
+	if (!(myself->value.rvalue && myself->value.rvalue->ptr)) {
+		CtrStdFlow = ctr_build_string_from_cstring("Null ast node");
+		return CtrStdNil;
+	}
+	ctr_object* blk = argumentList->object;
+	ctr_tnode *node = myself->value.rvalue->ptr;
+	ctr_tlistitem *pitem = node->nodes;
+	ctr_size count = 0;
+	argumentList->next = ctr_heap_allocate(sizeof(ctr_argument));
+	while (pitem) {
+		if(CtrStdFlow) {
+			if (CtrStdFlow == CtrStdContinue) {
+				CtrStdFlow = NULL;
+				continue;
+			}
+			if (CtrStdFlow == CtrStdBreak) CtrStdFlow = NULL;
+			break;
+		}
+		if(pitem->node->type != CTR_AST_NODE_ENDOFPROGRAM) {
+			argumentList->object = ctr_build_number_from_float(count);
+			argumentList->next->object = ctr_ast_nth(myself, argumentList);
+			count++;
+			ctr_block_run_here(blk, argumentList, myself);
+		}
+		pitem = pitem->next;
+	}
+	ctr_heap_free(argumentList->next);
+	argumentList->next = NULL;
+	argumentList->object = blk;
+	return myself;
+}
+
+ctr_object *ctr_ast_eachv(ctr_object * myself, ctr_argument * argumentList)
+{
+	if (!(myself->value.rvalue && myself->value.rvalue->ptr)) {
+		CtrStdFlow = ctr_build_string_from_cstring("Null ast node");
+		return CtrStdNil;
+	}
+	ctr_object* blk = argumentList->object;
+	ctr_tnode *node = myself->value.rvalue->ptr;
+	ctr_tlistitem *pitem = node->nodes;
+	ctr_size count = 0;
+	while (pitem) {
+		if(CtrStdFlow) {
+			if (CtrStdFlow == CtrStdContinue) {
+				CtrStdFlow = NULL;
+				continue;
+			}
+			if (CtrStdFlow == CtrStdBreak) CtrStdFlow = NULL;
+			break;
+		}
+		if(pitem->node->type != CTR_AST_NODE_ENDOFPROGRAM) {
+			argumentList->object = ctr_build_number_from_float(count);
+			argumentList->object = ctr_ast_nth(myself, argumentList);
+			count++;
+			ctr_block_run_here(blk, argumentList, myself);
+		}
+		pitem = pitem->next;
+	}
+	argumentList->object = blk;
+	return myself;
 }
 
 static char const *ctr_ast_tystr(ctr_tnode * ast)
@@ -220,11 +306,11 @@ static int ctr_ast_tyfstr(char *type)
 
 static char ctr_ast_modifier_fstr(char *mod)
 {
-	if (strcasecmp("My", mod))
+	if (strcasecmp("My", mod) == 0)
 		return 1;
-	if (strcasecmp("Var", mod))
+	if (strcasecmp("Var", mod) == 0)
 		return 2;
-	if (strcasecmp("Const", mod))
+	if (strcasecmp("Const", mod) == 0)
 		return 3;
 	return 0;
 }
@@ -954,6 +1040,9 @@ void initiailize_base_extensions()
 	ctr_internal_create_func(CtrStdObject,
 				 ctr_build_string_from_cstring("letEqual:in:"),
 				 &ctr_block_let);
+	ctr_internal_create_func(CtrStdBlock,
+				 ctr_build_string_from_cstring("transferOwnershipOf:to:"),
+				 &ctr_reown_obj);
 	CtrStdAst = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
 	CtrStdAst->link = CtrStdObject;
 	ctr_internal_create_func(CtrStdAst,
@@ -970,6 +1059,12 @@ void initiailize_base_extensions()
 				 &ctr_ast_nth);
 	ctr_internal_create_func(CtrStdAst, ctr_build_string_from_cstring("@"),
 				 &ctr_ast_nth);
+	ctr_internal_create_func(CtrStdAst,
+				 ctr_build_string_from_cstring("each:"),
+				 &ctr_ast_each);
+	ctr_internal_create_func(CtrStdAst,
+				 ctr_build_string_from_cstring("each_v:"),
+				 &ctr_ast_eachv);
 	ctr_internal_create_func(CtrStdAst,
 				 ctr_build_string_from_cstring("toString"),
 				 &ctr_ast_tostring);
@@ -1061,5 +1156,4 @@ void initiailize_base_extensions()
 	ctr_internal_create_func(CtrStdCoro_co,
 				 ctr_build_string_from_cstring("state"),
 				 &ctr_coro_state);
-
 }

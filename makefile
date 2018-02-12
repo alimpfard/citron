@@ -10,7 +10,7 @@ COBJS = ${OBJS} compiler.o
 
 .SUFFIXES:	.o .c
 
-all: CFALGS := $(CFLAGS) -O3
+all: CFALGS := $(CFLAGS) -O2
 all: ctr
 
 debug: CFLAGS := ${CFLAGS} -Og -g3 -ggdb3 -Wno-unused-function

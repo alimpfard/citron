@@ -10,6 +10,10 @@ HashSet on: '_marker' do: {^const HashSetValueMarker.}.
 HashSet on: 'add:' do: {:v
   my map put: const HashSetValueMarker at: v.
 }.
+HashSet on: 'extend:' do: {:set
+  var self is me.
+  set each_v: {:v self add: v. }.
+}.
 HashSet on: 'remove:' do: {:v
   my map deleteAt: v.
 }.

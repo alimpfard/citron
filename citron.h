@@ -5,6 +5,10 @@
 #ifndef CTR_H_GUARD
 #define CTR_H_GUARD
 
+#ifdef  _CPLUS_PLUS
+extern "C" {
+#endif
+
 #include "dictionary.h"
 #include <inttypes.h>
 #include <stdlib.h>
@@ -430,6 +434,7 @@ inline ctr_object* ctr_internal_cast2string( ctr_object* o );
 ctr_object* ctr_internal_create_object(int type);
 ctr_object* ctr_internal_create_mapped_object(int type, int shared);
 ctr_object *ctr_internal_create_standalone_object (int type);
+void ctr_transfer_object_ownership(ctr_object* to, ctr_object* what);
 inline ctr_object *ctr_internal_create_mapped_standalone_object (int type, int shared);
 void ctr_internal_delete_standalone_object (ctr_object* o);
 void*       ctr_internal_plugin_find( ctr_object* key );
@@ -1055,64 +1060,17 @@ uint16_t ctr_default_port;
 #include "citron_ensure.h"
 #include "citron_conv.h"
 
-static ctr_string CTR_CLEX_KW_ME_SV = {
-    .value = "me",
-    .vlen = 2
-};
-static ctr_object CTR_CLEX_KW_ME = {
-    .info = {
-        .type = CTR_OBJECT_TYPE_OTSTRING,
-        .mark = 0,
-        .sticky = 1,
-        .chainMode = 0,
-        .remote = 0,
-        .shared = 0,
-        .raw = 0
-    },
-    .value = {
-        .svalue = &CTR_CLEX_KW_ME_SV
-    }
-};
-
-static ctr_string CTR_CLEX_KW_THIS_SV = {
-    .value = "thisBlock",
-    .vlen = 9
-};
-static ctr_object CTR_CLEX_KW_THIS = {
-    .info = {
-        .type = CTR_OBJECT_TYPE_OTSTRING,
-        .mark = 0,
-        .sticky = 1,
-        .chainMode = 0,
-        .remote = 0,
-        .shared = 0,
-        .raw = 0
-    },
-    .value = {
-        .svalue = &CTR_CLEX_KW_THIS_SV
-    }
-};
-
-static ctr_string CTR_CLEX_US_SV = {
-    .value = "_",
-    .vlen = 1
-};
-static ctr_object CTR_CLEX_US = {
-    .info = {
-        .type = CTR_OBJECT_TYPE_OTSTRING,
-        .mark = 0,
-        .sticky = 1,
-        .chainMode = 0,
-        .remote = 0,
-        .shared = 0,
-        .raw = 0
-    },
-    .value = {
-        .svalue = &CTR_CLEX_US_SV
-    }
-};
+ctr_string CTR_CLEX_KW_ME_SV, CTR_CLEX_KW_THIS_SV, CTR_CLEX_US_SV;
+ctr_object CTR_CLEX_KW_ME,    CTR_CLEX_KW_THIS,    CTR_CLEX_US;
 
 static inline void ctr_linkstr();
 
+void ctr_deallocate_argument_list(ctr_argument*);
+int ctr_internal_object_is_equal(ctr_object*, ctr_object*);
+int ctr_internal_object_is_constructible_(ctr_object*, ctr_object*, int);
+
+#ifdef  _CPLUS_PLUS
+}
+#endif
 
 #endif //CTR_H_GUARD

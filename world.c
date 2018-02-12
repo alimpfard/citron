@@ -391,7 +391,7 @@ uint64_t ctr_internal_index_hash(ctr_object * key)
 ctr_object *ctr_internal_object_find_property(ctr_object * owner,
 					      ctr_object * key, int is_method)
 {
-	ctr_mapitem *head;
+	ctr_mapitem *head, *first_head;
 	uint64_t hashKey = ctr_internal_index_hash(key);
 	if (is_method) {
 		if (owner->methods->size == 0) {
@@ -404,9 +404,21 @@ ctr_object *ctr_internal_object_find_property(ctr_object * owner,
 		}
 		head = owner->properties->head;
 	}
+	first_head = head;
 	while (head) {
 		if ((hashKey == head->hashKey)
 		    && ctr_internal_object_is_equal(head->key, key)) {
+			// if(head->prev) {
+			// 	ctr_mapitem* prev = head->prev;
+			// 	if(prev != first_head && prev->prev != first_head) {
+			// 		ctr_mapitem* next = head->next;
+			// 		head->next = prev;
+			// 		prev->next = next;
+			// 		head->prev = prev->prev;
+			// 		prev->prev = head;
+			// 		if(next) next->prev = prev;
+			// 	}
+			// }
 			return head->value;
 		}
 		head = head->next;
@@ -487,7 +499,7 @@ ctr_object *ctr_internal_object_find_property_with_hash(ctr_object * owner,
 							uint64_t hashKey,
 							int is_method)
 {
-	ctr_mapitem *head;
+	ctr_mapitem *head, *first_head;
 	if (is_method) {
 		if (owner->methods->size == 0) {
 			return NULL;
@@ -499,9 +511,19 @@ ctr_object *ctr_internal_object_find_property_with_hash(ctr_object * owner,
 		}
 		head = owner->properties->head;
 	}
+	first_head = head;
 	while (head) {
 		if (hashKey == head->hashKey) {
 			if (ctr_internal_object_is_equal(head->key, key)) {
+				// if(head->prev && head->prev != first_head) {
+				// 	ctr_mapitem* prev = head->prev;
+				// 	ctr_mapitem* next = head->next;
+				// 	head->next = prev;
+				// 	prev->next = next;
+				// 	head->prev = prev->prev;
+				// 	prev->prev = head;
+				// 	if(next) next->prev = prev;
+				// }
 				return head->value;
 			}
 		}
@@ -811,18 +833,22 @@ ctr_object *ctr_internal_create_object(int type)
 {
 	return ctr_internal_create_mapped_object(type, 0);
 }
+ctr_object *ctr_internal_create_mapped_object_shared(int type);
+ctr_object *ctr_internal_create_mapped_object_unshared(int type);
 
+__attribute__ ((always_inline))
 ctr_object *ctr_internal_create_mapped_object(int type, int shared)
 {
+	if(shared) return ctr_internal_create_mapped_object_shared(type);
+	else return ctr_internal_create_mapped_object_unshared(type);
+}
+__attribute__ ((always_inline))
+ctr_object *ctr_internal_create_mapped_object_shared(int type)
+{
 	ctr_object *o;
-	o = shared ? ctr_heap_allocate_shared(sizeof(ctr_object)) :
-	    ctr_heap_allocate(sizeof(ctr_object));
-	o->properties =
-	    shared ? ctr_heap_allocate_shared(sizeof(ctr_map)) :
-	    ctr_heap_allocate(sizeof(ctr_map));
-	o->methods =
-	    shared ? ctr_heap_allocate_shared(sizeof(ctr_map)) :
-	    ctr_heap_allocate(sizeof(ctr_map));
+	o = ctr_heap_allocate_shared(sizeof(ctr_object));
+	o->properties = ctr_heap_allocate_shared(sizeof(ctr_map));
+	o->methods = ctr_heap_allocate_shared(sizeof(ctr_map));
 	o->properties->size = 0;
 	o->methods->size = 0;
 	o->properties->head = NULL;
@@ -832,17 +858,14 @@ ctr_object *ctr_internal_create_mapped_object(int type, int shared)
 	o->info.sticky = 0;
 	o->info.mark = 0;
 	o->info.remote = 0;
-	o->info.shared = shared;
+	o->info.shared = 1;
 	o->info.raw = 0;
 	if (type == CTR_OBJECT_TYPE_OTBOOL)
 		o->value.bvalue = 0;
 	if (type == CTR_OBJECT_TYPE_OTNUMBER)
 		o->value.nvalue = 0;
 	if (type == CTR_OBJECT_TYPE_OTSTRING) {
-		o->value.svalue =
-		    shared ==
-		    1 ? ctr_heap_allocate_shared(sizeof(ctr_string)) :
-		    ctr_heap_allocate(sizeof(ctr_string));
+		o->value.svalue = ctr_heap_allocate_shared(sizeof(ctr_string));
 		o->value.svalue->value = "";
 		o->value.svalue->vlen = 0;
 	}
@@ -855,7 +878,42 @@ ctr_object *ctr_internal_create_mapped_object(int type, int shared)
 	}
 	return o;
 }
-
+__attribute__ ((always_inline))
+ctr_object *ctr_internal_create_mapped_object_unshared(int type)
+{
+	ctr_object *o;
+	o = ctr_heap_allocate(sizeof(ctr_object));
+	o->properties = ctr_heap_allocate(sizeof(ctr_map));
+	o->methods = ctr_heap_allocate(sizeof(ctr_map));
+	o->properties->size = 0;
+	o->methods->size = 0;
+	o->properties->head = NULL;
+	o->methods->head = NULL;
+	o->release_hook = NULL;
+	o->info.type = type;
+	o->info.sticky = 0;
+	o->info.mark = 0;
+	o->info.remote = 0;
+	o->info.shared = 0;
+	o->info.raw = 0;
+	if (type == CTR_OBJECT_TYPE_OTBOOL)
+		o->value.bvalue = 0;
+	if (type == CTR_OBJECT_TYPE_OTNUMBER)
+		o->value.nvalue = 0;
+	if (type == CTR_OBJECT_TYPE_OTSTRING) {
+		o->value.svalue = ctr_heap_allocate(sizeof(ctr_string));
+		o->value.svalue->value = "";
+		o->value.svalue->vlen = 0;
+	}
+	o->gnext = NULL;
+	if (ctr_first_object == NULL) {
+		ctr_first_object = o;
+	} else {
+		o->gnext = ctr_first_object;
+		ctr_first_object = o;
+	}
+	return o;
+}
 /**
  * @internal
  *
@@ -867,6 +925,15 @@ ctr_object *ctr_internal_create_mapped_object(int type, int shared)
 ctr_object *ctr_internal_create_standalone_object(int type)
 {
 	return ctr_internal_create_mapped_standalone_object(type, 0);
+}
+
+__attribute__((always_inline))
+void ctr_transfer_object_ownership(ctr_object* to, ctr_object* what) {
+	char nbuf[1024];
+	int len = sprintf(nbuf, "property%lu", ctr_internal_index_hash(what));
+	char* name = ctr_heap_allocate(sizeof(char)*len+1);
+	memcpy(name, nbuf, len+1);
+	ctr_internal_object_add_property(to, ctr_build_string_from_cstring(name), what, 0);
 }
 
 __attribute__ ((always_inline))
@@ -1292,6 +1359,43 @@ void ctr_initialize_world()
 		CtrHashKey[i] = (rand() % 255);
 	}
 	ctr_first_object = NULL;
+	//----//
+	CTR_CLEX_KW_ME_SV.value = "me";
+	CTR_CLEX_KW_ME_SV.vlen = 2;
+	//----//
+	CTR_CLEX_KW_ME.info.type = CTR_OBJECT_TYPE_OTSTRING;
+  CTR_CLEX_KW_ME.info.mark = 0;
+  CTR_CLEX_KW_ME.info.sticky = 1;
+  CTR_CLEX_KW_ME.info.chainMode = 0;
+  CTR_CLEX_KW_ME.info.remote = 0;
+  CTR_CLEX_KW_ME.info.shared = 0;
+  CTR_CLEX_KW_ME.info.raw = 0;
+  CTR_CLEX_KW_ME.value.svalue = &CTR_CLEX_KW_ME_SV;
+	//----//
+	CTR_CLEX_KW_THIS_SV.value = "thisBlock";
+	CTR_CLEX_KW_THIS_SV.vlen = 9;
+	//----//
+	CTR_CLEX_KW_THIS.info.type = CTR_OBJECT_TYPE_OTSTRING;
+	CTR_CLEX_KW_THIS.info.mark = 0;
+	CTR_CLEX_KW_THIS.info.sticky = 1;
+	CTR_CLEX_KW_THIS.info.chainMode = 0;
+	CTR_CLEX_KW_THIS.info.remote = 0;
+	CTR_CLEX_KW_THIS.info.shared = 0;
+	CTR_CLEX_KW_THIS.info.raw = 0;
+	CTR_CLEX_KW_THIS.value.svalue = &CTR_CLEX_KW_THIS_SV;
+	//----//
+	CTR_CLEX_US_SV.value = "_";
+	CTR_CLEX_US_SV.vlen = 1;
+	//----//
+	CTR_CLEX_US.info.type = CTR_OBJECT_TYPE_OTSTRING;
+	CTR_CLEX_US.info.mark = 0;
+	CTR_CLEX_US.info.sticky = 1;
+	CTR_CLEX_US.info.chainMode = 0;
+	CTR_CLEX_US.info.remote = 0;
+	CTR_CLEX_US.info.shared = 0;
+	CTR_CLEX_US.info.raw = 0;
+	CTR_CLEX_US.value.svalue = &CTR_CLEX_US_SV;
+	//----//
 	CtrStdWorld = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
 	CtrStdWorld->info.sticky = 1;
 	ctr_contexts[0] = CtrStdWorld;

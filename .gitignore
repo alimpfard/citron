@@ -7,5 +7,5 @@ ctr
 plg.ctr
 namedstruct.ctr
 docs
-tools
+tools/*
 sync.sh

@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <stropts.h>
 #include <ctype.h>
 #include <stdarg.h>
 #include <math.h>
@@ -18,6 +17,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <pthread.h>
+#include "compcompat_pthread.h"
 
 #ifdef withTermios
 #include <termios.h>
@@ -2713,7 +2713,7 @@ ctr_object *ctr_console_line(ctr_object * myself, ctr_argument * argumentList)
 	return myself;
 }
 
-#ifdef forLinux
+#if 1
 ctr_object *ctr_console_clear(ctr_object * myself, ctr_argument * argumentList)
 {
 	char *line = "\033[H\033[J";

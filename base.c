@@ -863,8 +863,12 @@ ctr_object *ctr_object_send2remote(ctr_object * myself,
  */
 ctr_object *ctr_object_respond(ctr_object * myself, ctr_argument * argumentList)
 {
-	if (myself->info.remote == 0)
+	if (myself->info.remote == 0) {
+		ctr_object* err = ctr_build_string_from_cstring("Unknown method called: ");
+		ctr_string_append(err, argumentList);
+		CtrStdFlow = err;
 		return myself;
+	}
 	ctr_object *arr;
 	ctr_object *answer;
 	ctr_argument *newArgumentList;

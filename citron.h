@@ -14,7 +14,12 @@ extern "C" {
 #include <stdlib.h>
 #include <string.h>
 
-#define CTR_VERSION "0.0.6.9-lexical-scoping"
+#ifdef withBoehmGC
+#define CTR_VERSION "0.0.7.0-boehm-gc"
+#else
+#define CTR_VERSION "0.0.7.0-lexical-scoping"
+#endif
+
 #define CTR_LOG_WARNINGS 0//2 to enable
 /**
  * Define the Citron tokens

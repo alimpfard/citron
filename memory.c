@@ -10,6 +10,15 @@
 #include "citron.h"
 
 #define CTR_MEMBLOCK_CACHE_MAX 32
+#ifdef withBoehmGC
+	#include <gc/gc.h>
+	#define malloc GC_MALLOC
+	#define calloc(x, y) GC_MALLOC((x)*(y))
+	#define realloc GC_REALLOC
+	#define free GC_FREE
+#else
+	//
+#endif
 
 /**
  * Heap Object, represents dynamic memory.

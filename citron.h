@@ -717,6 +717,8 @@ ctr_object* ctr_array_intersperse(ctr_object* myself, ctr_argument* argumentList
 ctr_object* ctr_array_slice(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_chunks(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_every_do_fill(ctr_object* myself, ctr_argument* argumentList);
+ctr_object *ctr_array_all(ctr_object * myself, ctr_argument * argumentList);
+ctr_object *ctr_array_any(ctr_object * myself, ctr_argument * argumentList);
 ctr_object* ctr_build_immutable(ctr_tnode* node);
 
 /**
@@ -1084,10 +1086,10 @@ int ctr_internal_object_is_constructible_(ctr_object*, ctr_object*, int);
 	#define __COMPILER__NAME__OP "GCC/G++ " __VERSION__
 #elif defined(__HP_cc) || defined(__HP_aCC)
 	/* Hewlett-Packard C/aC++. ---------------------------------- */
-	#define __COMPILER__NAME__OP "HP aCC" 
+	#define __COMPILER__NAME__OP "HP aCC"
 #elif defined(__IBMC__) || defined(__IBMCPP__)
 	/* IBM XL C/C++. -------------------------------------------- */
-	#define __COMPILER__NAME__OP "IBM XL" 
+	#define __COMPILER__NAME__OP "IBM XL"
 #elif defined(_MSC_VER)
 	/* Microsoft Visual Studio. --------------------------------- */
 	#define __COMPILER__NAME__OP "MSC " _MSC_VER

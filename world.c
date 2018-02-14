@@ -2184,6 +2184,12 @@ void ctr_initialize_world()
 	ctr_internal_create_func(CtrStdArray,
 				 ctr_build_string_from_cstring
 				 ("from:lengthMax:"), &ctr_array_slice);
+	ctr_internal_create_func(CtrStdArray,
+				 ctr_build_string_from_cstring
+				 ("any"), &ctr_array_any);
+	ctr_internal_create_func(CtrStdArray,
+				 ctr_build_string_from_cstring
+				 ("all"), &ctr_array_all);
 	ctr_internal_object_add_property(CtrStdWorld,
 					 ctr_build_string_from_cstring
 					 (CTR_DICT_ARRAY), CtrStdArray, 0);

@@ -156,6 +156,51 @@ ctr_object *ctr_array_min(ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
+ * [Array] all
+ *
+ * Returns whether all the objects inside the array are truth-y.
+ *
+ * Usage:
+ *
+ * a := Array ← True ; False ; False.
+ * m := a all. #False
+ *
+ */
+ctr_object *ctr_array_all(ctr_object * myself, ctr_argument * argumentList)
+{
+	ctr_object *el;
+	ctr_size i = 0;
+	for (i = 0; i < myself->value.avalue->head; i++) {
+		el = *(myself->value.avalue->elements + i);
+		if ((el->info.type == CTR_OBJECT_TYPE_OTBOOL && el->value.nvalue) || (ctr_internal_cast2bool(el)->value.nvalue));
+		else return ctr_build_bool(0);
+	}
+	return ctr_build_bool(1);
+}
+
+/**
+ * [Array] any
+ *
+ * Returns whether any of the objects inside the array are truth-y.
+ *
+ * Usage:
+ *
+ * a := Array ← True ; False ; False.
+ * m := a any. #True
+ *
+ */
+ctr_object *ctr_array_any(ctr_object * myself, ctr_argument * argumentList)
+{
+	ctr_object *el;
+	ctr_size i = 0;
+	for (i = 0; i < myself->value.avalue->head; i++) {
+		el = *(myself->value.avalue->elements + i);
+		if ((el->info.type == CTR_OBJECT_TYPE_OTBOOL && el->value.nvalue) || (ctr_internal_cast2bool(el)->value.nvalue)) return ctr_build_bool(1);
+	}
+	return ctr_build_bool(0);
+}
+
+/**
  * [Array] max
  *
  * Returns the maximum value from an array.

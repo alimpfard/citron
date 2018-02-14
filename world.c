@@ -13,6 +13,10 @@
 #include "citron.h"
 #include "siphash.h"
 
+#ifdef withBoehmGC
+#include <gc/gc.h>
+#endif
+
 static const int all_signals[] = {
 #ifdef SIGHUP
 	SIGHUP,
@@ -842,6 +846,12 @@ ctr_object *ctr_internal_create_mapped_object(int type, int shared)
 	if(shared) return ctr_internal_create_mapped_object_shared(type);
 	else return ctr_internal_create_mapped_object_unshared(type);
 }
+#ifdef withBoehmGC
+void ctr_finalize_clear(GC_PTR obj, GC_PTR user_data) {
+	ctr_object* o = obj;
+	if(o->release_hook) o->release_hook(o->value.rvalue);
+}
+#endif
 __attribute__ ((always_inline))
 ctr_object *ctr_internal_create_mapped_object_shared(int type)
 {
@@ -876,6 +886,10 @@ ctr_object *ctr_internal_create_mapped_object_shared(int type)
 		o->gnext = ctr_first_object;
 		ctr_first_object = o;
 	}
+	#ifdef withBoehmGC
+	#warning With boehm
+	GC_REGISTER_FINALIZER(o, ctr_finalize_clear, 0, 0, 0);
+	#endif
 	return o;
 }
 __attribute__ ((always_inline))

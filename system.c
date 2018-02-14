@@ -12,7 +12,9 @@
 #include <sys/ioctl.h>
 #include <syslog.h>
 #include <signal.h>
-
+#ifdef withBoehmGC
+#include <gc/gc.h>
+#endif
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -259,6 +261,8 @@ u_int32_t arc4random_uniform(u_int32_t upper_bound)
 #endif
 #include "citron.h"
 #include "siphash.h"
+
+#ifndef withBoehmGC
 
 #define CTR_GC_BACKLOG_MAX 32
 
@@ -533,7 +537,21 @@ ctr_object *ctr_gc_sweep_this(ctr_object * myself, ctr_argument * argumentList)
 	}
 	return myself;
 }
+#else //withBoehmGC
 
+void ctr_gc_sweep(int all) {
+	GC_gcollect();
+}
+void ctr_gc_internal_collect() {
+	GC_gcollect();
+}
+ctr_object *ctr_gc_collect(ctr_object * myself, ctr_argument * argumentList) {
+	GC_gcollect();
+	return myself;
+}
+ctr_object *ctr_gc_sweep_this(ctr_object * myself, ctr_argument * argumentList) {return ctr_build_nil();} //no-op
+
+#endif //withBoehmGC
 /**
  * [Broom] dust
  *
@@ -584,7 +602,13 @@ ctr_object *ctr_gc_kept_count(ctr_object * myself, ctr_argument * argumentList)
  */
 ctr_object *ctr_gc_kept_alloc(ctr_object * myself, ctr_argument * argumentList)
 {
-	return ctr_build_number_from_float((ctr_number) ctr_gc_alloc);
+	return ctr_build_number_from_float((ctr_number)
+# ifdef withBoehmGC
+	GC_get_heap_size()
+# else
+	ctr_gc_alloc
+# endif
+	);
 }
 
 /**
@@ -610,6 +634,9 @@ ctr_object *ctr_gc_setmemlimit(ctr_object * myself, ctr_argument * argumentList)
 	ctr_gc_memlimit =
 	    (uint64_t) ctr_internal_cast2number(argumentList->object)->value.
 	    nvalue;
+	#ifdef withBoehmGC
+	GC_set_max_heap_size(CTR_LIMIT_MEM ? ctr_gc_memlimit : 0);
+	#endif
 	return myself;
 }
 

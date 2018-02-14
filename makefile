@@ -9,6 +9,12 @@ else
 	LEXTRACF := ${LEXTRACF} -L/usr/lib -licui18n -licuuc -licudata
 endif
 
+ifeq ($(strip ${WITH_BOEHM_GC}),)
+else
+	CFLAGS := ${CFLAGS} "-D withBoehmGC"
+	LEXTRACF := ${LEXTRACF} /usr/lib/libgc.so
+endif
+
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
        world.o lexer.o lexer_plug.o parser.o walker.o reflect.o fiber.o importlib.o\
 	   coroutine.o base_extensions.o citron.o

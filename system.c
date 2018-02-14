@@ -287,34 +287,41 @@ void ctr_gc_mark(ctr_object * object, int last_vector_index)
 			if (gc_checked[i] == object)
 				return;
 	gc_checked[(last_vector_index += 1)] = object;
-	if (object->info.type == CTR_OBJECT_TYPE_OTARRAY) {
+	if (object->info.type == CTR_OBJECT_TYPE_OTARRAY && object->value.avalue) {
 
-		for (i = 0; i < object->value.avalue->head; i++) {
+		for (i = object->value.avalue->tail; i < object->value.avalue->head; i++) {
 			el = *(object->value.avalue->elements + i);
+			if(el == object) continue;
 			el->info.mark = 1;
 			if (el != object)
 				ctr_gc_mark(el, last_vector_index);
 		}
 	}
-	item = object->properties->head;
-	while (item) {
-		k = item->key;
-		o = item->value;
-		o->info.mark = 1;
-		k->info.mark = 1;
-		if (o != object)
-			ctr_gc_mark(o, last_vector_index);
-		item = item->next;
+	if(object->properties) {
+		item = object->properties->head;
+		while (item) {
+			k = item->key;
+			o = item->value;
+			if(!o || !k) continue;
+			o->info.mark = 1;
+			k->info.mark = 1;
+			if (o != object)
+				ctr_gc_mark(o, last_vector_index);
+			item = item->next;
+		}
 	}
-	item = object->methods->head;
-	while (item) {
-		o = item->value;
-		k = item->key;
-		o->info.mark = 1;
-		k->info.mark = 1;
-		if (o != object)
-			ctr_gc_mark(o, last_vector_index);
-		item = item->next;
+	if(object->properties) {
+		item = object->methods->head;
+		while (item) {
+			o = item->value;
+			k = item->key;
+			if(!o || !k) continue;
+			o->info.mark = 1;
+			k->info.mark = 1;
+			if (o != object)
+				ctr_gc_mark(o, last_vector_index);
+			item = item->next;
+		}
 	}
 }
 

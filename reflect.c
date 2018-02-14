@@ -1547,8 +1547,9 @@ ctr_object *ctr_reflect_get_property(ctr_object * myself,
  */
 ctr_object *ctr_reflect_rawmsg(ctr_object * myself, ctr_argument * argumentList)
 {
-	ctr_past_instrumentor_func = ctr_instrumentor_func;
-	ctr_instrumentor_func = NULL;
+	// ctr_past_instrumentor_func = ctr_instrumentor_func;
+	// ctr_instrumentor_func = NULL;
+	ctr_instrument = 0;
 	return myself;
 }
 
@@ -1559,15 +1560,16 @@ ctr_object *ctr_reflect_rawmsg(ctr_object * myself, ctr_argument * argumentList)
 ctr_object *ctr_reflect_instrmsg(ctr_object * myself,
 				 ctr_argument * argumentList)
 {
-	if (!ctr_instrumentor_func)
-		ctr_instrumentor_func = ctr_past_instrumentor_func;
+	// if (!ctr_instrumentor_func)
+		// ctr_instrumentor_func = ctr_past_instrumentor_func;
+	ctr_instrument = 1;
 	return myself;
 }
 
 /**
- * [Reflect] registerInstrumentor: [Block<object, message, arguments>:<object, message, arguments>]
+ * [Reflect] registerInstrumentor: [Block<object, message, arguments>:<object, message, arguments>] forObject: [Object]
  *
- * register to an event that fires every time a message is sent.
+ * register to an event that fires every time a message is sent for an specific object.
  * This instrumentor will have to handle all message sending operations
  * using `[Reflect] disableInstrumentation` and '[Reflect] enableInstrumentation'.
  * return value is used as the result of the message, unless it is the instrumentor function,
@@ -1576,21 +1578,32 @@ ctr_object *ctr_reflect_instrmsg(ctr_object * myself,
 ctr_object *ctr_reflect_register_instrumentor(ctr_object * myself,
 					      ctr_argument * argumentList)
 {
-	ctr_instrumentor_func = argumentList->object;
+	ctr_internal_object_add_property_with_hash(ctr_instrumentor_funcs, argumentList->next->object, ctr_send_message(argumentList->next->object, "iHash", 5, NULL)->value.nvalue, argumentList->object, 0);
 	return myself;
 }
 
 /**
- * [Reflect] currentInstrumentor
+ * [Reflect] unregisterInstrumetationForObject: [Object]
+ *
+ * Unregister the instrumentation block for the given object
+ */
+ctr_object *ctr_reflect_unregister_instrumentor(ctr_object * myself,
+					      ctr_argument * argumentList)
+{
+	ctr_internal_object_delete_property_with_hash(ctr_instrumentor_funcs, argumentList->object, ctr_send_message(argumentList->object, "iHash", 5, NULL)->value.nvalue, 0);
+	return myself;
+}
+
+/**
+ * [Reflect] currentInstrumentorFor: [Object]
  *
  * gets the current instrumentor instance, or Nil if none exists
  */
 ctr_object *ctr_reflect_get_instrumentor(ctr_object * myself,
 					 ctr_argument * argumentList)
 {
-	if (!ctr_instrumentor_func)
-		return ctr_build_nil();
-	return ctr_instrumentor_func;
+	ctr_object* instr = ctr_internal_object_find_property_with_hash(ctr_instrumentor_funcs, argumentList->object, ctr_send_message(argumentList->object, "iHash", 5, NULL)->value.nvalue, 0);
+	return instr?instr:ctr_build_nil();
 }
 
 /**
@@ -1623,6 +1636,13 @@ ctr_object *ctr_reflect_this_context(ctr_object * myself,
 	ctr_object *ctx_ = ctr_contexts[ctr_context_id];
 	ctx_->link = CtrStdMap;
 	return ctx_;
+}
+
+ctr_object *ctr_reflect_compilerinfo(ctr_object * myself,
+						ctr_argument * argumentList)
+{
+	ctr_object* vi = ctr_build_string_from_cstring("[" __COMPILER__NAME__OP "]");
+	return vi;
 }
 
 ///Trash v

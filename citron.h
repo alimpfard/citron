@@ -322,8 +322,8 @@ ctr_object* CTR_FILE_STDERR_STR;  //!< Special Object : Standard Error in-world 
  * standard instrumentor, do not override.
  * only combine
  */
-ctr_object* ctr_instrumentor_func;
-ctr_object* ctr_past_instrumentor_func;
+ctr_object* ctr_instrumentor_funcs;
+int ctr_instrument;
 
 int ctr_internal_next_return;
 
@@ -393,6 +393,8 @@ ctr_code_pragma* regexLineCheck;
  */
 ctr_size getBytesUtf8(char* strval, long startByte, ctr_size lenUChar);
 ctr_size ctr_getutf8len(char* strval, ctr_size max);
+ctr_size ctr_getutf8clustercount(char* strval, ctr_size max);
+int ctr_utf8_is_one_cluster(char* strval, ctr_size max);
 int ctr_utf8size(char c);
 
 /**
@@ -970,9 +972,11 @@ ctr_object* ctr_reflect_object_delegate_get_responder(ctr_object* itself, ctr_ar
 ctr_object* ctr_reflect_rawmsg(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_instrmsg(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_register_instrumentor(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_unregister_instrumentor(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_get_instrumentor(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_glob(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_for_object_in_ctx (ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_compilerinfo (ctr_object* myself, ctr_argument* argumentList);
 ctr_argument* ctr_array_to_argument_list (ctr_object * arr, ctr_argument * provided);
 int ctr_internal_has_own_responder(ctr_object* myself, ctr_object* meth);
 int ctr_internal_has_responder(ctr_object* myself, ctr_object* meth);
@@ -1068,6 +1072,32 @@ static inline void ctr_linkstr();
 void ctr_deallocate_argument_list(ctr_argument*);
 int ctr_internal_object_is_equal(ctr_object*, ctr_object*);
 int ctr_internal_object_is_constructible_(ctr_object*, ctr_object*, int);
+
+#if defined(__clang__)
+	/* Clang/LLVM. ---------------------------------------------- */
+	#define __COMPILER__NAME__OP "Clang/LLVM " __clang_version__
+#elif defined(__ICC) || defined(__INTEL_COMPILER)
+	/* Intel ICC/ICPC. ------------------------------------------ */
+	#define __COMPILER__NAME__OP "Intel CC"
+#elif defined(__GNUC__) || defined(__GNUG__)
+	/* GNU GCC/G++. --------------------------------------------- */
+	#define __COMPILER__NAME__OP "GCC/G++ " __VERSION__
+#elif defined(__HP_cc) || defined(__HP_aCC)
+	/* Hewlett-Packard C/aC++. ---------------------------------- */
+	#define __COMPILER__NAME__OP "HP aCC" 
+#elif defined(__IBMC__) || defined(__IBMCPP__)
+	/* IBM XL C/C++. -------------------------------------------- */
+	#define __COMPILER__NAME__OP "IBM XL" 
+#elif defined(_MSC_VER)
+	/* Microsoft Visual Studio. --------------------------------- */
+	#define __COMPILER__NAME__OP "MSC " _MSC_VER
+#elif defined(__PGI)
+	/* Portland Group PGCC/PGCPP. ------------------------------- */
+	#define __COMPILER__NAME__OP "Some Fucked up shit"
+#elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+	/* Oracle Solaris Studio. ----------------------------------- */
+	#define __COMPILER__NAME__OP "Solaris Studio"
+#endif
 
 #ifdef  _CPLUS_PLUS
 }

@@ -9,8 +9,7 @@ inp is ''.
 
 ImportLib Queue.
 ImportLib LRArray.
-import Library/Data/Map.
-import Library/Utils/Highlight.
+import Library/Data/Map Library/Utils/Highlight Library/Utils/OneGateFlipper.
 
 TerminalWidth is 85.
 
@@ -29,12 +28,10 @@ Eval on: 'init' do: {
   my flags is Map new
     put: True at: 'printvs',
     put: True at: 'highlight',
-    put: False at: 'equit',
-    put: False at: 'instr'.
+    put: False at: 'equit'.
   me genReader: 'eServer'.
   ^me.
 }.
-Eval on: 'instrument' do: {me getFlag: 'instr', ifTrue: {Reflect enableInstrumentation.}.}.
 Eval on: 'handleException:' do: {:e
   ^me getFlag: 'equit', either: {thisBlock error: e.} or: {Pen red write: e, resetColor brk. ^e.}.
 }.
@@ -143,7 +140,6 @@ Eval on: 'evaluate:' do: { :str
       ({ ^eval_result_x is Eval doMeta: (str skip: 1). } catch: {:e Eval handleException: e.})
     or:
       ({
-          Eval instrument.
           ^(str startsWith: 'import') not
             either: ({
                 ^Reflect runAtGlobal: {:str ^str eval.} arguments: str.
@@ -193,15 +189,6 @@ var args is Array new.
 var _  is Nil.
 var __ is Nil.
 
-Reflect registerInstrumentor: {:obj:msg:args
-  Reflect disableInstrumentation.
-  var ret is obj message: msg arguments: args.
-  Pen green write: ('\n(%s : %s.%s(%s) => %s [%s]' formatObjects: [(Reflect generateLinkTree: obj join: '<-'), obj, msg, (args join: ', '), ret, (ret type)]), resetColor brk.
-  Reflect enableInstrumentation.
-  ^ret.
-}.
-Reflect disableInstrumentation.
-
 Eval on: 'tryNumrify:' do: {:s
   var r is s.
   {r is s toNumber.} catch: {r is s.}, run.
@@ -240,6 +227,7 @@ Eval on: 'tryNumrify:' do: {:s
           indent: 2 write: '-F<[no-]flag> : enables the passed flag\n',
           indent: 2 write: '-Fs : display all the available flags\n',
           indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
+          indent: 2 write: '-v : print version information and exit\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
         P resetColor.
         Program exit.
@@ -279,6 +267,15 @@ Eval on: 'tryNumrify:' do: {:s
         args imap: {:i:n Reflect addGlobalVariable: '$' + (i + 1). Reflect set: '$' + (i + 1) to: (Eval tryNumrify: n).}.
         value findPattern: '(.*)\\.' do: {:p value is p at: 1.}.
         Pen write: (Eval evaluate: value).
+        Program exit.
+    }, case: '-v' do: {
+        Pen writeln: 'Citron Version ' + Reflect version.
+        Pen writeln: 'Built with the extension prefix of ' + File extensionsPath.
+        Pen writeln: 'Compiled with ' + Reflect compilerInfo.
+        Program exit.
+    }, case: '-V' do: {
+        Pen writeln: 'Citron'.
+        Pen writeln: '[%L]' % [(Reflect version split: '.')].
         Program exit.
     }, default: {
       opt startsWith: '-F', ifTrue: {
@@ -364,10 +361,6 @@ Eval on: 'repl' do: {
     var cursor is 0.
     var multichar_in is Array new.
     {^done.} whileFalse: {
-      last_comp_rewind !=: 0, ifTrue: {
-        Pen write: ('\b \b' * last_comp_rewind).
-        last_comp_rewind is 0.
-      }.
       inc = '\t' ifTrue: {#<Tab>
           var candidate is 'Nil'.
           var toc is (inp trim or: '  ') split: ' ', last.
@@ -379,7 +372,8 @@ Eval on: 'repl' do: {
           }.
           toc is last_was_comp either: last_comp_entry or: toc.
           last_comp_entry is toc.
-          last_toc is (inp trim or: 'Nil') split: ' '.
+          var flipper is OneGateFlipper new.
+          last_toc is (inp trim or: 'Nil') split: ' ', filter: {:_:v (v endsWith: ':') ifTrue: {flipper set. ^False.}. ^((v endsWith: ':') | (flipper toBoolean)) not. }.
           last_toc is (last_toc count) >=: 2, either: {^last_toc init last.} or: 'Nil'.
           var candidates is Eval allTheNames: ({^Reflect getObject: (['my', 'var'] contains: last_toc, either: Nil or: last_toc).} catch: {^Nil.}, run).
           var skipthis is candidates @ 0.

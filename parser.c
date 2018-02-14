@@ -94,7 +94,6 @@ ctr_tnode *ctr_cparse_message(int mode)
 	int lookAhead;
 	int isBin;
 	int first;
-	ctr_size ulen;
 	t = ctr_clex_tok();
 	msgpartlen = ctr_clex_tok_value_length();
 	if ((msgpartlen) > 255) {
@@ -105,8 +104,7 @@ ctr_tnode *ctr_cparse_message(int mode)
 	s = ctr_clex_tok_value();
 	msg = ctr_heap_allocate_tracked(255 * sizeof(char));
 	memcpy(msg, s, msgpartlen);
-	ulen = ctr_getutf8len(msg, msgpartlen);
-	isBin = (ulen == 1);
+	isBin = ctr_utf8_is_one_cluster(msg, msgpartlen);
 	if (mode == 2 && isBin) {
 		ctr_clex_putback();
 		return m;

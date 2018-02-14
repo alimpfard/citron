@@ -1352,7 +1352,7 @@ ctr_object *ctr_object_destruct(ctr_object * object, ctr_argument * nothing)
 void ctr_initialize_world()
 {
 	// register_signal_handlers ();
-
+	ctr_instrument = 0;
 	int i;
 	srand((unsigned)time(NULL));
 	for (i = 0; i < 16; i++) {
@@ -1400,8 +1400,8 @@ void ctr_initialize_world()
 	CtrStdWorld->info.sticky = 1;
 	ctr_contexts[0] = CtrStdWorld;
 
-	ctr_instrumentor_func = NULL;	//register instrumentors to nil
-	ctr_past_instrumentor_func = NULL;	//register instrumentors to nil
+	ctr_instrumentor_funcs = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);	//register instrumentors to nil
+	// ctr_past_instrumentor_func = NULL;	//register instrumentors to nil
 	ctr_cparse_calltime_names = NULL;
 	/* Object */
 	CtrStdObject = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
@@ -2917,11 +2917,15 @@ void ctr_initialize_world()
 				 &ctr_reflect_instrmsg);
 	ctr_internal_create_func(CtrStdReflect,
 				 ctr_build_string_from_cstring
-				 ("registerInstrumentor:"),
+				 ("registerInstrumentor:forObject:"),
 				 &ctr_reflect_register_instrumentor);
 	ctr_internal_create_func(CtrStdReflect,
 				 ctr_build_string_from_cstring
-				 ("currentInstrumentor"),
+				 ("unregisterInstrumetationForObject:"),
+				 &ctr_reflect_unregister_instrumentor);
+	ctr_internal_create_func(CtrStdReflect,
+				 ctr_build_string_from_cstring
+				 ("currentInstrumentorFor:"),
 				 &ctr_reflect_get_instrumentor);
 	ctr_internal_create_func(CtrStdReflect,
 				 ctr_build_string_from_cstring
@@ -2930,7 +2934,10 @@ void ctr_initialize_world()
 	ctr_internal_create_func(CtrStdReflect,
 				 ctr_build_string_from_cstring("version"),
 				 &ctr_give_version);
-
+	ctr_internal_create_func(CtrStdReflect,
+				 ctr_build_string_from_cstring
+				 ("compilerInfo"),
+				 &ctr_reflect_compilerinfo);
 	ctr_internal_create_func(CtrStdObject,
 				 ctr_build_string_from_cstring("&method:"),
 				 &ctr_reflect_object_delegate_get_responder);
@@ -3114,20 +3121,26 @@ ctr_object *ctr_send_message(ctr_object * receiverObject, char *message,
 {
 	if (unlikely
 	    (receiverObject != CtrStdReflect
-	     && ctr_instrumentor_func != NULL)) {
-		ctr_argument *blkargs = ctr_heap_allocate(sizeof(ctr_argument));
-		blkargs->object = receiverObject;
-		blkargs->next = ctr_heap_allocate(sizeof(ctr_argument));
-		blkargs->next->object = ctr_build_string(message, vlen);
-		blkargs->next->next = ctr_heap_allocate(sizeof(ctr_argument));
-		blkargs->next->next->object =
-		    ctr_internal_argumentptr2tuple(argumentList);
-		ctr_object *result =
-		    ctr_block_run(ctr_instrumentor_func, blkargs,
-				  ctr_instrumentor_func);
-		if (result == ctr_instrumentor_func)
-			goto no_instrum;
-		return result;
+	     && ctr_instrument)) {
+		ctr_instrument = 0;
+		ctr_object* ctr_instrumentor_func = ctr_internal_object_find_property_with_hash(ctr_instrumentor_funcs, receiverObject, ctr_send_message(receiverObject, "iHash", 5, NULL)->value.nvalue, 0);
+		if(unlikely(ctr_instrumentor_func)) {
+			ctr_argument *blkargs = ctr_heap_allocate(sizeof(ctr_argument));
+			blkargs->object = receiverObject;
+			blkargs->next = ctr_heap_allocate(sizeof(ctr_argument));
+			blkargs->next->object = ctr_build_string(message, vlen);
+			blkargs->next->next = ctr_heap_allocate(sizeof(ctr_argument));
+			blkargs->next->next->object =
+			    ctr_internal_argumentptr2tuple(argumentList);
+			ctr_object *result =
+			    ctr_block_run_here(ctr_instrumentor_func, blkargs,
+					  ctr_instrumentor_func);
+			ctr_instrument = 1;
+			if (result == ctr_instrumentor_func)
+				goto no_instrum;
+			return result;
+		}
+		ctr_instrument = 1;
 	}
  no_instrum:;
 	char toParent = 0;
@@ -3156,11 +3169,11 @@ ctr_object *ctr_send_message(ctr_object * receiverObject, char *message,
 	}
 	methodObject = ctr_get_responder(receiverObject, message, vlen);
 	if (!methodObject) {
-		if (strcmp(message, "respondTo:and:") == 0) {
-			// printf("Requested message to catch-all in:\n");
-			// ctr_print_stack_trace();
-			return receiverObject;
-		}
+		// if (strcmp(message, "respondTo:and:") == 0) {
+		// 	// printf("Requested message to catch-all in:\n");
+		// 	// ctr_print_stack_trace();
+		// 	return receiverObject;
+		// }
 		argCounter = argumentList;
 		argCount = 0;
 		while (argCounter && argCounter->next && argCount < 4) {

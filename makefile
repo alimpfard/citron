@@ -1,4 +1,14 @@
-CFLAGS = -Wall -Wextra -Wno-unused-parameter -mtune=native -march=native -D withTermios -D forLinux -D CTR_STD_EXTENSION_PATH=\"`pwd`\"
+ifeq ($(strip ${WITH_ICU}),)
+	CFLAGS = -Wall -Wextra -Wno-unused-parameter -mtune=native\
+              -march=native -D withTermios -D forLinux\
+              -D CTR_STD_EXTENSION_PATH=\"`pwd`\"
+else
+	CFLAGS = -Wall -Wextra -Wno-unused-parameter -mtune=native\
+			 -march=native -D withTermios -D forLinux\
+			 -D CTR_STD_EXTENSION_PATH=\"`pwd`\" -D withICU
+	LEXTRACF := ${LEXTRACF} -L/usr/lib -licui18n -licuuc -licudata
+endif
+
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
        world.o lexer.o lexer_plug.o parser.o walker.o reflect.o fiber.o importlib.o\
 	   coroutine.o base_extensions.o citron.o

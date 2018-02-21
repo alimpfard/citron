@@ -3,6 +3,10 @@ Broom autoAlloc: True.
 import Library/Control/Applicative.
 import Library/Data/Array.
 
+Nil on: 'respondTo:' do: {}.
+Nil on: 'respondTo:and:' do: {}.
+
+
 ['Env', 'GlobalEnv', 'Truth',
 '_eval', 'parse', 'tokenize',
 'read_from', 'atom', 'to_string',

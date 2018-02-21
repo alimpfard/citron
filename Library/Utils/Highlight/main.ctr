@@ -130,9 +130,19 @@ Highlight on: 'highlight:' do: {:code
         }, else: {
           var next is AST token.
           (next @ 0 !=: 'FIN') ifTrue: {AST lexPutBack.}.
-          this_thing is (next @ 0 = 'COLON') either: {color is Colors lightMagenta. AST lexSkip: 1. token put: (token @ 2 + 1) at: 2. last_toc_override is 'MESSAGE'. ^token @ 1 + ':'.} or: {
+          this_thing is (next @ 0 = 'COLON') either: {
+            color is Colors lightMagenta.
+            AST lexSkip: 1.
+            token put: (token @ 2 + 1) at: 2.
+            last_toc_override is 'MESSAGE'.
+            ^token @ 1 + ':'.
+          } or: {
             ^(messageAcceptors contains: last_toc) either: {
               ((token @ 1) length = 1) ifTrue: {last_toc_override is 'MESSAGE'.}.
+              ((token @ 1) indexOf: ':', !=: -1) ifTrue: {
+                # token put: (token @ 2) at: 2.
+                token put: (token @ 1 + ':') at: 1.
+              }.
               color is Colors lightMagenta.
               ^token @ 1.
             } or: {

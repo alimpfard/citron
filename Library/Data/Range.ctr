@@ -1,0 +1,15 @@
+#Range is NOT a lazy iterator
+Number on: 'to:' do: {:end
+  var f is Array new.
+  me to: end step: 1 do: {:i
+    f push: i.
+  }.
+  ^f.
+}.
+Number on: 'to:step:' do: {:end:step
+  var f is Array new.
+  me to: end step: step do: {:i
+    f push: i.
+  }.
+  ^f.
+}.

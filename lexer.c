@@ -414,7 +414,16 @@ int ctr_clex_tok()
 		return CTR_TOKEN_PASSIGNMENT;
 	}
 	if (c == ':' /*&& ctr_code+1!=ctr_eofcode && *(ctr_code+1) != ':' */ ) {
+		int is_name = 0;
+		while(ctr_code+1<ctr_eofcode && *(ctr_code+1) == ':') {
+			is_name++;
+			ctr_code++;
+			ctr_clex_buffer[i++] = ':';
+			ctr_clex_tokvlen++;
+		}
 		ctr_code++;
+		if(is_name)
+			return CTR_TOKEN_REF;
 		return CTR_TOKEN_COLON;
 	}
 	if (c == '^') {

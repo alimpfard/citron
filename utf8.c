@@ -67,7 +67,7 @@ ctr_size ctr_getutf8len(char *strval, ctr_size max)
 }
 
 #ifndef withICU
-__attribute__((always_inline))
+// __attribute__((always_inline))
 ctr_size ctr_getutf8clustercount(char* strval, ctr_size max) {
 	// return countGraphemes((wchar_t*)strval, max);
 	return ctr_getutf8len(strval, max);
@@ -80,7 +80,7 @@ ctr_size ctr_getutf8clustercount(char* strval, ctr_size max) {
 #include <unicode/ubrk.h>
 static UBreakIterator* BIter__ = NULL;
 static UErrorCode err;
-__attribute__((always_inline))
+// __attribute__((always_inline))
 ctr_size ctr_getutf8clustercount(char* strval, ctr_size max) {
 	if(!BIter__) BIter__ = ubrk_open(UBRK_CHARACTER, NULL, NULL, 0, &err);
 	ubrk_setText(BIter__, (UChar*)strval, max, &err);

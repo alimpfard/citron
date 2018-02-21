@@ -15,9 +15,9 @@ extern "C" {
 #include <string.h>
 
 #ifdef withBoehmGC
-#define CTR_VERSION "0.0.7.0-boehm-gc"
+#define CTR_VERSION "0.0.7.1-boehm-gc"
 #else
-#define CTR_VERSION "0.0.7.0-lexical-scoping"
+#define CTR_VERSION "0.0.7.1-lexical-scoping"
 #endif
 
 #define CTR_LOG_WARNINGS 0//2 to enable

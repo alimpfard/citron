@@ -46,7 +46,7 @@ void ctr_cli_read_args(int argc, char *argv[])
 	    (char *)ctr_heap_allocate_tracked(sizeof(char) * 255);
 	strncpy(ctr_mode_input_file, argv[1], 254);
 }
-
+#ifndef CITRON_LIBRARY
 /**
  * Citron Application Main Start
  * Bootstraps the Citron Application.
@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
 	}
 	return 0;
 }
-
+#endif //CITRON_LIBRARY
 void initialize(int extensions)
 {
 	//pragma rules

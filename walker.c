@@ -340,7 +340,7 @@ ctr_object *ctr_cwlk_run(ctr_tnode * program)
 			break;
 		li = li->next;
 	}
-	if (wasReturn == 0)
+	if (wasReturn == 0 && !program->lexical) //let the last value be returned on BLOCKMAP
 		result = NULL;
 	return result;
 }

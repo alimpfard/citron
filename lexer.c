@@ -422,8 +422,10 @@ int ctr_clex_tok()
 			ctr_clex_tokvlen++;
 		}
 		ctr_code++;
-		if(is_name)
+		if(is_name) {
+			if(ctr_clex_tokvlen > 1) ctr_code--;
 			return CTR_TOKEN_REF;
+		}
 		return CTR_TOKEN_COLON;
 	}
 	if (c == '^') {

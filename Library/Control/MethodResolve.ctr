@@ -1,3 +1,6 @@
 Object on: ':' do: {:meth
   ^Reflect closure: meth of: me.
 }.
+Object on: ':::' do: {:meth
+  ^Reflect getResponder: meth ofObject: me.
+}.

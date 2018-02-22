@@ -322,7 +322,7 @@ ctr_internal_object_is_constructible_(ctr_object * object1,
 	    && object2->info.type == CTR_OBJECT_TYPE_OTARRAY) {
 		int count = ctr_array_count(object2, NULL)->value.nvalue;
 		ctr_object *last = ctr_array_last(object1, NULL);
-		if (ctr_array_count(object1, NULL)->value.nvalue < count
+		if (ctr_array_count(object1, NULL)->value.nvalue != count
 		    && !(last->info.type == CTR_OBJECT_TYPE_OTSTRING))
 			return 0;	//It requires more parameters than object1 can provide, and we don't have a catch-all binding
 		int i = 1;
@@ -398,7 +398,7 @@ ctr_object *ctr_internal_object_find_property(ctr_object * owner,
 	ctr_mapitem *head, *first_head;
 	uint64_t hashKey = ctr_internal_index_hash(key);
 	if (is_method) {
-		if (owner->methods->size == 0) {
+		if (!owner->methods || owner->methods->size == 0) {
 			return NULL;
 		}
 		head = owner->methods->head;
@@ -469,7 +469,7 @@ ctr_object *ctr_internal_object_find_property_ignore(ctr_object * owner,
 #endif				//CTR_DEBUG_HIDING
 
 	if (is_method) {
-		if (owner->methods->size == 0) {
+		if (!owner->methods || owner->methods->size == 0) {
 			return NULL;
 		}
 		head = owner->methods->head;
@@ -505,7 +505,7 @@ ctr_object *ctr_internal_object_find_property_with_hash(ctr_object * owner,
 {
 	ctr_mapitem *head, *first_head;
 	if (is_method) {
-		if (owner->methods->size == 0) {
+		if (!owner->methods || owner->methods->size == 0) {
 			return NULL;
 		}
 		head = owner->methods->head;
@@ -550,7 +550,7 @@ ctr_internal_object_delete_property(ctr_object * owner, ctr_object * key,
 	uint64_t hashKey = ctr_internal_index_hash(key);
 	ctr_mapitem *head;
 	if (is_method) {
-		if (owner->methods->size == 0) {
+		if (!owner->methods || owner->methods->size == 0) {
 			return;
 		}
 		head = owner->methods->head;
@@ -617,7 +617,7 @@ ctr_internal_object_delete_property_with_hash(ctr_object * owner,
 {
 	ctr_mapitem *head;
 	if (is_method) {
-		if (owner->methods->size == 0) {
+		if (!owner->methods || owner->methods->size == 0) {
 			return;
 		}
 		head = owner->methods->head;
@@ -692,7 +692,7 @@ ctr_internal_object_add_property(ctr_object * owner, ctr_object * key,
 	new_item->next = NULL;
 	new_item->prev = NULL;
 	if (m) {
-		if (owner->methods->size == 0) {
+		if (!owner->methods || owner->methods->size == 0) {
 			owner->methods->head = new_item;
 		} else {
 			current_head = owner->methods->head;
@@ -735,7 +735,7 @@ ctr_internal_object_add_property_with_hash(ctr_object * owner,
 	new_item->next = NULL;
 	new_item->prev = NULL;
 	if (m) {
-		if (owner->methods->size == 0) {
+		if (!owner->methods || owner->methods->size == 0) {
 			owner->methods->head = new_item;
 		} else {
 			current_head = owner->methods->head;
@@ -2897,6 +2897,9 @@ void ctr_initialize_world()
 	ctr_internal_create_func(CtrStdReflect,
 				 ctr_build_string_from_cstring("strTypeOf:"),
 				 &ctr_reflect_type_descriptor_print);
+	ctr_internal_create_func(CtrStdReflect,
+				 ctr_build_string_from_cstring("isObject:constructibleBy:"),
+				 &ctr_reflect_check_bind_valid_v);
 	ctr_internal_create_func(CtrStdReflect,
 				 ctr_build_string_from_cstring("unpack:to:"),
 				 &ctr_reflect_bind);

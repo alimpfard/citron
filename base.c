@@ -4681,6 +4681,7 @@ ctr_object *ctr_block_run_array(ctr_object * myself, ctr_object * argArray,
 	struct ctr_mapitem *head;
 	head = myself->properties->head;
 	while (p > -1) {
+		if (!head) break;
 		ctr_assign_value_to_my(head->key, head->value);
 		head = head->next;
 		p--;
@@ -4807,6 +4808,7 @@ ctr_object *ctr_block_run(ctr_object * myself, ctr_argument * argList,
 	struct ctr_mapitem *head;
 	head = myself->properties->head;
 	while (p > -1) {
+		if(!head) break;
 		ctr_assign_value_to_my(head->key, head->value);
 		head = head->next;
 		p--;

@@ -929,6 +929,8 @@ ctr_object *ctr_reflect_type_descriptor_print(ctr_object * myself,
 		break;
 
 	case CTR_OBJECT_TYPE_OTOBJECT:
+	case CTR_OBJECT_TYPE_OTMISC:
+	case CTR_OBJECT_TYPE_OTEX:
 		type_descriptor = ctr_send_message(object, "type", 4, NULL);
 		//TODO: Implement
 		break;
@@ -949,9 +951,11 @@ ctr_object *ctr_reflect_type_descriptor_print(ctr_object * myself,
 		type_descriptor->value.avalue->immutable = 1;
 		type_descriptor = ctr_internal_cast2string(type_descriptor);
 		break;
-	case CTR_OBJECT_TYPE_OTMISC:
-	case CTR_OBJECT_TYPE_OTEX:
-		//Is not data, just return Nil
+	default:
+		type_descriptor = ctr_reflect_get_primitive_link(object);
+		// if (type_descriptor == CtrStdObject) {
+		// 	type_descriptor = CtrStdNil;
+		// }
 		break;
 	}
 
@@ -998,7 +1002,9 @@ ctr_object *ctr_reflect_describe_type(ctr_object * myself,
 	case CTR_OBJECT_TYPE_OTNUMBER:
 	case CTR_OBJECT_TYPE_OTSTRING:
 	case CTR_OBJECT_TYPE_OTNATFUNC:
-		//No Data structure, just primitive, return primitive link
+	case CTR_OBJECT_TYPE_OTMISC:
+	case CTR_OBJECT_TYPE_OTEX:
+	//No Data structure, just primitive, return primitive link
 		type_descriptor = ctr_reflect_get_primitive_link(object);
 		arg->object = type_descriptor;
 		type_descriptor =
@@ -1034,9 +1040,11 @@ ctr_object *ctr_reflect_describe_type(ctr_object * myself,
 		}
 		type_descriptor->value.avalue->immutable = 1;
 		break;
-	case CTR_OBJECT_TYPE_OTMISC:
-	case CTR_OBJECT_TYPE_OTEX:
-		//Is not data, just return Nil
+	default:
+		type_descriptor = ctr_reflect_get_primitive_link(object);
+		// if (type_descriptor == CtrStdObject) {
+		// 	type_descriptor = CtrStdNil;
+		// }
 		break;
 	}
 
@@ -1099,6 +1107,7 @@ int ctr_reflect_is_valid_ctor(ctr_object * candidate)
 
 int ctr_reflect_check_bind_valid(ctr_object * from, ctr_object * to)
 {
+	ctr_object* err;
 	ctr_argument *argumentList = ctr_heap_allocate(sizeof(ctr_argument));
 	argumentList->object = to;
 	ctr_object *to_type =
@@ -1109,7 +1118,9 @@ int ctr_reflect_check_bind_valid(ctr_object * from, ctr_object * to)
 	if (!
 	    (ctr_internal_object_is_constructible_
 	     (from_type, to_type, to->info.raw))) {
-		CtrStdFlow =
+		argumentList->object = from_type;
+		 ctr_console_writeln(CtrStdConsole, argumentList);
+		err =
 		    ctr_build_string_from_cstring
 		    ("Cannot bind object of type ");
 		argumentList->object = from;
@@ -1117,10 +1128,10 @@ int ctr_reflect_check_bind_valid(ctr_object * from, ctr_object * to)
 		    ctr_reflect_describe_type_pretty(CtrStdReflect,
 						     argumentList);
 		argumentList->object = ctr_internal_cast2string(from_type);
-		ctr_string_append(CtrStdFlow, argumentList);
+		ctr_string_append(err, argumentList);
 		argumentList->object =
 		    ctr_build_string_from_cstring(" to object of type ");
-		ctr_string_append(CtrStdFlow, argumentList);
+		ctr_string_append(err, argumentList);
 		argumentList->object = ctr_build_string_from_cstring("String");
 		argumentList->next = ctr_heap_allocate(sizeof(ctr_argument));
 		argumentList->next->object =
@@ -1130,10 +1141,11 @@ int ctr_reflect_check_bind_valid(ctr_object * from, ctr_object * to)
 		    ctr_string_replace_with(ctr_internal_cast2string(to_type),
 					    argumentList);
 		ctr_heap_free(argumentList->next);
-		ctr_string_append(CtrStdFlow, argumentList);
+		ctr_string_append(err, argumentList);
 		argumentList->object = ctr_build_string_from_cstring(".");
-		ctr_string_append(CtrStdFlow, argumentList);
+		ctr_string_append(err, argumentList);
 		ctr_heap_free(argumentList);
+		CtrStdFlow = err;
 		return 0;
 	}
 	ctr_heap_free(argumentList);

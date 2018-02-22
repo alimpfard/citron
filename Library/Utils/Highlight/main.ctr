@@ -167,6 +167,11 @@ Highlight on: 'highlight:' do: {:code
         this_thing is '['.
     }, case: 'TUPCLOSE' do: {
         this_thing is ']'.
+    }, case: 'SYMBOL' do: {
+        color is Colors lightGreen.
+        var t is AST token.
+        token put: (t @ 2) at: 2.
+        this_thing is '\\' + (t @ 1).
     }, default: {
         # Pen writeln: token.
         this_thing is token @ 1.

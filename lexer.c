@@ -40,6 +40,7 @@ char *ctr_clex_desc_tok_booleanno = "False";
 char *ctr_clex_desc_tok_nil = "Nil";
 char *ctr_clex_desc_tok_assignment = ":=";	//derp
 char *ctr_clex_desc_tok_passignment = "=>";	//REEEE
+char *ctr_clex_desc_tok_symbol = "\\";	//TODO FIXME Find a better character for this
 char *ctr_clex_desc_tok_ret = "^";
 char *ctr_clex_desc_tok_ret_unicode = "↑";
 char *ctr_clex_desc_tok_fin = "end of program";
@@ -173,6 +174,9 @@ char *ctr_clex_tok_describe(int token)
 		break;
 	case CTR_TOKEN_TUPCLOSE:
 		description = ctr_clex_desc_tok_tupclose;
+		break;
+	case CTR_TOKEN_SYMBOL:
+		description = ctr_clex_desc_tok_symbol;
 		break;
 	default:
 		description = ctr_clex_desc_tok_unknown;
@@ -363,6 +367,15 @@ int ctr_clex_tok()
 	}
 	if (ctr_code == ctr_eofcode) {
 		return CTR_TOKEN_FIN;
+	}
+	if (c == '\\') {
+		ctr_code++;
+		int t = ctr_clex_tok();
+		ctr_clex_putback();
+		if (t != CTR_TOKEN_REF) {
+			// ctr_clex_emit_error("Expected a reference");
+		}
+		return CTR_TOKEN_SYMBOL;
 	}
 	if (c == '(') {
 		ctr_code++;

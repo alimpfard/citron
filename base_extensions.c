@@ -242,6 +242,8 @@ static char const *ctr_ast_tystr(ctr_tnode * ast)
 		return "LTRNIL";
 	case CTR_AST_NODE_PROGRAM:
 		return "PROGRAM";
+	case CTR_AST_NODE_SYMBOL:
+		return "SYMBOL";
 	default:
 		return "UNKNOWN";
 	}
@@ -301,6 +303,8 @@ static int ctr_ast_tyfstr(char *type)
 		return CTR_AST_NODE_LTRNIL;
 	if (strcasecmp("PROGRAM", type) == 0)
 		return CTR_AST_NODE_PROGRAM;
+	if (strcasecmp("SYMBOL", type) == 0)
+		return CTR_AST_NODE_SYMBOL;
 	return CTR_AST_NODE_ENDOFPROGRAM;
 }
 
@@ -544,6 +548,7 @@ char *ctr_ast_pure_stringify(ctr_tnode * node)
 				memcpy(ret, buf, len);
 				break;
 			}
+		case CTR_AST_NODE_SYMBOL:
 		case CTR_AST_NODE_LTRSTRING:{
 				ret =
 				    ctr_heap_allocate(sizeof(char) *
@@ -749,7 +754,7 @@ char *ctr_ast_pure_stringify(ctr_tnode * node)
 				memcpy(ret, buf, len);
 				break;
 			}
-		}
+	}
 	(void)printf("[%p] %s :: %s\n", node, ctr_ast_tystr(node), ret);
 	return ret;
 }
@@ -802,6 +807,7 @@ static char* ctr_lex_token_lookup(int tok) {
 		case CTR_TOKEN_TUPOPEN: return "TUPOPEN";
 		case CTR_TOKEN_TUPCLOSE: return "TUPCLOSE";
 		case CTR_TOKEN_PASSIGNMENT: return "PASSIGNMENT";
+		case CTR_TOKEN_SYMBOL: return "SYMBOL";
 		case CTR_TOKEN_FIN: return "FIN";
 		default: return "UNKNOWN";
 	}
@@ -1035,6 +1041,50 @@ ctr_object *ctr_coro_isrunning(ctr_object * myself, ctr_argument * argumentList)
 	return ctr_build_bool(! !coroutine_status(S, co));
 }
 
+ctr_object* ctr_build_symbol(ctr_tnode* node) {
+		ctr_object* sym = ctr_internal_create_object(CTR_OBJECT_TYPE_OTMISC);
+		sym->link = CtrStdSymbol;
+		sym->value.block = node;
+		return sym;
+}
+
+ctr_object* ctr_symbol_to_string(ctr_object* myself, ctr_argument* argumentList) {
+	if (unlikely(myself == CtrStdSymbol)) return ctr_build_string_from_cstring("#Symbol");
+	char* name = ctr_heap_allocate(sizeof(char)*(myself->value.block->vlen+1));
+	ctr_size len = sprintf(name, "\\%.*s", myself->value.block->vlen, myself->value.block->value);
+	ctr_object* nameS = ctr_build_string(name, len);
+	ctr_heap_free(name);
+	return nameS;
+}
+
+ctr_object* ctr_symbol_type(ctr_object* myself, ctr_argument* argumentList) {
+	return ctr_build_string_from_cstring("Symbol");
+}
+
+ctr_object* ctr_symbol_equals(ctr_object* myself, ctr_argument* argumentList) {
+	ctr_object* other = argumentList->object;
+	if(!other || other->info.type != CTR_OBJECT_TYPE_OTMISC || !other->value.block->value) return ctr_build_bool(0);
+	return ctr_build_bool(other->value.block->value == myself->value.block->value);
+}
+
+ctr_object* ctr_symbol_ihash(ctr_object* myself, ctr_argument* argumentList) {
+	if(myself == CtrStdSymbol) return ctr_build_number_from_float(ctr_internal_index_hash(myself));
+	else return ctr_build_number_from_float((uintptr_t)(myself->value.block->value));
+}
+
+ctr_object* ctr_symbol_unpack(ctr_object* myself, ctr_argument* argumentList) {
+	if(myself == CtrStdSymbol) { CtrStdFlow = ctr_build_string_from_cstring("binding a null symbol"); return CtrStdNil; }
+	if (argumentList->object->info.type == CTR_OBJECT_TYPE_OTSTRING) {
+		return ctr_assign_value(myself, argumentList->object);
+	}
+	if (ctr_reflect_get_primitive_link(argumentList->object) == CtrStdSymbol) {
+		if(argumentList->object->value.block->value != myself->value.block->value) {
+			CtrStdFlow = ctr_build_string_from_cstring("Cannot bind symbols with different values");
+		}
+	}
+	return myself;
+}
+
 void initiailize_base_extensions()
 {
 	ctr_internal_create_func(CtrStdObject,
@@ -1156,4 +1206,27 @@ void initiailize_base_extensions()
 	ctr_internal_create_func(CtrStdCoro_co,
 				 ctr_build_string_from_cstring("state"),
 				 &ctr_coro_state);
+	CtrStdSymbol = ctr_internal_create_object(CTR_OBJECT_TYPE_OTMISC);
+	CtrStdSymbol->link = CtrStdObject;
+	ctr_internal_create_func(CtrStdSymbol,
+			  ctr_build_string_from_cstring("toString"),
+				&ctr_symbol_to_string);
+	ctr_internal_create_func(CtrStdSymbol,
+			  ctr_build_string_from_cstring("equals:"),
+				&ctr_symbol_equals);
+	ctr_internal_create_func(CtrStdSymbol,
+			  ctr_build_string_from_cstring("="),
+				&ctr_symbol_equals);
+	ctr_internal_create_func(CtrStdSymbol,
+			  ctr_build_string_from_cstring("iHash"),
+				&ctr_symbol_ihash);
+	ctr_internal_create_func(CtrStdSymbol,
+			  ctr_build_string_from_cstring("id"),
+				&ctr_symbol_ihash);
+	ctr_internal_create_func(CtrStdSymbol,
+			  ctr_build_string_from_cstring("type"),
+				&ctr_symbol_type);
+	ctr_internal_create_func(CtrStdSymbol,
+			  ctr_build_string_from_cstring("unpack:"),
+				&ctr_symbol_unpack);
 }

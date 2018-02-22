@@ -79,7 +79,7 @@ ctr_object *ctr_reflect_add_my(ctr_object * myself, ctr_argument * argumentList)
  */
 ctr_object *ctr_reflect_set_to(ctr_object * myself, ctr_argument * argumentList)
 {
-	CTR_ENSURE_TYPE_STRING(argumentList->object);
+	// CTR_ENSURE_TYPE_STRING(argumentList->object);
 	ctr_internal_object_set_property(CtrStdWorld,
 					 ctr_internal_cast2string
 					 (argumentList->object),
@@ -1097,7 +1097,7 @@ int ctr_reflect_is_valid_ctor(ctr_object * candidate)
 	return 1;		//TODO: Implement actual method
 }
 
-int ctr_reflect_check_bind_valid(ctr_object * from, ctr_object * to)
+int ctr_reflect_check_bind_valid(ctr_object * from, ctr_object * to, int err)
 {
 	ctr_argument *argumentList = ctr_heap_allocate(sizeof(ctr_argument));
 	argumentList->object = to;
@@ -1106,7 +1106,7 @@ int ctr_reflect_check_bind_valid(ctr_object * from, ctr_object * to)
 	argumentList->object = from;
 	ctr_object *from_type =
 	    ctr_reflect_describe_type(CtrStdReflect, argumentList);
-	if (!
+	if (err && !
 	    (ctr_internal_object_is_constructible_
 	     (from_type, to_type, to->info.raw))) {
 		CtrStdFlow =
@@ -1140,11 +1140,21 @@ int ctr_reflect_check_bind_valid(ctr_object * from, ctr_object * to)
 	return 1;
 }
 
+/**
+ * [Reflect] isObject: [Object] constructibleBy: [Object]
+ *
+ * checks if the first object can be made from the second object (Constructor)
+ */
+
+ctr_object* ctr_reflect_check_bind_valid_v (ctr_object* myself, ctr_argument* argumentList) {
+	return ctr_build_bool(ctr_reflect_check_bind_valid(argumentList->object, argumentList->next->object, 0));
+}
+
 ctr_object *ctr_reflect_bind(ctr_object * myself, ctr_argument * argumentList)
 {
 	ctr_object *from = argumentList->object;
 	ctr_object *to = argumentList->next->object;
-	//if(!ctr_reflect_check_bind_valid(from, to)) {
+	//if(!ctr_reflect_check_bind_valid(from, to, 0)) {
 	//  return CtrStdNil;
 	//}
 	ctr_argument *arg2 = ctr_heap_allocate(sizeof(ctr_argument));

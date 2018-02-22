@@ -9,7 +9,8 @@
 #include "citron.h"
 
 int ctr_cwlk_replace_refs = 0;
-
+int ctr_cwlk_msg_level = 0; //toplevel
+int ctr_cwlk_last_msg_level = 0; //toplevel old
 /**
  * CTRWalkerReturn
  *
@@ -201,10 +202,12 @@ ctr_object *ctr_cwlk_assignment(ctr_tnode * node)
 	} else {
 		int old_replace = ctr_cwlk_replace_refs;
 		ctr_cwlk_replace_refs = 1;
-		ctr_send_message_variadic(x, "unpack:", 7, 1,
-					  ctr_cwlk_expr(assignee, &ret));
-		ctr_cwlk_replace_refs = old_replace;
-		result = x;
+		ctr_cwlk_last_msg_level = ctr_cwlk_msg_level;
+		ctr_object* y = ctr_cwlk_expr(assignee, &ret);
+		ctr_cwlk_replace_refs = old_replace; //set back in case we didn't reset
+		result = ctr_send_message_variadic(x, "unpack:", 7, 1, y);
+		if (result->info.type == CTR_OBJECT_TYPE_OTBLOCK)
+			result = ctr_block_run_here(result, NULL, result);
 	}
 	if (CtrStdFlow == NULL) {
 		ctr_callstack_index--;
@@ -245,7 +248,8 @@ ctr_object *ctr_cwlk_expr(ctr_tnode * node, char *wasReturn)
 		result = ctr_build_block(node);
 		break;
 	case CTR_AST_NODE_REFERENCE:
-		if (ctr_cwlk_replace_refs) {
+		if (ctr_cwlk_replace_refs && ctr_cwlk_msg_level <= ctr_cwlk_last_msg_level) {
+			printf("%.*s\n", node->vlen, node->value);
 			result = ctr_build_string(node->value, node->vlen);
 			break;
 		}
@@ -310,6 +314,7 @@ ctr_object *ctr_cwlk_expr(ctr_tnode * node, char *wasReturn)
 
 ctr_object *ctr_cwlk_run(ctr_tnode * program)
 {
+	ctr_cwlk_msg_level++;
 	ctr_object *result = NULL;
 	char wasReturn = 0;
 	ctr_tlistitem *li;
@@ -342,5 +347,6 @@ ctr_object *ctr_cwlk_run(ctr_tnode * program)
 	}
 	if (wasReturn == 0 && !program->lexical) //let the last value be returned on BLOCKMAP
 		result = NULL;
+	ctr_cwlk_msg_level--;
 	return result;
 }

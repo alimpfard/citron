@@ -373,7 +373,7 @@ Eval on: 'repl' do: {
           toc is last_was_comp either: last_comp_entry or: toc.
           last_comp_entry is toc.
           var flipper is OneGateFlipper new.
-          last_toc is (inp trim or: 'Nil') split: ' ', filter: {:_:v (v endsWith: ':') ifTrue: {flipper set. ^False.}. ^((v endsWith: ':') | (flipper toBoolean)) not. }.
+          last_toc is (inp trim or: 'Nil') split: ' ', filter: {:_:v (v endsWith: ':') ifTrue: {flipper set. ^False.}. ^((v endsWith: ':') | (flipper get)) not. }.
           last_toc is (last_toc count) >=: 2, either: {^last_toc init last.} or: 'Nil'.
           var candidates is Eval allTheNames: ({^Reflect getObject: (['my', 'var'] contains: last_toc, either: Nil or: last_toc).} catch: {^Nil.}, run).
           var skipthis is candidates @ 0.

@@ -10,6 +10,7 @@
 char *ctr_cparse_current_program;
 int do_compare_locals = 0;
 int all_plains_private = 0;
+extern int ctr_cwlk_replace_refs;
 int ctr_paramlist_has_name(char* namenode, size_t len) {
 	if(!ctr_cparse_calltime_names || len==0) return 0;
 	else {
@@ -409,7 +410,7 @@ ctr_tnode *ctr_cparse_block_(int autocap)
 			previousCodeListItem = codeListItem;
 		}
 		t = ctr_clex_tok();
-		if (t != CTR_TOKEN_DOT) {
+		if (t != CTR_TOKEN_DOT && !autocap) {
 			ctr_cparse_emit_error_unexpected(t,
 							 "Expected a dot (.).\n");
 		}
@@ -670,8 +671,27 @@ ctr_tnode *ctr_cparse_expr(int mode)
 							 "Invalid left-hand assignment.\n");
 			exit(1);
 		}
-		r->modifier = 1;	//set private
+		r->modifier = 1;	//set private */
 		e = ctr_cparse_assignment(r);	//go as usual
+		/*r->nodes->node->type = CTR_AST_NODE_LTRSTRING;
+		e = ctr_cparse_create_node(CTR_AST_NODE);
+		e->type = CTR_AST_NODE_EXPRMESSAGE;
+		e->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
+		e->nodes->node = ctr_cparse_create_node(CTR_AST_NODE);
+		e->nodes->node->value = ctr_heap_allocate(sizeof(char)*7); //Reflect
+		memcpy(e->nodes->node->value, "Reflect", 7);
+		e->nodes->node->vlen = 7;
+		e->nodes->node->type = CTR_AST_NODE_REFERENCE;
+		e->nodes->next = ctr_heap_allocate(sizeof(ctr_tlistitem));
+		e->nodes->next->node = ctr_cparse_create_node(CTR_AST_NODE);
+		e->nodes->next->node->type = CTR_AST_NODE_KWMESSAGE;
+		e->nodes->next->node->value = ctr_heap_allocate(sizeof(char)*7); //set:to:
+		memcpy(e->nodes->next->node->value, "set:to:", 7);
+		e->nodes->next->node->vlen = 7;
+		e->nodes->next->node->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
+		e->nodes->next->node->nodes->node = r->nodes->node;
+		e->nodes->next->node->nodes->next = ctr_heap_allocate(sizeof(ctr_tlistitem));
+		e->nodes->next->node->nodes->next->node = r->nodes->next->node;*/
 	} else if (t2 != CTR_TOKEN_DOT &&
 		   t2 != CTR_TOKEN_PARCLOSE && (t2 != CTR_TOKEN_CHAIN
 						&& mode !=

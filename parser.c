@@ -598,6 +598,7 @@ ctr_tnode *ctr_cparse_receiver()
 		{
 			ctr_tnode* t = ctr_cparse_block_capture();
 			t->lexical = 1;
+			t->nodes->next->node->lexical = 1;
 			return t;
 	}
 	case CTR_TOKEN_PAROPEN:

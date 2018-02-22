@@ -1089,6 +1089,7 @@ ctr_object *ctr_internal_cast2string(ctr_object * o)
 		break;
 	}
 	ctr_heap_free(a);
+	if (stringObject->info.type == CTR_OBJECT_TYPE_OTNIL) return ctr_build_string_from_cstring("(null)");
 	if (stringObject->info.type != CTR_OBJECT_TYPE_OTSTRING) {
 		printf("wanted 3, got %d from %d\n", stringObject->info.type,
 		       o->info.type);

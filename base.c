@@ -5296,24 +5296,30 @@ ctr_object *ctr_block_to_string(ctr_object * myself,
 
 int ctr_is_primitive(ctr_object * object)
 {
-	return object == CtrStdObject
-	    || object == CtrStdBlock
-	    || object == CtrStdString
-	    || object == CtrStdNumber
-	    || object == CtrStdBool
-	    || object == CtrStdConsole
-	    || object == CtrStdNil
-	    || object == CtrStdGC
-	    || object == CtrStdMap
-	    || object == CtrStdArray
-	    || object == CtrStdFile
-	    || object == CtrStdSystem
-	    || object == CtrStdDice
-	    || object == CtrStdCommand
-	    || object == CtrStdSlurp
-	    || object == CtrStdShell
-	    || object == CtrStdClock || object == CtrStdReflect
-	    || object == CtrStdFiber;
+	return object == CtrStdWorld
+			|| object == CtrStdObject
+			|| object == CtrStdBlock
+			|| object == CtrStdString
+			|| object == CtrStdNumber
+			|| object == CtrStdBool
+			|| object == CtrStdConsole
+			|| object == CtrStdNil
+			|| object == CtrStdGC
+			|| object == CtrStdMap
+			|| object == CtrStdArray
+			|| object == CtrStdIter
+			|| object == CtrStdFile
+			|| object == CtrStdSystem
+			|| object == CtrStdDice
+			|| object == CtrStdCommand
+			|| object == CtrStdSlurp
+			|| object == CtrStdShell
+			|| object == CtrStdClock
+			|| object == CtrStdReflect
+			|| object == CtrStdReflect_cons
+			|| object == CtrStdFiber
+			|| object == CtrStdThread
+			|| object == CtrStdSymbol;
 }
 
 //Stack-trace

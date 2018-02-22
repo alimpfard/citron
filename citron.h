@@ -5,7 +5,7 @@
 #ifndef CTR_H_GUARD
 #define CTR_H_GUARD
 
-#ifdef  _CPLUS_PLUS
+#ifdef  __cplusplus
 extern "C" {
 #endif
 
@@ -43,6 +43,7 @@ extern "C" {
 #define CTR_TOKEN_TUPOPEN 18
 #define CTR_TOKEN_TUPCLOSE 19
 #define CTR_TOKEN_PASSIGNMENT 20
+#define CTR_TOKEN_SYMBOL 21
 #define CTR_TOKEN_FIN 99
 //
 //
@@ -82,6 +83,7 @@ extern "C" {
 #define CTR_AST_NODE_CODEBLOCK 59
 #define CTR_AST_NODE_RETURNFROMBLOCK 60
 #define CTR_AST_NODE_IMMUTABLE 61
+#define CTR_AST_NODE_SYMBOL 62
 #define CTR_AST_NODE_PARAMLIST 76
 #define CTR_AST_NODE_INSTRLIST 77
 #define CTR_AST_NODE_ENDOFPROGRAM 79
@@ -314,6 +316,7 @@ ctr_object* CtrStdReflect;        //!< Standard Object : Reflect
 ctr_object* CtrStdReflect_cons;   //!< Standard Object : cons
 ctr_object* CtrStdFiber;          //!< Standard Object : Fiber
 ctr_object* CtrStdThread;         //!< Standard Object : Thread
+ctr_object* CtrStdSymbol;         //!< Standard Object : Symbol
 ctr_object* ctr_first_object;     //!< Internal Garbage Collector guide object
 //--
 ctr_object* CTR_FILE_STDIN;       //!< Special Object : Standard Input File
@@ -1047,6 +1050,7 @@ ctr_object* ctr_build_number_from_float(ctr_number floatNumber);
 ctr_object* ctr_build_bool(int truth);
 ctr_object* ctr_build_nil();
 ctr_object* ctr_build_string_from_cstring( char* str );
+ctr_object* ctr_build_symbol(ctr_tnode* node);
 void ctr_gc_internal_collect();
 ctr_object* ctr_gc_sweep_this( ctr_object* myself, ctr_argument* argumentList );
 
@@ -1106,7 +1110,7 @@ int ctr_internal_object_is_constructible_(ctr_object*, ctr_object*, int);
 	#define __COMPILER__NAME__OP "Solaris Studio"
 #endif
 
-#ifdef  _CPLUS_PLUS
+#ifdef  __cplusplus
 }
 #endif
 

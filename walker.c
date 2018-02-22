@@ -97,6 +97,9 @@ ctr_object *ctr_cwlk_message(ctr_tnode * paramNode)
 	case CTR_AST_NODE_CODEBLOCK:
 		r = ctr_build_block(receiverNode);
 		break;
+	case CTR_AST_NODE_SYMBOL:
+		r = ctr_build_symbol(receiverNode);
+		break;
 	default:
 		printf("Cannot send messages to receiver of type: %d \n",
 		       receiverNode->type);
@@ -271,6 +274,9 @@ ctr_object *ctr_cwlk_expr(ctr_tnode * node, char *wasReturn)
 		break;
 	case CTR_AST_NODE_IMMUTABLE:
 		result = ctr_build_immutable(node);
+		break;
+	case CTR_AST_NODE_SYMBOL:
+		result = ctr_build_symbol(node);
 		break;
 	case CTR_AST_NODE_RETURNFROMBLOCK:
 		result = ctr_cwlk_return(node);

@@ -7,6 +7,26 @@
 #include <stdint.h>
 #include "citron.h"
 
+static char** ctr_static_symbol_table = 0;
+static ctr_size ctr_static_symbol_table_count = 0;
+char* ctr_get_or_create_symbol_table_entry(char* name, ctr_size length) {
+	if (!ctr_static_symbol_table) {
+		ctr_static_symbol_table = ctr_heap_allocate(sizeof(char*));
+		ctr_static_symbol_table[0] = ctr_heap_allocate_tracked(sizeof(char)*length+1);
+		ctr_static_symbol_table_count = 1;
+		ctr_static_symbol_table[0][length] = 0;
+		return memmove(ctr_static_symbol_table[0], name, length);
+	}
+	for(ctr_size i=0; i<ctr_static_symbol_table_count; i++) {
+		ctr_size len = strlen(ctr_static_symbol_table[i]);
+		if (len == length && strncmp(ctr_static_symbol_table[i], name, length) == 0) return ctr_static_symbol_table[i];
+	}
+	ctr_heap_reallocate(ctr_static_symbol_table, (ctr_static_symbol_table_count+1)*sizeof(char*));
+	ctr_static_symbol_table[ctr_static_symbol_table_count] = ctr_heap_allocate_tracked(sizeof(char)*length+1);
+	ctr_static_symbol_table[ctr_static_symbol_table_count][length] = 0;
+	return memmove(ctr_static_symbol_table[ctr_static_symbol_table_count++], name, length);
+}
+
 char *ctr_cparse_current_program;
 int do_compare_locals = 0;
 int all_plains_private = 0;
@@ -280,6 +300,27 @@ ctr_tnode *ctr_cparse_tuple()
 	}
 	if (t != CTR_TOKEN_TUPCLOSE)
 		ctr_cparse_emit_error_unexpected(t, "Expected ].");
+	return r;
+}
+
+/**
+ * CTRParserSymbol
+ *
+ * Generates a symbol or pulls it from the static symbol list.
+ */
+ctr_tnode *ctr_cparse_symbol()
+{
+	ctr_tnode *r;
+	ctr_tlistitem *li;
+	r = ctr_cparse_create_node(CTR_AST_NODE);
+	int t = ctr_clex_tok();
+	if (t != CTR_TOKEN_SYMBOL) return NULL;
+	ctr_clex_tok();
+	r->type = CTR_AST_NODE_SYMBOL;
+	li = (ctr_tlistitem *) ctr_heap_allocate_tracked(sizeof(ctr_tlistitem));
+	ctr_size vlen = ctr_clex_tok_value_length();
+	r->value = ctr_get_or_create_symbol_table_entry(ctr_clex_tok_value(), vlen);
+	r->vlen = vlen;
 	return r;
 }
 
@@ -604,6 +645,8 @@ ctr_tnode *ctr_cparse_receiver()
 		return ctr_cparse_popen();
 	case CTR_TOKEN_TUPOPEN:
 		return ctr_cparse_tuple();
+	case CTR_TOKEN_SYMBOL:
+		return ctr_cparse_symbol();
 	default:
 		/* This function always exits, so return a dummy value. */
 		ctr_cparse_emit_error_unexpected(t,

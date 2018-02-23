@@ -28,7 +28,7 @@
 #endif
 
 /* The maximum number of fibers that can be active at once. */
-#define MAX_FIBERS 10
+#define MAX_FIBERS 1024
 /* The size of the stack for each fiber. */
 #define FIBER_STACK (1024*1024)
 

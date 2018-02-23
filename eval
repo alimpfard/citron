@@ -9,7 +9,7 @@ inp is ''.
 
 ImportLib Queue.
 ImportLib LRArray.
-import Library/Data/Map Library/Utils/Highlight Library/Utils/OneGateFlipper.
+import Library/Data/Map Library/Utils/Highlight Library/Utils/OneGateFlipper Library/Control/MethodResolve.
 
 TerminalWidth is 85.
 
@@ -23,6 +23,9 @@ Eval on: 'init' do: {
   my evalQueue is Queue new.
   my globalvars is False.
   my history is LRArray new init: 100.
+  my hs_file is File new: '~/.ctrhist'.
+  my hs_file exists ifFalse: { my hs_file write: '[]'. }.
+  (JSON parse: my hs_file read genericType: Object) each_v: (my history::'push:').
   my commands is Nil.
   my continuation is '...'.
   my flags is Map new
@@ -35,7 +38,11 @@ Eval on: 'init' do: {
 Eval on: 'handleException:' do: {:e
   ^me getFlag: 'equit', either: {thisBlock error: e.} or: {Pen red write: e, resetColor brk. ^e.}.
 }.
-Eval on: 'end' do: { my end is True. me stopEvalServer. }.
+Eval on: 'end' do: {
+  my end is True.
+  me stopEvalServer.
+  my hs_file write: (JSON serialize: my history).
+}.
 Eval on: 'break' do: { my end ifTrue: {Broom sweep.}. ^my end. }.
 Eval on: 'allowedColors' do: { ^my allowedColors. }.
 Eval on: 'isAllowedColor:' do: { :c
@@ -433,11 +440,11 @@ Eval on: 'repl' do: {
             Pen cyan write: recs, resetColor.
           }, case: '\x1b' do: {
             inc is stdin readBytes: 2.
-            inc case: '\x5b\x41' do: {
+            inc case: '\x5b\x41' do: { #Up Arrow
               hindex > 0 ifTrue: {
                 cursor is (inp is Eval getHistory at: (hindex is hindex - 1)) length.
               }.
-            }, case: '\x5b\x42' do: {
+            }, case: '\x5b\x42' do: { #Down Arrow
               (hindex > 0) & (Eval getHistory count > 0) ifTrue: {
                 hindex +=: 1.
                 Pen write: '\b' * (inp length).
@@ -455,20 +462,20 @@ Eval on: 'repl' do: {
               (cursor < (inp length - 1)) ifTrue: {
                 cursor +=: 1.
               }.
-            }, case: '\x5b\x44' do: {
+            }, case: '\x5b\x44' do: { #Left Arrow
               (cursor > 0) ifTrue: {
                 cursor -=: 1.
               }.
-            }, case: '\x5b\x31' do: {
+            }, case: '\x5b\x31' do: { #Supposedly <ctrl>
               Pen write: '\a' * 23.
               inc is stdin readBytes: 3.
               (cursor > 0) ifTrue: {
-                (inc = '\x3b\x35\x44') ifTrue: {
+                (inc = '\x3b\x35\x44') ifTrue: { #^Left Arrow
                   var ct is inp from: 0 to: cursor + 1.
                   ct is (ct indexOf: ' ').# + (ct split: ' ', last length min: cursor - 1).
                   cursor -=: ct.
                 }, else: {
-                  (inc = '\x3b\x35\x43') ifTrue: {
+                  (inc = '\x3b\x35\x43') ifTrue: { #^Right Arrow
                     var ct is inp from: cursor to: (inp length), split: ' ', head length min: cursor.
                     cursor +=: ct.
                   }.#, else: { Pen red write: inc. }.

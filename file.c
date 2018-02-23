@@ -17,6 +17,7 @@
 #include <dirent.h>
 #include "citron.h"
 #include "siphash.h"
+#include <wordexp.h>
 
 #include <termios.h>
 static struct termios oldTermios, newTermios;
@@ -167,9 +168,43 @@ ctr_object *ctr_file_rpath(ctr_object * myself, ctr_argument * argumentList)
 	if (path == NULL)
 		return CtrStdNil;
 	char *cpath = ctr_heap_allocate_cstring(path);
-	char *rpath = realpath(cpath, NULL);
+	char rpath[PATH_MAX+1];
+	char* ret = realpath(cpath, rpath);
+	if(!ret) {
+		if(1) {
+			wordexp_t exp_result;
+			int st = wordexp(cpath, &exp_result, 0);
+			if(!st) {
+				char* r = exp_result.we_wordv[0];
+				memset(rpath, 0, PATH_MAX);
+				memcpy(rpath, r, strlen(r));
+				wordfree(&exp_result);
+			} else {
+				char* err;
+				switch(st) {
+					case WRDE_BADCHAR:
+						err = "Bad character"; break;
+					case WRDE_BADVAL:
+						err = "Bad value"; break;
+					case WRDE_CMDSUB:
+						err = "command substitution requested"; break;
+					case WRDE_NOSPACE:
+						err = "Out of memory"; break;
+					case WRDE_SYNTAX:
+						err = "Shell syntax error"; break;
+					default: err = "Unknown error";
+				}
+				ctr_heap_free(cpath);
+				CtrStdFlow = ctr_build_string_from_cstring(err);
+				return CtrStdNil;
+			}
+		} else {
+			ctr_heap_free(cpath);
+			CtrStdFlow = ctr_build_string_from_cstring(strerror(errno));
+			return CtrStdNil;
+		}
+	}
 	path = ctr_build_string_from_cstring(rpath);
-	free(rpath);
 	ctr_heap_free(cpath);
 	return path;
 }
@@ -190,10 +225,7 @@ ctr_object *ctr_file_rpath(ctr_object * myself, ctr_argument * argumentList)
  */
 ctr_object *ctr_file_read(ctr_object * myself, ctr_argument * argumentList)
 {
-	ctr_object *path = ctr_internal_object_find_property(myself,
-							     ctr_build_string_from_cstring
-							     ("path"),
-							     0);
+	ctr_object *path = ctr_file_rpath(myself, NULL);
 	ctr_object *str;
 	ctr_size vlen, fileLen;
 	char *pathString;
@@ -278,10 +310,7 @@ ctr_object *ctr_file_write(ctr_object * myself, ctr_argument * argumentList)
 {
 	ctr_check_permission(CTR_SECPRO_NO_FILE_WRITE);
 	ctr_object *str = ctr_internal_cast2string(argumentList->object);
-	ctr_object *path = ctr_internal_object_find_property(myself,
-							     ctr_build_string_from_cstring
-							     ("path"),
-							     0);
+	ctr_object *path = ctr_file_rpath(myself, NULL);
 	if (!myself->value.rvalue || !myself->value.rvalue->ptr) {
 		FILE *f;
 		ctr_size vlen;
@@ -322,10 +351,7 @@ ctr_object *ctr_file_append(ctr_object * myself, ctr_argument * argumentList)
 {
 	ctr_check_permission(CTR_SECPRO_NO_FILE_WRITE);
 	ctr_object *str = ctr_internal_cast2string(argumentList->object);
-	ctr_object *path = ctr_internal_object_find_property(myself,
-							     ctr_build_string_from_cstring
-							     ("path"),
-							     0);
+	ctr_object *path = ctr_file_rpath(myself, NULL);
 	if (!myself->value.rvalue || !myself->value.rvalue->ptr) {
 		ctr_size vlen;
 		char *pathString;
@@ -363,10 +389,7 @@ ctr_object *ctr_file_exists(ctr_object * myself, ctr_argument * argumentList)
 {
 	if (myself->value.rvalue && myself->value.rvalue->ptr)
 		return ctr_build_bool(1);
-	ctr_object *path = ctr_internal_object_find_property(myself,
-							     ctr_build_string_from_cstring
-							     ("path"),
-							     0);
+	ctr_object *path = ctr_file_rpath(myself, NULL);
 	ctr_size vlen;
 	char *pathString;
 	FILE *f;
@@ -394,10 +417,7 @@ ctr_object *ctr_file_exists(ctr_object * myself, ctr_argument * argumentList)
 ctr_object *ctr_file_include(ctr_object * myself, ctr_argument * argumentList)
 {
 	ctr_check_permission(CTR_SECPRO_NO_INCLUDE);
-	ctr_object *path = ctr_internal_object_find_property(myself,
-							     ctr_build_string_from_cstring
-							     ("path"),
-							     0);
+	ctr_object *path = ctr_file_rpath(myself, NULL);
 	ctr_tnode *parsedCode;
 	ctr_size vlen;
 	char *pathString;
@@ -432,10 +452,7 @@ ctr_object *ctr_file_include_here(ctr_object * myself,
 				  ctr_argument * argumentList)
 {
 	ctr_check_permission(CTR_SECPRO_NO_INCLUDE);
-	ctr_object *path = ctr_internal_object_find_property(myself,
-							     ctr_build_string_from_cstring
-							     ("path"),
-							     0);
+	ctr_object *path = ctr_file_rpath(myself, NULL);
 	ctr_tnode *parsedCode;
 	ctr_size vlen;
 	char *pathString;
@@ -468,10 +485,7 @@ ctr_object *ctr_file_delete(ctr_object * myself, ctr_argument * argumentList)
 		CtrStdFlow = ctr_build_string_from_cstring("Resource is open");
 		return ctr_build_nil();
 	}
-	ctr_object *path = ctr_internal_object_find_property(myself,
-							     ctr_build_string_from_cstring
-							     ("path"),
-							     0);
+	ctr_object *path = ctr_file_rpath(myself, NULL);
 	ctr_size vlen;
 	char *pathString;
 	int r;
@@ -499,10 +513,7 @@ ctr_object *ctr_file_delete(ctr_object * myself, ctr_argument * argumentList)
  */
 ctr_object *ctr_file_size(ctr_object * myself, ctr_argument * argumentList)
 {
-	ctr_object *path = ctr_internal_object_find_property(myself,
-							     ctr_build_string_from_cstring
-							     ("path"),
-							     0);
+	ctr_object *path = ctr_file_rpath(myself, NULL);
 	ctr_size vlen;
 	char *pathString;
 	FILE *f;

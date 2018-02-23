@@ -6,7 +6,7 @@
 #include "ctypes.h"
 
 ctr_object* ctr_ctypes_struct_get_size(ctr_object* myself, ctr_argument* argumentList);
-
+ctr_object* ctr_ctypes_packed_size(ctr_object* myself, ctr_argument* argumentList);
 //Common
 #define CTR_CREATE_CTOBJECT(name) ctr_object* name = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX)
 
@@ -77,6 +77,7 @@ void ctr_ctypes_set_type(ctr_object* object, ctr_ctype type) {
     case CTR_CTYPE_STRUCT: object->link = CtrStdCType_struct; break;
     case CTR_CTYPE_STRING: object->link = CtrStdCType_string; break;
     case CTR_CTYPE_FUNCTION_POINTER: object->link = CtrStdCType_functionptr; break;
+    case CTR_CTYPE_CONTIGUOUS_ARRAY: object->link = CtrStdCType_cont_pointer; break;
     default: return;
   }
 }
@@ -502,6 +503,129 @@ CTR_CT_SIMPLE_TYPE_FUNC_STR(pointer) {
   return str_rep;
 }
 
+CTR_CT_SIMPLE_TYPE_FUNC_MAKE(cont_pointer) {
+  CTR_CREATE_CTOBJECT(object);
+  ctr_ctypes_set_type(object, CTR_CTYPE_CONTIGUOUS_ARRAY);
+  return object;
+}
+
+/*
+ffi_type_uint8
+ffi_type_sint8
+ffi_type_uint16
+ffi_type_sint16
+ffi_type_uint32
+ffi_type_sint32
+ffi_type_uint64
+ffi_type_sint64
+ffi_type_uchar
+ffi_type_schar
+ffi_type_ushort
+ffi_type_sshort
+ffi_type_uint
+ffi_type_sint
+ffi_type_ulong
+ffi_type_slong
+ffi_type_float
+ffi_type_double
+ffi_type_longdouble
+*/
+ctr_object* ctr_ctypes_make_packed(ctr_object* myself, ctr_argument* argumentList) { //packed: [int] count: [int]
+  int typeid = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  ffi_type* type_ = 0;
+  size_t size = 0;
+  size_t count = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
+  switch(typeid) {
+    case 0  : size = sizeof(uint8_t); type_ = &ffi_type_uint8; break;
+    case 1  : size = sizeof(char); type_ = &ffi_type_sint8; break;
+    case 2  : size = sizeof(uint16_t); type_ = &ffi_type_uint16; break;
+    case 3  : size = sizeof(int16_t); type_ = &ffi_type_sint16; break;
+    case 4  : size = sizeof(uint32_t); type_ = &ffi_type_uint32; break;
+    case 5  : size = sizeof(int32_t); type_ = &ffi_type_sint32; break;
+    case 6  : size = sizeof(uint64_t); type_ = &ffi_type_uint64; break;
+    case 7  : size = sizeof(int64_t); type_ = &ffi_type_sint64; break;
+    case 8  : size = sizeof(unsigned char); type_ = &ffi_type_uchar; break;
+    case 9  : size = sizeof(signed char); type_ = &ffi_type_schar; break;
+    case 10 : size = sizeof(unsigned short); type_ = &ffi_type_ushort; break;
+    case 11 : size = sizeof(signed short); type_ = &ffi_type_sshort; break;
+    case 12 : size = sizeof(unsigned int); type_ = &ffi_type_uint; break;
+    case 13 : size = sizeof(signed int); type_ = &ffi_type_sint; break;
+    case 14 : size = sizeof(unsigned long); type_ = &ffi_type_ulong; break;
+    case 15 : size = sizeof(signed long); type_ = &ffi_type_slong; break;
+    case 16 : size = sizeof(float); type_ = &ffi_type_float; break;
+    case 17 : size = sizeof(double); type_ = &ffi_type_double; break;
+    case 18 : size = sizeof(long double); type_ = &ffi_type_longdouble; break;
+    default : size = 0; type_ = 0;
+  }
+  if(!type_) {
+    CtrStdFlow = ctr_build_string_from_cstring("Incorrect type id for array");
+    return CtrStdNil;
+  }
+  void* storage = ctr_heap_allocate(size*count);
+  ctr_ctypes_cont_array_t* arr = ctr_heap_allocate(sizeof(*arr));
+  arr->storage = storage;
+  arr->count = count;
+  arr->esize = size;
+  arr->etype = type_;
+  ctr_object* obj = ctr_ctypes_make_cont_pointer(myself, NULL);
+  obj->value.rvalue->ptr = arr;
+  return obj;
+}
+ctr_object* ctr_ctypes_packed_set(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_ctypes_cont_array_t* ptr = myself->value.rvalue->ptr;
+  if(!ptr) return myself;
+  char* storage = ptr->storage;
+  ffi_type* etype = ptr->etype;
+  size_t
+    count = ptr->count,
+    esize = ptr->esize;
+  int elem = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
+  if(elem >= count) {
+    CtrStdFlow = ctr_build_string_from_cstring("Index out of bounds");
+    return myself;
+  }
+  ctr_object* obj = argumentList->object;
+  npdispatch(storage+(esize*elem), obj, etype);
+  return myself;
+}
+ctr_object* ctr_ctypes_packed_get(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_ctypes_cont_array_t* ptr = myself->value.rvalue->ptr;
+  if(!ptr) return myself;
+  char* storage = ptr->storage;
+  ffi_type* etype = ptr->etype;
+  size_t
+    count = ptr->count,
+    esize = ptr->esize;
+  int elem = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  if(elem >= count) {
+    CtrStdFlow = ctr_build_string_from_cstring("Index out of bounds");
+    return CtrStdNil;
+  }
+  ctr_object* obj;
+  obj = nudispatch(storage+(esize*elem), etype);
+  if(!obj) {
+    CtrStdFlow = ctr_build_string_from_cstring("Could not unpack the array");
+    return CtrStdNil;
+  }
+  return obj;
+}
+ctr_object* ctr_ctypes_packed_count(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_ctypes_cont_array_t* ptr = myself->value.rvalue->ptr;
+  if(!ptr) return ctr_build_number_from_float(0);
+  size_t
+    count = ptr->count;
+  return ctr_build_number_from_float(count);
+}
+
+ctr_object* ctr_ctypes_packed_size(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_ctypes_cont_array_t* ptr = myself->value.rvalue->ptr;
+  if(!ptr) return ctr_build_number_from_float(0);
+  size_t
+    count = ptr->count,
+    esize = ptr->esize;
+  return ctr_build_number_from_float(count*esize);
+}
+
 ssize_t ctr_ctype_get_c_size(ctr_object* obj) {
   ctr_object* meta = ctr_ctypes_get_first_meta(obj, CtrStdCType);
   if (meta->info.type == CTR_OBJECT_TYPE_OTSTRING) return sizeof(char)*(meta->value.svalue->vlen+1);
@@ -525,6 +649,7 @@ ssize_t ctr_ctype_get_c_size(ctr_object* obj) {
   else if((meta) == CtrStdCType_ulong)       return sizeof(unsigned long);
   else if((meta) == CtrStdCType_slong)       return sizeof(long);
   else if((meta) == CtrStdCType_longdouble)  return sizeof(long double);
+  else if((meta) == CtrStdCType_cont_pointer)return ctr_ctypes_packed_size(obj, NULL)->value.nvalue;
   else if(  meta == CtrStdCType_struct)      return ctr_ctypes_struct_get_size(obj, NULL)->value.nvalue;//signal for struct
   // else if((meta) == CtrStdCType_pointer ||
   // meta == CtrStdCType_dynamic_lib ||
@@ -680,10 +805,17 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(dynamic_lib) {
   return funptr;
 }
 
-ctr_object* ctr_ctypes_make_struct(ctr_object* myself, ctr_argument* argumentList) {
+void* ctr_struct_destruct(void* res) {
+  ctr_ctypes_ffi_struct_value* ptr = res;
+  ctr_heap_free(ptr->original_format);
+  if(ptr->value) ctr_heap_free(ptr->value);
+  return 0;
+}
+
+ctr_object* ctr_ctypes_struct_make_internal(ctr_object* myself, char* _fmt) {
   CTR_CREATE_CTOBJECT(object);
   ctr_ctypes_set_type(object, CTR_CTYPE_STRUCT);
-  char* fmt  = ctr_heap_allocate_cstring(argumentList->object);
+  char* fmt  = _fmt;
   char* fmtp = fmt;
   size_t size;
   struct_member_desc_t desc;
@@ -696,9 +828,15 @@ ctr_object* ctr_ctypes_make_struct(ctr_object* myself, ctr_argument* argumentLis
   ptr->size = size;
   ptr->padinfo = desc.pad_structure;
   ptr->value = NULL;
-  ctr_heap_free(fmtp);
+  ptr->original_format = fmtp;
   object->value.rvalue->ptr = (void*)ptr;
+  // object->release_hook = &ctr_struct_destruct;
   return object;
+}
+
+ctr_object* ctr_ctypes_make_struct(ctr_object* myself, ctr_argument* argumentList) {
+  char* fmt = ctr_heap_allocate_cstring(argumentList->object);
+  return ctr_ctypes_struct_make_internal(myself, fmt);
 }
 
 /* ptr is CTypes fromString: 'test'.
@@ -874,6 +1012,12 @@ ctr_object* ctr_ctypes_struct_to_string(ctr_object* myself, ctr_argument* argume
   char* nbf = ctr_heap_allocate((len+32)*sizeof(char));
   len = sprintf(nbf, "CTypes structWithFormat: '%.*s'", len, buf);
   return ctr_build_string(nbf, len);
+}
+
+ctr_object* ctr_ctypes_struct_new(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_ctypes_ffi_struct_value* ptr = myself->value.rvalue->ptr;
+  ctr_object* new = ctr_ctypes_struct_make_internal(myself, ptr->original_format);
+  return new;
 }
 
 ctr_object* ctr_ctypes_unmake_struct(ctr_object* myself, ctr_argument* argumentList) {
@@ -1477,6 +1621,7 @@ void begin() {
   CTR_CT_INTRODUCE_TYPE(struct);
   ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring("structWithFormat:"), &ctr_ctypes_make_struct);
   ctr_internal_create_func(CtrStdCType_struct, ctr_build_string_from_cstring("toString"), &ctr_ctypes_struct_to_string);
+  ctr_internal_create_func(CtrStdCType_struct, ctr_build_string_from_cstring("new"), &ctr_ctypes_struct_new);
   ctr_internal_create_func(CtrStdCType_struct, ctr_build_string_from_cstring("getSize"), &ctr_ctypes_struct_get_size);
   ctr_internal_create_func(CtrStdCType_struct, ctr_build_string_from_cstring("memberCount"), &ctr_ctypes_struct_get_member_count);
   ctr_internal_create_func(CtrStdCType_struct, ctr_build_string_from_cstring("padInfo"), &ctr_ctypes_struct_get_padding_format);
@@ -1493,6 +1638,12 @@ void begin() {
   ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("destruct"), &ctr_ctype_ffi_cif_destruct);
   ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("setABI:return:argTypes:"), &ctr_ctype_ffi_prep_cif);
   ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("call:withArgs:"), &ctr_ctype_ffi_call);
+  CTR_CT_INTRODUCE_TYPE(cont_pointer);
+  ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring("packed:count:"), &ctr_ctypes_make_packed);
+  ctr_internal_create_func(CtrStdCType_cont_pointer, ctr_build_string_from_cstring("at:"), &ctr_ctypes_packed_get);
+  ctr_internal_create_func(CtrStdCType_cont_pointer, ctr_build_string_from_cstring("put:at:"), &ctr_ctypes_packed_set);
+  ctr_internal_create_func(CtrStdCType_cont_pointer, ctr_build_string_from_cstring("count"), &ctr_ctypes_packed_count);
+  ctr_internal_create_func(CtrStdCType_cont_pointer, ctr_build_string_from_cstring("getSize"), &ctr_ctypes_packed_size);
 
   ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring("allocateBytes:"), &ctr_ctype_ffi_malloc);
   ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring("copyTo:from:numBytes:"), &ctr_ctype_ffi_memcpy);

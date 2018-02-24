@@ -1596,7 +1596,7 @@ ctr_object *ctr_array_select_from_if(ctr_object * myself,
 ctr_object *ctr_array_assign(ctr_object * myself, ctr_argument * argumentList)
 {
 	ctr_object *to = argumentList->object;
-	if (!ctr_reflect_check_bind_valid(myself, to))
+	if (!ctr_reflect_check_bind_valid(myself, to, 0))
 		return CtrStdNil;
 
 	ctr_argument *elnumArg =
@@ -2463,7 +2463,7 @@ ctr_object *ctr_map_to_string(ctr_object * myself, ctr_argument * argumentList)
 ctr_object *ctr_map_assign(ctr_object * myself, ctr_argument * argumentList)
 {
 	ctr_object *to = argumentList->object;
-	if (!ctr_reflect_check_bind_valid(myself, to))
+	if (!ctr_reflect_check_bind_valid(myself, to, 0))
 		return CtrStdNil;
 
 	ctr_mapitem *mapItem;
@@ -2485,7 +2485,7 @@ ctr_object *ctr_map_assign(ctr_object * myself, ctr_argument * argumentList)
 			continue;
 		}
 		value->info.raw = 1;
-		if (!ctr_reflect_check_bind_valid(mapItem->value, value)) {
+		if (!ctr_reflect_check_bind_valid(mapItem->value, value, 0)) {
 			// CtrStdFlow = NULL; //get rid of the error, and bind the result back to the name
 			newArgumentList->object = mapItem->key;
 			ctr_send_message(mapItem->value, "unpack:", 7,

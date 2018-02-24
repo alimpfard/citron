@@ -99,9 +99,15 @@ ctr_object *ctr_nil_to_boolean(ctr_object * myself,
 
 ctr_object *ctr_nil_assign(ctr_object * myself, ctr_argument * argumentList)
 {
-	if (!ctr_reflect_check_bind_valid(myself, argumentList->object))
+	if (!ctr_reflect_check_bind_valid(myself, argumentList->object, 0))
 		return CtrStdNil;
 	if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTSTRING) {
+  if(!ctr_internal_object_is_equal(myself, argumentList->object)) {
+    CtrStdFlow =
+        ctr_build_string_from_cstring
+        ("Number cannot be constructed by ");
+    ctr_string_append(CtrStdFlow, argumentList);
+  }
 		CtrStdFlow =
 		    ctr_build_string_from_cstring
 		    ("Nil cannot be constructed by ");
@@ -311,7 +317,7 @@ ctr_object *ctr_object_attr_writer(ctr_object * myself,
 
 ctr_object *ctr_object_assign(ctr_object * myself, ctr_argument * argumentList)
 {
-	if (!ctr_reflect_check_bind_valid(myself, argumentList->object))
+	if (!ctr_reflect_check_bind_valid(myself, argumentList->object, 0))
 		return CtrStdNil;
 	ctr_object *oldlink = myself->link;
 	myself->link = CtrStdMap;	//cast to map
@@ -966,9 +972,15 @@ ctr_object *ctr_build_bool(int truth)
 
 ctr_object *ctr_bool_assign(ctr_object * myself, ctr_argument * argumentList)
 {
-	if (!ctr_reflect_check_bind_valid(myself, argumentList->object))
+	if (!ctr_reflect_check_bind_valid(myself, argumentList->object, 0))
 		return CtrStdNil;
 	if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTSTRING) {
+  if(!ctr_internal_object_is_equal(myself, argumentList->object)) {
+    CtrStdFlow =
+        ctr_build_string_from_cstring
+        ("Number cannot be constructed by ");
+    ctr_string_append(CtrStdFlow, argumentList);
+  }
 		CtrStdFlow =
 		    ctr_build_string_from_cstring
 		    ("Boolean cannot be constructed by ");
@@ -1327,13 +1339,21 @@ ctr_object *ctr_build_number(char *n)
 
 ctr_object *ctr_number_assign(ctr_object * myself, ctr_argument * argumentList)
 {
-	if (!ctr_reflect_check_bind_valid(myself, argumentList->object))
+	if (!ctr_reflect_check_bind_valid(myself, argumentList->object, 0))
 		return CtrStdNil;
 	if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTSTRING) {
-		CtrStdFlow =
-		    ctr_build_string_from_cstring
-		    ("Number cannot be constructed by ");
-		ctr_string_append(CtrStdFlow, argumentList);
+  if(!ctr_internal_object_is_equal(myself, argumentList->object)) {
+    CtrStdFlow =
+        ctr_build_string_from_cstring
+        ("Number cannot be constructed by ");
+    ctr_string_append(CtrStdFlow, argumentList);
+  }
+		if(!ctr_internal_object_is_equal(myself, argumentList->object)) {
+			CtrStdFlow =
+			    ctr_build_string_from_cstring
+			    ("Number cannot be constructed by ");
+			ctr_string_append(CtrStdFlow, argumentList);
+		}
 		return myself;
 	}
 	if (ctr_internal_object_is_equal(argumentList->object, &CTR_CLEX_US)
@@ -2298,9 +2318,15 @@ ctr_object *ctr_string_assign(ctr_object * myself, ctr_argument * argumentList)
 		ctr_object *myarr = ctr_string_characters(myself, NULL);
 		return ctr_array_assign(myarr, argumentList);
 	}
-	if (!ctr_reflect_check_bind_valid(myself, argumentList->object))
+	if (!ctr_reflect_check_bind_valid(myself, argumentList->object, 0))
 		return CtrStdNil;
 	if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTSTRING) {
+  if(!ctr_internal_object_is_equal(myself, argumentList->object)) {
+    CtrStdFlow =
+        ctr_build_string_from_cstring
+        ("Number cannot be constructed by ");
+    ctr_string_append(CtrStdFlow, argumentList);
+  }
 		CtrStdFlow =
 		    ctr_build_string_from_cstring
 		    ("String cannot be constructed by ");
@@ -4475,9 +4501,15 @@ void ctr_capture_refs_(ctr_tnode * ti, ctr_object * block, int noerror)
 
 ctr_object *ctr_block_assign(ctr_object * myself, ctr_argument * argumentList)
 {
-	if (!ctr_reflect_check_bind_valid(myself, argumentList->object))
+	if (!ctr_reflect_check_bind_valid(myself, argumentList->object, 0))
 		return CtrStdNil;
 	if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTSTRING) {
+  if(!ctr_internal_object_is_equal(myself, argumentList->object)) {
+    CtrStdFlow =
+        ctr_build_string_from_cstring
+        ("Number cannot be constructed by ");
+    ctr_string_append(CtrStdFlow, argumentList);
+  }
 		CtrStdFlow =
 		    ctr_build_string_from_cstring
 		    ("Block cannot be constructed by ");
@@ -4681,6 +4713,7 @@ ctr_object *ctr_block_run_array(ctr_object * myself, ctr_object * argArray,
 	struct ctr_mapitem *head;
 	head = myself->properties->head;
 	while (p > -1) {
+		if (!head) break;
 		ctr_assign_value_to_my(head->key, head->value);
 		head = head->next;
 		p--;
@@ -4807,6 +4840,7 @@ ctr_object *ctr_block_run(ctr_object * myself, ctr_argument * argList,
 	struct ctr_mapitem *head;
 	head = myself->properties->head;
 	while (p > -1) {
+		if(!head) break;
 		ctr_assign_value_to_my(head->key, head->value);
 		head = head->next;
 		p--;

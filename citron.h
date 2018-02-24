@@ -820,6 +820,7 @@ ctr_object* ctr_file_list(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_tmp(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_stdext_path(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_assign(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_file_to_string(ctr_object* myself, ctr_argument* argumentList);
 /**
  * Command Object Interface
  */

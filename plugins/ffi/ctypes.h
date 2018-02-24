@@ -60,7 +60,8 @@ enum ctr_ctype {
   CTR_CTYPE_STRUCT,
   //convenience
   CTR_CTYPE_STRING,
-  CTR_CTYPE_FUNCTION_POINTER
+  CTR_CTYPE_FUNCTION_POINTER,
+  CTR_CTYPE_CONTIGUOUS_ARRAY
 };
 typedef enum ctr_ctype ctr_ctype;
 
@@ -70,7 +71,16 @@ typedef struct {
     ffi_type* type;
     pad_info_node_t** padinfo;
     void* value;
+    char* original_format;
 } ctr_ctypes_ffi_struct_value;
+
+typedef struct ctr_ctypes_cont_array
+{
+    size_t count;
+    size_t esize;
+    void* storage;
+    ffi_type* etype;
+} ctr_ctypes_cont_array_t;
 
 ctr_object* CtrStdCType; //Template, not added to the world
 ctr_object* CtrStdCType_ffi_cif;
@@ -187,6 +197,9 @@ CTR_CT_SIMPLE_TYPE_FUNC_STR(dynamic_lib);
 
 //Dynamic Library
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(struct);
+
+//CONTIGUOUS ARRAY
+CTR_CT_SIMPLE_TYPE_FUNC_MAKE(cont_pointer);
 
 //String
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(string);

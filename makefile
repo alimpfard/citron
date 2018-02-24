@@ -18,7 +18,7 @@ endif
 
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
        world.o lexer.o lexer_plug.o parser.o walker.o reflect.o fiber.o importlib.o\
-	   coroutine.o base_extensions.o citron.o
+	   coroutine.o symbol.o base_extensions.o citron.o
 
 COBJS = ${OBJS} compiler.o
 

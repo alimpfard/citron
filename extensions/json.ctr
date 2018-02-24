@@ -1,4 +1,4 @@
-var JSON is Object new.
-JSON on: 'loads:' do: {:str 
-  var parsed is Jansson parse: str.
+var Json is Object new.
+Json on: 'loads:' do: {:str 
+  var parsed is JSON parse: str.
 }.

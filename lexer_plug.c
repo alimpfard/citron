@@ -382,8 +382,10 @@ int ctr_lex_tok()
 			ctr_lex_tokvlen++;
 		}
 		ctr_code++;
-		if(is_name)
+		if(is_name) {
+			if(ctr_lex_tokvlen > 1) ctr_code--;
 			return CTR_TOKEN_REF;
+		}
 		return CTR_TOKEN_COLON;
 	}
 	if (c == '^') {

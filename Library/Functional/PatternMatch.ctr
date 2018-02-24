@@ -1,0 +1,17 @@
+Pen red writeln: 'WARNING: Pattern Match will NOT do true pattern matching, it will only check if any given pattern is constructible by the object', resetColor.
+Object on: 'match:' do: {:blkmap
+  var self is me.
+  var ret is Nil.
+  var done is False.
+  blkmap each_v: {:kv
+    var k is kv @ 0.
+    var v is kv @ 1.
+    Reflect isObject: self constructibleBy: k, ifTrue: {
+      ret is { self unpack: k. ^Reflect runHere: v forObject: thisBlock arguments: [self]. } run.
+      done is True.
+      done break.
+    }.
+  }.
+  done ifFalse: { thisBlock error: 'non-exhaustive Pattern match'. }.
+  ^ret.
+}.

@@ -9,14 +9,16 @@ ctr_object* ctr_string_dquotes_escape(ctr_object* myself, ctr_argument* argument
     ctr_size j;
     len = myself->value.svalue->vlen;
     for( i = 0; i < myself->value.svalue->vlen; i++ ) {
-        if ( *(myself->value.svalue->value + i) == '"' ) {
+      char c = *(myself->value.svalue->value + i);
+        if ( c == '"' || c == '\\') {
             len++;
         }
     }
     str = ctr_heap_allocate( len + 1 );
     j = 0;
     for( i = 0; i < myself->value.svalue->vlen; i++ ) {
-        if ( *(myself->value.svalue->value + i) == '"' ) {
+      char c = *(myself->value.svalue->value + i);
+        if ( c == '"' || c == '\\') {
             str[j+i] = '\\';
             j++;
         }
@@ -35,11 +37,19 @@ ctr_object* ctr_json_create_object(json_t* root, ctr_object* gt) {
             // size_t size;
             const char *key;
             json_t *value;
+            ctr_argument* argl = ctr_heap_allocate(sizeof(*argl));
+            argl->next = ctr_heap_allocate(sizeof(*argl));
             // size = json_object_size(root);
             json_object_foreach(root, key, value) {
               char* k = (char*)key;
-              ctr_internal_object_add_property(sub, ctr_build_string_from_cstring(k), ctr_json_create_object((json_t*)value, gt), CTR_CATEGORY_PRIVATE_PROPERTY);
+              ctr_object* ko = ctr_build_string_from_cstring(k);
+              ctr_object* vo = ctr_json_create_object(value, gt);
+              argl->object = vo;
+              argl->next->object = ko;
+              sub = ctr_map_put(sub, argl);
             }
+            ctr_heap_free(argl->next);
+            ctr_heap_free(argl);
             return sub;
           }
         case JSON_ARRAY: {
@@ -55,7 +65,7 @@ ctr_object* ctr_json_create_object(json_t* root, ctr_object* gt) {
           return arr;
         }
         case JSON_STRING: {
-          ctr_object* str = ctr_build_string_from_cstring((char*)json_string_value(root));
+          ctr_object* str = ctr_build_string((char*)json_string_value(root), json_string_length(root));
           return str;
         }
         case JSON_INTEGER: {
@@ -79,11 +89,11 @@ ctr_object* ctr_json_create_object(json_t* root, ctr_object* gt) {
         }
     }
 }
-json_t *load_json(const char *text) {
+json_t *load_json(const char *text, const char* fp) {
     json_t *root;
     json_error_t error;
 
-    root = json_loads(text, 0, &error);
+    root = text ? json_loads(text, 0, &error) : json_load_file(fp, 0, &error);
 
     if (root) {
         return root;
@@ -98,12 +108,25 @@ ctr_object* ctr_serialize_map(ctr_object* object);
 ctr_object* ctr_json_serialize_(ctr_object* object);
 
 ctr_object* ctr_json_parse (ctr_object* myself, ctr_argument* argumentList) {
-  char* jso = ctr_heap_allocate_cstring(ctr_internal_cast2string(argumentList->object));
-  json_t* root = load_json(jso);
-  ctr_heap_free(jso);
+  ctr_object* link = ctr_reflect_get_primitive_link(argumentList->object);
+  json_t* root;
+  if(link == CtrStdString) {
+    char* jso = ctr_heap_allocate_cstring(argumentList->object);
+    root = load_json(jso, 0);
+    ctr_heap_free(jso);
+  } else if (link == CtrStdFile) {
+    char* jso = ctr_heap_allocate_cstring(ctr_file_rpath(argumentList->object, 0));
+    root = load_json(0, jso);
+    ctr_heap_free(jso);
+  } else {
+    char* jso = ctr_heap_allocate_cstring(ctr_internal_cast2string(argumentList->object));
+    root = load_json(jso, 0);
+    ctr_heap_free(jso);
+  }
+  ctr_object* p = argumentList->next->object ? argumentList->next->object : CtrStdMap;
   if(root) {
-    ctr_object* obj = ctr_json_create_object(root, argumentList->next->object);
-    if(!obj->link) obj->link = argumentList->next->object;
+    ctr_object* obj = ctr_json_create_object(root, p);
+    if(!obj->link) obj->link = p;
     return obj;
   } else return CtrStdNil;
 }
@@ -202,7 +225,7 @@ ctr_object* ctr_serialize_map(ctr_object* object) {
   newArgumentList = ctr_heap_allocate( sizeof( ctr_argument ) );
   int first = 1;
   while( mapItem ) {
-      int skip = strncmp(mapItem->key->value.svalue->value, "me", mapItem->key->value.svalue->vlen) == 0 || strncmp(mapItem->key->value.svalue->value, "thisBlock", mapItem->key->value.svalue->vlen) == 0;
+      int skip = (mapItem->key->info.type == CTR_OBJECT_TYPE_OTSTRING) && (strncmp(mapItem->key->value.svalue->value, "me", mapItem->key->value.svalue->vlen) == 0 || strncmp(mapItem->key->value.svalue->value, "thisBlock", mapItem->key->value.svalue->vlen) == 0);
       if(!skip) {
         if ( mapItem && !first ) {
             newArgumentList->object = ctr_build_string_from_cstring( ", " );
@@ -234,6 +257,8 @@ void begin() {
   ctr_object* jans = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
   jans->link = CtrStdObject;
   ctr_internal_create_func(jans, ctr_build_string_from_cstring("parse:genericType:"), &ctr_json_parse);
+  ctr_internal_create_func(jans, ctr_build_string_from_cstring("parse:"), &ctr_json_parse);
   ctr_internal_create_func(jans, ctr_build_string_from_cstring("serialize:"), &ctr_json_serialize);
+  ctr_internal_create_func(jans, ctr_build_string_from_cstring("dump:"), &ctr_json_serialize);
   ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("JSON"), jans, 0);
 }

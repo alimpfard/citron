@@ -1136,7 +1136,7 @@ ctr_object *ctr_internal_cast2bool(ctr_object * o)
  */
 void ctr_switch_context(ctr_object * context)
 {
-	if (ctr_context_id >= 99999) {
+	if (ctr_context_id >= 9999) {
 		CtrStdFlow =
 		    ctr_build_string_from_cstring("Too many nested calls.");
 		CtrStdFlow->info.sticky = 1;
@@ -1155,7 +1155,7 @@ void ctr_switch_context(ctr_object * context)
 void ctr_open_context()
 {
 	ctr_object *context;
-	if (ctr_context_id >= 99999) {
+	if (ctr_context_id >= 9999) {
 		CtrStdFlow =
 		    ctr_build_string_from_cstring("Too many nested calls.");
 		CtrStdFlow->info.sticky = 1;
@@ -2497,6 +2497,9 @@ void ctr_initialize_world()
 	ctr_internal_create_func(CtrStdFile,
 				 ctr_build_string_from_cstring("special:"),
 				 &ctr_file_special);
+	ctr_internal_create_func(CtrStdFile,
+				 ctr_build_string_from_cstring(CTR_DICT_TOSTRING),
+			 	 &ctr_file_to_string);
 	CTR_FILE_STDIN = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
 	CTR_FILE_STDOUT = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
 	CTR_FILE_STDERR = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);

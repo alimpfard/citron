@@ -558,10 +558,7 @@ ctr_object *ctr_file_size(ctr_object * myself, ctr_argument * argumentList)
  */
 ctr_object *ctr_file_open(ctr_object * myself, ctr_argument * argumentList)
 {
-	ctr_object *pathObj = ctr_internal_object_find_property(myself,
-								ctr_build_string_from_cstring
-								("path"),
-								0);
+	ctr_object *pathObj = ctr_file_rpath(myself, NULL);
 	char *mode;
 	char *path;
 	FILE *handle;
@@ -937,6 +934,21 @@ ctr_object *ctr_file_list(ctr_object * myself, ctr_argument * argumentList)
 	ctr_heap_free(addArgumentList);
 	ctr_heap_free(pathValue);
 	return fileList;
+}
+
+ctr_object* ctr_file_to_string(ctr_object* myself, ctr_argument* argumentList) {
+	ctr_object *pathObj = ctr_internal_object_find_property(myself,
+								ctr_build_string_from_cstring
+								("path"),
+								0);
+	if(!pathObj) return ctr_build_string_from_cstring("File");
+	ctr_size len = pathObj->value.svalue->vlen;
+	char* v = pathObj->value.svalue->value;
+	char* nv = ctr_heap_allocate(sizeof(char)*(len+20));
+	len = sprintf(nv, "[File:%.*s]", len, v);
+	pathObj = ctr_build_string(nv, len);
+	ctr_heap_free(nv);
+	return pathObj;
 }
 
 ctr_object *ctr_file_type(ctr_object * myself, ctr_argument * argumentList)

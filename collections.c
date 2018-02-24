@@ -1955,11 +1955,13 @@ ctr_object *ctr_map_put(ctr_object * myself, ctr_argument * argumentList)
 		    ctr_send_message(nextArgument->object, "iHash", 5, NULL);
 
 		/* If developer returns something other than a number (ouch, iHash), then hash that */
+		ctr_number hashk;
 		if (putKeyHash->info.type != CTR_OBJECT_TYPE_OTNUMBER)
-			putKeyHash =
+			hashk =
 			    ctr_internal_index_hash(ctr_internal_cast2string
 						    (nextArgument->object));
-		ctr_number hashk = putKeyHash->value.nvalue;
+		else
+			hashk = putKeyHash->value.nvalue;
 		ctr_internal_object_delete_property_with_hash(myself,
 							      nextArgument->
 							      object,
@@ -1989,7 +1991,6 @@ ctr_object *ctr_map_rm(ctr_object * myself, ctr_argument * argumentList)
 	char *key;
 	long keyLen;
 	ctr_object *putKey = argumentList->object;
-	ctr_object *putValue;
 	ctr_argument *emptyArgumentList =
 	    ctr_heap_allocate(sizeof(ctr_argument));
 	emptyArgumentList->next = NULL;
@@ -2016,9 +2017,9 @@ ctr_object *ctr_map_rm(ctr_object * myself, ctr_argument * argumentList)
 		ctr_object *putKeyHash =
 		    ctr_send_message(putKey, "iHash", 5, NULL);
 
-		/* If developer returns something other than a number (ouch, iHash), then hash that */
+		/* If developer returns something other than a number (ouch, iHash), then hash internally */
 		if (putKeyHash->info.type != CTR_OBJECT_TYPE_OTNUMBER)
-			hashk = ctr_internal_index_hash(putKeyHash);
+			hashk = ctr_internal_index_hash(putKey);
 		else
 			hashk = putKeyHash->value.nvalue;
 		ctr_internal_object_delete_property_with_hash(myself,
@@ -2036,7 +2037,6 @@ ctr_object *ctr_map_rm(ctr_object * myself, ctr_argument * argumentList)
  */
 ctr_object *ctr_map_get(ctr_object * myself, ctr_argument * argumentList)
 {
-	ctr_argument *emptyArgumentList;
 	ctr_object *searchKey;
 	ctr_object *foundObject;
 
@@ -2061,14 +2061,15 @@ ctr_object *ctr_map_get(ctr_object * myself, ctr_argument * argumentList)
 		ctr_object *searchKeyHasho =
 		    ctr_send_message(searchKey, "iHash", 5, NULL);
 		if (searchKeyHasho->info.type != CTR_OBJECT_TYPE_OTNUMBER) {
-			hashk =
-			    ctr_internal_index_hash((searchKeyHasho));
-		} else hashk = searchKeyHasho->value.nvalue;
-		foundObject =
+			foundObject = ctr_internal_object_find_property(myself, searchKey, 0);
+		} else {
+			hashk = searchKeyHasho->value.nvalue;
+			foundObject =
 		    ctr_internal_object_find_property_with_hash(myself,
 								searchKey,
 								*(uint64_t *) &
 								hashk, 0);
+		}
 		if (foundObject == NULL)
 			foundObject = ctr_build_nil();
 		return foundObject;

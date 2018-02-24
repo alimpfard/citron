@@ -15,9 +15,9 @@ extern "C" {
 #include <string.h>
 
 #ifdef withBoehmGC
-#define CTR_VERSION "0.0.7.1-boehm-gc"
+#define CTR_VERSION "0.0.7.2-boehm-gc"
 #else
-#define CTR_VERSION "0.0.7.1-lexical-scoping"
+#define CTR_VERSION "0.0.7.2"
 #endif
 
 #define CTR_LOG_WARNINGS 0//2 to enable
@@ -964,7 +964,8 @@ ctr_object* ctr_reflect_get_primitive_link(ctr_object* object);
 ctr_object* ctr_reflect_describe_type(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_describe_value(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_type_descriptor_print(ctr_object* myself, ctr_argument* argumentList);
-int ctr_reflect_check_bind_valid(ctr_object* from, ctr_object* to);
+int ctr_reflect_check_bind_valid(ctr_object* from, ctr_object* to, int err);
+ctr_object* ctr_reflect_check_bind_valid_v(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_bind(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_cons_of(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_try_serialize_block(ctr_object* myself, ctr_argument* argumentList);
@@ -1050,7 +1051,6 @@ ctr_object* ctr_build_number_from_float(ctr_number floatNumber);
 ctr_object* ctr_build_bool(int truth);
 ctr_object* ctr_build_nil();
 ctr_object* ctr_build_string_from_cstring( char* str );
-ctr_object* ctr_build_symbol(ctr_tnode* node);
 void ctr_gc_internal_collect();
 ctr_object* ctr_gc_sweep_this( ctr_object* myself, ctr_argument* argumentList );
 

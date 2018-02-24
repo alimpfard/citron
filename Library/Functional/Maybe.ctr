@@ -1,0 +1,48 @@
+var Just is Object cnew: { value => Nil. },
+  on: 'unpack:' do: {:ot
+    # Pen writeln: ot.
+    (ot type equals: me type) ifTrue: {
+      var value is my value.
+      ^{\ ^value unpack: ot unwrap. }.
+    }, else: {
+      thisBlock error: 'NotJust'.
+    }.
+  },
+  on: '$' do: {:v
+    ^me cnew: {
+      my value is v.
+    }.
+  },
+  on: 'type' do: {
+    ^'Maybe#Just'.
+  },
+  on: 'toString' do: {\
+    'Just $ (%s)' % [my value].
+  },
+  on: 'unwrap' do: {\ my value }.
+var Nothing is Object new
+  # on: 'unpack:' do: {:ot
+  #   (ot type equals: me type) ifTrue: {
+  #     ^ot.
+  #   }, else: {
+  #     thisBlock error: 'Not Nothing'.
+  #   }.
+  # },
+  on: 'type' do: {
+      ^'Maybe#Nothing'.
+  },
+  on: 'toString' do: {\ 'Nothing' }.
+
+var Maybe is Object new
+  on: 'just:' do: {\:p
+    const Just cnew: {
+      my value is p.
+    }.
+  },
+  on: 'nothing' do: {
+    ^const Nothing.
+  }.
+import
+  export: Nothing as: 'Nothing',
+  export: Just as: 'Just',
+  export: Maybe as: 'Maybe'.

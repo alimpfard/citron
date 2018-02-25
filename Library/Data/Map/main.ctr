@@ -9,6 +9,10 @@ Map on: 'values' do: {
   ^r.
 }.
 
+Map on: 'clear' do: {
+  me each: {:k me deleteAt: k. }.
+}.
+
 Map on: 'respondTo:' do: {:msg
   var self is me.
   ^(msg startsWith: '@') either: { ^self at: (msg skip: 1). } or: { ^Object respondTo: msg. }.

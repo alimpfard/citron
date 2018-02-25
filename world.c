@@ -1893,6 +1893,26 @@ void ctr_initialize_world()
 				 &ctr_string_find_pattern_options_do);
 	ctr_internal_create_func(CtrStdString,
 				 ctr_build_string_from_cstring
+				 ("regex:substitute:options:"),
+			   &ctr_string_reg_replace);
+	ctr_internal_create_func(CtrStdString,
+				ctr_build_string_from_cstring
+				("regex:substitute:"),
+			  &ctr_string_reg_replace);
+	ctr_internal_create_func(CtrStdString,
+				 ctr_build_string_from_cstring
+				 ("=~:"),
+			   &ctr_string_reg_replace);
+	ctr_internal_create_func(CtrStdString,
+				 ctr_build_string_from_cstring
+				 ("p/:s/:o/:"),
+			   &ctr_string_reg_replace);
+	ctr_internal_create_func(CtrStdString,
+				 ctr_build_string_from_cstring
+				 ("p/:s/:"),
+			   &ctr_string_reg_replace);
+	ctr_internal_create_func(CtrStdString,
+				 ctr_build_string_from_cstring
 				 (CTR_DICT_REGEX_ISPCRE),
 				 &ctr_string_is_regex_pcre);
 	ctr_internal_create_func(CtrStdString,

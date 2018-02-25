@@ -1,9 +1,16 @@
-import Library/Data/StringIO.
+import
+  # constants
+  Library/Data/StringIO
+  # Library/Data/SwitchCase
+  # Library/Control/Error/ArgumentError
+  # Library/Control/Error/NotImplementedError
+.
 
 var Colors is Map new.
 var sio is StringIO new.
 var p is Pen for: sio.
 
+#{
 ['red', 'green', 'blue', 'cyan', 'magenta', 'purple', 'yellow', 'resetColor'] each_v: {:color
   p message: color arguments: [].
   Colors put: sio read at: color.
@@ -20,4 +27,98 @@ Colors on: 'stripColors:' do: {:v
   me each: {:_:color v is v replace: color with: ''. }.
   ^v.
 }.
+#}
+
+#{
+#
+# String on: 'toSymbol' do: {\
+#   ('\\' + me) eval
+# }.
+#
+# Colors on: 'paint:' do: {:str:*options
+#   ^(my mode = 0) | (options count = 0)
+#     either: {\ str toString }
+#     or: {
+#       (options count = 1) & (Reflect isObject: options @ 0 linkedTo: Array) ifTrue: { options is options first. }.
+#       ^(my cache at: options) + (str toString) + const NOTHING.
+#     }.
+# }.
+#
+# Colors on: 'color' do: {:*options
+#   ^((options toBoolean not) | (my mode = 0))
+#     either: ''
+#     or: {
+#       var mix is Array new.
+#       var color_seen is False.
+#       var colors is const ANSI_COLORS_FOREGROUND.
+#       var self is me.
+#       options each_v: {:option
+#         (option type)
+#            case: 'Symbol' do: {
+#              (var color is colors at: option) ifTrue: {
+#                 mix push: color.
+#                 color_seen is \set.
+#               }, else: {
+#                 (const ANSI_EFFECTS contains: option) ifTrue: {
+#                   mix push: (self effect: option).
+#                 }, else: {
+#                   thisBlock error: (ArgumentError $ ('Unknown color or effect %s' % [option])).
+#                 }.
+#               }.
+#         }, case: 'Array' do: {
+#             (options count = 3) & (options fmap: {:v ^Reflect isObject: n linkedTo: Number.}, all) ifTrue: {
+#               mix push: (self message: 'rgb' arguments: option + [color_seen]).
+#               color_seen is \set.
+#             }, else: {
+#               thisBlock error: ArgumentError $ 'Array argument must contain 3 numbers'.
+#             }.
+#         }, case: 'Number' do: {
+#             var int is option floor.
+#             int between: 30 and: 49, ifTrue: {color_seen is \set.}.
+#             mix push: int.
+#         }, case: 'Nil' do: {
+#             color_seen is \set.
+#         }, default: {
+#             thisBlock error: (ArgumentError $ ('Invalid argument %s' % [option])).
+#         }, switch.
+#         (color_seen = \set) ifTrue: {
+#           colors is ANSI_COLORS_BACKGROUND.
+#           color_seen is True.
+#         }.
+#       }.
+#       ^self message: 'wrap' arguments: mix.
+#     }.
+# }.
+#
+# Colors on: 'mode:' do: {:val
+#   my cache clear.
+#   [0, 8, 16, 256, const TRUE_COLOR] contains: val, ifTrue: { my mode is val. ^me. }.
+#   (val = True) ifTrue: { my mode is const TRUE_COLOR. ^me. }.
+#   (val = Nil) ifTrue: { my mode is 0. ^me. }.
+#   thisBlock error: ArgumentError $ ('Cannot set paint mode to value < $$val >, possible values are: 0xFFFFFF (True), 256, 16, 8, 0 (Nil)').
+# }.
+#
+# Colors on: 'wrap' do: {\:ansi_codes
+#   '\x21[' + (ansi_codes join: ';') + 'm'
+# }.
+#
+# Colors on: 'rgb' do: {
+#   thisBlock error: NotImplementedError $ 'RGB colors'.
+# }.
+#
+# Colors on: 'effect:' do: {\:effect
+#   const ANSI_EFFECTS at: effect.
+# }.
+#
+# Colors on: 'simple:background:' do: {\:name:bg
+#   (bg either: 40 or: 30) + (const ANSI_COLORS at: name toSymbol)
+# }.
+#
+# Colors on: 'stripColors:' do: {\:str
+#   str findPattern: ?>[\x1b\x1B][[\]()#;?]*(?:(?:(?:[a-zA-Z\d]*(?:;[a-zA-Z\d]*)*)?\x07)|(?:(?:\d{1,4}(?:;\d{0,4})*)?[\dA-PRZcf-ntqry=><~]))<? do: {^''.}.
+# }.
+#
+# Colors on: 'respondTo:' do: {:name ^me simple: name background: False. }.
+#}
+
 import export: Colors as: 'Colors'.

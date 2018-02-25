@@ -12,6 +12,7 @@
 #include <regex.h>
 #else
 #include <pcre.h>
+#include "pcrs/pcrs.c"
 #endif
 #include <errno.h>
 
@@ -870,7 +871,15 @@ ctr_object *ctr_object_send2remote(ctr_object * myself,
 ctr_object *ctr_object_respond(ctr_object * myself, ctr_argument * argumentList)
 {
 	if (myself->info.remote == 0) {
-		ctr_object* err = ctr_build_string_from_cstring("Unknown method called: ");
+		ctr_object* meth = argumentList->object;
+		ctr_object* err = ctr_build_string_from_cstring("Unknown method ");
+		argumentList->object = ctr_send_message(myself, "type", 4, 0);
+		ctr_string_append(err, argumentList);
+		argumentList->object = ctr_build_string_from_cstring("::'");
+		ctr_string_append(err, argumentList);
+		argumentList->object = meth;
+		ctr_string_append(err, argumentList);
+		argumentList->object = ctr_build_string_from_cstring("' was called");
 		ctr_string_append(err, argumentList);
 		CtrStdFlow = err;
 		return myself;
@@ -3550,6 +3559,69 @@ ctr_object *ctr_string_find_pattern_do(ctr_object * myself,
 	ctr_heap_free(no_options);
 	return answer;
 }
+
+#ifdef POSIXRE
+ctr_object* ctr_string_reg_replace(ctr_object* myself, ctr_argument* argumentList) {
+	CtrStdFlow = ctr_build_string_from_cstring("Regex replace not implemented for POSIX; use String#findPattern:do:options:");
+	return myself;
+}
+#else
+ctr_object* ctr_string_reg_replace(ctr_object* myself, ctr_argument* argumentList) {
+	if(argumentList->next->object) {//pattern, substitute, [options]
+		ctr_object* pat = argumentList->object;
+		ctr_object* sub = argumentList->next->object;
+		ctr_object* opts = (argumentList->next->next && argumentList->next->next->object) ? argumentList->next->next->object : ctr_build_empty_string();
+		char *p = ctr_heap_allocate_cstring(pat), *s = ctr_heap_allocate_cstring(sub), *o = ctr_heap_allocate_cstring(opts);
+		int err;
+		pcrs_job* job = pcrs_compile(p, s, o, &err);
+		if(job == NULL) {
+			ctr_heap_free(p);
+			ctr_heap_free(o);
+			ctr_heap_free(s);
+			CtrStdFlow = ctr_build_string_from_cstring((char*)pcrs_strerror(err));
+			return CtrStdNil;
+		}
+		char *input = ctr_heap_allocate_cstring(myself), *result;
+		ctr_size length = myself->value.svalue->vlen, rlen;
+		if(0 > (err = pcrs_execute(job, input, length, &result, &rlen))) {
+			pcrs_free_job(job);
+			ctr_heap_free(p);
+			ctr_heap_free(o);
+			ctr_heap_free(s);
+			ctr_heap_free(input);
+			CtrStdFlow = ctr_build_string_from_cstring((char*)pcrs_strerror(err));
+			return CtrStdNil;
+		}
+		ctr_heap_free(p);
+		ctr_heap_free(o);
+		ctr_heap_free(s);
+		ctr_heap_free(input);
+		return ctr_build_string(result, rlen);
+	} else {// s/pattern/replacement/flags
+		ctr_object* cmd = argumentList->object;
+		char *c = ctr_heap_allocate_cstring(cmd);
+		int err;
+		pcrs_job* job = pcrs_compile_command(c, &err);
+		if(job == NULL) {
+			ctr_heap_free(cmd);
+			CtrStdFlow = ctr_build_string_from_cstring((char*)pcrs_strerror(err));
+			return CtrStdNil;
+		}
+		char *input = ctr_heap_allocate_cstring(myself), *result;
+		ctr_size length = myself->value.svalue->vlen, rlen;
+		if(0 > (err = pcrs_execute(job, input, length, &result, &rlen))) {
+			pcrs_free_job(job);
+			ctr_heap_free(c);
+			ctr_heap_free(input);
+			CtrStdFlow = ctr_build_string_from_cstring((char*)pcrs_strerror(err));
+			return CtrStdNil;
+		}
+		ctr_heap_free(c);
+		ctr_heap_free(input);
+		return ctr_build_string(result, rlen);
+	}
+}
+#endif
 
 /**
  * <b>[String] contains: [String]</b>

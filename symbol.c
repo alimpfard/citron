@@ -5,7 +5,7 @@ static ctr_object** ctr_static_symbol_table = 0;
 static ctr_size ctr_static_symbol_table_count = 0;
 ctr_object* ctr_get_or_create_symbol_table_entry(char* name, ctr_size length) {
 	if (!ctr_static_symbol_table) {
-		ctr_static_symbol_table = ctr_heap_allocate(sizeof(char*));
+		ctr_static_symbol_table = ctr_heap_allocate(sizeof(ctr_object*));
     ctr_object* ptr = (ctr_static_symbol_table[0] = ctr_build_string(name, length));
 		ctr_static_symbol_table_count = 1;
     ptr->link = CtrStdSymbol;
@@ -14,6 +14,7 @@ ctr_object* ctr_get_or_create_symbol_table_entry(char* name, ctr_size length) {
 	}
 	for(ctr_size i=0; i<ctr_static_symbol_table_count; i++) {
     ctr_object* ptr = ctr_static_symbol_table[i];
+		if(!ptr) continue;
 		ctr_size len = ptr->value.svalue->vlen;
 		if (len == length
         &&
@@ -21,7 +22,7 @@ ctr_object* ctr_get_or_create_symbol_table_entry(char* name, ctr_size length) {
     )
       return ptr;
 	}
-	ctr_heap_reallocate(ctr_static_symbol_table, (ctr_static_symbol_table_count+1)*sizeof(ctr_object*));
+	ctr_static_symbol_table = ctr_heap_reallocate(ctr_static_symbol_table, (ctr_static_symbol_table_count+1)*sizeof(ctr_object*));
 	ctr_object* ptr = (ctr_static_symbol_table[ctr_static_symbol_table_count++] = ctr_build_string(name, length));
   ptr->link = CtrStdSymbol;
   ptr->info.type = CTR_OBJECT_TYPE_OTMISC;

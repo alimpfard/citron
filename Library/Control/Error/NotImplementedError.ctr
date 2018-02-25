@@ -1,0 +1,17 @@
+var NotImplementedError is Object cnew: {
+  message => ''.
+}, on: '$' do: {:msg
+  ^me cnew: {
+    message => msg.
+  }.
+}, on: 'new' do: {
+  ^me cnew: {
+    message => ''.
+  }.
+}, on: 'type' do: {
+  ^'NotImplementedError'.
+}, on: 'toString' do: {
+  ^'%s is/are not implemented' % [my message].
+}.
+
+import export: NotImplementedError as: 'NotImplementedError'.

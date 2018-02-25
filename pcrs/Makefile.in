@@ -1,0 +1,103 @@
+# Makefile.in for pcrs --oes
+#
+#############################################################################
+# Version number
+#############################################################################
+
+VERSION_MAJOR = @VERSION_MAJOR@
+VERSION_MINOR = @VERSION_MINOR@
+VERSION_POINT = @VERSION_POINT@
+VERSION       = @VERSION@
+
+
+#############################################################################
+# Directories for "make install"
+#############################################################################
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+
+BINDIR = @bindir@
+LIBDIR = @libdir@
+MANDIR = @mandir@/man3
+
+
+#############################################################################
+# Build tools
+#############################################################################
+
+CC        = @CC@
+LD        = @CC@
+LN_S      = @LN_S@
+INSTALL   = @INSTALL@
+TAR       = tar
+AR        = ar rcs
+
+HAVE_GZIP = @HAVE_GZIP@
+
+
+#############################################################################
+# PCRE
+#############################################################################
+
+LIBS    = @LIBS@
+
+#############################################################################
+# Compiler switches & include
+#############################################################################
+
+CFLAGS          = @CFLAGS@ -Wall -Wstrict-prototypes -Wshadow -Wconversion -pedantic \
+                  @PARANOID_FU@ -Wunreachable-code -Wmissing-prototypes \
+                  -Waggregate-return -W -Wfloat-equal -Wsign-compare \
+                  -Wwrite-strings
+LIBFLAGS        = -shared -lc
+LDFLAGS         = @LDFLAGS@
+
+#############################################################################
+# Build targets
+#############################################################################
+
+all: shared static pcrsed@EXEEXT@
+
+pcrs.@OBJEXT@:	pcrs.c pcrs.h
+		$(CC) $(CFLAGS) -fPIC -c pcrs.c
+
+pcrsed@EXEEXT@: pcrs.@OBJEXT@
+	$(CC) $(CFLAGS) pcrsed.c pcrs.@OBJEXT@ -o pcrsed@EXEEXT@ $(LIBS)
+
+shared:	pcrs.@OBJEXT@
+	$(CC) $(CLFLAGS) $(LDFLAGS) $(LIBFLAGS) -Wl,-soname,libpcrs.so.$(VERSION_MAJOR) -o libpcrs.so.$(VERSION) pcrs.@OBJEXT@ $(LIBS)
+
+static:
+	$(AR) libpcrs.a pcrs.@OBJEXT@
+
+install: all
+	$(INSTALL) -m 755 libpcrs.so.$(VERSION) $(LIBDIR)
+	$(LN_S) -f libpcrs.so.$(VERSION) $(LIBDIR)/libpcrs.so
+	$(INSTALL) -m 644 libpcrs.a $(LIBDIR)
+	$(INSTALL) -m 644 pcrs.3 $(MANDIR)
+
+	if test "$(HAVE_GZIP)" = "yes"; then \
+	  gzip -f $(MANDIR)/pcrs.3; \
+	fi
+
+	@echo -e " ***************************************************\n" \
+	          "** Libraries have been installed in $(LIBDIR).     \n" \
+	          "** Don't forget to run ldconfig.                   \n" \
+	          "***************************************************"
+
+	@if test -f pcrsed@EXEEXT@; then\
+	  echo -e "\nRebuilding pcrsed to use the installed shared library"; \
+	  $(CC) $(CFLAGS) -L$(LIBDIR) pcrsed.c -o pcrsed@EXEEXT@ $(LIBS) -lpcrs; \
+	fi
+
+clean:
+	-rm -f *.o libpcrs.* pcrsed@EXEEXT@
+
+distclean: clean
+	-rm -f Makefile config.* pcrs.[h3] *~ *.tar.gz
+
+tarball-src: distclean
+	$(LN_S) `pwd` ../pcrs-$(VERSION)
+	$(TAR) -C.. -cvhzf pcrs-$(VERSION)-src.tar.gz pcrs-$(VERSION)
+	$(RM) ../pcrs-$(VERSION)

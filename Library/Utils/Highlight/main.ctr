@@ -18,29 +18,29 @@ Highlight on: 'highlight:' do: {:code
     token @ 0
        case: 'RET' do: {
         color is (Colors bold) + (Colors magenta).
-        after_color is Colors unbold.
+        after_color is (Colors bold_off).
         this_thing is '^'.
     }, case: 'ASSIGNMENT' do: {
         # rlen +=: 1.
         color is (Colors bold) + (Colors magenta).
-        after_color is Colors unbold.
+        after_color is (Colors bold_off).
         this_thing is 'is'.
     }, case: 'PASSIGNMENT' do: {
         # rlen +=: 1.
         color is (Colors bold) + (Colors magenta).
-        after_color is Colors unbold.
+        after_color is Colors bold_off.
         this_thing is '=>'.
     }, case: 'BLOCKCLOSE' do: {
-        color is (Colors bold) + (Colors lightGreen).
-        after_color is (Colors unbold).
+      color is (Colors bold) + (Colors bright) + (Colors green).
+      after_color is (Colors bold_off) + (Colors bright_off).
         this_thing is '}'.
     }, case: 'BLOCKOPEN' do: {
-        color is (Colors bold) + (Colors lightGreen).
-        after_color is (Colors unbold).
+      color is (Colors bold) + (Colors bright) + (Colors green).
+      after_color is (Colors bold_off) + (Colors bright_off).
         this_thing is '{'.
     }, case: 'BLOCKOPEN_MAP' do: {
-        color is (Colors bold) + (Colors lightGreen).
-        after_color is (Colors unbold).
+      color is (Colors bold) + (Colors bright) + (Colors green).
+      after_color is (Colors bold_off) + (Colors bright_off).
         this_thing is ?>{\<?.
         last_toc_override is 'BLOCKOPEN'.
     }, case: 'BOOLEANNO' do: {
@@ -50,12 +50,14 @@ Highlight on: 'highlight:' do: {:code
     color is Colors magenta.
         this_thing is 'True'.
     }, case: 'CHAIN' do: {
+        color is (Colors white).
         this_thing is ','.
         rlen +=: 1.
     }, case: 'COLON' do: {
         this_thing is ':'.
         (last_toc = 'BLOCKOPEN') | (last_toc = 'PARAMN') ifTrue: {
-          color is Colors lightMagenta.
+          color is (Colors bold) + (Colors bright) + (Colors magenta).
+          after_color is (Colors bold_off) + (Colors bright_off).
           last_toc_override is 'PARAMC'.
         }, else: {
           color is Colors magenta.
@@ -70,15 +72,15 @@ Highlight on: 'highlight:' do: {:code
     color is Colors magenta.
         this_thing is 'Nil'.
     }, case: 'NUMBER' do: {
-    color is Colors green.
+        color is Colors green.
         this_thing is (token @ 1) .
     }, case: 'PARCLOSE' do: {
-        color is (Colors bold) + (Colors lightGreen).
-        after_color is (Colors unbold).
+        color is (Colors bold) + (Colors bright) + (Colors green).
+        after_color is (Colors bold_off) + (Colors bright_off).
         this_thing is ')'.
     }, case: 'PAROPEN' do: {
-        color is (Colors bold) + (Colors lightGreen).
-        after_color is (Colors unbold).
+        color is (Colors bold) + (Colors bright) + (Colors green).
+        after_color is (Colors bold_off) + (Colors bright_off).
         this_thing is '('.
     }, case: 'QUOTE' do: {
         this_thing is ''.
@@ -123,15 +125,16 @@ Highlight on: 'highlight:' do: {:code
         this_thing is begin + this_thing.
     }, case: 'REF' do: {
         (last_toc = 'PARAMC') ifTrue: {
-          color is (Colors bold) + (Colors lightMagenta).
-          after_color is (Colors unbold).
+          color is (Colors bold) + (Colors bright) + (Colors magenta).
+          after_color is (Colors bold_off) + (Colors bright_off).
           this_thing is token @ 1.
           last_toc_override is 'PARAMN'.
         }, else: {
           var next is AST token.
           (next @ 0 !=: 'FIN') ifTrue: {AST lexPutBack.}.
           this_thing is (next @ 0 = 'COLON') either: {
-            color is Colors lightMagenta.
+            color is (Colors bold) + (Colors bright) + (Colors magenta).
+            after_color is (Colors bold_off) + (Colors bright_off).
             AST lexSkip: 1.
             token put: (token @ 2 + 1) at: 2.
             last_toc_override is 'MESSAGE'.
@@ -143,7 +146,8 @@ Highlight on: 'highlight:' do: {:code
                 # token put: (token @ 2) at: 2.
                 token put: (token @ 1 + ':') at: 1.
               }.
-              color is Colors lightMagenta.
+              color is (Colors bold) + (Colors bright) + (Colors magenta).
+              after_color is (Colors bold_off) + (Colors bright_off).
               ^token @ 1.
             } or: {
               # Pen writeln: [token, last_toc, next].
@@ -153,7 +157,8 @@ Highlight on: 'highlight:' do: {:code
               } or: {
                 ^['me', 'my', 'const', 'var'] contains: token @ 1, either: {
                   last_toc_override is 'QUAL'.
-                  color is Colors lightBlue.
+                  color is (Colors bold) + (Colors bright) + (Colors blue).
+                  after_color is (Colors bold_off) + (Colors bright_off).
                   ^(token @ 1) .
                 } or: {
                   ^(token @ 1).
@@ -168,9 +173,12 @@ Highlight on: 'highlight:' do: {:code
     }, case: 'TUPCLOSE' do: {
         this_thing is ']'.
     }, case: 'SYMBOL' do: {
-        color is Colors lightGreen.
+        color is (Colors bold) + (Colors bright) + (Colors green).
+        after_color is (Colors bold_off) + (Colors bright_off).
         var t is AST token.
-        token put: (t @ 2) at: 2.
+        (t @ 1) !=: '',
+          ifTrue: { token put: (t @ 2) at: 2. },
+          else:   { token put: (t @ 2) at: 2. }.
         this_thing is '\\' + (t @ 1).
     }, default: {
         # Pen writeln: token.
@@ -178,7 +186,7 @@ Highlight on: 'highlight:' do: {:code
     }, switch.
     # Pen writeln: [token, this_thing, rlen].
     returned +=: ' ' * ((token @ 2) - rlen - (this_thing length)).
-    returned +=: color + this_thing + (Colors resetColor) + (after_color).
+    returned +=: color + this_thing + (Colors default) + (after_color).
     last_toc is last_toc_override or: token @ 0.
     skip continue.
     token is AST token.

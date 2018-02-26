@@ -1,35 +1,53 @@
+Broom memoryLimit: 1024 * 1024 * 512.
 Broom autoAlloc: True.
-var sdl is SDL new set: 'windowName' to: 'What? SDL? what sorcery is this?', set: 'windowWidth' to: 100, set: 'windowHeight' to: 50.
-# Map on: 'respondTo:' do: {:msg
-#   ^(msg at: 0, = '@') either: {^const me at: (msg skip: 1).} or: {^const me `respondTo: msg.}.
-# }.
-var colors is Map new
-  put: (Color rgb: [255, 0, 0]) at: 'red',
-  put: (Color rgb: [0, 255, 0]) at: 'green',
-  put: (Color rgb: [0, 0, 255]) at: 'blue',
-  put: (Color rgb: [0] * 3) at: 'black',
-  put: (Color rgb: [255] * 3) at: 'white',
-  put: (Color rgb: [255, 192, 203]) at: 'pink',
-  put: (Color rgb: [255, 0, 255]) at: 'magenta',
-  put: (Color rgb: [128, 0, 128]) at: 'purple'.
 
-Pen writeln: (colors at: 'purple').
-[height, width] is ['windowHeight', 'windowWidth'] fmap: {:p ^Reflect getProperty: p ofObject: sdl, / 2.}.
-var rects is [[0, 0], [0, width], [height, 0], [height, width]] fmap: {:x
-  ^sdl message: 'newRectWithX:andY:andW:andH:' arguments: x reverse + [width, height].
-}.
-var colorFor is {:x:y
-  ^(x > y) either: (colors at: 'red') or: (colors at: 'blue').
-}.
-var window is sdl init.
+import Library/Data/SwitchCase.
 
-(2 * width) times: {:x
-  (2 * height) times: {:y
-    window setPixelWithX: x andY: y toColor: (colorFor applyTo: x and: y).
-    Pen writeln: [x, y].
-  }.
+var w is 640.
+var h is 480.
+var window is SDL new set: 'windowWidth' to: w, set: 'windowHeight' to: h, init.
+var c is Color rgb: [0,0,0].
+var evt is SDLEvent new.
+var in_boop is False.
+var evthandler is {:e
+  (SDLEventTypes at: e toNumber)
+      case: 'keyDown' do: {
+     (var ks is e keysym)
+        case: 'q' do: {
+          Program exit.
+      },case: 'c' do: {
+        in_boop is in_boop not.
+        in_boop ifTrue: {
+          Pen writeln: 'boop'.
+          duck is SDL loadImage: 'examples/sdl/boop.jpg'.
+        }, else: {
+          Pen writeln: 'duck'.
+          duck is SDL loadImage: 'examples/sdl/lol.bmp'.
+        }.
+        duck scaleToW: w / 2 andH: h.
+        duck_rect is duck clipRect.
+        dc is duck pixelAtX: 0 andY: 0.
+        duck setColorKey: dc.
+      }, switch.
+   }, case: 'quit' do: {
+     Program exit.
+   }, switch.
+}.
+var duck is SDL loadImage: 'examples/sdl/lol.bmp'.
+duck scaleToW: w / 2 andH: h.
+var dc is duck pixelAtX: 0 andY: 0.
+duck setColorKey: dc.
+var duck_rect is duck clipRect.
+var r is SDL newRectWithX: 0 andY: 0 andW: 0 andH: 0.
+var x is w.
+var white is Color rgb: [256,256,255]. #Totally white
+{\ True } whileTrue: {
+  r setX: x abs.
+  window blit: duck fromRect: duck_rect toRect: r.
   window update.
+  evt poll: evthandler.
+  Clock wait: 5 ms. #magic 60fps time weee
+  window fillRect: Nil withColor: white.
+  x is x -=: 1.
+  (x equals: 0 - w) ifTrue: {x is w.}.
 }.
-
-Program waitForInput.
-sdl quit.

@@ -3216,16 +3216,17 @@ ctr_object *ctr_send_message(ctr_object * receiverObject, char *message,
 	}
 	methodObject = ctr_get_responder(receiverObject, message, vlen);
 	if (!methodObject) {
-		// if (strcmp(message, "respondTo:and:") == 0) {
-		// 	// printf("Requested message to catch-all in:\n");
-		// 	// ctr_print_stack_trace();
-		// 	return receiverObject;
-		// }
 		argCounter = argumentList;
 		argCount = 0;
 		while (argCounter && argCounter->next && argCount < 4) {
 			argCounter = argCounter->next;
 			argCount++;
+		}
+		char* catch_all = argCount == 0 ? CTR_DICT_RESPOND_TO : CTR_DICT_RESPOND_TO_AND;
+		long catch_all_v = argCount == 0 ? 10 : 14;
+		if (vlen == catch_all_v && message[9] == ':' && strcmp(message, catch_all) == 0) {
+			CtrStdFlow = ctr_build_string_from_cstring("respondTo:and: calls itself");
+			return receiverObject;
 		}
 		mesgArgument =
 		    (ctr_argument *) ctr_heap_allocate(sizeof(ctr_argument));

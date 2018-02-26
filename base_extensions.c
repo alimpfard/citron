@@ -1042,6 +1042,10 @@ ctr_object *ctr_coro_isrunning(ctr_object * myself, ctr_argument * argumentList)
 	return ctr_build_bool(! !coroutine_status(S, co));
 }
 
+ctr_object* ctr_string_to_symbol(ctr_object* myself, ctr_argument* argumentList) {
+	ctr_object* sym = ctr_get_or_create_symbol_table_entry(myself->value.svalue->value, myself->value.svalue->vlen);
+	return sym;
+}
 
 void initiailize_base_extensions()
 {
@@ -1187,4 +1191,7 @@ void initiailize_base_extensions()
 	ctr_internal_create_func(CtrStdSymbol,
 			  ctr_build_string_from_cstring("unpack:"),
 				&ctr_symbol_unpack);
+	ctr_internal_create_func(CtrStdString,
+				ctr_build_string_from_cstring("toSymbol"),
+				&ctr_string_to_symbol);
 }

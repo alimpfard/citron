@@ -1,124 +1,158 @@
 import
-  # constants
-  Library/Data/StringIO
-  # Library/Data/SwitchCase
-  # Library/Control/Error/ArgumentError
-  # Library/Control/Error/NotImplementedError
+  constants
+  Library/Data/SwitchCase
+  Library/Control/Error/ArgumentError
+  Library/Control/Error/NotImplementedError
 .
 
-var Colors is Map new.
-var sio is StringIO new.
-var p is Pen for: sio.
-
-#{
-['red', 'green', 'blue', 'cyan', 'magenta', 'purple', 'yellow', 'resetColor'] each_v: {:color
-  p message: color arguments: [].
-  Colors put: sio read at: color.
-  sio flush.
+var Colors is Object cnew: {
+  my cache is Map new on: 'at:' do: {:key
+    var self is const me.
+    ^((var v is me `at: key) isNil not) either: {\ v. } or: {
+      me put: (var c is self message: 'color' arguments: key) at: key.
+      ^c.
+    }.
+  }.
+  mode => 256.
 }.
-Colors put: '\x1b[2m' at: 'dim', put: '\x1b[22m' at: 'undim'.
-Colors put: '\x1b[1m' at: 'bold', put: '\x1b[21m' at: 'unbold'.
-Colors put: '\x1b[92m' at: 'lightGreen'.
-Colors put: '\x1b[94m' at: 'lightBlue'.
-Colors put: '\x1b[95m' at: 'lightMagenta'.
 
-Colors on: 'respondTo:' do: {:name ^me at: name. }.
-Colors on: 'stripColors:' do: {:v
-  me each: {:_:color v is v replace: color with: ''. }.
-  ^v.
+Colors on: 'new' do: {
+  thisBlock error: ArgumentError $ 'Colors may not be instantiated'.
 }.
-#}
+Colors on: 'cnew:' do: {
+  thisBlock error: ArgumentError $ 'Colors may not be instantiated'.
+}.
 
-#{
-#
-# String on: 'toSymbol' do: {\
-#   ('\\' + me) eval
-# }.
-#
-# Colors on: 'paint:' do: {:str:*options
-#   ^(my mode = 0) | (options count = 0)
-#     either: {\ str toString }
-#     or: {
-#       (options count = 1) & (Reflect isObject: options @ 0 linkedTo: Array) ifTrue: { options is options first. }.
-#       ^(my cache at: options) + (str toString) + const NOTHING.
-#     }.
-# }.
-#
-# Colors on: 'color' do: {:*options
-#   ^((options toBoolean not) | (my mode = 0))
-#     either: ''
-#     or: {
-#       var mix is Array new.
-#       var color_seen is False.
-#       var colors is const ANSI_COLORS_FOREGROUND.
-#       var self is me.
-#       options each_v: {:option
-#         (option type)
-#            case: 'Symbol' do: {
-#              (var color is colors at: option) ifTrue: {
-#                 mix push: color.
-#                 color_seen is \set.
-#               }, else: {
-#                 (const ANSI_EFFECTS contains: option) ifTrue: {
-#                   mix push: (self effect: option).
-#                 }, else: {
-#                   thisBlock error: (ArgumentError $ ('Unknown color or effect %s' % [option])).
-#                 }.
-#               }.
-#         }, case: 'Array' do: {
-#             (options count = 3) & (options fmap: {:v ^Reflect isObject: n linkedTo: Number.}, all) ifTrue: {
-#               mix push: (self message: 'rgb' arguments: option + [color_seen]).
-#               color_seen is \set.
-#             }, else: {
-#               thisBlock error: ArgumentError $ 'Array argument must contain 3 numbers'.
-#             }.
-#         }, case: 'Number' do: {
-#             var int is option floor.
-#             int between: 30 and: 49, ifTrue: {color_seen is \set.}.
-#             mix push: int.
-#         }, case: 'Nil' do: {
-#             color_seen is \set.
-#         }, default: {
-#             thisBlock error: (ArgumentError $ ('Invalid argument %s' % [option])).
-#         }, switch.
-#         (color_seen = \set) ifTrue: {
-#           colors is ANSI_COLORS_BACKGROUND.
-#           color_seen is True.
-#         }.
-#       }.
-#       ^self message: 'wrap' arguments: mix.
-#     }.
-# }.
-#
-# Colors on: 'mode:' do: {:val
-#   my cache clear.
-#   [0, 8, 16, 256, const TRUE_COLOR] contains: val, ifTrue: { my mode is val. ^me. }.
-#   (val = True) ifTrue: { my mode is const TRUE_COLOR. ^me. }.
-#   (val = Nil) ifTrue: { my mode is 0. ^me. }.
-#   thisBlock error: ArgumentError $ ('Cannot set paint mode to value < $$val >, possible values are: 0xFFFFFF (True), 256, 16, 8, 0 (Nil)').
-# }.
-#
-# Colors on: 'wrap' do: {\:ansi_codes
-#   '\x21[' + (ansi_codes join: ';') + 'm'
-# }.
-#
-# Colors on: 'rgb' do: {
-#   thisBlock error: NotImplementedError $ 'RGB colors'.
-# }.
-#
-# Colors on: 'effect:' do: {\:effect
-#   const ANSI_EFFECTS at: effect.
-# }.
-#
-# Colors on: 'simple:background:' do: {\:name:bg
-#   (bg either: 40 or: 30) + (const ANSI_COLORS at: name toSymbol)
-# }.
-#
-# Colors on: 'stripColors:' do: {\:str
-#   str findPattern: ?>[\x1b\x1B][[\]()#;?]*(?:(?:(?:[a-zA-Z\d]*(?:;[a-zA-Z\d]*)*)?\x07)|(?:(?:\d{1,4}(?:;\d{0,4})*)?[\dA-PRZcf-ntqry=><~]))<? do: {^''.}.
-# }.
-#
-# Colors on: 'respondTo:' do: {:name ^me simple: name background: False. }.
-#}
+Colors on: '%' do: {:arr
+  ^me message: 'paint:' arguments: arr.
+}.
+
+Colors on: 'paint:' do: {:str:*options
+  var cache is my cache.
+  ^(my mode = 0) | (options count = 0)
+    either: {\ str toString }
+    or: {
+      (options count = 1) & (Reflect isObject: options @ 0 @ 0 linkedTo: Array) ifTrue: { options is options head. }.
+      ^(cache at: options) + (str toString) + const NOTHING.
+    }.
+}.
+
+Colors on: 'color' do: {:*options
+  var mix is Array new.
+  var color_seen is False.
+  var colors is const ANSI_COLORS_FOREGROUND.
+  ^((options toBoolean not) | (my mode = 0))
+    either: ''
+    or: {\
+      options each_v: {:option
+        (option type)
+           case: 'Symbol' do: {
+             (var color is colors at: option) isNil not ifTrue: {
+                mix push: color.
+                color_seen is \set.
+              }, else: {
+                (var effect is ANSI_EFFECTS at: option) isNil not ifTrue: {
+                  mix push: effect.
+                }, else: {
+                  thisBlock error: (ArgumentError $ ('Unknown color or effect %s' % [option])).
+                }.
+              }.
+        }, case: 'Array' do: {
+            (option count = 3) & (option fmap: {:v ^Reflect isObject: v linkedTo: Number.}, all) ifTrue: {
+              mix push: (var x is Colors message: 'rgb' arguments: option + [color_seen]).
+              color_seen is \set.
+            }, else: {
+              thisBlock error: ArgumentError $ 'Array argument must contain 3 numbers'.
+            }.
+        }, case: 'Number' do: {
+            var int is option floor.
+            int between: 30 and: 49, ifTrue: {color_seen is \set.}.
+            mix push: int.
+        }, case: 'Nil' do: {
+            color_seen is \set.
+        }, default: {
+            thisBlock error: (ArgumentError $ ('Invalid argument %s' % [option])).
+        }, switch.
+        (color_seen = \set) ifTrue: {
+          colors is ANSI_COLORS_BACKGROUND.
+          color_seen is True.
+        }.
+      }.
+      Colors wrap: mix.
+    }.
+}.
+
+Colors on: 'mode:' do: {:val
+  my cache clear.
+  [0, 8, 16, 256, const TRUE_COLOR] contains: val, ifTrue: { my mode is val. ^me. }.
+  (val = True) ifTrue: { my mode is const TRUE_COLOR. ^me. }.
+  (val = Nil) ifTrue: { my mode is 0. ^me. }.
+  thisBlock error: ArgumentError $ ('Cannot set paint mode to value < $$val >, possible values are: 0xFFFFFF (True), 256, 16, 8, 0 (Nil)').
+}.
+
+Colors on: 'wrap:' do: {\:ansi_codes
+  '\x1b[' + (ansi_codes join: ';') + 'm'
+}.
+
+
+Colors on: 'rgb' do: {:red:green:blue:background
+  thisBlock error: NotImplementedError $ 'Colors#rgb'.
+  var background is Reflect objectExists: 'background', either: { ^background. } or: False.
+  ^'%d%s' % (my mode
+       case:   8 do: {
+      ^[(background either: 4 or: 3), (Colors message: 'rgb_to_ansi:' arguments: [red, green, blue, (False)])].
+    }, case:  16 do: {
+      ^[(background either: 4 or: 3), (Colors message: 'rgb_to_ansi:' arguments: [red, green, blue, (True)])].
+    }, case: 256 do: {
+      ^[(background either: 4 or: 3), (Colors rgb_to_256: [red, green, blue])].
+    }, case: TRUE_COLOR do: {
+      ^[(background either: 4 or: 3), (Colors rgb_true: [red, green, blue])].
+    }, default: {\ '' }, switch).
+}.
+
+Colors on: 'rgb_to_ansi:' do: {:red:green:blue:use_bright
+  var color_pool is RGB_COLORS_ANSI keys.
+  use_bright ifTrue: { color_pool is color_pool + (RGB_COLORS_ANSI_BRIGHT keys). }.
+  var ansi_color_rgb is color_pool sort: {:col0:col1 ^(Colors rgb_color_distance: [red, green, blue] color: col0) < (Colors rgb_color_distance: [red, green, blue] color: col1). }, last.
+  var ret is ''.
+  (var ansi_color is RGB_COLORS_ANSI at: ansi_color_rgb) isNil not ifTrue: {
+    ret is ANSI_COLORS at: ansi_color.
+  }, else: {
+    ansi_color is RGB_COLORS_ANSI_BRIGHT at: ansi_color_rgb.
+    ret is '%s;1' % [(ANSI_COLORS at: ansi_color)].
+  }.
+  ^ret.
+}.
+
+Colors on: 'rgb_color_distance:color:' do: {:rgb1:rgb2
+  ^[rgb1, rgb2] zip foldl: {:acc:x
+    ^acc + (((x @ 0) - (x @ 1)) toPowerOf: 2).
+  } accumulator: 0.
+}.
+
+Colors on: 'effect:' do: {:effect
+  ^ANSI_EFFECTS at: effect.
+}.
+
+Colors on: 'simple:background:' do: {:name:bg
+  name is name toSymbol.
+  (ANSI_EFFECTS at: name) isNil not
+    ifTrue: {
+      # Pen writeln: ANSI_EFFECTS @ name.
+      ^me wrap: (me effect: name).
+      # ^'<%s>' % [name].
+    },
+    else: {
+      ^(ANSI_COLORS at: name) isNil not
+        either: {\ me wrap: [((bg either: 40 or: 30) + (ANSI_COLORS at: name))]. }
+        or: {\ ''. }.
+    }.
+}.
+
+Colors on: 'stripColors:' do: {\:str
+  (str =~: 's/\x1b\\[(?:[0-9];?)+m//g')
+}.
+
+Colors on: 'respondTo:' do: {:name ^me simple: name background: False. }.
 
 import export: Colors as: 'Colors'.

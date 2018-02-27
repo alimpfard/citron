@@ -11,7 +11,7 @@ x applyTo: 1 and: 2 and: 3.
 y applyTo: 1 and: 2 and: 3.
 
 
-?>x contains arguments: <?.
+#?>x contains arguments: <?.
 Pen write: (Reflect argumentListOf: x), brk.
-?>y contains arguments: <?.
+#?>y contains arguments: <?.
 Pen write: (Reflect argumentListOf: y), brk.

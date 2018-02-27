@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
+#include <SDL/SDL_ttf.h>
 #include <SDL/SDL_rotozoom.h>
 
 #define NEW 1
@@ -123,6 +124,8 @@ ctr_sdl_evt* get_sdl_event_ptr(ctr_object* myself) {
 
 void ctr_sdl_quit_atexit() {
   IMG_Quit();
+  TTF_Quit();
+  // ctr_sdl_ttf_free_all();
   SDL_Quit();
 }
 
@@ -204,6 +207,12 @@ ctr_object* ctr_sdl_init(ctr_object* myself, ctr_argument* argumentList) {
     CtrStdFlow = ctr_build_string_from_cstring(err);
     return CtrStdFlow;
   }
+  initted=TTF_Init();
+  if(initted < 0) {
+    char* err = strcat("TTF failed to initialize: ", TTF_GetError());
+    CtrStdFlow = ctr_build_string_from_cstring(err);
+    return CtrStdFlow;
+  }
   ctr_heap_free(caption);
   myself->link = CtrStdSdl_surface;
   myself->value.rvalue->ptr = (void*)window;
@@ -211,6 +220,7 @@ ctr_object* ctr_sdl_init(ctr_object* myself, ctr_argument* argumentList) {
 }
 ctr_object* ctr_sdl_quit(ctr_object* myself, ctr_argument* argumentList) {
   IMG_Quit();
+  TTF_Quit();
   SDL_Quit();
   return CtrStdNil;
 }

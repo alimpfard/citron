@@ -98,8 +98,8 @@ json_t *load_json(const char *text, const char* fp) {
     if (root) {
         return root;
     } else {
-        char* err = "";
-        sprintf(err, "json error on line %d: %s\n", error.line, error.text);
+        char err[2048];
+        sprintf(err, "json error on line %d: %s", error.line, error.text);
         CtrStdFlow = ctr_build_string_from_cstring(err);
         return (json_t *)0;
     }

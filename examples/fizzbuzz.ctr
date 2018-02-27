@@ -5,13 +5,13 @@
 	var b is 'Buzz'.
 
 	var s is i toString.
-	i % 15 = 0 ifTrue: {
+	i mod: 15, = 0 ifTrue: {
 		s is f + b.
 	}, ifFalse: {
-		i % 3 = 0 ifTrue: {
+		i mod: 3, = 0 ifTrue: {
 			s is f.
 		}.
-		i % 5 = 0 ifTrue: {
+		i mod: 5, = 0 ifTrue: {
 			s is b.
 		}.
 	}.

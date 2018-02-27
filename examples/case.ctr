@@ -1,28 +1,9 @@
-File new: 'extensions/switchcase.ctr', include.
+import Library/Data/SwitchCase.
 
 a is 'value'.
 
-a singleCase: 'value' do: {
+a case: 'value' do: {
   var value is my value.
   Pen write: 'Single select switch-case: $$value ', brk.
   },
-   singleCase: 'lol' do: { Pen write: 'what?', brk. }.
-
-Broom sweep.
-Pen red write: 'More performant, but more verbatim, single case. used ', cyan write: Broom dust, red write: ' Objects.', brk.
-Pen resetColor.
-
-((a case: 'value') case: 'lol') do: {
-  var value is my value.
-  Pen write: 'Multi-select switch-case: $$value ', brk.
-  }.
-
-Broom sweep.
-Pen red write: 'Less performant, but more simple, multi case. used ', cyan write: Broom dust, red write: ' Objects.', brk.
-Pen resetColor.
-
-
-File new: 'extensions/fileutils.ctr', include.
-
-str is 'Pen write: \'' + a + '\', brk.'.
-str execute.
+   case: 'lol' do: { Pen write: 'what?', brk. }, switch.

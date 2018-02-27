@@ -5,6 +5,4 @@ Butler on: 'greet:' do: { :name
 var james is Butler new.
 james greet: 'visitor'.
 
-(Reflect objectExists: 'ImportLib') ifTrue: {
-	ImportLib export: james as: 'james'.
-}.
+import export: james as: 'James'.

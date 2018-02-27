@@ -22,7 +22,7 @@ var evthandler is {:e
           duck is SDL loadImage: 'examples/sdl/boop.jpg'.
         }, else: {
           Pen writeln: 'duck'.
-          duck is SDL loadImage: 'examples/sdl/lol.bmp'.
+          duck is SDL loadImage: 'examples/sdl/razavi.jpg'.
         }.
         duck scaleToW: w / 2 andH: h.
         duck_rect is duck clipRect.

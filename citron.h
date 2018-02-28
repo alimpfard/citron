@@ -15,9 +15,9 @@ extern "C" {
 #include <string.h>
 
 #ifdef withBoehmGC
-#define CTR_VERSION "0.0.7.2-boehm-gc"
+#define CTR_VERSION "0.0.7.3-boehm-gc"
 #else
-#define CTR_VERSION "0.0.7.2"
+#define CTR_VERSION "0.0.7.3"
 #endif
 
 #define CTR_LOG_WARNINGS 0//2 to enable
@@ -162,6 +162,8 @@ typedef struct ctr_string ctr_string;
 struct ctr_map {
 	struct ctr_mapitem* head;
 	int size;
+	// uint64_t s_hash;
+	// uint32_t m_hash;
 };
 typedef struct ctr_map ctr_map;
 
@@ -437,6 +439,7 @@ ctr_object* ctr_internal_object_find_property(ctr_object* owner, ctr_object* key
 ctr_object* ctr_internal_object_find_property_with_hash(ctr_object* owner, ctr_object* key, uint64_t hash, int is_method);
 ctr_object* ctr_internal_object_find_property_ignore(ctr_object* owner, ctr_object* key, int is_method, int ignore);
 uint64_t    ctr_internal_index_hash(ctr_object* key);
+uint64_t    ctr_internal_alt_hash(ctr_object* key);
 void        ctr_internal_object_add_property(ctr_object* owner, ctr_object* key, ctr_object* value, int m);
 inline ctr_object* ctr_internal_cast2bool( ctr_object* o );
 inline ctr_object* ctr_internal_cast2number(ctr_object* o);
@@ -501,6 +504,7 @@ ctr_object* ctr_object_make(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_ctor(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_assign(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_hash(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_object_ahash(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_attr_accessor(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_attr_reader(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_attr_writer(ctr_object* myself, ctr_argument* argumentList);

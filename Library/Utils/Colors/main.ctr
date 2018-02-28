@@ -150,7 +150,7 @@ Colors on: 'simple:background:' do: {:name:bg
 }.
 
 Colors on: 'stripColors:' do: {\:str
-  (str =~: 's/\x1b\\[(?:[0-9];?)+m//g')
+  (str ~ 's/\x1b\\[(?:[0-9];?)+m//g')
 }.
 
 Colors on: 'respondTo:' do: {:name ^me simple: name background: False. }.

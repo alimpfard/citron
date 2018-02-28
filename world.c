@@ -1960,7 +1960,7 @@ void ctr_initialize_world()
 			  &ctr_string_reg_replace);
 	ctr_internal_create_func(CtrStdString,
 				 ctr_build_string_from_cstring
-				 ("=~:"),
+				 ("~"),
 			   &ctr_string_reg_replace);
 	ctr_internal_create_func(CtrStdString,
 				 ctr_build_string_from_cstring
@@ -1998,7 +1998,7 @@ void ctr_initialize_world()
 				 ctr_build_string_from_cstring
 				 (CTR_DICT_STRFMTMAP), &ctr_string_format_map);
 	ctr_internal_create_func(CtrStdString,
-				 ctr_build_string_from_cstring("~"),
+				 ctr_build_string_from_cstring("%~:"),
 				 &ctr_string_format_map);
 	ctr_internal_create_func(CtrStdString,
 				 ctr_build_string_from_cstring

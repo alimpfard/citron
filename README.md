@@ -22,7 +22,6 @@ All operations are done through sending and receiving messages between objects.
 
 `receiver keyword: 'string' messages: 1, can be: 'chained', like so.`
 
-there are some examples in the `examples` directory, And I personally implore you to check out `mips_emu.ctr`.
-It is probably the most useful thing ever made in this language.
+there are some examples in the `examples` directory.
 
 running the interpreter is quite simple: `ctr eval` in the directory that the file `eval` is.

@@ -504,7 +504,7 @@ ctr_object* ctr_object_make(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_ctor(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_assign(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_hash(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_object_ahash(ctr_object* myself, ctr_argument* argumentList);
+// ctr_object* ctr_object_ahash(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_attr_accessor(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_attr_reader(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_attr_writer(ctr_object* myself, ctr_argument* argumentList);

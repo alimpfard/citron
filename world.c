@@ -12,7 +12,7 @@
 
 #include "citron.h"
 #include "siphash.h"
-#include "murmur3.h"
+// #include "murmur3.h"
 
 #ifdef withBoehmGC
 #include <gc/gc.h>
@@ -386,22 +386,22 @@ uint64_t ctr_internal_index_hash(ctr_object * key)
 			 stringKey->value.svalue->vlen, CtrHashKey);
 }
 
-/**
- * @internal
- *
- * InternalObjectAltHash
- *
- * Given an object, this function will calculate a hash to speed-up
- * lookup.
- */
-uint64_t ctr_internal_alt_hash(ctr_object * key)
-{
-	ctr_object *stringKey = ctr_internal_cast2string(key);
-	uint32_t out;
-	MurmurHash3_x86_32(stringKey->value.svalue->value,
-			 stringKey->value.svalue->vlen, *(uint32_t*)CtrHashKey, &out);
-	return out;
-}
+// /**
+//  * @internal
+//  *
+//  * InternalObjectAltHash
+//  *
+//  * Given an object, this function will calculate a hash to speed-up
+//  * lookup.
+//  */
+//// uint64_t ctr_internal_alt_hash(ctr_object * key)
+// {
+// 	ctr_object *stringKey = ctr_internal_cast2string(key);
+// 	uint32_t out;
+// 	MurmurHash3_x86_32(stringKey->value.svalue->value,
+// 			 stringKey->value.svalue->vlen, *(uint32_t*)CtrHashKey, &out);
+// 	return out;
+// }
 
 /**
  * @internal
@@ -414,7 +414,7 @@ ctr_object *ctr_internal_object_find_property(ctr_object * owner,
 					      ctr_object * key, int is_method)
 {
 	uint64_t hashKey = ctr_internal_index_hash(key);
-	uint64_t ahashKey = ctr_internal_alt_hash(key);
+//	uint64_t ahashKey = ctr_internal_alt_hash(key);
 	ctr_mapitem *head, *first_head;
 	if (is_method) {
 		if (!owner->methods || owner->methods->size == 0) {
@@ -459,7 +459,7 @@ ctr_object *ctr_internal_object_find_property_ignore(ctr_object * owner,
 {
 	ctr_mapitem *head;
 	uint64_t hashKey = ctr_internal_index_hash(key);
-	uint64_t ahashKey = ctr_internal_alt_hash(key);
+//	uint64_t ahashKey = ctr_internal_alt_hash(key);
 
 #ifdef CTR_DEBUG_HIDING
 	int did_skip = -1;
@@ -581,7 +581,7 @@ ctr_internal_object_delete_property(ctr_object * owner, ctr_object * key,
 				    int is_method)
 {
 	uint64_t hashKey = ctr_internal_index_hash(key);
-	uint64_t ahashKey = ctr_internal_alt_hash(key);
+//	uint64_t ahashKey = ctr_internal_alt_hash(key);
 	ctr_mapitem *head;
 	if (is_method) {
 		if (!owner->methods || owner->methods->size == 0) {
@@ -730,7 +730,7 @@ ctr_internal_object_add_property(ctr_object * owner, ctr_object * key,
 	ctr_mapitem *current_head = NULL;
 	new_item->key = key;
 	new_item->hashKey = ctr_internal_index_hash(key);
-	uint32_t ahash = ctr_internal_alt_hash(key);
+//	uint32_t ahash = ctr_internal_alt_hash(key);
 	new_item->value = value;
 	new_item->next = NULL;
 	new_item->prev = NULL;
@@ -778,7 +778,7 @@ ctr_internal_object_add_property_with_hash(ctr_object * owner,
 	ctr_mapitem *current_head = NULL;
 	new_item->key = key;
 	new_item->hashKey = hashKey;
-		uint32_t ahash = ctr_internal_alt_hash(key);
+//		uint32_t ahash = ctr_internal_alt_hash(key);
 	new_item->value = value;
 	new_item->next = NULL;
 	new_item->prev = NULL;

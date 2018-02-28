@@ -1,0 +1,132 @@
+#ifndef __GUARD_PCRE_SPLIT_H
+#define __GUARD_PCRE_SPLIT_H
+
+/*
+ */
+
+#include <stdio.h>
+#include <string.h>
+#include <pcre.h>
+#include "citron.h"
+
+ctr_object *pcre_split(char *, char *);
+
+#define OVECCOUNT 30
+
+typedef struct split_t_internal {
+	char *string;
+	char *match;
+	unsigned int length;
+} split_t_internal;
+
+split_t_internal *pcre_split_internal(pcre *, char *);
+
+/* Initialise the RegEx */
+ctr_object *pcre_split(char *pattern, char *string)
+{
+	pcre *re;
+	const char *error;
+	int erroffset;
+	split_t_internal *si;
+	ctr_argument* push_arg = ctr_heap_allocate(sizeof(ctr_argument));
+	ctr_object* sarr = ctr_array_new(CtrStdArray, NULL);
+
+	/*
+	  Make a local copy of pattern and string
+	*/
+	char *s = string;
+
+	/*
+	  Setup RegEx
+	*/
+	re = pcre_compile(pattern, 0, &error, &erroffset, NULL);
+
+	/*
+	  Check if compilation was successful
+	*/
+	if(re == NULL) {
+    char error[1024];
+    size_t len = sprintf(error, "Error: PCRE compilation failed at offset %d: %s\n", erroffset, error);
+		CtrStdFlow = ctr_build_string(error, len);
+		return NULL;
+	}
+
+	/*
+	  Loop thorough string
+	*/
+	char *match;
+	do {
+		/* Return first occurence of match of RegEx */
+		si = pcre_split_internal(re, s);
+
+		/* Copy pointer of match */
+		match = si->match;
+
+		/* Push into array */
+		push_arg->object = ctr_build_string(si->string, si->length);
+		ctr_array_push(sarr, push_arg);
+
+		/* Increment string pointer to skip previous match */
+		s += si->length > 0 ? si->length : 1;
+
+		ctr_heap_free(si);
+
+	} while(match&&*s!=0);
+
+	/*
+	  Free locally allocated memory
+	 */
+	pcre_free(re);
+	ctr_heap_free(push_arg);
+	return sarr;
+}
+
+split_t_internal *pcre_split_internal(pcre *re, char *string)
+{
+
+	int rc;
+	int ovector[OVECCOUNT];
+	int length;
+	split_t_internal *s = (split_t_internal *)ctr_heap_allocate(sizeof(split_t_internal));
+
+	length = (int)strlen(string);
+
+	rc = pcre_exec(re, NULL, string, length, 0, 0, ovector, OVECCOUNT);
+
+	/* check for matches */
+	if(rc < 0) {
+		switch(rc) {
+			case PCRE_ERROR_NOMATCH:
+				s->string = (char *)ctr_heap_allocate(sizeof(char)*(length + 1));
+				strncpy(s->string, string, length);
+				s->match = NULL;
+				return s;
+				break;
+			default: {
+				char err[1024];
+				size_t len = sprintf(err, "Error: Matching error: %d\n", rc);
+				CtrStdFlow = ctr_build_string(err, len);
+				return (split_t_internal *)NULL;
+				break;
+			}
+		}
+	}
+
+	/* check if output vector was large enough */
+	if(rc == 0) {
+		rc = OVECCOUNT/3;
+		fprintf(stderr, "Warning: ovector only has room for %d captured substrings\n", rc-1);
+	}
+
+	s->string = ctr_heap_allocate(sizeof(char) * (ovector[0] + 1));
+	strncpy(s->string, string, ovector[0]);
+
+	s->match = ctr_heap_allocate(sizeof(char) * ((ovector[1] - ovector[0]) + 1));
+	strncpy(s->match, (char *)(string + ovector[0]), (ovector[1] - ovector[0]));
+
+	s->length = ovector[1];
+
+	return (split_t_internal *)s;
+}
+
+#endif

@@ -41,7 +41,7 @@ Eval on: 'handleException:' do: {:e
 Eval on: 'end' do: {
   my end is True.
   me stopEvalServer.
-  my hs_file write: (JSON serialize: my history, =~: ?>s/\\([^"\\])/\\\\$1/g<?).
+  my hs_file write: (JSON serialize: my history, =~: ?>s/(\\)+([^"\\])/\\\\$2/g<?).
 }.
 Eval on: 'break' do: { my end ifTrue: {Broom sweep.}. ^my end. }.
 Eval on: 'allowedColors' do: { ^my allowedColors. }.

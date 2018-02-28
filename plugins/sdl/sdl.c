@@ -8,14 +8,30 @@
 #include <SDL/SDL_ttf.h>
 #include <SDL/SDL_rotozoom.h>
 
+static int sdl_inited = 0;
+static int ttf_inited = 0;
+static int img_inited = 0;
+
 #define NEW 1
 
 #define CTR_SDL_TYPE_BASE 2
 
+ctr_object* sdl_error(const char* errmsg, const char* cat) {//Copy errmsg, concat cat
+  size_t errlen = strlen(errmsg);
+  size_t catlen = strlen(cat);
+  char* err = ctr_heap_allocate(sizeof(char)*(errlen + catlen + 1));
+  memcpy(err, errmsg, errlen);
+  memcpy(err+errlen, cat, catlen);
+  ctr_object* errobj = ctr_build_string(err, errlen+catlen);
+  ctr_heap_free(err);
+  return errobj;
+}
+
 enum ctr_sdl {
   CTR_SDL_TYPE_SURFACE = CTR_SDL_TYPE_BASE,
   CTR_SDL_TYPE_RECT,
-  CTR_SDL_TYPE_EVT
+  CTR_SDL_TYPE_EVT,
+  CTR_SDL_TYPE_FONT
 };
 
 enum ctr_sdl_event_type {
@@ -36,6 +52,7 @@ ctr_object* CtrStdSdl;
 ctr_object* CtrStdSdl_surface;
 ctr_object* CtrStdSdl_rect;
 ctr_object* CtrStdSdl_evt;
+ctr_object* CtrStdSdl_font;
 ctr_object* CtrStdColor;
 
 /*
@@ -91,6 +108,12 @@ ctr_object* ctr_sdl_event_motion_(ctr_object* myself);
 ctr_object* ctr_sdl_event_text_(ctr_object* myself);
 ctr_object* ctr_sdl_event_wheel_(ctr_object* myself);
 /*
+ * SDL TTF Font interface
+ */
+ctr_object* ctr_sdl_ttf_make(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_sdl_ttf_open(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_sdl_ttf_render_solid(ctr_object* myself, ctr_argument* argumentList);
+/*
  * SDL Event Type CTR Impl
  */
 ctr_object* ctr_sdl_event_types_make(ctr_object* myself, int type, char* name);
@@ -123,10 +146,18 @@ ctr_sdl_evt* get_sdl_event_ptr(ctr_object* myself) {
 }
 
 void ctr_sdl_quit_atexit() {
-  IMG_Quit();
-  TTF_Quit();
-  // ctr_sdl_ttf_free_all();
-  SDL_Quit();
+  if(img_inited) {
+    IMG_Quit();
+    img_inited = 0;
+  }
+  if(ttf_inited) {
+    TTF_Quit();
+    ttf_inited = 0;
+  }
+  if(sdl_inited) {
+    SDL_Quit();
+    sdl_inited = 0;
+  }
 }
 
 /**
@@ -182,36 +213,39 @@ ctr_object* ctr_sdl_init(ctr_object* myself, ctr_argument* argumentList) {
     ctr_build_string_from_cstring("windowHeight"),
     CTR_CATEGORY_PRIVATE_PROPERTY
   )->value.nvalue;
-  if(SDL_Init(SDL_INIT_VIDEO) < 0) {
-    char* err = "Unable to initialize SDL: ";
-    err = strcat(err, SDL_GetError());
-    CtrStdFlow = ctr_build_string_from_cstring(err);
-    ctr_heap_free(caption);
-    return CtrStdFlow;
+  if(!sdl_inited) {
+    if(SDL_Init(SDL_INIT_VIDEO) < 0) {
+      CtrStdFlow = sdl_error("Unable to initialize SDL: ", SDL_GetError());
+      ctr_heap_free(caption);
+      return CtrStdFlow;
+    }
+    sdl_inited = 1;
   }
   SDL_WM_SetCaption (caption, caption);
   SDL_Surface* window = SDL_SetVideoMode(w, h, 0, 0);
   if (window == NULL) {
-    char* err = "Unable to set Video Mode: ";
-    err = strcat(err, SDL_GetError());
-    CtrStdFlow = ctr_build_string_from_cstring(err);
+    CtrStdFlow = sdl_error("Unable to set Video Mode: ", SDL_GetError());
     ctr_heap_free(caption);
     return CtrStdFlow;
   }
 
-  // load support for the JPG and PNG image formats
-  int flags=IMG_INIT_JPG|IMG_INIT_PNG;
-  int initted=IMG_Init(flags);
-  if((initted&flags) != flags) {
-    char* err = strcat("IMG failed to initialize: ", IMG_GetError());
-    CtrStdFlow = ctr_build_string_from_cstring(err);
-    return CtrStdFlow;
+  if(!img_inited) {
+    // load support for the JPG and PNG image formats
+    int flags=IMG_INIT_JPG|IMG_INIT_PNG;
+    int initted=IMG_Init(flags);
+    if((initted&flags) != flags) {
+      CtrStdFlow = sdl_error("IMG failed to initialize: ", IMG_GetError());
+      return CtrStdFlow;
+    }
+    img_inited = 1;
   }
-  initted=TTF_Init();
-  if(initted < 0) {
-    char* err = strcat("TTF failed to initialize: ", TTF_GetError());
-    CtrStdFlow = ctr_build_string_from_cstring(err);
-    return CtrStdFlow;
+  if(!TTF_WasInit()) {
+    int initted=TTF_Init();
+    if(initted < 0) {
+      CtrStdFlow = sdl_error("TTF failed to initialize: ", TTF_GetError());
+      return CtrStdFlow;
+    }
+    ttf_inited = 1;
   }
   ctr_heap_free(caption);
   myself->link = CtrStdSdl_surface;
@@ -219,10 +253,23 @@ ctr_object* ctr_sdl_init(ctr_object* myself, ctr_argument* argumentList) {
   return myself;
 }
 ctr_object* ctr_sdl_quit(ctr_object* myself, ctr_argument* argumentList) {
-  IMG_Quit();
-  TTF_Quit();
-  SDL_Quit();
+  if(img_inited) {
+    IMG_Quit();
+    img_inited = 0;
+  }
+  if(ttf_inited) {
+    TTF_Quit();
+    ttf_inited = 0;
+  }
+  if(sdl_inited) {
+    SDL_Quit();
+    sdl_inited = 0;
+  }
   return CtrStdNil;
+}
+
+ctr_object* ctr_sdl_ticks(ctr_object* myself, ctr_argument* argumentList) {
+  return ctr_build_number_from_float(SDL_GetTicks());
 }
 
 SDL_Rect* ctr_sdl_rect_make_nat(int x, int y, int w, int h) {
@@ -400,9 +447,7 @@ ctr_object* ctr_sdl_surface_blit(ctr_object* myself, ctr_argument* argumentList)
   SDL_Surface* what = get_sdl_surface_ptr(argumentList->object);
   // printf("blit\n");
   if(SDL_BlitSurface(what, NULL, on, NULL) < 0) {
-    char* err;
-    err = strcat("Blit failed: ", SDL_GetError());
-    CtrStdFlow = ctr_build_string_from_cstring(err);
+    CtrStdFlow = sdl_error("Blit failed: ", SDL_GetError());
     return myself;
   }
   return myself;
@@ -487,8 +532,7 @@ ctr_object* ctr_sdl_surface_set_color_key(ctr_object* myself, ctr_argument* argu
   uint32_t color = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
   #endif
   if(SDL_SetColorKey(surface, flag, color) < 0) {
-    char* err = strcat("setColorKey failed: ", SDL_GetError());
-    CtrStdFlow = ctr_build_string_from_cstring(err);
+    CtrStdFlow = sdl_error("setColorKey failed: ", SDL_GetError());
   }
   return myself;
 }
@@ -643,6 +687,38 @@ ctr_object* ctr_sdl_event_get_param(ctr_object* myself, ctr_argument* argumentLi
   ctr_heap_free(opt);
   return instance;
 }
+ctr_object* ctr_sdl_event_get_ms(ctr_object* myself, ctr_argument* argumentList) {
+  Uint32 state = SDL_GetMouseState(NULL, NULL);
+  int
+    left = state&SDL_BUTTON(SDL_BUTTON_LEFT),
+    middle = state&SDL_BUTTON(SDL_BUTTON_MIDDLE),
+    right = state&SDL_BUTTON(SDL_BUTTON_RIGHT);
+  ctr_object* statemap = ctr_map_new(CtrStdMap, NULL);
+  ctr_argument* argument = ctr_heap_allocate(sizeof(ctr_argument));
+  argument->next = ctr_heap_allocate(sizeof(ctr_argument));
+  argument->object = ctr_build_bool(left);
+  argument->next->object = ctr_build_string_from_cstring("left");
+  ctr_map_put(statemap, argument);
+  argument->object = ctr_build_bool(middle);
+  argument->next->object = ctr_build_string_from_cstring("middle");
+  ctr_map_put(statemap, argument);
+  argument->object = ctr_build_bool(right);
+  argument->next->object = ctr_build_string_from_cstring("right");
+  ctr_map_put(statemap, argument);
+  ctr_heap_free(argument->next);
+  ctr_heap_free(argument);
+  return statemap;
+}
+ctr_object* ctr_sdl_event_get_mp(ctr_object* myself, ctr_argument* argumentList) {
+  int x, y;
+  SDL_GetMouseState(&x, &y);
+  ctr_object* pos = ctr_array_new(CtrStdArray, NULL);
+  argumentList->object = ctr_build_number_from_float(x);
+  ctr_array_push(pos, argumentList);
+  argumentList->object = ctr_build_number_from_float(y);
+  ctr_array_push(pos, argumentList);
+  return pos;
+}
 ctr_object* ctr_sdl_event_key_   (ctr_object* myself) {
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_EVT);
   instance->link = CtrStdSdl_evt;
@@ -718,7 +794,190 @@ ctr_object* ctr_sdl_event_type_compare(ctr_object* myself, ctr_argument* argumen
   return ctr_build_bool(other!=NULL && (other->value.nvalue) == (double)(evt->type));
 }
 
+/*
+ * TTF Font Interface
+ */
+ ctr_object* ctr_sdl_ttf_make(ctr_object* myself, ctr_argument* argumentList) {
+   ctr_object* container = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_FONT);
+   container->link = CtrStdSdl_font;
+   return container;
+ }
 
+ ctr_object* ctr_sdl_ttf_open(ctr_object* myself, ctr_argument* argumentList) { //Name, [size = 12]
+   if(!TTF_WasInit()) {
+     int initted=TTF_Init();
+     if(initted < 0) {
+       CtrStdFlow = sdl_error("TTF failed to initialize: ", TTF_GetError());
+       return CtrStdFlow;
+     }
+   }
+   char* fname = ctr_heap_allocate_cstring(ctr_internal_cast2string(argumentList->object));
+   int size = 12;
+   if(argumentList->next->object)
+     size = argumentList->next->object->value.nvalue;
+   ctr_object* container = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_FONT);
+   container->link = CtrStdSdl_font;
+   TTF_Font* font = TTF_OpenFont(fname, size);
+   ctr_heap_free(fname);
+   if(!font) {
+     CtrStdFlow = sdl_error("OpenFont error: ", TTF_GetError());
+     return CtrStdNil;
+   }
+   container->value.rvalue->ptr = font;
+   return container;
+ }
+
+ctr_object* ctr_sdl_ttf_render_solid(ctr_object* myself, ctr_argument* argumentList) {
+  TTF_Font* font = myself->value.rvalue->ptr;
+  ctr_object* str = ctr_internal_cast2string(argumentList->object);
+  ctr_object* ocolor = argumentList->next->object;
+  SDL_Color color;
+  color.r = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
+  color.g = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
+  color.b = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  char* text = ctr_heap_allocate_cstring(str);
+  SDL_Surface* srf;
+  if(str->value.svalue->vlen == strlen(text)) {//ASCII
+    srf = TTF_RenderText_Solid(font, text, color);
+  } else {//UTF8
+    srf = TTF_RenderUTF8_Solid(font, text, color);
+  }
+  ctr_heap_free(text);
+  if(!srf) {
+    CtrStdFlow = sdl_error("Couldn't render text: ", TTF_GetError());
+    return CtrStdNil;
+  }
+  ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
+  instance->link = CtrStdSdl_surface;
+  instance->value.rvalue->ptr = srf;
+  return instance;
+}
+
+ctr_object* ctr_sdl_ttf_renderu_solid(ctr_object* myself, ctr_argument* argumentList) {
+  TTF_Font* font = myself->value.rvalue->ptr;
+  ctr_object* str = ctr_internal_cast2string(argumentList->object);
+  ctr_object* ocolor = argumentList->next->object;
+  SDL_Color color;
+  color.r = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
+  color.g = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
+  color.b = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  char* text = ctr_heap_allocate_cstring(str);
+  SDL_Surface*
+    srf = TTF_RenderUTF8_Solid(font, text, color);
+  ctr_heap_free(text);
+  if(!srf) {
+    CtrStdFlow = sdl_error("Couldn't render text: ", TTF_GetError());
+    return CtrStdNil;
+  }
+  ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
+  instance->link = CtrStdSdl_surface;
+  instance->value.rvalue->ptr = srf;
+  return instance;
+}
+ctr_object* ctr_sdl_ttf_render_blended(ctr_object* myself, ctr_argument* argumentList) {
+  TTF_Font* font = myself->value.rvalue->ptr;
+  ctr_object* str = ctr_internal_cast2string(argumentList->object);
+  ctr_object* ocolor = argumentList->next->object;
+  SDL_Color color;
+  color.r = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
+  color.g = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
+  color.b = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  char* text = ctr_heap_allocate_cstring(str);
+  SDL_Surface* srf;
+  if(str->value.svalue->vlen == strlen(text)) {//ASCII
+    srf = TTF_RenderText_Blended(font, text, color);
+  } else {//UTF8
+    srf = TTF_RenderUTF8_Blended(font, text, color);
+  }
+  ctr_heap_free(text);
+  if(!srf) {
+    CtrStdFlow = sdl_error("Couldn't render text: ", TTF_GetError());
+    return CtrStdNil;
+  }
+  ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
+  instance->link = CtrStdSdl_surface;
+  instance->value.rvalue->ptr = srf;
+  return instance;
+}
+
+ctr_object* ctr_sdl_ttf_renderu_blended(ctr_object* myself, ctr_argument* argumentList) {
+  TTF_Font* font = myself->value.rvalue->ptr;
+  ctr_object* str = ctr_internal_cast2string(argumentList->object);
+  ctr_object* ocolor = argumentList->next->object;
+  SDL_Color color;
+  color.r = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
+  color.g = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
+  color.b = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  char* text = ctr_heap_allocate_cstring(str);
+  SDL_Surface*
+    srf = TTF_RenderUTF8_Blended(font, text, color);
+  ctr_heap_free(text);
+  if(!srf) {
+    CtrStdFlow = sdl_error("Couldn't render text: ", TTF_GetError());
+    return CtrStdNil;
+  }
+  ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
+  instance->link = CtrStdSdl_surface;
+  instance->value.rvalue->ptr = srf;
+  return instance;
+}
+ctr_object* ctr_sdl_ttf_render_shaded(ctr_object* myself, ctr_argument* argumentList) {
+  TTF_Font* font = myself->value.rvalue->ptr;
+  ctr_object* str = ctr_internal_cast2string(argumentList->object);
+  ctr_object* ocolor = argumentList->next->object;
+  ctr_object* bocolor = argumentList->next->next->object;
+  SDL_Color fcolor;
+  fcolor.r = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
+  fcolor.g = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
+  fcolor.b = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  SDL_Color bcolor;
+  bcolor.r = ctr_internal_object_find_property(bocolor, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
+  bcolor.g = ctr_internal_object_find_property(bocolor, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
+  bcolor.b = ctr_internal_object_find_property(bocolor, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  char* text = ctr_heap_allocate_cstring(str);
+  SDL_Surface* srf;
+  if(str->value.svalue->vlen == strlen(text)) {//ASCII
+    srf = TTF_RenderText_Shaded(font, text, fcolor, bcolor);
+  } else {//UTF8
+    srf = TTF_RenderUTF8_Shaded(font, text, fcolor, bcolor);
+  }
+  ctr_heap_free(text);
+  if(!srf) {
+    CtrStdFlow = sdl_error("Couldn't render text: ", TTF_GetError());
+    return CtrStdNil;
+  }
+  ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
+  instance->link = CtrStdSdl_surface;
+  instance->value.rvalue->ptr = srf;
+  return instance;
+}
+
+ctr_object* ctr_sdl_ttf_renderu_shaded(ctr_object* myself, ctr_argument* argumentList) {
+  TTF_Font* font = myself->value.rvalue->ptr;
+  ctr_object* str = ctr_internal_cast2string(argumentList->object);
+  ctr_object* ocolor = argumentList->next->object;
+  ctr_object* bocolor = argumentList->next->next->object;
+  SDL_Color fcolor;
+  fcolor.r = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
+  fcolor.g = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
+  fcolor.b = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  SDL_Color bcolor;
+  bcolor.r = ctr_internal_object_find_property(bocolor, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
+  bcolor.g = ctr_internal_object_find_property(bocolor, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
+  bcolor.b = ctr_internal_object_find_property(bocolor, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  char* text = ctr_heap_allocate_cstring(str);
+  SDL_Surface*
+  srf = TTF_RenderUTF8_Shaded(font, text, fcolor, bcolor);
+  ctr_heap_free(text);
+  if(!srf) {
+    CtrStdFlow = sdl_error("Couldn't render text: ", TTF_GetError());
+    return CtrStdNil;
+  }
+  ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
+  instance->link = CtrStdSdl_surface;
+  instance->value.rvalue->ptr = srf;
+  return instance;
+}
 void begin() {
   atexit(ctr_sdl_quit_atexit);
   CtrStdSdl = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
@@ -730,10 +989,14 @@ void begin() {
   CtrStdSdl_evt = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
   CtrStdSdl_evt->link = CtrStdObject;
   CtrStdColor = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
+  CtrStdColor->link = CtrStdObject;
+  CtrStdSdl_font = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
+  CtrStdSdl_font->link = CtrStdObject;
   //sdl, surface, rect
 	ctr_internal_create_func(CtrStdSdl, ctr_build_string_from_cstring( "new" ), &ctr_sdl_make );
   ctr_internal_create_func(CtrStdSdl, ctr_build_string_from_cstring( "init" ), &ctr_sdl_init );
   ctr_internal_create_func(CtrStdSdl, ctr_build_string_from_cstring( "quit" ), &ctr_sdl_quit );
+  ctr_internal_create_func(CtrStdSdl, ctr_build_string_from_cstring( "ticks" ), &ctr_sdl_ticks );
   ctr_internal_create_func(CtrStdSdl, ctr_build_string_from_cstring( "set:to:" ), &ctr_sdl_set_prop);
   ctr_internal_create_func(CtrStdSdl, ctr_build_string_from_cstring( "loadImage:" ), &ctr_sdl_surface_loadImage );
   ctr_internal_create_func(CtrStdSdl, ctr_build_string_from_cstring( "newRectWithX:andY:andW:andH:" ), &ctr_sdl_rect_make );
@@ -759,10 +1022,22 @@ void begin() {
   ctr_internal_create_func(CtrStdSdl_evt, ctr_build_string_from_cstring( "toNumber" ), &ctr_sdl_event_type);
   ctr_internal_create_func(CtrStdSdl_evt, ctr_build_string_from_cstring( "equals:" ), &ctr_sdl_event_type_compare);
   ctr_internal_create_func(CtrStdSdl_evt, ctr_build_string_from_cstring( "get:" ), &ctr_sdl_event_get_param);
+  ctr_internal_create_func(CtrStdSdl_evt, ctr_build_string_from_cstring( "mouseState" ), &ctr_sdl_event_get_ms);
+  ctr_internal_create_func(CtrStdSdl_evt, ctr_build_string_from_cstring( "mousePosition" ), &ctr_sdl_event_get_mp);
   //
   ctr_internal_create_func(CtrStdSdl_evt, ctr_build_string_from_cstring("keystate"), &ctr_sdl_event_key_get_state);
   ctr_internal_create_func(CtrStdSdl_evt, ctr_build_string_from_cstring("keysym"), &ctr_sdl_event_key_get_keysym);
-
+  //font
+  ctr_internal_create_func(CtrStdSdl, ctr_build_string_from_cstring("loadFont:"), &ctr_sdl_ttf_open);
+  ctr_internal_create_func(CtrStdSdl, ctr_build_string_from_cstring("loadFont:size:"), &ctr_sdl_ttf_open);
+  ctr_internal_create_func(CtrStdSdl_font, ctr_build_string_from_cstring("renderSolid:color:"), &ctr_sdl_ttf_render_solid);
+  ctr_internal_create_func(CtrStdSdl_font, ctr_build_string_from_cstring("renderSolidUnicode:color:"), &ctr_sdl_ttf_renderu_solid);
+  //--
+  ctr_internal_create_func(CtrStdSdl_font, ctr_build_string_from_cstring("renderBlended:color:"), &ctr_sdl_ttf_render_blended);
+  ctr_internal_create_func(CtrStdSdl_font, ctr_build_string_from_cstring("renderBlendedUnicode:color:"), &ctr_sdl_ttf_renderu_blended);
+  //--
+  ctr_internal_create_func(CtrStdSdl_font, ctr_build_string_from_cstring("renderShaded:fore:back:"), &ctr_sdl_ttf_render_shaded);
+  ctr_internal_create_func(CtrStdSdl_font, ctr_build_string_from_cstring("renderShadedUnicode:fore:back:"), &ctr_sdl_ttf_renderu_shaded);
   #ifdef NEW
   //Color
   ctr_internal_create_func(CtrStdColor, ctr_build_string_from_cstring( "red:green:blue:alpha:" ), &ctr_sdl_color_make);

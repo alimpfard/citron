@@ -12,6 +12,7 @@
 
 #include "citron.h"
 #include "siphash.h"
+#include "murmur3.h"
 
 #ifdef withBoehmGC
 #include <gc/gc.h>
@@ -388,6 +389,23 @@ uint64_t ctr_internal_index_hash(ctr_object * key)
 /**
  * @internal
  *
+ * InternalObjectAltHash
+ *
+ * Given an object, this function will calculate a hash to speed-up
+ * lookup.
+ */
+uint64_t ctr_internal_alt_hash(ctr_object * key)
+{
+	ctr_object *stringKey = ctr_internal_cast2string(key);
+	uint32_t out;
+	MurmurHash3_x86_32(stringKey->value.svalue->value,
+			 stringKey->value.svalue->vlen, *(uint32_t*)CtrHashKey, &out);
+	return out;
+}
+
+/**
+ * @internal
+ *
  * InternalObjectFindProperty
  *
  * Finds property in object.
@@ -395,17 +413,22 @@ uint64_t ctr_internal_index_hash(ctr_object * key)
 ctr_object *ctr_internal_object_find_property(ctr_object * owner,
 					      ctr_object * key, int is_method)
 {
-	ctr_mapitem *head, *first_head;
 	uint64_t hashKey = ctr_internal_index_hash(key);
+	uint64_t ahashKey = ctr_internal_alt_hash(key);
+	ctr_mapitem *head, *first_head;
 	if (is_method) {
 		if (!owner->methods || owner->methods->size == 0) {
 			return NULL;
 		}
+		// if((owner->methods->s_hash&hashKey) != hashKey || (owner->methods->m_hash&ahashKey) != ahashKey)
+			// return NULL;
 		head = owner->methods->head;
 	} else {
 		if (owner->properties->size == 0) {
 			return NULL;
 		}
+		// if((owner->properties->s_hash&hashKey) != hashKey || (owner->properties->m_hash&ahashKey) != ahashKey)
+			// return NULL;
 		head = owner->properties->head;
 	}
 	first_head = head;
@@ -436,6 +459,7 @@ ctr_object *ctr_internal_object_find_property_ignore(ctr_object * owner,
 {
 	ctr_mapitem *head;
 	uint64_t hashKey = ctr_internal_index_hash(key);
+	uint64_t ahashKey = ctr_internal_alt_hash(key);
 
 #ifdef CTR_DEBUG_HIDING
 	int did_skip = -1;
@@ -472,11 +496,15 @@ ctr_object *ctr_internal_object_find_property_ignore(ctr_object * owner,
 		if (!owner->methods || owner->methods->size == 0) {
 			return NULL;
 		}
+		// if((owner->methods->s_hash&hashKey) != hashKey || (owner->methods->m_hash&ahashKey) != ahashKey)
+			// return NULL;
 		head = owner->methods->head;
 	} else {
 		if (owner->properties->size == 0) {
 			return NULL;
 		}
+		// if((owner->properties->s_hash&hashKey) != hashKey || (owner->properties->m_hash&ahashKey) != ahashKey)
+			// return NULL;
 		head = owner->properties->head;
 	}
 #ifdef CTR_DEBUG_HIDING
@@ -508,11 +536,15 @@ ctr_object *ctr_internal_object_find_property_with_hash(ctr_object * owner,
 		if (!owner->methods || owner->methods->size == 0) {
 			return NULL;
 		}
+		// if((owner->methods->s_hash&hashKey) != hashKey)
+			// return NULL;
 		head = owner->methods->head;
 	} else {
 		if (owner->properties->size == 0) {
 			return NULL;
 		}
+		// if((owner->properties->s_hash&hashKey) != hashKey)
+			// return NULL;
 		head = owner->properties->head;
 	}
 	first_head = head;
@@ -542,22 +574,28 @@ ctr_object *ctr_internal_object_find_property_with_hash(ctr_object * owner,
  * InternalObjectDeleteProperty
  *
  * Deletes the specified property from the object.
+ * NOTE: Does not update the bloom filter TODO: Try to fix
  */
 void
 ctr_internal_object_delete_property(ctr_object * owner, ctr_object * key,
 				    int is_method)
 {
 	uint64_t hashKey = ctr_internal_index_hash(key);
+	uint64_t ahashKey = ctr_internal_alt_hash(key);
 	ctr_mapitem *head;
 	if (is_method) {
 		if (!owner->methods || owner->methods->size == 0) {
 			return;
 		}
+		// if((owner->methods->s_hash&hashKey) != hashKey || (owner->methods->m_hash&ahashKey) != ahashKey)
+			// return;
 		head = owner->methods->head;
 	} else {
 		if (owner->properties->size == 0) {
 			return;
 		}
+		// if((owner->properties->s_hash&hashKey) != hashKey || (owner->properties->m_hash&ahashKey) != ahashKey)
+			// return;
 		head = owner->properties->head;
 	}
 	while (head) {
@@ -620,11 +658,15 @@ ctr_internal_object_delete_property_with_hash(ctr_object * owner,
 		if (!owner->methods || owner->methods->size == 0) {
 			return;
 		}
+		// if((owner->methods->s_hash&hashKey) != hashKey)
+			// return;
 		head = owner->methods->head;
 	} else {
 		if (owner->properties->size == 0) {
 			return;
 		}
+		// if((owner->properties->s_hash&hashKey) != hashKey)
+			// return;
 		head = owner->properties->head;
 	}
 	while (head) {
@@ -688,6 +730,7 @@ ctr_internal_object_add_property(ctr_object * owner, ctr_object * key,
 	ctr_mapitem *current_head = NULL;
 	new_item->key = key;
 	new_item->hashKey = ctr_internal_index_hash(key);
+	uint32_t ahash = ctr_internal_alt_hash(key);
 	new_item->value = value;
 	new_item->next = NULL;
 	new_item->prev = NULL;
@@ -700,6 +743,8 @@ ctr_internal_object_add_property(ctr_object * owner, ctr_object * key,
 			new_item->next = current_head;
 			owner->methods->head = new_item;
 		}
+		// owner->methods->s_hash = owner->methods->s_hash | new_item->hashKey;
+		// owner->methods->m_hash |= ahash;
 		owner->methods->size++;
 	} else {
 		if (owner->properties->size == 0) {
@@ -710,6 +755,8 @@ ctr_internal_object_add_property(ctr_object * owner, ctr_object * key,
 			new_item->next = current_head;
 			owner->properties->head = new_item;
 		}
+		// owner->properties->s_hash |= new_item->hashKey;
+		// owner->properties->m_hash |= ahash;
 		owner->properties->size++;
 	}
 }
@@ -731,6 +778,7 @@ ctr_internal_object_add_property_with_hash(ctr_object * owner,
 	ctr_mapitem *current_head = NULL;
 	new_item->key = key;
 	new_item->hashKey = hashKey;
+		uint32_t ahash = ctr_internal_alt_hash(key);
 	new_item->value = value;
 	new_item->next = NULL;
 	new_item->prev = NULL;
@@ -743,6 +791,8 @@ ctr_internal_object_add_property_with_hash(ctr_object * owner,
 			new_item->next = current_head;
 			owner->methods->head = new_item;
 		}
+		// owner->methods->s_hash = owner->methods->s_hash | new_item->hashKey;
+		// owner->methods->m_hash |= ahash;
 		owner->methods->size++;
 	} else {
 		if (owner->properties->size == 0) {
@@ -753,6 +803,8 @@ ctr_internal_object_add_property_with_hash(ctr_object * owner,
 			new_item->next = current_head;
 			owner->properties->head = new_item;
 		}
+		// owner->properties->s_hash |= new_item->hashKey;
+		// owner->properties->m_hash |= ahash;
 		owner->properties->size++;
 	}
 }
@@ -900,7 +952,11 @@ ctr_object *ctr_internal_create_mapped_object_unshared(int type)
 	o->properties = ctr_heap_allocate(sizeof(ctr_map));
 	o->methods = ctr_heap_allocate(sizeof(ctr_map));
 	o->properties->size = 0;
+	// o->properties->s_hash = 0;
+	// o->properties->m_hash = 0;
 	o->methods->size = 0;
+	// o->methods->s_hash = 0;
+	// o->methods->m_hash = 0;
 	o->properties->head = NULL;
 	o->methods->head = NULL;
 	o->release_hook = NULL;

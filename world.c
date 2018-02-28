@@ -1903,6 +1903,9 @@ void ctr_initialize_world()
 				 ctr_build_string_from_cstring(CTR_DICT_SPLIT),
 				 &ctr_string_split);
 	ctr_internal_create_func(CtrStdString,
+				 ctr_build_string_from_cstring("reSplit:"),
+				 &ctr_string_split_re);
+	ctr_internal_create_func(CtrStdString,
 				 ctr_build_string_from_cstring
 				 (CTR_DICT_ASCII_UPPER_CASE),
 				 &ctr_string_to_upper);
@@ -2138,6 +2141,9 @@ void ctr_initialize_world()
 	ctr_internal_create_func(CtrStdArray,
 				 ctr_build_string_from_cstring("filter:"),
 				 &ctr_array_filter);
+	ctr_internal_create_func(CtrStdArray,
+				 ctr_build_string_from_cstring("filter_v:"),
+				 &ctr_array_filter_v);
 	ctr_internal_create_func(CtrStdArray,
 				 ctr_build_string_from_cstring("fmap:from:"),
 				 &ctr_array_select_from_if);

@@ -633,6 +633,7 @@ ctr_object* ctr_string_ends_with(ctr_object* myself, ctr_argument* argumentList)
 ctr_object* ctr_string_last_index_of(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_replace_with(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_split(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_split_re(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_to_number(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_to_boolean(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_to_lower(ctr_object* myself, ctr_argument* argumentList);
@@ -692,6 +693,7 @@ ctr_object* ctr_array_fmap(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_imap(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_foldl(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_filter(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_filter_v(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_select_from_if(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_push(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_push_imm(ctr_object* myself, ctr_argument* argumentList);

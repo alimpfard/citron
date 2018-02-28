@@ -1464,6 +1464,42 @@ ctr_object *ctr_array_filter(ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
+ * [Array] filter_v: [Block<v>]
+ *
+ * Include the element iff block returns True for the element
+ */
+ctr_object *ctr_array_filter_v(ctr_object * myself, ctr_argument * argumentList)
+{
+	ctr_object *block = argumentList->object;
+	CTR_ENSURE_TYPE_BLOCK(block);
+	ctr_size i = 0;
+	block->info.sticky = 1;
+	ctr_argument *arguments = ctr_heap_allocate(sizeof(ctr_argument));
+	ctr_object *newArr = ctr_array_new(CtrStdArray, NULL);
+	ctr_object *current;
+	for (i = myself->value.avalue->tail; i < myself->value.avalue->head;
+	     i++) {
+		current = *(myself->value.avalue->elements + i);
+		arguments->object = current;
+		ctr_object *fv = ctr_block_run(block, arguments, block);
+		if (ctr_internal_cast2bool(fv)->value.bvalue) {
+			arguments->object = current;
+			ctr_array_push(newArr, arguments);
+		}
+		if (CtrStdFlow == CtrStdContinue)
+			CtrStdFlow = NULL;
+		if (CtrStdFlow)
+			break;
+	}
+	ctr_heap_free(arguments);
+	if (CtrStdFlow == CtrStdBreak)
+		CtrStdFlow = NULL;	/* consume break */
+	block->info.mark = 0;
+	block->info.sticky = 0;
+	return newArr;
+}
+
+/**
  * CtrArrayToArgumentList
  * @internal
  *

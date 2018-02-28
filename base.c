@@ -23,6 +23,11 @@
 
 #include "citron.h"
 #include "siphash.h"
+
+#ifndef POSIXRE
+#include "pcre_split.h"
+#endif
+
 /**@I_OBJ_DEF Nil*/
 /**
  *
@@ -3984,6 +3989,33 @@ ctr_object *ctr_string_split(ctr_object * myself, ctr_argument * argumentList)
 	ctr_heap_free(buffer);
 	return arr;
 }
+
+/**
+ * <b>[String] reSplit: [String]</b>
+ *
+ * Converts a string to an array by splitting the string using
+ * the specified regex (also a string).
+ * ONLY WITH PCRE
+ */
+
+#ifdef POSIXRE
+ctr_object* ctr_string_split_re(ctr_object* myself, ctr_argument* argumentList) {
+	CtrStdFlow = ctr_build_string_from_cstring("Regex split not implemented for POSIX regex");
+	return myself;
+}
+#else
+ctr_object* ctr_string_split_re(ctr_object* myself, ctr_argument* argumentList) {
+	if(argumentList->object->info.type != CTR_OBJECT_TYPE_OTSTRING || argumentList->object->value.svalue->vlen == 0) {
+		CtrStdFlow = ctr_build_string_from_cstring("Invalid regex or not a string");
+		return ctr_build_nil();
+	}
+	char *re = ctr_heap_allocate_cstring(argumentList->object), *str = ctr_heap_allocate_cstring(myself);
+	ctr_object* ret = pcre_split(re, str);
+	ctr_heap_free(re);
+	ctr_heap_free(myself);
+	return ret;
+}
+#endif
 
 /**
  * <b>[String] characters.</b>

@@ -10,7 +10,10 @@
 #include "citron.h"
 
 ctr_object *pcre_split(char *, char *);
-
+ssize_t pcre_indexof_internal(pcre* re, char* string);
+ssize_t pcre_last_indexof_internal(pcre* re, char* string);
+ssize_t pcre_last_indexof(char* pattern, char* string);
+ssize_t pcre_indexof(char* pattern, char* string);
 #define OVECCOUNT 30
 
 typedef struct split_t_internal {
@@ -21,9 +24,47 @@ typedef struct split_t_internal {
 
 split_t_internal *pcre_split_internal(pcre *, char *);
 
+ssize_t pcre_indexof(char* pattern, char* string) {
+	pcre *re;
+	const char* error;
+	int erroffset;
+	re = pcre_compile(pattern, 0, &error, &erroffset, NULL);
+	if (re == NULL) {
+		char error[1024];
+		size_t len = sprintf(error, "Error: PCRE compilation failed at offset %d: %s\n", erroffset, error);
+		CtrStdFlow = ctr_build_string(error, len);
+		return NULL;
+	}
+	ssize_t offset = pcre_indexof_internal(re, string);
+	pcre_free(re);
+	return offset;
+}
+
+ssize_t pcre_last_indexof(char* pattern, char* string) {
+	pcre *re;
+	const char* error;
+	int erroffset;
+	re = pcre_compile(pattern, 0, &error, &erroffset, NULL);
+	if (re == NULL) {
+		char error[1024];
+		size_t len = sprintf(error, "Error: PCRE compilation failed at offset %d: %s\n", erroffset, error);
+		CtrStdFlow = ctr_build_string(error, len);
+		return NULL;
+	}
+	ssize_t offset = pcre_indexof_internal(re, string);
+	size_t position = offset;
+	while(1) {
+		offset = pcre_indexof_internal(re, string+position);
+		if(offset != -1)
+			position = position + offset;
+		else break;
+	}
+	pcre_free(re);
+	return position;
+}
+
 /* Initialise the RegEx */
-ctr_object *pcre_split(char *pattern, char *string)
-{
+ctr_object *pcre_split(char *pattern, char *string) {
 	pcre *re;
 	const char *error;
 	int erroffset;
@@ -129,4 +170,26 @@ split_t_internal *pcre_split_internal(pcre *re, char *string)
 	return (split_t_internal *)s;
 }
 
+ssize_t pcre_indexof_internal(pcre* re, char* string) {
+		int rc;
+		int ovector[OVECCOUNT];
+		int length;
+
+		length = (int)strlen(string);
+
+		rc = pcre_exec(re, NULL, string, length, 0, 0, ovector, OVECCOUNT);
+
+		/* check for matches */
+		if(rc < 0) {
+			return -1;
+		}
+
+		/* check if output vector was large enough */
+		if(rc == 0) {
+			rc = OVECCOUNT/3;
+			fprintf(stderr, "Warning: ovector only has room for %d captured substrings\n", rc-1);
+		}
+
+		return ovector[1];
+}
 #endif

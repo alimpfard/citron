@@ -473,11 +473,13 @@ Eval on: 'repl' do: {
                 (inc = '\x3b\x35\x44') ifTrue: { #^Left Arrow
                   var ct is inp from: 0 to: cursor.
                   var ct is ct trim.
-                  ct is (ct lastIndexOf: ' ').
+                  ct is (ct reLastIndexOf: ?>\s|\'<?).
+                  ct is ct equals: cursor - 1, either: ct - 1 or: ct.
                   cursor is ct + 1.
                 }, else: {
                   (inc = '\x3b\x35\x43') ifTrue: { #^Right Arrow
-                    var ct is (var ix is inp from: cursor to: (inp length), trim) indexOf: ' ', - 1.
+                    var ct is (var ix is inp from: cursor to: (inp length), trim) reIndexOf: ?>\s|\'<?, - 1.
+                    ct is ct equals: 0, either: ct + 1 or: ct.
                     cursor is cursor + ct + ((inp length) - (ix length)).
                   }.#, else: { Pen red write: inc. }.
                 }.

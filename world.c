@@ -1886,6 +1886,9 @@ void ctr_initialize_world()
 				 ctr_build_string_from_cstring
 				 (CTR_DICT_INDEX_OF), &ctr_string_index_of);
 	ctr_internal_create_func(CtrStdString,
+				 ctr_build_string_from_cstring
+				 ("reIndexOf:"), &ctr_string_re_index_of);
+	ctr_internal_create_func(CtrStdString,
 				 ctr_build_string_from_cstring("startsWith:"),
 				 &ctr_string_starts_with);
 	ctr_internal_create_func(CtrStdString,
@@ -1895,6 +1898,10 @@ void ctr_initialize_world()
 				 ctr_build_string_from_cstring
 				 (CTR_DICT_LAST_INDEX_OF),
 				 &ctr_string_last_index_of);
+	ctr_internal_create_func(CtrStdString,
+				 ctr_build_string_from_cstring
+				 ("reLastIndexOf:"),
+				 &ctr_string_re_last_index_of);
 	ctr_internal_create_func(CtrStdString,
 				 ctr_build_string_from_cstring
 				 (CTR_DICT_REPLACE_WITH),

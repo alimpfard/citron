@@ -3120,6 +3120,64 @@ ctr_object *ctr_string_index_of(ctr_object * myself,
 }
 
 /**
+ * <b>[String] reLastIndexOf: [subject]</b>
+ *
+ * Returns the index (character number, not the byte!) of the
+ * last occurance of needle in the haystack, by regex
+ *
+ * Usage:
+ *
+ * 'find the needle' reLastIndexOf: 'n.{2}dle'. #9
+ *
+ */
+ ctr_object *ctr_string_re_last_index_of(ctr_object * myself,
+ 				ctr_argument * argumentList)
+ {
+#ifndef POSIXRE
+ 	char* re = ctr_heap_allocate_cstring(ctr_internal_cast2string(argumentList->object));
+ 	char* str = ctr_heap_allocate_cstring(myself);
+	ssize_t offset = pcre_last_indexof(re, str);
+	offset = offset>0?ctr_getutf8len(myself->value.svalue->value, offset)-1:offset;
+	ctr_heap_free(re);
+	ctr_heap_free(str);
+ 	return ctr_build_number_from_float((ctr_number) offset);
+#else
+	CtrStdFlow =
+			ctr_build_string_from_cstring("Strin#reLastIndexOf: not implemented for posix re");
+	return ctr_build_nil();
+#endif
+ }
+
+ /**
+  * <b>[String] reIndexOf: [subject]</b>
+  *
+  * Returns the index (character number, not the byte!) of the
+  * needle in the haystack, by regex
+  *
+  * Usage:
+  *
+  * 'find the needle' indexOf: 'n.{2}dle'. #9
+  *
+  */
+  ctr_object *ctr_string_re_index_of(ctr_object * myself,
+  				ctr_argument * argumentList)
+  {
+#ifndef POSIXRE
+	char* re = ctr_heap_allocate_cstring(ctr_internal_cast2string(argumentList->object));
+	char* str = ctr_heap_allocate_cstring(myself);
+ 	ssize_t offset = pcre_indexof(re, str);
+	offset = offset>0?ctr_getutf8len(myself->value.svalue->value, offset)-1:offset;
+ 	ctr_heap_free(re);
+ 	ctr_heap_free(str);
+	return ctr_build_number_from_float((ctr_number) offset);
+#else
+	CtrStdFlow =
+			ctr_build_string_from_cstring("Strin#reLastIndexOf: not implemented for posix re");
+	return ctr_build_nil();
+#endif
+  }
+
+/**
  * <b>[String] startsWith: [String]</b>
  *
  * Returns whether the string starts with the arg

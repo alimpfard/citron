@@ -94,7 +94,7 @@ var white is Color rgb: [256,256,255]. #Totally white
   rtext run.
   window update.
   evt poll: evthandler.
-  Clock wait: 5 ms. #magic 60fps time weee
+  Clock wait: 13 ms. #magic 60fps time weee
   window fillRect: Nil withColor: white.
   x is x -=: 1.
   (x equals: 0 - w) ifTrue: {x is w.}.

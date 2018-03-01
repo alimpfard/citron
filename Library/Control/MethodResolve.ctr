@@ -4,3 +4,7 @@ Object on: ':' do: {:meth
 Object on: ':::' do: {:meth
   ^Reflect getResponder: meth ofObject: me.
 }.
+Object on: ':::apply:' do: {:meth:aargs
+  var mobj is me:::meth.
+  ^{\:self:args mobj applyAll: [self, (aargs + [args])]. }.
+}.

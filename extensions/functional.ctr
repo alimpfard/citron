@@ -101,7 +101,7 @@
   # }.
 
   CodeBlock on: 'compose:' do: { :f
-    ((((Reflect argumentListOf: f) count) !=: 1) | (((Reflect argumentListOf: me) count) !=: 1)) ifTrue: {thisBlock error: 'Composed functions can have only one argument.'.}.
+    # ((((Reflect argumentListOf: f, filter_v: {:v ^v !=: 'self'.}) count) !=: 1) | (((Reflect argumentListOf: me, filter_v: {:v ^v !=: 'self'.}) count) !=: 1)) ifTrue: {thisBlock error: 'Composed functions can have only one argument.'.}.
     var self is me.
     var composite is { :i ^my self applyTo: (my f applyTo: i). }.
     composite set: 'self' value: self.

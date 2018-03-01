@@ -271,7 +271,9 @@ Eval on: 'tryNumrify:' do: {:s
         (value isNil) ifTrue: { thisBlock error: '-e requires an argument.'. }.
         { ^(Eval argCount > 0). } whileTrue: { args push: Eval shiftArgs. }. #consume all other arguments.
         # if it ends in a dot, delete it.
-        args imap: {:i:n Reflect addGlobalVariable: '$' + (i + 1). Reflect set: '$' + (i + 1) to: (Eval tryNumrify: n).}.
+        args imap: {:i:n Reflect addGlobalVariable: '&' + (i + 1). Reflect set: '&' + (i + 1) to: (Eval tryNumrify: n).}.
+        Reflect addGlobalVariable: '&_'.
+        &_ is args.
         value findPattern: '(.*)\\.' do: {:p value is p at: 1.}.
         Pen write: (Eval evaluate: value).
         Program exit.

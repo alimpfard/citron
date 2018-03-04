@@ -16,6 +16,7 @@
 #define LF_SIGNALERROR	5
 
 // Define a debugging output macro
+// #define LF_DEBUG 1
 #ifdef LF_DEBUG
 
 #include <stdio.h>
@@ -135,7 +136,7 @@ void fiberYield()
 static void fiberStart(ctr_object * block)
 {
 	fiberList[currentFiber].active = 1;
-	ctr_block_runIt(block, NULL);
+	ctr_block_run(block, NULL, block);
 	fiberList[currentFiber].active = 0;
 
 	// Yield control, but because active == 0, this will free the fiber
@@ -362,6 +363,7 @@ void ctr_fiber_begin_init()
 	initFibers();
 
 	CtrStdFiber = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+	CtrStdFiber->link = CtrStdObject;
 	ctr_internal_create_func(CtrStdFiber,
 				 ctr_build_string_from_cstring("toString"),
 				 &ctr_fiber_tostring);

@@ -1668,7 +1668,7 @@ ctr_object *ctr_number_times(ctr_object * myself, ctr_argument * argumentList)
 		indexNumber->value.nvalue = (ctr_number) i;
 		arguments->object = indexNumber;
 		ctr_transfer_object_ownership(block, indexNumber);
-		ctr_block_run_here(block, arguments, NULL);
+		ctr_block_run_here(block, arguments, block);
 		// ctr_internal_delete_standalone_object(indexNumber);
 		if (CtrStdFlow == CtrStdContinue)
 			CtrStdFlow = NULL;	/* consume continue */
@@ -1930,7 +1930,7 @@ ctr_object *ctr_number_to_step_do(ctr_object * myself,
 		arg->value.nvalue = (ctr_number) curValue;
 		arguments->object = arg;
 		ctr_transfer_object_ownership(codeBlock, arg);
-		ctr_block_run_here(codeBlock, arguments, NULL);
+		ctr_block_run_here(codeBlock, arguments, codeBlock);
 		// ctr_internal_delete_standalone_object(arg);
 		if (CtrStdFlow == CtrStdContinue)
 			CtrStdFlow = NULL;	/* consume continue and go on */
@@ -2239,10 +2239,10 @@ ctr_object *ctr_number_to_string(ctr_object * myself,
 	char *buf;
 	int bufSize;
 	ctr_object *stringObject;
-	s = ctr_heap_allocate(80 * sizeof(char));
-	bufSize = 100 * sizeof(char);
+	s = ctr_heap_allocate(200 * sizeof(char));
+	bufSize = 2000/8 * sizeof(char);
 	buf = ctr_heap_allocate(bufSize);
-	snprintf(buf, 99, "%.10f", o->value.nvalue);
+	snprintf(buf, 199, "%.10f", o->value.nvalue);
 	p = buf + strlen(buf) - 1;
 	while (*p == '0' && *p-- != '.') ;
 	*(p + 1) = '\0';
@@ -5174,10 +5174,10 @@ ctr_object *ctr_block_while_true(ctr_object * myself,
 	while (1 && !CtrStdFlow) {
 		ctr_object *result =
 		    ctr_internal_cast2bool(ctr_block_run_here
-					   (myself, argumentList, NULL));
+					   (myself, argumentList, myself));
 		if (result->value.bvalue == 0 || CtrStdFlow)
 			break;
-		ctr_block_run_here(argumentList->object, argumentList, NULL);
+		ctr_block_run_here(argumentList->object, argumentList, argumentList->object);
 		if (CtrStdFlow == CtrStdContinue)
 			CtrStdFlow = NULL;	/* consume continue */
 	}
@@ -5212,10 +5212,10 @@ ctr_object *ctr_block_while_false(ctr_object * myself,
 	while (1 && !CtrStdFlow) {
 		ctr_object *result =
 		    ctr_internal_cast2bool(ctr_block_run_here
-					   (myself, argumentList, NULL));
+					   (myself, argumentList, myself));
 		if (result->value.bvalue == 1 || CtrStdFlow)
 			break;
-		ctr_block_run_here(argumentList->object, argumentList, NULL);
+		ctr_block_run_here(argumentList->object, argumentList, argumentList->object);
 		if (CtrStdFlow == CtrStdContinue)
 			CtrStdFlow = NULL;	/* consume continue */
 	}

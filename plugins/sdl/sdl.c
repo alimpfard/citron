@@ -7,12 +7,13 @@
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_ttf.h>
 #include <SDL/SDL_rotozoom.h>
+#include <SDL/SDL_gfxPrimitives.h>
+#include <SDL/SDL_gfxBlitFunc.h>
 
 static int sdl_inited = 0;
 static int ttf_inited = 0;
 static int img_inited = 0;
 
-#define NEW 1
 
 #define CTR_SDL_TYPE_BASE 2
 
@@ -113,6 +114,106 @@ ctr_object* ctr_sdl_event_wheel_(ctr_object* myself);
 ctr_object* ctr_sdl_ttf_make(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_sdl_ttf_open(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_sdl_ttf_render_solid(ctr_object* myself, ctr_argument* argumentList);
+/*
+ * SDL_gfx Primitives interface
+ */
+
+/**********************NATIVES***********************/
+#define CTR_XYXYC_FUNCTION_BODY(name) SDL_Surface* dst = get_sdl_surface_ptr(myself);\
+  ctr_object* color_obj;\
+  Sint16 x1, x2, y1, y2;\
+  Uint32 color = 0;\
+  x1 = ctr_internal_cast2number(argumentList->object)->value.nvalue;\
+  y1 = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;\
+  x2 = ctr_internal_cast2number(argumentList->next->next->object)->value.nvalue;\
+  y2 = ctr_internal_cast2number(argumentList->next->next->next->object)->value.nvalue;\
+  color_obj = argumentList->next->next->next->next->object;\
+  int r = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("red"), 0)->value.nvalue;\
+  int g = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("green"), 0)->value.nvalue;\
+  int b = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;\
+  int a = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("alpha"), 0)->value.nvalue;\
+  color |= ((Uint32)a);\
+  color |= ((Uint32)b)<<8;\
+  color |= ((Uint32)g)<<16;\
+  color |= ((Uint32)r)<<24;\
+  int errno = name (dst, x1, y1, x2, y2, color);\
+  return myself;
+
+/**/ // Pixel
+/**/ // ctr_object* ctr_sdl_gfx_pixelColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y, Uint32 color);
+/**/ // ctr_object* ctr_sdl_gfx_pixelRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// Horizontal line
+ctr_object* ctr_sdl_gfx_hlineColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, Uint32 color);
+ctr_object* ctr_sdl_gfx_hlineRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// Vertical line
+ctr_object* ctr_sdl_gfx_vlineColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y1, Sint16 y2, Uint32 color);
+ctr_object* ctr_sdl_gfx_vlineRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y1, Sint16 y2, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// Rectangle
+ctr_object* ctr_sdl_gfx_rectangleColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint32 color);
+ctr_object* ctr_sdl_gfx_rectangleRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// Filled rectangle Box
+ctr_object* ctr_sdl_gfx_boxColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint32 color);
+ctr_object* ctr_sdl_gfx_boxRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// Line
+ctr_object* ctr_sdl_gfx_lineColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint32 color);
+ctr_object* ctr_sdl_gfx_lineRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// AA Line
+ctr_object* ctr_sdl_gfx_aalineColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint32 color);
+ctr_object* ctr_sdl_gfx_aalineRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// Circle
+ctr_object* ctr_sdl_gfx_circleColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Uint32 color);
+ctr_object* ctr_sdl_gfx_circleRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// AA Circle
+ctr_object* ctr_sdl_gfx_aacircleColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Uint32 color);
+ctr_object* ctr_sdl_gfx_aacircleRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// Filled Circle
+ctr_object* ctr_sdl_gfx_filledCircleColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Uint32 color);
+ctr_object* ctr_sdl_gfx_filledCircleRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// Ellipse
+ctr_object* ctr_sdl_gfx_ellipseColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, Uint32 color);
+ctr_object* ctr_sdl_gfx_ellipseRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// AA Ellipse
+ctr_object* ctr_sdl_gfx_aaellipseColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, Uint32 color);
+ctr_object* ctr_sdl_gfx_aaellipseRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// Filled Ellipse
+ctr_object* ctr_sdl_gfx_filledEllipseColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, Uint32 color);
+ctr_object* ctr_sdl_gfx_filledEllipseRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// Pie
+ctr_object* ctr_sdl_gfx_pieColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, Sint16 end, Uint32 color);
+ctr_object* ctr_sdl_gfx_pieRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, Sint16 end, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// Filled Pie
+ctr_object* ctr_sdl_gfx_filledPieColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, Sint16 end, Uint32 color);
+ctr_object* ctr_sdl_gfx_filledPieRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, Sint16 end, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// Trigon
+ctr_object* ctr_sdl_gfx_trigonColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 x3, Sint16 y3, Uint32 color);
+ctr_object* ctr_sdl_gfx_trigonRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 x3, Sint16 y3, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// AA-Trigon
+ctr_object* ctr_sdl_gfx_aatrigonColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 x3, Sint16 y3, Uint32 color);
+ctr_object* ctr_sdl_gfx_aatrigonRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst,  Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 x3, Sint16 y3, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// Filled Trigon
+ctr_object* ctr_sdl_gfx_filledTrigonColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 x3, Sint16 y3, int color);
+ctr_object* ctr_sdl_gfx_filledTrigonRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 x3, Sint16 y3, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// Polygon
+ctr_object* ctr_sdl_gfx_polygonColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 * vx, Sint16 * vy, int n, Uint32 color);
+ctr_object* ctr_sdl_gfx_polygonRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 * vx, Sint16 * vy, int n, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// AA-Polygon
+ctr_object* ctr_sdl_gfx_aapolygonColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 * vx, Sint16 * vy, int n, Uint32 color);
+ctr_object* ctr_sdl_gfx_aapolygonRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 * vx, Sint16 * vy, int n, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// Filled Polygon
+ctr_object* ctr_sdl_gfx_filledPolygonColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 * vx, Sint16 * vy, int n, int color);
+ctr_object* ctr_sdl_gfx_filledPolygonRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 * vx, Sint16 * vy, int n, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// Bezier Curve
+ctr_object* ctr_sdl_gfx_bezierColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 * vx, Sint16 * vy, int n, int s, Uint32 color);
+ctr_object* ctr_sdl_gfx_bezierRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 * vx, Sint16 * vy, int n, int s, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// 8x8 Characters/Strings
+ctr_object* ctr_sdl_gfx_characterColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y, char c, Uint32 color);
+ctr_object* ctr_sdl_gfx_characterRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y, char c, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+ctr_object* ctr_sdl_gfx_stringColor(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y, char *c, Uint32 color);
+ctr_object* ctr_sdl_gfx_stringRGBA(ctr_object* myself, ctr_argument* argumentList); //(SDL_Surface * dst, Sint16 x, Sint16 y, char *c, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+// void gfxPrimitivesSetFont(unsigned char *fontdata, int cw, int ch);
+
+/***********************Citron Interface****************************/
+
 /*
  * SDL Event Type CTR Impl
  */
@@ -315,7 +416,28 @@ ctr_object* ctr_sdl_rect_alterh(ctr_object* myself, ctr_argument* argumentList) 
   return myself;
 }
 
-#ifdef NEW
+ctr_object* ctr_sdl_rect_getx(ctr_object* myself, ctr_argument* argumentList) {
+  SDL_Rect* rect = get_sdl_rect_ptr(myself);
+  return ctr_build_number_from_float(rect->x);
+}
+ctr_object* ctr_sdl_rect_gety(ctr_object* myself, ctr_argument* argumentList) {
+  SDL_Rect* rect = get_sdl_rect_ptr(myself);
+  return ctr_build_number_from_float(rect->y);
+}
+ctr_object* ctr_sdl_rect_getw(ctr_object* myself, ctr_argument* argumentList) {
+  SDL_Rect* rect = get_sdl_rect_ptr(myself);
+  return ctr_build_number_from_float(rect->w);
+}
+ctr_object* ctr_sdl_rect_geth(ctr_object* myself, ctr_argument* argumentList) {
+  SDL_Rect* rect = get_sdl_rect_ptr(myself);
+  return ctr_build_number_from_float(rect->h);
+}
+ctr_object* ctr_sdl_rect_to_s(ctr_object* myself, ctr_argument* argumentList) {
+  SDL_Rect* rect = get_sdl_rect_ptr(myself);
+  char str[1024];
+  size_t len = sprintf(str, "Rect[%d,%d,%d,%d]", rect->x, rect->y, rect->w, rect->h);
+  return ctr_build_string(str, len);
+}
 /**
  * SDL Color Interface
  *
@@ -356,7 +478,7 @@ ctr_object* ctr_sdl_rect_alterh(ctr_object* myself, ctr_argument* argumentList) 
    ctr_internal_object_set_property(myself, ctr_build_string_from_cstring("red"), (argumentList->object), CTR_CATEGORY_PRIVATE_PROPERTY);
    ctr_internal_object_set_property(myself, ctr_build_string_from_cstring("green"), (argumentList->next->object), CTR_CATEGORY_PRIVATE_PROPERTY);
    ctr_internal_object_set_property(myself, ctr_build_string_from_cstring("blue"), (argumentList->next->next->object), CTR_CATEGORY_PRIVATE_PROPERTY);
-   if(argumentList->next->next->next->object) ctr_internal_object_set_property(myself, ctr_build_string_from_cstring("alpha"), (argumentList->next->next->next->object), CTR_CATEGORY_PRIVATE_PROPERTY);
+   ctr_internal_object_set_property(myself, ctr_build_string_from_cstring("alpha"), (argumentList->next->next->next->object?argumentList->next->next->next->object:ctr_build_number_from_float(255)), CTR_CATEGORY_PRIVATE_PROPERTY);
    return myself;
  }
  ctr_object* ctr_sdl_color_make_rgb(ctr_object* myself, ctr_argument* argumentList) {
@@ -402,7 +524,6 @@ ctr_object* ctr_sdl_rect_alterh(ctr_object* myself, ctr_argument* argumentList) 
    sprintf(str, "RGBA[%i,%i,%i,%i]", r,g,b,a);
    return ctr_build_string_from_cstring(str);
  }
- #endif
 
 /**
  *  SDL surface entry point
@@ -466,7 +587,6 @@ ctr_object* ctr_sdl_surface_blit_loc(ctr_object* myself, ctr_argument* argumentL
 ctr_object* ctr_sdl_surface_fill(ctr_object* myself, ctr_argument* argumentList) {
   SDL_Surface* surface = get_sdl_surface_ptr(myself);
   SDL_Rect* rect = argumentList->object!=CtrStdNil?get_sdl_rect_ptr(argumentList->object):NULL;
-  #ifdef NEW
   //TODO: Get color interface
   ctr_object* color_ = argumentList->next->object;
   uint8_t r,g,b;
@@ -474,11 +594,9 @@ ctr_object* ctr_sdl_surface_fill(ctr_object* myself, ctr_argument* argumentList)
   g = ctr_internal_object_find_property(color_, ctr_build_string_from_cstring("green"), CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue;
   b = ctr_internal_object_find_property(color_, ctr_build_string_from_cstring("blue"), CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue;
   uint32_t color = SDL_MapRGB(surface->format, r, g, b);
-  #else
-  uint32_t color = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
-  #endif
-  if(SDL_FillRect(surface, rect, color) == -1) {
-    CtrStdFlow = ctr_build_string_from_cstring("Could not fill rect.");
+  //uint32_t color = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
+  if(SDL_FillRect(surface, rect, color) != 0) {
+    CtrStdFlow = sdl_error("Fill rect failed: ", SDL_GetError());
     return CtrStdNil;
   }
   return myself;
@@ -515,7 +633,6 @@ ctr_object* ctr_sdl_surface_scale_s(ctr_object* myself, ctr_argument* argumentLi
 ctr_object* ctr_sdl_surface_set_color_key(ctr_object* myself, ctr_argument* argumentList) {
   SDL_Surface* surface = get_sdl_surface_ptr(myself);
   uint32_t flag = SDL_SRCCOLORKEY | SDL_RLEACCEL;
-  #ifdef NEW
   uint32_t color = 0;
   if(argumentList->next->object) {
     flag = ctr_internal_cast2bool(argumentList->next->object)->value.nvalue ? SDL_SRCCOLORKEY : 0;
@@ -528,9 +645,7 @@ ctr_object* ctr_sdl_surface_set_color_key(ctr_object* myself, ctr_argument* argu
     b = ctr_internal_object_find_property(color_, ctr_build_string_from_cstring("blue"), CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue;
     color = SDL_MapRGB(surface->format, r, g, b);
   }
-  #else
-  uint32_t color = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
-  #endif
+  // uint32_t color = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
   if(SDL_SetColorKey(surface, flag, color) < 0) {
     CtrStdFlow = sdl_error("setColorKey failed: ", SDL_GetError());
   }
@@ -544,6 +659,34 @@ ctr_object* ctr_sdl_surface_update(ctr_object* myself, ctr_argument* argumentLis
   SDL_UpdateRect(on, 0, 0, 0, 0);
   return myself;
 }
+
+ctr_object* ctr_sdl_surface_new(ctr_object* myself, ctr_argument* argumentList) {
+  SDL_Surface* surf = get_sdl_surface_ptr(myself);
+  SDL_Surface* sf2 = SDL_CreateRGBSurface(0, surf->w, surf->h, surf->format->BitsPerPixel, surf->format->Rmask, surf->format->Gmask, surf->format->Bmask, surf->format->Amask);
+  if(!sf2){
+    CtrStdFlow = sdl_error("CreateRGBSurface failed: ", SDL_GetError());
+    return CtrStdNil;
+  }
+  ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
+  instance->link = CtrStdSdl_surface;
+  instance->value.rvalue->ptr = sf2;
+  return instance;
+}
+ctr_object* ctr_sdl_surface_new_wh(ctr_object* myself, ctr_argument* argumentList) {
+  SDL_Surface* surf = get_sdl_surface_ptr(myself);
+  int w, h;
+  w = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  h = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
+  SDL_Surface* sf2 = SDL_CreateRGBSurface(0, w, h, surf->format->BitsPerPixel, surf->format->Rmask, surf->format->Gmask, surf->format->Bmask, surf->format->Amask);
+  if(!sf2){
+    CtrStdFlow = sdl_error("CreateRGBSurface failed: ", SDL_GetError());
+    return CtrStdNil;
+  }
+  ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
+  instance->link = CtrStdSdl_surface;
+  instance->value.rvalue->ptr = sf2;
+  return instance;
+}
 #ifdef NEWSURF
 ctr_object* ctr_sdl_surface_lock(ctr_object* myself, ctr_argument* argumentList) {
   SDL_Surface* surface = get_sdl_surface_ptr(myself);
@@ -554,7 +697,6 @@ ctr_object* ctr_sdl_surface_unlock(ctr_object* myself, ctr_argument* argumentLis
 
 }
 #endif
-#ifdef NEW
 void ctr_sdl_put_pixel(SDL_Surface *surface, int x, int y, uint32_t pixel)
 {
     int bpp = surface->format->BytesPerPixel;
@@ -625,6 +767,7 @@ ctr_object* ctr_sdl_surface_set_pixel(ctr_object* myself, ctr_argument* argument
   r = ctr_internal_object_find_property(color_, ctr_build_string_from_cstring("red"), CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue;
   g = ctr_internal_object_find_property(color_, ctr_build_string_from_cstring("green"), CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue;
   b = ctr_internal_object_find_property(color_, ctr_build_string_from_cstring("blue"), CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue;
+  // a = ctr_internal_object_find_property(color_, ctr_build_string_from_cstring("alpha"), CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue;
   uint32_t color = SDL_MapRGB(surface->format, r, g, b);
   ctr_sdl_put_pixel(surface, x, y, color);
   return myself;
@@ -646,7 +789,6 @@ ctr_object* ctr_sdl_surface_get_pixel(ctr_object* myself, ctr_argument* argument
   ctr_internal_object_set_property(instance, ctr_build_string_from_cstring("alpha"), ctr_build_number_from_float(0), CTR_CATEGORY_PRIVATE_PROPERTY);
   return instance;
 }
-#endif
 /**
  * Event Interface
  *
@@ -835,6 +977,7 @@ ctr_object* ctr_sdl_ttf_render_solid(ctr_object* myself, ctr_argument* argumentL
   color.r = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
   color.g = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
   color.b = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  // color.a = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("alpha"), 0)->value.nvalue;
   char* text = ctr_heap_allocate_cstring(str);
   SDL_Surface* srf;
   if(str->value.svalue->vlen == strlen(text)) {//ASCII
@@ -861,6 +1004,7 @@ ctr_object* ctr_sdl_ttf_renderu_solid(ctr_object* myself, ctr_argument* argument
   color.r = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
   color.g = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
   color.b = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  // color.a = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("alpha"), 0)->value.nvalue;
   char* text = ctr_heap_allocate_cstring(str);
   SDL_Surface*
     srf = TTF_RenderUTF8_Solid(font, text, color);
@@ -882,6 +1026,7 @@ ctr_object* ctr_sdl_ttf_render_blended(ctr_object* myself, ctr_argument* argumen
   color.r = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
   color.g = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
   color.b = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  // color.a = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("alpha"), 0)->value.nvalue;
   char* text = ctr_heap_allocate_cstring(str);
   SDL_Surface* srf;
   if(str->value.svalue->vlen == strlen(text)) {//ASCII
@@ -908,6 +1053,7 @@ ctr_object* ctr_sdl_ttf_renderu_blended(ctr_object* myself, ctr_argument* argume
   color.r = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
   color.g = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
   color.b = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  // color.a = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("alpha"), 0)->value.nvalue;
   char* text = ctr_heap_allocate_cstring(str);
   SDL_Surface*
     srf = TTF_RenderUTF8_Blended(font, text, color);
@@ -930,10 +1076,12 @@ ctr_object* ctr_sdl_ttf_render_shaded(ctr_object* myself, ctr_argument* argument
   fcolor.r = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
   fcolor.g = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
   fcolor.b = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  // fcolor.a = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("alpha"), 0)->value.nvalue;
   SDL_Color bcolor;
   bcolor.r = ctr_internal_object_find_property(bocolor, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
   bcolor.g = ctr_internal_object_find_property(bocolor, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
   bcolor.b = ctr_internal_object_find_property(bocolor, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  // bcolor.a = ctr_internal_object_find_property(bocolor, ctr_build_string_from_cstring("alpha"), 0)->value.nvalue;
   char* text = ctr_heap_allocate_cstring(str);
   SDL_Surface* srf;
   if(str->value.svalue->vlen == strlen(text)) {//ASCII
@@ -961,10 +1109,12 @@ ctr_object* ctr_sdl_ttf_renderu_shaded(ctr_object* myself, ctr_argument* argumen
   fcolor.r = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
   fcolor.g = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
   fcolor.b = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  // fcolor.a = ctr_internal_object_find_property(ocolor, ctr_build_string_from_cstring("alpha"), 0)->value.nvalue;
   SDL_Color bcolor;
   bcolor.r = ctr_internal_object_find_property(bocolor, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
   bcolor.g = ctr_internal_object_find_property(bocolor, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
   bcolor.b = ctr_internal_object_find_property(bocolor, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  // bcolor.a = ctr_internal_object_find_property(bocolor, ctr_build_string_from_cstring("alpha"), 0)->value.nvalue;
   char* text = ctr_heap_allocate_cstring(str);
   SDL_Surface*
   srf = TTF_RenderUTF8_Shaded(font, text, fcolor, bcolor);
@@ -978,6 +1128,259 @@ ctr_object* ctr_sdl_ttf_renderu_shaded(ctr_object* myself, ctr_argument* argumen
   instance->value.rvalue->ptr = srf;
   return instance;
 }
+
+ctr_object* ctr_sdl_gfx_hlineColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, Uint32 color);
+  SDL_Surface* dst = get_sdl_surface_ptr(myself);
+  ctr_object* color_obj;
+  Sint16 x1, x2, y;
+  Uint32 color = 0;
+  x1 = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  x2 = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
+  y = ctr_internal_cast2number(argumentList->next->next->object)->value.nvalue;
+  color_obj = argumentList->next->next->next->object;
+  int r = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
+  int g = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
+  int b = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  int a = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("alpha"), 0)->value.nvalue;
+  color |= ((Uint32)a);
+  color |= ((Uint32)b)<<8;
+  color |= ((Uint32)g)<<16;
+  color |= ((Uint32)r)<<24;
+  int errno = hlineColor(dst, x1, x2, y, color);
+  return myself;
+}
+ctr_object* ctr_sdl_gfx_vlineColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 x, Sint16 y1, Sint16 y2, Uint32 color);
+  SDL_Surface* dst = get_sdl_surface_ptr(myself);
+  ctr_object* color_obj;
+  Sint16 x, y1, y2;
+  Uint32 color = 0;
+  x = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  y1 = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
+  y2 = ctr_internal_cast2number(argumentList->next->next->object)->value.nvalue;
+  color_obj = argumentList->next->next->next->object;
+  int r = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
+  int g = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
+  int b = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  int a = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("alpha"), 0)->value.nvalue;
+  color |= ((Uint32)a);
+  color |= ((Uint32)b)<<8;
+  color |= ((Uint32)g)<<16;
+  color |= ((Uint32)r)<<24;
+  int errno = vlineColor(dst, x, y1, y2, color);
+  return myself;
+}
+ctr_object* ctr_sdl_gfx_rectangleColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint32 color);
+  CTR_XYXYC_FUNCTION_BODY(rectangleColor)
+}
+ctr_object* ctr_sdl_gfx_boxColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint32 color);
+  CTR_XYXYC_FUNCTION_BODY(boxColor)
+}
+ctr_object* ctr_sdl_gfx_lineColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint32 color);
+  CTR_XYXYC_FUNCTION_BODY(lineColor)
+}
+ctr_object* ctr_sdl_gfx_aalineColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint32 color);
+  CTR_XYXYC_FUNCTION_BODY(aalineColor)
+}
+ctr_object* ctr_sdl_gfx_circleColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Uint32 color);
+  SDL_Surface* dst = get_sdl_surface_ptr(myself);
+  ctr_object* color_obj;
+  Sint16 x, y1, r_;
+  Uint32 color = 0;
+  x = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  y1 = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
+  r_ = ctr_internal_cast2number(argumentList->next->next->object)->value.nvalue;
+  color_obj = argumentList->next->next->next->object;
+  int r = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
+  int g = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
+  int b = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  int a = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("alpha"), 0)->value.nvalue;
+  color |= ((Uint32)a);
+  color |= ((Uint32)b)<<8;
+  color |= ((Uint32)g)<<16;
+  color |= ((Uint32)r)<<24;
+  int errno = circleColor(dst, x, y1, r_, color);
+  return myself;
+}
+ctr_object* ctr_sdl_gfx_aacircleColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Uint32 color);
+  SDL_Surface* dst = get_sdl_surface_ptr(myself);
+  ctr_object* color_obj;
+  Sint16 x, y1, r_;
+  Uint32 color = 0;
+  x = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  y1 = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
+  r_ = ctr_internal_cast2number(argumentList->next->next->object)->value.nvalue;
+  color_obj = argumentList->next->next->next->object;
+  int r = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
+  int g = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
+  int b = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  int a = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("alpha"), 0)->value.nvalue;
+  color |= ((Uint32)a);
+  color |= ((Uint32)b)<<8;
+  color |= ((Uint32)g)<<16;
+  color |= ((Uint32)r)<<24;
+  int errno = aacircleColor(dst, x, y1, r_, color);
+  return myself;
+}
+ctr_object* ctr_sdl_gfx_filledCircleColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Uint32 color);
+  SDL_Surface* dst = get_sdl_surface_ptr(myself);
+  ctr_object* color_obj;
+  Sint16 x, y1, r_;
+  Uint32 color = 0;
+  x = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  y1 = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
+  r_ = ctr_internal_cast2number(argumentList->next->next->object)->value.nvalue;
+  color_obj = argumentList->next->next->next->object;
+  int r = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
+  int g = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
+  int b = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  int a = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("alpha"), 0)->value.nvalue;
+  color |= ((Uint32)a);
+  color |= ((Uint32)b)<<8;
+  color |= ((Uint32)g)<<16;
+  color |= ((Uint32)r)<<24;
+  int errno = filledCircleColor(dst, x, y1, r_, color);
+  return myself;
+}
+ctr_object* ctr_sdl_gfx_ellipseColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, Uint32 color);
+  CTR_XYXYC_FUNCTION_BODY(ellipseColor)
+}
+ctr_object* ctr_sdl_gfx_aaellipseColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, Uint32 color);
+  CTR_XYXYC_FUNCTION_BODY(aaellipseColor)
+}
+ctr_object* ctr_sdl_gfx_filledEllipseColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, Uint32 color);
+  CTR_XYXYC_FUNCTION_BODY(filledEllipseColor)
+}
+ctr_object* ctr_sdl_gfx_pieColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, Sint16 end, Uint32 color);
+  SDL_Surface* dst = get_sdl_surface_ptr(myself);
+  ctr_object* color_obj;
+  Sint16 x, y1, rad, start, end;
+  Uint32 color = 0;
+  x = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  y1 = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
+  rad = ctr_internal_cast2number(argumentList->next->next->object)->value.nvalue;
+  start = ctr_internal_cast2number(argumentList->next->next->next->object)->value.nvalue;
+  end = ctr_internal_cast2number(argumentList->next->next->next->next->object)->value.nvalue;
+  color_obj = argumentList->next->next->next->next->next->object;
+  int r = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
+  int g = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
+  int b = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  int a = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("alpha"), 0)->value.nvalue;
+  color |= ((Uint32)a);
+  color |= ((Uint32)b)<<8;
+  color |= ((Uint32)g)<<16;
+  color |= ((Uint32)r)<<24;
+  int errno = pieColor(dst, x, y1, rad, start, end, color);
+  return myself;
+}
+ctr_object* ctr_sdl_gfx_filledPieColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, Sint16 end, Uint32 color);
+  SDL_Surface* dst = get_sdl_surface_ptr(myself);
+  ctr_object* color_obj;
+  Sint16 x, y1, rad, start, end;
+  Uint32 color = 0;
+  x = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  y1 = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
+  rad = ctr_internal_cast2number(argumentList->next->next->object)->value.nvalue;
+  start = ctr_internal_cast2number(argumentList->next->next->next->object)->value.nvalue;
+  end = ctr_internal_cast2number(argumentList->next->next->next->next->object)->value.nvalue;
+  color_obj = argumentList->next->next->next->next->next->object;
+  int r = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
+  int g = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
+  int b = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  int a = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("alpha"), 0)->value.nvalue;
+  color |= ((Uint32)a);
+  color |= ((Uint32)b)<<8;
+  color |= ((Uint32)g)<<16;
+  color |= ((Uint32)r)<<24;
+  int errno = filledPieColor(dst, x, y1, rad, start, end, color);
+  return myself;
+}
+ctr_object* ctr_sdl_gfx_trigonColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 x3, Sint16 y3, Uint32 color);
+  SDL_Surface* dst = get_sdl_surface_ptr(myself);
+  ctr_object* color_obj;
+  Sint16 x1, y1, x2, y2, x3, y3;
+  Uint32 color = 0;
+  x1 = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  y1 = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
+  x2 = ctr_internal_cast2number(argumentList->next->next->object)->value.nvalue;
+  y2 = ctr_internal_cast2number(argumentList->next->next->next->object)->value.nvalue;
+  x3 = ctr_internal_cast2number(argumentList->next->next->next->next->object)->value.nvalue;
+  y3 = ctr_internal_cast2number(argumentList->next->next->next->next->next->object)->value.nvalue;
+  color_obj = argumentList->next->next->next->next->next->next->object;
+  int r = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
+  int g = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
+  int b = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  int a = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("alpha"), 0)->value.nvalue;
+  color |= ((Uint32)a);
+  color |= ((Uint32)b)<<8;
+  color |= ((Uint32)g)<<16;
+  color |= ((Uint32)r)<<24;
+  int errno = trigonColor(dst, x1, y1, x2, y2, x3, y3, color);
+  return myself;
+}
+ctr_object* ctr_sdl_gfx_aatrigonColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 x3, Sint16 y3, Uint32 color);
+  SDL_Surface* dst = get_sdl_surface_ptr(myself);
+  ctr_object* color_obj;
+  Sint16 x1, y1, x2, y2, x3, y3;
+  Uint32 color = 0;
+  x1 = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  y1 = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
+  x2 = ctr_internal_cast2number(argumentList->next->next->object)->value.nvalue;
+  y2 = ctr_internal_cast2number(argumentList->next->next->next->object)->value.nvalue;
+  x3 = ctr_internal_cast2number(argumentList->next->next->next->next->object)->value.nvalue;
+  y3 = ctr_internal_cast2number(argumentList->next->next->next->next->next->object)->value.nvalue;
+  color_obj = argumentList->next->next->next->next->next->next->object;
+  int r = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
+  int g = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
+  int b = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  int a = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("alpha"), 0)->value.nvalue;
+  color |= ((Uint32)a);
+  color |= ((Uint32)b)<<8;
+  color |= ((Uint32)g)<<16;
+  color |= ((Uint32)r)<<24;
+  int errno = aatrigonColor(dst, x1, y1, x2, y2, x3, y3, color);
+  return myself;
+}
+ctr_object* ctr_sdl_gfx_filledTrigonColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 x3, Sint16 y3, int color);
+  SDL_Surface* dst = get_sdl_surface_ptr(myself);
+  ctr_object* color_obj;
+  Sint16 x1, y1, x2, y2, x3, y3;
+  Uint32 color = 0;
+  x1 = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  y1 = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
+  x2 = ctr_internal_cast2number(argumentList->next->next->object)->value.nvalue;
+  y2 = ctr_internal_cast2number(argumentList->next->next->next->object)->value.nvalue;
+  x3 = ctr_internal_cast2number(argumentList->next->next->next->next->object)->value.nvalue;
+  y3 = ctr_internal_cast2number(argumentList->next->next->next->next->next->object)->value.nvalue;
+  color_obj = argumentList->next->next->next->next->next->next->object;
+  int r = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("red"), 0)->value.nvalue;
+  int g = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("green"), 0)->value.nvalue;
+  int b = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("blue"), 0)->value.nvalue;
+  int a = ctr_internal_object_find_property(color_obj, ctr_build_string_from_cstring("alpha"), 0)->value.nvalue;
+  color |= ((Uint32)a);
+  color |= ((Uint32)b)<<8;
+  color |= ((Uint32)g)<<16;
+  color |= ((Uint32)r)<<24;
+  int errno = filledTrigonColor(dst, x1, y1, x2, y2, x3, y3, color);
+  return myself;
+}
+// ctr_object* ctr_sdl_gfx_polygonColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 * vx, Sint16 * vy, int n, Uint32 color);
+//
+// }
+// ctr_object* ctr_sdl_gfx_aapolygonColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 * vx, Sint16 * vy, int n, Uint32 color);
+//
+// }
+// ctr_object* ctr_sdl_gfx_filledPolygonColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 * vx, Sint16 * vy, int n, int color);
+//
+// }
+// ctr_object* ctr_sdl_gfx_bezierColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 * vx, Sint16 * vy, int n, int s, Uint32 color);
+//
+// }
+// ctr_object* ctr_sdl_gfx_characterColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 x, Sint16 y, char c, Uint32 color);
+//
+// }
+// ctr_object* ctr_sdl_gfx_stringColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 x, Sint16 y, char *c, Uint32 color);
+//
+// }
 void begin() {
   atexit(ctr_sdl_quit_atexit);
   CtrStdSdl = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
@@ -1001,6 +1404,7 @@ void begin() {
   ctr_internal_create_func(CtrStdSdl, ctr_build_string_from_cstring( "loadImage:" ), &ctr_sdl_surface_loadImage );
   ctr_internal_create_func(CtrStdSdl, ctr_build_string_from_cstring( "newRectWithX:andY:andW:andH:" ), &ctr_sdl_rect_make );
 
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "free" ), &ctr_sdl_surface_free_surface );
   ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "blit:" ), &ctr_sdl_surface_blit );
   ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "blit:fromRect:toRect:" ), &ctr_sdl_surface_blit_loc );
   ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "update" ), &ctr_sdl_surface_update );
@@ -1011,11 +1415,35 @@ void begin() {
   ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "scale:" ), &ctr_sdl_surface_scale );
   ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "scaleToW:andH:" ), &ctr_sdl_surface_scale_s );
   ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "setColorKey:" ), &ctr_sdl_surface_set_color_key );
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "newBuffer" ), &ctr_sdl_surface_new );
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "newBufferWithWidth:andHeight:" ), &ctr_sdl_surface_new_wh );
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "hline_x0:x1:y0:color:" ), &ctr_sdl_gfx_hlineColor);
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "vline_x0:x1:y0:color:" ), &ctr_sdl_gfx_vlineColor);
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "rectangle_x0:x1:y0:y1:color:" ), &ctr_sdl_gfx_rectangleColor);
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "box_x0:x1:y0:y1:color:" ), &ctr_sdl_gfx_boxColor);
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "line_x0:x1:y0:y1:color:" ), &ctr_sdl_gfx_lineColor);
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "aaline_x0:x1:y0:y1:color:" ), &ctr_sdl_gfx_aalineColor);
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "circle_x0:y0:r0:color:" ), &ctr_sdl_gfx_circleColor);
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "aacircle_x0:y0:r0:color:" ), &ctr_sdl_gfx_aacircleColor);
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "filledCircle_x0:y0:r0:color:" ), &ctr_sdl_gfx_filledCircleColor);
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "ellipse_x0:y0:r0:r1:color:" ), &ctr_sdl_gfx_ellipseColor);
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "aaellipse_x0:y0:r0:r1:color:" ), &ctr_sdl_gfx_aaellipseColor);
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "filledEllipse_x0:y0:r0:r1:color:" ), &ctr_sdl_gfx_filledEllipseColor);
+  // ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "FILLME" ), &ctr_sdl_gfx_pieColor);
+  // ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "FILLME" ), &ctr_sdl_gfx_filledPieColor);
+  // ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "FILLME" ), &ctr_sdl_gfx_trigonColor);
+  // ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "FILLME" ), &ctr_sdl_gfx_aatrigonColor);
+  // ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "FILLME" ), &ctr_sdl_gfx_filledTrigonColor);
 
   ctr_internal_create_func(CtrStdSdl_rect, ctr_build_string_from_cstring( "setX:"), &ctr_sdl_rect_alterx);
   ctr_internal_create_func(CtrStdSdl_rect, ctr_build_string_from_cstring( "setY:"), &ctr_sdl_rect_altery);
   ctr_internal_create_func(CtrStdSdl_rect, ctr_build_string_from_cstring( "setW:"), &ctr_sdl_rect_alterw);
   ctr_internal_create_func(CtrStdSdl_rect, ctr_build_string_from_cstring( "setH:"), &ctr_sdl_rect_alterh);
+  ctr_internal_create_func(CtrStdSdl_rect, ctr_build_string_from_cstring( "getX"), &ctr_sdl_rect_getx);
+  ctr_internal_create_func(CtrStdSdl_rect, ctr_build_string_from_cstring( "getY"), &ctr_sdl_rect_gety);
+  ctr_internal_create_func(CtrStdSdl_rect, ctr_build_string_from_cstring( "getW"), &ctr_sdl_rect_getw);
+  ctr_internal_create_func(CtrStdSdl_rect, ctr_build_string_from_cstring( "getH"), &ctr_sdl_rect_geth);
+  ctr_internal_create_func(CtrStdSdl_rect, ctr_build_string_from_cstring( "toString"), &ctr_sdl_rect_to_s);
   //event
   ctr_internal_create_func(CtrStdSdl_evt, ctr_build_string_from_cstring( "new" ), &ctr_sdl_event_make );
   ctr_internal_create_func(CtrStdSdl_evt, ctr_build_string_from_cstring( "poll:" ), &ctr_sdl_event_poll_event );
@@ -1038,7 +1466,6 @@ void begin() {
   //--
   ctr_internal_create_func(CtrStdSdl_font, ctr_build_string_from_cstring("renderShaded:fore:back:"), &ctr_sdl_ttf_render_shaded);
   ctr_internal_create_func(CtrStdSdl_font, ctr_build_string_from_cstring("renderShadedUnicode:fore:back:"), &ctr_sdl_ttf_renderu_shaded);
-  #ifdef NEW
   //Color
   ctr_internal_create_func(CtrStdColor, ctr_build_string_from_cstring( "red:green:blue:alpha:" ), &ctr_sdl_color_make);
   ctr_internal_create_func(CtrStdColor, ctr_build_string_from_cstring( "rgba:" ), &ctr_sdl_color_make_rgba);
@@ -1050,7 +1477,6 @@ void begin() {
   ctr_internal_create_func(CtrStdColor, ctr_build_string_from_cstring( "toString" ), &ctr_sdl_color_to_string);
 
   ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring( "Color" ), CtrStdColor, 0);
-  #endif
   ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring( "SDLEvent" ), CtrStdSdl_evt, 0);
   ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring( "SDLSurface" ), CtrStdSdl_surface, 0);
 	ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring( "SDL" ), CtrStdSdl, 0);

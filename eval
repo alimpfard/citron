@@ -428,13 +428,19 @@ Eval on: 'repl' do: {
           }, case: '\x3' do: {#<^C>
             inp is ''.
             cursor is 0.
-            Pen red writeln: 'Interrupted', resetColor.
-            done is True.
-          }, case: '\x8' do: {#<\b>
+            # Pen red writeln: 'Interrupted', resetColor.
+            # done is True.
+          }, case: '\b' do: {#<\b>
             cursor > 0 ifTrue: {
               inp is inp removeFrom: (cursor - 1) to: cursor.
               cursor -=: 1.
-              Pen write: '\x8 \x8'.
+              Pen write: '\b \b'.
+            }, else: { Pen write: '\a'. }.
+          }, case: ('' appendByte: 127) do: {#<\b>
+            cursor > 0 ifTrue: {
+              inp is inp removeFrom: (cursor - 1) to: cursor.
+              cursor -=: 1.
+              Pen write: '\b \b'.
             }, else: { Pen write: '\a'. }.
           }, case: '\x11' do: {
             var toc is (inp trim or: '  ') split: ' ', last.

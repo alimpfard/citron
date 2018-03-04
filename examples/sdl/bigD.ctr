@@ -1,0 +1,12 @@
+var window is SDL new init.
+var red is Color rgb: [255,0,0].
+var r is 30.
+var buf is window newBufferWithWidth: 2 * r andHeight: 2 * r.
+buf filledCircle_x0: r y0: r r0: r color: red.
+
+window blit: buf fromRect: Nil toRect: (SDL newRectWithX: 320 - r andY: 240 andW: 0 andH: 0).
+window filledEllipse_x0: 320 y0: 240 - (2 * r) r0: r r1: 2 * r color: red.
+
+window update.
+
+Program waitForInput.

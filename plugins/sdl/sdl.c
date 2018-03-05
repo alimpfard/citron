@@ -1429,11 +1429,11 @@ void begin() {
   ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "ellipse_x0:y0:r0:r1:color:" ), &ctr_sdl_gfx_ellipseColor);
   ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "aaellipse_x0:y0:r0:r1:color:" ), &ctr_sdl_gfx_aaellipseColor);
   ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "filledEllipse_x0:y0:r0:r1:color:" ), &ctr_sdl_gfx_filledEllipseColor);
-  // ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "FILLME" ), &ctr_sdl_gfx_pieColor);
-  // ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "FILLME" ), &ctr_sdl_gfx_filledPieColor);
-  // ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "FILLME" ), &ctr_sdl_gfx_trigonColor);
-  // ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "FILLME" ), &ctr_sdl_gfx_aatrigonColor);
-  // ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "FILLME" ), &ctr_sdl_gfx_filledTrigonColor);
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "pie_x0:y0:rad:start:end:color:" ), &ctr_sdl_gfx_pieColor);
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "filledPie_x0:y0:rad:start:end:color:" ), &ctr_sdl_gfx_filledPieColor);
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "trigon_x0:y0:x1:y1:x2:y2:color:" ), &ctr_sdl_gfx_trigonColor);
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "aatrigon_x0:y0:x1:y1:x2:y2:color:" ), &ctr_sdl_gfx_aatrigonColor);
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "filledTrigon_x0:y0:x1:y1:x2:y2:color:" ), &ctr_sdl_gfx_filledTrigonColor);
 
   ctr_internal_create_func(CtrStdSdl_rect, ctr_build_string_from_cstring( "setX:"), &ctr_sdl_rect_alterx);
   ctr_internal_create_func(CtrStdSdl_rect, ctr_build_string_from_cstring( "setY:"), &ctr_sdl_rect_altery);

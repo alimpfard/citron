@@ -4910,14 +4910,20 @@ ctr_object *ctr_block_run_array(ctr_object * myself, ctr_object * argArray,
 						      ("catch"),
 						      0);
 		if (catchBlock != NULL) {
+			ctr_object* catch_type = ctr_internal_object_find_property(catchBlock, ctr_build_string_from_cstring("%catch"), 0);
 			ctr_argument *a = (ctr_argument *)
 			    ctr_heap_allocate(sizeof(ctr_argument));
 			a->object = CtrStdFlow;
-			CtrStdFlow = NULL;
-			ctr_object *alternative =
-			    ctr_block_run(catchBlock, a, my);
+			a->next = ctr_heap_allocate(sizeof(ctr_argument));
+			a->next->object = catch_type;
+			if(!catch_type||ctr_reflect_is_linked_to(CtrStdReflect, a)->value.bvalue) {
+				CtrStdFlow = NULL;
+				ctr_object *alternative =
+				    ctr_block_run(catchBlock, a, my);
+				result = alternative;
+			}
+			ctr_heap_free(a->next);
 			ctr_heap_free(a);
-			result = alternative;
 		}
 	}
 	ctr_deallocate_argument_list(argList);
@@ -5037,14 +5043,20 @@ ctr_object *ctr_block_run(ctr_object * myself, ctr_argument * argList,
 						      ("catch"),
 						      0);
 		if (catchBlock != NULL) {
+			ctr_object* catch_type = ctr_internal_object_find_property(catchBlock, ctr_build_string_from_cstring("%catch"), 0);
 			ctr_argument *a = (ctr_argument *)
 			    ctr_heap_allocate(sizeof(ctr_argument));
 			a->object = CtrStdFlow;
-			CtrStdFlow = NULL;
-			ctr_object *alternative =
-			    ctr_block_run(catchBlock, a, my);
+			a->next = ctr_heap_allocate(sizeof(ctr_argument));
+			a->next->object = catch_type;
+			if(!catch_type||ctr_reflect_is_linked_to(CtrStdReflect, a)->value.bvalue) {
+				CtrStdFlow = NULL;
+				ctr_object *alternative =
+				    ctr_block_run(catchBlock, a, my);
+				result = alternative;
+			}
+			ctr_heap_free(a->next);
 			ctr_heap_free(a);
-			result = alternative;
 		}
 	}
 	//ctr_block_run_cache_result_if_expensive(myself, argList, result);
@@ -5134,13 +5146,20 @@ ctr_object *ctr_block_run_here(ctr_object * myself, ctr_argument * argList,
 						      ("catch"),
 						      0);
 		if (catchBlock != NULL) {
+			ctr_object* catch_type = ctr_internal_object_find_property(catchBlock, ctr_build_string_from_cstring("%catch"), 0);
 			ctr_argument *a = (ctr_argument *)
 			    ctr_heap_allocate(sizeof(ctr_argument));
 			a->object = CtrStdFlow;
-			CtrStdFlow = NULL;
-			ctr_block_run(catchBlock, a, my);
+			a->next = ctr_heap_allocate(sizeof(ctr_argument));
+			a->next->object = catch_type;
+			if(!catch_type||ctr_reflect_is_linked_to(CtrStdReflect, a)->value.bvalue) {
+				CtrStdFlow = NULL;
+				ctr_object *alternative =
+				    ctr_block_run(catchBlock, a, my);
+				result = alternative;
+			}
+			ctr_heap_free(a->next);
 			ctr_heap_free(a);
-			result = myself;
 		}
 	}
 	return result;
@@ -5467,7 +5486,7 @@ ctr_object *ctr_block_error(ctr_object * myself, ctr_argument * argumentList)
  *
  * Associates an error clause to a block.
  * If an error (exception) occurs within the block this block will be
- * executed.
+ * executed, and its return substituted for the result of the expression
  *
  * Example:
  *
@@ -5478,9 +5497,42 @@ ctr_object *ctr_block_error(ctr_object * myself, ctr_argument * argumentList)
  *    Pen write: e, brk.
  * }, run.
  */
-ctr_object *ctr_block_catch(ctr_object * myself, ctr_argument * argumentList)
+ ctr_object *ctr_block_catch(ctr_object * myself, ctr_argument * argumentList)
+ {
+ 	ctr_object *catchBlock = argumentList->object;
+ 	ctr_internal_object_delete_property(myself,
+ 					    ctr_build_string_from_cstring
+ 					    ("catch"), 0);
+ 	ctr_internal_object_add_property(myself,
+ 					 ctr_build_string_from_cstring("catch"),
+ 					 catchBlock, 0);
+ 	return myself;
+ }
+
+/**
+ * <b>[Block] catch: [otherBlock] type: [Object]</b>
+ *
+ * Associates an error clause to a block.
+ * If the specified exception occurs within the block this block will be
+ * executed, and its return substituted for the result of the expression
+ *
+ * Example:
+ *
+ * #Raise error on division by zero.
+ * {
+ *    var z := 4 / 0.
+ * } catch: { :errorMessage
+ *    Pen write: e, brk.
+ * } type: String, run.
+ */
+ctr_object *ctr_block_catch_type(ctr_object * myself, ctr_argument * argumentList)
 {
 	ctr_object *catchBlock = argumentList->object;
+	ctr_internal_object_add_property(catchBlock,
+		ctr_build_string_from_cstring("%catch"),
+		argumentList->next->object,
+		0
+	);
 	ctr_internal_object_delete_property(myself,
 					    ctr_build_string_from_cstring
 					    ("catch"), 0);

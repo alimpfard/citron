@@ -104,11 +104,11 @@ ctr_object *pcre_split(char *pattern, char *string) {
 		match = si->match;
 
 		/* Push into array */
-		push_arg->object = ctr_build_string(si->string, si->length);
+		push_arg->object = ctr_build_string(si->string, si->length-1);
 		ctr_array_push(sarr, push_arg);
 
 		/* Increment string pointer to skip previous match */
-		s += si->length > 0 ? si->length : 1;
+		s += si->length;
 
 		ctr_heap_free(si);
 

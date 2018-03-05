@@ -1440,15 +1440,20 @@ ctr_object *ctr_reflect_run_for_object_in_ctx(ctr_object * myself,
 						      ("catch"),
 						      0);
 		if (catchBlock != NULL) {
-			ctr_argument *a =
-			    (ctr_argument *)
+			ctr_object* catch_type = ctr_internal_object_find_property(catchBlock, ctr_build_string_from_cstring("%catch"), 0);
+			ctr_argument *a = (ctr_argument *)
 			    ctr_heap_allocate(sizeof(ctr_argument));
 			a->object = CtrStdFlow;
-			CtrStdFlow = NULL;
-			ctr_object *alternative =
-			    ctr_block_run(catchBlock, a, ctx);
+			a->next = ctr_heap_allocate(sizeof(ctr_argument));
+			a->next->object = catch_type;
+			if(!catch_type||ctr_reflect_is_linked_to(CtrStdReflect, a)->value.bvalue) {
+				CtrStdFlow = NULL;
+				ctr_object *alternative =
+				    ctr_block_run(catchBlock, a, ctx);
+				result = alternative;
+			}
+			ctr_heap_free(a->next);
 			ctr_heap_free(a);
-			result = alternative;
 		}
 	}
 	return result;

@@ -1,13 +1,43 @@
-var Just is Object cnew: { value => Nil. },
-  on: 'unpack:' do: {:ot
-    # Pen writeln: ot.
-    (ot type equals: me type) ifTrue: {
-      var value is my value.
-      ^{\ ^value unpack: ot unwrap. }.
-    }, else: {
-      thisBlock error: 'NotJust'.
+var Maybe is Object new
+  on: 'just:' do: {:p
+    ^Just cnew: {
+      my value is p.
     }.
   },
+  on: 'nothing' do: {
+    ^Nothing.
+  },
+  on: 'unpack:' do: {:to
+    var self is me.
+    ^((me type) = (Just type)) & ((to type) = (Just type))
+      either: {^{
+        ^const self unwrap unpack: (const to unwrap).
+      }.}
+      or: {
+        ^(self type) = (Nothing type) either: {
+          ([(String type), (Nothing type)] contains: to type) ifFalse: {
+            thisBlock error: ('%s cannot be constructed by %s' % [(Reflect strTypeOf: to), (Reflect strTypeOf: const self)]).
+          }.
+          Reflect set: to to: Nothing.
+          ^Nothing.
+        } or: {
+          thisBlock error: ('%s cannot be constructed by %s' % [(Reflect strTypeOf: to), (Reflect strTypeOf: const self)]).
+        }.
+      }.
+  },
+  on: 'equals:' do: {:other
+    var self is me.
+    ^(me type) = (var tt is other type)
+      either: {
+        ^tt = (Nothing type) either: True or: {^(self unwrap) = (other unwrap).}.
+        }
+      or: False.
+  },
+  on: 'isJust' do: {
+    ^(me type) = (Just type).
+  },
+  learn: '=' means: 'equals:'.
+var Just is Maybe cnew: { value => Nil. },
   on: '$' do: {:v
     ^me cnew: {
       my value is v.
@@ -20,28 +50,11 @@ var Just is Object cnew: { value => Nil. },
     'Just $ (%s)' % [my value].
   },
   on: 'unwrap' do: {\ my value }.
-var Nothing is Object new
-  # on: 'unpack:' do: {:ot
-  #   (ot type equals: me type) ifTrue: {
-  #     ^ot.
-  #   }, else: {
-  #     thisBlock error: 'Not Nothing'.
-  #   }.
-  # },
+var Nothing is Maybe new
   on: 'type' do: {
       ^'Maybe#Nothing'.
   },
   on: 'toString' do: {\ 'Nothing' }.
-
-var Maybe is Object new
-  on: 'just:' do: {\:p
-    const Just cnew: {
-      my value is p.
-    }.
-  },
-  on: 'nothing' do: {
-    ^const Nothing.
-  }.
 import
   export: Nothing as: 'Nothing',
   export: Just as: 'Just',

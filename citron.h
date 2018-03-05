@@ -311,6 +311,7 @@ ctr_object* CtrStdSlurp;          //!< Standard Object : Slurp
 ctr_object* CtrStdShell;          //!< Standard Object : Shell
 ctr_object* CtrStdClock;          //!< Standard Object : Clock
 ctr_object* CtrStdFlow;           //!< Internal Flow namespace : contains errors and flow control
+ctr_object* CtrExceptionType;     //!< contains error/exception types
 ctr_object* CtrStdBreak;          //!< Internal Flow representation for break : stop the current iteration
 ctr_object* CtrStdContinue;       //!< Internal Flow representation for continue : skip the current iteration
 ctr_object* CtrStdExit;           //!< Internal Flow representation for exit : exit program on this message
@@ -676,6 +677,7 @@ ctr_object* ctr_block_run_variadic_my(ctr_object* myself, ctr_object* my, int co
 ctr_object* ctr_block_set(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_error(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_catch(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_block_catch_type(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_while_true(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_while_false(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object* my);

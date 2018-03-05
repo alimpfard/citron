@@ -2096,6 +2096,9 @@ void ctr_initialize_world()
 				 ctr_build_string_from_cstring(CTR_DICT_CATCH),
 				 &ctr_block_catch);
 	ctr_internal_create_func(CtrStdBlock,
+				 ctr_build_string_from_cstring("catch:type:"),
+				 &ctr_block_catch_type);
+	ctr_internal_create_func(CtrStdBlock,
 				 ctr_build_string_from_cstring
 				 (CTR_DICT_WHILE_TRUE), &ctr_block_while_true);
 	ctr_internal_create_func(CtrStdBlock,

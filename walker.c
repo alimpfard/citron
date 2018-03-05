@@ -252,7 +252,7 @@ ctr_object *ctr_cwlk_expr(ctr_tnode * node, char *wasReturn)
 		break;
 	case CTR_AST_NODE_REFERENCE:
 		if (ctr_cwlk_replace_refs && ctr_cwlk_msg_level <= ctr_cwlk_last_msg_level) {
-			printf("%.*s\n", node->vlen, node->value);
+			// printf("%.*s\n", node->vlen, node->value);
 			result = ctr_build_string(node->value, node->vlen);
 			break;
 		}

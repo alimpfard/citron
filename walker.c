@@ -209,8 +209,9 @@ ctr_object *ctr_cwlk_assignment(ctr_tnode * node)
 		ctr_object* y = ctr_cwlk_expr(assignee, &ret);
 		ctr_cwlk_replace_refs = old_replace; //set back in case we didn't reset
 		result = ctr_send_message_variadic(x, "unpack:", 7, 1, y);
-		if (result->info.type == CTR_OBJECT_TYPE_OTBLOCK)
-			result = ctr_block_run_here(result, NULL, result);
+		ctr_object* old_result = NULL;
+		while (old_result!=result && result->info.type == CTR_OBJECT_TYPE_OTBLOCK)
+			result = ctr_block_run_here(result, NULL, (old_result = result));
 	}
 	if (CtrStdFlow == NULL) {
 		ctr_callstack_index--;

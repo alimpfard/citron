@@ -236,7 +236,9 @@ Eval on: 'tryNumrify:' do: {:s
           indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
           indent: 2 write: '-v : print version information and exit\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
-        P resetColor.
+        P green write: 'default imported modules in eval are:',
+          cyan indent: 1 write: ('Queue LRArray ' + (import __loaded_modules reverse join: ' ') ~ 's/\\s|^/\\n+ /g').
+        P resetColor brk.
         Program exit.
     # when passed -p, get the next arg, and set the prompt to that.
     }, case: '-p' do: {

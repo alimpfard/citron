@@ -1,4 +1,7 @@
-var Maybe is Object new
+var Maybe is Monad new
+  on: 'type' do: {\
+    'Maybe'
+  },
   on: 'just:' do: {:p
     ^Just cnew: {
       my value is p.
@@ -43,8 +46,20 @@ var Just is Maybe cnew: { value => Nil. },
       my value is v.
     }.
   },
+  on: 'bind:' do: {:fn
+    var value is my value.
+    var val is fn applyTo: value.
+    (Reflect isObject: val linkedTo: Maybe) ifFalse: {
+      ((var vt is val type) = (value type)) | (value type equals: Nil type) ifTrue: {
+        val is Just $ val.
+      }, else: {
+        thisBlock error: ('Invalid return type for Maybe#bind:, Expected %s|%s, got %s' % [(Maybe type), (value type), (val type)]).
+      }.
+    }.
+    ^val.
+  },
   on: 'type' do: {
-    ^'Maybe#Just'.
+    ^'Maybe#Just#%s' % [(my value type)].
   },
   on: 'toString' do: {\
     'Just $ (%s)' % [my value].
@@ -53,6 +68,9 @@ var Just is Maybe cnew: { value => Nil. },
 var Nothing is Maybe new
   on: 'type' do: {
       ^'Maybe#Nothing'.
+  },
+  on: 'bind:' do: {:fn
+    ^Nothing.
   },
   on: 'toString' do: {\ 'Nothing' }.
 import

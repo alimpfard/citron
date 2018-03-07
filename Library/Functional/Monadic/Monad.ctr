@@ -1,0 +1,26 @@
+import Library/Control/Error/NotImplementedError.
+
+var identity is {\:x x}.
+
+var Monad is Object new
+  on: 'bind:' do: {
+    thisBlock error: NotImplementedError $ 'Monad#bind:'.
+  },
+  on: 'unit:' do: {:value
+    ^me cnew: {value => value.}.
+  },
+  on: 'lift:' do: {:func
+    var self is me.
+    ^me bind: {\:x self unit: (func applyTo: x).}.
+  },
+  on: 'join' do: {
+    ^me bind: const identity.
+  },
+  on: '>>=:' do: {:func
+    ^me bind: func.
+  },
+  on: '>' do: {:next
+    ^me bind: {\:_ next}.
+  }.
+
+import export: Monad as: 'Monad'.

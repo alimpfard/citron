@@ -1,6 +1,9 @@
 import genAccessors: 'return'.
 import return: (Map new).
 
+import genAccessors: '__loaded_modules'.
+import __loaded_modules: Array new.
+
 import on: 'searchPaths' do: {^my searchPaths.}.
 import on: 'export:as:' do: {:object:name
   Reflect addGlobalVariable: name.
@@ -40,6 +43,7 @@ import on: 'respondTo:' do: {:name
   file isNil ifTrue: {
     thisBlock error: ('Could not find neither a package, nor a standalone file representing $$name in the search paths: \n%s' formatObjects: [(my searchPaths fmap: {:p ^p + ' aka (' + (File new: p, realPath) + ')'.}, join: '\n')]).
   }.
+  my __loaded_modules contains: path, ifTrue: { Program warn: '[ctr]::module $$path was already loaded'. }, else: {my __loaded_modules push: path.}.
   var oldp is Program changeDirectory: path.
   file include.
   Program changeDirectory: oldp.

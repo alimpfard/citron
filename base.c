@@ -496,13 +496,14 @@ ctr_object *ctr_object_to_string(ctr_object * myself,
 /**
  * <b>[Object] toNumber</b>
  *
- * Returns a numerical representation of the object. This basic behavior, part
- * of any object will just return 1. Other objects typically override this
- * behavior with more useful implementations.
+ * Errors out. Objects cannot be represented by numbers.
+ * (default behavior)
  */
 ctr_object *ctr_object_to_number(ctr_object * myself,
 				 ctr_argument * ctr_argumentList)
 {
+	CtrStdFlow = ctr_build_string_from_cstring("Object#toNumber is disallowed");
+	//return 1 anyway
 	return ctr_build_number_from_float(1);
 }
 

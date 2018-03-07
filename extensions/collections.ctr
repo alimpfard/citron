@@ -134,13 +134,13 @@ Array on: 'with:count:' do: { :iter :c
   ^arr.
 }.
 
-Array on: 'reverse' do: {
-  me each: {:i:v:a
-    var tmp is a at: ((a count - i) - 1).
-    a put: v at: ((a count - i) - 1).
-    a put: tmp at: i.
-  }.
-}.
+# Array on: 'reverse' do: {
+#   me each: {:i:v:a
+#     var tmp is a at: ((a count - i) - 1).
+#     a put: v at: ((a count - i) - 1).
+#     a put: tmp at: i.
+#   }.
+# }.
 
 # Each_cons each<int> cons<block:int,Tuple,Array>
 # Array on: 'each:cons:' do: { :c :b
@@ -234,11 +234,11 @@ Array on: 'from:to:skip:' do: {:f :t :s
 #   chunks init: me size: n.
 #   ^chunks.
 # }.
-Array on: 'indexOf:' do: { :what
-  var ind is -1.
-  me each: { :i :v ind is i. (what = v) break. }.
-  ^ind.
-}.
+# Array on: 'indexOf:' do: { :what
+#   var ind is -1.
+#   me each: { :i :v ind is i. (what = v) break. }.
+#   ^ind.
+# }.
 
 #
 # Maps

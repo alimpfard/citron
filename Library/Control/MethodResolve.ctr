@@ -1,3 +1,5 @@
+import Library/Control/Error/ArgumentError.
+
 Object on: ':' do: {:meth
   ^Reflect closure: meth of: me.
 }.
@@ -5,6 +7,7 @@ Object on: ':::' do: {:meth
   ^Reflect getResponder: meth ofObject: me.
 }.
 Object on: ':::apply:' do: {:meth:aargs
+  (aargs type) !=: (Array type), ifTrue: {thisBlock error: ArgumentError $ (':::apply: argument#1 takes %s, but some %s was passed.' % [(Array type), (aargs type)]).}.
   var mobj is me:::meth.
-  ^{\:self:args mobj applyAll: [self, (aargs + [args])]. }.
+  ^{\:self:args mobj applyAll: [self] + (aargs + [args]). }.
 }.

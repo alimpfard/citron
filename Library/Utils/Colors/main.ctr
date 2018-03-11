@@ -126,7 +126,7 @@ Colors on: 'rgb_to_ansi:' do: {:red:green:blue:use_bright
 
 Colors on: 'rgb_color_distance:color:' do: {:rgb1:rgb2
   ^[rgb1, rgb2] zip foldl: {:acc:x
-    ^acc + (((x @ 0) - (x @ 1)) toPowerOf: 2).
+    ^acc + (((x @ 0) - (x @ 1)) pow: 2).
   } accumulator: 0.
 }.
 

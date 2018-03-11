@@ -83,7 +83,7 @@ GlobalInit each: {:k:v GlobalEnv put: v at: k.}.
 each: {:i:v
     GlobalEnv put: (Number &method: v) at: v.
 }.
-GlobalEnv put: (Number &method: 'toPowerOf:') at: 'pow'.
+GlobalEnv put: (Number &method: 'pow:') at: 'pow'.
 GlobalEnv put: (Number &method: 'max:') at: 'max'.
 GlobalEnv put: (Number &method: 'min:') at: 'min'.
 GlobalEnv put: (Number &method: 'mod:') at: 'mod'.

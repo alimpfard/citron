@@ -319,8 +319,10 @@ int ctr_lex_tok()
 		ctr_code++;
 		int t = ctr_clex_tok();
 		ctr_clex_putback();
-		if (t != CTR_TOKEN_REF) {
-			// ctr_lex_emit_error("Expected a reference");
+		if (t != CTR_TOKEN_COLON) { //HACK This thing here returns a REF<\>, while the real lexer returns a BLOCKOPEN_MAP<>, and sets a flag.
+			ctr_lex_tokvlen = 1;
+			*ctr_lex_buffer = '\\';
+			return CTR_TOKEN_REF;
 		}
 		return CTR_TOKEN_SYMBOL;
 	}

@@ -1776,14 +1776,14 @@ ctr_object *ctr_number_modulo(ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] toPowerOf: [power]</b>
+ * <b>[Number] pow: [power]</b>
  *
  * Returns a new object representing the
  * number to the specified power.
  *
  * Usage:
  *
- * x := 2 toPowerOf: 8. #x will be 256
+ * x := 2 pow: 8. #x will be 256
  *
  * The example above will raise 2 to the power of 8 resulting in
  * a new Number object: 256.
@@ -4630,6 +4630,7 @@ void ctr_capture_refs_(ctr_tnode * ti, ctr_object * block, int noerror)
 		int i;
 		// for (i=0; i<indent; i++) printf(" ");
 		// str = ctr_heap_allocate( 40 * sizeof( char ) );
+		if(!t) return;
 		switch (t->type) {
 		case CTR_AST_NODE_REFERENCE:
 			if (t->modifier == 3) {
@@ -4835,8 +4836,7 @@ ctr_object *ctr_block_run_array(ctr_object * myself, ctr_object * argArray,
 					if (!argList || !argList->next)
 						break;
 					argList = argList->next;
-					if (!parameterList->next)
-						break;
+					if (!parameterList->next) break;
 					parameterList = parameterList->next;
 					parameter = parameterList->node;
 					continue;
@@ -4875,11 +4875,14 @@ ctr_object *ctr_block_run_array(ctr_object * myself, ctr_object * argArray,
 			if (!argList || !argList->next)
 				break;
 			argList = argList->next;
-			if (!parameterList->next)
-				break;
+			if (!parameterList->next) break;
 			parameterList = parameterList->next;
 			parameter = parameterList->node;
 		}
+		while(parameterList->next) {
+  ctr_assign_value_to_local(ctr_build_string(parameterList->next->node->value, parameterList->next->node->vlen), CtrStdNil);
+  if(!parameterList->next) break; parameterList = parameterList->next;
+}
 	}
 	if (my)
 		ctr_assign_value_to_local_by_ref(&CTR_CLEX_KW_ME, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
@@ -4968,8 +4971,7 @@ ctr_object *ctr_block_run(ctr_object * myself, ctr_argument * argList,
 					if (!argList || !argList->next)
 						break;
 					argList = argList->next;
-					if (!parameterList->next)
-						break;
+					if (!parameterList->next) break;
 					parameterList = parameterList->next;
 					parameter = parameterList->node;
 					continue;
@@ -5008,11 +5010,14 @@ ctr_object *ctr_block_run(ctr_object * myself, ctr_argument * argList,
 			if (!argList || !argList->next)
 				break;
 			argList = argList->next;
-			if (!parameterList->next)
-				break;
+			if (!parameterList->next) break;
 			parameterList = parameterList->next;
 			parameter = parameterList->node;
 		}
+		while(parameterList->next) {
+  ctr_assign_value_to_local(ctr_build_string(parameterList->next->node->value, parameterList->next->node->vlen), CtrStdNil);
+  if(!parameterList->next) break; parameterList = parameterList->next;
+}
 	}
 	if (my)
 		ctr_assign_value_to_local_by_ref(&CTR_CLEX_KW_ME, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
@@ -5122,11 +5127,14 @@ ctr_object *ctr_block_run_here(ctr_object * myself, ctr_argument * argList,
 			if (!argList->next)
 				break;
 			argList = argList->next;
-			if (!parameterList->next)
-				break;
+			if (!parameterList->next) break;
 			parameterList = parameterList->next;
 			parameter = parameterList->node;
 		}
+		while(parameterList->next) {
+  ctr_assign_value_to_local(ctr_build_string(parameterList->next->node->value, parameterList->next->node->vlen), CtrStdNil);
+  if(!parameterList->next) break; parameterList = parameterList->next;
+}
 	}
 	if (my)
 		ctr_assign_value_to_local_by_ref(&CTR_CLEX_KW_ME, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */

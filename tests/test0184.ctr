@@ -34,8 +34,8 @@ a divideBy: 3.    #3
 a is a / 0.1.     #30
 a is a - -1.      #31
 a multiplyBy: 0.5.#15.5
-a is a + (2 toPowerOf: 8).  #271.5
-a is a + (2 toPowerOf: -1). #272
+a is a + (2 pow: 8).  #271.5
+a is a + (2 pow: -1). #272
 a is a + (49 sqrt).   #279
 a add: (0 max: 1).          #280
 a add: (2 min: 3).          #282
@@ -56,8 +56,8 @@ a divideBy: 3.    #3
 a is a / 0.1.     #30
 a is a - -1.      #31
 a multiplyBy: 0.5.#15.5
-a is a + (2 toPowerOf: 8).  #271.5
-a is a + (2 toPowerOf: -1). #272
+a is a + (2 pow: 8).  #271.5
+a is a + (2 pow: -1). #272
 a is a + (49 sqrt).   #279
 a add: (0 max: 1).          #280
 a add: (2 min: 3).          #282
@@ -77,8 +77,8 @@ a divideBy: 3.    #3
 a is a / 0.1.     #30
 a is a - -1.      #31
 a multiplyBy: 0.5.#15.5
-a is a + (2 toPowerOf: 8).  #271.5
-a is a + (2 toPowerOf: -1). #272
+a is a + (2 pow: 8).  #271.5
+a is a + (2 pow: -1). #272
 a is a + (49 sqrt).   #279
 a add: (0 max: 1).          #280
 a add: (2 min: 3).          #282

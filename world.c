@@ -3063,10 +3063,18 @@ void ctr_initialize_world()
 	ctr_internal_create_func(CtrStdReflect,
 				 ctr_build_string_from_cstring("lastTrace"),
 				 &ctr_get_last_trace);
-	ctr_internal_create_func(CtrStdObject,
+	ctr_internal_create_func(CtrStdReflect,
 				 ctr_build_string_from_cstring
 				 ("run:inContext:arguments:"),
 				 &ctr_reflect_run_for_object_in_ctx);
+	ctr_internal_create_func(CtrStdReflect,
+				 ctr_build_string_from_cstring
+				 ("marshal:"),
+				 &ctr_reflect_marshal);
+	ctr_internal_create_func(CtrStdReflect,
+				 ctr_build_string_from_cstring
+				 ("unmarshal:"),
+				 &ctr_reflect_unmarshal);
 
 	ctr_internal_object_add_property(CtrStdWorld,
 					 ctr_build_string_from_cstring

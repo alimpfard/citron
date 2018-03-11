@@ -383,6 +383,7 @@ ctr_size ctr_clex_len;
 ctr_size ctr_program_length;
 int ctr_clex_line_number;
 int ctr_clex_char_num;
+int ctr_transform_lambda_shorthand;
 
 unsigned long ctr_lex_position();
 void ctr_lex_load(char* prg, size_t len);
@@ -1003,6 +1004,10 @@ ctr_object* ctr_reflect_compilerinfo (ctr_object* myself, ctr_argument* argument
 ctr_argument* ctr_array_to_argument_list (ctr_object * arr, ctr_argument * provided);
 int ctr_internal_has_own_responder(ctr_object* myself, ctr_object* meth);
 int ctr_internal_has_responder(ctr_object* myself, ctr_object* meth);
+/* Defined in marshal.c v*/
+ctr_object* ctr_reflect_marshal(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_unmarshal(ctr_object* myself, ctr_argument* argumentList);
+/* Defined in marshal.c ^*/
 // ctr_object* ctr_reflect_dump_function(ctr_object* myself, ctr_argument* argumentList);
 
 /**

@@ -570,7 +570,7 @@ MIPSIntructions on: 'bitsToSigned:' do: {:str
   var len is str length.
   str characters each: {:p:v
     (v !=: '1') continue.
-    v is 2 toPowerOf: p.
+    v is 2 pow: p.
     (p = len) ifTrue: {v *=: -1.}.
     i +=: v.
   }.
@@ -581,7 +581,7 @@ MIPSIntructions on: 'bitsToUnsigned:' do: {:str
   var len is str length.
   str characters each: {:p:v
     (v !=: '1') continue.
-    v is 2 toPowerOf: p.
+    v is 2 pow: p.
     i +=: v.
   }.
   ^i.
@@ -591,7 +591,7 @@ MIPSIntructions on: 'bitsToUnsignedReverse:' do: {:str
   var len is str length.
   str characters each: {:p:v
     (v !=: '1') continue.
-    v is 2 toPowerOf: (len - p - 1).
+    v is 2 pow: (len - p - 1).
     i +=: v.
   }.
   ^i.

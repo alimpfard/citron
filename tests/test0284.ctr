@@ -13,7 +13,7 @@ pyrun is ll PyRun_SimpleString.
 cif call: pyinit withArgs: [].
 cif setABI: 0 return: Nil argTypes: [ptr].
 ptime is 0.
-pbest is 10 toPowerOf: 10.
+pbest is 10 pow: 10.
 rept times: {:i
   ptr destruct.
   ptr is 'len( "    " * $$i )'.
@@ -34,7 +34,7 @@ cif setABI: 0 return: Nil argTypes: [ptr].
 execstr is ll execute_string.
 
 rtime is 0.
-rbest is 10 toPowerOf: 10.
+rbest is 10 pow: 10.
 rept times:{:i
   ptr is '\'    \' * $$i length'.
   rtime +=: (var bestc is (Clock timeExecutionOf: {

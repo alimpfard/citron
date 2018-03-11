@@ -122,6 +122,7 @@ void *ctr_heap_allocate(size_t size)
 				    ("Out of memory. Failed to allocate %lu bytes.\n",
 				     size);
 				ctr_print_stack_trace();
+				abort();
 				exit(1);
 			} else {
 				ctr_gc_memlimit *= 2;
@@ -136,6 +137,7 @@ void *ctr_heap_allocate(size_t size)
 		printf
 		    ("Out of memory. Failed to allocate %lu bytes (malloc failed). \n",
 		     size);
+		abort();
 		exit(1);
 	}
 
@@ -172,6 +174,7 @@ void *ctr_heap_allocate_shared(size_t size)
 			printf("Out of memory. Failed to allocate %lu bytes.\n",
 			       size);
 			ctr_print_stack_trace();
+			abort();
 			exit(1);
 		} else {
 			ctr_gc_memlimit *= 2;
@@ -185,6 +188,7 @@ void *ctr_heap_allocate_shared(size_t size)
 		printf
 		    ("Out of memory. Failed to allocate %lu bytes (malloc failed). \n",
 		     size);
+		 abort();
 		exit(1);
 	}
 

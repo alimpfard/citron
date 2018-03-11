@@ -685,6 +685,10 @@ ctr_object* ctr_ctypes_pointer_set_obj(ctr_object* myself, ctr_argument* argumen
   return ret;
 }
 
+ctr_object* ctr_ctypes_pointer_get_obj(ctr_object* myself, ctr_argument* argumentList) {
+  return myself->value.rvalue->ptr;
+}
+
 ctr_object* ctr_ctypes_to_bytes(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* ret = ctr_array_new(CtrStdArray, NULL);
   char* buf = (void*)myself->value.rvalue->ptr;
@@ -1601,6 +1605,7 @@ void begin() {
   ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring("getAddress"), &ctr_ctypes_addr_of);
   ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring("getRawAddress"), &ctr_ctypes_addr_of_raw);
   ctr_internal_create_func(CtrStdCType_pointer, ctr_build_string_from_cstring("addressOfObject:"), &ctr_ctypes_pointer_set_obj);
+  ctr_internal_create_func(CtrStdCType_pointer, ctr_build_string_from_cstring("asObject"), &ctr_ctypes_pointer_get_obj);
   CTR_CT_INTRODUCE_MAKE(pointer);
 	CTR_CT_INTRODUCE_UNMAKE(pointer);
 

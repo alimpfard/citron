@@ -403,38 +403,54 @@ ctr_tnode *ctr_cparse_block_(int autocap)
 	ctr_tnode* oldcalltime = ctr_cparse_calltime_names;
 	ctr_cparse_calltime_names = paramList;
 	all_plains_private = autocap;
-	while ((first || t == CTR_TOKEN_DOT)) {
+	if (ctr_transform_lambda_shorthand) {
+		ctr_transform_lambda_shorthand = 0;
 		ctr_tlistitem *codeListItem;
 		ctr_tnode *codeNode;
-		if (first) {
-			ctr_clex_putback();
-		}
-		t = ctr_clex_tok();
-		if (t == CTR_TOKEN_BLOCKCLOSE)
-			break;
 		ctr_clex_putback();
 		codeListItem =
-		    (ctr_tlistitem *)
-		    ctr_heap_allocate_tracked(sizeof(ctr_tlistitem));
+				(ctr_tlistitem *)
+				ctr_heap_allocate_tracked(sizeof(ctr_tlistitem));
 		codeNode = ctr_cparse_create_node(CTR_AST_NODE);
-		if (t == CTR_TOKEN_RET) {
-			codeNode = ctr_cparse_ret();
-		} else {
-			codeNode = ctr_cparse_expr(0);
-		}
+		codeNode = ctr_cparse_expr(0); //parse a single expression
 		codeListItem->node = codeNode;
-		if (first) {
-			codeList->nodes = codeListItem;
-			previousCodeListItem = codeListItem;
-			first = 0;
-		} else {
-			previousCodeListItem->next = codeListItem;
-			previousCodeListItem = codeListItem;
-		}
-		t = ctr_clex_tok();
-		if (t != CTR_TOKEN_DOT && !autocap) {
-			ctr_cparse_emit_error_unexpected(t,
-							 "Expected a dot (.).\n");
+		codeList->nodes = codeListItem;
+		previousCodeListItem = codeListItem;
+	}
+	else {
+		while ((first || t == CTR_TOKEN_DOT)) {
+			ctr_tlistitem *codeListItem;
+			ctr_tnode *codeNode;
+			if (first) {
+				ctr_clex_putback();
+			}
+			t = ctr_clex_tok();
+			if (t == CTR_TOKEN_BLOCKCLOSE)
+				break;
+			ctr_clex_putback();
+			codeListItem =
+			    (ctr_tlistitem *)
+			    ctr_heap_allocate_tracked(sizeof(ctr_tlistitem));
+			codeNode = ctr_cparse_create_node(CTR_AST_NODE);
+			if (t == CTR_TOKEN_RET) {
+				codeNode = ctr_cparse_ret();
+			} else {
+				codeNode = ctr_cparse_expr(0);
+			}
+			codeListItem->node = codeNode;
+			if (first) {
+				codeList->nodes = codeListItem;
+				previousCodeListItem = codeListItem;
+				first = 0;
+			} else {
+				previousCodeListItem->next = codeListItem;
+				previousCodeListItem = codeListItem;
+			}
+			t = ctr_clex_tok();
+			if (t != CTR_TOKEN_DOT && !autocap) {
+				ctr_cparse_emit_error_unexpected(t,
+								 "Expected a dot (.).\n");
+			}
 		}
 	}
 	all_plains_private = oldallpl;

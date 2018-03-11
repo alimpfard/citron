@@ -1369,8 +1369,7 @@ ctr_object *ctr_reflect_run_for_object_in_ctx(ctr_object * myself,
 					if (!argList || !argList->next)
 						break;
 					argList = argList->next;
-					if (!parameterList->next)
-						break;
+					if (!parameterList->next) break;
 					parameterList = parameterList->next;
 					parameter = parameterList->node;
 					continue;
@@ -1409,11 +1408,14 @@ ctr_object *ctr_reflect_run_for_object_in_ctx(ctr_object * myself,
 			if (!argList || !argList->next)
 				break;
 			argList = argList->next;
-			if (!parameterList->next)
-				break;
+			if (!parameterList->next) break;
 			parameterList = parameterList->next;
 			parameter = parameterList->node;
 		}
+		while(parameterList->next) {
+  ctr_assign_value_to_local(ctr_build_string(parameterList->next->node->value, parameterList->next->node->vlen), CtrStdNil);
+  if(!parameterList->next) break; parameterList = parameterList->next;
+}
 	}
 	ctr_assign_value_to_local_by_ref(&CTR_CLEX_KW_ME, ctx);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
 	ctr_object *this = ctr_build_string("thisBlock", 9);

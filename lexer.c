@@ -21,6 +21,7 @@ char *ctr_clex_olderptr;
 int ctr_clex_verbatim_mode = 0;	/* flag: indicates whether lexer operates in verbatim mode or not (1 = ON, 0 = OFF) */
 uintptr_t ctr_clex_verbatim_mode_insert_quote = 0;	/* pointer to 'overlay' the 'fake quote' for verbatim mode */
 int ctr_clex_old_line_number = 0;
+int ctr_transform_lambda_shorthand = 0; /* flag: indicated whether lexer has seen a shorthand lambda (\(:arg)+ expr) */
 
 char *ctr_clex_desc_tok_ref = "reference";
 char *ctr_clex_desc_tok_quote = "'";
@@ -373,6 +374,10 @@ int ctr_clex_tok()
 		int t = ctr_clex_tok();
 		ctr_clex_putback();
 		if (t != CTR_TOKEN_REF) {
+			if (t == CTR_TOKEN_COLON) { // transform \:x expr to {\:x expr}
+				ctr_transform_lambda_shorthand = 1;
+				return CTR_TOKEN_BLOCKOPEN_MAP; //HACK This thing here simply transforms the syntax, however we fool the in-language lexer to think that this is actually a ref
+			}
 			// ctr_clex_emit_error("Expected a reference");
 		}
 		return CTR_TOKEN_SYMBOL;

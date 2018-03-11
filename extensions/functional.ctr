@@ -224,7 +224,7 @@
   var sub is {:i :j ^i - j.}.
   var mul is {:i :j ^i * j.}.
   var div is {:i :j ^i / j.}.
-  var pow is {:i :j ^i toPowerOf: j.}.
+  var pow is {:i :j ^i pow: j.}.
 
   #Logic
   var not is {:i ^(i toBoolean not). }.

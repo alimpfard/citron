@@ -133,12 +133,20 @@ Highlight on: 'highlight:' do: {:code
           var next is AST token.
           (next @ 0 !=: 'FIN') ifTrue: {AST lexPutBack.}.
           this_thing is (next @ 0 = 'COLON') either: {
-            color is (Colors bold) + (Colors bright) + (Colors magenta).
-            after_color is (Colors bold_off) + (Colors bright_off).
-            AST lexSkip: 1.
-            token put: (token @ 2 + 1) at: 2.
-            last_toc_override is 'MESSAGE'.
-            ^token @ 1 + ':'.
+            ^(token @ 1 = '\\') either: {
+              color is (Colors bold) + (Colors bright) + (Colors green).
+              after_color is (Colors bold_off) + (Colors bright_off).
+              last_toc_override is 'BLOCKOPEN'.
+              ^'\\'.
+            }
+            or: {
+              color is (Colors bold) + (Colors bright) + (Colors magenta).
+              after_color is (Colors bold_off) + (Colors bright_off).
+              AST lexSkip: 1.
+              token put: (token @ 2 + 1) at: 2.
+              last_toc_override is 'MESSAGE'.
+              ^token @ 1 + ':'.
+            }.
           } or: {
             ^(messageAcceptors contains: last_toc) either: {
               ((token @ 1) length = 1) ifTrue: {last_toc_override is 'MESSAGE'.}.

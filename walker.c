@@ -329,8 +329,10 @@ ctr_object *ctr_cwlk_run(ctr_tnode * program)
 	while (li) {
 		ctr_tnode *node = li->node;
 		if (!li->node) {
-			printf("Missing parse node\n");
-			exit(1);
+			// printf("Missing parse node\n");
+			// exit(1);
+			CtrStdFlow = ctr_build_string_from_cstring("Missing Parse Node");
+			return NULL;
 		}
 		wasReturn = 0;
 		result = ctr_cwlk_expr(node, &wasReturn);

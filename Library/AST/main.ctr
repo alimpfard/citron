@@ -1,0 +1,12 @@
+var PLAIN_TYPES is ['LTRSTRING', 'LTRNIL', 'LTRNUM', 'LTRBOOLTRUE', 'LTRBOOLFALSE', 'REFERENCE'].
+
+AST on: 'dump' do: {
+  var dump is Array < [(me type), (me)].
+  (me count = 0) & (const PLAIN_TYPES contains: me type) ifTrue: { ^[(me type), me]. }.
+  me each_v: {:ast
+    dump push: ast dump.
+  }.
+  ^dump.
+}.
+
+import constructors.#, descriptors.

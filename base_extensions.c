@@ -135,6 +135,79 @@ ctr_object *ctr_ast_nth(ctr_object * myself, ctr_argument * argumentList)
 	return ast;
 }
 
+ctr_object *ctr_ast_insert_nth(ctr_object* myself, ctr_argument* argumentList) {
+	ctr_object* tnodeobj = argumentList->object;
+	int nullast=0, ip=0;
+	if (myself == CtrStdAst)
+		return CtrStdNil;
+	if (!(myself->value.rvalue && myself->value.rvalue->ptr)) {
+		nullast = 1;
+ err:		;
+		CtrStdFlow =
+		    ctr_build_string_from_cstring
+		    (ip ? "incorrect passed argument" : (nullast ? "Null ast node" : "count out of range"));
+		return CtrStdNil;
+	}
+	if(tnodeobj->value.rvalue->type != CTR_AST_TYPE) { ip=1; goto err; }
+	ctr_tnode* insnode = tnodeobj->value.rvalue->ptr;
+	if(!insnode) goto err;
+	int n = argumentList->next->object->value.nvalue;
+	ctr_tnode *node = myself->value.rvalue->ptr;
+	ctr_tlistitem *pitem = node->nodes, *oldpitem = pitem;
+	while (n>0) {
+		if (!pitem)
+			goto err;
+		n--;
+		oldpitem = pitem;
+		pitem = pitem->next;
+	}
+	if (!pitem&&n>-1)
+		goto err;
+	if(oldpitem != pitem) {
+		ctr_tlistitem* insitem = ctr_heap_allocate(sizeof(ctr_tlistitem));
+		insitem->node = insnode;
+		insitem->next = pitem->next;
+		pitem->next = insitem;
+	} else {
+		ctr_tlistitem* insitem = ctr_heap_allocate(sizeof(ctr_tlistitem));
+		insitem->node = insnode;
+		insitem->next = pitem;
+		node->nodes = insitem;
+	}
+	return myself;
+}
+ctr_object *ctr_ast_set_nth(ctr_object* myself, ctr_argument* argumentList) {
+	ctr_object* tnodeobj = argumentList->object;
+	int nullast=0, ip=0;
+	if (myself == CtrStdAst)
+		return CtrStdNil;
+	if (!(myself->value.rvalue && myself->value.rvalue->ptr)) {
+		nullast = 1;
+ err:		;
+		CtrStdFlow =
+		    ctr_build_string_from_cstring
+		    (ip ? "incorrect passed argument" : (nullast ? "Null ast node" : "count out of range"));
+		return CtrStdNil;
+	}
+	if(tnodeobj->value.rvalue->type != CTR_AST_TYPE) { ip=1; goto err; }
+	ctr_tnode* insnode = tnodeobj->value.rvalue->ptr;
+	if(!insnode) goto err;
+	int n = argumentList->next->object->value.nvalue;
+	ctr_tnode *node = myself->value.rvalue->ptr;
+	ctr_tlistitem *pitem = node->nodes, *oldpitem = pitem;
+	while (n>0) {
+		if (!pitem)
+			goto err;
+		n--;
+		oldpitem = pitem;
+		pitem = pitem->next;
+	}
+	if (!pitem)
+		goto err;
+	pitem->node = insnode;
+	return myself;
+}
+
 ctr_object *ctr_ast_each(ctr_object * myself, ctr_argument * argumentList)
 {
 	if (!(myself->value.rvalue && myself->value.rvalue->ptr)) {
@@ -388,6 +461,19 @@ ctr_object *ctr_ast_set_value(ctr_object * myself, ctr_argument * argumentList)
 	memcpy(node->value, cval, cvlen);
 	*(node->value + cvlen) = '\0';
 	return myself;
+}
+
+ctr_object *ctr_ast_with_value(ctr_object * myself, ctr_argument * argumentList) {
+	ctr_tnode* node = ctr_heap_allocate(sizeof(ctr_tnode));
+	ctr_string* str = argumentList->object->value.svalue;
+	node->value = str->value;
+	node->vlen = str->vlen;
+	ctr_object *ast = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+	ast->link = CtrStdAst;
+	ast->value.rvalue = ctr_heap_allocate(sizeof(ctr_resource));
+	ast->value.rvalue->ptr = node;
+	ast->value.rvalue->type = CTR_AST_TYPE;
+	return ast;
 }
 
 ctr_object *ctr_ast_set_type(ctr_object * myself, ctr_argument * argumentList)
@@ -867,6 +953,21 @@ ctr_object* ctr_ast_lexputback(ctr_object* myself, ctr_argument* argumentList) {
 	ctr_lex_putback();
 	return myself;
 }
+ctr_object* ctr_ast_marshal(ctr_object* myself, ctr_argument* argumentList) {
+	if (myself == CtrStdAst)
+		return CtrStdNil;
+	if (!(myself->value.rvalue && myself->value.rvalue->ptr)) {
+		CtrStdFlow = ctr_build_string_from_cstring("Null ast node");
+		return CtrStdNil;
+	}
+	ctr_tnode *node = myself->value.rvalue->ptr;
+	ctr_size avail=1024, used=0;
+	char* buf = ctr_heap_allocate(avail);
+	ctr_marshal_ast(node, &buf, &avail, &used);
+	ctr_object* str = ctr_build_string(buf, used);
+	ctr_heap_free(buf);
+	return str;
+}
 ctr_object* ctr_ast_lexskip(ctr_object* myself, ctr_argument* argumentList) {
 	int len = ctr_internal_cast2number(argumentList->object)->value.nvalue;
 	ctr_lex_skip(len);
@@ -1069,6 +1170,12 @@ void initiailize_base_extensions()
 	ctr_internal_create_func(CtrStdAst,
 				 ctr_build_string_from_cstring("at:"),
 				 &ctr_ast_nth);
+	ctr_internal_create_func(CtrStdAst,
+				 ctr_build_string_from_cstring("insert:at:"),
+				 &ctr_ast_insert_nth);
+	ctr_internal_create_func(CtrStdAst,
+				 ctr_build_string_from_cstring("put:at:"),
+				 &ctr_ast_set_nth);
 	ctr_internal_create_func(CtrStdAst, ctr_build_string_from_cstring("@"),
 				 &ctr_ast_nth);
 	ctr_internal_create_func(CtrStdAst,
@@ -1092,6 +1199,9 @@ void initiailize_base_extensions()
 	ctr_internal_create_func(CtrStdAst,
 				 ctr_build_string_from_cstring("value:"),
 				 &ctr_ast_set_value);
+	ctr_internal_create_func(CtrStdAst,
+				 ctr_build_string_from_cstring("withValue:"),
+				 &ctr_ast_with_value);
 	ctr_internal_create_func(CtrStdAst,
 				 ctr_build_string_from_cstring("type:"),
 				 &ctr_ast_set_type);
@@ -1125,6 +1235,9 @@ void initiailize_base_extensions()
 	ctr_internal_create_func(CtrStdAst,
 				 ctr_build_string_from_cstring("lexPutBack"),
 				 &ctr_ast_lexputback);
+	ctr_internal_create_func(CtrStdAst,
+				 ctr_build_string_from_cstring("marshal"),
+				 &ctr_ast_marshal);
 	ctr_internal_object_add_property(CtrStdWorld,
 					 ctr_build_string_from_cstring("AST"),
 					 CtrStdAst, 0);

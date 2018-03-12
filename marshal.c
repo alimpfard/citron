@@ -77,13 +77,13 @@ ctr_object* ctr_unmarshal_object(char* stream, ctr_size* avail, ctr_size* consum
 ctr_mapitem* get_last_item(ctr_map* map) {
   if(!map) return NULL;
   ctr_mapitem* item = map->head;
-  for(size_t len=map->size; len>1; len--) {
+  for(ctr_size len=map->size; len>1; len--) {
     item = item->next;
   }
   return item;
 }
 
-ctr_tnode* ctr_unmarshal_ast(char* stream, size_t avail, size_t* consumed) {
+ctr_tnode* ctr_unmarshal_ast(char* stream, ctr_size avail, ctr_size* consumed) {
   ctr_tnode* node = ctr_heap_allocate(sizeof(*node));
   char type = *(stream+((*consumed)++));
 
@@ -101,9 +101,9 @@ ctr_tnode* ctr_unmarshal_ast(char* stream, size_t avail, size_t* consumed) {
     case CTR_MARSH_AST_EXPRMESSAGE: {
       node->type = CTR_AST_NODE_EXPRMESSAGE;
       ctr_tnode* receiver = ctr_unmarshal_ast(stream, avail, consumed);
-      size_t msg_count;
-      memcpy(&msg_count, stream+*consumed, sizeof(size_t));
-      *consumed += sizeof(size_t);
+      ctr_size msg_count;
+      memcpy(&msg_count, stream+*consumed, sizeof(ctr_size));
+      *consumed += sizeof(ctr_size);
       ctr_tlistitem* msgs = ctr_heap_allocate(sizeof(ctr_tlistitem));
       ctr_tlistitem* msgs_ = msgs;
       for(;msg_count>0;msg_count--) {
@@ -120,9 +120,9 @@ ctr_tnode* ctr_unmarshal_ast(char* stream, size_t avail, size_t* consumed) {
     }
     case CTR_MARSH_AST_UNAMESSAGE: {
       node->type = CTR_AST_NODE_UNAMESSAGE;
-      size_t len;
-      memcpy(&len, stream+*consumed, sizeof(size_t));
-      *consumed += sizeof(size_t);
+      ctr_size len;
+      memcpy(&len, stream+*consumed, sizeof(ctr_size));
+      *consumed += sizeof(ctr_size);
       node->value = ctr_heap_allocate(sizeof(char)*len);
       node->vlen = len;
       memcpy(node->value, stream+*consumed, len);
@@ -131,9 +131,9 @@ ctr_tnode* ctr_unmarshal_ast(char* stream, size_t avail, size_t* consumed) {
     }
     case CTR_MARSH_AST_BINMESSAGE: {
       node->type = CTR_AST_NODE_BINMESSAGE;
-      size_t len;
-      memcpy(&len, stream+*consumed, sizeof(size_t));
-      *consumed += sizeof(size_t);
+      ctr_size len;
+      memcpy(&len, stream+*consumed, sizeof(ctr_size));
+      *consumed += sizeof(ctr_size);
       node->value = ctr_heap_allocate(sizeof(char)*len);
       node->vlen = len;
       memcpy(node->value, stream+*consumed, len);
@@ -144,14 +144,15 @@ ctr_tnode* ctr_unmarshal_ast(char* stream, size_t avail, size_t* consumed) {
     }
     case CTR_MARSH_AST_KWMESSAGE: {//KWMESSAGE <msg_len> <message> <argument_count> (<argument>)+
       node->type = CTR_AST_NODE_KWMESSAGE;
-      size_t len;
-      memcpy(&len, stream+*consumed, sizeof(size_t));
-      *consumed += sizeof(size_t);
+      ctr_size len;
+      memcpy(&len, stream+*consumed, sizeof(ctr_size));
+      *consumed += sizeof(ctr_size);
       node->value = ctr_heap_allocate(sizeof(char)*len);
+      node->vlen = len;
       memcpy(node->value, stream+*consumed, len);
       *consumed += len;
-      memcpy(&len, stream+*consumed, sizeof(size_t));
-      *consumed += sizeof(size_t);
+      memcpy(&len, stream+*consumed, sizeof(ctr_size));
+      *consumed += sizeof(ctr_size);
       ctr_tlistitem* li = node->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
       for(;len>0;len--) {
         li->node = ctr_unmarshal_ast(stream, avail, consumed);
@@ -164,9 +165,9 @@ ctr_tnode* ctr_unmarshal_ast(char* stream, size_t avail, size_t* consumed) {
     }
     case CTR_MARSH_AST_LTRSTRING: {
       node->type = CTR_AST_NODE_LTRSTRING;
-      size_t len;
-      memcpy(&len, stream+*consumed, sizeof(size_t));
-      *consumed+=sizeof(size_t);
+      ctr_size len;
+      memcpy(&len, stream+*consumed, sizeof(ctr_size));
+      *consumed+=sizeof(ctr_size);
       node->value = ctr_heap_allocate(sizeof(char)*len);
       memcpy(node->value, stream+*consumed, len);
       node->vlen = len;
@@ -176,9 +177,9 @@ ctr_tnode* ctr_unmarshal_ast(char* stream, size_t avail, size_t* consumed) {
     case CTR_MARSH_AST_REFERENCE: {
       node->type = CTR_AST_NODE_REFERENCE;
       node->modifier = *(stream+((*consumed)++));
-      size_t len;
-      memcpy(&len, stream+*consumed, sizeof(size_t));
-      *consumed+=sizeof(size_t);
+      ctr_size len;
+      memcpy(&len, stream+*consumed, sizeof(ctr_size));
+      *consumed+=sizeof(ctr_size);
       node->value = ctr_heap_allocate(sizeof(char)*len);
       memcpy(node->value, stream+*consumed, len);
       node->vlen = len;
@@ -187,9 +188,9 @@ ctr_tnode* ctr_unmarshal_ast(char* stream, size_t avail, size_t* consumed) {
     }
     case CTR_MARSH_AST_LTRNUM: {
       node->type = CTR_AST_NODE_LTRNUM;
-      size_t len;
-      memcpy(&len, stream+*consumed, sizeof(size_t));
-      *consumed+=sizeof(size_t);
+      ctr_size len;
+      memcpy(&len, stream+*consumed, sizeof(ctr_size));
+      *consumed+=sizeof(ctr_size);
       node->value = ctr_heap_allocate(sizeof(char)*len);
       memcpy(node->value, stream+*consumed, len);
       node->vlen = len;
@@ -201,16 +202,18 @@ ctr_tnode* ctr_unmarshal_ast(char* stream, size_t avail, size_t* consumed) {
       ctr_size plen;
       memcpy(&plen, stream+*consumed, sizeof(ctr_size));
       *consumed+=sizeof(ctr_size);
-      ctr_tlistitem* nl = ctr_heap_allocate(sizeof(ctr_tlistitem));
-      ctr_tlistitem* onl = nl;
-      for(;plen>0;plen--) {
-        nl->node = ctr_unmarshal_ast(stream, avail, consumed);
-        if(plen>1) {
-          nl->next = ctr_heap_allocate(sizeof(ctr_tlistitem));
-          nl = nl->next;
+      if(plen) {
+        ctr_tlistitem* nl = ctr_heap_allocate(sizeof(ctr_tlistitem));
+        ctr_tlistitem* onl = nl;
+        for(;plen>0;plen--) {
+          nl->node = ctr_unmarshal_ast(stream, avail, consumed);
+          if(plen>1) {
+            nl->next = ctr_heap_allocate(sizeof(ctr_tlistitem));
+            nl = nl->next;
+          }
         }
+        node->nodes = onl;
       }
-      node->nodes = onl;
     break;
     }
     case CTR_MARSH_AST_CODEBLOCKL: {
@@ -238,9 +241,33 @@ ctr_tnode* ctr_unmarshal_ast(char* stream, size_t avail, size_t* consumed) {
     break;
     }
     case CTR_MARSH_AST_IMMUTABLE: {
+      node->type = CTR_AST_NODE_IMMUTABLE;
+      node->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
+      node->nodes->node = ctr_heap_allocate(sizeof(ctr_tnode));
+      node->nodes->node->type = CTR_AST_NODE_NESTED;
+      ctr_size len;
+      memcpy(&len, stream+*consumed, sizeof(ctr_size));
+      *consumed+=sizeof(ctr_size);
+      ctr_tlistitem* nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
+      node->nodes->node->nodes = nodes;
+      for(;len>0;len--) {
+        nodes->node = ctr_unmarshal_ast(stream, avail, consumed);
+        if(len>1) {
+          nodes->next=ctr_heap_allocate(sizeof(ctr_tlistitem));
+          nodes=nodes->next;
+        }
+      }
     break;
     }
     case CTR_MARSH_AST_SYMBOL: {
+      node->type = CTR_AST_NODE_SYMBOL;
+      ctr_size len;
+      memcpy(&len, stream+*consumed, sizeof(ctr_size));
+      *consumed+=sizeof(ctr_size);
+      node->value = ctr_heap_allocate(sizeof(char)*len);
+      memcpy(node->value, stream+*consumed, len);
+      node->vlen = len;
+      *consumed += len;
     break;
     }
     case CTR_MARSH_AST_PARAM: {
@@ -258,15 +285,17 @@ ctr_tnode* ctr_unmarshal_ast(char* stream, size_t avail, size_t* consumed) {
       ctr_size plen;
       ctr_tlistitem* nl;
       node->type = CTR_AST_NODE_INSTRLIST;
-      node->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
       memcpy(&plen, stream+*consumed, sizeof(ctr_size));
       *consumed+=sizeof(ctr_size);
-      nl = node->nodes;
-      for(;plen>0;plen--) {
-        nl->node = ctr_unmarshal_ast(stream, avail, consumed);
-        if(plen>1) {
-          nl->next = ctr_heap_allocate(sizeof(ctr_tlistitem));
-          nl = nl->next;
+      if(plen) {
+        node->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
+        nl = node->nodes;
+        for(;plen>0;plen--) {
+          nl->node = ctr_unmarshal_ast(stream, avail, consumed);
+          if(plen>1) {
+            nl->next = ctr_heap_allocate(sizeof(ctr_tlistitem));
+            nl = nl->next;
+          }
         }
       }
     break;
@@ -311,9 +340,9 @@ ctr_tnode* ctr_unmarshal_ast(char* stream, size_t avail, size_t* consumed) {
   return node;
 }
 
-void ctr_marshal_ast(ctr_tnode* rnode, char** stream, size_t* stream_len, size_t* used) {
+void ctr_marshal_ast(ctr_tnode* rnode, char** stream, ctr_size* stream_len, ctr_size* used) {
   // printf("HERE WE GO BOIS %p(%d)\n", rnode, rnode->type);
-  if(*stream_len-*used < 2+sizeof(size_t)) {
+  if(*stream_len-*used < 2+sizeof(ctr_size)) {
     *stream_len *= MARSH_BUFFER_ENLARGEMENT_FACTOR;
     ctr_heap_reallocate(*stream, *stream_len);
   }
@@ -325,7 +354,7 @@ void ctr_marshal_ast(ctr_tnode* rnode, char** stream, size_t* stream_len, size_t
     break;
     }
     case CTR_AST_NODE_EXPRMESSAGE: {//EXPRMESSAGE <receiver> <msg_node_count> (<message>)*
-      size_t message_count = 0;
+      ctr_size message_count = 0;
       *(*stream+((*used)++)) = CTR_MARSH_AST_EXPRMESSAGE;
       ctr_tlistitem* nl = rnode->nodes;
       while(nl&&nl->node) {
@@ -336,16 +365,16 @@ void ctr_marshal_ast(ctr_tnode* rnode, char** stream, size_t* stream_len, size_t
       ctr_marshal_ast(nl->node, stream, stream_len, used);
       nl = nl->next;
       message_count--;
-      memcpy(*stream+(*used), &message_count, sizeof(size_t));
-      *used += sizeof(size_t);
+      memcpy(*stream+(*used), &message_count, sizeof(ctr_size));
+      *used += sizeof(ctr_size);
       for(;message_count>0;message_count--,nl=nl->next)
         ctr_marshal_ast(nl->node, stream, stream_len, used);
     break;
     }
     case CTR_AST_NODE_UNAMESSAGE: {//UNAMESSAGE <message_len> <message_name>
       memset(*stream+((*used)++), CTR_MARSH_AST_UNAMESSAGE, 1);
-      memcpy(*stream+*used, &rnode->vlen, sizeof(size_t));
-      *used += sizeof(size_t);
+      memcpy(*stream+*used, &rnode->vlen, sizeof(ctr_size));
+      *used += sizeof(ctr_size);
       if(*stream_len-*used <= rnode->vlen) {
         *stream_len *= MARSH_BUFFER_ENLARGEMENT_FACTOR;
         ctr_heap_reallocate(*stream, *stream_len);
@@ -356,8 +385,8 @@ void ctr_marshal_ast(ctr_tnode* rnode, char** stream, size_t* stream_len, size_t
     }
     case CTR_AST_NODE_BINMESSAGE: {//BINMESSAGE <msg_len(in case of ::)> <msg> <argument> (count = 1 implicit)
       memset(*stream+((*used)++), CTR_MARSH_AST_BINMESSAGE, 1);
-      memcpy(*stream+*used, &rnode->vlen, sizeof(size_t));
-      *used += sizeof(size_t);
+      memcpy(*stream+*used, &rnode->vlen, sizeof(ctr_size));
+      *used += sizeof(ctr_size);
       if(*stream_len-*used <= rnode->vlen) {
         *stream_len *= MARSH_BUFFER_ENLARGEMENT_FACTOR;
         ctr_heap_reallocate(*stream, *stream_len);
@@ -369,8 +398,8 @@ void ctr_marshal_ast(ctr_tnode* rnode, char** stream, size_t* stream_len, size_t
     }
     case CTR_AST_NODE_KWMESSAGE: {//KWMESSAGE <msg_len> <message> <argument_count> (<argument>)+
       *(*stream+((*used)++)) = CTR_MARSH_AST_KWMESSAGE;
-      memcpy(*stream+*used, &rnode->vlen, sizeof(size_t));
-      *used += sizeof(size_t);
+      memcpy(*stream+*used, &rnode->vlen, sizeof(ctr_size));
+      *used += sizeof(ctr_size);
       if(*stream_len-*used <= rnode->vlen) {
         *stream_len *= MARSH_BUFFER_ENLARGEMENT_FACTOR;
         ctr_heap_reallocate(*stream, *stream_len);
@@ -384,7 +413,7 @@ void ctr_marshal_ast(ctr_tnode* rnode, char** stream, size_t* stream_len, size_t
         msgns = msgns->next;
       }
       memcpy(*stream+*used, &argcount, sizeof(ctr_size));
-      *used += sizeof(size_t);
+      *used += sizeof(ctr_size);
       msgns = rnode->nodes;
       for(;argcount>0;argcount--,msgns=msgns->next) {
         ctr_marshal_ast(msgns->node, stream, stream_len, used);
@@ -393,8 +422,8 @@ void ctr_marshal_ast(ctr_tnode* rnode, char** stream, size_t* stream_len, size_t
     }
     case CTR_AST_NODE_LTRSTRING: {//STRING <length> <contents>
       memset(*stream+((*used)++), CTR_MARSH_AST_LTRSTRING, 1);
-      memcpy(*stream+*used, &rnode->vlen, sizeof(size_t));
-      *used += sizeof(size_t);
+      memcpy(*stream+*used, &rnode->vlen, sizeof(ctr_size));
+      *used += sizeof(ctr_size);
       memcpy(*stream+*used, rnode->value, rnode->vlen);
       *used += rnode->vlen;
     break;
@@ -402,16 +431,16 @@ void ctr_marshal_ast(ctr_tnode* rnode, char** stream, size_t* stream_len, size_t
     case CTR_AST_NODE_REFERENCE: {//REFERENCE <modifier> <length> <name>
       *(*stream+((*used)++)) = CTR_MARSH_AST_REFERENCE;
       *(*stream+((*used)++)) = rnode->modifier;
-      memcpy(*stream+*used, &rnode->vlen, sizeof(size_t));
-      *used += sizeof(size_t);
+      memcpy(*stream+*used, &rnode->vlen, sizeof(ctr_size));
+      *used += sizeof(ctr_size);
       memcpy(*stream+*used, rnode->value, rnode->vlen);
       *used += rnode->vlen;
     break;
     }
     case CTR_AST_NODE_LTRNUM: {//LTRNUM <length> <value>
       memset(*stream+((*used)++), CTR_MARSH_AST_LTRNUM, 1);
-      memcpy(*stream+*used, &rnode->vlen, sizeof(size_t));
-      *used += sizeof(size_t);
+      memcpy(*stream+*used, &rnode->vlen, sizeof(ctr_size));
+      *used += sizeof(ctr_size);
       memcpy(*stream+*used, rnode->value, rnode->vlen);
       *used += rnode->vlen;
     break;
@@ -421,24 +450,38 @@ void ctr_marshal_ast(ctr_tnode* rnode, char** stream, size_t* stream_len, size_t
       ctr_marshal_ast(rnode->nodes->node, stream, stream_len, used);
     break;
     }
-    case CTR_AST_NODE_IMMUTABLE: {
-
+    case CTR_AST_NODE_IMMUTABLE: {//IMMUTABLE <count> (<expr>)*
+      *(*stream+((*used)++)) = CTR_MARSH_AST_IMMUTABLE;
+      ctr_tlistitem *nodes = rnode->nodes->node->nodes, *onodes = nodes;
+      ctr_size len = 0;
+      while(nodes&&nodes->node) {
+        nodes=nodes->next;
+        len++;
+      }
+      memcpy(*stream+*used, &len, sizeof(ctr_size));
+      *used += sizeof(ctr_size);
+      for(;len>0;len--,onodes=onodes->next)
+        ctr_marshal_ast(onodes->node, stream, stream_len, used);
     break;
     }
-    case CTR_AST_NODE_SYMBOL: {
-
+    case CTR_AST_NODE_SYMBOL: {//SYMBOL <length> <name>
+      memset(*stream+((*used)++), CTR_MARSH_AST_SYMBOL, 1);
+      memcpy(*stream+*used, &rnode->vlen, sizeof(ctr_size));
+      *used += sizeof(ctr_size);
+      memcpy(*stream+*used, rnode->value, rnode->vlen);
+      *used += rnode->vlen;
     break;
     }
     case CTR_AST_NODE_PARAMLIST: {//PARAMLIST <count> (<argument>)*
       memset(*stream+((*used)++), CTR_MARSH_AST_PARAMLIST, 1);
-      size_t count = 0;
+      ctr_size count = 0;
       ctr_tlistitem* nl = rnode->nodes;
       while(nl&&nl->node) {
         count++;
         nl = nl->next;
       }
-      memcpy(*stream+(*used), &count, sizeof(size_t));
-      *used += sizeof(size_t);
+      memcpy(*stream+(*used), &count, sizeof(ctr_size));
+      *used += sizeof(ctr_size);
       nl = rnode->nodes;
       for(;count>0;count--,nl=nl->next)
         ctr_marshal_ast(nl->node, stream, stream_len, used);
@@ -446,14 +489,14 @@ void ctr_marshal_ast(ctr_tnode* rnode, char** stream, size_t* stream_len, size_t
     }
     case CTR_AST_NODE_INSTRLIST: {//INSTRLIST <count> (<instruction>)*
       memset(*stream+((*used)++), CTR_MARSH_AST_INSTRLIST, 1);
-      size_t count = 0;
+      ctr_size count = 0;
       ctr_tlistitem* nl = rnode->nodes;
       while(nl&&nl->node) {
         count++;
         nl = nl->next;
       }
-      memcpy(*stream+(*used), &count, sizeof(size_t));
-      *used += sizeof(size_t);
+      memcpy(*stream+(*used), &count, sizeof(ctr_size));
+      *used += sizeof(ctr_size);
       nl = rnode->nodes;
       for(;count>0;count--,nl=nl->next)
         ctr_marshal_ast(nl->node, stream, stream_len, used);
@@ -493,14 +536,14 @@ void ctr_marshal_ast(ctr_tnode* rnode, char** stream, size_t* stream_len, size_t
     }
     case CTR_AST_NODE_PROGRAM: {// PROGRAM (<instruction>)*
       memset(*stream+((*used)++), CTR_MARSH_AST_PROGRAM, 1);
-      size_t instrc = 0;
+      ctr_size instrc = 0;
       ctr_tlistitem* nl = rnode->nodes;
       while(nl&&nl->node) {
         instrc++;
         nl = nl->next;
       }
-      memcpy(*stream+(*used), &instrc, sizeof(size_t));
-      *used += sizeof(size_t);
+      memcpy(*stream+(*used), &instrc, sizeof(ctr_size));
+      *used += sizeof(ctr_size);
       nl = rnode->nodes;
       for(;instrc>0;instrc--,nl=nl->next)
         ctr_marshal_ast(nl->node, stream, stream_len, used);
@@ -508,8 +551,8 @@ void ctr_marshal_ast(ctr_tnode* rnode, char** stream, size_t* stream_len, size_t
     }
     case 0: {//PARAMETER <length> <name>
       memset(*stream+((*used)++), CTR_MARSH_AST_PARAM, 1);
-      memcpy(*stream+*used, &rnode->vlen, sizeof(size_t));
-      *used += sizeof(size_t);
+      memcpy(*stream+*used, &rnode->vlen, sizeof(ctr_size));
+      *used += sizeof(ctr_size);
       memcpy(*stream+*used, rnode->value, rnode->vlen);
       *used += rnode->vlen;
     }
@@ -655,7 +698,7 @@ ctr_size ctr_marshal_object(ctr_object* obj, char** stream, ctr_size* stream_len
     *stream_len = 1024;
   }
   char* buf;
-  size_t cplen = 0;
+  ctr_size cplen = 0;
   char type_p = 0;
   int allocated = 0;
   ctr_size len = 0;
@@ -912,7 +955,7 @@ ctr_object* ctr_marshal(ctr_object* object) {
   return ret;
 }
 
-ctr_object* ctr_unmarshal(char* object, size_t len) {
+ctr_object* ctr_unmarshal(char* object, ctr_size len) {
   ctr_size c = 0, l = len;
   return ctr_unmarshal_object(object, &l, &c);
 }

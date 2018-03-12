@@ -1,0 +1,90 @@
+#CTR_AST_NODE_EXPRASSIGNMENT
+#CTR_AST_NODE_EXPRMESSAGE
+#CTR_AST_NODE_UNAMESSAGE
+#CTR_AST_NODE_BINMESSAGE
+#CTR_AST_NODE_KWMESSAGE
+#CTR_AST_NODE_LTRSTRING
+#CTR_AST_NODE_REFERENCE
+#CTR_AST_NODE_LTRNUM
+#CTR_AST_NODE_CODEBLOCK
+#CTR_AST_NODE_RETURNFROMBLOCK
+#CTR_AST_NODE_IMMUTABLE
+#CTR_AST_NODE_SYMBOL
+#CTR_AST_NODE_PARAMLIST
+#CTR_AST_NODE_INSTRLIST
+#CTR_AST_NODE_ENDOFPROGRAM
+#CTR_AST_NODE_NESTED
+#CTR_AST_NODE_LTRBOOLTRUE
+#CTR_AST_NODE_LTRBOOLFALSE
+#CTR_AST_NODE_LTRNIL
+#CTR_AST_NODE_PROGRAM
+AST on: 'constructProgram' do: {:instruction_list
+  var f is AST parse: '.'.
+  ^f put: instruction_list at: 0.
+}.
+
+AST on: 'constructNil' do: {
+  ^AST parse: 'Nil.', at: 0.
+}.
+AST on: 'constructFalse' do: {
+  ^AST parse: 'False.', at: 0.
+}.
+AST on: 'constructTrue' do: {
+  ^AST parse: 'True.', at: 0.
+}.
+AST on: 'constructNested' do: {:enclosed
+  ^AST parse: '().', at: 0, insert: enclosed at: -1.
+}, learn: 'constructNested:' means: 'constructNested'.
+
+AST on: 'constructEOP' do: {
+  ^AST parse: '.', at: 0.
+}.
+AST on: 'constructInstructionList' do: {:nodes
+  var f is AST parse: '{}.', at: 0, at: 1.
+  nodes reverse each_v: {:node f insert: node at: -1.}.
+  ^f.
+}, learn: 'constructInstructionList:' means: 'constructInstructionList'.
+
+AST on: 'constructParamList' do: {:names
+  var f is AST parse: '{}.', at: 0, at: 0.
+  names reverse each_v: {:name f insert: (AST withValue: name) at: -1.}.
+  ^f.
+}, learn: 'constructParamList:' means: 'constructParamList'.
+
+AST on: 'constructSymbol' do: {:symbol
+  var f is AST parse: '\\%s.' % [symbol].
+  ^f at: 0.
+}, learn: 'constructSymbol:' means: 'constructSymbol'.
+
+AST on: 'constructImmutable' do: {:nodes
+  var f is AST parse: '[].', at: 0.
+  nodes reverse each_v: {:v f at: 0, insert: v at: -1.}.
+  ^f.
+}, learn: 'constructImmutable:' means: 'constructImmutable'.
+
+AST on: 'constructReturn' do: {:node
+  var f is AST parse: '^.', at: 0.
+  ^f put: node at: 0.
+}, learn: 'constructReturn:' means: 'constructReturn'.
+
+AST on: 'constructCodeBlock' do: {:params:instrs:is_lexical
+  is_lexical is is_lexical or: False.
+  var f is is_lexical either: {^AST parse: '{\\}.'.} or: {^AST parse: '{}.'.}, at: 0.
+  f put: params at: 0.
+  f put: instrs at: 1.
+  ^f.
+}.
+
+AST on: 'constructNumber' do: {:value
+  ^AST parse: (value + '.'), at: 0.
+}, learn: 'constructNumber:' means: 'constructNumber'.
+
+AST on: 'constructString' do: {:value
+  ^AST parse: '\'' + (value escapeQuotes) + '\'', at: 0.
+}, learn: 'constructString:' means: 'constructString'.
+
+AST on: 'constructReference' do: {:name:mod
+  var f is AST parse: (name + '.'), at: 0.
+  f modifier: mod.
+  ^f.
+}.

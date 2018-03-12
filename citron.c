@@ -18,17 +18,24 @@
 #include <gperftools/profiler.h>
 #endif
 
+static int compile_and_quit = 0;
+static int debug = 0;
 /**
  * CommandLine Display Welcome Message
  * Displays a Welcome message, copyright information,
  * version information and usage.
  */
-void ctr_cli_welcome()
+void ctr_cli_welcome(char* invoked_by)
 {
 	printf("\n");
 	printf("CTR Programming Language V " CTR_VERSION "\n");
 	printf("Written by AnotherTest (c) copyright 2017, Licensed BSD.\n");
 	printf("\tbuilt with Extensions at: " CTR_STD_EXTENSION_PATH "\n");
+	printf("Usage: %s [options] filename\n", invoked_by);
+	puts("Options:");
+	puts("\t-c | --compile : serialize AST to stdout and exit");
+	puts("\t-fc | --from-compiled : assume file is a serialized AST, execute that");
+	puts("\t-d | enable debug mode");
 	printf("\n");
 }
 
@@ -39,12 +46,24 @@ void ctr_cli_welcome()
 void ctr_cli_read_args(int argc, char *argv[])
 {
 	if (argc == 1) {
-		ctr_cli_welcome();
+		ctr_cli_welcome(argv[0]);
 		exit(0);
+	}
+	argc--;
+	argv++;
+	while (argc > 0 && argv[0][0] == '-') {
+		if (strcmp(argv[0], "-c") == 0 || strcmp(argv[0], "--compile") == 0)
+			compile_and_quit = 1;
+		if (strcmp(argv[0], "-fc") == 0 || strcmp(argv[0], "--from-compiled") == 0)
+			compile_and_quit = 2;
+		if (strcmp(argv[0], "-d") == 0)
+			debug = 1;
+		argv++;
+		argc--;
 	}
 	ctr_mode_input_file =
 	    (char *)ctr_heap_allocate_tracked(sizeof(char) * 255);
-	strncpy(ctr_mode_input_file, argv[1], 254);
+	strncpy(ctr_mode_input_file, argv[0], 254);
 }
 #ifndef CITRON_LIBRARY
 /**
@@ -96,7 +115,18 @@ int main(int argc, char *argv[])
 	if (ctr_mode_input_file != NULL) {
 		prg =
 		    ctr_internal_readf(ctr_mode_input_file, &program_text_size);
-		program = ctr_cparse_parse(prg, ctr_mode_input_file);
+		if(compile_and_quit == 2) {
+			ctr_size len = 0;
+			program = ctr_unmarshal_ast(prg, program_text_size, &len);
+		} else
+			program = ctr_cparse_parse(prg, ctr_mode_input_file);
+		if(compile_and_quit == 1) {
+			ctr_size blen = 102400, bused=0;
+			char* bufp = ctr_heap_allocate(blen);
+			ctr_marshal_ast(program, &bufp, &blen, &bused);
+			fwrite(bufp, 1, bused, stdout);
+			exit(0);
+		}
 #ifdef comp
 		ctr_ccomp_env_update_new_context();
 		printf("%d\n", ctr_ccomp_node_indeterministic_level(program));
@@ -113,7 +143,7 @@ int main(int argc, char *argv[])
 
 		exit(0);
 #endif
-		// ctr_internal_debug_tree(program,1); /*-- for debugging */
+		if(debug) ctr_internal_debug_tree(program,1); /*-- for debugging */
 		ctr_initialize_world();
 		ctr_cwlk_run(program);
 		ctr_gc_sweep(1);

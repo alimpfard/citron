@@ -3236,6 +3236,39 @@ ctr_object *ctr_internal_argumentptr2tuple(ctr_argument * argumentList)
 	return ret;
 }
 
+ctr_object *ctr_get_appropriate_catch_all(char* message, long vlen, int argCount) {
+	if(vlen == 1)
+		return ctr_build_string("respondTo:and:", 13);
+	if(argCount == -1) {
+		char *msg = message, *msg_end = msg+vlen;
+		int count = argCount;
+		while(msg <= msg_end) {
+			size_t plen = 0;
+			while(*(msg++) == ':') plen++;
+			if(plen == 1) continue;
+			count += plen > 6 ? plen / 3 : 1;
+			while(msg<msg_end&&*(msg++)!=':');
+			if(msg < msg_end && *(msg-1) == ':') count ++;
+		}
+		argCount = count;
+	}
+	switch (argCount) {
+		case 0:
+			return ctr_build_string_from_cstring("respondTo:");
+		default:
+		case 1:
+			return ctr_build_string_from_cstring("respondTo:and:");
+		case 2:
+			return ctr_build_string_from_cstring("respondTo:and:and:");
+		case 3:
+			return ctr_build_string_from_cstring("respondTo:and:and:and:");
+		case 4:
+			return ctr_build_string_from_cstring("respondTo:and:and:and:and:");
+		case 5:
+			return ctr_build_string_from_cstring("respondTo:and:and:and:and:and:");
+	}
+}
+
 /**
  * @internal
  *
@@ -3302,10 +3335,11 @@ ctr_object *ctr_send_message(ctr_object * receiverObject, char *message,
 			argCounter = argCounter->next;
 			argCount++;
 		}
-		char* catch_all = argCount == 0 ? CTR_DICT_RESPOND_TO : CTR_DICT_RESPOND_TO_AND;
-		long catch_all_v = argCount == 0 ? 10 : 14;
+		ctr_object* catch_all_s = ctr_get_appropriate_catch_all(message, vlen, argCount);
+		char* catch_all = catch_all_s->value.svalue->value;
+		size_t catch_all_v = catch_all_s->value.svalue->vlen;
 		if (vlen == catch_all_v && message[9] == ':' && strcmp(message, catch_all) == 0) {
-			CtrStdFlow = ctr_build_string_from_cstring("respondTo:and: calls itself");
+			CtrStdFlow = ctr_build_string_from_cstring(CTR_DICT_RESPOND_TO_AND" calls itself");
 			return receiverObject;
 		}
 		mesgArgument =
@@ -3313,14 +3347,7 @@ ctr_object *ctr_send_message(ctr_object * receiverObject, char *message,
 		mesgArgument->object = ctr_build_string(message, vlen);
 		mesgArgument->next = argumentList;
 		returnValue =
-		    ctr_send_message(receiverObject,
-				     argCount ==
-				     0 ? CTR_DICT_RESPOND_TO :
-				     CTR_DICT_RESPOND_TO_AND,
-				     strlen(argCount ==
-					    0 ? CTR_DICT_RESPOND_TO :
-					    CTR_DICT_RESPOND_TO_AND),
-				     mesgArgument);
+		    ctr_send_message(receiverObject, catch_all, catch_all_v, mesgArgument);
 		ctr_heap_free(mesgArgument);
 		msg->info.sticky = 0;
 		if (receiverObject->info.chainMode == 1)

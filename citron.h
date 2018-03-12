@@ -425,7 +425,8 @@ ctr_tnode* ctr_cparse_calltime_names;
 uint64_t    ctr_cwlk_subprogram;
 ctr_object* ctr_cwlk_run(ctr_tnode* program);
 ctr_object* ctr_cwlk_expr(ctr_tnode* node, char* wasReturn);
-
+ctr_tnode* ctr_unmarshal_ast(char* stream, size_t avail, size_t* consumed);
+void ctr_marshal_ast(ctr_tnode* rnode, char** stream, size_t* stream_len, size_t* used);
 /**
  * Internal World functions
  */
@@ -474,7 +475,8 @@ void ctr_internal_create_func(ctr_object* o, ctr_object* key, ctr_object* (*func
 int ctr_is_primitive(ctr_object* object);
 ctr_object* ctr_get_stack_trace();
 void ctr_print_stack_trace();
-
+ctr_object* ctr_get_or_create_symbol_table_entry(char* name, ctr_size len);
+int ctr_str_count_substr(char *str, char *substr, int overlap);
 /**
  * Scoping functions
  */

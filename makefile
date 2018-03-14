@@ -27,7 +27,7 @@ COBJS = ${OBJS} compiler.o
 all: CFALGS := $(CFLAGS) -O2
 all: ctr
 
-debug: CFLAGS := ${CFLAGS} -Og -g3 -ggdb3 -Wno-unused-function
+debug: CFLAGS := ${CFLAGS} -DDEBUG_BUILD -Og -g3 -ggdb3 -Wno-unused-function
 	   #LEXTRACF := -lefence ${LEXTRACF}
 debug: ctr
 

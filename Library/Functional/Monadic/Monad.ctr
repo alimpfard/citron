@@ -1,6 +1,11 @@
 import Library/Control/Error/NotImplementedError.
 
 var identity is {\:x x}.
+var pure is {:x
+  ^Reflect objectExists: 'thisContext', either: {
+    ^thisContext unit: x.
+  } or: x.
+}. #Ugly HACK to get contextual awareness
 
 var Monad is Object new
   on: 'bind:' do: {
@@ -11,7 +16,7 @@ var Monad is Object new
   },
   on: 'lift:' do: {:func
     var self is me.
-    ^me bind: {\:x self unit: (func applyTo: x).}.
+    ^me bind: \:x self unit: (func applyTo: x).
   },
   on: 'join' do: {
     ^me bind: const identity.
@@ -20,7 +25,9 @@ var Monad is Object new
     ^me bind: func.
   },
   on: '>' do: {:next
-    ^me bind: {\:_ next}.
+    ^me bind: \:_ next.
   }.
 
 import export: Monad as: 'Monad'.
+import export: identity as: 'identity'.
+import export: pure as: 'pure'.

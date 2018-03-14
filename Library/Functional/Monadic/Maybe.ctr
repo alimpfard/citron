@@ -47,6 +47,7 @@ var Just is Maybe cnew: { value => Nil. },
     }.
   },
   on: 'bind:' do: {:fn
+    var thisContext is me.
     var value is my value.
     var val is fn applyTo: value.
     (Reflect isObject: val linkedTo: Maybe) ifFalse: {

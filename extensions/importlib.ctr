@@ -12,6 +12,9 @@ import on: 'export:as:' do: {:object:name
 import on: 'require-parent' do: {
   me message: '..' arguments: [].
 }.
+import on: 'dir:' do: {:dname
+  me message: dname arguments: [].
+}.
 import on: 'return:' do: {:obj
   var path is (File new: '.', realPath).
   var spath is my searchPaths filter: {:i:v ^path contains: v.}.

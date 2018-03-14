@@ -31,17 +31,11 @@ Eval on: 'init' do: {
   my flags is Map new
     put: True at: 'printvs',
     put: True at: 'highlight',
-    put: False at: 'equit',
-    put: False at: 'jsonout'.
+    put: False at: 'equit'.
   me genReader: 'eServer'.
-  my serverRunning is False.
-  my last_exception is Nil.
-  my exception_was_fired is False.
   ^me.
 }.
 Eval on: 'handleException:' do: {:e
-  my last_exception is e.
-  my exception_was_fired is True.
   ^me getFlag: 'equit', either: {thisBlock error: e.} or: {Pen red write: e, resetColor brk. ^e.}.
 }.
 Eval on: 'end' do: {
@@ -82,39 +76,36 @@ Eval on: 'onlyRelevantArgs' do: { my args do shift shift done. }. #get rid of ./
 Eval on: 'startEvalServer' do: {
   var port is 5000 + (Dice rollWithSides: 1000).
 
-  var EvalServer is Eval new init enableFlag: 'jsonout'.
+  var EvalServer is Object new.
+  EvalServer on: 'evaluate:' do: {:str
+      ^str eval.
+  }.
 
   my eServer is Program new: {:p
-      Program is p.
       p port: port.
       p serve: EvalServer.
   }.
 
-  my serverRunning is True.
   ^port.
 }.
 
 Eval on: 'startEvalServerOnPort:' do: {:port
 
-  var EvalServer is Eval new init enableFlag: 'jsonout'.
+  var EvalServer is Object new.
+  EvalServer on: 'evaluate:' do: {:str
+      ^str eval.
+  }.
 
   my eServer is Program new: {:p
-      Program is p.
       p port: port.
       p serve: EvalServer.
   }.
-  my serverRunning is True.
+
   ^port.
 }.
 
-Eval on: 'serverRunning' do: {
-  ^my serverRunning.
-}.
-
 Eval on: 'stopEvalServer' do: {
-  var ret is my serverRunning either: {my eServer signal: 1. ^True.} or: {^False.}.
-  my serverRunning is False.
-  ^ret.
+  ^my eServer isNil not either: {my eServer signal: 1. ^True.} or: {^False.}.
 }.
 
 Eval on: 'Commands' do: {
@@ -133,13 +124,11 @@ Eval on: 'Commands' do: {
       + !p <expression> -- evaluates and shows the properties of expression.
       + !f <[no-]flag> -- modifies flag
       + p <expression> -- prints the value of expression
-      + !s <cmd> -- evaluate shell command
       + h -- show this help'.} at: 'h',
       put: {^Eval stopEvalServer.} at: '!server',
       put: {:args ^Reflect getPropertiesOf: (Eval evaluate: args).} at: '!p',
       put: {:args Pen writeln: (Eval evaluate: args). ^''.} at: 'p',
-      put: {:args ^Reflect getMethodsOf: (Eval evaluate: args).} at: '!m',
-      put: {:args ^Shell call: args.} at: '!s'.
+      put: {:args ^Reflect getMethodsOf: (Eval evaluate: args).} at: '!m'.
   }.
   ^my commands.
 }.
@@ -147,21 +136,13 @@ Eval on: 'Commands' do: {
 Eval on: 'doMeta:' do: {:str:ptr
   var cmd is 'h'.
   var args is ''.
-  str trim findPattern: ?>(\!?\w+)(\s+(.*))?<? do: {:parts cmd is parts @ 1. args is parts count > 2 either: {^parts at: 2, trim.} or: ''.}.
+  str trim findPattern: '(\\W?\\w+)(\\s+(.*))?' do: {:parts cmd is parts @ 1. args is parts count > 2 either: {^parts @ 3.} or: ''.}.
   ^(Eval Commands at: cmd) applyTo: args.
 }.
 
-Eval on: 'exceptionOccured' do: {
-  var last_exception is my last_exception.
-  var exception_was_fired is my exception_was_fired.
-  ^JSON serialize: (my exception_was_fired either: {^[exception_was_fired, (Reflect lastTrace), (last_exception type), (last_exception toString)].} or: [(exception_was_fired)]).
-}.
-
 Eval on: 'evaluate:' do: { :str
-  my exception_was_fired is False.
   var eval_result_x is Nil.
-  var Eval is me.
-  var ret is (str at: 0, = ':')
+  ^(str at: 0, = ':')
     either:
       ({ ^eval_result_x is Eval doMeta: (str skip: 1). } catch: {:e Eval handleException: e.})
     or:
@@ -174,7 +155,6 @@ Eval on: 'evaluate:' do: { :str
                 ^str eval.
                 } catch: {:e Eval handleException: e. ^Nil.}).
         }).
-  ^me getFlag: 'jsonout', either: {^JSON serialize: [(ret toString), (Eval exceptionOccured)].} or: ret.
 }.
 Eval on: 'evaluateFile:' do: { :fl
   {
@@ -204,25 +184,6 @@ Eval on: 'getHistory' do: {^my history.}.
 Eval on: 'queryState:' do: {:query
     ^(((query countOf: '\'') - (query countOf: '\\\'')) even) & ((query countOf: '{') = (query countOf: '}')) & ((query countOf: '[') = (query countOf: ']')).
 }.
-Eval on: 'flatten:' do: {:list
-  var lst is Array new.
-  list each_v: {:l
-    (Reflect isObject: l linkedTo: Array) either: {
-      lst is lst + (Eval flatten: l).
-    } or: {
-      lst push: l.
-    }.
-  }.
-  ^lst.
-}.
-
-Eval on: 'allTheNames' do: {
-  ^(Eval Commands keys fmap: {:i ^':' + i.}) + ['var', 'my', 'is'] + (Eval flatten: Reflect getContext).
-}.
-
-Eval on: 'allTheNames:' do: {:obj
-  ^obj isNil not either: {^[(False), (Reflect getMethodsOf: obj)].} or: {^[(True), (Eval allTheNames)].}.
-}.
 
 Eval init.
 Eval setArgs: (Array with: {:i ^Program argument: i. } count: (Program argCount)).
@@ -236,7 +197,9 @@ var _  is Nil.
 var __ is Nil.
 
 Eval on: 'tryNumrify:' do: {:s
-  ^s containsPattern: '^\\d+(\.\\d+)?$', either: s toNumber or: s.
+  var r is s.
+  {r is s toNumber.} catch: {r is s.}, run.
+  ^r.
 }.
 
 # parse arguments
@@ -268,7 +231,6 @@ Eval on: 'tryNumrify:' do: {:s
           indent: 2 write: '-c : set the result color\n',
           indent: 2 write: '-h : show this help\n',
           indent: 2 write: '-f : evaluate file. many can be passed, evals in passed order\n',
-          indent: 2 write: '-s <port> : start an evaluation server on localhost:port\n',
           indent: 2 write: '-F<[no-]flag> : enables the passed flag\n',
           indent: 2 write: '-Fs : display all the available flags\n',
           indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
@@ -326,13 +288,6 @@ Eval on: 'tryNumrify:' do: {:s
         Pen writeln: 'Citron'.
         Pen writeln: '[%L]' % [(Reflect version split: '.')].
         Program exit.
-    }, case: '-s' do: {
-      args pop.
-      var sport is Eval shiftArgs.
-      var nport is sport toNumber.
-      nport = 0 ifTrue: { thisBlock error: 'Incorrect port $$sport'. }.
-      Eval startEvalServerOnPort: nport.
-      Program exit.
     }, default: {
       opt startsWith: '-F', ifTrue: {
         args pop. #consume option.
@@ -346,6 +301,26 @@ Pen green write: ?>Project Citron : The Programming Language (V<?, write:(Reflec
 write: ?>Eval Mode, parameters related to eval are in the Eval namespace.
 run with '-h' to read the eval mode help.
 <?.
+
+Eval on: 'flatten:' do: {:list
+  var lst is Array new.
+  list each_v: {:l
+    (Reflect isObject: l linkedTo: Array) either: {
+      lst is lst + (Eval flatten: l).
+    } or: {
+      lst push: l.
+    }.
+  }.
+  ^lst.
+}.
+
+Eval on: 'allTheNames' do: {
+  ^(Eval Commands keys fmap: {:i ^':' + i.}) + ['var', 'my', 'is'] + (Eval flatten: Reflect getContext).
+}.
+
+Eval on: 'allTheNames:' do: {:obj
+  ^obj isNil not either: {^[(False), (Reflect getMethodsOf: obj)].} or: {^[(True), (Eval allTheNames)].}.
+}.
 
 # Eval on: 'redraw:at:' do: {:inp:cursor
 #   var cols is Program env: 'COLUMNS', or: '89', toNumber.
@@ -555,7 +530,7 @@ Eval on: 'repl' do: {
     Pen resetColor.
     __ is _.
     _ is ret.
-    (inp startsWith: ':') ifFalse: {Eval pushHist: inp.}.
+    Eval pushHist: inp.
     #Broom sweep. #Keep the darn pointers in memory
     ret toString length > 0 ifTrue: { Pen brk. }.
   }.

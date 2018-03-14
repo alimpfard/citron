@@ -14,10 +14,16 @@ extern "C" {
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef withBoehmGC
-#define CTR_VERSION "0.0.7.3-boehm-gc"
+#ifdef DEBUG_BUILD
+#define IS_DEBUG_STRING "-debug"
 #else
-#define CTR_VERSION "0.0.7.3"
+#define IS_DEBUG_STRING ""
+#endif
+
+#ifdef withBoehmGC
+#define CTR_VERSION "0.0.7.4-boehm-gc" IS_DEBUG_STRING
+#else
+#define CTR_VERSION "0.0.7.4" IS_DEBUG_STRING
 #endif
 
 #define CTR_LOG_WARNINGS 0//2 to enable

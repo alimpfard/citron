@@ -6,7 +6,14 @@
 #define CTR_H_GUARD
 
 #ifdef  __cplusplus
+
+#define CTR_H_DECLSPEC extern
 extern "C" {
+
+#else
+
+#define CTR_H_DECLSPEC
+
 #endif
 
 #include "dictionary.h"
@@ -277,8 +284,8 @@ struct ctr_source_map {
 };
 typedef struct ctr_source_map ctr_source_map;
 
-ctr_source_map* ctr_source_map_head;
-int ctr_source_mapping;
+CTR_H_DECLSPEC ctr_source_map* ctr_source_map_head;
+CTR_H_DECLSPEC int ctr_source_mapping;
 
 /**
  * General Pragma Structure
@@ -290,76 +297,76 @@ struct ctr_code_pragma {
 typedef struct ctr_code_pragma ctr_code_pragma;
 
 
-int CTR_CCOMP_SIMULATION; //in compiler simulation mode
+CTR_H_DECLSPEC int CTR_CCOMP_SIMULATION; //in compiler simulation mode
 ctr_object* ctr_ccomp_get_stub(ctr_object*(*nfunc)(ctr_object*,ctr_argument*), ctr_object* receiver, ctr_argument* args); //stub generator lookup table
-ctr_argument* CtrCompilerStub; //returned object in case of stub error
+CTR_H_DECLSPEC ctr_argument* CtrCompilerStub; //returned object in case of stub error
 
 /**
  * Core Objects
  */
-ctr_object* CtrStdWorld;          //!< Standard Object : Global Namespace
-ctr_object* CtrStdObject;         //!< Standard Object : Base Object
-ctr_object* CtrStdBlock;          //!< Standard Object : Code Block
-ctr_object* CtrStdString;         //!< Standard Object : String
-ctr_object* CtrStdNumber;         //!< Standard Object : Number
-ctr_object* CtrStdBool;           //!< Standard Object : Boolean
-ctr_object* CtrStdConsole;        //!< Standard Object : Pen
-ctr_object* CtrStdNil;            //!< Standard Object : Nil
-ctr_object* CtrStdGC;             //!< Standard Object : Broom
-ctr_object* CtrStdMap;            //!< Standard Object : Map
-ctr_object* CtrStdArray;          //!< Standard Object : Array
-ctr_object* CtrStdIter;           //!< Standard Object : Iterator
-ctr_object* CtrStdFile;           //!< Standard Object : File
-ctr_object* CtrStdSystem;         //!< Standard Object : internal
-ctr_object* CtrStdDice;           //!< Standard Object : Dice
-ctr_object* CtrStdCommand;        //!< Standard Object : Program
-ctr_object* CtrStdSlurp;          //!< Standard Object : Slurp
-ctr_object* CtrStdShell;          //!< Standard Object : Shell
-ctr_object* CtrStdClock;          //!< Standard Object : Clock
-ctr_object* CtrStdFlow;           //!< Internal Flow namespace : contains errors and flow control
-ctr_object* CtrExceptionType;     //!< contains error/exception types
-ctr_object* CtrStdBreak;          //!< Internal Flow representation for break : stop the current iteration
-ctr_object* CtrStdContinue;       //!< Internal Flow representation for continue : skip the current iteration
-ctr_object* CtrStdExit;           //!< Internal Flow representation for exit : exit program on this message
-ctr_object* CtrStdReflect;        //!< Standard Object : Reflect
-ctr_object* CtrStdReflect_cons;   //!< Standard Object : cons
-ctr_object* CtrStdFiber;          //!< Standard Object : Fiber
-ctr_object* CtrStdThread;         //!< Standard Object : Thread
-ctr_object* CtrStdSymbol;         //!< Standard Object : Symbol
-ctr_object* ctr_first_object;     //!< Internal Garbage Collector guide object
+CTR_H_DECLSPEC ctr_object* CtrStdWorld;          //!< Standard Object : Global Namespace
+CTR_H_DECLSPEC ctr_object* CtrStdObject;         //!< Standard Object : Base Object
+CTR_H_DECLSPEC ctr_object* CtrStdBlock;          //!< Standard Object : Code Block
+CTR_H_DECLSPEC ctr_object* CtrStdString;         //!< Standard Object : String
+CTR_H_DECLSPEC ctr_object* CtrStdNumber;         //!< Standard Object : Number
+CTR_H_DECLSPEC ctr_object* CtrStdBool;           //!< Standard Object : Boolean
+CTR_H_DECLSPEC ctr_object* CtrStdConsole;        //!< Standard Object : Pen
+CTR_H_DECLSPEC ctr_object* CtrStdNil;            //!< Standard Object : Nil
+CTR_H_DECLSPEC ctr_object* CtrStdGC;             //!< Standard Object : Broom
+CTR_H_DECLSPEC ctr_object* CtrStdMap;            //!< Standard Object : Map
+CTR_H_DECLSPEC ctr_object* CtrStdArray;          //!< Standard Object : Array
+CTR_H_DECLSPEC ctr_object* CtrStdIter;           //!< Standard Object : Iterator
+CTR_H_DECLSPEC ctr_object* CtrStdFile;           //!< Standard Object : File
+CTR_H_DECLSPEC ctr_object* CtrStdSystem;         //!< Standard Object : internal
+CTR_H_DECLSPEC ctr_object* CtrStdDice;           //!< Standard Object : Dice
+CTR_H_DECLSPEC ctr_object* CtrStdCommand;        //!< Standard Object : Program
+CTR_H_DECLSPEC ctr_object* CtrStdSlurp;          //!< Standard Object : Slurp
+CTR_H_DECLSPEC ctr_object* CtrStdShell;          //!< Standard Object : Shell
+CTR_H_DECLSPEC ctr_object* CtrStdClock;          //!< Standard Object : Clock
+CTR_H_DECLSPEC ctr_object* CtrStdFlow;           //!< Internal Flow namespace : contains errors and flow control
+CTR_H_DECLSPEC ctr_object* CtrExceptionType;     //!< contains error/exception types
+CTR_H_DECLSPEC ctr_object* CtrStdBreak;          //!< Internal Flow representation for break : stop the current iteration
+CTR_H_DECLSPEC ctr_object* CtrStdContinue;       //!< Internal Flow representation for continue : skip the current iteration
+CTR_H_DECLSPEC ctr_object* CtrStdExit;           //!< Internal Flow representation for exit : exit program on this message
+CTR_H_DECLSPEC ctr_object* CtrStdReflect;        //!< Standard Object : Reflect
+CTR_H_DECLSPEC ctr_object* CtrStdReflect_cons;   //!< Standard Object : cons
+CTR_H_DECLSPEC ctr_object* CtrStdFiber;          //!< Standard Object : Fiber
+CTR_H_DECLSPEC ctr_object* CtrStdThread;         //!< Standard Object : Thread
+CTR_H_DECLSPEC ctr_object* CtrStdSymbol;         //!< Standard Object : Symbol
+CTR_H_DECLSPEC ctr_object* ctr_first_object;     //!< Internal Garbage Collector guide object
 //--
-ctr_object* CTR_FILE_STDIN;       //!< Special Object : Standard Input File
-ctr_object* CTR_FILE_STDOUT;      //!< Special Object : Standard Output File
-ctr_object* CTR_FILE_STDERR;      //!< Special Object : Standard Error File
-ctr_object* CTR_FILE_STDIN_STR;   //!< Special Object : Standard Input in-world name
-ctr_object* CTR_FILE_STDOUT_STR;  //!< Special Object : Standard Output in-world name
-ctr_object* CTR_FILE_STDERR_STR;  //!< Special Object : Standard Error in-world name
+CTR_H_DECLSPEC ctr_object* CTR_FILE_STDIN;       //!< Special Object : Standard Input File
+CTR_H_DECLSPEC ctr_object* CTR_FILE_STDOUT;      //!< Special Object : Standard Output File
+CTR_H_DECLSPEC ctr_object* CTR_FILE_STDERR;      //!< Special Object : Standard Error File
+CTR_H_DECLSPEC ctr_object* CTR_FILE_STDIN_STR;   //!< Special Object : Standard Input in-world name
+CTR_H_DECLSPEC ctr_object* CTR_FILE_STDOUT_STR;  //!< Special Object : Standard Output in-world name
+CTR_H_DECLSPEC ctr_object* CTR_FILE_STDERR_STR;  //!< Special Object : Standard Error in-world name
 /**
 * @internal
  * standard instrumentor, do not override.
  * only combine
  */
-ctr_object* ctr_instrumentor_funcs;
-int ctr_instrument;
+CTR_H_DECLSPEC ctr_object* ctr_instrumentor_funcs;
+CTR_H_DECLSPEC int ctr_instrument;
 
-int ctr_internal_next_return;
+CTR_H_DECLSPEC int ctr_internal_next_return;
 
 /**
  * Hashkey
  */
-char CtrHashKey[16];
+CTR_H_DECLSPEC char CtrHashKey[16];
 
 /**
  * CLI Arguments
  */
-int ctr_argc;
-char** ctr_argv;
+CTR_H_DECLSPEC int ctr_argc;
+CTR_H_DECLSPEC char** ctr_argv;
 
 /**
  * Mode of Operation
  */
-char* ctr_mode_input_file;
-char* ctr_mode_interactive;
+CTR_H_DECLSPEC char* ctr_mode_input_file;
+CTR_H_DECLSPEC char* ctr_mode_interactive;
 
 
 /**
@@ -372,24 +379,24 @@ long    ctr_clex_tok_value_length();
 void 	ctr_clex_putback();
 char*	ctr_clex_readstr();
 char*   ctr_clex_tok_describe( int token );
-int     ctr_clex_quiet;
-char*   ctr_clex_keyword_var;
-char*   ctr_clex_keyword_me;
-char*   ctr_clex_keyword_my;
-char*   ctr_clex_keyword_const; //maybe to `force`?
+CTR_H_DECLSPEC int     ctr_clex_quiet;
+CTR_H_DECLSPEC char*   ctr_clex_keyword_var;
+CTR_H_DECLSPEC char*   ctr_clex_keyword_me;
+CTR_H_DECLSPEC char*   ctr_clex_keyword_my;
+CTR_H_DECLSPEC char*   ctr_clex_keyword_const; //maybe to `force`?
 
-ctr_size ctr_clex_keyword_const_len;
-ctr_size ctr_clex_keyword_my_len;
-ctr_size ctr_clex_keyword_var_len;
+CTR_H_DECLSPEC ctr_size ctr_clex_keyword_const_len;
+CTR_H_DECLSPEC ctr_size ctr_clex_keyword_my_len;
+CTR_H_DECLSPEC ctr_size ctr_clex_keyword_var_len;
 
 /**
  * Lexer properties
  */
-ctr_size ctr_clex_len;
-ctr_size ctr_program_length;
-int ctr_clex_line_number;
-int ctr_clex_char_num;
-int ctr_transform_lambda_shorthand;
+CTR_H_DECLSPEC ctr_size ctr_clex_len;
+CTR_H_DECLSPEC ctr_size ctr_program_length;
+CTR_H_DECLSPEC int ctr_clex_line_number;
+CTR_H_DECLSPEC int ctr_clex_char_num;
+CTR_H_DECLSPEC int ctr_transform_lambda_shorthand;
 
 unsigned long ctr_lex_position();
 void ctr_lex_load(char* prg, size_t len);
@@ -402,9 +409,9 @@ void ctr_lex_skip(int len);
 ctr_object* ctr_lex_get_buf_str();
 
 // Pragmas
-ctr_code_pragma* oneLineExpressions;
-ctr_code_pragma* flexibleConstructs;
-ctr_code_pragma* regexLineCheck;
+CTR_H_DECLSPEC ctr_code_pragma* oneLineExpressions;
+CTR_H_DECLSPEC ctr_code_pragma* flexibleConstructs;
+CTR_H_DECLSPEC ctr_code_pragma* regexLineCheck;
 
 /**
  * UTF-8 functions
@@ -421,14 +428,14 @@ int ctr_utf8size(char c);
 ctr_tnode* ctr_cparse_parse(char* prg, char* pathString);
 ctr_tnode* ctr_cparse_expr(int mode);
 ctr_tnode* ctr_cparse_ret();
-int     ctr_cparse_quiet;
+CTR_H_DECLSPEC int     ctr_cparse_quiet;
 
-char* ctr_last_parser_error;
-ctr_tnode* ctr_cparse_calltime_names;
+CTR_H_DECLSPEC char* ctr_last_parser_error;
+CTR_H_DECLSPEC ctr_tnode* ctr_cparse_calltime_names;
 /**
  * Abstract Tree Walker functions
  */
-uint64_t    ctr_cwlk_subprogram;
+CTR_H_DECLSPEC uint64_t    ctr_cwlk_subprogram;
 ctr_object* ctr_cwlk_run(ctr_tnode* program);
 ctr_object* ctr_cwlk_expr(ctr_tnode* node, char* wasReturn);
 ctr_tnode* ctr_unmarshal_ast(char* stream, size_t avail, size_t* consumed);
@@ -493,10 +500,10 @@ void ctr_switch_context();
 /**
  * Global Scoping variables
  */
-ctr_object* ctr_contexts[10000];
-int ctr_context_id;
-ctr_tnode* ctr_callstack[10000]; //That should be enough... right?
-uint8_t ctr_callstack_index;
+CTR_H_DECLSPEC ctr_object* ctr_contexts[10000];
+CTR_H_DECLSPEC int ctr_context_id;
+CTR_H_DECLSPEC ctr_tnode* ctr_callstack[10000]; //That should be enough... right?
+CTR_H_DECLSPEC uint8_t ctr_callstack_index;
 
 /**
  * Nil Interface
@@ -766,9 +773,9 @@ ctr_object* ctr_map_flip(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_assign(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_to_string(ctr_object* myself, ctr_argument* argumentList);
 
-ctr_object* ctr_iter_range;
-ctr_object* ctr_iter_urange;
-ctr_object* ctr_iter_repeat;
+CTR_H_DECLSPEC ctr_object* ctr_iter_range;
+CTR_H_DECLSPEC ctr_object* ctr_iter_urange;
+CTR_H_DECLSPEC ctr_object* ctr_iter_repeat;
 
 ctr_object* ctr_iterator_make(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_iterator_set_seed(ctr_object* myself, ctr_argument* argumentList);
@@ -845,7 +852,7 @@ ctr_object* ctr_file_to_string(ctr_object* myself, ctr_argument* argumentList);
  * Command Object Interface
  */
 void ctr_int_handler(int signal);
-ctr_object* ctr_signal_map;
+CTR_H_DECLSPEC ctr_object* ctr_signal_map;
 ctr_object* ctr_command_argument(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_command_num_of_args(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_command_waitforinput(ctr_object* myself, ctr_argument* argumentList);
@@ -882,11 +889,11 @@ ctr_object* ctr_command_chdir(ctr_object* myself, ctr_argument* argumentList);
 
 
 void ctr_check_permission( uint8_t operationID );
-uint8_t ctr_command_security_profile;
-uint64_t ctr_command_tick;
-uint64_t ctr_command_maxtick;
-ctr_object* (*ctr_secpro_eval_whitelist[64])(ctr_object*, ctr_argument*);
-ctr_object* ctr_global_interrupt_handler;
+CTR_H_DECLSPEC uint8_t ctr_command_security_profile;
+CTR_H_DECLSPEC uint64_t ctr_command_tick;
+CTR_H_DECLSPEC uint64_t ctr_command_maxtick;
+CTR_H_DECLSPEC ctr_object* (*ctr_secpro_eval_whitelist[64])(ctr_object*, ctr_argument*);
+CTR_H_DECLSPEC ctr_object* ctr_global_interrupt_handler;
 
 /**
  * Clock Interface
@@ -944,7 +951,7 @@ ctr_object* ctr_shell_respond_to_and(ctr_object* myself, ctr_argument* argumentL
 /**
  * Garbage Collector Object Interface
  */
-int CTR_LIMIT_MEM;
+CTR_H_DECLSPEC int CTR_LIMIT_MEM;
 ctr_object* ctr_gc_collect(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gc_dust(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gc_object_count(ctr_object* myself, ctr_argument* argumentList);
@@ -1040,21 +1047,21 @@ ctr_object* ctr_thread_names(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_thread_to_string(ctr_object* myself, ctr_argument* argumentList);
 
 /** ImportLib **/
-ctr_object* CtrStdImportLib;
-ctr_object* CtrStdImportLib_SearchPaths;
+CTR_H_DECLSPEC ctr_object* CtrStdImportLib;
+CTR_H_DECLSPEC ctr_object* CtrStdImportLib_SearchPaths;
 ctr_object* ctr_importlib_begin(ctr_object* myself, ctr_argument* argumentList);
 
 /**
  * Global Garbage Collector variables
  */
-int ctr_gc_dust_counter;
-int ctr_gc_object_counter;
-int ctr_gc_kept_counter;
-int ctr_gc_sticky_counter;
-int ctr_gc_mode;
+CTR_H_DECLSPEC int ctr_gc_dust_counter;
+CTR_H_DECLSPEC int ctr_gc_object_counter;
+CTR_H_DECLSPEC int ctr_gc_kept_counter;
+CTR_H_DECLSPEC int ctr_gc_sticky_counter;
+CTR_H_DECLSPEC int ctr_gc_mode;
 
-uint64_t ctr_gc_alloc;
-uint64_t ctr_gc_memlimit;
+CTR_H_DECLSPEC uint64_t ctr_gc_alloc;
+CTR_H_DECLSPEC uint64_t ctr_gc_memlimit;
 
 /**
  * Misc Interfaces
@@ -1094,14 +1101,14 @@ char* ctr_heap_allocate_cstring_shared( ctr_object* o );
 
 void initiailize_base_extensions();
 
-uint8_t  ctr_accept_n_connections;
-uint16_t ctr_default_port;
+CTR_H_DECLSPEC uint8_t  ctr_accept_n_connections;
+CTR_H_DECLSPEC uint16_t ctr_default_port;
 
 #include "citron_ensure.h"
 #include "citron_conv.h"
 
-ctr_string CTR_CLEX_KW_ME_SV, CTR_CLEX_KW_THIS_SV, CTR_CLEX_US_SV;
-ctr_object CTR_CLEX_KW_ME,    CTR_CLEX_KW_THIS,    CTR_CLEX_US;
+CTR_H_DECLSPEC ctr_string CTR_CLEX_KW_ME_SV, CTR_CLEX_KW_THIS_SV, CTR_CLEX_US_SV;
+CTR_H_DECLSPEC ctr_object CTR_CLEX_KW_ME,    CTR_CLEX_KW_THIS,    CTR_CLEX_US;
 
 static inline void ctr_linkstr();
 

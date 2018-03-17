@@ -884,7 +884,7 @@ char *ctr_internal_memmem(char *haystack, long hlen, char *needle, long nlen,
  *
  * Creates an object.
  */
-__attribute__ ((always_inline))
+// __attribute__ ((always_inline))
 ctr_object *ctr_internal_create_object(int type)
 {
 	return ctr_internal_create_mapped_object(type, 0);
@@ -892,7 +892,7 @@ ctr_object *ctr_internal_create_object(int type)
 ctr_object *ctr_internal_create_mapped_object_shared(int type);
 ctr_object *ctr_internal_create_mapped_object_unshared(int type);
 
-__attribute__ ((always_inline))
+// __attribute__ ((always_inline))
 ctr_object *ctr_internal_create_mapped_object(int type, int shared)
 {
 	if(shared) return ctr_internal_create_mapped_object_shared(type);
@@ -904,7 +904,7 @@ void ctr_finalize_clear(GC_PTR obj, GC_PTR user_data) {
 	if(o->release_hook) o->release_hook(o->value.rvalue);
 }
 #endif
-__attribute__ ((always_inline))
+// __attribute__ ((always_inline))
 ctr_object *ctr_internal_create_mapped_object_shared(int type)
 {
 	ctr_object *o;
@@ -944,7 +944,7 @@ ctr_object *ctr_internal_create_mapped_object_shared(int type)
 	#endif
 	return o;
 }
-__attribute__ ((always_inline))
+// __attribute__ ((always_inline))
 ctr_object *ctr_internal_create_mapped_object_unshared(int type)
 {
 	ctr_object *o;
@@ -1006,7 +1006,7 @@ void ctr_transfer_object_ownership(ctr_object* to, ctr_object* what) {
 	ctr_internal_object_add_property(to, ctr_build_string_from_cstring(name), what, 0);
 }
 
-__attribute__ ((always_inline))
+// __attribute__ ((always_inline))
 ctr_object *ctr_internal_create_mapped_standalone_object(int type, int shared)
 {
 	ctr_object *o;
@@ -1908,6 +1908,9 @@ void ctr_initialize_world()
 				 &ctr_string_replace_with);
 	ctr_internal_create_func(CtrStdString,
 				 ctr_build_string_from_cstring(CTR_DICT_SPLIT),
+				 &ctr_string_split);
+	ctr_internal_create_func(CtrStdString,
+				 ctr_build_string_from_cstring(CTR_DICT_SPLIT"max:"),
 				 &ctr_string_split);
 	ctr_internal_create_func(CtrStdString,
 				 ctr_build_string_from_cstring("reSplit:"),

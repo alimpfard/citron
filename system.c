@@ -1538,7 +1538,7 @@ ctr_object *ctr_command_pid(ctr_object * myself, ctr_argument * argumentList)
 						      ("pid"),
 						      CTR_CATEGORY_PRIVATE_PROPERTY);
 	if (pidObject == NULL)
-		return CtrStdNil;
+		return ctr_build_number_from_float(getpid());
 	return ctr_internal_cast2number(pidObject);
 }
 

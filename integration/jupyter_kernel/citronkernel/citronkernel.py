@@ -30,8 +30,8 @@ class CitronKernel(Kernel):
             except Exception as e:
                 raise e
         req = "Array < '%s' %s" % (api_method, ('; ' + (code if code else '')))
-        # with open(api_method.replace(':','_')+'.in', 'w') as f:
-        #     f.write(req)
+        with open(api_method.replace(':','_')+'.in', 'w') as f:
+            f.write(req)
         self.ctr_socket.send(bytes(req, 'utf-8'))
         v = b''
         while True:
@@ -39,8 +39,8 @@ class CitronKernel(Kernel):
             if not b: break
             v += b
         self.ctr_socket.close()
-        # with open(api_method.replace(':','_')+'.out', 'wb') as f:
-        #     f.write(v)
+        with open(api_method.replace(':','_')+'.out', 'wb') as f:
+            f.write(v)
         return v.decode()
 
 

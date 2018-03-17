@@ -335,13 +335,13 @@ ctr_tnode *ctr_cparse_popen()
  * Generates a set of AST nodes to represent a block of code.
  */
 ctr_tnode *ctr_cparse_block_(int autocap);
-__attribute__ ((always_inline))
+// __attribute__ ((always_inline))
 ctr_tnode *ctr_cparse_block()
 {
 	return ctr_cparse_block_(0);
 }
 
-__attribute__ ((always_inline))
+// __attribute__ ((always_inline))
 ctr_tnode *ctr_cparse_block_capture()
 {
 	return ctr_cparse_block_(1);

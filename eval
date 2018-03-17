@@ -31,13 +31,21 @@ Eval on: 'init' do: {
   my flags is Map new
     put: True at: 'printvs',
     put: True at: 'highlight',
-    put: False at: 'equit'.
+    put: False at: 'equit',
+    put: False at: 'jsonout'.
   me genReader: 'eServer'.
+  my errd is False.
+  my last_error is Nil.
   ^me.
 }.
 Eval on: 'handleException:' do: {:e
+  my errd is True.
+  my last_error is e.
   ^me getFlag: 'equit', either: {thisBlock error: e.} or: {Pen red write: e, resetColor brk. ^e.}.
 }.
+Eval on: 'errored?' do: {^my errd.}.
+Eval on: 'lastError' do: {^my last_error.}.
+Eval on: 'trace' do: {^Reflect lastTrace.}.
 Eval on: 'end' do: {
   my end is True.
   me stopEvalServer.
@@ -76,12 +84,11 @@ Eval on: 'onlyRelevantArgs' do: { my args do shift shift done. }. #get rid of ./
 Eval on: 'startEvalServer' do: {
   var port is 5000 + (Dice rollWithSides: 1000).
 
-  var EvalServer is Object new.
-  EvalServer on: 'evaluate:' do: {:str
-      ^str eval.
-  }.
+  var EvalServer is Eval new init.
 
   my eServer is Program new: {:p
+      Program is p.
+      File new: '~/.ctrpid.pid', write: Program pid.
       p port: port.
       p serve: EvalServer.
   }.
@@ -91,12 +98,11 @@ Eval on: 'startEvalServer' do: {
 
 Eval on: 'startEvalServerOnPort:' do: {:port
 
-  var EvalServer is Object new.
-  EvalServer on: 'evaluate:' do: {:str
-      ^str eval.
-  }.
+  var EvalServer is Eval new init.
 
   my eServer is Program new: {:p
+      Program is p.
+      File new: '~/.ctrpid.pid', write: Program pid.
       p port: port.
       p serve: EvalServer.
   }.
@@ -123,16 +129,20 @@ Eval on: 'Commands' do: {
       + !m <expression> -- evaluates and shows the methods of expression.
       + !p <expression> -- evaluates and shows the properties of expression.
       + !f <[no-]flag> -- modifies flag
+      + !ud <name> <expression> -- create a metacommand
       + p <expression> -- prints the value of expression
       + h -- show this help'.} at: 'h',
       put: {^Eval stopEvalServer.} at: '!server',
       put: {:args ^Reflect getPropertiesOf: (Eval evaluate: args).} at: '!p',
       put: {:args Pen writeln: (Eval evaluate: args). ^''.} at: 'p',
-      put: {:args ^Reflect getMethodsOf: (Eval evaluate: args).} at: '!m'.
+      put: {:args ^Reflect getMethodsOf: (Eval evaluate: args).} at: '!m',
+      put: {:args [name, fn] is args split: ' ' max: 1. Eval addMetaCommand: name function: (Eval evaluate: fn). ^name.} at: '!ud'.
   }.
   ^my commands.
 }.
-
+Eval on: 'addMetaCommand:function:' do: {:name:fn
+  Eval Commands put: fn at: name.
+}.
 Eval on: 'doMeta:' do: {:str:ptr
   var cmd is 'h'.
   var args is ''.
@@ -141,8 +151,9 @@ Eval on: 'doMeta:' do: {:str:ptr
 }.
 
 Eval on: 'evaluate:' do: { :str
+  my errd is False.
   var eval_result_x is Nil.
-  ^(str at: 0, = ':')
+  var f is (str at: 0, = ':')
     either:
       ({ ^eval_result_x is Eval doMeta: (str skip: 1). } catch: {:e Eval handleException: e.})
     or:
@@ -155,6 +166,7 @@ Eval on: 'evaluate:' do: { :str
                 ^str eval.
                 } catch: {:e Eval handleException: e. ^Nil.}).
         }).
+    ^(Eval getFlag: 'jsonout') either: { ^JSON serialize: [(f toString replace: '\\' with: '\\\\'), (JSON serialize: [(Eval errored?), (Eval lastError), (Eval trace)])]. } or: {^f.}.
 }.
 Eval on: 'evaluateFile:' do: { :fl
   {
@@ -202,6 +214,27 @@ Eval on: 'tryNumrify:' do: {:s
   ^r.
 }.
 
+
+Eval on: 'flatten:' do: {:list
+  var lst is Array new.
+  list each_v: {:l
+    (Reflect isObject: l linkedTo: Array) either: {
+      lst is lst + (Eval flatten: l).
+    } or: {
+      lst push: l.
+    }.
+  }.
+  ^lst.
+}.
+
+Eval on: 'allTheNames' do: {
+  ^(Eval Commands keys fmap: {:i ^':' + i.}) + ['var', 'my', 'is'] + (Eval flatten: Reflect getContext).
+}.
+
+Eval on: 'allTheNames:' do: {:obj
+  ^obj isNil not either: {^[(False), (Reflect getMethodsOf: obj)].} or: {^[(True), (Eval allTheNames)].}.
+}.
+
 # parse arguments
 { ^(Eval argCount > 0). } whileTrue: {
     # get an option
@@ -235,6 +268,7 @@ Eval on: 'tryNumrify:' do: {:s
           indent: 2 write: '-Fs : display all the available flags\n',
           indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
           indent: 2 write: '-v : print version information and exit\n',
+          indent: 2 write: '-s <port>: start a evaluation server on the specified port (Forked and the current process will be killed. pidfile at ~/.ctrpid.pid)\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
         P green write: 'default imported modules in eval are:',
           cyan indent: 1 write: ('Queue LRArray ' + (import __loaded_modules reverse join: ' ') ~ 's/\\s|^/\\n+ /g').
@@ -288,6 +322,13 @@ Eval on: 'tryNumrify:' do: {:s
         Pen writeln: 'Citron'.
         Pen writeln: '[%L]' % [(Reflect version split: '.')].
         Program exit.
+    }, case: '-s' do: {
+      args pop.
+      var f is Eval shiftArgs toNumber.
+      (f <=: 0) ifTrue: { thisBlock error: 'Invalid port specified: $$f'. }.
+      Eval enableFlag: 'jsonout'.
+      Eval startEvalServerOnPort: f.
+      Program exit.
     }, default: {
       opt startsWith: '-F', ifTrue: {
         args pop. #consume option.
@@ -301,26 +342,6 @@ Pen green write: ?>Project Citron : The Programming Language (V<?, write:(Reflec
 write: ?>Eval Mode, parameters related to eval are in the Eval namespace.
 run with '-h' to read the eval mode help.
 <?.
-
-Eval on: 'flatten:' do: {:list
-  var lst is Array new.
-  list each_v: {:l
-    (Reflect isObject: l linkedTo: Array) either: {
-      lst is lst + (Eval flatten: l).
-    } or: {
-      lst push: l.
-    }.
-  }.
-  ^lst.
-}.
-
-Eval on: 'allTheNames' do: {
-  ^(Eval Commands keys fmap: {:i ^':' + i.}) + ['var', 'my', 'is'] + (Eval flatten: Reflect getContext).
-}.
-
-Eval on: 'allTheNames:' do: {:obj
-  ^obj isNil not either: {^[(False), (Reflect getMethodsOf: obj)].} or: {^[(True), (Eval allTheNames)].}.
-}.
 
 # Eval on: 'redraw:at:' do: {:inp:cursor
 #   var cols is Program env: 'COLUMNS', or: '89', toNumber.

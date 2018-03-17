@@ -4016,6 +4016,12 @@ ctr_object *ctr_string_split(ctr_object * myself, ctr_argument * argumentList)
 	    ctr_internal_cast2string(argumentList->object);
 	char *dstr = delimObject->value.svalue->value;
 	long dlen = delimObject->value.svalue->vlen;
+	ctr_number times=0;
+	_Bool p = 0;
+	if(argumentList->next&&argumentList->next->object) {
+		times = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
+		p = 1;
+	}
 	ctr_argument *arg;
 	char *elem;
 	ctr_object *arr = ctr_array_new(CtrStdArray, NULL);
@@ -4025,7 +4031,7 @@ ctr_object *ctr_string_split(ctr_object * myself, ctr_argument * argumentList)
 	for (i = 0; i < len; i++) {
 		buffer[j] = str[i];
 		j++;
-		if (ctr_internal_memmem(buffer, j, dstr, dlen, 0) != NULL) {
+		if (ctr_internal_memmem(buffer, j, dstr, dlen, 0) != NULL && (!p || times>0)) {
 			elem = ctr_heap_allocate(sizeof(char) * (j - dlen));
 			memcpy(elem, buffer, j - dlen);
 			arg = ctr_heap_allocate(sizeof(ctr_argument));
@@ -4034,6 +4040,7 @@ ctr_object *ctr_string_split(ctr_object * myself, ctr_argument * argumentList)
 			ctr_heap_free(arg);
 			ctr_heap_free(elem);
 			j = 0;
+			times--;
 		}
 	}
 	if (j > 0) {

@@ -29,7 +29,7 @@ ctr_object *ctr_cwlk_return(ctr_tnode * node)
 	li = node->nodes;
 	if (!li->node) {
 		printf
-		    ("Invalid return expression 2 (Return statement has no parse node %p has no node %p).\n",
+		    ("Invalid return expression 2 (Return statement has no parse node -- %p has no node %p).\n",
 		     li, li->node);
 		exit(1);
 	}

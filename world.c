@@ -3063,6 +3063,9 @@ void ctr_initialize_world()
 	ctr_internal_create_func(CtrStdObject,
 				 ctr_build_string_from_cstring("&method:"),
 				 &ctr_reflect_object_delegate_get_responder);
+	ctr_internal_create_func(CtrStdObject,
+				 ctr_build_string_from_cstring("&responder:"),
+				 &ctr_reflect_object_get_responder);
 	ctr_internal_create_func(CtrStdReflect,
 				 ctr_build_string_from_cstring("lastTrace"),
 				 &ctr_get_last_trace);

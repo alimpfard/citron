@@ -23,6 +23,10 @@ HashSet on: 'contains:' do: {:v
 HashSet on: 'each_v:' do: {:v
   my map each: {:k v applyTo: k.}.
 }.
+HashSet on: 'copy' do: {
+  var new is me new.
+  ^new extend: me.
+}.
 HashSet on: 'toString' do: {
   var s is '{'.
   var noprint is [me, my map].

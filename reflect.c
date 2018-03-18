@@ -1282,6 +1282,23 @@ ctr_object *ctr_reflect_object_delegate_get_responder(ctr_object * itself,
 	return ret;
 }
 
+ctr_object *ctr_reflect_object_get_responder(ctr_object * itself,
+						      ctr_argument *
+						      argumentList)
+{
+	if (argumentList == NULL || argumentList->next == NULL)
+		CTR_ERR("Argument cannot be NULL.");
+	CTR_ENSURE_TYPE_STRING(argumentList->object);
+	ctr_object *name = argumentList->object;
+	ctr_object *obj = argumentList->next->object;
+	ctr_object *methodObject =
+	    ctr_get_responder(obj, name->value.svalue->value,
+			      name->value.svalue->vlen);
+	if(!methodObject)
+		return CtrStdNil;
+	return methodObject;
+}
+
 /**
  * [Reflect] run: [Block] forObject: [object:Object] arguments: [Array]
  *

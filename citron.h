@@ -1008,6 +1008,7 @@ ctr_object* ctr_reflect_get_primitive(ctr_object* myself, ctr_argument* argument
 ctr_object* ctr_reflect_get_property(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_has_own_responder(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_object_delegate_get_responder(ctr_object* itself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_object_get_responder(ctr_object* itself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_rawmsg(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_instrmsg(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_register_instrumentor(ctr_object* myself, ctr_argument* argumentList);

@@ -1,1 +1,3 @@
-import HashSet.
+var Set is import HashSet: 'HashSet', head.
+
+import export: Set as: 'HashSet'.

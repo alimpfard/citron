@@ -1,3 +1,4 @@
+import Library/Functional/TypeClass/Monad.
 var Maybe is Monad new
   on: 'type' do: {\
     'Maybe'

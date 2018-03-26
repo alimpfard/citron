@@ -6,7 +6,7 @@ var pure is {:x
     ^thisContext unit: x.
   } or: x.
 }. #Ugly HACK to get contextual awareness
-
+pure learn: '$' means: 'applyTo:'.
 var Monad is Object new
   on: 'bind:' do: {
     thisBlock error: NotImplementedError $ 'Monad#bind:'.
@@ -26,8 +26,12 @@ var Monad is Object new
   },
   on: '>' do: {:next
     ^me bind: \:_ next.
+  },
+  on: '>>:' do: {:next
+    ^me > next.
   }.
 
 import export: Monad as: 'Monad'.
 import export: identity as: 'identity'.
 import export: pure as: 'pure'.
+import export: pure as: 'return'.

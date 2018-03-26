@@ -1,3 +1,4 @@
+import Library/Functional/TypeClass/Monad.
 var Either is Monad new
   on: 'left:' do: {:p
     ^Left cnew: {

@@ -8,7 +8,7 @@ ctr_object *ctr_reflect_new(ctr_object * myself, ctr_argument * argumentList)
 {
 	ctr_object *instance =
 	    ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-	instance->link = myself;
+	ctr_set_link_all(instance, myself);
 	return instance;
 }
 
@@ -26,7 +26,7 @@ ctr_object *ctr_reflect_add_glob(ctr_object * myself,
 		return myself;	//We already have it
 	ctr_object *instance =
 	    ctr_internal_create_object(CTR_OBJECT_TYPE_OTNIL);
-	instance->link = CtrStdNil;
+	ctr_set_link_all(instance, CtrStdNil);
 	instance->info.sticky = 0;
 	ctr_internal_object_add_property(CtrStdWorld,
 					 ctr_internal_cast2string(argumentList->
@@ -46,7 +46,7 @@ ctr_object *ctr_reflect_add_local(ctr_object * myself,
 	CTR_ENSURE_TYPE_STRING(argumentList->object);
 	ctr_object *instance =
 	    ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-	instance->link = CtrStdObject;
+	ctr_set_link_all(instance, CtrStdObject);
 	ctr_internal_object_add_property(ctr_contexts[ctr_context_id],
 					 ctr_internal_cast2string
 					 (argumentList->object), instance,
@@ -64,7 +64,7 @@ ctr_object *ctr_reflect_add_my(ctr_object * myself, ctr_argument * argumentList)
 	CTR_ENSURE_TYPE_STRING(argumentList->object);
 	ctr_object *instance =
 	    ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-	instance->link = CtrStdObject;
+	ctr_set_link_all(instance, CtrStdObject);
 	ctr_internal_object_add_property(ctr_contexts[ctr_context_id],
 					 ctr_internal_cast2string
 					 (argumentList->object), instance,
@@ -160,7 +160,7 @@ ctr_object *ctr_reflect_dump_context_spec(ctr_object * myself,
 	ctr_object *of = argumentList->object;
 	ctr_object *meths = ctr_array_new(CtrStdArray, NULL);
 	ctr_argument *args = ctr_heap_allocate(sizeof(ctr_argument));
-	while (of->link) {
+	while (of->interfaces->link) {
 		int m = of->methods->size - 1;
 		struct ctr_mapitem *head;
 		head = of->methods->head;
@@ -174,8 +174,8 @@ ctr_object *ctr_reflect_dump_context_spec(ctr_object * myself,
 			head = head->next;
 			m--;
 		}
-		if (of->link)
-			of = of->link;
+		if (of->interfaces->link)
+			of = of->interfaces->link;
 		else
 			break;
 	}
@@ -185,7 +185,7 @@ ctr_object *ctr_reflect_dump_context_spec(ctr_object * myself,
 
 int ctr_internal_has_responder(ctr_object * of, ctr_object * meth)
 {
-	while (of->link) {
+	while (of->interfaces->link) {
 		int m = of->methods->size - 1;
 		struct ctr_mapitem *head;
 		head = of->methods->head;
@@ -195,8 +195,8 @@ int ctr_internal_has_responder(ctr_object * of, ctr_object * meth)
 			head = head->next;
 			m--;
 		}
-		if (of->link)
-			of = of->link;
+		if (of->interfaces->link)
+			of = of->interfaces->link;
 		else
 			break;
 	}
@@ -801,7 +801,7 @@ ctr_object *ctr_reflect_share_memory(ctr_object * myself,
 	// CTR_ENSURE_TYPE_STRING(argumentList->object);
 	ctr_object *shared =
 	    ctr_internal_create_mapped_object(CTR_OBJECT_TYPE_OTOBJECT, 1);
-	shared->link = CtrStdObject;
+	ctr_set_link_all(shared, CtrStdObject);
 	return shared;
 }
 
@@ -813,7 +813,7 @@ ctr_object *ctr_reflect_share_memory(ctr_object * myself,
 ctr_object *ctr_reflect_link_to(ctr_object * myself,
 				ctr_argument * argumentList)
 {
-	argumentList->object->link = argumentList->next->object;
+	ctr_set_link_all(argumentList->object, argumentList->next->object);
 	return argumentList->object;
 }
 
@@ -834,9 +834,9 @@ ctr_object *ctr_reflect_find_obj_ex(ctr_object * myself,
 
 int ctr_reflect_is_linked_to_(ctr_argument * argumentList)
 {
-	if (argumentList->object->link == NULL)
+	if (argumentList->object->interfaces->link == NULL)
 		return 0;
-	ctr_object *link = argumentList->object->link;
+	ctr_object *link = argumentList->object->interfaces->link;
 	argumentList->object = link;
 	return (link == argumentList->next->object)
 	    || ctr_reflect_is_linked_to_(argumentList);
@@ -861,7 +861,7 @@ ctr_object *ctr_reflect_is_linked_to(ctr_object * myself,
 ctr_object *ctr_reflect_child_of(ctr_object * myself,
 				 ctr_argument * argumentList)
 {
-	return ctr_build_bool(argumentList->object->link ==
+	return ctr_build_bool(argumentList->object->interfaces->link ==
 			      argumentList->next->object);
 }
 
@@ -877,13 +877,11 @@ ctr_object *ctr_reflect_generate_inheritance_tree(ctr_object * myself,
 	ctr_object *arr = ctr_array_new(CtrStdArray, NULL);
 	ctr_argument *newarg = ctr_heap_allocate(sizeof(ctr_argument));
 	while (parent != NULL) {
-		newarg->object =
-		    (parent->lexical_name ==
-		     NULL ? parent : parent->lexical_name);
+		newarg->object = parent;
 		ctr_array_push(arr, newarg);
-		if (parent == parent->link)
+		if (parent == parent->interfaces->link)
 			goto cleanup;
-		parent = parent->link;
+		parent = parent->interfaces->link;
 	}
  cleanup:
 	ctr_heap_free(newarg);
@@ -968,7 +966,7 @@ ctr_object *ctr_reflect_get_primitive_link(ctr_object * object)
 	while (parent != NULL) {
 		if (ctr_is_primitive(parent))
 			break;
-		parent = parent->link;
+		parent = parent->interfaces->link;
 	}
 	return parent;
 }
@@ -1180,7 +1178,7 @@ ctr_object *ctr_reflect_cons_of(ctr_object * myself,
 				ctr_argument * argumentList)
 {
 	ctr_object *ins = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-	ins->link = myself;
+	ctr_set_link_all(ins, myself);
 	ctr_internal_object_set_property(ins,
 					 ctr_build_string_from_cstring
 					 ("value"), argumentList->object, 0);
@@ -1213,7 +1211,7 @@ ctr_object *ctr_reflect_try_serialize_block(ctr_object * myself,
 ctr_object *ctr_reflect_get_first_link(ctr_object * myself,
 				       ctr_argument * argumentList)
 {
-	ctr_object *link = argumentList->object->link;
+	ctr_object *link = argumentList->object->interfaces->link;
 	if (link)
 		return link;
 	else {
@@ -1290,7 +1288,7 @@ ctr_object *ctr_reflect_object_get_responder(ctr_object * itself,
 		CTR_ERR("Argument cannot be NULL.");
 	CTR_ENSURE_TYPE_STRING(argumentList->object);
 	ctr_object *name = argumentList->object;
-	ctr_object *obj = argumentList->next->object;
+	ctr_object *obj = itself;
 	ctr_object *methodObject =
 	    ctr_get_responder(obj, name->value.svalue->value,
 			      name->value.svalue->vlen);
@@ -1308,7 +1306,8 @@ ctr_object *ctr_reflect_run_for_object(ctr_object * myself,
 				       ctr_argument * argumentList)
 {
 	ctr_object *blk, *me, *argl;
-	CTR_ENSURE_TYPE_BLOCK((blk = argumentList->object));
+	blk = argumentList->object;
+	// CTR_ENSURE_TYPE_BLOCK((blk = argumentList->object));
 	CTR_ENSURE_NON_NULL(argumentList->next);
 	me = argumentList->next->object;
 	CTR_ENSURE_NON_NULL(argumentList->next->next);
@@ -1356,6 +1355,11 @@ ctr_object *ctr_reflect_run_for_object_in_ctx(ctr_object * myself,
 	    argumentList->next->next->object, *result = NULL;
 	ctr_argument *argList = ctr_heap_allocate(sizeof(ctr_argument));
 	(void)ctr_array_to_argument_list(arguments, argList);
+	if(block->info.type == CTR_OBJECT_TYPE_OTNATFUNC) {
+		ctr_object* result = block->value.fvalue(ctx, argList);
+		ctr_free_argumentList(argList);
+		return result;
+	}
 	ctr_tnode *node = block->value.block;
 	ctr_tlistitem *codeBlockParts = node->nodes;
 	ctr_tnode *codeBlockPart1 = codeBlockParts->node;
@@ -1672,6 +1676,30 @@ ctr_object *ctr_reflect_run_glob(ctr_object * myself,
 }
 
 /**
+ * [Reflect] runInNewContext: [Block]
+ *
+ * runs a block in a new context and returns that context
+ */
+ctr_object *ctr_reflect_run_in_new_ctx(ctr_object * myself, ctr_argument * argumentList) {
+	ctr_object* ctx = ctr_internal_create_standalone_object(CTR_OBJECT_TYPE_OTOBJECT);
+	ctr_set_link_all(ctx, CtrStdMap);
+	ctr_object* blk = argumentList->object;
+	ctr_argument* args = ctr_heap_allocate(sizeof(*args));
+	args->next = ctr_heap_allocate(sizeof(*args));
+	args->next->next = ctr_heap_allocate(sizeof(*args));
+	args->object = blk;
+	args->next->object = ctx;
+	args->next->next->object = ctr_array_new(CtrStdArray, NULL);
+
+	(void)ctr_reflect_run_for_object_in_ctx(myself, args);
+
+	ctr_heap_free(args->next->next);
+	ctr_heap_free(args->next);
+	ctr_heap_free(args);
+
+	return ctx;
+}
+/**
  * [Reflect] thisContext
  *
  * returns the current context as a map
@@ -1680,7 +1708,7 @@ ctr_object *ctr_reflect_this_context(ctr_object * myself,
 				     ctr_argument * argumentList)
 {
 	ctr_object *ctx_ = ctr_contexts[ctr_context_id];
-	ctx_->link = CtrStdMap;
+	ctr_set_link_all(ctx_, CtrStdMap);
 	return ctx_;
 }
 
@@ -1689,6 +1717,17 @@ ctr_object *ctr_reflect_compilerinfo(ctr_object * myself,
 {
 	ctr_object* vi = ctr_build_string_from_cstring("[" __COMPILER__NAME__OP "]");
 	return vi;
+}
+
+/**
+ * [Object] setPrivate: [String] value: [Object]
+ *
+ * sets a private property of the object
+ */
+ctr_object* ctr_reflect_delegate_set_private_property(ctr_object* itself, ctr_argument* argumentList) {
+	ctr_object *name = argumentList->object, *value = argumentList->next->object;
+	ctr_internal_object_set_property(itself, name, value, 0);
+	return itself;
 }
 
 ///Trash v

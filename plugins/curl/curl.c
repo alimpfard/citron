@@ -41,7 +41,7 @@ ctr_object *ctr_internal_otype(ctr_object *o) {
 ctr_object* ctr_curl_new(ctr_object* myself, ctr_argument* argumentList) {
 
 	ctr_object* curlObjectInstance = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-	curlObjectInstance->link = myself;
+	ctr_set_link_all(curlObjectInstance, myself);
 
 	curlObjectInstance->info.type = CTR_OBJECT_TYPE_OTEX;
 
@@ -418,6 +418,6 @@ void begin(){
 	ctr_internal_create_func(CtrStdHandle, ctr_build_string_from_cstring( "perform" ), &ctr_curl_perform );
 	ctr_internal_create_func(CtrStdHandle, ctr_build_string_from_cstring( "respondTo:and:"), &ctr_curl_respondto );
 	ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring( "Curl" ), CtrStdHandle, CTR_CATEGORY_PUBLIC_PROPERTY);
-	CtrStdHandle->link = CtrStdObject;
+	ctr_set_link_all(CtrStdHandle, CtrStdObject);
 	CtrStdHandle->info.sticky = 1;
 }

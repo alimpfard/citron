@@ -32,7 +32,7 @@ ctr_object* ctr_gmp_make(ctr_object* myself, ctr_argument* argumentList) {
   mpz_init(*num);
   mpz_set_ui(*num, number);
   ctr_object* numobj = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
-  numobj->link = CtrStdBigInt;
+  ctr_set_link_all(numobj, CtrStdBigInt);
   numobj->value.rvalue = ctr_heap_allocate_tracked(sizeof(ctr_resource));
   numobj->value.rvalue->ptr = (void*)num;
   return numobj;
@@ -40,7 +40,7 @@ ctr_object* ctr_gmp_make(ctr_object* myself, ctr_argument* argumentList) {
 ctr_object* ctr_gmp_to_gmp(ctr_object* myself, ctr_argument* argumentList) { //Number to BigInt
   ctr_object* gmpobj = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
   unsigned long int number = ctr_internal_cast2number(myself)->value.nvalue;
-  gmpobj->link = CtrStdBigInt;
+  ctr_set_link_all(gmpobj, CtrStdBigInt);
   gmpobj->value.rvalue = ctr_heap_allocate_tracked(sizeof(ctr_resource));
   gmpobj->value.rvalue->ptr = (void*)ctr_heap_allocate_tracked(sizeof(mpz_t));
   mpz_init_set_ui(*(mpz_t*)(gmpobj->value.rvalue->ptr), number);
@@ -228,7 +228,7 @@ ctr_object* ctr_gmp_times(ctr_object* myself, ctr_argument* argumentList) {
 void begin() {
   //mp_set_memory_functions(&ctr_heap_allocate, &ctr_heap_reallocate, &ctr_heap_free);
   CtrStdBigInt = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-  CtrStdBigInt->link = CtrStdObject;
+  ctr_set_link_all(CtrStdBigInt, CtrStdObject);
   ctr_internal_create_func(CtrStdNumber, ctr_build_string_from_cstring("toBigInt"), &ctr_gmp_to_gmp);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("+=:"), &ctr_gmp_add);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("-=:"), &ctr_gmp_sub);

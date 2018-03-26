@@ -657,7 +657,7 @@ void ctr_marshal_store_link(ctr_object* obj, char** stream, ctr_size* stream_len
     *(*stream+((*used)++)) = CTR_MARSH_OBJECT_LINK_Symbol;
   else {
     *(*stream+((*used)++)) = CTR_MARSH_OBJECT_LINK_DESCRIBE;
-    ctr_marshal_object(obj->link, stream, stream_len, used);
+    ctr_marshal_object(obj->interfaces->link, stream, stream_len, used);
   }
 }
 
@@ -918,7 +918,7 @@ ctr_object* ctr_unmarshal_object(char* stream, ctr_size* avail, ctr_size* consum
       (*consumed)--;
       ctr_object* block = ctr_internal_create_object(CTR_OBJECT_TYPE_OTBLOCK);
       block->value.block = ctr_unmarshal_ast(stream, *avail, consumed);
-      block->link = CtrStdBlock;
+      ctr_set_link_all(block, CtrStdBlock);
       umarshed = block;
     break;
     }
@@ -939,7 +939,7 @@ ctr_object* ctr_unmarshal_object(char* stream, ctr_size* avail, ctr_size* consum
     }
   }
   ctr_unmarshal_meta_object_into(umarshed, stream, avail, consumed);
-  // if(umarshed&&umarshed->info.type == CTR_OBJECT_TYPE_OTOBJECT) umarshed->link = ctr_marshal_resolve_linq(stream, avail, consumed);
+  // if(umarshed&&umarshed->info.type == CTR_OBJECT_TYPE_OTOBJECT) ctr_set_link_all(umarshed, ctr_marshal_resolve_linq(stream, avail, consumed))
   return umarshed;
 }
 

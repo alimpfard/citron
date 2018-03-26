@@ -1,7 +1,7 @@
-var HashSet is Object new.
+var HashSet is Object cnew: { my map is Map new. }.
 var HashSetValueMarker is Object new on: '=' do: {:e ^(me id) = (e id).}.
 HashSet on: 'new' do: {
-  ^me cnew: {my map is Map new.}.
+  ^me cnew: { my map is Map new. }.
 }.
 HashSet on: 'from:' do: {:map
   ^me cnew: {my map is map.}.
@@ -54,4 +54,4 @@ HashSet on: 'count' do: {
   ^my map count.
 }.
 HashSet on: 'type' do: {^'HashSet'.}.
-import export: HashSet as: 'HashSet'.
+# import export: HashSet as: 'HashSet'.

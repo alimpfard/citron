@@ -8,8 +8,9 @@ import
 var Colors is Object cnew: {
   my cache is Map new on: 'at:' do: {:key
     var self is const me.
+    var cself is me.
     ^((var v is me `at: key) isNil not) either: {\ v. } or: {
-      me put: (var c is self message: 'color' arguments: key) at: key.
+      cself put: (var c is self message: 'color' arguments: key) at: key.
       ^c.
     }.
   }.
@@ -32,7 +33,7 @@ Colors on: 'paint:' do: {:str:*options
   ^(my mode = 0) | (options count = 0)
     either: {\ str toString }
     or: {
-      (options count = 1) & (Reflect isObject: options @ 0 @ 0 linkedTo: Array) ifTrue: { options is options head. }.
+      (options count = 1) & (Reflect isObject: options @ 0 linkedTo: Array) ifTrue: { options is options head. }.
       ^(cache at: options) + (str toString) + const NOTHING.
     }.
 }.
@@ -136,16 +137,17 @@ Colors on: 'effect:' do: {:effect
 
 Colors on: 'simple:background:' do: {:name:bg
   name is name toSymbol.
-  (ANSI_EFFECTS at: name) isNil not
-    ifTrue: {
+  var self is me.
+  ^(ANSI_EFFECTS at: name) isNil not
+    either: {
       # Pen writeln: ANSI_EFFECTS @ name.
-      ^me wrap: (me effect: name).
+      ^self wrap: [(self effect: name)].
       # ^'<%s>' % [name].
-    },
-    else: {
-      ^(ANSI_COLORS at: name) isNil not
-        either: {\ me wrap: [((bg either: 40 or: 30) + (ANSI_COLORS at: name))]. }
-        or: {\ ''. }.
+    }
+    or: {
+      ^(var p is ANSI_COLORS at: name) isNil not
+        either: { ^self wrap: [((bg either: 40 or: 30) + p)]. }
+        or: {\ '' }.
     }.
 }.
 

@@ -9,3 +9,4 @@ namedstruct.ctr
 docs
 tools/*
 sync.sh
+integration/vscode

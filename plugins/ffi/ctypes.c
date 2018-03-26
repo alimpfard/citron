@@ -52,32 +52,32 @@ void ctr_ctypes_set_type(ctr_object* object, ctr_ctype type) {
   object->info.sticky = 1;
   object->value.rvalue->type = (int)(type);
   switch(type) {
-    case CTR_CTYPE_VOID: object->link = CtrStdCType_void; break;
-    case CTR_CTYPE_UINT8: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(uint8_t)); object->link = CtrStdCType_uint8; break;
-    case CTR_CTYPE_SINT8: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(int8_t)); object->link = CtrStdCType_sint8; break;
-    case CTR_CTYPE_UINT16: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(uint16_t)); object->link = CtrStdCType_uint16; break;
-    case CTR_CTYPE_SINT16: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(int16_t)); object->link = CtrStdCType_sint16; break;
-    case CTR_CTYPE_UINT32: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(uint32_t)); object->link = CtrStdCType_uint32; break;
-    case CTR_CTYPE_SINT32: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(int32_t)); object->link = CtrStdCType_sint32; break;
-    case CTR_CTYPE_UINT64: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(uint64_t)); object->link = CtrStdCType_uint64; break;
-    case CTR_CTYPE_SINT64: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(int64_t)); object->link = CtrStdCType_sint64; break;
-    case CTR_CTYPE_FLOAT: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(float)); object->link = CtrStdCType_float; break;
-    case CTR_CTYPE_DOUBLE: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(double)); object->link = CtrStdCType_double; break;
-    case CTR_CTYPE_UCHAR: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(unsigned char)); object->link = CtrStdCType_uchar; break;
-    case CTR_CTYPE_SCHAR: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(char)); object->link = CtrStdCType_schar; break;
-    case CTR_CTYPE_USHORT: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(unsigned short)); object->link = CtrStdCType_ushort; break;
-    case CTR_CTYPE_SSHORT: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(short)); object->link = CtrStdCType_sshort; break;
-    case CTR_CTYPE_UINT: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(unsigned int)); object->link = CtrStdCType_uint; break;
-    case CTR_CTYPE_SINT: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(int)); object->link = CtrStdCType_sint; break;
-    case CTR_CTYPE_ULONG: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(unsigned long)); object->link = CtrStdCType_ulong; break;
-    case CTR_CTYPE_SLONG: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(long)); object->link = CtrStdCType_slong; break;
-    case CTR_CTYPE_LONGDOUBLE: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(long double)); object->link = CtrStdCType_longdouble; break;
-    case CTR_CTYPE_POINTER: object->link = CtrStdCType_pointer; break;
-    case CTR_CTYPE_DYN_LIB: object->link = CtrStdCType_dynamic_lib; break;
-    case CTR_CTYPE_STRUCT: object->link = CtrStdCType_struct; break;
-    case CTR_CTYPE_STRING: object->link = CtrStdCType_string; break;
-    case CTR_CTYPE_FUNCTION_POINTER: object->link = CtrStdCType_functionptr; break;
-    case CTR_CTYPE_CONTIGUOUS_ARRAY: object->link = CtrStdCType_cont_pointer; break;
+    case CTR_CTYPE_VOID: ctr_set_link_all(object, CtrStdCType_void); break;
+    case CTR_CTYPE_UINT8: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(uint8_t)); ctr_set_link_all(object, CtrStdCType_uint8); break;
+    case CTR_CTYPE_SINT8: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(int8_t)); ctr_set_link_all(object, CtrStdCType_sint8); break;
+    case CTR_CTYPE_UINT16: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(uint16_t)); ctr_set_link_all(object, CtrStdCType_uint16); break;
+    case CTR_CTYPE_SINT16: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(int16_t)); ctr_set_link_all(object, CtrStdCType_sint16); break;
+    case CTR_CTYPE_UINT32: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(uint32_t)); ctr_set_link_all(object, CtrStdCType_uint32); break;
+    case CTR_CTYPE_SINT32: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(int32_t)); ctr_set_link_all(object, CtrStdCType_sint32); break;
+    case CTR_CTYPE_UINT64: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(uint64_t)); ctr_set_link_all(object, CtrStdCType_uint64); break;
+    case CTR_CTYPE_SINT64: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(int64_t)); ctr_set_link_all(object, CtrStdCType_sint64); break;
+    case CTR_CTYPE_FLOAT: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(float)); ctr_set_link_all(object, CtrStdCType_float); break;
+    case CTR_CTYPE_DOUBLE: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(double)); ctr_set_link_all(object, CtrStdCType_double); break;
+    case CTR_CTYPE_UCHAR: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(unsigned char)); ctr_set_link_all(object, CtrStdCType_uchar); break;
+    case CTR_CTYPE_SCHAR: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(char)); ctr_set_link_all(object, CtrStdCType_schar); break;
+    case CTR_CTYPE_USHORT: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(unsigned short)); ctr_set_link_all(object, CtrStdCType_ushort); break;
+    case CTR_CTYPE_SSHORT: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(short)); ctr_set_link_all(object, CtrStdCType_sshort); break;
+    case CTR_CTYPE_UINT: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(unsigned int)); ctr_set_link_all(object, CtrStdCType_uint); break;
+    case CTR_CTYPE_SINT: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(int)); ctr_set_link_all(object, CtrStdCType_sint); break;
+    case CTR_CTYPE_ULONG: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(unsigned long)); ctr_set_link_all(object, CtrStdCType_ulong); break;
+    case CTR_CTYPE_SLONG: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(long)); ctr_set_link_all(object, CtrStdCType_slong); break;
+    case CTR_CTYPE_LONGDOUBLE: object->value.rvalue->ptr = ctr_heap_allocate(sizeof(long double)); ctr_set_link_all(object, CtrStdCType_longdouble); break;
+    case CTR_CTYPE_POINTER: ctr_set_link_all(object, CtrStdCType_pointer); break;
+    case CTR_CTYPE_DYN_LIB: ctr_set_link_all(object, CtrStdCType_dynamic_lib); break;
+    case CTR_CTYPE_STRUCT: ctr_set_link_all(object, CtrStdCType_struct); break;
+    case CTR_CTYPE_STRING: ctr_set_link_all(object, CtrStdCType_string); break;
+    case CTR_CTYPE_FUNCTION_POINTER: ctr_set_link_all(object, CtrStdCType_functionptr); break;
+    case CTR_CTYPE_CONTIGUOUS_ARRAY: ctr_set_link_all(object, CtrStdCType_cont_pointer); break;
     default: return;
   }
 }
@@ -708,6 +708,12 @@ ctr_object* ctr_ctypes_to_bytes_string(ctr_object* myself, ctr_argument* argumen
   return ret;
 }
 
+ctr_object* ctr_ctypes_read_string(ctr_object* myself, ctr_argument* argumentList) {
+  char* buf = (void*)myself->value.rvalue->ptr;
+  ctr_object* ret = ctr_build_string_from_cstring(buf);
+  return ret;
+}
+
 ctr_object* ctr_ctype_new_instance(ctr_object* type) {
        if(type == CtrStdCType_void)        return ctr_ctypes_make_void(CtrStdCType_void, NULL);
   else if(type == CtrStdCType_uint8)       return ctr_ctypes_make_uint8(CtrStdCType_uint8, NULL);
@@ -1095,13 +1101,13 @@ ctr_object* ctr_ctypes_struct_get_offset_format(ctr_object* myself, ctr_argument
 
 ctr_object* ctr_ctypes_get_first_meta(ctr_object* object, ctr_object* last) {
   ctr_object* link = object;
-  while(link->link != NULL && link->link != last) {
-    link = link->link;
+  while(link->interfaces->link != NULL && link->interfaces->link != last) {
+    link = link->interfaces->link;
   }
   return link;
 }
 ffi_type* ctr_ctypes_ffi_convert_to_ffi_type(ctr_object* type) {
-    ctr_object* initial = ctr_ctypes_get_first_meta(type->link, CtrStdCType);
+    ctr_object* initial = ctr_ctypes_get_first_meta(type->interfaces->link, CtrStdCType);
     if((initial) == CtrStdCType_void)             return &ffi_type_void;
     else if((initial) == CtrStdCType_uint8)       return &ffi_type_uint8;
     else if((initial) == CtrStdCType_sint8)       return &ffi_type_sint8;
@@ -1201,7 +1207,7 @@ CTR_CT_FFI_BIND(cif_new) { //^External CIF ptr
   ffi_cif* cif = ctr_heap_allocate(sizeof(ffi_cif));
   ctr_object* cifobj = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
   ctr_ctypes_set_type(cifobj, CTR_CTYPE_CIF);
-  cifobj->link = CtrStdCType_ffi_cif;
+  ctr_set_link_all(cifobj, CtrStdCType_ffi_cif);
   cifobj->value.rvalue->ptr = (void*)cif;
   return cifobj;
 }
@@ -1467,10 +1473,10 @@ CTR_CT_SIMPLE_TYPE_FUNC_STR(functionptr) {
 
 void begin() {
   CtrStdCType = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-  CtrStdCType->link = CtrStdObject;
+  ctr_set_link_all(CtrStdCType, CtrStdObject);
   CtrStdCType->info.sticky = 1;
   CtrStdCType_ffi_cif = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-  CtrStdCType_ffi_cif->link = CtrStdObject;
+  ctr_set_link_all(CtrStdCType_ffi_cif, CtrStdObject);
   CtrStdCType_ffi_cif->info.sticky = 1;
 
   //Void
@@ -1602,6 +1608,7 @@ void begin() {
   ctr_internal_create_func(CtrStdCType_pointer, ctr_build_string_from_cstring("derefSet:"), &ctr_ctypes_set_internal_pointer);
   ctr_internal_create_func(CtrStdCType_pointer, ctr_build_string_from_cstring("readBytes:"), &ctr_ctypes_to_bytes);
   ctr_internal_create_func(CtrStdCType_pointer, ctr_build_string_from_cstring("readBytesAsString:"), &ctr_ctypes_to_bytes_string);
+  ctr_internal_create_func(CtrStdCType_pointer, ctr_build_string_from_cstring("readCString"), &ctr_ctypes_read_string);
   ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring("getAddress"), &ctr_ctypes_addr_of);
   ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring("getRawAddress"), &ctr_ctypes_addr_of_raw);
   ctr_internal_create_func(CtrStdCType_pointer, ctr_build_string_from_cstring("addressOfObject:"), &ctr_ctypes_pointer_set_obj);

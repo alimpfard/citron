@@ -377,6 +377,10 @@ int ctr_clex_tok()
 			if (t == CTR_TOKEN_COLON) { // transform \:x expr to {\:x expr}
 				ctr_transform_lambda_shorthand = 1;
 				return CTR_TOKEN_BLOCKOPEN_MAP; //HACK This thing here simply transforms the syntax, however we fool the in-language lexer to think that this is actually a ref
+			} else { // if not a (\:x expr) then it's simply a message
+				ctr_clex_buffer[0] = '\\';
+				ctr_clex_tokvlen = 1;
+				return CTR_TOKEN_REF;
 			}
 			// ctr_clex_emit_error("Expected a reference");
 		}

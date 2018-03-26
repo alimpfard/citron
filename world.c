@@ -17,6 +17,13 @@
 #ifdef withBoehmGC
 #include <gc/gc.h>
 #endif
+#ifdef withBoehmGC_P
+#define ctr_heap_allocate_typed_(s,t) ctr_heap_allocate_typed(s,t)
+#else
+#define ctr_heap_allocate_typed_(s,t) ctr_heap_allocate(s)
+#endif
+
+static int ctr_world_initialized = 0;
 
 static const int all_signals[] = {
 #ifdef SIGHUP
@@ -814,7 +821,7 @@ ctr_internal_object_add_property_with_hash(ctr_object * owner,
  *
  * InternalObjectSetProperty
  *
- * Sets a property on an object.
+ * Sets a property on an object
  */
 void
 ctr_internal_object_set_property(ctr_object * owner, ctr_object * key,
@@ -922,6 +929,7 @@ ctr_object *ctr_internal_create_mapped_object_shared(int type)
 	o->info.remote = 0;
 	o->info.shared = 1;
 	o->info.raw = 0;
+	o->interfaces = ctr_heap_allocate_shared(sizeof(ctr_interfaces));
 	if (type == CTR_OBJECT_TYPE_OTBOOL)
 		o->value.bvalue = 0;
 	if (type == CTR_OBJECT_TYPE_OTNUMBER)
@@ -931,6 +939,7 @@ ctr_object *ctr_internal_create_mapped_object_shared(int type)
 		o->value.svalue->value = "";
 		o->value.svalue->vlen = 0;
 	}
+	#ifndef withBoehmGC
 	o->gnext = NULL;
 	if (ctr_first_object == NULL) {
 		ctr_first_object = o;
@@ -938,6 +947,7 @@ ctr_object *ctr_internal_create_mapped_object_shared(int type)
 		o->gnext = ctr_first_object;
 		ctr_first_object = o;
 	}
+	#endif
 	#ifdef withBoehmGC
 	#warning With boehm
 	GC_REGISTER_FINALIZER(o, ctr_finalize_clear, 0, 0, 0);
@@ -948,7 +958,7 @@ ctr_object *ctr_internal_create_mapped_object_shared(int type)
 ctr_object *ctr_internal_create_mapped_object_unshared(int type)
 {
 	ctr_object *o;
-	o = ctr_heap_allocate(sizeof(ctr_object));
+	o = ctr_heap_allocate_typed_(sizeof(*o), type);
 	o->properties = ctr_heap_allocate(sizeof(ctr_map));
 	o->methods = ctr_heap_allocate(sizeof(ctr_map));
 	o->properties->size = 0;
@@ -966,6 +976,7 @@ ctr_object *ctr_internal_create_mapped_object_unshared(int type)
 	o->info.remote = 0;
 	o->info.shared = 0;
 	o->info.raw = 0;
+	o->interfaces = ctr_heap_allocate(sizeof(ctr_interfaces));
 	if (type == CTR_OBJECT_TYPE_OTBOOL)
 		o->value.bvalue = 0;
 	if (type == CTR_OBJECT_TYPE_OTNUMBER)
@@ -975,6 +986,7 @@ ctr_object *ctr_internal_create_mapped_object_unshared(int type)
 		o->value.svalue->value = "";
 		o->value.svalue->vlen = 0;
 	}
+	#ifndef withBoehmGC
 	o->gnext = NULL;
 	if (ctr_first_object == NULL) {
 		ctr_first_object = o;
@@ -982,6 +994,7 @@ ctr_object *ctr_internal_create_mapped_object_unshared(int type)
 		o->gnext = ctr_first_object;
 		ctr_first_object = o;
 	}
+	#endif
 	return o;
 }
 /**
@@ -1012,7 +1025,7 @@ ctr_object *ctr_internal_create_mapped_standalone_object(int type, int shared)
 	ctr_object *o;
 	o = shared ==
 	    1 ? ctr_heap_allocate_shared(sizeof(ctr_object)) :
-	    ctr_heap_allocate(sizeof(ctr_object));
+	    ctr_heap_allocate_typed_(sizeof(ctr_object), type);
 	o->properties =
 	    shared ==
 	    1 ? ctr_heap_allocate_shared(sizeof(ctr_map)) :
@@ -1032,6 +1045,7 @@ ctr_object *ctr_internal_create_mapped_standalone_object(int type, int shared)
 	o->info.remote = 0;
 	o->info.shared = shared;
 	o->info.raw = 0;
+	o->interfaces = shared == 1 ? ctr_heap_allocate_shared(sizeof(ctr_interfaces)) : ctr_heap_allocate(sizeof(ctr_interfaces));
 	if (type == CTR_OBJECT_TYPE_OTBOOL)
 		o->value.bvalue = 0;
 	if (type == CTR_OBJECT_TYPE_OTNUMBER)
@@ -1077,6 +1091,7 @@ ctr_internal_create_func(ctr_object * o, ctr_object * key,
 {
 	ctr_object *methodObject =
 	    ctr_internal_create_object(CTR_OBJECT_TYPE_OTNATFUNC);
+	ctr_set_link_all(methodObject, CtrStdBlock);
 	methodObject->value.fvalue = func;
 	ctr_internal_object_add_property(o, key, methodObject, 1);
 }
@@ -1422,6 +1437,8 @@ ctr_object *ctr_object_destruct(ctr_object * object, ctr_argument * nothing)
  */
 void ctr_initialize_world()
 {
+	if(ctr_world_initialized) return;
+	ctr_world_initialized = 1;
 	// register_signal_handlers ();
 	ctr_instrument = 0;
 	int i;
@@ -1442,6 +1459,7 @@ void ctr_initialize_world()
   CTR_CLEX_KW_ME.info.shared = 0;
   CTR_CLEX_KW_ME.info.raw = 0;
   CTR_CLEX_KW_ME.value.svalue = &CTR_CLEX_KW_ME_SV;
+  CTR_CLEX_KW_ME.interfaces = ctr_heap_allocate(sizeof(ctr_interfaces));
 	//----//
 	CTR_CLEX_KW_THIS_SV.value = "thisBlock";
 	CTR_CLEX_KW_THIS_SV.vlen = 9;
@@ -1454,6 +1472,7 @@ void ctr_initialize_world()
 	CTR_CLEX_KW_THIS.info.shared = 0;
 	CTR_CLEX_KW_THIS.info.raw = 0;
 	CTR_CLEX_KW_THIS.value.svalue = &CTR_CLEX_KW_THIS_SV;
+  CTR_CLEX_KW_THIS.interfaces = ctr_heap_allocate(sizeof(ctr_interfaces));
 	//----//
 	CTR_CLEX_US_SV.value = "_";
 	CTR_CLEX_US_SV.vlen = 1;
@@ -1466,6 +1485,7 @@ void ctr_initialize_world()
 	CTR_CLEX_US.info.shared = 0;
 	CTR_CLEX_US.info.raw = 0;
 	CTR_CLEX_US.value.svalue = &CTR_CLEX_US_SV;
+  CTR_CLEX_US.interfaces = ctr_heap_allocate(sizeof(ctr_interfaces));
 	//----//
 	CtrStdWorld = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
 	CtrStdWorld->info.sticky = 1;
@@ -1476,6 +1496,10 @@ void ctr_initialize_world()
 	ctr_cparse_calltime_names = NULL;
 	/* Object */
 	CtrStdObject = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
+	CtrStdString = ctr_internal_create_object(CTR_OBJECT_TYPE_OTSTRING);
+	CtrStdBlock = ctr_internal_create_object(CTR_OBJECT_TYPE_OTBLOCK);
+	ctr_set_link_all(CtrStdString, CtrStdObject);
+	ctr_set_link_all(CtrStdBlock, CtrStdObject);
 	ctr_internal_create_func(CtrStdObject,
 				 ctr_build_string_from_cstring(CTR_DICT_NEW),
 				 &ctr_object_make);
@@ -1584,7 +1608,10 @@ void ctr_initialize_world()
 	ctr_internal_object_add_property(CtrStdWorld,
 					 ctr_build_string_from_cstring
 					 (CTR_DICT_OBJECT), CtrStdObject, 0);
-	CtrStdObject->link = NULL;
+	CtrStdObject->interfaces->link = NULL;
+	CtrStdObject->interfaces->count = 0;
+	CtrStdObject->interfaces->ifs = ctr_heap_allocate(sizeof(ctr_object*));
+	CtrStdObject->interfaces->ifs[0] = NULL;
 	CtrStdObject->info.sticky = 1;
 
 	/* Nil */
@@ -1607,7 +1634,7 @@ void ctr_initialize_world()
 	ctr_internal_create_func(CtrStdNil,
 				 ctr_build_string_from_cstring(CTR_DICT_UNPACK),
 				 &ctr_nil_assign);
-	CtrStdNil->link = CtrStdObject;
+	ctr_set_link_all(CtrStdNil, CtrStdObject);
 	CtrStdNil->info.sticky = 1;
 
 	/* Boolean */
@@ -1660,13 +1687,13 @@ void ctr_initialize_world()
 	ctr_internal_create_func(CtrStdBool,
 				 ctr_build_string_from_cstring(CTR_DICT_UNPACK),
 				 &ctr_bool_assign);
-	ctr_internal_create_func(CtrStdBool,
+	ctr_internal_create_func(CtrStdObject,
 				 ctr_build_string_from_cstring
 				 (CTR_DICT_EITHEROR), &ctr_bool_either_or);
 	ctr_internal_object_add_property(CtrStdWorld,
 					 ctr_build_string_from_cstring
 					 (CTR_DICT_BOOLEAN), CtrStdBool, 0);
-	CtrStdBool->link = CtrStdObject;
+	ctr_set_link_all(CtrStdBool, CtrStdObject);
 	CtrStdBool->info.sticky = 1;
 
 	/* Number */
@@ -1826,11 +1853,11 @@ void ctr_initialize_world()
 	ctr_internal_object_add_property(CtrStdWorld,
 					 ctr_build_string_from_cstring
 					 (CTR_DICT_NUMBER), CtrStdNumber, 0);
-	CtrStdNumber->link = CtrStdObject;
+	ctr_set_link_all(CtrStdNumber, CtrStdObject);
 	CtrStdNumber->info.sticky = 1;
 
 	/* String */
-	CtrStdString = ctr_internal_create_object(CTR_OBJECT_TYPE_OTSTRING);
+	//CtrStdString = ctr_internal_create_object(CTR_OBJECT_TYPE_OTSTRING);
 	ctr_linkstr();
 	ctr_internal_create_func(CtrStdString,
 				 ctr_build_string_from_cstring(CTR_DICT_BYTES),
@@ -1885,6 +1912,15 @@ void ctr_initialize_world()
 	ctr_internal_create_func(CtrStdString,
 				 ctr_build_string_from_cstring
 				 (CTR_DICT_INDEX_OF), &ctr_string_index_of);
+	ctr_internal_create_func(CtrStdString,
+				 ctr_build_string_from_cstring
+				 ("fmap:"), &ctr_string_fmap);
+	ctr_internal_create_func(CtrStdString,
+				 ctr_build_string_from_cstring
+				 ("imap:"), &ctr_string_imap);
+	ctr_internal_create_func(CtrStdString,
+				 ctr_build_string_from_cstring
+				 ("filter:"), &ctr_string_filter);
 	ctr_internal_create_func(CtrStdString,
 				 ctr_build_string_from_cstring
 				 ("reIndexOf:"), &ctr_string_re_index_of);
@@ -2056,11 +2092,10 @@ void ctr_initialize_world()
 	ctr_internal_object_add_property(CtrStdWorld,
 					 ctr_build_string_from_cstring
 					 (CTR_DICT_STRING), CtrStdString, 0);
-	CtrStdString->link = CtrStdObject;
+	ctr_set_link_all(CtrStdString, CtrStdObject);
 	CtrStdString->info.sticky = 1;
 
 	/* Block */
-	CtrStdBlock = ctr_internal_create_object(CTR_OBJECT_TYPE_OTBLOCK);
 	ctr_internal_create_func(CtrStdBlock,
 				 ctr_build_string_from_cstring(CTR_DICT_RUN),
 				 &ctr_block_runIt);
@@ -2117,7 +2152,7 @@ void ctr_initialize_world()
 	ctr_internal_object_add_property(CtrStdWorld,
 					 ctr_build_string_from_cstring
 					 (CTR_DICT_CODE_BLOCK), CtrStdBlock, 0);
-	CtrStdBlock->link = CtrStdObject;
+	ctr_set_link_all(CtrStdBlock, CtrStdObject);
 	CtrStdBlock->info.sticky = 1;
 
 	/* Array */
@@ -2303,7 +2338,7 @@ void ctr_initialize_world()
 	ctr_internal_object_add_property(CtrStdWorld,
 					 ctr_build_string_from_cstring
 					 (CTR_DICT_ARRAY), CtrStdArray, 0);
-	CtrStdArray->link = CtrStdObject;
+	ctr_set_link_all(CtrStdArray, CtrStdObject);
 	CtrStdArray->info.sticky = 1;
 
 	/* Iterator */
@@ -2390,7 +2425,7 @@ void ctr_initialize_world()
 	ctr_internal_object_add_property(CtrStdWorld,
 					 ctr_build_string_from_cstring
 					 ("Iterator"), CtrStdIter, 0);
-	CtrStdIter->link = CtrStdObject;
+	ctr_set_link_all(CtrStdIter, CtrStdObject);
 	CtrStdIter->info.sticky = 1;
 
 	/* Map */
@@ -2432,6 +2467,9 @@ void ctr_initialize_world()
 				 ctr_build_string_from_cstring("kvlist:"),
 				 &ctr_map_kvlist);
 	ctr_internal_create_func(CtrStdMap,
+				 ctr_build_string_from_cstring("contains:"),
+				 &ctr_map_contains);
+	ctr_internal_create_func(CtrStdMap,
 				 ctr_build_string_from_cstring(CTR_DICT_FLIP),
 				 &ctr_map_flip);
 	ctr_internal_create_func(CtrStdMap,
@@ -2446,7 +2484,7 @@ void ctr_initialize_world()
 	ctr_internal_object_add_property(CtrStdWorld,
 					 ctr_build_string_from_cstring
 					 (CTR_DICT_MAP_OBJECT), CtrStdMap, 0);
-	CtrStdMap->link = CtrStdObject;
+	ctr_set_link_all(CtrStdMap, CtrStdObject);
 	CtrStdMap->info.sticky = 1;
 
 	/* Console */
@@ -2507,7 +2545,7 @@ void ctr_initialize_world()
 					 ctr_build_string_from_cstring
 					 (CTR_DICT_PEN_TEMPLATE_SYMBOL),
 					 CtrStdConsole, 0);
-	CtrStdConsole->link = CtrStdObject;
+	ctr_set_link_all(CtrStdConsole, CtrStdObject);
 	CtrStdConsole->info.sticky = 1;
 
 	/* File */
@@ -2598,9 +2636,9 @@ void ctr_initialize_world()
 	CTR_FILE_STDIN = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
 	CTR_FILE_STDOUT = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
 	CTR_FILE_STDERR = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
-	CTR_FILE_STDIN->link = CtrStdObject;
-	CTR_FILE_STDOUT->link = CtrStdObject;
-	CTR_FILE_STDERR->link = CtrStdObject;
+	ctr_set_link_all(CTR_FILE_STDIN, CtrStdObject);
+	ctr_set_link_all(CTR_FILE_STDOUT, CtrStdObject);
+	ctr_set_link_all(CTR_FILE_STDERR, CtrStdObject);
 	CTR_FILE_STDIN->info.sticky = 1;
 	CTR_FILE_STDOUT->info.sticky = 1;
 	CTR_FILE_STDERR->info.sticky = 1;
@@ -2618,7 +2656,7 @@ void ctr_initialize_world()
 					 ctr_build_string_from_cstring
 					 (CTR_DICT_FILE), CtrStdFile, 0);
 
-	CtrStdFile->link = CtrStdObject;
+	ctr_set_link_all(CtrStdFile, CtrStdObject);
 	CtrStdFile->info.sticky = 1;
 
 	/* Command */
@@ -2731,7 +2769,7 @@ void ctr_initialize_world()
 	ctr_internal_object_add_property(CtrStdWorld,
 					 ctr_build_string_from_cstring
 					 (CTR_DICT_PROGRAM), CtrStdCommand, 0);
-	CtrStdCommand->link = CtrStdObject;
+	ctr_set_link_all(CtrStdCommand, CtrStdObject);
 	CtrStdCommand->info.sticky = 1;
 
 	/* Clock */
@@ -2831,7 +2869,7 @@ void ctr_initialize_world()
 					 ctr_build_string_from_cstring
 					 (CTR_DICT_CLOCK), CtrStdClock, 0);
 	ctr_clock_init(CtrStdClock);
-	CtrStdClock->link = CtrStdObject;
+	ctr_set_link_all(CtrStdClock, CtrStdObject);
 	CtrStdClock->info.sticky = 1;
 
 	/* Dice */
@@ -2848,7 +2886,7 @@ void ctr_initialize_world()
 	ctr_internal_object_add_property(CtrStdWorld,
 					 ctr_build_string_from_cstring
 					 (CTR_DICT_DICE), CtrStdDice, 0);
-	CtrStdDice->link = CtrStdObject;
+	ctr_set_link_all(CtrStdDice, CtrStdObject);
 	CtrStdDice->info.sticky = 1;
 
 	/* Slurp */
@@ -2866,7 +2904,7 @@ void ctr_initialize_world()
 	ctr_internal_object_add_property(CtrStdWorld,
 					 ctr_build_string_from_cstring
 					 (CTR_DICT_SLURP), CtrStdSlurp, 0);
-	CtrStdSlurp->link = CtrStdObject;
+	ctr_set_link_all(CtrStdSlurp, CtrStdObject);
 	CtrStdSlurp->info.sticky = 1;
 
 	/* Shell */
@@ -2884,7 +2922,7 @@ void ctr_initialize_world()
 	ctr_internal_object_add_property(CtrStdWorld,
 					 ctr_build_string_from_cstring
 					 (CTR_DICT_SHELL), CtrStdShell, 0);
-	CtrStdShell->link = CtrStdObject;
+	ctr_set_link_all(CtrStdShell, CtrStdObject);
 	CtrStdShell->info.sticky = 1;
 
 	/* Broom */
@@ -2923,7 +2961,7 @@ void ctr_initialize_world()
 	ctr_internal_object_add_property(CtrStdWorld,
 					 ctr_build_string_from_cstring
 					 (CTR_DICT_BROOM), CtrStdGC, 0);
-	CtrStdGC->link = CtrStdObject;
+	ctr_set_link_all(CtrStdGC, CtrStdObject);
 	CtrStdGC->info.sticky = 1;
 
 	CtrStdReflect = ctr_reflect_new(CtrStdObject, NULL);
@@ -3061,6 +3099,10 @@ void ctr_initialize_world()
 				 ("compilerInfo"),
 				 &ctr_reflect_compilerinfo);
 	ctr_internal_create_func(CtrStdObject,
+				 ctr_build_string_from_cstring
+				 ("setPrivate:value:"),
+				 &ctr_reflect_delegate_set_private_property);
+	ctr_internal_create_func(CtrStdObject,
 				 ctr_build_string_from_cstring("&method:"),
 				 &ctr_reflect_object_delegate_get_responder);
 	ctr_internal_create_func(CtrStdObject,
@@ -3073,6 +3115,10 @@ void ctr_initialize_world()
 				 ctr_build_string_from_cstring
 				 ("run:inContext:arguments:"),
 				 &ctr_reflect_run_for_object_in_ctx);
+	ctr_internal_create_func(CtrStdReflect,
+				 ctr_build_string_from_cstring
+				 ("runInNewContext:"),
+				 &ctr_reflect_run_in_new_ctx);
 	ctr_internal_create_func(CtrStdReflect,
 				 ctr_build_string_from_cstring
 				 ("marshal:"),
@@ -3088,7 +3134,7 @@ void ctr_initialize_world()
 	CtrStdReflect->info.sticky = 1;
 
 	CtrStdThread = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
-	CtrStdThread->link = CtrStdObject;
+	ctr_set_link_all(CtrStdThread, CtrStdObject);
 	CtrStdThread->info.sticky = 1;
 
 	ctr_internal_create_func(CtrStdThread,
@@ -3128,7 +3174,7 @@ void ctr_initialize_world()
 
 	CtrStdReflect_cons =
 	    ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-	CtrStdReflect_cons->link = CtrStdObject;
+	ctr_set_link_all(CtrStdReflect_cons, CtrStdObject);
 
 	ctr_internal_create_func(CtrStdReflect_cons,
 				 ctr_build_string_from_cstring("of:"),
@@ -3208,6 +3254,7 @@ ctr_object *ctr_get_responder(ctr_object * receiverObject, char *message,
 	msg = ctr_build_string(message, vlen);
 	msg->info.sticky = 1;	/* prevent message from being swept, no need to free(), GC will do */
 	while (!methodObject) {
+		if(!searchObject) break;
 		methodObject =
 		    ctr_internal_object_find_property(searchObject, msg, 1);
 		if (methodObject && toParent) {
@@ -3216,9 +3263,28 @@ ctr_object *ctr_get_responder(ctr_object * receiverObject, char *message,
 		}
 		if (methodObject)
 			break;
-		if (!searchObject->link)
+		if (!searchObject->interfaces->link)
 			break;
-		searchObject = searchObject->link;
+		searchObject = searchObject->interfaces->link;
+	}
+	if(!methodObject) {
+		#pragma omp parallel default(none), shared(receiverObject, vlen, message, methodObject)
+		{
+			int abort = 0;
+			#pragma omp for
+			for(int i=0; i<receiverObject->interfaces->count; i++) {
+				if(!abort) {
+				//printf("%.*s", vlen, message);
+					ctr_object* meth = ctr_get_responder(receiverObject->interfaces->ifs[i], message, vlen);
+					if(meth) {
+						#pragma omp critical(methodObject)
+						methodObject = meth;
+						abort = 1;
+						#pragma omp flush (abort)
+					}
+				}
+			}
+		}
 	}
 	return methodObject;
 }
@@ -3244,7 +3310,7 @@ ctr_object *ctr_internal_argumentptr2tuple(ctr_argument * argumentList)
 
 ctr_object *ctr_get_appropriate_catch_all(char* message, long vlen, int argCount) {
 	if(vlen == 1)
-		return ctr_build_string("respondTo:and:", 13);
+		return ctr_build_string("respondTo:and:", 14);
 	if(argCount == -1) {
 		char *msg = message, *msg_end = msg+vlen;
 		int count = argCount;
@@ -3561,7 +3627,15 @@ ctr_object *ctr_assign_value_to_local_by_ref(ctr_object * key, ctr_object * o)
 
 static void ctr_linkstr()
 {
-	CTR_CLEX_KW_ME.link = CtrStdString;
-	CTR_CLEX_KW_THIS.link = CtrStdString;
-	CTR_CLEX_US.link = CtrStdString;
+	CTR_CLEX_KW_ME.interfaces->link = CtrStdString;
+	CTR_CLEX_KW_THIS.interfaces->link = CtrStdString;
+	CTR_CLEX_US.interfaces->link = CtrStdString;
+}
+void ctr_set_link_all(ctr_object* what, ctr_object* to) {
+	what->interfaces->link = to;
+	int count = to->interfaces->count;
+	what->interfaces->count = count;
+	what->interfaces->ifs = what->info.shared ? ctr_heap_allocate_shared(sizeof(ctr_object*)*(count+1)) : ctr_heap_allocate(sizeof(ctr_object*)*(count+1));
+	for(int i=0;i<count;i++)
+		memcpy(what->interfaces->ifs+i, to->interfaces->ifs+i, sizeof(ctr_object*));
 }

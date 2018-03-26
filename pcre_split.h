@@ -20,6 +20,7 @@ typedef struct split_t_internal {
 	char *string;
 	char *match;
 	unsigned int length;
+	unsigned int offset;
 } split_t_internal;
 
 split_t_internal *pcre_split_internal(pcre *, char *);
@@ -104,19 +105,24 @@ ctr_object *pcre_split(char *pattern, char *string) {
 		match = si->match;
 
 		/* Push into array */
-		push_arg->object = ctr_build_string(si->string, si->length-1);
-		ctr_array_push(sarr, push_arg);
-
+		if(si->offset || si->length) {
+			push_arg->object = ctr_build_string(s, si->offset);
+			ctr_array_push(sarr, push_arg);
+		}
 		/* Increment string pointer to skip previous match */
-		s += si->length;
+		s += si->offset + si->length;
 
 		ctr_heap_free(si);
 
-	} while(match&&*s!=0);
+	} while(match && *s!=0);
 
 	/*
 	  Free locally allocated memory
 	 */
+	if(*s != 0) {
+		push_arg->object = ctr_build_string_from_cstring(s);
+		ctr_array_push(sarr, push_arg);
+	}
 	pcre_free(re);
 	ctr_heap_free(push_arg);
 	return sarr;
@@ -129,7 +135,7 @@ split_t_internal *pcre_split_internal(pcre *re, char *string)
 	int ovector[OVECCOUNT];
 	int length;
 	split_t_internal *s = (split_t_internal *)ctr_heap_allocate(sizeof(split_t_internal));
-
+	s->offset = 0;
 	length = (int)strlen(string);
 
 	rc = pcre_exec(re, NULL, string, length, 0, 0, ovector, OVECCOUNT);
@@ -165,8 +171,8 @@ split_t_internal *pcre_split_internal(pcre *re, char *string)
 	s->match = ctr_heap_allocate(sizeof(char) * ((ovector[1] - ovector[0]) + 1));
 	strncpy(s->match, (char *)(string + ovector[0]), (ovector[1] - ovector[0]));
 
-	s->length = ovector[1];
-
+	s->length = ovector[1] - ovector[0];
+	s->offset = ovector[0];
 	return (split_t_internal *)s;
 }
 

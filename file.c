@@ -40,7 +40,7 @@ ctr_object *ctr_file_new(ctr_object * myself, ctr_argument * argumentList)
 	ctr_object *s = ctr_object_make(myself, argumentList);
 	ctr_object *pathObject;
 	s->info.type = CTR_OBJECT_TYPE_OTEX;	/* indicates resource for GC */
-	s->link = myself;
+	ctr_set_link_all(s, myself);
 	s->value.rvalue = NULL;
 	pathObject =
 	    ctr_build_string(argumentList->object->value.svalue->value,

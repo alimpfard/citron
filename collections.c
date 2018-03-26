@@ -33,7 +33,7 @@
 ctr_object *ctr_array_new(ctr_object * myclass, ctr_argument * argumentList)
 {
 	ctr_object *s = ctr_internal_create_object(CTR_OBJECT_TYPE_OTARRAY);
-	s->link = myclass;
+	ctr_set_link_all(s, myclass);
 	s->value.avalue =
 	    (ctr_collection *) ctr_heap_allocate(sizeof(ctr_collection));
 	s->value.avalue->immutable = 0;
@@ -1869,9 +1869,23 @@ ctr_object *ctr_array_fill(ctr_object * myself, ctr_argument * argumentList)
 	ctr_argument *newArgumentList;
 	n = ctr_internal_cast2number(argumentList->object)->value.nvalue;
 	newArgumentList = ctr_heap_allocate(sizeof(ctr_argument));
-	newArgumentList->object = argumentList->next->object;
-	for (i = 0; i < n; i++) {
-		ctr_array_push(myself, newArgumentList);
+	ctr_object* memb = argumentList->next->object;
+	if(memb->info.type == CTR_OBJECT_TYPE_OTBLOCK) {
+		ctr_object* _i = ctr_internal_create_standalone_object(CTR_OBJECT_TYPE_OTNUMBER);
+		ctr_set_link_all(_i, CtrStdNumber);
+		ctr_open_context();
+		for (i = 0; i < n; i++) {
+			_i->value.nvalue = i;
+			newArgumentList->object = _i;
+			newArgumentList->object = ctr_block_run_here(memb, newArgumentList, memb);
+			ctr_array_push(myself, newArgumentList);
+		}
+		ctr_close_context();
+	} else {
+		newArgumentList->object = memb;
+		for (i = 0; i < n; i++) {
+			ctr_array_push(myself, newArgumentList);
+		}
 	}
 	ctr_heap_free(newArgumentList);
 	return myself;
@@ -1929,7 +1943,7 @@ ctr_object *ctr_array_column(ctr_object * myself, ctr_argument * argumentList)
 ctr_object *ctr_map_new(ctr_object * myclass, ctr_argument * argumentList)
 {
 	ctr_object *s = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-	s->link = myclass;
+	ctr_set_link_all(s, myclass);
 	return s;
 }
 
@@ -2540,6 +2554,14 @@ ctr_object *ctr_map_assign(ctr_object * myself, ctr_argument * argumentList)
 	return myself;
 }
 
+/**
+ * [Map] contains: [Object]
+ *
+ * check if map contains key
+ */
+ ctr_object* ctr_map_contains(ctr_object* myself, ctr_argument* argumentList) {
+	 return ctr_build_bool(!!ctr_internal_object_find_property(myself, argumentList->object, 0));
+ }
 /**@I_OBJ_DEF Iterator*/
 
 /**
@@ -2561,7 +2583,7 @@ ctr_object *ctr_iterator_make(ctr_object * myself, ctr_argument * argumentList)
 {
 	ctr_object *instance =
 	    ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-	instance->link = myself;
+	ctr_set_link_all(instance, myself);
 	return instance;
 }
 

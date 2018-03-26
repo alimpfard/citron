@@ -33,7 +33,7 @@ ctr_object* ctr_json_create_object(json_t* root, ctr_object* gt) {
     switch(json_typeof(root)) {
         case JSON_OBJECT: {
             ctr_object* sub = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-            sub->link = gt;
+            ctr_set_link_all(sub, gt);
             // size_t size;
             const char *key;
             json_t *value;
@@ -126,7 +126,7 @@ ctr_object* ctr_json_parse (ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* p = argumentList->next->object ? argumentList->next->object : CtrStdMap;
   if(root) {
     ctr_object* obj = ctr_json_create_object(root, p);
-    if(!obj->link) obj->link = p;
+    if(!obj->interfaces->link) ctr_set_link_all(obj, p);
     return obj;
   } else return CtrStdNil;
 }
@@ -255,7 +255,7 @@ ctr_object* ctr_json_serialize(ctr_object* myself, ctr_argument* argumentList) {
 
 void begin() {
   ctr_object* jans = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-  jans->link = CtrStdObject;
+  ctr_set_link_all(jans, CtrStdObject);
   ctr_internal_create_func(jans, ctr_build_string_from_cstring("parse:genericType:"), &ctr_json_parse);
   ctr_internal_create_func(jans, ctr_build_string_from_cstring("parse:"), &ctr_json_parse);
   ctr_internal_create_func(jans, ctr_build_string_from_cstring("serialize:"), &ctr_json_serialize);

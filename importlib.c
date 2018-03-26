@@ -10,7 +10,7 @@ ctr_object *ctr_importlib_begin(ctr_object * myself,
 {
 	ctr_object *instance =
 	    ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-	instance->link = myself;
+	ctr_set_link_all(instance, myself);
 	CtrStdImportLib_SearchPaths = ctr_array_new(CtrStdArray, NULL);
 	ctr_invoke_variadic(CtrStdImportLib_SearchPaths, &ctr_array_push, 1,
 			    ctr_build_string_from_cstring("."));

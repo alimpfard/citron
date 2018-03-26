@@ -4,11 +4,12 @@
 static ctr_object** ctr_static_symbol_table = 0;
 static ctr_size ctr_static_symbol_table_count = 0;
 ctr_object* ctr_get_or_create_symbol_table_entry(char* name, ctr_size length) {
+	ctr_initialize_world();
 	if (!ctr_static_symbol_table) {
 		ctr_static_symbol_table = ctr_heap_allocate(sizeof(ctr_object*));
     ctr_object* ptr = (ctr_static_symbol_table[0] = ctr_build_string(name, length));
 		ctr_static_symbol_table_count = 1;
-    ptr->link = CtrStdSymbol;
+    ctr_set_link_all(ptr, CtrStdSymbol);
     ptr->info.type = CTR_OBJECT_TYPE_OTMISC;
     return ptr;
 	}
@@ -24,7 +25,7 @@ ctr_object* ctr_get_or_create_symbol_table_entry(char* name, ctr_size length) {
 	}
 	ctr_static_symbol_table = ctr_heap_reallocate(ctr_static_symbol_table, (ctr_static_symbol_table_count+1)*sizeof(ctr_object*));
 	ctr_object* ptr = (ctr_static_symbol_table[ctr_static_symbol_table_count++] = ctr_build_string(name, length));
-  ptr->link = CtrStdSymbol;
+  ctr_set_link_all(ptr, CtrStdSymbol);
   ptr->info.type = CTR_OBJECT_TYPE_OTMISC;
   return ptr;
 }

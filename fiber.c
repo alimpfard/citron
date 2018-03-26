@@ -240,7 +240,7 @@ ctr_object *CtrStdFiber;	//Namespace for all fibers, conatining all the relevant
 ctr_object *ctr_fiber_create(ctr_object * myself, ctr_argument * argumentList)
 {
 	ctr_object *ctrl = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
-	ctrl->link = CtrStdFiber;
+	ctr_set_link_all(ctrl, CtrStdFiber);
 	return ctrl;
 }
 
@@ -363,7 +363,7 @@ void ctr_fiber_begin_init()
 	initFibers();
 
 	CtrStdFiber = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
-	CtrStdFiber->link = CtrStdObject;
+	ctr_set_link_all(CtrStdFiber, CtrStdObject);
 	ctr_internal_create_func(CtrStdFiber,
 				 ctr_build_string_from_cstring("toString"),
 				 &ctr_fiber_tostring);

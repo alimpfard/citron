@@ -11,7 +11,7 @@ ctr_object* ctr_ctypes_make_##type (ctr_object* myself, ctr_argument* argumentLi
 #define CTR_CT_FFI_BIND(name)              ctr_object* ctr_ctype_ffi_##name  (ctr_object* myself, ctr_argument* argumentList)
 
 #define CTR_CT_INTRODUCE_TYPE(type)        CtrStdCType_##type = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);\
-CtrStdCType_##type->link = CtrStdCType;\
+ctr_set_link_all(CtrStdCType_##type, CtrStdCType);\
 CtrStdCType_##type->info.sticky = 1;\
 ctr_internal_object_add_property(CtrStdCType, ctr_build_string_from_cstring("type_"#type), CtrStdCType_##type, 0);
 #define CTR_CT_INTRODUCE_MAKE(type)        ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring(#type), &ctr_ctypes_make_##type)

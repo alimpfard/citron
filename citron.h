@@ -10,7 +10,7 @@
 #define CTR_H_DECLSPEC extern
 extern "C" {
 
-#else
+#else //__cplusplus
 
 #define CTR_H_DECLSPEC
 
@@ -201,6 +201,14 @@ struct ctr_argument {
 };
 typedef struct ctr_argument ctr_argument;
 typedef void(*voidptrfn_t(void*));
+
+struct ctr_interfaces {
+	int count;
+	struct ctr_object* link;
+	struct ctr_object** ifs;
+};
+typedef struct ctr_interfaces ctr_interfaces;
+
 /**
  * Root Object
  */
@@ -216,8 +224,7 @@ struct ctr_object {
 		unsigned int shared: 1;
 		unsigned int raw: 1;
 	} info;
-	struct ctr_object* link;
-	//int lex_scope;
+	struct ctr_interfaces* interfaces;
 	struct ctr_object* lexical_name;
 	union uvalue {
 		ctr_bool bvalue;
@@ -644,6 +651,9 @@ ctr_object* ctr_string_count_of(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_slice(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_at(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_byte_at(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_fmap(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_imap(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_filter(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_index_of(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_re_index_of(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_starts_with(ctr_object* myself, ctr_argument* argumentList);
@@ -769,6 +779,7 @@ ctr_object* ctr_map_each(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_fmap(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_kvmap(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_kvlist(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_map_contains(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_flip(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_assign(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_to_string(ctr_object* myself, ctr_argument* argumentList);
@@ -1016,7 +1027,9 @@ ctr_object* ctr_reflect_unregister_instrumentor(ctr_object* myself, ctr_argument
 ctr_object* ctr_reflect_get_instrumentor(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_glob(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_for_object_in_ctx (ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_run_in_new_ctx(ctr_object * myself, ctr_argument * argumentList);
 ctr_object* ctr_reflect_compilerinfo (ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_delegate_set_private_property(ctr_object* itself, ctr_argument* argumentList);
 ctr_argument* ctr_array_to_argument_list (ctr_object * arr, ctr_argument * provided);
 int ctr_internal_has_own_responder(ctr_object* myself, ctr_object* meth);
 int ctr_internal_has_responder(ctr_object* myself, ctr_object* meth);
@@ -1088,8 +1101,11 @@ void ctr_gc_internal_collect();
 ctr_object* ctr_gc_sweep_this( ctr_object* myself, ctr_argument* argumentList );
 
 
-void* ctr_heap_allocate( size_t size );
 void* ctr_heap_allocate_shared( size_t size );
+void* ctr_heap_allocate( size_t size );
+#ifdef withBoehmGC_P
+void* ctr_heap_allocate_typed( size_t size, int type );
+#endif
 void* ctr_heap_allocate_tracked( size_t size );
 void  ctr_heap_free( void* ptr );
 void  ctr_heap_free_shared( void* ptr );
@@ -1112,10 +1128,11 @@ CTR_H_DECLSPEC ctr_string CTR_CLEX_KW_ME_SV, CTR_CLEX_KW_THIS_SV, CTR_CLEX_US_SV
 CTR_H_DECLSPEC ctr_object CTR_CLEX_KW_ME,    CTR_CLEX_KW_THIS,    CTR_CLEX_US;
 
 static inline void ctr_linkstr();
-
+void ctr_set_link_all(ctr_object*, ctr_object*);
 void ctr_deallocate_argument_list(ctr_argument*);
 int ctr_internal_object_is_equal(ctr_object*, ctr_object*);
 int ctr_internal_object_is_constructible_(ctr_object*, ctr_object*, int);
+
 
 #if defined(__clang__)
 	/* Clang/LLVM. ---------------------------------------------- */

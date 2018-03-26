@@ -1,6 +1,7 @@
 #include "citron.h"
 #include "coroutine.h"
 #include "symbol.h"
+#include "generator.h"
 #include <stdio.h>
 
 /**
@@ -81,7 +82,8 @@ ctr_object *ctr_ast_parse(ctr_object * myself, ctr_argument * argumentList)
 	ctr_tnode *ped = ctr_cparse_parse(prg, "ASTparse");
 	ctr_cparse_quiet = last_q;
 	ctr_object *ast = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
-	ast->link = CtrStdAst;
+	// ctr_set_link_all(ast, CtrStdAst);
+	ctr_set_link_all(ast, CtrStdAst);
 	ast->value.rvalue = ctr_heap_allocate(sizeof(ctr_resource));
 	ast->value.rvalue->ptr = ped;
 	ast->value.rvalue->type = CTR_AST_TYPE;
@@ -128,7 +130,7 @@ ctr_object *ctr_ast_nth(ctr_object * myself, ctr_argument * argumentList)
 	if (!pitem)
 		goto err;
 	ctr_object *ast = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
-	ast->link = CtrStdAst;
+	ctr_set_link_all(ast, CtrStdAst);
 	ast->value.rvalue = ctr_heap_allocate(sizeof(ctr_resource));
 	ast->value.rvalue->ptr = pitem->node;
 	ast->value.rvalue->type = CTR_AST_TYPE;
@@ -469,7 +471,7 @@ ctr_object *ctr_ast_with_value(ctr_object * myself, ctr_argument * argumentList)
 	node->value = str->value;
 	node->vlen = str->vlen;
 	ctr_object *ast = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
-	ast->link = CtrStdAst;
+	ctr_set_link_all(ast, CtrStdAst);
 	ast->value.rvalue = ctr_heap_allocate(sizeof(ctr_resource));
 	ast->value.rvalue->ptr = node;
 	ast->value.rvalue->type = CTR_AST_TYPE;
@@ -1003,7 +1005,7 @@ void ctr_coroutine_run_block(struct schedule *S, void *ud)
 ctr_object *ctr_coro_make(ctr_object * myself, ctr_argument * argumentList)
 {
 	ctr_object *coro = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
-	coro->link = CtrStdCoro;
+	ctr_set_link_all(coro, CtrStdCoro);
 	coro->value.rvalue = ctr_heap_allocate(sizeof(ctr_resource));
 	coro->value.rvalue->ptr = coroutine_open();
 	coro->release_hook = (voidptrfn_t *) ctr_coroutine_close;
@@ -1027,7 +1029,7 @@ ctr_object *ctr_coro_new(ctr_object * myself, ctr_argument * argumentList)
 	struct schedule *S = myself->value.rvalue->ptr;
 	struct ctr_coro_args_data *args = ctr_heap_allocate(sizeof(*args));
 	ctr_object *coro = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
-	coro->link = CtrStdCoro_co;
+	ctr_set_link_all(coro, CtrStdCoro_co);
 	args->co = coro;
 	args->block = argumentList->object;
 	args->argumentList =
@@ -1148,6 +1150,21 @@ ctr_object* ctr_string_to_symbol(ctr_object* myself, ctr_argument* argumentList)
 	return sym;
 }
 
+ctr_object* ctr_object_inherit(ctr_object* myself, ctr_argument* argumentList) {
+	if(myself->info.shared) {
+		CtrStdFlow = ctr_build_string_from_cstring("Cannot add interfaces to shared objects");
+		return myself;
+	}
+	ctr_interfaces* ifsp = myself->interfaces;
+	ctr_object* ifs = argumentList->object;
+	for(int i=0; i>ifsp->count; i++) if(ifsp->ifs[i] == ifs) return myself;
+	ifsp->count++;
+	ifsp->ifs = ctr_heap_reallocate(ifsp->ifs, sizeof(ctr_object*)*(ifsp->count+1));
+	ifsp->ifs[ifsp->count] = NULL;
+	ifsp->ifs[ifsp->count-1] = ifs;
+	return myself;
+}
+
 void initiailize_base_extensions()
 {
 	ctr_internal_create_func(CtrStdObject,
@@ -1157,7 +1174,7 @@ void initiailize_base_extensions()
 				 ctr_build_string_from_cstring("transferOwnershipOf:to:"),
 				 &ctr_reown_obj);
 	CtrStdAst = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
-	CtrStdAst->link = CtrStdObject;
+	ctr_set_link_all(CtrStdAst, CtrStdObject);
 	ctr_internal_create_func(CtrStdAst,
 				 ctr_build_string_from_cstring("instrCount"),
 				 &ctr_ast_instrcount);
@@ -1243,7 +1260,7 @@ void initiailize_base_extensions()
 					 CtrStdAst, 0);
 
 	CtrStdCoro = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-	CtrStdCoro->link = CtrStdObject;
+	ctr_set_link_all(CtrStdCoro, CtrStdObject);
 	ctr_internal_create_func(CtrStdCoro,
 				 ctr_build_string_from_cstring("new"),
 				 &ctr_coro_make);
@@ -1262,7 +1279,7 @@ void initiailize_base_extensions()
 					 ("Coroutine"),
 					 ctrstdcoro_default_sched, 0);
 	CtrStdCoro_co = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-	CtrStdCoro_co->link = CtrStdObject;
+	ctr_set_link_all(CtrStdCoro_co, CtrStdObject);
 	ctr_internal_create_func(CtrStdCoro_co,
 				 ctr_build_string_from_cstring("await"),
 				 &ctr_coro_resume);
@@ -1282,7 +1299,7 @@ void initiailize_base_extensions()
 				 ctr_build_string_from_cstring("state"),
 				 &ctr_coro_state);
 	CtrStdSymbol = ctr_internal_create_object(CTR_OBJECT_TYPE_OTMISC);
-	CtrStdSymbol->link = CtrStdObject;
+	ctr_set_link_all(CtrStdSymbol, CtrStdObject);
 	ctr_internal_create_func(CtrStdSymbol,
 			  ctr_build_string_from_cstring("toString"),
 				&ctr_symbol_to_string);
@@ -1307,4 +1324,30 @@ void initiailize_base_extensions()
 	ctr_internal_create_func(CtrStdString,
 				ctr_build_string_from_cstring("toSymbol"),
 				&ctr_string_to_symbol);
+
+	ctr_internal_create_func(CtrStdObject,
+		ctr_build_string_from_cstring("inheritFrom:"),
+		&ctr_object_inherit
+	);
+	ctr_std_generator = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
+	ctr_set_link_all(ctr_std_generator, CtrStdObject);
+	ctr_internal_create_func(ctr_std_generator,
+				ctr_build_string_from_cstring("repeat:"),
+				&ctr_generator_make);
+	ctr_internal_create_func(ctr_std_generator,
+				ctr_build_string_from_cstring("from:to:"),
+				&ctr_generator_make);
+	ctr_internal_create_func(ctr_std_generator,
+				ctr_build_string_from_cstring("from:to:step:"),
+				&ctr_generator_make);
+	ctr_internal_create_func(ctr_std_generator,
+				ctr_build_string_from_cstring("elementsOf:"),
+				&ctr_generator_make);
+	ctr_internal_create_func(ctr_std_generator,
+				ctr_build_string_from_cstring("next"),
+				&ctr_generator_next);
+	ctr_internal_create_func(ctr_std_generator,
+				ctr_build_string_from_cstring("toString"),
+				&ctr_generator_tostr);
+	ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Generator"), ctr_std_generator, 0);
 }

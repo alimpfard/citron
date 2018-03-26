@@ -604,7 +604,7 @@ ctr_object *ctr_gc_kept_alloc(ctr_object * myself, ctr_argument * argumentList)
 {
 	return ctr_build_number_from_float((ctr_number)
 # ifdef withBoehmGC
-	GC_get_heap_size()
+	GC_get_total_bytes()
 # else
 	ctr_gc_alloc
 # endif
@@ -1357,7 +1357,7 @@ ctr_object *ctr_command_fork(ctr_object * myself, ctr_argument * argumentList)
 	ctr_check_permission(CTR_SECPRO_FORK);
 	newArgumentList = ctr_heap_allocate(sizeof(ctr_argument));
 	child = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-	child->link = myself;
+	ctr_set_link_all(child, myself);
 	ps = ctr_heap_allocate(sizeof(int) * 4);
 	pipes = ctr_heap_allocate_tracked(
 #ifndef forLinux
@@ -1612,7 +1612,7 @@ ctr_object *ctr_command_remote(ctr_object * myself, ctr_argument * argumentList)
 	ctr_check_permission(CTR_SECPRO_COUNTDOWN);
 	ctr_object *remoteObj =
 	    ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-	remoteObj->link = CtrStdObject;
+	ctr_set_link_all(remoteObj, CtrStdObject);
 	remoteObj->info.remote = 1;
 	ctr_object *port, *inet6;
 	if (argumentList->next)
@@ -2577,7 +2577,7 @@ ctr_object *ctr_clock_new(ctr_object * myself, ctr_argument * argumentList)
 {
 	ctr_object *clock;
 	clock = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-	clock->link = myself;
+	ctr_set_link_all(clock, myself);
 	ctr_clock_init(clock);
 	return clock;
 }
@@ -2832,7 +2832,7 @@ ctr_size thread_current_number = 1;
 ctr_object *ctr_thread_make(ctr_object * myself, ctr_argument * argumentList)
 {
 	ctr_object *inst = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
-	inst->link = myself;
+	ctr_set_link_all(inst, myself);
 	inst->value.rvalue = ctr_heap_allocate(sizeof(ctr_resource));
 	inst->release_hook = &ctr_thread_free_res;
 	return inst;
@@ -2929,7 +2929,7 @@ ctr_object *ctr_thread_make_set_target(ctr_object * myself,
 				       ctr_argument * argumentList)
 {
 	ctr_object *inst = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
-	inst->link = myself;
+	ctr_set_link_all(inst, myself);
 	inst->value.rvalue = ctr_heap_allocate(sizeof(ctr_resource));
 	inst->release_hook = &ctr_thread_free_res;
 	pthread_t *thread;

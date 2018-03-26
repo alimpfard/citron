@@ -140,7 +140,7 @@ ctr_object *ctr_object_make(ctr_object * myself, ctr_argument * argumentList)
 {
 	ctr_object *objectInstance = NULL;
 	objectInstance = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-	objectInstance->link = myself;
+	ctr_set_link_all(objectInstance, myself);
 	return objectInstance;
 }
 
@@ -154,7 +154,7 @@ ctr_object *ctr_object_ctor(ctr_object * myself, ctr_argument * argumentList)
 {
 	ctr_object *objectInstance = NULL;
 	objectInstance = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-	objectInstance->link = myself;
+	ctr_set_link_all(objectInstance, myself);
 	CTR_ENSURE_TYPE_BLOCK(argumentList->object);
 	ctr_argument *args = ctr_heap_allocate(sizeof(ctr_argument));
 	ctr_block_run(argumentList->object, args, objectInstance);
@@ -325,10 +325,10 @@ ctr_object *ctr_object_assign(ctr_object * myself, ctr_argument * argumentList)
 {
 	if (!ctr_reflect_check_bind_valid(myself, argumentList->object, 0))
 		return CtrStdNil;
-	ctr_object *oldlink = myself->link;
-	myself->link = CtrStdMap;	//cast to map
+	ctr_object *oldlink = myself->interfaces->link;
+	ctr_set_link_all(myself, CtrStdMap);	//cast to map
 	ctr_map_assign(myself, argumentList);
-	myself->link = oldlink;	//cast back to whatever we were
+	ctr_set_link_all(myself, oldlink);	//cast back to whatever we were
 	return myself;
 }
 
@@ -374,7 +374,7 @@ ctr_object *ctr_object_make_hiding(ctr_object * myself,
 	}
 	ctr_object *instance =
 	    ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-	instance->link = myself;
+	ctr_set_link_all(instance, myself);
 	ctr_size length = (int)ctr_array_count(hide_arr, NULL)->value.nvalue;
 	if (length > 0) {
 		ctr_object *key = ctr_build_string_from_cstring("hides");
@@ -919,8 +919,20 @@ ctr_object *ctr_object_respond(ctr_object * myself, ctr_argument * argumentList)
 ctr_object *ctr_object_respond_and(ctr_object * myself,
 				   ctr_argument * argumentList)
 {
-	if (myself->info.remote == 0)
+	if (myself->info.remote == 0) {
+		ctr_object* meth = argumentList->object;
+		ctr_object* err = ctr_build_string_from_cstring("Unknown method ");
+		argumentList->object = ctr_send_message(myself, "type", 4, 0);
+		ctr_string_append(err, argumentList);
+		argumentList->object = ctr_build_string_from_cstring("::'");
+		ctr_string_append(err, argumentList);
+		argumentList->object = meth;
+		ctr_string_append(err, argumentList);
+		argumentList->object = ctr_build_string_from_cstring("' was called");
+		ctr_string_append(err, argumentList);
+		CtrStdFlow = err;
 		return myself;
+	}
 	ctr_object *arr;
 	ctr_object *answer;
 	ctr_argument *newArgumentList;
@@ -939,8 +951,20 @@ ctr_object *ctr_object_respond_and(ctr_object * myself,
 ctr_object *ctr_object_respond_and_and(ctr_object * myself,
 				       ctr_argument * argumentList)
 {
-	if (myself->info.remote == 0)
+	if (myself->info.remote == 0) {
+		ctr_object* meth = argumentList->object;
+		ctr_object* err = ctr_build_string_from_cstring("Unknown method ");
+		argumentList->object = ctr_send_message(myself, "type", 4, 0);
+		ctr_string_append(err, argumentList);
+		argumentList->object = ctr_build_string_from_cstring("::'");
+		ctr_string_append(err, argumentList);
+		argumentList->object = meth;
+		ctr_string_append(err, argumentList);
+		argumentList->object = ctr_build_string_from_cstring("' was called");
+		ctr_string_append(err, argumentList);
+		CtrStdFlow = err;
 		return myself;
+	}
 	ctr_object *arr;
 	ctr_object *answer;
 	ctr_argument *newArgumentList;
@@ -988,7 +1012,7 @@ ctr_object *ctr_build_bool(int truth)
 	else
 		boolObject->value.bvalue = 0;
 	boolObject->info.type = CTR_OBJECT_TYPE_OTBOOL;
-	boolObject->link = CtrStdBool;
+	ctr_set_link_all(boolObject, CtrStdBool);
 	return boolObject;
 }
 
@@ -1130,9 +1154,11 @@ ctr_object *ctr_bool_if_true(ctr_object * myself, ctr_argument * argumentList)
 		arguments->object = myself;
 		result = ctr_block_run(codeBlock, arguments, NULL);
 		ctr_heap_free(arguments);
-		if (result != codeBlock)
+		if (result != codeBlock) {
 			ctr_internal_next_return = 1;
-		return result;
+			// return result;
+		}
+		return myself;
 	}
 	if (CtrStdFlow == CtrStdBreak)
 		CtrStdFlow = NULL;	/* consume break */
@@ -1160,10 +1186,12 @@ ctr_object *ctr_bool_if_false(ctr_object * myself, ctr_argument * argumentList)
 		    (ctr_argument *) ctr_heap_allocate(sizeof(ctr_argument));
 		arguments->object = myself;
 		result = ctr_block_run(codeBlock, arguments, NULL);
-		if (result != codeBlock)
-			ctr_internal_next_return = 1;
 		ctr_heap_free(arguments);
-		return result;
+		if (result != codeBlock) {
+			ctr_internal_next_return = 1;
+			// return result;
+		}
+		return myself;
 	}
 	if (CtrStdFlow == CtrStdBreak)
 		CtrStdFlow = NULL;	/* consume break */
@@ -1245,7 +1273,8 @@ ctr_object *ctr_bool_flip(ctr_object * myself, ctr_argument * argumentList)
  */
 ctr_object *ctr_bool_either_or(ctr_object * myself, ctr_argument * argumentList)
 {
-	if (myself->value.bvalue) {
+	int b = ctr_internal_cast2bool(myself)->value.bvalue;
+	if (b) {
 		if (argumentList->object->info.type == CTR_OBJECT_TYPE_OTBLOCK)
 			return ctr_block_runIt(argumentList->object, NULL);
 		return argumentList->object;
@@ -1355,7 +1384,7 @@ ctr_object *ctr_build_number(char *n)
 		numberObject->value.nvalue = (double)strtol(n, NULL, 0);
 	else
 		numberObject->value.nvalue = atof(n);
-	numberObject->link = CtrStdNumber;
+	ctr_set_link_all(numberObject, CtrStdNumber);
 	return numberObject;
 }
 
@@ -1408,7 +1437,7 @@ ctr_object *ctr_build_number_from_string(char *str, ctr_size length)
 	numCStr = (char *)ctr_heap_allocate(41 * sizeof(char));
 	memcpy(numCStr, str, stringNumberLength);
 	numberObject->value.nvalue = atof(numCStr);
-	numberObject->link = CtrStdNumber;
+	ctr_set_link_all(numberObject, CtrStdNumber);
 	ctr_heap_free(numCStr);
 	return numberObject;
 }
@@ -1425,7 +1454,7 @@ ctr_object *ctr_build_number_from_float(ctr_number f)
 	ctr_object *numberObject =
 	    ctr_internal_create_object(CTR_OBJECT_TYPE_OTNUMBER);
 	numberObject->value.nvalue = f;
-	numberObject->link = CtrStdNumber;
+	ctr_set_link_all(numberObject, CtrStdNumber);
 	return numberObject;
 }
 
@@ -1676,7 +1705,10 @@ ctr_object *ctr_number_times(ctr_object * myself, ctr_argument * argumentList)
 		if (CtrStdFlow)
 			break;
 	}
+	// ctr_object* ctx = ctr_contexts[ctr_context_id];
 	ctr_close_context();
+	// arguments->object = ctx;
+	// ctr_gc_sweep_this(CtrStdGC, arguments);
 	ctr_heap_free(arguments);
 	if (CtrStdFlow == CtrStdBreak)
 		CtrStdFlow = NULL;	/* consume break */
@@ -2284,7 +2316,7 @@ ctr_object *ctr_number_to_boolean(ctr_object * myself,
 ctr_object *ctr_build_string(char *stringValue, long size)
 {
 	ctr_object *stringObject =
-	    ctr_internal_create_object(CTR_OBJECT_TYPE_OTSTRING);
+	    ctr_internal_create_standalone_object(CTR_OBJECT_TYPE_OTSTRING);
 	if (size != 0) {
 		stringObject->value.svalue->value =
 		    ctr_heap_allocate(size * sizeof(char));
@@ -2293,7 +2325,7 @@ ctr_object *ctr_build_string(char *stringValue, long size)
 	} else
 		stringObject->value.svalue->value = NULL;
 	stringObject->value.svalue->vlen = size;
-	stringObject->link = CtrStdString;
+	ctr_set_link_all(stringObject, CtrStdString);
 	return stringObject;
 }
 
@@ -4140,6 +4172,90 @@ ctr_object *ctr_string_to_byte_array(ctr_object * myself,
 	ctr_heap_free(newArgumentList);
 	return arr;
 }
+/**
+ * <b>[String] fmap: [Block]</b>
+ *
+ * maps a function over the string and returns a string
+ */
+ctr_object* ctr_string_fmap(ctr_object* myself, ctr_argument* argumentList) {
+	ctr_size i;
+	ctr_object *arr;
+	ctr_argument *newArgumentList;
+	ctr_object *fmapb = argumentList->object;
+	CTR_ENSURE_TYPE_BLOCK(fmapb);
+	arr = ctr_array_new(CtrStdArray, NULL);
+	newArgumentList = ctr_heap_allocate(sizeof(ctr_argument));
+	i = 0;
+	while (i < ctr_string_length(myself, NULL)->value.nvalue) {
+		newArgumentList->object = ctr_build_number_from_float(i);
+		newArgumentList->object = ctr_string_at(myself, newArgumentList);
+		newArgumentList->object = ctr_block_runIt(fmapb, newArgumentList);
+		ctr_array_push(arr, newArgumentList);
+		i++;
+	}
+	newArgumentList->object = ctr_build_empty_string();
+	arr = ctr_array_join(arr, newArgumentList);
+	ctr_heap_free(newArgumentList);
+	return arr;
+}
+/**
+ * <b>[String] imap: [Block]</b>
+ *
+ * maps a function over the string with indices and returns a string
+ */
+ctr_object* ctr_string_imap(ctr_object* myself, ctr_argument* argumentList) {
+	ctr_size i;
+	ctr_object *arr;
+	ctr_argument *newArgumentList;
+	ctr_object *fmapb = argumentList->object;
+	CTR_ENSURE_TYPE_BLOCK(fmapb);
+	arr = ctr_array_new(CtrStdArray, NULL);
+	newArgumentList = ctr_heap_allocate(sizeof(ctr_argument));
+	newArgumentList->next = ctr_heap_allocate(sizeof(ctr_argument));
+	i = 0;
+	while (i < ctr_string_length(myself, NULL)->value.nvalue) {
+		newArgumentList->object = ctr_build_number_from_float(i);
+		newArgumentList->next->object = ctr_string_at(myself, newArgumentList);
+		newArgumentList->object = ctr_block_runIt(fmapb, newArgumentList);
+		ctr_array_push(arr, newArgumentList);
+		i++;
+	}
+	newArgumentList->object = ctr_build_empty_string();
+	arr = ctr_array_join(arr, newArgumentList);
+	ctr_heap_free(newArgumentList->next);
+	ctr_heap_free(newArgumentList);
+	return arr;
+}
+/**
+ * <b>[String] filter: [Block]</b>
+ *
+ * filters a string based on a predicate. returns a string
+ */
+ctr_object* ctr_string_filter(ctr_object* myself, ctr_argument* argumentList) {
+	ctr_size i;
+	ctr_object *arr;
+	ctr_argument *newArgumentList;
+	ctr_object *fmapb = argumentList->object;
+	CTR_ENSURE_TYPE_BLOCK(fmapb);
+	arr = ctr_array_new(CtrStdArray, NULL);
+	newArgumentList = ctr_heap_allocate(sizeof(ctr_argument));
+	newArgumentList->next = ctr_heap_allocate(sizeof(ctr_argument));
+	i = 0;
+	while (i < ctr_string_length(myself, NULL)->value.nvalue) {
+		newArgumentList->object = ctr_build_number_from_float(i);
+		newArgumentList->next->object = ctr_string_at(myself, newArgumentList);
+		if(ctr_block_runIt(fmapb, newArgumentList)->value.bvalue) {
+			newArgumentList->object = newArgumentList->next->object;
+			ctr_array_push(arr, newArgumentList);
+		}
+		i++;
+	}
+	newArgumentList->object = ctr_build_empty_string();
+	arr = ctr_array_join(arr, newArgumentList);
+	ctr_heap_free(newArgumentList->next);
+	ctr_heap_free(newArgumentList);
+	return arr;
+}
 
 /**
  * <b>[String] appendByte: [Number].</b>
@@ -4551,7 +4667,7 @@ ctr_object *ctr_build_immutable(ctr_tnode * node)
 {
 	ctr_object *tupleobj =
 	    ctr_internal_create_object(CTR_OBJECT_TYPE_OTARRAY);
-	tupleobj->link = CtrStdArray;
+	ctr_set_link_all(tupleobj, CtrStdArray);
 	tupleobj->value.avalue =
 	    (ctr_collection *) ctr_heap_allocate(sizeof(ctr_collection));
 	tupleobj->value.avalue->immutable = 1;
@@ -4606,7 +4722,7 @@ ctr_object *ctr_build_block(ctr_tnode * node)
 	ctr_object *codeBlockObject =
 	    ctr_internal_create_object(CTR_OBJECT_TYPE_OTBLOCK);
 	codeBlockObject->value.block = node;
-	codeBlockObject->link = CtrStdBlock;
+	ctr_set_link_all(codeBlockObject, CtrStdBlock);
 	ctr_capture_refs(node, codeBlockObject);
 	return codeBlockObject;
 }
@@ -4810,6 +4926,13 @@ int ctr_args_eq(ctr_argument * arg0, ctr_argument * arg1)
 ctr_object *ctr_block_run_array(ctr_object * myself, ctr_object * argArray,
 				ctr_object * my)
 {
+	if(myself->info.type == CTR_OBJECT_TYPE_OTNATFUNC) {
+		ctr_argument *argList = ctr_heap_allocate(sizeof(ctr_argument));
+		(void)ctr_array_to_argument_list(argArray, argList);
+		ctr_object* result = myself->value.fvalue(my, argList);
+		ctr_free_argumentList(argList);
+		return result;
+	}
 	ctr_object *result;
 	ctr_tnode *node = myself->value.block;
 	ctr_tlistitem *codeBlockParts = node->nodes;
@@ -4945,6 +5068,11 @@ ctr_object *ctr_block_run_array(ctr_object * myself, ctr_object * argArray,
 ctr_object *ctr_block_run(ctr_object * myself, ctr_argument * argList,
 			  ctr_object * my)
 {
+	if(myself->info.type == CTR_OBJECT_TYPE_OTNATFUNC) {
+		ctr_argument *argList = ctr_heap_allocate(sizeof(ctr_argument));
+		ctr_object* result = myself->value.fvalue(my, argList);
+		return result;
+	}
 	ctr_object *result;
 	//result = ctr_block_run_try_get_result_for(myself, argList);
 	//if(result) return result;
@@ -5084,6 +5212,11 @@ ctr_object *ctr_block_run(ctr_object * myself, ctr_argument * argList,
 ctr_object *ctr_block_run_here(ctr_object * myself, ctr_argument * argList,
 			       ctr_object * my)
 {
+	if(myself->info.type == CTR_OBJECT_TYPE_OTNATFUNC) {
+		ctr_argument *argList = ctr_heap_allocate(sizeof(ctr_argument));
+		ctr_object* result = myself->value.fvalue(my, argList);
+		return result;
+	}
 	ctr_object *result;
 	ctr_tnode *node = myself->value.block;
 	ctr_tlistitem *codeBlockParts = node->nodes;

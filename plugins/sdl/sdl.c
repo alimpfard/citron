@@ -269,7 +269,7 @@ void ctr_sdl_quit_atexit() {
 
 ctr_object* ctr_sdl_make(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
-  instance->link = CtrStdSdl;
+  ctr_set_link_all(instance, CtrStdSdl);
   ctr_internal_object_set_property(
    instance,
    ctr_build_string_from_cstring( "windowHeight" ),
@@ -349,7 +349,7 @@ ctr_object* ctr_sdl_init(ctr_object* myself, ctr_argument* argumentList) {
     ttf_inited = 1;
   }
   ctr_heap_free(caption);
-  myself->link = CtrStdSdl_surface;
+  ctr_set_link_all(myself, CtrStdSdl_surface);
   myself->value.rvalue->ptr = (void*)window;
   return myself;
 }
@@ -390,7 +390,7 @@ ctr_object* ctr_sdl_rect_make(ctr_object* myself, ctr_argument* argumentList) {
   h = argumentList->next->next->next->object->value.nvalue;
   SDL_Rect* Rect = ctr_sdl_rect_make_nat(x,y,w,h);
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_RECT);
-  instance->link = CtrStdSdl_rect;
+  ctr_set_link_all(instance, CtrStdSdl_rect);
   instance->value.rvalue->ptr = (void*)Rect;
   return instance;
 }
@@ -447,7 +447,7 @@ ctr_object* ctr_sdl_rect_to_s(ctr_object* myself, ctr_argument* argumentList) {
 
  ctr_object* ctr_sdl_color_make(ctr_object* myself, ctr_argument* argumentList) {
    ctr_object* instance = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-   instance->link = myself;
+   ctr_set_link_all(instance, myself);
    if(argumentList == NULL) return instance;
    ctr_internal_object_set_property(instance, ctr_build_string_from_cstring("red"),  (argumentList->object), CTR_CATEGORY_PRIVATE_PROPERTY);
    ctr_internal_object_set_property(instance, ctr_build_string_from_cstring("green"),(argumentList->next->object), CTR_CATEGORY_PRIVATE_PROPERTY);
@@ -533,7 +533,7 @@ ctr_object* ctr_sdl_rect_to_s(ctr_object* myself, ctr_argument* argumentList) {
 
 ctr_object* ctr_sdl_surface_loadImage(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
-  instance->link = CtrStdSdl_surface;
+  ctr_set_link_all(instance, CtrStdSdl_surface);
   char* loc = ctr_heap_allocate_cstring (argumentList->object);
   if(access(loc, F_OK) == -1) {
     CtrStdFlow = ctr_build_string_from_cstring("specified file does not exist or cannot be accessed.");
@@ -556,7 +556,7 @@ ctr_object* ctr_sdl_surface_free_surface(ctr_object* myself, ctr_argument* argum
 
 ctr_object* ctr_sdl_surface_display_format(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* instance = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-  instance->link = CtrStdSdl_surface;
+  ctr_set_link_all(instance, CtrStdSdl_surface);
   SDL_Surface* surface = get_sdl_surface_ptr(myself);
   SDL_Surface* temp = SDL_DisplayFormat(surface);
   instance->value.rvalue->ptr = (void*)temp;
@@ -607,7 +607,7 @@ ctr_object* ctr_sdl_surface_get_clip_rect(ctr_object* myself, ctr_argument* argu
   SDL_Surface* surface = get_sdl_surface_ptr(myself);
   SDL_GetClipRect(surface, rect);
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_RECT);
-  instance->link = CtrStdSdl_rect;
+  ctr_set_link_all(instance, CtrStdSdl_rect);
   instance->value.rvalue->ptr = (void*)rect;
   return instance;
 }
@@ -668,7 +668,7 @@ ctr_object* ctr_sdl_surface_new(ctr_object* myself, ctr_argument* argumentList) 
     return CtrStdNil;
   }
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
-  instance->link = CtrStdSdl_surface;
+  ctr_set_link_all(instance, CtrStdSdl_surface);
   instance->value.rvalue->ptr = sf2;
   return instance;
 }
@@ -683,7 +683,7 @@ ctr_object* ctr_sdl_surface_new_wh(ctr_object* myself, ctr_argument* argumentLis
     return CtrStdNil;
   }
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
-  instance->link = CtrStdSdl_surface;
+  ctr_set_link_all(instance, CtrStdSdl_surface);
   instance->value.rvalue->ptr = sf2;
   return instance;
 }
@@ -782,7 +782,7 @@ ctr_object* ctr_sdl_surface_get_pixel(ctr_object* myself, ctr_argument* argument
   uint8_t r,g,b;
   SDL_GetRGB(pixel, surface->format, &r, &g, &b);
   ctr_object* instance = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-  instance->link = CtrStdColor;
+  ctr_set_link_all(instance, CtrStdColor);
   ctr_internal_object_set_property(instance, ctr_build_string_from_cstring("red"),   ctr_build_number_from_float(r), CTR_CATEGORY_PRIVATE_PROPERTY);
   ctr_internal_object_set_property(instance, ctr_build_string_from_cstring("green"), ctr_build_number_from_float(g), CTR_CATEGORY_PRIVATE_PROPERTY);
   ctr_internal_object_set_property(instance, ctr_build_string_from_cstring("blue"),  ctr_build_number_from_float(b), CTR_CATEGORY_PRIVATE_PROPERTY);
@@ -795,7 +795,7 @@ ctr_object* ctr_sdl_surface_get_pixel(ctr_object* myself, ctr_argument* argument
  */
 ctr_object* ctr_sdl_event_make(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_EVT);
-  instance->link = myself;
+  ctr_set_link_all(instance, myself);
   ((ctr_sdl_evt*)(instance->value.rvalue->ptr))->ptr = ctr_heap_allocate_tracked(sizeof(SDL_Event));
   return instance;
 }
@@ -863,7 +863,7 @@ ctr_object* ctr_sdl_event_get_mp(ctr_object* myself, ctr_argument* argumentList)
 }
 ctr_object* ctr_sdl_event_key_   (ctr_object* myself) {
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_EVT);
-  instance->link = CtrStdSdl_evt;
+  ctr_set_link_all(instance, CtrStdSdl_evt);
   //ctr_internal_create_func(instance, ctr_build_string_from_cstring("timestamp"), &ctr_sdl_event_key_get_timestamp);
   //ctr_internal_create_func(instance, ctr_build_string_from_cstring("windowID"), &ctr_sdl_event_key_get_windowID);
   // ctr_internal_create_func(instance, ctr_build_string_from_cstring("state"), &ctr_sdl_event_key_get_state);
@@ -941,7 +941,7 @@ ctr_object* ctr_sdl_event_type_compare(ctr_object* myself, ctr_argument* argumen
  */
  ctr_object* ctr_sdl_ttf_make(ctr_object* myself, ctr_argument* argumentList) {
    ctr_object* container = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_FONT);
-   container->link = CtrStdSdl_font;
+   ctr_set_link_all(container, CtrStdSdl_font);
    return container;
  }
 
@@ -958,7 +958,7 @@ ctr_object* ctr_sdl_event_type_compare(ctr_object* myself, ctr_argument* argumen
    if(argumentList->next->object)
      size = argumentList->next->object->value.nvalue;
    ctr_object* container = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_FONT);
-   container->link = CtrStdSdl_font;
+   ctr_set_link_all(container, CtrStdSdl_font);
    TTF_Font* font = TTF_OpenFont(fname, size);
    ctr_heap_free(fname);
    if(!font) {
@@ -991,7 +991,7 @@ ctr_object* ctr_sdl_ttf_render_solid(ctr_object* myself, ctr_argument* argumentL
     return CtrStdNil;
   }
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
-  instance->link = CtrStdSdl_surface;
+  ctr_set_link_all(instance, CtrStdSdl_surface);
   instance->value.rvalue->ptr = srf;
   return instance;
 }
@@ -1014,7 +1014,7 @@ ctr_object* ctr_sdl_ttf_renderu_solid(ctr_object* myself, ctr_argument* argument
     return CtrStdNil;
   }
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
-  instance->link = CtrStdSdl_surface;
+  ctr_set_link_all(instance, CtrStdSdl_surface);
   instance->value.rvalue->ptr = srf;
   return instance;
 }
@@ -1040,7 +1040,7 @@ ctr_object* ctr_sdl_ttf_render_blended(ctr_object* myself, ctr_argument* argumen
     return CtrStdNil;
   }
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
-  instance->link = CtrStdSdl_surface;
+  ctr_set_link_all(instance, CtrStdSdl_surface);
   instance->value.rvalue->ptr = srf;
   return instance;
 }
@@ -1063,7 +1063,7 @@ ctr_object* ctr_sdl_ttf_renderu_blended(ctr_object* myself, ctr_argument* argume
     return CtrStdNil;
   }
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
-  instance->link = CtrStdSdl_surface;
+  ctr_set_link_all(instance, CtrStdSdl_surface);
   instance->value.rvalue->ptr = srf;
   return instance;
 }
@@ -1095,7 +1095,7 @@ ctr_object* ctr_sdl_ttf_render_shaded(ctr_object* myself, ctr_argument* argument
     return CtrStdNil;
   }
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
-  instance->link = CtrStdSdl_surface;
+  ctr_set_link_all(instance, CtrStdSdl_surface);
   instance->value.rvalue->ptr = srf;
   return instance;
 }
@@ -1124,7 +1124,7 @@ ctr_object* ctr_sdl_ttf_renderu_shaded(ctr_object* myself, ctr_argument* argumen
     return CtrStdNil;
   }
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
-  instance->link = CtrStdSdl_surface;
+  ctr_set_link_all(instance, CtrStdSdl_surface);
   instance->value.rvalue->ptr = srf;
   return instance;
 }
@@ -1384,17 +1384,17 @@ ctr_object* ctr_sdl_gfx_filledTrigonColor(ctr_object* myself, ctr_argument* argu
 void begin() {
   atexit(ctr_sdl_quit_atexit);
   CtrStdSdl = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-  CtrStdSdl->link = CtrStdObject;
+  ctr_set_link_all(CtrStdSdl, CtrStdObject);
   CtrStdSdl_surface = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-  CtrStdSdl_surface->link = CtrStdObject;
+  ctr_set_link_all(CtrStdSdl_surface, CtrStdObject);
   CtrStdSdl_rect = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-  CtrStdSdl_rect->link = CtrStdObject;
+  ctr_set_link_all(CtrStdSdl_rect, CtrStdObject);
   CtrStdSdl_evt = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-  CtrStdSdl_evt->link = CtrStdObject;
+  ctr_set_link_all(CtrStdSdl_evt, CtrStdObject);
   CtrStdColor = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-  CtrStdColor->link = CtrStdObject;
+  ctr_set_link_all(CtrStdColor, CtrStdObject);
   CtrStdSdl_font = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-  CtrStdSdl_font->link = CtrStdObject;
+  ctr_set_link_all(CtrStdSdl_font, CtrStdObject);
   //sdl, surface, rect
 	ctr_internal_create_func(CtrStdSdl, ctr_build_string_from_cstring( "new" ), &ctr_sdl_make );
   ctr_internal_create_func(CtrStdSdl, ctr_build_string_from_cstring( "init" ), &ctr_sdl_init );

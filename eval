@@ -6,12 +6,14 @@ contextPurity is False. #This is not a pure context, since objects are mutated i
 File new: (File extensionsPath) + '/extensions/fileutils.ctr', include.
 
 inp is ''.
+var stderr is File special: 'stderr'.
+var errPen is Pen for: stderr.
+var GREEN_COLOR is 'green' toSymbol.
+var ITALIC_EFFECT is 'italic' toSymbol.
 
 ImportLib Queue.
 ImportLib LRArray.
-import Library/Data/Map Library/Utils/Highlight Library/Utils/OneGateFlipper Library/Control/MethodResolve.
-
-TerminalWidth is 85.
+import Library/Foreign/C/NamedStruct Library/Data/Map Library/Utils/Highlight Library/Utils/OneGateFlipper Library/Control/MethodResolve.
 
 Eval is Object new.
 Eval on: 'init' do: {
@@ -29,6 +31,8 @@ Eval on: 'init' do: {
   my commands is Nil.
   my continuation is '...'.
   my flags is Map new
+    put: False at: 'ptype',
+    put: False at: 'stats',
     put: True at: 'printvs',
     put: True at: 'highlight',
     put: False at: 'equit',
@@ -42,6 +46,9 @@ Eval on: 'handleException:' do: {:e
   my errd is True.
   my last_error is e.
   ^me getFlag: 'equit', either: {thisBlock error: e.} or: {Pen red write: e, resetColor brk. ^e.}.
+}.
+Eval on: 'handleInternalException:' do: {:e
+  errPen writeln: 'Eval bug, $$e'.
 }.
 Eval on: 'errored?' do: {^my errd.}.
 Eval on: 'lastError' do: {^my last_error.}.
@@ -64,12 +71,19 @@ Eval on: 'setPrompt:' do: { :p my prompt is p. }.
 Eval on: 'setContinuation:' do: { :p my continuation is p. }.
 Eval on: 'setArgs:' do: { :a my args := a. }.
 Eval on: 'color' do: { ^my color. }.
-Eval on: 'prompt' do: { ^my prompt. }.
+Eval on: 'prompt' do: { ^(me preprompt) + my prompt. }.
+Eval on: 'preprompt' do: {
+  var pp is Array new.
+  me getFlag: 'highlight', ifFalse: { pp push: 'p'. }.
+  pp is pp join: ':'.
+  ^pp length > 0 either: pp + ' ' or: pp.
+}.
 Eval on: 'continuation' do: { ^my continuation. }.
 Eval on: 'shiftArgs' do: { ^(my args shift). }.
 Eval on: 'enableFlag:' do: {:flag my flags put: True at: flag. }.
 Eval on: 'disableFlag:' do: {:flag my flags put: False at: flag. }.
 Eval on: 'getFlag:' do: {:flag ^my flags at: flag. }.
+Eval on: 'toggleFlag:' do: {:flag my flags put: (my flags @ flag) not at: flag. }.
 Eval on: 'flags' do: {^my flags. }.
 Eval on: 'modifyFlags:' do: {:flag
   flag startsWith: 'no-', ifTrue: {
@@ -119,6 +133,7 @@ Eval on: 'Commands' do: {
     ^Map new
       put: {:args Eval end. ^''.} at: 'q',
       put: {:args Eval modifyFlags: args. ^''.} at: '!f',
+      put: {:args Eval modifyFlags: args ~ ?>s/^-/no-/g<? ~ ?>s/^\+//g<?. ^''.} at: 'set',
       put: {:args ^Reflect strTypeOf: (Eval evaluate: args).} at: 't',
       put: {:args ^(args trim = '') either: {^Eval startEvalServer.} or: {^Eval startEvalServerOnPort: (Eval evaluate: args).}.} at: 'server',
       put: {:args ^'Interpreter metacommands help:
@@ -129,6 +144,7 @@ Eval on: 'Commands' do: {
       + !m <expression> -- evaluates and shows the methods of expression.
       + !p <expression> -- evaluates and shows the properties of expression.
       + !f <[no-]flag> -- modifies flag
+      + set <(+|-)flag> -- alternative for !f with easier(?) syntax
       + !ud <name> <expression> -- create a metacommand
       + p <expression> -- prints the value of expression
       + h -- show this help'.} at: 'h',
@@ -147,7 +163,8 @@ Eval on: 'doMeta:' do: {:str:ptr
   var cmd is 'h'.
   var args is ''.
   str trim findPattern: '(\\W?\\w+)(\\s+(.*))?' do: {:parts cmd is parts @ 1. args is parts count > 2 either: {^parts @ 3.} or: ''.}.
-  ^(Eval Commands at: cmd) applyTo: args.
+  var cmds is Eval Commands.
+  ^cmds at: cmd, or: {^{^'Invalid meta-command.\n' + (cmds at: 'h', run).}.}, applyTo: args.
 }.
 
 Eval on: 'evaluate:' do: { :str
@@ -205,6 +222,7 @@ Eval onlyRelevantArgs.
 var args is Array new.
 
 #global vars for evaler
+var it is Nil.
 var _  is Nil.
 var __ is Nil.
 
@@ -233,6 +251,10 @@ Eval on: 'allTheNames' do: {
 
 Eval on: 'allTheNames:' do: {:obj
   ^obj isNil not either: {^[(False), (Reflect getMethodsOf: obj)].} or: {^[(True), (Eval allTheNames)].}.
+}.
+
+Eval on: 'togglePasteMode' do: {
+  me toggleFlag: 'highlight'.
 }.
 
 # parse arguments
@@ -271,7 +293,7 @@ Eval on: 'allTheNames:' do: {:obj
           indent: 2 write: '-s <port>: start a evaluation server on the specified port (Forked and the current process will be killed. pidfile at ~/.ctrpid.pid)\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
         P green write: 'default imported modules in eval are:',
-          cyan indent: 1 write: ('Queue LRArray ' + (import __loaded_modules reverse join: ' ') ~ 's/\\s|^/\\n+ /g').
+          cyan indent: 1 write: ('Queue LRArray ' + (import __loaded_modules keys reverse join: ' ') ~ 's/\\s|^/\\n+ /g').
         P resetColor brk.
         Program exit.
     # when passed -p, get the next arg, and set the prompt to that.
@@ -338,6 +360,27 @@ Eval on: 'allTheNames:' do: {:obj
       }.
     }, switch. # do not consume any other option.
 }.
+
+import Library/Foreign/C/C_Types: ['c_int', 'c_ptr', 'c_short'].
+import Library/Foreign/C/errno: 'g_strerror'.
+import Library/Foreign/C/Signal: 'Signal'.
+
+_ioctl is CTypes loadLibrary: Nil, ioctl.
+_ioctl_ty is CIF new setABI: 0 return: c_int argTypes: [c_int, c_int, c_ptr].
+wsize is NamedStruct new initAs: 'ssssssss' names: ['row', 'col', 'x_pixel', 'y_pixel'].
+wsize struct allocate.
+
+winsize is {:_
+  var __eval_ret is _ioctl_ty call: _ioctl withArgs: [0, 0x5413, (wsize struct)].
+  (__eval_ret !=: 0) ifTrue: { thisBlock error: g_strerror run. }.
+  TerminalWidth is (wsize memberCol - 10) max: 10.
+}.
+
+TerminalWidth is 85.
+winsize run.
+Signal new handle: 'SIGWINCH' with: winsize.
+
+
 Pen green write: ?>Project Citron : The Programming Language (V<?, write:(Reflect version) + ')', resetColor brk
 write: ?>Eval Mode, parameters related to eval are in the Eval namespace.
 run with '-h' to read the eval mode help.
@@ -354,11 +397,11 @@ run with '-h' to read the eval mode help.
 # }.
 Eval on: 'redraw:at:' do: {:inp:cursor
   var ctn is Eval prompt.
-  ctn is inp length > (TerminalWidth - (ctn length)) either: '<' or: ctn.
+  ctn is inp length > (TerminalWidth run - (ctn length)) either: (ctn @ 0) or: ctn.
   Pen clearLine.
   inp length > 1 ifTrue: {
     var diff is 0.
-    var iinp is (cursor > (var first_visible is (inp length - TerminalWidth - (ctn length) max: 0))) either: { ^inp skip: first_visible - 2. } or: { var tdiff is TerminalWidth - (ctn length). var f is inp skip: cursor - 1. diff is f length - tdiff. ^f from: 0 length: tdiff. }.
+    var iinp is (cursor > (var first_visible is (inp length - TerminalWidth run - (ctn length) max: 0))) either: { ^inp skip: first_visible - 2. } or: { var tdiff is TerminalWidth run - (ctn length). var f is inp skip: cursor - 1. diff is f length - tdiff. ^f from: 0 length: tdiff. }.
     (Eval getFlag: 'highlight') ifTrue: {iinp is Highlight highlight: iinp.}.
     Pen cyan write: ctn, resetColor.
     # Pen for: (File special: 'stderr'), writeln: [first_visible, cursor].
@@ -368,8 +411,10 @@ Eval on: 'redraw:at:' do: {:inp:cursor
   }.
 }.
 
+Eval genAccessors: ['exectime', '__eval_ret', 'statsb', 'statsa'].
+
 Eval on: 'repl' do: {
-  {^True.} whileTrue: {
+  {^True.} whileTrue: ({
     var hindex is Eval getHistory count.
     var ncmessage is ' <- No completion'.
     var stdin is File special: 'stdin'.
@@ -515,6 +560,8 @@ Eval on: 'repl' do: {
                   }.#, else: { Pen red write: inc. }.
                 }.
               }.
+            }, case: '\x4f\x51' do: { #F2
+                Eval togglePasteMode.
             }, default: {
               Pen write: inc toByteArray.
             }, switch.
@@ -526,13 +573,14 @@ Eval on: 'repl' do: {
           last_was_comp is False.
         }.
       Eval redraw: inp at: cursor - 1.
+      # Pen write: inc toByteArray.
       done break.
       inc is stdin readBytes: 1.
     }.
     hindex is Eval getHistory count.
     # Pen cyan write: ' [cursor %d in (%s)]' % [cursor, (inp)], resetColor.
     (inp trim = '') continue.
-    Pen brk.
+    Eval getFlag: 'printvs', ifTrue: { Pen brk. }.
     # {^Eval queryState: inp.} whileFalse: {
     #  inp append: (inp countOf: '\'', even either: '\n' or: '') + ({
     #    Pen cyan write: Eval continuation * (1 + (inp countOf: '{') - (inp countOf: '}')), resetColor.
@@ -546,15 +594,36 @@ Eval on: 'repl' do: {
     }.
 
     # Syntactic errors will not be passed to the eval. # TODO: handle that.
-    var ret is Eval evaluate: inp.
-    Eval getFlag: 'printvs', ifTrue: { 'Pen %s write: ret toString' formatObjects: [(Eval color)], eval. }.
-    Pen resetColor.
-    __ is _.
-    _ is ret.
+    Eval statsb: 0, statsa: 0, exectime: 0.
+    Eval getFlag: 'stats', either: {
+      Eval statsb: Broom keptAlloc.
+      Eval exectime: (Clock timeExecutionOf: { Eval __eval_ret: (Eval evaluate: inp). }).
+      Eval statsa: Broom keptAlloc.
+    }
+    or: {
+      Eval __eval_ret: (Eval evaluate: inp).
+    }.
     Eval pushHist: inp.
-    #Broom sweep. #Keep the darn pointers in memory
-    ret toString length > 0 ifTrue: { Pen brk. }.
-  }.
+    __ is _.
+    _ is Eval __eval_ret.
+    Eval errored? not ifTrue: {
+      var printed is False.
+      Eval getFlag: 'printvs', ifTrue: { Pen message: Eval color arguments: [], write: var str is Eval __eval_ret toString. printed is str length > 0. }.
+      Pen resetColor.
+      Eval getFlag: 'ptype', ifTrue: {
+        Pen yellow write: '%s=> (%s)%s' % [(printed either: ' ' or: ''), (Reflect strTypeOf: Eval __eval_ret, replace: '\'' with: ''), (printed either: '' or: '\n')].
+        Pen resetColor.
+      }.
+      Eval getFlag: 'stats', ifTrue: {
+        var str is '%s(%s seconds (%d cycles), %s bytes)' % [(printed either: '\n' or: ''), Eval exectime / (Clock ticksPerSecond), Eval exectime, ((Eval statsa - Eval statsb) toString reverse reSplit: '(?<=\\G...)', join: ',', reverse)].
+        Pen write: Colors % [str, GREEN_COLOR, ITALIC_EFFECT].
+        printed ifFalse: { Pen brk. }.
+      }.
+      it is _.
+      #Broom sweep. #Keep the darn pointers in memory
+      Eval __eval_ret toString length > 0 ifTrue: { Pen brk. }.
+    }.
+  } catch: Eval::'handleInternalException:').
 }.
 
 Eval repl.

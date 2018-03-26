@@ -1,0 +1,26 @@
+var c_void is CTypes void.
+var c_uint8 is CTypes uint8.
+var c_sint8 is CTypes sint8.
+var c_uint16 is CTypes uint16.
+var c_sint16 is CTypes sint16.
+var c_uint32 is CTypes uint32.
+var c_sint32 is CTypes sint32.
+var c_uint64 is CTypes uint64.
+var c_sint64 is CTypes sint64.
+var c_float is CTypes float.
+var c_double is CTypes double.
+var c_uchar is CTypes uchar.
+var c_schar is CTypes schar.
+var c_ushort is CTypes ushort.
+var c_sshort is CTypes sshort.
+var c_uint is CTypes uint.
+var c_sint is CTypes sint.
+var c_ulong is CTypes ulong.
+var c_slong is CTypes slong.
+var c_longdouble is CTypes longdouble.
+var c_ptr is CTypes pointer.
+
+var c_int is c_sint.
+var c_char is c_schar.
+var c_long is c_slong.
+var c_short is c_sshort.

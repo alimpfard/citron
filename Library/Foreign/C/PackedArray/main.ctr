@@ -1,4 +1,4 @@
-Program warn: 'This module is highly unstable and subject to rewrite'.
+Program warning: 'This module is highly unstable and subject to rewrite'.
 var TYPEMAP is Map new
   put: 0  at: 'uint8',
   put: 1  at: 'sint8',

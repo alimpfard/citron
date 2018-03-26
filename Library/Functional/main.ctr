@@ -117,3 +117,4 @@ CodeBlock on: 'compose:' do: {:func
      )
  ).
 }.
+CodeBlock learn: '<' means: 'compose:'.

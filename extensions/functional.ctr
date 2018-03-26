@@ -1,4 +1,4 @@
-({^contextPurity.} catch: {Reflect addGlobalVariable: 'contextPurity'. contextPurity is True. ^contextPurity.}) ifTrue: {
+({^contextPurity.} catch: {Reflect addGlobalVariable: 'contextPurity'. contextPurity is True. ^contextPurity.}) run ifTrue: {
   Broom mode: 0.
 
   # TODO :: Actually fix scoping first

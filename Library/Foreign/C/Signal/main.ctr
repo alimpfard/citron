@@ -1,0 +1,94 @@
+import Library/Foreign/C/C_Types: ['c_int', 'c_ptr'].
+import Library/Foreign/C/NamedStruct.
+import Library/Foreign/C/errno: 'g_strerror'.
+
+var Signal is Object cnew: {
+  var sigmap is Map new.
+  [
+   ['SIGHUP',    [ 1      ], 'Hangup detected on controlling terminal or death of controlling process'],
+   ['SIGINT',    [ 2      ], 'Interrupt from keyboard'                                                ],
+   ['SIGQUIT',   [ 3      ], 'Quit from keyboard'                                                     ],
+   ['SIGILL',    [ 4      ], 'Illegal Instruction'                                                    ],
+   ['SIGABRT',   [ 6      ], 'Abort signal from abort(3)'                                             ],
+   ['SIGFPE',    [ 8      ], 'Floating point exception'                                               ],
+   ['SIGKILL',   [ 9      ], 'Kill signal'                                                            ],
+   ['SIGSEGV',   [ 11     ], 'Invalid memory reference'                                               ],
+   ['SIGPIPE',   [ 13     ], 'Broken pipe: write to pipe with no readers'                             ],
+   ['SIGALRM',   [ 14     ], 'Timer signal from alarm(2)'                                             ],
+   ['SIGTERM',   [ 15     ], 'Termination signal'                                                     ],
+   ['SIGUSR1',   [30,10,16], 'User-defined signal 1'                                                  ],
+   ['SIGUSR2',   [31,12,17], 'User-defined signal 2'                                                  ],
+   ['SIGCHLD',   [20,17,18], 'Child stopped or terminated'                                            ],
+   ['SIGCONT',   [19,18,25], 'Continue if stopped'                                                    ],
+   ['SIGSTOP',   [17,19,23], 'Stop process'                                                           ],
+   ['SIGTSTP',   [18,20,24], 'Stop typed at terminal'                                                 ],
+   ['SIGTTIN',   [21,21,26], 'Terminal input for background process'                                  ],
+   ['SIGTTOU',   [22,22,27], 'Terminal output for background process'                                 ],
+   ['SIGBUS',    [10, 7,10], 'Bus error (bad memory access)'                                          ],
+   ['SIGPROF',   [27,27,29], 'Profiling timer expired'                                                ],
+   ['SIGSYS',    [12,31,12], 'Bad argument to routine (SVr4)'                                         ],
+   ['SIGTRAP',   [ 5      ], 'Trace/breakpoint trap'                                                  ],
+   ['SIGURG',    [16,23,21], 'Urgent condition on socket (4.2BSD)'                                    ],
+   ['SIGVTALRM', [26,26,28], 'Virtual alarm clock (4.2BSD)'                                           ],
+   ['SIGXCPU',   [24,24,30], 'CPU time limit exceeded (4.2BSD)'                                       ],
+   ['SIGXFSZ',   [25,25,31], 'File size limit exceeded (4.2BSD)'                                      ],
+   ['SIGIOT',    [ 6      ], 'IOT trap. A synonym for SIGABRT'                                        ],
+   ['SIGEMT',    [ 7      ], ''                                                                       ],
+   ['SIGSTKFLT', [ 16     ], 'Stack fault on coprocessor (unused)'                                    ],
+   ['SIGIO',     [23,29,22], 'I/O now possible (4.2BSD)'                                              ],
+   ['SIGCLD',    [ 18     ], 'A synonym for SIGCHLD'                                                  ],
+   ['SIGPWR',    [29,30,19], 'Power failure (System V)'                                               ],
+   ['SIGINFO',   [ 29     ], 'A synonym for SIGPWR'                                                   ],
+   ['SIGWINCH',  [28,28,20], 'Window resize signal (4.3BSD, Sun)'                                     ],
+   ['SIGUNUSED', [ 31     ], 'Synonymous with SIGSYS'                                                 ]
+  ] each_v: {:desc
+      sigmap put: desc tail at: desc head.
+    }.
+  my sigmap is sigmap.
+  me on: '_init' do: {
+    my libhandle is CTypes loadLibrary: Nil.
+    my sigaction is my libhandle sigaction.
+    (my sigaction get = 0) ifTrue: { thisBlock error: 'Could not find #sigaction in the current executable'. }.
+    my sa_handler_ty is CIF new setABI: 0 return: Nil argTypes: [c_int].
+    my sigaction_ty  is CIF new setABI: 0 return: c_int argTypes: [c_int, c_ptr, c_ptr].
+    my struct_sigaction is NamedStruct new initAs: 'p6uisip' names: ['sa_handler', 'sa_mask', 'sa_flags', 'sa_restorer']. #Do NOT assign to sa_sigaction TODO: figure out a way to handle the (probable union type)
+    my kill_ty is CIF new setABI: 0 return: c_int argTypes: [c_int, c_int].
+    my kill is my libhandle kill.
+  }.
+}, _init.
+Signal on: 'new' do: {
+  var sm is my sigmap.
+  ^me cnew: {
+    var sigmap is Map new.
+    sm each: {:i:v sigmap put: v at: i. }.
+    my sigmap is sigmap.
+  }, _init.
+}.
+Signal on: 'spec:' do: {:name
+  var spec is my sigmap at: name.
+  spec isNil ifTrue: { thisBlock error: 'Unknown signal $$name'. }.
+  ^spec head.
+}.
+Signal on: 'describe:' do: {:name
+  var spec is my sigmap at: name.
+  spec isNil ifTrue: { thisBlock error: 'Unknown signal $$name'. }.
+  ^'signal %s, values: [%L] (%s)' % [name, (spec head), (spec last)].
+}.
+Signal on: 'handle:with:' do: {:name:handler
+  var spec is me spec: name.
+  var sa is my struct_sigaction newIns.
+  sa memberSaHandler: (CTypes closureOf: handler withCIF: my sa_handler_ty).
+  var sigaction_ty is my sigaction_ty.
+  var sigaction is my sigaction.
+  var res is spec fmap: {:s ^sigaction_ty call: sigaction withArgs: [s, (sa struct), 0]. }, sum.
+  (res < 0) ifTrue: {
+    thisBlock error: g_strerror run.
+  }.
+}.
+Signal on: 'kill:PID:' do: {:signum:pid
+  var self is me.
+  (signum type !=: Number type) ifTrue: { signum is self spec: signum, min. }.
+  var res is my kill_ty call: my kill withArgs: [pid, signum].
+  (res = 0) ifFalse: { thisBlock error: g_strerror run. }.
+  ^res.
+}.

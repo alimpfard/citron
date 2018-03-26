@@ -15,6 +15,9 @@ NamedStruct on: 'initAs:names:' do: {:desc:names
     self on: 'member' + (self transformName: name) do: {^my struct at: my struct offsets @ const idx.}.
   }.
 }.
+NamedStruct on: 'newIns' do: {
+  ^me sameFor: my struct new.
+}.
 NamedStruct on: 'struct' do: {^my struct.}.
 NamedStruct on: 'pack:' do: {:stuff my struct pack: stuff.}.
 NamedStruct on: 'unpack' do: {^my struct unpack.}.

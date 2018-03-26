@@ -1,0 +1,7 @@
+var _errno is CTypes loadLibrary: Nil, errno.
+var _strerror is CTypes loadLibrary: Nil, strerror.
+var _strerror_ty is CIF new setABI: 0 return: (CTypes pointer) argTypes: [(CTypes sint)].
+
+var g_strerror is {
+  ^const _strerror_ty call: const _strerror withArgs: [(const _errno derefAs: CTypes sint, get)], readCString.
+}.

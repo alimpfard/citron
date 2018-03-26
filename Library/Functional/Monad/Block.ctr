@@ -1,0 +1,10 @@
+import Library/Functional/TypeClass/Monad.
+
+CodeBlock
+  inheritFrom: Monad,
+  on: 'unit:' do: (\:x \:_ x),
+  on: 'bind:' do: {:k
+    var f is me.
+    var thisContext is me.
+    ^\:r k applyTo: (f applyTo: r) and: r.
+  }.

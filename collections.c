@@ -147,7 +147,7 @@ ctr_object *ctr_array_min(ctr_object * myself, ctr_argument * argumentList)
 	ctr_size i = 0;
 	for (i = 0; i < myself->value.avalue->head; i++) {
 		el = *(myself->value.avalue->elements + i);
-		v = ctr_internal_cast2number(el)->value.nvalue;
+		v = ctr_internal_cast2number(el)->value.bvalue;
 		if (i == 0 || v < min) {
 			min = v;
 		}
@@ -156,7 +156,7 @@ ctr_object *ctr_array_min(ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * [Array] all
+ * [Array] all [: [Block]]
  *
  * Returns whether all the objects inside the array are truth-y.
  *
@@ -170,16 +170,33 @@ ctr_object *ctr_array_all(ctr_object * myself, ctr_argument * argumentList)
 {
 	ctr_object *el;
 	ctr_size i = 0;
-	for (i = 0; i < myself->value.avalue->head; i++) {
-		el = *(myself->value.avalue->elements + i);
-		if ((el->info.type == CTR_OBJECT_TYPE_OTBOOL && el->value.nvalue) || (ctr_internal_cast2bool(el)->value.nvalue));
-		else return ctr_build_bool(0);
+	ctr_object* fn;
+	if((fn = argumentList->object)) {
+		ctr_open_context();
+		for (i = 0; i < myself->value.avalue->head; i++) {
+			argumentList->object = *(myself->value.avalue->elements + i);
+			el = ctr_block_run_here(fn, argumentList, fn);
+			if ((el->info.type == CTR_OBJECT_TYPE_OTBOOL && el->value.bvalue) || (ctr_internal_cast2bool(el)->value.bvalue));
+			else {
+				ctr_close_context();
+				return ctr_build_bool(0);
+			}
+		}
+		ctr_close_context();
+		return ctr_build_bool(1);
 	}
-	return ctr_build_bool(1);
+	else {
+		for (i = 0; i < myself->value.avalue->head; i++) {
+			el = *(myself->value.avalue->elements + i);
+			if ((el->info.type == CTR_OBJECT_TYPE_OTBOOL && el->value.bvalue) || (ctr_internal_cast2bool(el)->value.bvalue));
+			else return ctr_build_bool(0);
+		}
+		return ctr_build_bool(1);
+	}
 }
 
 /**
- * [Array] any
+ * [Array] any [: [Block]]
  *
  * Returns whether any of the objects inside the array are truth-y.
  *
@@ -193,11 +210,29 @@ ctr_object *ctr_array_any(ctr_object * myself, ctr_argument * argumentList)
 {
 	ctr_object *el;
 	ctr_size i = 0;
-	for (i = 0; i < myself->value.avalue->head; i++) {
-		el = *(myself->value.avalue->elements + i);
-		if ((el->info.type == CTR_OBJECT_TYPE_OTBOOL && el->value.nvalue) || (ctr_internal_cast2bool(el)->value.nvalue)) return ctr_build_bool(1);
+	ctr_object* fn;
+	if((fn = argumentList->object)) {
+		ctr_open_context();
+		for (i = 0; i < myself->value.avalue->head; i++) {
+			argumentList->object = *(myself->value.avalue->elements + i);
+			el = ctr_block_run_here(fn, argumentList, fn);
+			if ((el->info.type == CTR_OBJECT_TYPE_OTBOOL && el->value.bvalue) || (ctr_internal_cast2bool(el)->value.bvalue)) {
+				ctr_close_context();
+				return ctr_build_bool(1);
+			}
+		}
+		ctr_close_context();
+		return ctr_build_bool(0);
 	}
-	return ctr_build_bool(0);
+	else {
+		for (i = 0; i < myself->value.avalue->head; i++) {
+			el = *(myself->value.avalue->elements + i);
+			if ((el->info.type == CTR_OBJECT_TYPE_OTBOOL && el->value.bvalue) || (ctr_internal_cast2bool(el)->value.bvalue)) {
+				return ctr_build_bool(1);
+			}
+		}
+		return ctr_build_bool(0);
+	}
 }
 
 /**
@@ -219,7 +254,7 @@ ctr_object *ctr_array_max(ctr_object * myself, ctr_argument * argumentList)
 	ctr_size i = 0;
 	for (i = 0; i < myself->value.avalue->head; i++) {
 		el = *(myself->value.avalue->elements + i);
-		v = ctr_internal_cast2number(el)->value.nvalue;
+		v = ctr_internal_cast2number(el)->value.bvalue;
 		if (i == 0 || max < v) {
 			max = v;
 		}
@@ -2187,9 +2222,9 @@ ctr_object *ctr_map_each(ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * [Map] fmap: [Block<value>]
+ * [Map] fmap: [Block<key,value>]
  *
- * Iterates over the map, passing the value to the function, and replacing it with the result
+ * Iterates over the map, passing the key and the value to the function, and replacing the value with the result
  * (Or itself if a value is not returned)
  *
  */
@@ -2210,7 +2245,8 @@ ctr_object *ctr_map_fmap(ctr_object * myself, ctr_argument * argumentList)
 	    (ctr_argument *) ctr_heap_allocate(sizeof(ctr_argument));
 	ctr_object *newmap = ctr_map_new(CtrStdMap, NULL);
 	while (m) {
-		arguments->object = m->value;
+		arguments->object = m->key;
+		arguments->next->object = m->value;
 		arguments->object = ctr_block_run(block, arguments, myself);
 		if (arguments->object == block) {
 			arguments->object = m->key;

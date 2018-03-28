@@ -8,3 +8,58 @@ Array on: 'groupBy:' do: {:fn
   }.
   ^rt.
 }.
+
+Array on: 'nubBy:' do: {:fn
+  var self is me.
+  ^me count = 0
+    either: me copy
+    or: {
+      var rt is Array new.
+      self each_v: {:v
+        (rt any: \:x fn applyTo: x and: v) ifFalse: { rt push: v. }.
+      }.
+      ^rt.
+    }.
+}.
+
+Array on: 'nub' do: {
+  ^me nubBy: \:x:y x = y.
+}.
+
+Array on: 'delete:by:' do: {:x:eq
+  var self is me.
+  ^self count = 0
+    either: self copy
+    or: {
+      ^(eq applyTo: x and: var y is self head)
+        either: {^self tail.}
+        or: {^[y] + (self tail delete: x by: eq).}.
+    }.
+}.
+
+Array on: 'delete:' do: {:x
+  ^me delete: x by: \:x x = x.
+}.
+
+Array on: 'difference:' do: {:ys
+  var self is me.
+  ^ys foldl: (\:x:y x delete: y) accumulator: me.
+}.
+
+Array on: 'union:by:' do: {:ys:eq
+  var xs is me.
+  ^xs + (xs foldl: (\:x:y x delete: y by: eq) accumulator: (ys nubBy: eq)).
+}.
+
+Array on: 'union:' do: {:ys
+  ^me union: ys by: \:x:y x = y.
+}.
+
+Array on: 'intersect:by:' do: {:ys:eq
+  var xs is me.
+  ^(xs count min: ys count) = 0
+    either: Array new
+    or: {
+      ^(xs fmap: \:x (ys any: \:y eq applyTo: x and: y) either: [x] or: []) sum.
+    }.
+}.

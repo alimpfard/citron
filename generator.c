@@ -7,6 +7,7 @@
 #define CTR_E_OF_S_GENNY 3
 #define CTR_E_OF_A_GENNY 4
 #define CTR_E_OF_M_GENNY 5
+#define CTR_FN_OF_GENNY  6
 
 typedef struct {
   ctr_size seq_index;
@@ -18,6 +19,12 @@ typedef struct {
 typedef struct {
   ctr_number current, end, step;
 } ctr_step_generator;
+
+typedef struct {
+  unsigned int i_type;
+  ctr_generator* genny;
+  ctr_object* fn;
+} ctr_mapping_generator;
 
 ctr_object* ctr_generator_make(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* inst = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
@@ -101,15 +108,32 @@ ctr_object* ctr_generator_make(ctr_object* myself, ctr_argument* argumentList) {
   return inst;
 }
 
-ctr_object* ctr_generator_next(ctr_object* myself, ctr_argument* argumentList) {
-  ctr_resource* res = myself->value.rvalue;
-  ctr_generator* genny = res->ptr;
-  if(!genny) {
-    errd:;
-    CtrStdFlow = ctr_build_string_from_cstring("#next on uninitialized generator");
-    return CtrStdNil;
-  }
-  switch(res->type) {
+ctr_object* ctr_generator_map(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* blk = argumentList->object;
+  ctr_object* inst = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+  ctr_set_link_all(inst, ctr_std_generator);
+  ctr_generator* under = myself->value.rvalue->ptr;
+  inst->release_hook = ctr_generator_free;
+  inst->value.rvalue = ctr_heap_allocate(sizeof(ctr_resource));
+  ctr_resource* res = inst->value.rvalue;
+  res->type = CTR_FN_OF_GENNY;
+  ctr_mapping_generator* genny = ctr_heap_allocate(sizeof(*genny));
+  genny->i_type = myself->value.rvalue->type;
+  genny->genny  = myself->value.rvalue->ptr;
+  genny->fn = blk;
+  ctr_generator* generator = ctr_heap_allocate(sizeof(*generator));
+  generator->seq_index = under->seq_index;
+  generator->sequence = genny;
+  ctr_argument* argm = ctr_heap_allocate(sizeof(ctr_argument));
+  argm->next = ctr_heap_allocate(sizeof(ctr_argument));
+  generator->data = argm;
+  generator->finished = under->finished;
+  res->ptr = generator;
+  return inst;
+}
+
+ctr_object* ctr_generator_internal_next(ctr_generator* genny, int gtype) {
+  switch(gtype) {
     case CTR_STEP_GENNY: {
       if(genny->finished) return CtrStdNil;
       genny->seq_index++;
@@ -130,7 +154,7 @@ ctr_object* ctr_generator_next(ctr_object* myself, ctr_argument* argumentList) {
     	long ub = getBytesUtf8(str->value, ua, 1);
     	ctr_object *newString;
     	char *dest = ctr_heap_allocate(ub * sizeof(char));
-    	memcpy(dest, (myself->value.svalue->value) + ua, ub);
+    	memcpy(dest, (str->value) + ua, ub);
     	newString = ctr_build_string(dest, ub);
     	ctr_heap_free(dest);
       genny->seq_index++;
@@ -165,21 +189,89 @@ ctr_object* ctr_generator_next(ctr_object* myself, ctr_argument* argumentList) {
       tup->value.avalue->immutable = 1;
       return tup;
     }
-    default: goto errd;
+    case CTR_FN_OF_GENNY: {
+      ctr_mapping_generator* mgen = genny->sequence;
+      ctr_argument* argm = genny->data;
+      ctr_generator* igen = mgen->genny;
+      int igen_type = mgen->i_type;
+      ctr_object* fn = mgen->fn;
+      argm->object = ctr_build_number_from_float(genny->seq_index++);
+      argm->next->object = ctr_generator_internal_next(igen, igen_type);
+      genny->finished = igen->finished;
+      if(genny->finished) return CtrStdNil;
+      return ctr_block_run(fn, argm, fn);
+    }
+    default: return NULL;
+  }
+}
+
+ctr_object* ctr_generator_next(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_resource* res = myself->value.rvalue;
+  ctr_generator* genny = res->ptr;
+  int gtype = res->type;
+  if(!genny) {
+    CtrStdFlow = ctr_build_string_from_cstring("#next on uninitialized generator");
+    return CtrStdNil;
+  }
+  ctr_object* next = ctr_generator_internal_next(genny, gtype);
+  if(!next) {
+    CtrStdFlow = ctr_build_string_from_cstring("Invalid generator type(probably)");
+    return CtrStdNil;
+  }
+  return next;
+}
+ctr_object* ctr_generator_each(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* blk = argumentList->object;
+  ctr_resource* res = myself->value.rvalue;
+  ctr_generator* genny = res->ptr;
+  int gtype = res->type;
+  if(!genny) {
+    CtrStdFlow = ctr_build_string_from_cstring("#next on uninitialized generator");
+    return CtrStdNil;
+  }
+  ctr_argument* argm = ctr_heap_allocate(sizeof(*argm));
+  argm->next = ctr_heap_allocate(sizeof(*argm));
+  while(1) {
+    ctr_object* next = ctr_generator_internal_next(genny, gtype);
+    if(genny->finished) break;
+    argm->object = ctr_build_number_from_float(genny->seq_index - 1);
+    argm->next->object = next;
+    ctr_block_run(blk, argm, blk);
+    if(CtrStdFlow) {
+      if(CtrStdFlow == CtrStdContinue) { CtrStdFlow = NULL; continue; }
+      break;
+    }
+  }
+  if(CtrStdFlow == CtrStdBreak) CtrStdFlow = NULL;
+  ctr_heap_free(argm);
+  return myself;
+}
+ctr_object* ctr_generator_internal_tostr(ctr_generator* gen, int gtype) {
+  switch(gtype) {
+    case CTR_REPEAT_GENNY: return ctr_build_string_from_cstring("[RepeatGenerator]");
+    case CTR_E_OF_S_GENNY: return ctr_build_string_from_cstring("[StringGenerator]");
+    case CTR_E_OF_A_GENNY: return ctr_build_string_from_cstring("[ArrayGenerator]");
+    case CTR_STEP_GENNY  : return ctr_build_string_from_cstring("[StepGenerator]");
+    case CTR_E_OF_M_GENNY: return ctr_build_string_from_cstring("[MapGenerator]");
+    case CTR_FN_OF_GENNY: {
+      ctr_object* str = ctr_build_string_from_cstring("[MappedGenerator<");
+      ctr_mapping_generator* mgen = gen->sequence;
+      ctr_object* inner = ctr_generator_internal_tostr(mgen->genny, mgen->i_type);
+      ctr_argument* arg = gen->data;
+      arg->object = inner;
+      ctr_string_append(str, arg);
+      arg->object = ctr_build_string_from_cstring(">]");
+      ctr_string_append(str, arg);
+      return str;
+    }
+    default: return ctr_build_string_from_cstring("[Generator]");
   }
 }
 
 ctr_object* ctr_generator_tostr(ctr_object* myself, ctr_argument* argumentList) {
   if(!myself->value.rvalue)
     return ctr_build_string_from_cstring("[UninitializedGenerator]");
-    switch(myself->value.rvalue->type) {
-      case CTR_REPEAT_GENNY: return ctr_build_string_from_cstring("[RepeatGenerator]");
-      case CTR_E_OF_S_GENNY: return ctr_build_string_from_cstring("[StringGenerator]");
-      case CTR_E_OF_A_GENNY: return ctr_build_string_from_cstring("[ArrayGenerator]");
-      case CTR_STEP_GENNY  : return ctr_build_string_from_cstring("[StepGenerator]");
-      case CTR_E_OF_M_GENNY: return ctr_build_string_from_cstring("[MapGenerator]");
-      default: return ctr_build_string_from_cstring("[Generator]");
-    }
+  return ctr_generator_internal_tostr(myself->value.rvalue->ptr, myself->value.rvalue->type);
 }
 
 void* ctr_generator_free(void* res_) {
@@ -190,6 +282,14 @@ void* ctr_generator_free(void* res_) {
     case CTR_E_OF_A_GENNY:  ctr_heap_free(res->ptr); return NULL;
     case CTR_STEP_GENNY  :  /* fall through */
     case CTR_E_OF_M_GENNY:  ctr_heap_free(((ctr_generator*)res->ptr)->data); ctr_heap_free(res->ptr); return NULL;
+    case CTR_FN_OF_GENNY :  {
+      ctr_heap_free(((ctr_generator*)res->ptr)->sequence);
+      ctr_argument* argm = ((ctr_generator*)res->ptr)->data;
+      ctr_heap_free(argm->next);
+      ctr_heap_free(argm);
+      ctr_heap_free(res->ptr);
+      return NULL;
+    }
   }
   return res_;
 }

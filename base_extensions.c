@@ -1344,8 +1344,14 @@ void initiailize_base_extensions()
 				ctr_build_string_from_cstring("elementsOf:"),
 				&ctr_generator_make);
 	ctr_internal_create_func(ctr_std_generator,
+				ctr_build_string_from_cstring("fmap:"),
+				&ctr_generator_map);
+	ctr_internal_create_func(ctr_std_generator,
 				ctr_build_string_from_cstring("next"),
 				&ctr_generator_next);
+	ctr_internal_create_func(ctr_std_generator,
+				ctr_build_string_from_cstring("each:"),
+				&ctr_generator_each);
 	ctr_internal_create_func(ctr_std_generator,
 				ctr_build_string_from_cstring("toString"),
 				&ctr_generator_tostr);

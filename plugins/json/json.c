@@ -1,34 +1,6 @@
 #include "../../citron.h"
 #include "jansson.h"
 
-ctr_object* ctr_string_dquotes_escape(ctr_object* myself, ctr_argument* argumentList) {
-    ctr_object* answer;
-    char* str;
-    ctr_size len;
-    ctr_size i;
-    ctr_size j;
-    len = myself->value.svalue->vlen;
-    for( i = 0; i < myself->value.svalue->vlen; i++ ) {
-      char c = *(myself->value.svalue->value + i);
-        if ( c == '"' || c == '\\') {
-            len++;
-        }
-    }
-    str = ctr_heap_allocate( len + 1 );
-    j = 0;
-    for( i = 0; i < myself->value.svalue->vlen; i++ ) {
-      char c = *(myself->value.svalue->value + i);
-        if ( c == '"' || c == '\\') {
-            str[j+i] = '\\';
-            j++;
-        }
-        str[j+i] = *(myself->value.svalue->value + i);
-    }
-    answer = ctr_build_string_from_cstring( str );
-    ctr_heap_free( str );
-    return answer;
-}
-
 ctr_object* ctr_json_create_object(json_t* root, ctr_object* gt) {
     switch(json_typeof(root)) {
         case JSON_OBJECT: {
@@ -150,25 +122,27 @@ ctr_object* ctr_json_serialize_(ctr_object* object) {
       for(i=0; i<size; i++) {
           newArgumentList->object = ctr_build_number_from_float(i);
           arrayElement = ctr_array_get(object, newArgumentList);
-          if ( arrayElement->info.type == CTR_OBJECT_TYPE_OTBOOL || arrayElement->info.type == CTR_OBJECT_TYPE_OTNUMBER
-                  || arrayElement->info.type == CTR_OBJECT_TYPE_OTNIL ) {
-              newArgumentList->object = ctr_json_serialize_(arrayElement);
-              string = ctr_string_append( string, newArgumentList );
-          } else if ( arrayElement->info.type == CTR_OBJECT_TYPE_OTSTRING ) {
-              newArgumentList->object = ctr_build_string_from_cstring("\"");
-              string = ctr_string_append( string, newArgumentList );
-              newArgumentList->object = ctr_string_dquotes_escape( arrayElement, newArgumentList );
-              string = ctr_string_append( string, newArgumentList );
-              newArgumentList->object = ctr_build_string_from_cstring("\"");
-              string = ctr_string_append( string, newArgumentList );
-          } else {
-              //newArgumentList->object = ctr_build_string_from_cstring("(");
-              //ctr_string_append( string, newArgumentList );
-              newArgumentList->object = ctr_json_serialize_(arrayElement);
-              string = ctr_string_append( string, newArgumentList );
-              //newArgumentList->object = ctr_build_string_from_cstring(")");
-              //ctr_string_append( string, newArgumentList );
-          }
+          // if ( arrayElement->info.type == CTR_OBJECT_TYPE_OTBOOL || arrayElement->info.type == CTR_OBJECT_TYPE_OTNUMBER
+          //         || arrayElement->info.type == CTR_OBJECT_TYPE_OTNIL ) {
+          //     newArgumentList->object = ctr_json_serialize_(arrayElement);
+          //     string = ctr_string_append( string, newArgumentList );
+          // } else if ( arrayElement->info.type == CTR_OBJECT_TYPE_OTSTRING ) {
+          //     newArgumentList->object = ctr_build_string_from_cstring("\"");
+          //     string = ctr_string_append( string, newArgumentList );
+          //     newArgumentList->object = ctr_string_dquotes_escape( arrayElement, newArgumentList );
+          //     string = ctr_string_append( string, newArgumentList );
+          //     newArgumentList->object = ctr_build_string_from_cstring("\"");
+          //     string = ctr_string_append( string, newArgumentList );
+          // } else {
+          //     //newArgumentList->object = ctr_build_string_from_cstring("(");
+          //     //ctr_string_append( string, newArgumentList );
+          //     newArgumentList->object = ctr_json_serialize_(arrayElement);
+          //     string = ctr_string_append( string, newArgumentList );
+          //     //newArgumentList->object = ctr_build_string_from_cstring(")");
+          //     //ctr_string_append( string, newArgumentList );
+          // }
+          newArgumentList->object = ctr_json_serialize_(arrayElement);
+          string = ctr_string_append( string, newArgumentList );
           if (  (i + 1)<object->value.avalue->head ) {
               newArgumentList->object = ctr_build_string_from_cstring(", ");
               string = ctr_string_append( string, newArgumentList );
@@ -208,7 +182,7 @@ ctr_object* ctr_json_serialize_(ctr_object* object) {
       if(ctr_internal_has_responder(object, ctr_build_string_from_cstring("toJSON")))
         obj = ctr_internal_cast2string(ctr_send_message(object, "toJSON", 6, NULL));
       else {
-        CtrStdFlow = ctr_build_string_from_cstring("Cannot serialize this object."); //TODO:get a decent message.
+        CtrStdFlow = ctr_build_string_from_cstring("Cannot serialize this object, implement the message toJSON"); //TODO:get a decent message.
         return CtrStdNil;
       }
       break;
@@ -232,11 +206,9 @@ ctr_object* ctr_serialize_map(ctr_object* object) {
             ctr_string_append( string, newArgumentList );
         }
         if(first) first=0;
-        newArgumentList->object = ctr_build_string_from_cstring("\"");
+        newArgumentList->object = ctr_json_serialize_(ctr_internal_cast2string(mapItem->key));
         ctr_string_append( string, newArgumentList );
-        newArgumentList->object = ctr_internal_cast2string(mapItem->key);
-        ctr_string_append( string, newArgumentList );
-        newArgumentList->object = ctr_build_string_from_cstring("\": ");
+        newArgumentList->object = ctr_build_string_from_cstring(": ");
         ctr_string_append( string, newArgumentList );
         newArgumentList->object = ctr_json_serialize_(mapItem->value);
         ctr_string_append( string, newArgumentList );

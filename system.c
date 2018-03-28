@@ -2796,18 +2796,25 @@ typedef struct {
 
 void *ctr_run_thread_func(ctr_thread_t * threadt)
 {
-	ctr_argument *args = ctr_heap_allocate(sizeof(ctr_argument));
-	(void)ctr_array_to_argument_list(threadt->args, args);
-	pthread_mutex_lock(threadt->mutex);
-	ctr_object *result =
-	    ctr_block_run(threadt->target, args, threadt->target);
-	pthread_mutex_unlock(threadt->mutex);
-	ctr_deallocate_argument_list(args);
+	sigset_t set;
+	sigfillset(&set);
+	sigset_t oset;
 	ctr_thread_return_t *rv =
 	    ctr_heap_allocate(sizeof(ctr_thread_return_t));
+	pthread_mutex_lock(threadt->mutex);
+	int sets = pthread_sigmask(SIG_SETMASK, &set, &oset);
+
+	ctr_argument *args = ctr_heap_allocate(sizeof(ctr_argument));
+	(void)ctr_array_to_argument_list(threadt->args, args);
+	ctr_object *result =
+	    ctr_block_run(threadt->target, args, threadt->target);
+	ctr_deallocate_argument_list(args);
+
 	rv->retval = result;
 	rv->stdFlow = CtrStdFlow;
 	threadt->last_result = rv;
+	sets = pthread_sigmask(SIG_SETMASK, &oset, NULL);
+	pthread_mutex_unlock(threadt->mutex);
 	pthread_exit(rv);
 }
 

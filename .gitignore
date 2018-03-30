@@ -1,4 +1,7 @@
 *.o
+*.lo
+*.Tpo
+*.Po
 *.so
 *.c~
 ctr

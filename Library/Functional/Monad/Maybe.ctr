@@ -37,9 +37,6 @@ var Maybe is Monad new
         }
       or: False.
   },
-  on: 'isJust' do: {
-    ^(me type) = (Just type).
-  },
   learn: '=' means: 'equals:'.
 var Just is Maybe cnew: { value => Nil. },
   on: '$' do: {:v
@@ -66,6 +63,7 @@ var Just is Maybe cnew: { value => Nil. },
   on: 'toString' do: {\
     'Just $ (%s)' % [my value].
   },
+  on: 'isJust' do: { ^True. },
   on: 'unwrap' do: {\ my value }.
 var Nothing is Maybe new
   on: 'type' do: {
@@ -74,6 +72,7 @@ var Nothing is Maybe new
   on: 'bind:' do: {:fn
     ^Nothing.
   },
+  on: 'isJust' do: { ^False. },
   on: 'toString' do: {\ 'Nothing' }.
 import
   export: Nothing as: 'Nothing',

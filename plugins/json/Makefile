@@ -3,7 +3,7 @@ default_target: all
 all: libjansson ctrjson
 
 libjansson: 
-	cd jansson && make
+	cd jansson && cmake . && make
 ctrjson: 
 	cc -c json.c -fPIC -g3 -o json.o
 	cp jansson/lib/libjansson.a .

@@ -64,5 +64,4 @@ AS_IF([test "x$enable-boehm-gc" != "xno"], [
        AC_CHECK_LIB([gc], [GC_free])
 ])
 
-AC_CONFIG_FILES([src/plugins/sdl/Makefile])
 AC_OUTPUT

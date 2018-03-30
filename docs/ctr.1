@@ -1,14 +1,88 @@
-Expected closing quote on line: 117. 
-.TH "Citron v0.0.6.8.0a" 1 "04 February 2018" "The Citron programming language Manual".SH
+.TH "Citron v0.0.7.4-boehm-gc" 1 "30 March 2018" "The Citron programming language Manual"
+.SH NAME
+ctr \- run a Citron program
+.PP
+citron \- interface to citron eval
+.SH SYNOPSIS
+ctr [PROGRAM]
+.PP
+citron [arguments]
+.SH DESCRIPTION
+Citron is a general purpose programming language for UNIX\-like operating systems.
+.SH REFERENCE MANUAL
+Citron has 5 literals:
+.RS 4
+.br
+- Nil
+.br
+- Booleans (True, False)
+.br
+- Numbers (1, -2, 3.5)
+.br
+- Strings 'All Strings are UTF8!'
+.br
+- Code Blocks { parameters code }
+.br
+
+.SH BASIC INSTRUCTIONS
+.SH ASSIGNMENT
+.RE
+Assignment in Citron has a few forms, a simple binding (variable is expression) or (variable := expression)
+a strictly private binding (variable => expression) [Which can be used in constructor messages]
+and a decomposition binding whose explanation follows:
+
+
+Every object that implements the 'unpack:' method, hereon called 'decomposable' and 'algebraic',
+is mostly a wrapper around smaller parts, for instance, an array is a container that only conatins some Objects.
+It does not change the objects, nor does it have any other property that can cause us to be unable to recreate those objects
+given said array. hence, we can deconstruct the array into its creating objects.
+
+
+Consider an object. an object can be called a mapping from its property names as keys, to their values as, well, values.
+much like a Map. However, since the object`s methods require a reference to it, they cannot be safely deconstructed.
+
+
+this concept (algebraic decomposition) is done by creating a wireframe of sorts, and telling the object to deconstruct itself
+based off that wireframe.
+E.g.
+
+.pp
+.nf
+.rs
+var \fBtestMap\fR is Map cnew: {
+		\fBtest\fR => [1,2,3,4,5].
+		\fBkey1\fR => Map new put: \fBme\fR at: 'test'.
+}.
+.re
+.rs
+(Map cnew: {
+		\fI#Take the third element from the right, and bind it to 'a'
+		\fBtest\fR => ['*_', 'a', '_', '_'].
+		\fI#Take the value at 'key1',
+		#take its' value at 'test',
+		#take its' value at 'test' and bind it to 'b'.\fR
+		\fBkey1\fR => Map cnew: {\fBtest\fR => (Map cnew: {\fBtest\fR => 'b'.}).}
+}) is \fBtestMap\fR.
+.fi
+.RE
+.pp
+
+Returning algebraic object types from functions, is often used to return several values from said function.
+:: TODO : Finish this section.
+.SH CORE MESSAGES
+The following messages are part of the Core API of the Citron Programming Language:
+.br
+.PP
+.SS
+
+.SH
  Nil
 .B _OBJ_DEF Nil
 .BR
 
 .PP
 .SS
-.B Nil
-
- Nil represents 'nothing' or NULL in other languages.
+.B Nil represents 'nothing' or NULL in other languages.
  Any object property that has not been assigned a value
  will contain Nil. Unlike some other programming languages
  Citron has no concept of 'undefined' or isset, Nil is actually the
@@ -21,35 +95,44 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Nil] isNil
+.B <b> [Nil] isNil </b>
+
+ @see ctr_object_is_nil
 
  Nil always answers this message with a boolean object 'True'.
 .BR
 
 .PP
 .SS
-.B [Nil] toString
+.B <b> [Nil] toString </b>
+
+ @see ctr_object_to_string
 
  Returns the string representation of Nil: 'Nil'.
 .BR
 
 .PP
 .SS
-.B [Nil] toNumber
+.B <b> [Nil] toNumber </b>
+
+ @see ctr_object_to_number
 
  Returns the numerical representation of Nil: 0.
 .BR
 
 .PP
 .SS
-.B [Nil] toBoolean
+.B <b> [Nil] toBoolean </b>
+
+ @see ctr_object_to_boolean
 
  Returns the boolean representation of Nil: False.
 .BR
 
 .PP
 .SS
-.B [Nil] unpack: [Ref:string]
+.B <b> [Nil] unpack: [Ref:string] </b>
+
  Assigns Nil into Ref
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
@@ -63,15 +146,13 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B Object
-
- This is the base object, the parent of all other objects.
+.B This is the base object, the parent of all other objects.
  It contains essential object oriented programming features.
 .BR
 
 .PP
 .SS
-.B Object cnew: [Block]
+.B <b> Object cnew: [Block] </b>
 
  Object constructor with some initial parameters.
  Object is passed to the block as me/my
@@ -79,7 +160,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B Object genAccessors: [String]
+.B <b> Object genAccessors: [String] </b>
 
  generate reader/writer methods for property.
  creates the property is it doesn't exist
@@ -87,7 +168,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B Object genReader: [String]
+.B <b> Object genReader: [String] </b>
 
  generate reader method for property.
  creates the property is it doesn't exist
@@ -95,7 +176,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B Object genWriter: [String]
+.B <b> Object genWriter: [String] </b>
 
  generate writer method for property.
  does not create the property is it doesn't exist
@@ -103,14 +184,15 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Object] unpack: [Object:{Ref*}]
+.B <b> [Object] unpack: [Object:{Ref*}] </b>
+
  Element-wise object assign
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
 
 .PP
 .SS
-.B [Object] iHash
+.B <b>[Object] iHash</b>
 
  fallback hashing
  returns the hash of the object's string form.
@@ -118,14 +200,22 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Object] new hiding:
+.B * <b>[Object] aHash</b>
+  *
+  * fallback alternate hashing
+  * returns the hash of the object's string form.
+.BR
+
+.PP
+.SS
+.B <b>[Object] new hiding:</b>
 
  Creates a new Object hiding some parameters.
 .BR
 
 .PP
 .SS
-.B Object swapRefs: [Object]
+.B <b>[Object] swapRefs: [Object]</b>
 
  swap two objects with each other.
  Effectively 'xchg %ra, %rb'
@@ -133,14 +223,14 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Object] type
+.B <b>[Object] type</b>
 
  Returns a string representation of the type of object.
 .BR
 
 .PP
 .SS
-.B [Object] toString
+.B <b>[Object] toString</b>
 
  Returns a string representation of a generic object.
  This string representation will be:
@@ -150,16 +240,15 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Object] toNumber
+.B <b>[Object] toNumber</b>
 
- Returns a numerical representation of the object. This basic behavior, part
- of any object will just return 1. Other objects typically override this
- behavior with more useful implementations.
+ Errors out. Objects cannot be represented by numbers.
+ (default behavior)
 .BR
 
 .PP
 .SS
-.B [Object] toBoolean
+.B <b>[Object] toBoolean</b>
 
  Returns a boolean representation of the object. This basic behavior, part
  of any object will just return True. Other objects typically override this
@@ -168,7 +257,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Object] equals: [other]
+.B <b>[Object] equals: [other]</b>
 
  Tests whether the current instance is the same as
  the argument.
@@ -181,21 +270,21 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Object] id
+.B <b>[Object] id</b>
 
  returns a unique identifier for the object
 .BR
 
 .PP
 .SS
-.B [Object] myself
+.B <b>[Object] myself</b>
 
  Returns the object itself.
 .BR
 
 .PP
 .SS
-.B [Object] learn: [String] means: [String].
+.B <b>[Object] learn: [String] means: [String].</b>
 
  Teaches any object to repsond to the first specified message just like
  it would upon receiving the second. This allows you to map existing
@@ -219,7 +308,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Object] do
+.B <b>[Object] do</b>
 
  Activates 'chain mode'. If chain mode is active, all messages will
  return the recipient object regardless of their return signature.
@@ -241,14 +330,14 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Object] done
+.B <b>[Object] done</b>
 
  Deactivates 'chain mode'.
 .BR
 
 .PP
 .SS
-.B [Object] message: [String] arguments: [Array]
+.B <b>[Object] message: [String] arguments: [Array]</b>
 
  Sends a custom or 'dynamic' message to an object. This takes a string containing
  the message to be send to the object and an array listing the arguments at the
@@ -267,7 +356,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Object] on: [String] do: [Block]
+.B <b>[Object] on: [String] do: [Block]</b>
 
  Makes the object respond to a new kind of message.
  Use the semicolons to indicate the positions of the arguments to be
@@ -281,7 +370,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Object] respondTo: [String]
+.B <b>[Object] respondTo: [String]</b>
 
  Variations:
 
@@ -293,7 +382,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Object] isNil
+.B <b>[Object] isNil</b>
 
  Default isNil implementation.
 
@@ -319,14 +408,14 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Boolean] unpack: [String:Ref]
+.B <b>[Boolean] unpack: [String:Ref]</b>
  Assign ref to boolean
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
 
 .PP
 .SS
-.B [Boolean] = [other]
+.B <b>[Boolean] = [other]</b>
 
  Tests whether the other object (as a boolean) has the
  same value (boolean state True or False) as the current one.
@@ -338,7 +427,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Boolean] != [other]
+.B <b>[Boolean] != [other]</b>
 
  Tests whether the other object (as a boolean) has the
  same value (boolean state True or False) as the current one.
@@ -350,14 +439,14 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Boolean] toString
+.B <b>[Boolean] toString</b>
 
  Simple cast function.
 .BR
 
 .PP
 .SS
-.B [Boolean] break
+.B <b>[Boolean] break</b>
 
  Breaks out of the current block and bubbles up to the parent block if
  the value of the receiver equals boolean True.
@@ -369,7 +458,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Boolean] continue
+.B <b>[Boolean] continue</b>
 
  Skips the remainder of the current block in a loop, continues to the next
  iteration.
@@ -381,7 +470,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Boolean] ifTrue: [block]
+.B <b>[Boolean] ifTrue: [block]</b>
 
  Executes a block of code if the value of the boolean
  object is True.
@@ -395,7 +484,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Boolean] ifFalse: [block]
+.B <b>[Boolean] ifFalse: [block]</b>
 
  Executes a block of code if the value of the boolean
  object is True.
@@ -409,14 +498,14 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [b:Object] or: [Block|Object]
+.B <b>[b:Object] or: [Block|Object]</b>
 
  Evaluates and returns the block if b evaluates to false, else returns b
 .BR
 
 .PP
 .SS
-.B [Boolean] not
+.B <b>[Boolean] not</b>
 
  Returns the opposite of the current value.
 
@@ -426,7 +515,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Boolean] flip
+.B <b>[Boolean] flip</b>
 
  'Flips a coin'. Returns a random boolean value True or False.
 
@@ -436,7 +525,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Boolean] either: [this] or: [that]
+.B <b>[Boolean] either: [this] or: [that]</b>
 
  Returns argument #1 if boolean value is True and argument #2 otherwise.
 
@@ -450,7 +539,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Boolean] & [other]
+.B <b>[Boolean] & [other]</b>
 
  Returns True if both the object value is True and the
  argument is True as well.
@@ -462,7 +551,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Boolean] ! [other]
+.B <b>[Boolean] ! [other]</b>
 
  Returns True if the object value is False and the
  argument is False as well.
@@ -474,7 +563,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Boolean] | [other]
+.B <b>[Boolean] | [other]</b>
 
  Returns True if either the object value is True or the
  argument is True or both are True.
@@ -486,7 +575,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Boolean] ? [other]
+.B <b>[Boolean] ? [other]</b>
 
  Returns True if either the object value is True or the
  argument is True but not both.
@@ -498,7 +587,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Boolean] toNumber
+.B <b>[Boolean] toNumber</b>
 
  Returns 0 if boolean is False and 1 otherwise.
 .BR
@@ -526,56 +615,56 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Number] unpack: [String:Ref]
+.B <b>[Number] unpack: [String:Ref]</b>
  Assign ref to number
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
 
 .PP
 .SS
-.B [Number] > [other]
+.B <b>[Number] > [other]</b>
 
  Returns True if the number is higher than other number.
 .BR
 
 .PP
 .SS
-.B [Number] >=: [other]
+.B <b>[Number] >=: [other]</b>
 
  Returns True if the number is higher than or equal to other number.
 .BR
 
 .PP
 .SS
-.B [Number] < [other]
+.B <b>[Number] < [other]</b>
 
  Returns True if the number is less than other number.
 .BR
 
 .PP
 .SS
-.B [Number] <=: [other]
+.B <b>[Number] <=: [other]</b>
 
  Returns True if the number is less than or equal to other number.
 .BR
 
 .PP
 .SS
-.B [Number] = [other]
+.B <b>[Number] = [other]</b>
 
  Returns True if the number equals the other number.
 .BR
 
 .PP
 .SS
-.B [Number] !=: [other]
+.B <b>[Number] !=: [other]</b>
 
  Returns True if the number does not equal the other number.
 .BR
 
 .PP
 .SS
-.B [Number] between: [low] and: [high]
+.B <b>[Number] between: [low] and: [high]</b>
 
  Returns True if the number instance has a value between the two
  specified values.
@@ -587,21 +676,21 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Number] odd
+.B <b>[Number] odd</b>
 
  Returns True if the number is odd and False otherwise.
 .BR
 
 .PP
 .SS
-.B [Number] even
+.B <b>[Number] even</b>
 
  Returns True if the number is even and False otherwise.
 .BR
 
 .PP
 .SS
-.B [Number] + [Number]
+.B <b>[Number] + [Number]</b>
 
  Adds the other number to the current one. Returns a new
  number object.
@@ -609,7 +698,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Number] +=: [Number]
+.B <b>[Number] +=: [Number]</b>
 
  Increases the number ITSELF by the specified amount, this message will change the
  value of the number object itself instead of returning a new number.
@@ -617,7 +706,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Number] - [Number]
+.B <b>[Number] - [Number]</b>
 
  Subtracts the other number from the current one. Returns a new
  number object.
@@ -625,7 +714,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Number] -=: [number]
+.B <b>[Number] -=: [number]</b>
 
  Decreases the number ITSELF by the specified amount, this message will change the
  value of the number object itself instead of returning a new number.
@@ -633,7 +722,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Number] * [Number or Block]
+.B <b>[Number] * [Number or Block]</b>
 
  Multiplies the number by the specified multiplier. Returns a new
  number object.
@@ -641,7 +730,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Number] times: [Block]
+.B <b>[Number] times: [Block]</b>
 
  Runs the block of code a 'Number' of times.
  This is the most basic form of a loop.
@@ -656,7 +745,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Number] *=: [Number]
+.B <b>[Number] *=: [Number]</b>
 
  Multiplies the number ITSELF by multiplier, this message will change the
  value of the number object itself instead of returning a new number.
@@ -672,7 +761,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Number] / [Number]
+.B <b>[Number] / [Number]</b>
 
  Divides the number by the specified divider. Returns a new
  number object.
@@ -680,7 +769,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Number] /=: [Number]
+.B <b>[Number] /=: [Number]</b>
 
  Divides the number ITSELF by divider, this message will change the
  value of the number object itself instead of returning a new number.
@@ -696,7 +785,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Number] mod: [modulo]
+.B <b>[Number] mod: [modulo]</b>
 
  Returns the modulo of the number. This message will return a new
  object representing the modulo of the recipient.
@@ -711,14 +800,14 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Number] toPowerOf: [power]
+.B <b>[Number] pow: [power]</b>
 
  Returns a new object representing the
  number to the specified power.
 
  Usage:
 
- x is 2 toPowerOf: 8. #x will be 256
+ x is 2 pow: 8. #x will be 256
 
  The example above will raise 2 to the power of 8 resulting in
  a new Number object: 256.
@@ -726,7 +815,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Number] pos
+.B <b>[Number] pos</b>
 
  Returns a boolean indicating wether the number is positive.
  This message will return a boolean object 'True' if the recipient is
@@ -742,7 +831,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Number] neg
+.B <b>[Number] neg</b>
 
  Returns a boolean indicating wether the number is negative.
  This message will return a boolean object 'True' if the recipient is
@@ -760,7 +849,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Number] max: [other]
+.B <b>[Number] max: [other]</b>
 
  Returns the biggest number of the two.
 
@@ -772,7 +861,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Number] min: [other]
+.B <b>[Number] min: [other]</b>
 
  Returns a the smallest number.
 
@@ -784,14 +873,14 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Number] factorial
+.B <b>[Number] factorial</b>
 
  Calculates the factorial of a number.
 .BR
 
 .PP
 .SS
-.B [Number] to: [number] step: [step] do: [block]
+.B <b>[Number] to: [number] step: [step] do: [block]</b>
 
  Runs the specified block for each step it takes to go from
  the start value to the target value using the specified step size.
@@ -804,12 +893,12 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Number] to: [number] step: [step]
+.B <b>[Number] to: [number] step: [step]</b>
 .BR
 
 .PP
 .SS
-.B [Number] floor
+.B <b>[Number] floor</b>
 
  Gives the largest integer less than the recipient.
 
@@ -824,7 +913,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Number] ceil
+.B <b>[Number] ceil</b>
 
  Rounds up the recipient number and returns the next higher integer number
  as a result.
@@ -840,14 +929,14 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Number] round
+.B <b>[Number] round</b>
 
  Returns the rounded number.
 .BR
 
 .PP
 .SS
-.B [Number] abs
+.B <b>[Number] abs</b>
 
  Returns the absolute (unsigned, positive) value of the number.
 
@@ -862,7 +951,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Number] sqrt
+.B <b>[Number] sqrt</b>
 
  Returns the square root of the recipient.
 
@@ -877,89 +966,88 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Number] exp
+.B <b>[Number] exp</b>
 
  Returns the exponent of the number.
 .BR
 
 .PP
 .SS
-.B [Number] sin
+.B <b>[Number] sin</b>
 
  Returns the sine of the number.
 .BR
 
 .PP
 .SS
-.B [Number] cos
+.B <b>[Number] cos</b>
 
  Returns the cosine of the number.
 .BR
 
 .PP
 .SS
-.B [Number] tan
+.B <b>[Number] tan</b>
 
  Caculates the tangent of a number.
 .BR
 
 .PP
 .SS
-.B [Number] atan
+.B <b>[Number] atan</b>
 
  Caculates the arctangent of a number.
 .BR
 
 .PP
 .SS
-.B [Number] log
+.B <b>[Number] log</b>
 
  Calculates the logarithm of a number.
 .BR
 
 .PP
 .SS
-.B [Number] shiftRight: [Number]
-  Only with integers
+.B <b>[Number] shiftRight: [Number]</b>
 .BR
 
 .PP
 .SS
-.B [Number] shiftLeft: [Number]
+.B <b>[Number] shiftLeft: [Number]</b>
 .BR
 
 .PP
 .SS
-.B [Number] integerOr: [Number]
+.B <b>[Number] bitOr: [Number]</b>
 .BR
 
 .PP
 .SS
-.B [Number] integerAnd: [Number]
+.B <b>[Number] bitAnd: [Number]</b>
 .BR
 
 .PP
 .SS
-.B [Number] integerXor: [Number]
+.B <b>[Number] bitXor: [Number]</b>
 .BR
 
 .PP
 .SS
-.B [Number] toByte
+.B <b>[Number] toByte</b>
 
  Converts a number to a single byte.
 .BR
 
 .PP
 .SS
-.B [Number] toString
+.B <b>[Number] toString</b>
 
  Wrapper for cast function.
 .BR
 
 .PP
 .SS
-.B [Number] toBoolean
+.B <b>[Number] toBoolean</b>
 
  Casts a number to a boolean object.
 .BR
@@ -986,21 +1074,21 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] isConstructible: [Object]
+.B <b>[String] isConstructible: [Object]</b>
 
  returns whether object is constructible from string
 .BR
 
 .PP
 .SS
-.B [String] unpack: [String:Ref]
+.B <b>[String] unpack: [String:Ref]</b>
  Assign ref to string
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
 
 .PP
 .SS
-.B [String] bytes
+.B <b>[String] bytes</b>
 
  Returns the number of bytes in a string, as opposed to
  length which returns the number of UTF-8 code points (symbols or characters).
@@ -1008,21 +1096,21 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] = [other]
+.B <b>[String] = [other]</b>
 
  Returns True if the other string is the same (in bytes).
 .BR
 
 .PP
 .SS
-.B [String] != [other]
+.B <b>[String] != [other]</b>
 
  Returns True if the other string is not the same (in bytes).
 .BR
 
 .PP
 .SS
-.B [String] length
+.B <b>[String] length</b>
 
  Returns the length of the string in symbols.
  This message is UTF-8 unicode aware. A 4 byte character will be counted as ONE.
@@ -1030,7 +1118,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] + [other]
+.B <b>[String] + [other]</b>
 
  Appends other string to self and returns the resulting
  string as a new object.
@@ -1038,7 +1126,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] append: [String].
+.B <b>[String] append: [String].</b>
 
  Appends the specified string to itself. This is different from the '+'
  message, the '+' message adds the specified string while creating a new string.
@@ -1058,7 +1146,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] multiply: [Number].
+.B <b>[String] multiply: [Number].</b>
 
  Appends the specified string to itself as many times as [Number]
  alias: *
@@ -1066,7 +1154,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] formatObjects: [Array].
+.B <b>[String] formatObjects: [Array].</b>
 
  Creates a string with the template format and the specified objects
 
@@ -1094,7 +1182,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] formatMap: [Map]
+.B <b>[String] formatMap: [Map]</b>
 
  format a format string based off a map
 
@@ -1106,7 +1194,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] from: [position] to: [destination]
+.B <b>[String] from: [position] to: [destination]</b>
 
  Returns a portion of a string defined by from-to values.
  This message is UTF-8 unicode aware.
@@ -1118,7 +1206,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] from: [start] length: [length]
+.B <b>[String] from: [start] length: [length]</b>
 
  Returns a portion of a string defined by from
  and length values.
@@ -1131,21 +1219,21 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] skip: [number]
+.B <b>[String] skip: [number]</b>
 
  Returns a string without the first X characters.
 .BR
 
 .PP
 .SS
-.B [String] sliceFrom: [number] length: [number]
+.B <b>[String] sliceFrom: [number] length: [number]</b>
 
  slice a string from,length and return the sliced. modifies string
 .BR
 
 .PP
 .SS
-.B [String] at: [position]
+.B <b>[String] at: [position]</b>
 
  Returns the character at the specified position (UTF8 aware).
  You may also use the alias '@'.
@@ -1158,7 +1246,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] byteAt: [position]
+.B <b>[String] byteAt: [position]</b>
 
  Returns the byte at the specified position (in bytes).
  Note that you cannot use the '@' message here because that will
@@ -1170,7 +1258,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] indexOf: [subject]
+.B <b>[String] indexOf: [subject]</b>
 
  Returns the index (character number, not the byte!) of the
  needle in the haystack.
@@ -1182,21 +1270,46 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] startsWith: [String]
+.B <b>[String] reLastIndexOf: [subject]</b>
+
+ Returns the index (character number, not the byte!) of the
+ last occurance of needle in the haystack, by regex
+
+ Usage:
+
+ 'find the needle' reLastIndexOf: 'n.{2}dle'. #9
+.BR
+
+.PP
+.SS
+.B * <b>[String] reIndexOf: [subject]</b>
+*
+* Returns the index (character number, not the byte!) of the
+* needle in the haystack, by regex
+*
+* Usage:
+*
+* 'find the needle' indexOf: 'n.{2}dle'. #9
+*
+.BR
+
+.PP
+.SS
+.B <b>[String] startsWith: [String]</b>
 
  Returns whether the string starts with the arg
 .BR
 
 .PP
 .SS
-.B [String] endsWith: [String]
+.B <b>[String] endsWith: [String]</b>
 
  Returns whether the string ends with the arg
 .BR
 
 .PP
 .SS
-.B [String] upper
+.B <b>[String] upper</b>
 
  Returns a new uppercased version of the string.
  Note that this is just basic ASCII case functionality, this should only
@@ -1206,7 +1319,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] lower
+.B <b>[String] lower</b>
 
  Returns a new lowercased version of the string.
  Note that this is just basic ASCII case functionality, this should only
@@ -1216,7 +1329,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] lower1st
+.B <b>[String] lower1st</b>
 
  Converts the first character of the recipient to lowercase and
  returns the resulting string object.
@@ -1224,7 +1337,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] upper1st
+.B <b>[String] upper1st</b>
 
  Converts the first character of the recipient to uppercase and
  returns the resulting string object.
@@ -1232,7 +1345,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] lastIndexOf: [subject]
+.B <b>[String] lastIndexOf: [subject]</b>
 
  Returns the index (character number, not the byte!) of the
  needle in the haystack.
@@ -1244,7 +1357,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] replace: [string] with: [other]
+.B <b>[String] replace: [string] with: [other]</b>
 
  Replaces needle with replacement in original string and returns
  the result as a new string object.
@@ -1256,7 +1369,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] findPattern: [String] do: [Block] options: [String].
+.B <b>[String] findPattern: [String] do: [Block] options: [String].</b>
 
  Matches the POSIX or PCRE (depending on the #defines) regular expression in the first argument against
  the string and executes the specified block on every match passing
@@ -1280,7 +1393,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] findPattern: [String] do: [Block].
+.B <b>[String] findPattern: [String] do: [Block].</b>
 
  Same as findPattern:do:options: but without the options, no flags will
  be send to the regex engine.
@@ -1288,14 +1401,14 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] contains: [String]
+.B <b>[String] contains: [String]</b>
 
  Returns True if the other string is a substring.
 .BR
 
 .PP
 .SS
-.B [String] containsPattern: [String].
+.B <b>[String] containsPattern: [String].</b>
 
  Tests the pattern against the string and returns True if there is a match
  and False otherwise.
@@ -1308,7 +1421,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] trim
+.B <b>[String] trim</b>
 
  Trims a string. Removes surrounding white space characters
  from string and returns the result as a new string object.
@@ -1324,7 +1437,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] leftTrim
+.B <b>[String] leftTrim</b>
 
  Removes all the whitespace at the left side of the string.
 
@@ -1339,7 +1452,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] rightTrim
+.B <b>[String] rightTrim</b>
 
  Removes all the whitespace at the right side of the string.
 
@@ -1354,21 +1467,21 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] toNumber
+.B <b>[String] toNumber</b>
 
  Converts string to a number.
 .BR
 
 .PP
 .SS
-.B [String] toBoolean
+.B <b>[String] toBoolean</b>
 
  Converts string to boolean
 .BR
 
 .PP
 .SS
-.B [String] split: [String]
+.B <b>[String] split: [String]</b>
 
  Converts a string to an array by splitting the string using
  the specified delimiter (also a string).
@@ -1376,7 +1489,16 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] characters.
+.B <b>[String] reSplit: [String]</b>
+
+ Converts a string to an array by splitting the string using
+ the specified regex (also a string).
+ ONLY WITH PCRE
+.BR
+
+.PP
+.SS
+.B <b>[String] characters.</b>
 
  Splits the string in UTF-8 characters and returns
  those as an array.
@@ -1389,42 +1511,63 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] toByteArray
+.B <b>[String] toByteArray</b>
 
  Returns an array of bytes representing the string.
 .BR
 
 .PP
 .SS
-.B [String] appendByte: [Number].
+.B <b>[String] fmap: [Block]</b>
+
+ maps a function over the string and returns a string
+.BR
+
+.PP
+.SS
+.B <b>[String] imap: [Block]</b>
+
+ maps a function over the string with indices and returns a string
+.BR
+
+.PP
+.SS
+.B <b>[String] filter: [Block]</b>
+
+ filters a string based on a predicate. returns a string
+.BR
+
+.PP
+.SS
+.B <b>[String] appendByte: [Number].</b>
 
  Appends a raw byte to a string.
 .BR
 
 .PP
 .SS
-.B [String(length=1)] charSub: [Number | String(length=1)]
+.B <b>[String(length=1)] charSub: [Number | String(length=1)]</b>
 
  works on the underlaying character.
 .BR
 
 .PP
 .SS
-.B [String(length=1)] charAdd: [Number | String(length=1)]
+.B <b>[String(length=1)] charAdd: [Number | String(length=1)]</b>
 
  works on the underlaying character.
 .BR
 
 .PP
 .SS
-.B [String] htmlEscape
+.B <b>[String] htmlEscape</b>
 
  Escapes HTML chars.
 .BR
 
 .PP
 .SS
-.B [String] hashWithKey: [String]
+.B <b>[String] hashWithKey: [String]</b>
 
  Returns the hash of the recipient String using the specified key.
  The default hash in Citron is the SipHash which is also used internally.
@@ -1433,7 +1576,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] eval
+.B <b>[String] eval</b>
 
  Evaluates the contents of the string as code.
 
@@ -1445,7 +1588,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] escapeQuotes.
+.B <b>[String] escapeQuotes.</b>
 
  Escapes all single quotes in a string. Sending this message to a
  string will cause all single quotes (') to be replaced with (\').
@@ -1453,7 +1596,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] randomizeBytesWithLength: [Number].
+.B <b>[String] randomizeBytesWithLength: [Number].</b>
 
  Returns a randomized string with the specified length using the pool of
  bytes contained in the String object.
@@ -1461,7 +1604,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [String] reverse
+.B <b>[String] reverse</b>
 
  reverse the string
 .BR
@@ -1518,14 +1661,14 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Block] unpack: [String:Ref]
+.B <b>[Block] unpack: [String:Ref]</b>
  Assign ref to block
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
 
 .PP
 .SS
-.B [Block] applyTo: [object]
+.B <b>[Block] applyTo: [object]</b>
 
  Runs a block of code using the specified object as a parameter.
  If you run a block using the messages 'run' or 'applyTo:', me/my will
@@ -1537,7 +1680,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Block] whileTrue: [block]
+.B <b>[Block] whileTrue: [block]</b>
 
  Runs a block of code, depending on the outcome runs the other block
  as long as the result of the first one equals boolean True.
@@ -1555,7 +1698,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Block] whileFalse: [block]
+.B <b>[Block] whileFalse: [block]</b>
 
  Runs a block of code, depending on the outcome runs the other block
  as long as the result of the first one equals to False.
@@ -1573,7 +1716,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Block] run
+.B <b>[Block] run</b>
 
  Sending the unary message 'run' to a block will cause it to execute.
  The run message takes no arguments, if you want to use the block as a function
@@ -1590,7 +1733,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Block] set: [name] value: [object]
+.B <b>[Block] set: [name] value: [object]</b>
 
  Sets a variable in a block of code. This how you can get closure-like
  functionality.
@@ -1620,7 +1763,7 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Block] error: [object].
+.B <b>[Block] error: [object].</b>
 
  Sets error flag on a block of code.
  This will throw an error / exception.
@@ -1638,11 +1781,11 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Block] catch: [otherBlock]
+.B <b>[Block] catch: [otherBlock]</b>
 
  Associates an error clause to a block.
  If an error (exception) occurs within the block this block will be
- executed.
+ executed, and its return substituted for the result of the expression
 
  Example:
 
@@ -1656,7 +1799,25 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Block] toString
+.B <b>[Block] catch: [otherBlock] type: [Object]</b>
+
+ Associates an error clause to a block.
+ If the specified exception occurs within the block this block will be
+ executed, and its return substituted for the result of the expression
+
+ Example:
+
+ #Raise error on division by zero.
+ {
+    var z is 4 / 0.
+ } catch: { :errorMessage
+    Pen write: e, brk.
+ } type: String, run.
+.BR
+
+.PP
+.SS
+.B <b>[Block] toString</b>
 
  Returns a string representation of the Block. This basic behavior, part
  of any object will just return [Block]. Other objects typically override this
@@ -1725,6 +1886,30 @@ Expected closing quote on line: 117.
 
  a is Array ← 8 ; 4 ; 2 ; 16.  
  m is a min. #2
+.BR
+
+.PP
+.SS
+.B [Array] all [: [Block]]
+
+ Returns whether all the objects inside the array are truth-y.
+
+ Usage:
+
+ a is Array ← True ; False ; False.  
+ m is a all. #False
+.BR
+
+.PP
+.SS
+.B [Array] any [: [Block]]
+
+ Returns whether any of the objects inside the array are truth-y.
+
+ Usage:
+
+ a is Array ← True ; False ; False.  
+ m is a any. #True
 .BR
 
 .PP
@@ -2105,6 +2290,13 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
+.B [Array] filter_v: [Block<v>]
+
+ Include the element iff block returns True for the element
+.BR
+
+.PP
+.SS
 .B [Array] fmap: [Block] from: [Block|Array|Map|supports `items`] [filter: [Block]]
  @Experimental
  list comprehension
@@ -2241,9 +2433,9 @@ Expected closing quote on line: 117.
 
 .PP
 .SS
-.B [Map] fmap: [Block<value>]
+.B [Map] fmap: [Block<key,value>]
 
- Iterates over the map, passing the value to the function, and replacing it with the result
+ Iterates over the map, passing the key and the value to the function, and replacing the value with the result
  (Or itself if a value is not returned)
 .BR
 
@@ -2318,6 +2510,13 @@ Give alternative names as the values of the constructor
 e.g. (Map new put: 'Hello' at: 'test0', put: 'World' at: 'test1') unpack: (Map cnew: {my test0 is 'a'. my test1 is 'b'.})
 
 (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
+.BR
+
+.PP
+.SS
+.B [Map] contains: [Object]
+
+ check if map contains key
 .BR
 
 .PP
@@ -3665,6 +3864,13 @@ This function does not evaluate anything from the iterator
 
 .PP
 .SS
+.B [Reflect] isObject: [Object] constructibleBy: [Object]
+
+ checks if the first object can be made from the second object (Constructor)
+.BR
+
+.PP
+.SS
 .B [Reflect] parentOf: [o:Object]
 
  gets the first immediate parent of o.
@@ -3731,9 +3937,9 @@ This function does not evaluate anything from the iterator
 
 .PP
 .SS
-.B [Reflect] registerInstrumentor: [Block<object, message, arguments>:<object, message, arguments>]
+.B [Reflect] registerInstrumentor: [Block<object, message, arguments>:<object, message, arguments>] forObject: [Object]
 
- register to an event that fires every time a message is sent.
+ register to an event that fires every time a message is sent for an specific object.
  This instrumentor will have to handle all message sending operations
  using `[Reflect] disableInstrumentation` and '[Reflect] enableInstrumentation'.
  return value is used as the result of the message, unless it is the instrumentor function,
@@ -3742,7 +3948,14 @@ This function does not evaluate anything from the iterator
 
 .PP
 .SS
-.B [Reflect] currentInstrumentor
+.B [Reflect] unregisterInstrumetationForObject: [Object]
+
+ Unregister the instrumentation block for the given object
+.BR
+
+.PP
+.SS
+.B [Reflect] currentInstrumentorFor: [Object]
 
  gets the current instrumentor instance, or Nil if none exists
 .BR
@@ -3758,9 +3971,23 @@ This function does not evaluate anything from the iterator
 
 .PP
 .SS
+.B [Reflect] runInNewContext: [Block]
+
+ runs a block in a new context and returns that context
+.BR
+
+.PP
+.SS
 .B [Reflect] thisContext
 
  returns the current context as a map
+.BR
+
+.PP
+.SS
+.B [Object] setPrivate: [String] value: [Object]
+
+ sets a private property of the object
 .BR
 
 .PP
@@ -3824,3 +4051,14 @@ yield control and pass an object along
 
 .PP
 .SS
+
+.SH BUGS
+This is a preliminary version (< 1.0) of Citron, there might still be very serious bugs.
+Please refrain from using this version in a production environment. This version of Citron
+is still considered 'alpha' stage and cannot be expected to be reliable.
+
+.SH AUTHOR
+AnotherTest and the Citron Community (Nil)
+.PP
+devanothertest@gmail.com
+

@@ -25,6 +25,18 @@
 
 static int ctr_world_initialized = 0;
 
+// #define withGIL 1 //we all know this is a bad idea...
+
+#ifdef withGIL
+#include <pthread.h>
+static pthread_mutex_t ctr_message_mutex = PTHREAD_MUTEX_INITIALIZER;
+#define CTR_THREAD_LOCK() pthread_mutex_lock(&ctr_message_mutex)
+#define CTR_THREAD_UNLOCK() pthread_mutex_unlock(&ctr_message_mutex)
+#else
+#define CTR_THREAD_LOCK()
+#define CTR_THREAD_UNLOCK()
+#endif
+
 static const int all_signals[] = {
 #ifdef SIGHUP
 	SIGHUP,
@@ -3376,11 +3388,13 @@ ctr_object *ctr_send_message(ctr_object * receiverObject, char *message,
 			ctr_instrument = 1;
 			if (result == ctr_instrumentor_func)
 				goto no_instrum;
+			CTR_THREAD_UNLOCK();
 			return result;
 		}
 		ctr_instrument = 1;
 	}
  no_instrum:;
+ CTR_THREAD_LOCK();
 	char toParent = 0;
 	int i = 0;
 	char messageApproved = 0;
@@ -3395,8 +3409,10 @@ ctr_object *ctr_send_message(ctr_object * receiverObject, char *message,
 			      ctr_argument * argumentList);
 	ctr_object *msg = ctr_build_string(message, vlen);
 	int argCount;
-	if (CtrStdFlow != NULL)
+	if (CtrStdFlow != NULL) {
+		CTR_THREAD_UNLOCK();
 		return CtrStdNil;	/* Error mode, ignore subsequent messages until resolved. */
+	}
 	if (ctr_command_security_profile & CTR_SECPRO_COUNTDOWN) {
 		if (ctr_command_tick > ctr_command_maxtick) {
 			printf
@@ -3418,12 +3434,14 @@ ctr_object *ctr_send_message(ctr_object * receiverObject, char *message,
 		size_t catch_all_v = catch_all_s->value.svalue->vlen;
 		if (vlen == catch_all_v && message[9] == ':' && strcmp(message, catch_all) == 0) {
 			CtrStdFlow = ctr_build_string_from_cstring(CTR_DICT_RESPOND_TO_AND" calls itself");
+			CTR_THREAD_UNLOCK();
 			return receiverObject;
 		}
 		mesgArgument =
 		    (ctr_argument *) ctr_heap_allocate(sizeof(ctr_argument));
 		mesgArgument->object = ctr_build_string(message, vlen);
 		mesgArgument->next = argumentList;
+		CTR_THREAD_UNLOCK();
 		returnValue =
 		    ctr_send_message(receiverObject, catch_all, catch_all_v, mesgArgument);
 		ctr_heap_free(mesgArgument);
@@ -3453,9 +3471,10 @@ ctr_object *ctr_send_message(ctr_object * receiverObject, char *message,
 		}
 #endif
 
+		CTR_THREAD_UNLOCK();
 		result = funct(receiverObject, argumentList);
 	}
-	if (methodObject->info.type == CTR_OBJECT_TYPE_OTBLOCK) {
+	else if (methodObject->info.type == CTR_OBJECT_TYPE_OTBLOCK) {
 #ifdef EVALSECURITY
 		if (ctr_command_security_profile & CTR_SECPRO_EVAL) {
 			printf("Custom message not allowed in eval.\n");
@@ -3463,6 +3482,7 @@ ctr_object *ctr_send_message(ctr_object * receiverObject, char *message,
 			exit(1);
 		}
 #endif
+CTR_THREAD_UNLOCK();
 		result =
 		    ctr_block_run(methodObject, argumentList, receiverObject);
 	}

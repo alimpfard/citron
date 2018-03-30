@@ -262,9 +262,11 @@ u_int32_t arc4random_uniform(u_int32_t upper_bound)
 #include "citron.h"
 #include "siphash.h"
 
+
 #ifndef withBoehmGC
 
 #define CTR_GC_BACKLOG_MAX 32
+
 
 ctr_object *gc_checked[CTR_GC_BACKLOG_MAX];	//32 backward spanning last_checked pointers.
 /**@I_OBJ_DEF Broom*/

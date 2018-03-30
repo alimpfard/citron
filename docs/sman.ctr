@@ -10,6 +10,7 @@
 Broom memoryLimit: 1024 * 1024 * 128.
 
 Pen write: ('.TH "Citron v%s" 1 "%s" "The Citron programming language Manual"' formatObjects: [(Reflect version), (Clock new format: '%d %B %Y')]).
+Pen writeln: 
 ?>
 .SH NAME
 ctr \- run a Citron program
@@ -105,6 +106,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 	}.
 }.
 
+Pen writeln:
 ?>
 .SH BUGS
 This is a preliminary version (< 1.0) of Citron, there might still be very serious bugs.
@@ -115,3 +117,4 @@ is still considered 'alpha' stage and cannot be expected to be reliable.
 AnotherTest and the Citron Community (Nil)
 .PP
 devanothertest@gmail.com
+<?.

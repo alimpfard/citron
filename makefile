@@ -1,4 +1,6 @@
-LEXTRACF := ${LEXTRACF} -flto 
+LEXTRACF := ${LEXTRACF} -flto
+fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
+
 ifeq ($(strip ${WITH_ICU}),)
 	CFLAGS = -Wall -Wextra -Wno-unused-parameter -mtune=native\
               -march=native -D withTermios -D forLinux\
@@ -12,7 +14,7 @@ endif
 
 ifeq ($(strip ${WITHOUT_BOEHM_GC}),)
 	CFLAGS := ${CFLAGS} "-D withBoehmGC"
-	LEXTRACF := ${LEXTRACF} /usr/lib/libgc.so
+	LEXTRACF := ${LEXTRACF} ${fv}
 else
 endif
 
@@ -20,6 +22,13 @@ ifeq ($(strip ${WITH_TYPED_GC}),)
 else
 	CFLAGS := ${CFLAGS} "-D withBoehmGC_P"
 endif
+
+
+.PHONY: gc_check
+gc_check:
+	@if [ "${fv}x" == "x" ]; then echo "Could not find libgc.so."; echo Failing; exit 1; else echo "Found libgc.so at ${fv}"; fi
+
+-include gc_check
 
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
        world.o lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o\
@@ -63,6 +72,3 @@ love:
 
 war:
 	echo "Not love?"
-
-.phony:
-

@@ -236,7 +236,9 @@ struct ctr_object {
 		struct ctr_object* (*fvalue) (struct ctr_object* myself, struct ctr_argument* argumentList);
 	} value;
 	voidptrfn_t* release_hook;
+#if !defined(withBoehmGC)
 	struct ctr_object* gnext;
+#endif
 };
 typedef struct ctr_object ctr_object;
 

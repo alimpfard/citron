@@ -1070,7 +1070,9 @@ ctr_object *ctr_internal_create_mapped_standalone_object(int type, int shared)
 		o->value.svalue->value = "";
 		o->value.svalue->vlen = 0;
 	}
-	o->gnext = NULL;
+# ifndef withBoehmGC
+	  o->gnext = NULL;
+# endif
 	return o;
 }
 

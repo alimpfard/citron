@@ -37,6 +37,8 @@ static pthread_mutex_t ctr_message_mutex = PTHREAD_MUTEX_INITIALIZER;
 #define CTR_THREAD_UNLOCK()
 #endif
 
+void ctr_load_required_native_modules();
+
 static const int all_signals[] = {
 #ifdef SIGHUP
 	SIGHUP,
@@ -3253,6 +3255,9 @@ void ctr_initialize_world()
 
 	/* maximum number of connections to accept (in total) */
 	ctr_accept_n_connections = 0;
+
+	/* load native modules */
+	ctr_load_required_native_modules();
 }
 
 ctr_object *ctr_get_responder(ctr_object * receiverObject, char *message,

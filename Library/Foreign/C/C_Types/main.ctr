@@ -24,3 +24,16 @@ var c_int is c_sint.
 var c_char is c_schar.
 var c_long is c_slong.
 var c_short is c_sshort.
+
+var CTLibcache is Object cnew: {
+  my cache is Map new put: (CTypes loadLibrary: Nil) at: 'thisexec'.
+},
+on: 'getOrCreate:' do: {:name
+  ^(var cache is my cache) at: name, or: {
+    var lib is CTypes loadLibrary: name.
+    lib get = 0 ifTrue: {thisBlock error: 'Could not load $$name'.}.
+    cache put: lib at: name.
+    ^lib.
+  }.
+}.
+var load_library is \:name CTLibcache getOrCreate: name.

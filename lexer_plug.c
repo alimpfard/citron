@@ -415,7 +415,7 @@ int ctr_lex_tok()
 		ctr_code++;
 		c = toupper(*ctr_code);
 		if (xnum_likely)
-			base = c == 'X' ? 16 : 10;	//let the parser handle incorrect values
+			base = c == 'X' ? 16 : c == 'C' ? 8 : 10;	//let the parser handle incorrect values
 		if (base != 10) {
 			ctr_lex_buffer[i] = c;
 			ctr_lex_tokvlen++;

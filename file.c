@@ -8,11 +8,12 @@
 #include <stdint.h>
 #include <time.h>
 #include <sys/file.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <errno.h>
 #include <fcntl.h>
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
-#include <sys/stat.h>
 #endif
 #include <dirent.h>
 #include "citron.h"
@@ -400,12 +401,9 @@ ctr_object *ctr_file_exists(ctr_object * myself, ctr_argument * argumentList)
 	pathString = ctr_heap_allocate(vlen + 1);
 	memcpy(pathString, path->value.svalue->value, vlen);
 	memcpy(pathString + vlen, "\0", 1);
-	f = fopen(pathString, "r");
+	static struct stat sb;
+	exists = stat(pathString, &sb) == 0;
 	ctr_heap_free(pathString);
-	exists = (f != NULL);
-	if (f) {
-		fclose(f);
-	}
 	return ctr_build_bool(exists);
 }
 
@@ -989,4 +987,29 @@ ctr_object *ctr_file_type(ctr_object * myself, ctr_argument * argumentList)
  ret:
 	ctr_heap_free(path);
 	return ctr_build_string_from_cstring(value);
+}
+
+/**
+ * File mkdir [: [Number:permissions]]
+ *
+ * makes a directory
+ */
+ctr_object* ctr_file_mkdir(ctr_object* myself, ctr_argument* argumentList) {
+	ctr_check_permission(CTR_SECPRO_NO_FILE_WRITE);
+	ctr_object* pathobj = ctr_file_rpath(myself, NULL);
+	if(pathobj == CtrStdNil) {
+		CtrStdFlow = ctr_build_string_from_cstring("file object contains no path");
+		return CtrStdNil;
+	}
+	char* path = ctr_heap_allocate_cstring(pathobj);
+	mode_t mode = 0755;
+	if(argumentList->object)
+		mode = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+	if(mkdir(path, mode) != 0) {
+		CtrStdFlow = ctr_build_string_from_cstring(strerror(errno));
+		ctr_heap_free(path);
+		return CtrStdNil;
+	}
+	ctr_heap_free(path);
+	return myself;
 }

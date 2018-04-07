@@ -475,11 +475,13 @@ int ctr_clex_tok()
 		ctr_code++;
 		c = toupper(*ctr_code);
 		if (xnum_likely)
-			base = c == 'X' ? 16 : 10;	//let the parser handle incorrect values
+			base = c == 'X' ? 16 : c == 'C' ? 8 : 10;	//let the parser handle incorrect values
 		if (base != 10) {
-			ctr_clex_buffer[i] = c;
-			ctr_clex_tokvlen++;
-			i++;
+			if (c != 'C') {
+				ctr_clex_buffer[i] = c;
+				ctr_clex_tokvlen++;
+				i++;
+			}//ignore the C, for strtod
 			ctr_code++;
 			c = toupper(*ctr_code);
 		}

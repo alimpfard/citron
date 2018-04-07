@@ -1,0 +1,206 @@
+import Library/Data/SwitchCase.
+import Library/Foreign/C/C_Types: ['c_ptr', 'c_int'].
+
+File on: 'joinPath:' do: {:addition
+  var p0 is me path.
+  p0 is p0 endsWith: '/', either: { ^p0 from: 0 length: p0 length - 1. } or: p0.
+  addition is addition startsWith: '/', either: { ^addition skip: 1. } or: addition.
+  ^File new: (p0 + '/' + addition).
+}.
+
+File on: 'listrec:' do: {:path # tuples of [type, filename]
+  var arr is Array < ['folder', path].
+  var joinf is File new: path.
+  File list: path, each_v: {:mp
+    ['.', '..'] contains: (mp @ 'file'), continue.
+    (mp at: 'type', = 'folder') either: {
+      arr is arr + ['folder', (joinf joinPath: mp @ 'file', path)] + (File listrec: (joinf joinPath: mp @ 'file', path)).
+    }
+    or: {
+      arr push: [mp @ 'type', (joinf joinPath: mp @ 'file', path)].
+    }.
+  }.
+  ^arr reverse.
+}.
+
+var Main is {:cliargs
+  var dlopen is CTypes loadLibrary: Nil, dlopen.
+  var dlopen_cif is CIF new setABI: 0 return: c_ptr argTypes: [c_ptr, c_int].
+  var dlclose is CTypes loadLibrary: Nil, dlclose.
+  var dlclose_cif is CIF new setABI: 0 return: c_int argTypes: [c_ptr].
+  var dlsym is CTypes loadLibrary: Nil, dlsym.
+  var dlsym_cif is CIF new setABI: 0 return: c_ptr argTypes: [c_ptr, c_ptr].
+  var dlerror is CTypes loadLibrary: Nil, dlerror.
+  var dlerror_cif is CIF new setABI: 0 return: c_ptr argTypes: [].
+  var strlen is CTypes loadLibrary: Nil, strlen.
+  var strlen_cif is CIF new setABI: 0 return: c_int argTypes: [c_ptr].
+  var chmod is CTypes loadLibrary: Nil, chmod.
+  var chmod_cif is CIF new setABI: 0 return: c_int argTypes: [c_ptr, c_int].
+
+  var modsPath is File new: File extensionsPath, joinPath: 'mods'.
+  var modPathInfo is {:name
+    var mpath is modsPath joinPath: '%s/libctr%s.so' % [name, name].
+    var fpath is modsPath joinPath: '%s' % [name].
+    ^Map cnew: {
+      mpath => mpath path.
+      fpath => fpath path.
+      exists => mpath exists.
+      name => name.
+      list => \:_ File listrec: fpath path.
+    }, on: 'respondTo:' do: {:prop ^Reflect getProperty: prop ofObject: me. }.
+  }.
+  var rmmod is {:name
+    var inf is modPathInfo applyTo: name.
+    inf exists either: {
+      inf list run each_v: \:iff File new: iff @ 1, delete.
+    }
+    or: {
+      thisBlock error: 'module $$name does not exist.'.
+    }.
+  }.
+
+  var confirm is {:msg
+    Pen purple write: 'Confirm: %s [y/N]: ' % [msg], resetColor.
+    ^(Program waitForInput) at: 0, lower = 'y'.
+  }.
+
+  var check_so is {:path
+    var soptr is dlopen_cif call: dlopen withArgs: [path, 0x000001].
+    var pf is soptr get.
+    var error is Nil.
+    pf !=: 0, ifTrue: {
+      pf is dlsym_cif call: dlsym withArgs: [soptr, 'begin'], get.
+      pf !=: 0, ifFalse: {
+        var cerror is dlerror_cif call: dlerror withArgs: [].
+        var errorlen is strlen_cif call: strlen withArgs: [cerror].
+        error is cerror readBytesAsString: errorlen.
+      }.
+      dlclose_cif call: dlclose withArgs: [soptr].
+    }, else: {
+      var cerror is dlerror_cif call: dlerror withArgs: [].
+      var errorlen is strlen_cif call: strlen withArgs: [cerror].
+      error is cerror readBytesAsString: errorlen.
+    }.
+    ^[(pf !=: 0), error].
+  }.
+
+  var help is
+'Citron Package Manager - cpm
+
+usage: cpm operation_name operation_args...
+
+operations:
+    + -rmmod <modname> : remove a module
+    + -insmod <modname> <so_path> : install a module (will raise error if module exists)'.
+
+  cliargs count = 0 ifTrue: {
+    Pen writeln: help.
+    thisBlock error: 'No operation given'.
+  }.
+
+  var rmmod_opt is {:cliargs_
+    var modname is cliargs_ shift.
+      confirm applyTo: 'Are you sure to remove the module $$modname' + '?', ifTrue: {
+        Pen cyan write: 'Removing module $$modname ... ', resetColor.
+        { rmmod applyTo: modname. } catch: {:e Pen red writeln: '[Failed: %s]' % [e], resetColor. thisBlock error: e.}, run.
+        Pen green writeln: '[Ok]', resetColor.
+      }.
+    ^cliargs_.
+  }.
+  var insmod_opt is {:cliargs_
+    [modname, curpath, *cliargs_] is cliargs_.
+      curpath is File new: curpath, realPath.
+      Pen cyan write: 'Attempting to install module %s (from shared object %s)... ' % [modname, curpath], resetColor.
+      (var stats is check_so applyTo: curpath) at: 0, ifFalse: {
+        Pen red writeln: '[Failed]', resetColor writeln: '%s appears to be an invalid shared library' % [(curpath)].
+        Pen magenta writeln: stats last, resetColor.
+        thisBlock error: 'Invalid shared lib file'.
+      }.
+
+      var cf is File new: curpath.
+      cf exists ifFalse: {
+        Pen red writeln: '[Failed]', resetColor.
+        thisBlock error: 'No such file "%s" found' % [cf path].
+      }.
+      var insinfo is modPathInfo applyTo: modname.
+      insinfo exists ifTrue: {
+        Pen red writeln: '[Failed]', resetColor.
+        thisBlock error: 'module with name $$modname exists at path %s' % [insinfo mpath].
+      }.
+      {
+        File new: insinfo fpath, mkdir: 0c777.
+        File new: (insinfo mpath), open: 'w+', write: (cf read), close.
+        chmod_cif call: chmod withArgs: [insinfo mpath, 0c777].
+      } catch: {:err
+        Pen red writeln: '[Failed: %s]' % [e], resetColor.
+        thisBlock error: err.
+      }, run.
+      Pen green writeln: '[Ok]', resetColor.
+    ^cliargs_.
+  }.
+
+  var compilepp_opt is {:cliargs #compile given cpp files
+    [*cliargs, name] is cliargs.
+    Pen writeln: 'Compiling %L into libctr%s.so' % [cliargs, name].
+    var ret is Shell call: '%s --std=c++17 -lcitron -rdynamic %:L -o libctr%s.so && echo True' % [(Program env: 'CXX', or: 'clang++'), ' ', (cliargs filter: \:_:x x endsWith: 'cpp'), name].
+    ret trim = 'True' either: {
+      Pen green writeln: 'Compilation succeeded'.
+    } or: {
+      thisBlock error: 'Compilation failed'.
+    }.
+    ^[name, 'libctr%s.so' % [name]].
+  }.
+  var compile_opt is {:cliargs #compile given c files
+    [*cliargs, name] is cliargs.
+    Pen writeln: 'Compiling %L into libctr%s.so' % [cliargs, name].
+    var ret is Shell call: '%s -lcitron -rdynamic %:L -o libctr%s.so && echo True' % [(Program env: 'CC', or: 'clang'), ' ', (cliargs filter: \:_:x x endsWith: 'c'), name].
+    ret trim = 'True' either: {
+      Pen green writeln: 'Compilation succeeded'.
+    } or: {
+      thisBlock error: 'Compilation failed'.
+    }.
+    ^[name, 'libctr%s.so' % [name]].
+  }.
+
+
+  (cliargs shift)
+    case: '-rmmod' do: {
+      cliargs is rmmod_opt applyTo: cliargs.
+    },
+    case: '-insmod' do: {
+      cliargs is insmod_opt applyTo: cliargs.
+    },
+    case: '-reinsmod' do: {
+      {
+        rmmod_opt applyTo: (cliargs from: 0 length: cliargs count).
+      } catch: {}, run.
+      cliargs is insmod_opt applyTo: cliargs.
+    },
+    case: '-compile++' do: {
+      cliargs is compilepp_opt applyTo: cliargs.
+      {
+        rmmod_opt applyTo: (cliargs from: 0 length: cliargs count).
+      } catch: {}, run.
+      cliargs is insmod_opt applyTo: cliargs.
+    },
+    case: '-compile' do: {
+      cliargs is compile_opt applyTo: cliargs.
+      {
+        rmmod_opt applyTo: (cliargs from: 0 length: cliargs count).
+      } catch: {}, run.
+      cliargs is insmod_opt applyTo: cliargs.
+    },
+    switch.
+    Program exit.
+}.
+
+import __is_being_imported ifFalse: {
+  var cliargs is Array new fill: Program argCount with: \:i Program argument: i.
+  { ^(cliargs head or: '') startsWith: '-'. } whileFalse: {
+    cliargs shift.
+    (cliargs count = 0) break.
+  }.
+
+  # Main catch: {:e Pen red writeln: e, resetColor. }, run.
+  Main run.
+}.

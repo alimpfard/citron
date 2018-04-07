@@ -71,6 +71,7 @@ Eval on: 'setColor:' do: { :c
 Eval on: 'setPrompt:' do: { :p my prompt is p. }.
 Eval on: 'setContinuation:' do: { :p my continuation is p. }.
 Eval on: 'setArgs:' do: { :a my args := a. }.
+Eval on: 'args' do: { ^my args. }.
 Eval on: 'color' do: { ^my color. }.
 Eval on: 'prompt' do: { ^(me preprompt) + my prompt. }.
 Eval on: 'preprompt' do: {
@@ -399,6 +400,13 @@ Eval on: 'togglePasteMode' do: {
       (f <=: 0) ifTrue: { thisBlock error: 'Invalid port specified: $$f'. }.
       Eval enableFlag: 'jsonout'.
       Eval startEvalServerOnPort: f.
+      Program exit.
+    }, case: '-m' do: {
+      var mod is Eval shiftArgs.
+      (mod isNil) ifTrue: { thisBlock error: 'no module to run?'. }.
+      var args is Eval args.
+      import respondTo: 'Library/Executable/%s:' % [mod] and: ['Main'].
+      { Main applyTo: args. } catch: Eval::'handleException:', run.
       Program exit.
     }, default: {
       opt startsWith: '-F', ifTrue: {

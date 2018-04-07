@@ -1436,7 +1436,11 @@ ctr_object *ctr_build_number_from_string(char *str, ctr_size length)
 	/* max length is 40 (and that's probably even too long... ) */
 	numCStr = (char *)ctr_heap_allocate(41 * sizeof(char));
 	memcpy(numCStr, str, stringNumberLength);
-	numberObject->value.nvalue = atof(numCStr);
+	if(numCStr[0] == '0') {
+		numberObject->value.nvalue = strtol(numCStr, 0, 0);
+	} else {
+		numberObject->value.nvalue = atof(numCStr);
+	}
 	ctr_set_link_all(numberObject, CtrStdNumber);
 	ctr_heap_free(numCStr);
 	return numberObject;

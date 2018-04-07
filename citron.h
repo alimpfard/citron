@@ -350,6 +350,45 @@ CTR_H_DECLSPEC ctr_object* CTR_FILE_STDERR;      //!< Special Object : Standard 
 CTR_H_DECLSPEC ctr_object* CTR_FILE_STDIN_STR;   //!< Special Object : Standard Input in-world name
 CTR_H_DECLSPEC ctr_object* CTR_FILE_STDOUT_STR;  //!< Special Object : Standard Output in-world name
 CTR_H_DECLSPEC ctr_object* CTR_FILE_STDERR_STR;  //!< Special Object : Standard Error in-world name
+
+#ifdef __cplusplus
+ctr_object* get_CtrStdWorld();
+ctr_object* get_CtrStdObject();
+ctr_object* get_CtrStdBlock();
+ctr_object* get_CtrStdString();
+ctr_object* get_CtrStdNumber();
+ctr_object* get_CtrStdBool();
+ctr_object* get_CtrStdConsole();
+ctr_object* get_CtrStdNil();
+ctr_object* get_CtrStdGC();
+ctr_object* get_CtrStdMap();
+ctr_object* get_CtrStdArray();
+ctr_object* get_CtrStdIter();
+ctr_object* get_CtrStdFile();
+ctr_object* get_CtrStdSystem();
+ctr_object* get_CtrStdDice();
+ctr_object* get_CtrStdCommand();
+ctr_object* get_CtrStdSlurp();
+ctr_object* get_CtrStdShell();
+ctr_object* get_CtrStdClock();
+ctr_object* get_CtrStdFlow();
+ctr_object* get_CtrExceptionType();
+ctr_object* get_CtrStdBreak();
+ctr_object* get_CtrStdContinue();
+ctr_object* get_CtrStdExit();
+ctr_object* get_CtrStdReflect();
+ctr_object* get_CtrStdReflect_cons();
+ctr_object* get_CtrStdFiber();
+ctr_object* get_CtrStdThread();
+ctr_object* get_CtrStdSymbol();
+ctr_object* get_ctr_first_object();
+ctr_object* get_CTR_FILE_STDIN();
+ctr_object* get_CTR_FILE_STDOUT();
+ctr_object* get_CTR_FILE_STDERR();
+ctr_object* get_CTR_FILE_STDIN_STR();
+ctr_object* get_CTR_FILE_STDOUT_STR();
+ctr_object* get_CTR_FILE_STDERR_STR();
+#endif
 /**
 * @internal
  * standard instrumentor, do not override.
@@ -861,6 +900,7 @@ ctr_object* ctr_file_tmp(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_stdext_path(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_assign(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_to_string(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_file_mkdir(ctr_object* myself, ctr_argument* argumentList);
 /**
  * Command Object Interface
  */

@@ -16,6 +16,8 @@ extern "C" {
 
 #endif
 
+#define CTR_LOAD_BASE_MODS //undef for no base mods
+
 #include "dictionary.h"
 #include <inttypes.h>
 #include <stdlib.h>
@@ -515,6 +517,7 @@ void ctr_transfer_object_ownership(ctr_object* to, ctr_object* what);
 inline ctr_object *ctr_internal_create_mapped_standalone_object (int type, int shared);
 void ctr_internal_delete_standalone_object (ctr_object* o);
 void*       ctr_internal_plugin_find( ctr_object* key );
+void*       ctr_internal_plugin_find_base( char const* key );
 ctr_object* ctr_find_(ctr_object* key, int noerror);
 ctr_object* ctr_find(ctr_object* key);
 ctr_object* ctr_find_in_my(ctr_object* key);

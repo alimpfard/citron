@@ -1,0 +1,8 @@
+import Library/Foreign/C/C_Types: ['c_uint8', 'c_ptr', 'load_library'].
+
+var thisexec is load_library applyTo: 'thisexec'.
+
+var cache is c_uint8.
+
+var readMem is \:p:sz p readBytes: sz. #Read sz bytes starting at p
+var writeMem is \:p:bytes bytes each_v: \:byte p derefSet: (cache set: byte). #Write all the bytes in @bytes into memory starting at p

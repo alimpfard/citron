@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <dlfcn.h>
+#include <errno.h>
 #include "citron.h"
 
 char *np;
@@ -171,6 +172,32 @@ void *ctr_internal_plugin_find(ctr_object * key)
 	realPathModName = realpath(pathNameMod, NULL);
 	if (access(realPathModName, F_OK) == -1)
 		return NULL;
+	handle = dlopen(realPathModName, RTLD_NOW);
+	if (!handle) {
+		printf("%s: %s\n", "Failed to open file", dlerror());
+		return NULL;
+	}
+	*(void **)(&init_plugin) = dlsym(handle, "begin");
+	if (!init_plugin)
+		return NULL;
+	(void)init_plugin();
+	return handle;
+}
+
+void *ctr_internal_plugin_find_base(char const * modName)
+{
+	void *handle;
+	char pathNameMod[1024];
+	plugin_init_func init_plugin;
+	char *realPathModName = NULL;
+	snprintf(pathNameMod, 1024,
+		 (CTR_STD_EXTENSION_PATH "/basemods/%s/libctr%s.so"), modName,
+		 modName);
+	realPathModName = realpath(pathNameMod, NULL);
+	if (access(realPathModName, F_OK) == -1) {
+		printf("Error: %s\n", strerror(errno));
+		return NULL;
+	}
 	handle = dlopen(realPathModName, RTLD_NOW);
 	if (!handle) {
 		printf("%s: %s\n", "Failed to open file", dlerror());

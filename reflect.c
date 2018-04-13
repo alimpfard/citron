@@ -790,17 +790,116 @@ ctr_object *ctr_reflect_fn_copy(ctr_object * myself,
 	return newblk;
 }
 
+/*
+ * replace_mask
+ * << 0 : replace inner
+ * << 1 : replace node type
+ *
+ */
+ctr_tnode* ctr_reflect_internal_term_rewrite(ctr_tnode* pfn, int nodety, ctr_tnode* rewrite_term, int replace_mask) {
+	printf("try: rewriting %d to %d mode %d (now %d)\n", nodety, rewrite_term->type, replace_mask, pfn->type);
+	if(pfn->type == nodety) {
+		ctr_internal_debug_tree(pfn, 1);
+
+		printf("rewriting %d to %d mode %d\n", nodety, rewrite_term->type, replace_mask);
+		if(replace_mask&1) {//replace inner structure
+			pfn->nodes = rewrite_term->nodes;
+		}
+		if(replace_mask&2) {//replace node type
+			pfn->type = rewrite_term->type;
+		}
+		if(replace_mask&4) {
+
+		}
+		ctr_internal_debug_tree(pfn, 1);
+		return pfn;
+	}
+	switch(pfn->type) {
+		case CTR_AST_NODE_EXPRASSIGNMENT:
+			ctr_reflect_internal_term_rewrite(pfn->nodes->node, nodety, rewrite_term, replace_mask);
+			ctr_reflect_internal_term_rewrite(pfn->nodes->next->node, nodety, rewrite_term, replace_mask);
+			return pfn;
+		case CTR_AST_NODE_EXPRMESSAGE: {
+			ctr_reflect_internal_term_rewrite(pfn->nodes->node, nodety, rewrite_term, replace_mask);
+			ctr_tlistitem* li = pfn->nodes->next;
+			while(li&&li->node) {
+				ctr_reflect_internal_term_rewrite(li->node, nodety, rewrite_term, replace_mask);
+				li = li->next;
+			}
+			return pfn;
+		}
+		case CTR_AST_NODE_UNAMESSAGE: return pfn;
+		case CTR_AST_NODE_BINMESSAGE: {
+			ctr_reflect_internal_term_rewrite(pfn->nodes->node, nodety, rewrite_term, replace_mask);
+			return pfn;
+		}
+		case CTR_AST_NODE_KWMESSAGE: {
+			ctr_tlistitem* li = pfn->nodes->next;
+			while(li&&li->node) {
+				ctr_reflect_internal_term_rewrite(li->node, nodety, rewrite_term, replace_mask);
+				li = li->next;
+			}
+			return pfn;
+		}
+		case CTR_AST_NODE_LTRSTRING:
+		case CTR_AST_NODE_REFERENCE:
+		case CTR_AST_NODE_LTRBOOLTRUE:
+		case CTR_AST_NODE_LTRBOOLFALSE:
+		case CTR_AST_NODE_LTRNIL:
+		case CTR_AST_NODE_SYMBOL:
+		case CTR_AST_NODE_ENDOFPROGRAM:
+		case CTR_AST_NODE_LTRNUM: return pfn;
+		case CTR_AST_NODE_CODEBLOCK: {
+			ctr_tlistitem* li = pfn->nodes;
+			while(li&&li->node) {
+				ctr_reflect_internal_term_rewrite(li->node, nodety, rewrite_term, replace_mask);
+				li = li->next;
+			}
+			li = pfn->nodes->next;
+			while(li&&li->node) {
+				ctr_reflect_internal_term_rewrite(li->node, nodety, rewrite_term, replace_mask);
+				li = li->next;
+			}
+			return pfn;
+		}
+		case CTR_AST_NODE_RETURNFROMBLOCK: ctr_reflect_internal_term_rewrite(pfn->nodes->node, nodety, rewrite_term, replace_mask); return pfn;
+		case CTR_AST_NODE_IMMUTABLE: {
+			ctr_tlistitem* li = pfn->nodes->node->nodes;
+			while(li&&li->node) {
+				ctr_reflect_internal_term_rewrite(li->node, nodety, rewrite_term, replace_mask);
+				li = li->next;
+			}
+			return pfn;
+		}
+		case CTR_AST_NODE_NESTED:
+			ctr_reflect_internal_term_rewrite(pfn->nodes->node, nodety, rewrite_term, replace_mask);
+			return pfn;
+		case CTR_AST_NODE_PARAMLIST:
+		case CTR_AST_NODE_INSTRLIST:
+		case CTR_AST_NODE_PROGRAM: {
+			ctr_tlistitem* li = pfn->nodes;
+			while(li&&li->node) {
+				ctr_reflect_internal_term_rewrite(li->node, nodety, rewrite_term, replace_mask);
+				li = li->next;
+			}
+			return pfn;
+		}
+	}
+	return pfn;
+}
+
 /**
- * [Reflect] newSharedObject
+ * [Reflect] newSharedObject[: [Type]]
  *
  * makes a memmapped object. (Automatic destructor exists)
+ * Type defaults to Object
  **/
 ctr_object *ctr_reflect_share_memory(ctr_object * myself,
 				     ctr_argument * argumentList)
 {
-	// CTR_ENSURE_TYPE_STRING(argumentList->object);
+	ctr_object *ty = argumentList->object;
 	ctr_object *shared =
-	    ctr_internal_create_mapped_object(CTR_OBJECT_TYPE_OTOBJECT, 1);
+	    ctr_internal_create_mapped_object(ty?ty->info.type:CTR_OBJECT_TYPE_OTOBJECT, 1);
 	ctr_set_link_all(shared, CtrStdObject);
 	return shared;
 }

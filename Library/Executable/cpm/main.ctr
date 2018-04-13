@@ -91,7 +91,10 @@ usage: cpm operation_name operation_args...
 
 operations:
     + -rmmod <modname> : remove a module
-    + -insmod <modname> <so_path> : install a module (will raise error if module exists)'.
+    + -insmod <modname> <so_path> : install a module (will raise error if module exists)
+    + -reinsmod <modname> <so_path> : remove an existing module and replace it with the given .so file
+    + -compile <compiler options>* <module name> : compile the given C files and install the module
+    + -compile++ <compiler options>* <module name> : compile the given C++ files and install the module'.
 
   cliargs count = 0 ifTrue: {
     Pen writeln: help.

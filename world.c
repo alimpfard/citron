@@ -3040,6 +3040,10 @@ void ctr_initialize_world()
 				 ("newSharedObject"),
 				 &ctr_reflect_share_memory);
 	ctr_internal_create_func(CtrStdReflect,
+				 ctr_build_string_from_cstring
+				 ("newSharedObject:"),
+				 &ctr_reflect_share_memory);
+	ctr_internal_create_func(CtrStdReflect,
 				 ctr_build_string_from_cstring("link:to:"),
 				 &ctr_reflect_link_to);
 	ctr_internal_create_func(CtrStdReflect,

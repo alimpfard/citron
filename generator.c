@@ -26,6 +26,9 @@ typedef struct {
   ctr_object* fn;
 } ctr_mapping_generator;
 
+void ctr_condense_generator(ctr_generator*, int);
+ctr_mapping_generator* ctr_combine_generators(ctr_mapping_generator*, ctr_mapping_generator*);
+
 ctr_object* ctr_generator_make(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* inst = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
   ctr_set_link_all(inst, myself);
@@ -128,6 +131,7 @@ ctr_object* ctr_generator_map(ctr_object* myself, ctr_argument* argumentList) {
   argm->next = ctr_heap_allocate(sizeof(ctr_argument));
   generator->data = argm;
   generator->finished = under->finished;
+  // ctr_condense_generator(generator, CTR_FN_OF_GENNY);
   res->ptr = generator;
   return inst;
 }
@@ -246,7 +250,7 @@ ctr_object* ctr_generator_each(ctr_object* myself, ctr_argument* argumentList) {
   ctr_heap_free(argm);
   return myself;
 }
-ctr_object* ctr_generator_internal_tostr(ctr_generator* gen, int gtype) {
+ctr_object* ctr_generator_internal_tostr(ctr_generator * gen, int gtype) {
   switch(gtype) {
     case CTR_REPEAT_GENNY: return ctr_build_string_from_cstring("[RepeatGenerator]");
     case CTR_E_OF_S_GENNY: return ctr_build_string_from_cstring("[StringGenerator]");
@@ -272,6 +276,47 @@ ctr_object* ctr_generator_tostr(ctr_object* myself, ctr_argument* argumentList) 
   if(!myself->value.rvalue)
     return ctr_build_string_from_cstring("[UninitializedGenerator]");
   return ctr_generator_internal_tostr(myself->value.rvalue->ptr, myself->value.rvalue->type);
+}
+
+ctr_generator* ctr_unwrap_generator(ctr_mapping_generator* mg) {
+  if(mg->i_type == CTR_FN_OF_GENNY) return ctr_unwrap_generator(mg->genny->sequence);
+  return mg->genny;
+}
+
+void ctr_condense_generator(ctr_generator* gen, int ty) {
+  switch(ty) {
+    case CTR_REPEAT_GENNY :
+    case CTR_E_OF_S_GENNY :
+    case CTR_E_OF_A_GENNY :
+    case CTR_STEP_GENNY   :
+    case CTR_E_OF_M_GENNY : return;
+    case CTR_FN_OF_GENNY  : {
+      ctr_mapping_generator* mgen = gen->sequence;
+      if(mgen->i_type == CTR_FN_OF_GENNY) {
+        ctr_condense_generator(mgen->genny, CTR_FN_OF_GENNY);
+        gen->sequence = ctr_combine_generators(mgen, mgen->genny->sequence);
+        mgen->genny = ctr_unwrap_generator(mgen);
+      }
+    }
+  }
+}
+
+static ctr_object* fv_gen_combinator_str = NULL;
+static ctr_object* fv_gen_str_0 = NULL;
+static ctr_object* fv_gen_str_1 = NULL;
+ctr_mapping_generator* ctr_combine_generators(ctr_mapping_generator* genp, ctr_mapping_generator* genc) {
+  // if(genp->fn->info.type == CTR_OBJECT_TYPE_OTBLOCK && genc->fn->info.type == CTR_OBJECT_TYPE_OTBLOCK) {
+    if(fv_gen_combinator_str == NULL) {
+      fv_gen_combinator_str = ctr_build_string_from_cstring("{:fv ^my fn0 applyTo: (my fn1 applyTo: fv).}");
+      fv_gen_str_0 = ctr_build_string_from_cstring("fn0");
+      fv_gen_str_1 = ctr_build_string_from_cstring("fn1");
+    }
+    ctr_object* callmsg = ctr_string_eval(fv_gen_combinator_str, NULL);
+    ctr_internal_object_set_property(callmsg, fv_gen_str_0, genp->fn, 0);
+    ctr_internal_object_set_property(callmsg, fv_gen_str_1, genc->fn, 0);
+  // }
+  genp->fn = callmsg;
+  return genp;
 }
 
 void* ctr_generator_free(void* res_) {

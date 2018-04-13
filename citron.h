@@ -1039,6 +1039,7 @@ ctr_object* ctr_reflect_set_to(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_cb_ac(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_cb_add_param(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_fn_copy(ctr_object* myself, ctr_argument* argumentList);
+ctr_tnode* ctr_reflect_internal_term_rewrite(ctr_tnode* pfn, int nodety, ctr_tnode* rewrite_term, int replace_mask);
 ctr_object* ctr_reflect_share_memory(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_link_to(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_child_of(ctr_object* myself, ctr_argument* argumentList);

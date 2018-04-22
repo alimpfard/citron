@@ -22,7 +22,7 @@ ImportLib on: 'loadExtensions' do: { :ename
   exts each: { :k :f
     ((f @ 'type' !=: 'file') | (f @ 'file' = 'fileutils.ctr')) continue.
     var v is f @ 'file'.
-    (v from: (v length - 5) to: (v length - 1) = '.ctr') ifTrue: {
+    (v endsWith: '.ctr') ifTrue: {
       File new: (File extensionsPath) + '/extensions/' + v, include.
     }.
   }.

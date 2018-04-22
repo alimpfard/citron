@@ -1206,9 +1206,9 @@ ctr_object *ctr_internal_cast2bool(ctr_object * o)
 	ctr_object *boolObject = ctr_send_message(o, "toBoolean", 9, a);
 	ctr_heap_free(a);
 	if (boolObject->info.type != CTR_OBJECT_TYPE_OTBOOL) {
-		CtrStdFlow =
-		    ctr_build_string_from_cstring
-		    ("toBoolean must return a boolean.");
+		// CtrStdFlow =
+		//     ctr_build_string_from_cstring
+		//     ("toBoolean must return a boolean.");
 		return ctr_build_bool(0);
 	}
 	return boolObject;
@@ -2238,6 +2238,9 @@ void ctr_initialize_world()
 				 &ctr_array_join);
 	ctr_internal_create_func(CtrStdArray,
 				 ctr_build_string_from_cstring(CTR_DICT_POP),
+				 &ctr_array_pop);
+	ctr_internal_create_func(CtrStdArray,
+				 ctr_build_string_from_cstring(CTR_DICT_POP":"),
 				 &ctr_array_pop);
 	ctr_internal_create_func(CtrStdArray,
 				 ctr_build_string_from_cstring(CTR_DICT_AT),

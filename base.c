@@ -517,7 +517,7 @@ ctr_object *ctr_object_to_number(ctr_object * myself,
 ctr_object *ctr_object_to_boolean(ctr_object * myself,
 				  ctr_argument * ctr_argumentList)
 {
-	return ctr_build_bool(1);
+	return myself->info.type == CTR_OBJECT_TYPE_OTBOOL ? myself : ctr_build_bool(1);
 }
 
 /**
@@ -1439,7 +1439,13 @@ ctr_object *ctr_build_number_from_string(char *str, ctr_size length)
 	if(numCStr[0] == '0') {
 		numberObject->value.nvalue = strtol(numCStr, 0, 0);
 	} else {
-		numberObject->value.nvalue = atof(numCStr);
+		char* endptr = NULL;
+		numberObject->value.nvalue = strtod(numCStr, &endptr);
+		if (endptr < numCStr+stringNumberLength) {
+			ctr_heap_free(numCStr);
+			CtrStdFlow = ctr_build_string_from_cstring("cannot build number, extranous characters in string");
+			return CtrStdNil;
+		}
 	}
 	ctr_set_link_all(numberObject, CtrStdNumber);
 	ctr_heap_free(numCStr);

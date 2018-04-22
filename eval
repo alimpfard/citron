@@ -10,6 +10,7 @@ var stderr is File special: 'stderr'.
 var errPen is Pen for: stderr.
 var GREEN_COLOR is 'green' toSymbol.
 var ITALIC_EFFECT is 'italic' toSymbol.
+var inBlock is 0.
 
 ImportLib Queue.
 ImportLib LRArray.
@@ -27,7 +28,8 @@ Eval on: 'init' do: {
   my history is LRArray new init: 100.
   my hs_file is File new: '~/.ctrhist'.
   my hs_file exists ifFalse: { my hs_file write: '[]'. }.
-  (JSON parse: my hs_file read genericType: Object) each_v: (my history::'push:').
+  var history is my history.
+  (JSON parse: my hs_file read genericType: Object) each_v: \:x history push: x.
   my commands is Nil.
   my userDefs is Nil.
   my continuation is '...'.
@@ -41,6 +43,7 @@ Eval on: 'init' do: {
   me genReader: 'eServer'.
   my errd is False.
   my last_error is Nil.
+  my inNewBlock is False.
   ^me.
 }.
 Eval on: 'handleException:' do: {:e
@@ -57,7 +60,7 @@ Eval on: 'trace' do: {^Reflect lastTrace.}.
 Eval on: 'end' do: {
   my end is True.
   me stopEvalServer.
-  my hs_file write: (JSON serialize: my history, ~ ?>s/\\/\\\\/g<?).
+  my hs_file write: ({:json JSON parse: json. ^json.} catch: {:e ^''.}, applyTo: (JSON serialize: my history, ~ ?>s/\\/\\\\/g<?)).
 }.
 Eval on: 'break' do: { my end ifTrue: {Broom sweep.}. ^my end. }.
 Eval on: 'allowedColors' do: { ^my allowedColors. }.
@@ -73,13 +76,19 @@ Eval on: 'setContinuation:' do: { :p my continuation is p. }.
 Eval on: 'setArgs:' do: { :a my args := a. }.
 Eval on: 'args' do: { ^my args. }.
 Eval on: 'color' do: { ^my color. }.
-Eval on: 'prompt' do: { ^(me preprompt) + my prompt. }.
+Eval on: 'prompt' do: { ^(me preprompt) + my prompt + (me proprompt). }.
 Eval on: 'preprompt' do: {
   var pp is Array new.
   me getFlag: 'highlight', ifFalse: { pp push: 'p'. }.
   pp is pp join: ':'.
   ^pp length > 0 either: pp + ' ' or: pp.
 }.
+Eval on: 'proprompt' do: {
+  ^me inNewBlock either: ' ' * 2 * inBlock or: ''.
+}.
+Eval on: 'inNewBlock' do: {^my inNewBlock.}.
+Eval on: 'newBlock' do: { my inNewBlock is True. }.
+Eval on: 'endBlock' do: { my inNewBlock is False. }.
 Eval on: 'continuation' do: { ^my continuation. }.
 Eval on: 'shiftArgs' do: { ^(my args shift). }.
 Eval on: 'enableFlag:' do: {:flag my flags put: True at: flag. }.
@@ -505,7 +514,8 @@ Eval on: 'repl' do: {
     var done is False.
     var cursor is 0.
     var multichar_in is Array new.
-    var inBlock is 0.
+    inBlock is 0.
+    Eval endBlock.
     var lastEscape is False.
     var inString is False.
     var inpbrk is 0.
@@ -554,7 +564,7 @@ Eval on: 'repl' do: {
                 }.
                 done is inBlock = 0.
               }.
-              inBlock !=: 0, ifTrue: { Pen brk. inp +=: ' '. inpbrk is inp length. cursor +=: 1.}.
+              inBlock !=: 0, ifTrue: { Eval newBlock. Pen brk. inp +=: ' '. inpbrk is inp length. cursor +=: 1.}.
             }, else: { Pen brk. done is True. }.
           }, case: '\x3' do: {#<^C>
             inp is ''.

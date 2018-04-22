@@ -936,7 +936,7 @@ ctr_object *ctr_array_put(ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * [Array] pop
+ * [Array] pop [: [idx]]
  *
  * Pops off the last element of the array.
  */
@@ -951,8 +951,14 @@ ctr_object *ctr_array_pop(ctr_object * myself, ctr_argument * argumentList)
 	if (myself->value.avalue->tail >= myself->value.avalue->head) {
 		return CtrStdNil;
 	}
-	myself->value.avalue->head--;
-	return *(myself->value.avalue->elements + myself->value.avalue->head);
+	if (argumentList->object) {
+		myself->value.avalue->head--;
+		for(int i = (ctr_size)(argumentList->object->value.nvalue); i < myself->value.avalue->head - myself->value.avalue->tail - 1; i++) myself->value.avalue->elements[i] = myself->value.avalue->elements[i + 1];
+		return *(myself->value.avalue->elements + (ctr_size)(argumentList->object->value.nvalue));
+	} else {
+		myself->value.avalue->head--;
+		return *(myself->value.avalue->elements + myself->value.avalue->head);
+	}
 }
 
 /**

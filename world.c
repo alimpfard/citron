@@ -1860,6 +1860,9 @@ void ctr_initialize_world()
 	ctr_internal_create_func(CtrStdNumber,
 				 ctr_build_string_from_cstring
 				 (CTR_DICT_TO_BYTE), &ctr_number_to_byte);
+ ctr_internal_create_func(CtrStdNumber,
+				ctr_build_string_from_cstring
+				("negate"), &ctr_number_negate);
 	ctr_internal_create_func(CtrStdNumber,
 				 ctr_build_string_from_cstring
 				 (CTR_DICT_QUALIFY), &ctr_number_qualify);

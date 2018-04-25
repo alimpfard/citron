@@ -671,7 +671,7 @@ ctr_object* ctr_number_to_byte(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_qualify(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_respond_to(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_assign(ctr_object* myself, ctr_argument* argumentList);
-
+ctr_object *ctr_number_negate(ctr_object * myself, ctr_argument * argumentList);
 
 /**
  * String Interface

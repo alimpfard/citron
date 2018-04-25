@@ -20,7 +20,7 @@ Eval is Object new.
 Eval on: 'init' do: {
   my end is False.
   my color is 'resetColor'.
-  my prompt is '>>> '.
+  my prompt is '⠭⠕ '.
   my args is Array new.
   my allowedColors is ('red blue magenta cyan yellow green resetColor' split: ' ') join: '|'.
   my evalQueue is Queue new.
@@ -32,7 +32,7 @@ Eval on: 'init' do: {
   (JSON parse: my hs_file read genericType: Object) each_v: \:x history push: x.
   my commands is Nil.
   my userDefs is Nil.
-  my continuation is '...'.
+  my continuation is '⠒⠂'.
   my flags is Map new
     put: False at: 'ptype',
     put: False at: 'stats',
@@ -466,7 +466,7 @@ Eval on: 'redraw:at:comment:' do: {:inp:cursor:cmt
   cursor -=: inpbrk.
   inp is inp from: inpbrk to: inp length.
   var ctn is Eval prompt.
-  ctn is inp length > ((var twext is TerminalWidth run - (ctn length))) either: (ctn @ 0) or: ctn.
+  ctn is inp length > ((var twext is TerminalWidth run - (ctn length))) either: (Eval continuation) or: ctn.
   twext -=: cursor.
   twext -=: cmt length.
   twext < 0 ifTrue: {

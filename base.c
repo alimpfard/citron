@@ -1156,7 +1156,7 @@ ctr_object *ctr_bool_if_true(ctr_object * myself, ctr_argument * argumentList)
 		ctr_heap_free(arguments);
 		if (result != codeBlock) {
 			ctr_internal_next_return = 1;
-			// return result;
+			return result;
 		}
 		return myself;
 	}
@@ -1189,7 +1189,7 @@ ctr_object *ctr_bool_if_false(ctr_object * myself, ctr_argument * argumentList)
 		ctr_heap_free(arguments);
 		if (result != codeBlock) {
 			ctr_internal_next_return = 1;
-			// return result;
+			return result;
 		}
 		return myself;
 	}
@@ -1653,6 +1653,17 @@ ctr_object *ctr_number_dec(ctr_object * myself, ctr_argument * argumentList)
 	ctr_object *otherNum = ctr_internal_cast2number(argumentList->object);
 	myself->value.nvalue -= otherNum->value.nvalue;
 	return myself;
+}
+
+/**
+ * <b>[Number] negate</b>
+ *
+ * Negates the value of the number object
+ */
+ctr_object *ctr_number_negate(ctr_object * myself, ctr_argument * argumentList)
+{
+		myself->value.nvalue = 0-myself->value.nvalue;
+		return myself;
 }
 
 /**

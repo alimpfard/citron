@@ -5,6 +5,8 @@ contextPurity is False. #This is not a pure context, since objects are mutated i
 #Pen write: 'Extensions: ' + (File extensionsPath), brk.
 File new: (File extensionsPath) + '/extensions/fileutils.ctr', include.
 
+var PIDFILE is '~/.ctrpid.pid'.
+
 inp is ''.
 var stderr is File special: 'stderr'.
 var errPen is Pen for: stderr.
@@ -113,7 +115,7 @@ Eval on: 'startEvalServer' do: {
 
   my eServer is Program new: {:p
       Program is p.
-      File new: '~/.ctrpid.pid', write: Program pid.
+      File new: PIDFILE, write: Program pid.
       p port: port.
       p serve: EvalServer.
   }.
@@ -127,7 +129,7 @@ Eval on: 'startEvalServerOnPort:' do: {:port
 
   my eServer is Program new: {:p
       Program is p.
-      File new: '~/.ctrpid.pid', write: Program pid.
+      File new: PIDFILE, write: Program pid.
       p port: port.
       p serve: EvalServer.
   }.
@@ -351,6 +353,7 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
           indent: 2 write: '-v : print version information and exit\n',
           indent: 2 write: '-s <port>: start a evaluation server on the specified port (Forked and the current process will be killed. pidfile at ~/.ctrpid.pid)\n',
+          indent: 2 write: '-p <pidfile>: set the pid file. value is ignored unless [-s <port>] comes after',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
         P green write: 'default imported modules in eval are:',
           cyan indent: 1 write: ('Queue LRArray ' + (import __loaded_modules keys reverse join: ' ') ~ 's/\\s|^/\\n+ /g').
@@ -404,6 +407,11 @@ Eval on: 'togglePasteMode' do: {
         Pen writeln: 'Citron'.
         Pen writeln: '[%L]' % [(Reflect version split: '.')].
         Program exit.
+    }, case: '-p' do: {
+      args pop.
+      var f is Eval shiftArgs.
+      (f isNil) ifTrue: { thisBlock error: '-p requires an argument <pidfile>'. }.
+      PIDFILE is f.
     }, case: '-s' do: {
       args pop.
       var f is Eval shiftArgs toNumber.
@@ -569,6 +577,8 @@ Eval on: 'repl' do: {
           }, case: '\x3' do: {#<^C>
             inp is ''.
             cursor is 0.
+            inBlock is 0.
+            cmt is '<Broke block>'.
             # Pen red writeln: 'Interrupted', resetColor.
             # done is True.
           }, case: '\b' do: {#<\b>

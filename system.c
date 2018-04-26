@@ -1864,7 +1864,7 @@ ctr_object *ctr_command_accepti4(ctr_object * myself,
 ctr_object *ctr_dice_sides(ctr_object * myself, ctr_argument * argumentList)
 {
 	ctr_object *arg = ctr_internal_cast2number(argumentList->object);
-	return ctr_build_number_from_float((ctr_number) 1 +
+	return ctr_build_number_from_float((ctr_number)
 					   arc4random_uniform((uint32_t)
 							      (ceil
 							       (arg->value.

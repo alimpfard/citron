@@ -951,7 +951,7 @@ ctr_object *ctr_array_pop(ctr_object * myself, ctr_argument * argumentList)
 	if (myself->value.avalue->tail >= myself->value.avalue->head) {
 		return CtrStdNil;
 	}
-	if (argumentList->object) {
+	if (argumentList->object && argumentList->object->info.type == CTR_OBJECT_TYPE_OTNUMBER) {
 		myself->value.avalue->head--;
 		for(int i = (ctr_size)(argumentList->object->value.nvalue); i < myself->value.avalue->head - myself->value.avalue->tail - 1; i++) myself->value.avalue->elements[i] = myself->value.avalue->elements[i + 1];
 		return *(myself->value.avalue->elements + (ctr_size)(argumentList->object->value.nvalue));

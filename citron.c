@@ -39,27 +39,37 @@ void ctr_cli_welcome(char* invoked_by)
 	printf("\n");
 }
 
+void ctr_question_intent(void) {
+	puts("What is it that you meant to do?");
+	ctr_cli_welcome("<exec>");
+}
+
 /**
  * CommandLine Read Arguments
  * Parses command line arguments and sets global settings accordingly.
  */
 void ctr_cli_read_args(int argc, char *argv[])
 {
-	if (argc == 1) {
+	if (argc == 1 || argv == NULL) {
 		ctr_cli_welcome(argv[0]);
 		exit(0);
 	}
 	argc--;
 	argv++;
-	while (argc > 0 && argv[0][0] == '-') {
+	while (argc > 0 && argv && argv[0][0] == '-') {
 		if (strcmp(argv[0], "-c") == 0 || strcmp(argv[0], "--compile") == 0)
 			compile_and_quit = 1;
-		if (strcmp(argv[0], "-fc") == 0 || strcmp(argv[0], "--from-compiled") == 0)
+		else if (strcmp(argv[0], "-fc") == 0 || strcmp(argv[0], "--from-compiled") == 0)
 			compile_and_quit = 2;
-		if (strcmp(argv[0], "-d") == 0)
+		else if (strcmp(argv[0], "-d") == 0)
 			debug = 1;
+		else break;
 		argv++;
 		argc--;
+	}
+	if (argv == NULL) {
+		ctr_question_intent();
+		exit(0);
 	}
 	ctr_mode_input_file =
 	    (char *)ctr_heap_allocate_tracked(sizeof(char) * 255);

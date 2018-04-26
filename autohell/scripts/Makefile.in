@@ -527,8 +527,10 @@ uninstall-am: uninstall-binSCRIPTS uninstall-extensionDATA
 install-data-local:
 	rm -rf $(datadir)/@PACKAGE@/Library
 	rm -rf $(datadir)/@PACKAGE@/mods
+	rm -rf $(datadir)/@PACKAGE@/basemods
 	cp -Lrf mods $(datadir)/@PACKAGE@/
 	cp -Lrf Library $(datadir)/@PACKAGE@/
+	cp -Lrf basemods $(datadir)/@PACKAGE@/
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

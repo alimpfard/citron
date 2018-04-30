@@ -878,6 +878,7 @@ ctr_object* ctr_file_new(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_special(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_path(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_rpath(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_file_expand(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_read(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_write(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_append(ctr_object* myself, ctr_argument* argumentList);

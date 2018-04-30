@@ -211,6 +211,51 @@ ctr_object *ctr_file_rpath(ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
+ * [File] expand: [String: path]
+ *
+ * Expands a given path by user paths
+ */
+ctr_object* ctr_file_expand(ctr_object* myself, ctr_argument* argumentList) {
+	if (argumentList->object == NULL)
+	return CtrStdNil;
+	ctr_object *path = ctr_internal_cast2string(argumentList->object);
+	char *cpath = ctr_heap_allocate_cstring(path);
+	wordexp_t exp_result;
+	int st = wordexp(cpath, &exp_result, 0);
+	ctr_object* arr;
+	if(!st) {
+		arr = ctr_array_new(CtrStdArray, NULL);
+		char* r;
+		int i=0;
+		while(1) {
+			r = exp_result.we_wordv[i++];
+			if(!r) break;
+			argumentList->object = ctr_build_string_from_cstring(r);
+			ctr_array_push(arr, argumentList);
+		}
+		wordfree(&exp_result);
+	} else {
+		char* err;
+		switch(st) {
+			case WRDE_BADCHAR:
+				err = "Bad character"; break;
+			case WRDE_BADVAL:
+				err = "Bad value"; break;
+			case WRDE_CMDSUB:
+				err = "command substitution requested"; break;
+			case WRDE_NOSPACE:
+				err = "Out of memory"; break;
+			case WRDE_SYNTAX:
+				err = "Shell syntax error"; break;
+			default: err = "Unknown error";
+		}
+		ctr_heap_free(cpath);
+		CtrStdFlow = ctr_build_string_from_cstring(err);
+		return CtrStdNil;
+	}
+	return arr;
+}
+/**
  * [File] read
  *
  * Reads contents of a file. Send this message to a file to read the entire contents in

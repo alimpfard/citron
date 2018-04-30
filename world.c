@@ -279,7 +279,6 @@ int ctr_internal_object_is_equal(ctr_object * object1, ctr_object * object2)
 			    ctr_internal_cast2bool(ctr_send_message_variadic
 						   (object2, "=", 1, 1,
 						    object1))->value.bvalue;
-			printf("%d\n", a);
 			return a;
 		}
 	return 0;
@@ -2588,6 +2587,9 @@ void ctr_initialize_world()
 	ctr_internal_create_func(CtrStdFile,
 				 ctr_build_string_from_cstring("realPath"),
 				 &ctr_file_rpath);
+	ctr_internal_create_func(CtrStdFile,
+				 ctr_build_string_from_cstring("expand:"),
+				 &ctr_file_expand);
 	ctr_internal_create_func(CtrStdFile,
 				 ctr_build_string_from_cstring
 				 (CTR_DICT_EXT_PATH), &ctr_file_stdext_path);

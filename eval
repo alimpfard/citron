@@ -33,6 +33,7 @@ Eval on: 'init' do: {
   var history is my history.
   (JSON parse: my hs_file read genericType: Object) each_v: \:x history push: x.
   my commands is Nil.
+  my command_comps is Nil.
   my userDefs is Nil.
   my continuation is '⠒⠂'.
   my flags is Map new
@@ -212,6 +213,25 @@ Eval on: 'Commands' do: {
   }.
   ^my commands.
 }.
+Eval on: 'CommandCompletions' do: {
+  ^my command_comps is my command_comps or: {
+    ^Map new
+      put: {:argstr var flags is Eval flags keys.
+        ^argstr count either: {
+          var flag is argstr head trim.
+          flag startsWith: 'no-', either: { flag is flag skip: 3. } or: { }.
+          ^flags filter: \:i:v v startsWith: flag.
+        } or: flags.
+      } at: ':!f',
+      put: {:argstr
+          ^argstr count either: {
+              var path is argstr head split: ' ', last ~ ?>s|.*?((/*\w+)(/\w+)+/?).*|$1|<?.
+              var path2 is path contains: '*', either: path or: path + '*'.
+              ^(File expand: path2, fmap: (\:x x skip: path length)).
+          } or: [].
+      } at: ':!'.
+  }.
+}.
 Eval on: 'addMetaCommand:function:' do: {:name:fn
   Eval Commands put: fn at: name.
 }.
@@ -227,6 +247,14 @@ Eval on: 'doMeta:' do: {:str:ptr
         ^{^'Invalid meta-command \':%s\'.\n' % [cmd] + (cmds at: 'h', run).}.
       }.
   }, applyTo: args.
+}.
+
+Eval on: 'metaCompletion:' do: {:m
+  [meta, *argstrs] is m.
+  var cmds is Eval CommandCompletions.
+  ^cmds at: meta, or: {
+      ^\:_ [].
+  }, applyTo: argstrs.
 }.
 
 Eval on: 'evaluate:' do: { :str
@@ -350,6 +378,7 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '-f : evaluate file. many can be passed, evals in passed order\n',
           indent: 2 write: '-F<[no-]flag> : enables the passed flag\n',
           indent: 2 write: '-Fs : display all the available flags\n',
+          indent: 2 write: '-meta <command> : execute a metacommand (sans the initial :)\n',
           indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
           indent: 2 write: '-v : print version information and exit\n',
           indent: 2 write: '-s <port>: start a evaluation server on the specified port (Forked and the current process will be killed. pidfile at ~/.ctrpid.pid)\n',
@@ -386,6 +415,10 @@ Eval on: 'togglePasteMode' do: {
         args pop. #consume option.
         Pen writeln: (Eval flags keys join: ', ').
         Program exit.
+    }, case: '-meta' do: {
+        args pop.
+        Eval doMeta: Eval shiftArgs.
+
     }, case: '-e' do: {
         args pop. #consume option..
         var value is Eval shiftArgs.
@@ -508,7 +541,14 @@ Eval on: 'repl' do: {
     Eval break break.
     (Eval queueHasItem) ifTrue: {
       var item is Eval dequeue.
-      Eval evaluateFile: item.
+      Eval statsb: 0, statsa: 0, exectime: 0.
+      Eval statsb: Broom keptAlloc.
+      Eval exectime: (Clock timeExecutionOf: { Eval evaluateFile: item. }).
+      Eval statsa: Broom keptAlloc.
+      Eval getFlag: 'stats', ifTrue: {
+        var str is '(%s seconds (%d cycles), %s bytes)' % [Eval exectime / (Clock ticksPerSecond), Eval exectime, ((Eval statsa - Eval statsb) toString reverse reSplit: '(?<=\\G...)', join: ',', reverse)].
+        Pen write: Colors % [str, GREEN_COLOR, ITALIC_EFFECT].
+      }.
     }.
     Eval queueHasItem continue.
     Pen cyan write: (Eval prompt), resetColor.
@@ -527,38 +567,56 @@ Eval on: 'repl' do: {
     var lastEscape is False.
     var inString is False.
     var inpbrk is 0.
+    var last_comp_entry_len is 0.
+    var ce_idx is 0.
     {^done & (inBlock = 0).} whileFalse: {
       var cmt is ''.
       inc = '\t' ifTrue: {#<Tab>
-          var candidate is 'Nil'.
-          var toc is (inp trim or: '  ') split: ' ', last.
-          last_was_comp ifTrue: {
-            var toremove is ((toc length) - (last_comp_entry length)).
-            Pen write: '\b \b' * toremove.
-            inp is inp removeFrom: (cursor - toremove) to: cursor.
-            cursor is (cursor - toremove) max: 0.
+          inp containsPattern: ?>^\s*:<?, either: {
+            last_was_comp ifTrue: {
+              inp is inp removeFrom: (cursor - last_comp_entry_len) to: cursor.
+              cursor is (cursor - last_comp_entry_len) max: 0.
+              }.
+            var comps is Eval metaCompletion: (inp split: ' ' max: 1).
+            comps count = ce_idx ifTrue: { ce_idx is 0. }.
+            # Pen writeln: comps.
+            last_comp_entry is comps @ ce_idx.
+            ce_idx +=: 1.
+            last_comp_entry_len is last_comp_entry length.
+            inp +=: last_comp_entry.
+            cursor +=: last_comp_entry_len.
+            last_was_comp is True.
+          } or: {
+            var candidate is 'Nil'.
+            var toc is (inp trim or: '  ') split: ' ', last.
+            last_was_comp ifTrue: {
+              var toremove is ((toc length) - (last_comp_entry length)).
+              Pen write: '\b \b' * toremove.
+              inp is inp removeFrom: (cursor - toremove) to: cursor.
+              cursor is (cursor - toremove) max: 0.
+            }.
+            toc is last_was_comp either: last_comp_entry or: toc.
+            last_comp_entry is toc.
+            var flipper is OneGateFlipper new.
+            last_toc is (inp trim or: 'Nil') split: ' ', filter: {:_:v (v endsWith: ':') ifTrue: {flipper set. ^False.}. ^((v endsWith: ':') | (flipper get)) not. }.
+            last_toc is (last_toc count) >=: 2, either: {^last_toc init last.} or: 'Nil'.
+            var candidates is Eval allTheNames: ({^Reflect getObject: (['my', 'var'] contains: last_toc, either: Nil or: last_toc).} catch: {^Nil.}, run).
+            var skipthis is candidates @ 0.
+            candidates is (candidates @ 1) filter: {:_:i ^i startsWith: toc.}.
+            candidates count !=: 0, ifTrue: {
+              candidate is candidates @ (last_comp_index is (last_comp_index +=: 1) >=: (candidates count), either: 0 or: last_comp_index).
+              var cc is candidate skip: toc length.
+              Pen cyan write: cc, resetColor.
+              cmt is (var iis is '[from %s]' % [last_toc]).
+              last_comp_rewind is iis length.
+              inp is inp insert: cc at: cursor.
+              cursor +=: cc length.
+            }, else: {
+              cmt is ncmessage.
+            }.
+            last_was_comp is True.
+            skipthis ifTrue: {last_toc is candidate.}.
           }.
-          toc is last_was_comp either: last_comp_entry or: toc.
-          last_comp_entry is toc.
-          var flipper is OneGateFlipper new.
-          last_toc is (inp trim or: 'Nil') split: ' ', filter: {:_:v (v endsWith: ':') ifTrue: {flipper set. ^False.}. ^((v endsWith: ':') | (flipper get)) not. }.
-          last_toc is (last_toc count) >=: 2, either: {^last_toc init last.} or: 'Nil'.
-          var candidates is Eval allTheNames: ({^Reflect getObject: (['my', 'var'] contains: last_toc, either: Nil or: last_toc).} catch: {^Nil.}, run).
-          var skipthis is candidates @ 0.
-          candidates is (candidates @ 1) filter: {:_:i ^i startsWith: toc.}.
-          candidates count !=: 0, ifTrue: {
-            candidate is candidates @ (last_comp_index is (last_comp_index +=: 1) >=: (candidates count), either: 0 or: last_comp_index).
-            var cc is candidate skip: toc length.
-            Pen cyan write: cc, resetColor.
-            cmt is (var iis is '[from %s]' % [last_toc]).
-            last_comp_rewind is iis length.
-            inp is inp insert: cc at: cursor.
-            cursor +=: cc length.
-          }, else: {
-            cmt is ncmessage.
-          }.
-          last_was_comp is True.
-          skipthis ifTrue: {last_toc is candidate.}.
         }, else: {
           inc case: '\xd' do: {#<Enter>
             # Pen brk.

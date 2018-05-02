@@ -14,7 +14,11 @@ ffi_type* ctr_ctype_citron_object_try_infer_type(ctr_object* object) {
   switch (object->info.type) {
     case CTR_OBJECT_TYPE_OTNIL: return &ffi_type_void;
     case CTR_OBJECT_TYPE_OTBOOL: return &ffi_type_uint;
-    case CTR_OBJECT_TYPE_OTNUMBER: return &ffi_type_double;
+    case CTR_OBJECT_TYPE_OTNUMBER: {
+      double intpart;
+      if(modf(object->value.nvalue, &intpart) == 0) return &ffi_type_sint64;
+      return &ffi_type_double;
+    }
     case CTR_OBJECT_TYPE_OTSTRING: return &ffi_type_pointer;
     case CTR_OBJECT_TYPE_OTEX: return ctr_ctypes_ffi_convert_to_ffi_type(object);
     case CTR_OBJECT_TYPE_OTNATFUNC: //Do not pass around native functions, bad kid.
@@ -1193,6 +1197,30 @@ ffi_type* ctr_ctypes_ffi_convert_ctype_to_ffi_type(ctr_ctype type) {
     default: return NULL;
   }
 }
+ctr_ctype ctr_ctypes_ffi_convert_ffi_type_to_ctype(ffi_type* type) {
+    if(type == &ffi_type_void) return CTR_CTYPE_VOID;
+    else if(type == &ffi_type_uint8) return CTR_CTYPE_UINT8;
+    else if(type == &ffi_type_sint8) return CTR_CTYPE_SINT8;
+    else if(type == &ffi_type_uint16) return CTR_CTYPE_UINT16;
+    else if(type == &ffi_type_sint16) return CTR_CTYPE_SINT16;
+    else if(type == &ffi_type_uint32) return CTR_CTYPE_UINT32;
+    else if(type == &ffi_type_sint32) return CTR_CTYPE_SINT32;
+    else if(type == &ffi_type_uint64) return CTR_CTYPE_UINT64;
+    else if(type == &ffi_type_sint64) return CTR_CTYPE_SINT64;
+    else if(type == &ffi_type_float) return CTR_CTYPE_FLOAT;
+    else if(type == &ffi_type_double) return CTR_CTYPE_DOUBLE;
+    else if(type == &ffi_type_uchar) return CTR_CTYPE_UCHAR;
+    else if(type == &ffi_type_schar) return CTR_CTYPE_SCHAR;
+    else if(type == &ffi_type_ushort) return CTR_CTYPE_USHORT;
+    else if(type == &ffi_type_sshort) return CTR_CTYPE_SSHORT;
+    else if(type == &ffi_type_uint) return CTR_CTYPE_UINT;
+    else if(type == &ffi_type_sint) return CTR_CTYPE_SINT;
+    else if(type == &ffi_type_ulong) return CTR_CTYPE_ULONG;
+    else if(type == &ffi_type_slong) return CTR_CTYPE_SLONG;
+    else if(type == &ffi_type_longdouble) return CTR_CTYPE_LONGDOUBLE;
+    else if(type == &ffi_type_pointer) return CTR_CTYPE_POINTER;
+    return CTR_CTYPE_INVALID;
+}
 ctr_object* ctr_ctypes_convert_ffi_type_to_citron(ffi_arg* value, ctr_ctype type) {
   // printf("p %d\n", type);
   ctr_object* object = nudispatch((char*)value, ctr_ctypes_ffi_convert_ctype_to_ffi_type(type));
@@ -1235,6 +1263,53 @@ CTR_CT_FFI_BIND(prep_cif) { //cif*, int<abi>, type* rtype, type** atypes
     ctr_internal_object_set_property(myself, ctr_build_string_from_cstring(":crType"), ctr_build_number_from_float(ctr_ctypes_ffi_convert_to_citron_ctype(argumentList->next->object)), 0);
   }
   return myself;
+}
+
+CTR_CT_FFI_BIND(prep_cif_inferred) { //[*atypes, rtype]
+  ctr_object*   cifobj  = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+  ffi_cif*      cif_res = ctr_heap_allocate(sizeof(ffi_cif));
+  ctr_object*   atypes_ = argumentList->object;
+  int           asize   = ((int)(ctr_array_count(atypes_, NULL)->value.nvalue)) - 1;
+  ffi_type**    atypes  = ctr_heap_allocate(sizeof(ffi_type) * asize);
+  ctr_argument* args    = ctr_heap_allocate(sizeof(ctr_argument));
+  int           i       = 0;
+  ffi_type*     rtype;
+  ffi_type* ty;
+  ctr_ctypes_set_type(cifobj, CTR_CTYPE_CIF);
+  ctr_set_link_all(cifobj, CtrStdCType_ffi_cif);
+  cifobj->value.rvalue->ptr = cif_res;
+  int error = 0;
+  for(i = 0; i<asize; i++) {
+    args->object = ctr_build_number_from_float(i);
+    ty = ctr_ctype_citron_object_try_infer_type(ctr_array_get(atypes_, args));
+    if(ty == NULL) {
+      error = 5; //ERROR_INFERRED
+      goto error_out_inf;
+    }
+    atypes[i] = ty;
+  }
+  args->object = ctr_build_number_from_float(i);
+  ty = ctr_ctype_citron_object_try_infer_type(ctr_array_get(atypes_, args));
+  if(ty == NULL) {
+    error = 5; //ERROR_INFERRED
+    goto error_out_inf;
+  }
+  rtype = ty;
+  ffi_abi abi = FFI_DEFAULT_ABI;
+  ffi_status status = ffi_prep_cif(cif_res, abi, asize, rtype, atypes);
+  error_out_inf:;
+  ctr_heap_free(args);
+  if (error == 5) {
+    static char ERROR_STR[1024];
+    size_t slen = sprintf(ERROR_STR, "Type inferrence failed for %s (argument#%d)", i == asize ? "the return value" : "an argument", i);
+    CtrStdFlow = ctr_build_string(ERROR_STR, slen);
+    return myself;
+  }
+  if (status != FFI_OK) CtrStdFlow = ctr_build_string_from_cstring((status==FFI_BAD_ABI?"FFI_BAD_ABI":"FFI_ERROR"));
+  else {
+    ctr_internal_object_set_property(cifobj, ctr_build_string_from_cstring(":crType"), ctr_build_number_from_float(ctr_ctypes_ffi_convert_ffi_type_to_ctype(rtype)), 0);
+  }
+  return cifobj;
 }
 
 CTR_CT_FFI_BIND(call) { //<cif, CTypes pointer (fn), Array avalues; ^Citron object
@@ -1649,6 +1724,7 @@ void begin() {
   ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("new"), &ctr_ctype_ffi_cif_new);
   ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("destruct"), &ctr_ctype_ffi_cif_destruct);
   ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("setABI:return:argTypes:"), &ctr_ctype_ffi_prep_cif);
+  ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("newByInferreingTypes:"), &ctr_ctype_ffi_prep_cif_inferred);
   ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("call:withArgs:"), &ctr_ctype_ffi_call);
   CTR_CT_INTRODUCE_TYPE(cont_pointer);
   ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring("packed:count:"), &ctr_ctypes_make_packed);

@@ -4,6 +4,7 @@
 *.Po
 *.so
 *.c~
+*.h~
 ctr
 *.js
 *.yml

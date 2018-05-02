@@ -1,0 +1,32 @@
+import Library/Utils/Colors.
+
+var stdin is File special: 'stdin'.
+
+var get_term_cursor_pos is {
+  Pen write: '\x1b[6n'.
+  var c is 0.
+  var r is 0.
+  var stdin is const stdin.
+  var s is '' append: (stdin readBytes: 1).
+  {^s endsWith: 'R'.} whileFalse: {
+    s append: (stdin readBytes: 1).
+  }.
+  ^s skip: 2, split: ';', fmap: \:x (x ~ 's/[^\\d]//g') toNumber.
+}.
+
+var generate_context_menu is {:elems:selected_index
+  var old_cursor_position is const get_term_cursor_pos run.
+  # var tcols is Shell tput: 'cols', trim toNumber.
+  var text is '\x1b[%d;%dH' % ([old_cursor_position head + 1, 0]).
+  elems each: {:idx:elem
+    text +=: ((idx = selected_index) either: {^Colors % [elem toString, 'swap' toSymbol].} or: elem).
+    text +=: Colors % ['  ', 'reset' toSymbol].
+  }.
+  text +=: '\x1b[%d;%dH' % old_cursor_position.
+  Pen write: text.
+}.
+
+var clear_next_line is {
+  var old_cursor_position is const get_term_cursor_pos run.
+  Pen write: '\x1b[%d;%dH\x1b[2K\x1b[%d;%dH' % ([old_cursor_position head + 1, 0] + old_cursor_position).
+}.

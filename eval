@@ -72,6 +72,7 @@ Eval on: 'handleException:' do: {:e
   ^me getFlag: 'equit', either: {thisBlock error: e.} or: {Pen red write: e, resetColor brk. ^e.}.
 }.
 Eval on: 'handleInternalException:' do: {:e
+  File new: '~/citron_eval_bug_track_%s' % [Clock new time], write: '%s\nTime %s\n===========================\n%s' % [e, Clock new, (Reflect lastTrace tail tail tail chunks: 2, fmap: (\:x x join: ' at '), join: '\n')].
   errPen writeln: 'Eval bug, $$e'.
 }.
 Eval on: 'errored?' do: {^my errd.}.
@@ -246,7 +247,8 @@ Eval on: 'CommandCompletions' do: {
               var path2 is path contains: '*', either: path or: path + '*'.
               ^(File expand: path2, fmap: (\:x x skip: path length)).
           } or: [].
-      } at: ':!'.
+      } at: ':!',
+      put: {:filter ^Eval Commands keys filter: (\:_:x x startsWith: filter), fmap: \:x x skip: filter length.} at: 'generic'.
   }.
 }.
 Eval on: 'addMetaCommand:function:' do: {:name:fn
@@ -270,7 +272,8 @@ Eval on: 'metaCompletion:' do: {:m
   [meta, *argstrs] is m.
   var cmds is Eval CommandCompletions.
   ^cmds at: meta, or: {
-      ^\:_ [].
+      argstrs is meta skip: 1.
+      ^cmds at: 'generic'.
   }, applyTo: argstrs.
 }.
 
@@ -598,10 +601,11 @@ Eval on: 'repl' do: {
     var ce_idx is 0.
     var cmt is ''.
     var comp_set is HashSet new.
+    var have_context is False.
     {^done & (inBlock = 0).} whileFalse: {
       cmt is ''.
       inc = '\t' ifTrue: {#<Tab>
-          clear_next_line run.
+          clear_next_line run. have_context is False.
           comp_set clear.
           inp containsPattern: ?>^\s*:<?, either: {
             last_was_comp ifTrue: {
@@ -609,15 +613,18 @@ Eval on: 'repl' do: {
               cursor is (cursor - last_comp_entry_len) max: 0.
               }.
             var comps is Eval metaCompletion: (inp split: ' ' max: 1).
-            comps count = ce_idx ifTrue: { ce_idx is 0. }.
-            # Pen writeln: comps.
-            last_comp_entry is comps @ ce_idx.
-            ce_idx +=: 1.
-            last_comp_entry_len is last_comp_entry length.
-            inp +=: last_comp_entry.
-            cursor +=: last_comp_entry_len.
-            last_was_comp is True.
+            comps count > 0 either: {
+              comps count <=: ce_idx, ifTrue: { ce_idx is 0. }.
+              # Pen writeln: comps.
+              last_comp_entry is comps @ ce_idx.
+              ce_idx +=: 1.
+              last_comp_entry_len is last_comp_entry length.
+              inp +=: last_comp_entry.
+              cursor +=: last_comp_entry_len.
+              last_was_comp is True.
+            } or: { cmt is '<- No completion'. }.
           } or: {
+            have_context is True.
             var candidate is 'Nil'.
             var toc is (inp trim or: '  ') split: ' ', last.
 
@@ -643,7 +650,6 @@ Eval on: 'repl' do: {
               var uid is uniq indexOf: candidate.
               generate_context_menu applyTo: uniq and: uid.
               var cc is candidate skip: toc length.
-              Pen cyan write: cc, resetColor.
               cmt is (var iis is '[from %s]' % [last_toc]).
               last_comp_rewind is iis length.
               inp is inp insert: cc at: cursor.
@@ -657,6 +663,7 @@ Eval on: 'repl' do: {
         }, else: {
           inc case: '\xd' do: {#<Enter>
             clear_next_line run.
+            have_context ifFalse: {
             # Pen brk.
             # (cursor !=: inp length) ifTrue: {
             #   Pen write: (inp from: cursor length: (inp length - cursor)).
@@ -670,7 +677,10 @@ Eval on: 'repl' do: {
               }.
               inBlock !=: 0, ifTrue: { Eval newBlock. Pen brk. inp +=: ' '. inpbrk is inp length. cursor +=: 1.}.
             }, else: { Pen brk. done is True. }.
+            }.
+            have_context is False.
           }, case: '\x3' do: {#<^C>
+            clear_next_line run. have_context is False.
             inp is ''.
             cursor is 0.
             inBlock is 0.
@@ -678,12 +688,14 @@ Eval on: 'repl' do: {
             # Pen red writeln: 'Interrupted', resetColor.
             # done is True.
           }, case: '\b' do: {#<\b>
+            clear_next_line run. have_context is False.
             cursor > 0 ifTrue: {
               inp is inp removeFrom: (cursor - 1) to: cursor.
               cursor -=: 1.
               Pen write: '\b \b'.
             }, else: { Pen write: '\a'. }.
           }, case: ('' appendByte: 127) do: {#<\b>
+            clear_next_line run. have_context is False.
             cursor > 0 ifTrue: {
               inp is inp removeFrom: (cursor - 1) to: cursor.
               cursor -=: 1.
@@ -693,12 +705,16 @@ Eval on: 'repl' do: {
             var toc is (inp trim or: '  ') split: ' ', last.
             var recs is '%:L' % [' ', (Eval allTheNames filter: {:_:n ^n startsWith: toc.})].
             Pen cyan write: recs, resetColor.
+            clear_next_line run. have_context is False.
+
           }, case: '\x1b' do: {
             inc is stdin readBytes: 2.
             inc case: '\x5b\x41' do: { #Up Arrow
               hindex > 0 ifTrue: {
                 cursor is (inp is Eval getHistory at: (hindex is hindex - 1)) length.
               }.
+              clear_next_line run. have_context is False.
+
             }, case: '\x5b\x42' do: { #Down Arrow
               (hindex > 0) & (Eval getHistory count > 0) ifTrue: {
                 hindex +=: 1.
@@ -713,14 +729,20 @@ Eval on: 'repl' do: {
                 inp is ''.
                 cursor is 0.
               }.
+              clear_next_line run. have_context is False.
+
             }, case: '\x5b\x43' do: { #Right Arrow
               (cursor < inp length) ifTrue: {
                 cursor +=: 1.
               }, else: {Pen write: '\a'.}.
+              clear_next_line run. have_context is False.
+
             }, case: '\x5b\x44' do: { #Left Arrow
               (cursor > 0) ifTrue: {
                 cursor -=: 1.
               }, else: {Pen write: '\a'.}.
+              clear_next_line run. have_context is False.
+
             }, case: '\x5b\x31' do: { #Supposedly <ctrl>
               inc is stdin readBytes: 3.
                 (inc = '\x3b\x35\x44') & (cursor > 0) ifTrue: { #^Left Arrow
@@ -736,7 +758,9 @@ Eval on: 'repl' do: {
                     cursor is cursor + ct + ((inp length) - (ix length)).
                   }.#, else: { Pen red write: inc. }.
                 }.
+                clear_next_line run. have_context is False.
             }, case: '\x4f\x51' do: { #F2
+                clear_next_line run. have_context is False.
                 Eval togglePasteMode.
             }, default: {
               Pen write: inc toByteArray.
@@ -821,7 +845,7 @@ Eval on: 'repl' do: {
       #Broom sweep. #Keep the darn pointers in memory
       Eval __eval_ret toString length > 0 ifTrue: { Pen brk. }.
     }.
-  } catch: Eval::'handleInternalException:').
+  }).#catch: Eval::'handleInternalException:').
 }.
 
 Eval repl.

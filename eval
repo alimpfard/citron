@@ -6,6 +6,16 @@ contextPurity is False. #This is not a pure context, since objects are mutated i
 File new: (File extensionsPath) + '/extensions/fileutils.ctr', include.
 
 var PIDFILE is '~/.ctrpid.pid'.
+var logo is ?>  _____ _ _
+ / ____(_) |
+| |     _| |_ _ __ ___  _ __
+| |    | | __| '__/ _ \| '_ \  %s
+| |____| | |_| | | (_) | | | |
+ \_____|_|\__|_|  \___/|_| |_|
+
+%s %s<?.
+
+var display_logo is True.
 
 inp is ''.
 var stderr is File special: 'stderr'.
@@ -16,7 +26,14 @@ var inBlock is 0.
 
 ImportLib Queue.
 ImportLib LRArray.
-import Library/Foreign/C/NamedStruct Library/Data/Map Library/Utils/Highlight Library/Utils/OneGateFlipper Library/Control/MethodResolve.
+import
+  Library/Foreign/C/NamedStruct
+  Library/Data/Map
+  Library/Data/Set
+  Library/Utils/Highlight
+  Library/Utils/OneGateFlipper
+  Library/Control/MethodResolve
+  Library/Utils/CLIContextMenu: ['generate_context_menu', 'clear_next_line'].
 
 Eval is Object new.
 Eval on: 'init' do: {
@@ -31,7 +48,7 @@ Eval on: 'init' do: {
   my hs_file is File new: '~/.ctrhist'.
   my hs_file exists ifFalse: { my hs_file write: '[]'. }.
   var history is my history.
-  (JSON parse: my hs_file read genericType: Object) each_v: \:x history push: x.
+  (JSON parse: (my hs_file read or: '[]') genericType: Object) each_v: \:x history push: x.
   my commands is Nil.
   my command_comps is Nil.
   my userDefs is Nil.
@@ -377,12 +394,13 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '-h : show this help\n',
           indent: 2 write: '-f : evaluate file. many can be passed, evals in passed order\n',
           indent: 2 write: '-F<[no-]flag> : enables the passed flag\n',
-          indent: 2 write: '-Fs : display all the available flags\n',
-          indent: 2 write: '-meta <command> : execute a metacommand (sans the initial :)\n',
+          indent: 2 write: '--Fs : display all the available flags\n',
+          indent: 2 write: '--meta <command> : execute a metacommand (sans the initial :)\n',
           indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
           indent: 2 write: '-v : print version information and exit\n',
           indent: 2 write: '-s <port>: start a evaluation server on the specified port (Forked and the current process will be killed. pidfile at ~/.ctrpid.pid)\n',
-          indent: 2 write: '-p <pidfile>: set the pid file. value is ignored unless [-s <port>] comes after',
+          indent: 2 write: '-p <pidfile>: set the pid file. value is ignored unless [-s <port>] comes after\n',
+          indent: 2 write: '--no-logo : don\'t display the ascii logo, use normal text instead\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
         P green write: 'default imported modules in eval are:',
           cyan indent: 1 write: ('Queue LRArray ' + (import __loaded_modules keys reverse join: ' ') ~ 's/\\s|^/\\n+ /g').
@@ -411,11 +429,11 @@ Eval on: 'togglePasteMode' do: {
         var file is Eval shiftArgs.
         (file isNil) ifTrue: { thisBlock error: '-f requires a file name.'. }.
         Eval enqueue: file.
-    }, case: '-Fs' do: {
+    }, case: '--Fs' do: {
         args pop. #consume option.
         Pen writeln: (Eval flags keys join: ', ').
         Program exit.
-    }, case: '-meta' do: {
+    }, case: '--meta' do: {
         args pop.
         Eval doMeta: Eval shiftArgs.
 
@@ -459,12 +477,17 @@ Eval on: 'togglePasteMode' do: {
       import respondTo: 'Library/Executable/%s:' % [mod] and: ['Main'].
       { Main applyTo: args. } catch: Eval::'handleException:', run.
       Program exit.
+    }, case: '--no-logo' do: {
+      display_logo is False.
     }, default: {
       opt startsWith: '-F', ifTrue: {
         args pop. #consume option.
         var flag is opt skip: 2.
         (flag = '') ifTrue: { thisBlock error: '-F requires a flag name.\nSee -Fs'. }.
         Eval modifyFlags: flag.
+      }.
+      (opt startsWith: '-') & (opt startsWith: '--', not) ifTrue: {
+        opt skip: 1, reverse characters each_v: \:c args push: '-' + c.
       }.
     }, switch. # do not consume any other option.
 }.
@@ -489,10 +512,14 @@ winsize run.
 Signal new handle: 'SIGWINCH' with: winsize.
 
 
-Pen green write: ?>Project Citron : The Programming Language (V<?, write:(Reflect version) + ')', resetColor brk
-write: ?>Eval Mode, parameters related to eval are in the Eval namespace.
-run with '-h' to read the eval mode help.
-<?.
+display_logo
+  either: {Pen writeln: (Colors % [logo, GREEN_COLOR, ITALIC_EFFECT] % ['Project Citron', Reflect version, Reflect compilerInfo]).}
+  or: {
+    Pen green write: ?>Project Citron : The Programming Language (V<?, write:(Reflect version) + ')', resetColor brk
+    write:
+    'Eval Mode, parameters related to eval are in the Eval namespace.\n' +
+    'run with \'-h\' to read the eval mode help.\n'.
+  }.
 
 # Eval on: 'redraw:at:' do: {:inp:cursor
 #   var cols is Program env: 'COLUMNS', or: '89', toNumber.
@@ -569,9 +596,13 @@ Eval on: 'repl' do: {
     var inpbrk is 0.
     var last_comp_entry_len is 0.
     var ce_idx is 0.
+    var cmt is ''.
+    var comp_set is HashSet new.
     {^done & (inBlock = 0).} whileFalse: {
-      var cmt is ''.
+      cmt is ''.
       inc = '\t' ifTrue: {#<Tab>
+          clear_next_line run.
+          comp_set clear.
           inp containsPattern: ?>^\s*:<?, either: {
             last_was_comp ifTrue: {
               inp is inp removeFrom: (cursor - last_comp_entry_len) to: cursor.
@@ -589,6 +620,7 @@ Eval on: 'repl' do: {
           } or: {
             var candidate is 'Nil'.
             var toc is (inp trim or: '  ') split: ' ', last.
+
             last_was_comp ifTrue: {
               var toremove is ((toc length) - (last_comp_entry length)).
               Pen write: '\b \b' * toremove.
@@ -598,13 +630,18 @@ Eval on: 'repl' do: {
             toc is last_was_comp either: last_comp_entry or: toc.
             last_comp_entry is toc.
             var flipper is OneGateFlipper new.
-            last_toc is (inp trim or: 'Nil') split: ' ', filter: {:_:v (v endsWith: ':') ifTrue: {flipper set. ^False.}. ^((v endsWith: ':') | (flipper get)) not. }.
+            last_toc is (inp trim or: 'Nil') split: ' ', filter: {:_:v (v endsWith: ':') ifTrue: {flipper set. ^False.}. ^((v endsWith: ':') | (flipper get)) not | (v containsPattern: ?>(-?(0[xXcC])?[\d]+(\.[\d]+)?)|($\')<?). }.
             last_toc is (last_toc count) >=: 2, either: {^last_toc init last.} or: 'Nil'.
+            last_toc containsPattern: ?>(-?(0[xXcC])?[\d]+(\.[\d]+)?)<?, ifTrue: { last_toc is 'Number'. }.
+            last_toc containsPattern: ?>^\'<?, ifTrue: { last_toc is 'String'. }.
             var candidates is Eval allTheNames: ({^Reflect getObject: (['my', 'var'] contains: last_toc, either: Nil or: last_toc).} catch: {^Nil.}, run).
             var skipthis is candidates @ 0.
             candidates is (candidates @ 1) filter: {:_:i ^i startsWith: toc.}.
             candidates count !=: 0, ifTrue: {
               candidate is candidates @ (last_comp_index is (last_comp_index +=: 1) >=: (candidates count), either: 0 or: last_comp_index).
+              var uniq is comp_set addAll: candidates, toArray.
+              var uid is uniq indexOf: candidate.
+              generate_context_menu applyTo: uniq and: uid.
               var cc is candidate skip: toc length.
               Pen cyan write: cc, resetColor.
               cmt is (var iis is '[from %s]' % [last_toc]).
@@ -619,6 +656,7 @@ Eval on: 'repl' do: {
           }.
         }, else: {
           inc case: '\xd' do: {#<Enter>
+            clear_next_line run.
             # Pen brk.
             # (cursor !=: inp length) ifTrue: {
             #   Pen write: (inp from: cursor length: (inp length - cursor)).

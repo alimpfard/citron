@@ -14,7 +14,7 @@
 #define CTR_MEMBLOCK_CACHE_MAX 32
 #define malloc GC_MALLOC
 #define calloc(x,y) GC_MALLOC((x)*(y))
-#define free GC_FREE
+#define gfree GC_FREE
 #define realloc GC_REALLOC
 
 void setup_types() {}//no-op
@@ -102,7 +102,7 @@ void *ctr_heap_allocate(size_t size)
 	//    memBlockCache.node = last_node->next;
 	//  memBlockCache.length--;
 	//  memBlock* block = last_node->block;
-	//  free(last_node);
+	//  gfree(last_node);
 	//  return block;
 	//}
 	volatile void *slice_of_memory;
@@ -278,8 +278,8 @@ void ctr_heap_free(void *ptr)
 	//  if(node->block->space == ptr) {
 	//    printf("Found matching %p in linked list. two requests for free, freeing %i bytes\n", node->block->space, node->block->size);
 	//    lnode->next = node->next;
-	//    free(node->block);
-	//    free(node);
+	//    gfree(node->block);
+	//    gfree(node);
 	//    memBlockCache.length--;
 	//    return;
 	//  }
@@ -299,7 +299,7 @@ void ctr_heap_free(void *ptr)
 	/* find the correct size of this memory block and move pointer back */
 	block_width = (size_t *) ((char *)ptr - q);
 	size = *block_width;
-	free((void *)block_width);
+	gfree((void *)block_width);
 	ctr_gc_alloc -= size;
 }
 

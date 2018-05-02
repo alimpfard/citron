@@ -14,6 +14,19 @@ HashSet on: 'extend:' do: {:set
   var self is me.
   set each_v: {:v self add: v. }.
 }.
+HashSet on: 'addAll:' do: {:iterable
+  var self is me.
+  iterable each_v: {:v self add: v.}.
+}.
+HashSet on: 'toArray' do: {
+  var arr is Array new.
+  me each_v: {:v arr unshift: v.}.
+  ^arr.
+}.
+HashSet on: 'clear' do: {
+  var map is my map.
+  me each_v: {:v map deleteAt: v. }.
+}.
 HashSet on: 'remove:' do: {:v
   my map deleteAt: v.
 }.

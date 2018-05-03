@@ -257,6 +257,35 @@ ctr_object *ctr_reflect_dump_context_spec_prop(ctr_object * myself,
 }
 
 /**
+ * Reflect mapPropertiesOf: [Object]
+ *
+ * returns all the property names and values of object
+ */
+ctr_object *ctr_reflect_dump_context_prop(ctr_object * myself,
+					       ctr_argument * argumentList)
+{
+	ctr_object *of = argumentList->object;
+	ctr_object *props = ctr_map_new(CtrStdMap, NULL);
+	int p = of->properties->size - 1;
+	struct ctr_mapitem *head;
+	head = of->properties->head;
+	ctr_argument *args = ctr_heap_allocate(sizeof(ctr_argument));
+	args->next = ctr_heap_allocate(sizeof(ctr_argument));
+	while (p > -1) {
+		//printf("m:%d:%d :: ", i, m);
+		args->object = head->key;
+		args->next->object = head->value;
+		//printf("%s\n", head->key->value.svalue->value);
+		ctr_map_put(props, args);
+		head = head->next;
+		p--;
+	}
+	ctr_heap_free(args->next);
+	ctr_heap_free(args);
+	return props;
+}
+
+/**
  * [Reflect] getObject: [s:String]
  *
  * looks for the object `s` in the current context or any of the contexts beneath
@@ -1532,10 +1561,12 @@ ctr_object *ctr_reflect_run_for_object_in_ctx(ctr_object * myself,
 			parameterList = parameterList->next;
 			parameter = parameterList->node;
 		}
-		while(parameterList->next) {
-  ctr_assign_value_to_local(ctr_build_string(parameterList->next->node->value, parameterList->next->node->vlen), CtrStdNil);
-  if(!parameterList->next) break; parameterList = parameterList->next;
-}
+		parameterList = parameterList->next;while(parameterList) {
+			was_vararg = (strncmp(parameterList->node->value, "*", 1) == 0);
+ctr_assign_value_to_local(ctr_build_string(parameterList->node->value+was_vararg, parameterList->node->vlen-was_vararg), was_vararg?ctr_array_new(CtrStdArray, NULL):CtrStdNil);
+			if(!parameterList->next) break;
+			parameterList = parameterList->next;
+		}
 	}
 	ctr_assign_value_to_local_by_ref(&CTR_CLEX_KW_ME, ctx);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
 	ctr_object *this = ctr_build_string("thisBlock", 9);

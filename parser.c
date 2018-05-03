@@ -17,8 +17,10 @@ int ctr_paramlist_has_name(char* namenode, size_t len) {
 	else {
 		ctr_tlistitem* name = ctr_cparse_calltime_names->nodes;
 		while(name) {
-			if(unlikely(name->node->vlen == len))
-				if(strncmp(name->node->value, namenode, len) == 0) return 1;
+			int vararg = name->node->value[0] == '*';
+			if(unlikely(name->node->vlen == len || vararg)) {
+				if(strncmp(name->node->value+vararg, namenode, len-vararg) == 0) return 1;
+			}
 			name = name->next;
 		}
 		return 0;

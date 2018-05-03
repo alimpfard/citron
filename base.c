@@ -490,6 +490,7 @@ ctr_object *ctr_object_type(ctr_object * myself, ctr_argument * argumentList)
 ctr_object *ctr_object_to_string(ctr_object * myself,
 				 ctr_argument * argumentList)
 {
+	if (myself->lexical_name) return ctr_build_string(ctr_heap_allocate_cstring(myself->lexical_name), myself->lexical_name->value.svalue->vlen);
 	return ctr_build_string_from_cstring("[Object]");
 }
 
@@ -5030,10 +5031,12 @@ ctr_object *ctr_block_run_array(ctr_object * myself, ctr_object * argArray,
 			parameterList = parameterList->next;
 			parameter = parameterList->node;
 		}
-		while(parameterList->next) {
-  ctr_assign_value_to_local(ctr_build_string(parameterList->next->node->value, parameterList->next->node->vlen), CtrStdNil);
-  if(!parameterList->next) break; parameterList = parameterList->next;
-}
+		parameterList = parameterList->next;while(parameterList) {
+			was_vararg = (strncmp(parameterList->node->value, "*", 1) == 0);
+ctr_assign_value_to_local(ctr_build_string(parameterList->node->value+was_vararg, parameterList->node->vlen-was_vararg), was_vararg?ctr_array_new(CtrStdArray, NULL):CtrStdNil);
+			if(!parameterList->next) break;
+			parameterList = parameterList->next;
+		}
 	}
 	if (my)
 		ctr_assign_value_to_local_by_ref(&CTR_CLEX_KW_ME, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
@@ -5170,10 +5173,12 @@ ctr_object *ctr_block_run(ctr_object * myself, ctr_argument * argList,
 			parameterList = parameterList->next;
 			parameter = parameterList->node;
 		}
-		while(parameterList->next) {
-  ctr_assign_value_to_local(ctr_build_string(parameterList->next->node->value, parameterList->next->node->vlen), CtrStdNil);
-  if(!parameterList->next) break; parameterList = parameterList->next;
-}
+		parameterList = parameterList->next;while(parameterList) {
+			was_vararg = (strncmp(parameterList->node->value, "*", 1) == 0);
+ctr_assign_value_to_local(ctr_build_string(parameterList->node->value+was_vararg, parameterList->node->vlen-was_vararg), was_vararg?ctr_array_new(CtrStdArray, NULL):CtrStdNil);
+			if(!parameterList->next) break;
+			parameterList = parameterList->next;
+		}
 	}
 	if (my)
 		ctr_assign_value_to_local_by_ref(&CTR_CLEX_KW_ME, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
@@ -5292,10 +5297,12 @@ ctr_object *ctr_block_run_here(ctr_object * myself, ctr_argument * argList,
 			parameterList = parameterList->next;
 			parameter = parameterList->node;
 		}
-		while(parameterList->next) {
-  ctr_assign_value_to_local(ctr_build_string(parameterList->next->node->value, parameterList->next->node->vlen), CtrStdNil);
-  if(!parameterList->next) break; parameterList = parameterList->next;
-}
+		parameterList = parameterList->next;while(parameterList) {
+			was_vararg = (strncmp(parameterList->node->value, "*", 1) == 0);
+ctr_assign_value_to_local(ctr_build_string(parameterList->node->value+was_vararg, parameterList->node->vlen-was_vararg), was_vararg?ctr_array_new(CtrStdArray, NULL):CtrStdNil);
+			if(!parameterList->next) break;
+			parameterList = parameterList->next;
+		}
 	}
 	if (my)
 		ctr_assign_value_to_local_by_ref(&CTR_CLEX_KW_ME, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
@@ -5722,6 +5729,7 @@ ctr_object *ctr_block_catch_type(ctr_object * myself, ctr_argument * argumentLis
 ctr_object *ctr_block_to_string(ctr_object * myself,
 				ctr_argument * argumentList)
 {
+	if (myself->lexical_name) return ctr_build_string(ctr_heap_allocate_cstring(myself->lexical_name), myself->lexical_name->value.svalue->vlen);
 	return ctr_build_string_from_cstring("[Block]");
 }
 

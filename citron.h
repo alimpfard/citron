@@ -1029,6 +1029,7 @@ static ctr_object* ctr_reflect_map_type_descriptor __attribute__((unused));
 ctr_object* ctr_reflect_add_glob(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_add_local(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_add_my(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_dump_context_prop(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_dump_context_spec_prop(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_dump_context_spec(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_dump_context(ctr_object* myself, ctr_argument* argumentList);

@@ -1227,7 +1227,10 @@ void initiailize_base_extensions() {
   ctr_internal_create_func(CtrStdString,
                            ctr_build_string_from_cstring("toSymbol"),
                            &ctr_string_to_symbol);
-
+  ctr_internal_object_add_property(CtrStdWorld,
+                           ctr_build_string_from_cstring("Symbol"),
+                           CtrStdSymbol,
+                           0);
   ctr_internal_create_func(CtrStdObject,
                            ctr_build_string_from_cstring("inheritFrom:"),
                            &ctr_object_inherit);

@@ -744,7 +744,9 @@ ctr_internal_object_add_property(ctr_object * owner, ctr_object * key,
 				 ctr_object * value, int m)
 {
 	if (strncmp(key->value.svalue->value, "me", key->value.svalue->vlen) !=
-	    0)
+	    0 &&
+			strncmp(key->value.svalue->value, "thisBlock", key->value.svalue->vlen) !=
+			0)
 		value->lexical_name = key;
 	ctr_mapitem *new_item = ctr_heap_allocate(sizeof(ctr_mapitem));
 	ctr_mapitem *current_head = NULL;
@@ -3023,6 +3025,10 @@ void ctr_initialize_world()
 	ctr_internal_create_func(CtrStdReflect,
 				 ctr_build_string_from_cstring("getMethodsOf:"),
 				 &ctr_reflect_dump_context_spec);
+	ctr_internal_create_func(CtrStdReflect,
+				 ctr_build_string_from_cstring
+				 ("mapPropertiesOf:"),
+				 &ctr_reflect_dump_context_prop);
 	ctr_internal_create_func(CtrStdReflect,
 				 ctr_build_string_from_cstring
 				 ("getPropertiesOf:"),

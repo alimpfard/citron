@@ -15,7 +15,7 @@ args=(
     '--pc[set the continuation prompt]:str'
     '-c[set the result color]:color:->colors'
     '-h[show help]'
-    '-f[evaluate file]:filename:->files'
+    '-f[evaluate file]:filename:->ctr_files'
     '-F[enable/disable flag]:flag:->flags'
     '--Fs[show all flags]'
     '--meta[execute metacommand]'

@@ -627,7 +627,6 @@ Eval on: 'repl' do: {
               last_was_comp is True.
             } or: { cmt is '<- No completion'. }.
           } or: {
-            have_context is True.
             var candidate is 'Nil'.
             var toc is (inp trim or: '  ') split: ' ', last.
 
@@ -648,6 +647,7 @@ Eval on: 'repl' do: {
             var skipthis is candidates @ 0.
             candidates is (candidates @ 1) filter: {:_:i ^i startsWith: toc.}.
             candidates count !=: 0, ifTrue: {
+              have_context is True.
               candidate is candidates @ (last_comp_index is (last_comp_index +=: 1) >=: (candidates count), either: 0 or: last_comp_index).
               var uniq is comp_set addAll: candidates, toArray.
               var uid is uniq indexOf: candidate.
@@ -769,6 +769,7 @@ Eval on: 'repl' do: {
               Pen write: inc toByteArray.
             }, switch.
           }, default: {
+            have_context ifTrue: { clear_next_line run. have_context is False. }.
             (inc
               case: '\'' do: {
                   inString is (inString & lastEscape not) | (inString not).

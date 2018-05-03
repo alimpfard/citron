@@ -1,5 +1,8 @@
 var HashSet is Object cnew: { my map is Map new. }.
-var HashSetValueMarker is Object new on: '=' do: {:e ^(me id) = (e id).}.
+var HashSetValueMarker is Object
+  new on: '=' do: {:e ^(me id) = (e id).},
+      on: 'toString' do: { ^'[Object %s]' % [me id]. }.
+
 HashSet on: 'new' do: {
   ^me cnew: { my map is Map new. }.
 }.
@@ -61,7 +64,7 @@ HashSet on: 'iHash' do: {
   ^hash.
 }.
 HashSet on: 'serialize' do: {
-  ^'HashSet from: (%s)' % [(my map serialize replace: 'put:([Object])' with: 'put:(HashSet _marker)')].
+  ^'HashSet from: (%s)' % [(my map serialize replace: 'put:([Object %s])' % [me _marker id] with: 'put:(HashSet _marker)')].
 }.
 HashSet on: 'count' do: {
   ^my map count.

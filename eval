@@ -393,6 +393,7 @@ Eval on: 'togglePasteMode' do: {
         P indent: 1 write: 'All the args that were not consumed are in the variable `args`.', brk.
         P cyan indent: 1 write: 'Program arguments\n',
           resetColor indent: 2 write: '-p : set the prompt\n',
+          indent: 2 write: '--pc : set the prompt continuation\n',
           indent: 2 write: '-c : set the result color\n',
           indent: 2 write: '-h : show this help\n',
           indent: 2 write: '-f : evaluate file. many can be passed, evals in passed order\n',
@@ -402,7 +403,7 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
           indent: 2 write: '-v : print version information and exit\n',
           indent: 2 write: '-s <port>: start a evaluation server on the specified port (Forked and the current process will be killed. pidfile at ~/.ctrpid.pid)\n',
-          indent: 2 write: '-p <pidfile>: set the pid file. value is ignored unless [-s <port>] comes after\n',
+          indent: 2 write: '--pid <pidfile>: set the pid file. value is ignored unless [-s <port>] comes after\n',
           indent: 2 write: '--no-logo : don\'t display the ascii logo, use normal text instead\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
         P green write: 'default imported modules in eval are:',
@@ -416,10 +417,10 @@ Eval on: 'togglePasteMode' do: {
         (value isNil) ifTrue: { thisBlock error: '-p requires an arg.'. }.
         Eval setPrompt: value.
     # when passed -pc, get the next arg, and set the continuation prompt to that.
-    }, case: '-pc' do: {
+    }, case: '--pc' do: {
         args pop. #consume option..
         var value is Eval shiftArgs.
-        (value isNil) ifTrue: { thisBlock error: '-pc requires an arg.'. }.
+        (value isNil) ifTrue: { thisBlock error: '--pc requires an arg.'. }.
         Eval setContinuation: value.
     # when passed -c, get the next arg, and set the result color to that.
     }, case: '-c' do: {
@@ -434,7 +435,7 @@ Eval on: 'togglePasteMode' do: {
         Eval enqueue: file.
     }, case: '--Fs' do: {
         args pop. #consume option.
-        Pen writeln: (Eval flags keys join: ', ').
+        Pen writeln: (Eval flags keys join: '\n').
         Program exit.
     }, case: '--meta' do: {
         args pop.
@@ -461,10 +462,10 @@ Eval on: 'togglePasteMode' do: {
         Pen writeln: 'Citron'.
         Pen writeln: '[%L]' % [(Reflect version split: '.')].
         Program exit.
-    }, case: '-p' do: {
+    }, case: '--pid' do: {
       args pop.
       var f is Eval shiftArgs.
-      (f isNil) ifTrue: { thisBlock error: '-p requires an argument <pidfile>'. }.
+      (f isNil) ifTrue: { thisBlock error: '--pid requires an argument <pidfile>'. }.
       PIDFILE is f.
     }, case: '-s' do: {
       args pop.
@@ -482,13 +483,14 @@ Eval on: 'togglePasteMode' do: {
       Program exit.
     }, case: '--no-logo' do: {
       display_logo is False.
-    }, default: {
-      opt startsWith: '-F', ifTrue: {
-        args pop. #consume option.
-        var flag is opt skip: 2.
-        (flag = '') ifTrue: { thisBlock error: '-F requires a flag name.\nSee -Fs'. }.
+    }, case: '-F' do: {
+      args pop.
+      var opts is Eval shiftArgs reSplit: '(,|/)(\\s*)'.
+      opts each: {:i:flag
+        (flag = '') ifTrue: { errPen yellow writeln: '[Warn]: empty -F flag index#$$i was ignored', resetColor. }.
         Eval modifyFlags: flag.
       }.
+    }, default: {
       (opt startsWith: '-') & (opt startsWith: '--', not) ifTrue: {
         opt skip: 1, reverse characters each_v: \:c args push: '-' + c.
       }.
@@ -508,10 +510,11 @@ winsize is {:_
   var __eval_ret is _ioctl_ty call: _ioctl withArgs: [0, 0x5413, (wsize struct)].
   (__eval_ret !=: 0) ifTrue: { thisBlock error: g_strerror run. }.
   TerminalWidth is (wsize memberCol - 10) max: 10.
+  ^[wsize memberRow, wsize memberCol, wsize memberXPixel, wsize memberYPixel].
 }.
 
 TerminalWidth is 85.
-winsize run.
+Pen writeln: 'Terminal: %sx%s - %sx%s' % winsize run.
 Signal new handle: 'SIGWINCH' with: winsize.
 
 

@@ -64,10 +64,16 @@ var add_globals is {:env
     put: (\:x x isNil) at: ('null?'),
     put: (\:x Reflect isObject: x linkedTo: String) at: ('symbol?'),
     put: (\:x x not) at: ('not'),
-    put: (\:x [(Pen writeln: x), Nil] last) at: ('display').
+    put: (\:x [(Pen writeln: x), Nil] last) at: ('display'),
+    put: True at: '#t',
+    put: False at: '#f'.
 }.
 
+var memoized is Map new.
+
+
 var eval is {:x:env
+  var p is Nil.
   ^(Reflect isObject: x linkedTo: String) either: {
       ^env at: x.
    }
@@ -77,7 +83,11 @@ var eval is {:x:env
     }
     or: {
       ^(x head)
-           case: ('quote') do: {
+           case: ('and') do: {
+          ^(x tail head either: x last or: False) toBoolean.
+        }, case: ('or') do: {
+          ^((p is x tail head) either: p or: x last) toBoolean.
+        }, case: ('quote') do: {
           ^x tail.
         }, case: ('if') do: {
           ^eval applyTo: (eval applyTo: x @ 1 and: env, either: {^x @ 2.} or: {^x @ 3.}) and: env.
@@ -91,9 +101,16 @@ var eval is {:x:env
           ^\:*args (eval applyTo: (const x @ 2) copy and: (Env new: [const x @ 1, args, const env])).
         }, case: ('begin') do: {
           ^x tail foldl: (\:val_env:exp [(eval applyTo: exp and: val_env @ 1), val_env @ 1]) accumulator: [Nil, env], head.
+        }, case: ('ctr') do: {
+          ^x tail join: ' ', eval toString.
         }, default: {
           var exps is x fmap: \:exp eval applyTo: exp and: env.
-          ^exps count = 1 either: {^exps head.} or: {^exps head applyAll: exps tail.}.
+          p is memoized at: exps.
+          p isNil ifTrue: {
+            p is exps count = 1 either: {^exps head.} or: {^exps head applyAll: exps tail.}.
+            memoized put: p at: exps.
+          }.
+          ^p.
         }, switch.
     }.
   }.

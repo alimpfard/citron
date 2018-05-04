@@ -1,0 +1,23 @@
+import Library/GUI/TK.
+Broom memoryLimit: 1024 * 1024 * 1024.
+
+Tcl defineCommons: ['center_window'].
+
+Tcl grid: (Tcl sub ttk->label: '.l' text: '"<Return> me"').
+Tcl pack: '.l' expand: 'yes' fill: 'both'.
+Tcl wm: ['title', '.', '"Dorks dorking around, what else?"'].
+var counter is 0.
+Tcl bind: ['.', '<Return>', (Tcl fnOf: {
+  Tcl eval: '.l configure -text "P %d"' % [(counter +=: 1)].
+})].
+Tcl bind: ['.', '<KeyPress>', '{%s %%K}' % [(Tcl fnOf: {:w
+  Tcl eval: '.l configure -text "<Return>, not %s"' % [w].
+})]].
+
+Tcl after: ['idle', '{center_window .}'].
+Tcl after: ['idle', '{wm geometry . 500x500}'].
+
+50000 times: {
+  Tcl update.
+  Clock wait: 13ms.
+}.

@@ -135,7 +135,7 @@ operations:
         File new: (insinfo mpath), open: 'w+', write: (cf read), close.
         chmod_cif call: chmod withArgs: [insinfo mpath, 0c777].
       } catch: {:err
-        Pen red writeln: '[Failed: %s]' % [e], resetColor.
+        Pen red writeln: '[Failed: %s]' % [err], resetColor.
         thisBlock error: err.
       }, run.
       Pen green writeln: '[Ok]', resetColor.

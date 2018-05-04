@@ -1,0 +1,67 @@
+Tcl init eval: 'package require Tk'.
+
+var common_decls is Map new
+  put: 'proc center_window { w } {
+      if { [string equal $w [winfo toplevel $w]] } {
+
+              # Calculate the desired geometry
+              set width [winfo reqwidth $w]
+              set height [winfo reqheight $w]
+              set x [expr { ( [winfo vrootwidth  $w] - $width  ) / 4 }]
+              set y [expr { ( [winfo vrootheight $w] - $height ) / 2 }]
+
+              # Hand the geometry off to the window manager
+              wm geometry $w ${width}x${height}+${x}+${y}
+          }
+          return
+      }' at: 'center_window'.
+
+Tcl on: 'defineCommons:' do: {:names
+  var common_decls is const common_decls.
+  names each_v: \:name Tcl eval: common_decls @ name.
+}.
+
+var TclSubcommand is Object new.
+TclSubcommand on: 'respondTo:' do: {:msg ^'[%s]' % [msg].}.
+
+1 to: 6 step: 1 do: {:i
+  TclSubcommand on: 'respondTo:' + ('and:' * i) do: {:msg:*args #(command: arg)(command: arg)* -> (command arg)(-command arg)*
+    var s is ''.
+    var fix is {:whatever
+      ^(Reflect isObject: whatever linkedTo: Array) either: { ^whatever join: ' '. } or: whatever.
+    }.
+    msg split: ':', each: {:i:v
+      s +=: ((i = 0) either: {
+        ^'%s %s '.
+      } or: {
+        ^'-%s %s '.
+      }, % [(v replace: '->' with: '::'), (fix applyTo: args @ i)]).
+    }.
+    ^'[%s]' % [s].
+  }.
+}.
+
+
+Tcl on: 'sub' do: { ^const TclSubcommand. }.
+Tcl on: 'proc:args:body:' do: {:name:args:body
+  ^me eval: 'proc %s {%:L} {%s}' % [name, ' ', args, body].
+}.
+Tcl on: 'respondTo:' do: {:msg ^me eval: msg.}.
+
+1 to: 6 step: 1 do: {:i
+  Tcl on: 'respondTo:' + ('and:' * i) do: {:msg:*args #(command: arg)(command: arg)* -> (command arg)(-command arg)*
+    var s is ''.
+    var fix is {:whatever
+      ^(Reflect isObject: whatever linkedTo: Array) either: { ^whatever join: ' '. } or: whatever.
+    }.
+    msg split: ':', each: {:i:v
+      s +=: ((i = 0) either: {
+        ^'%s %s '.
+      } or: {
+        ^'-%s %s '.
+      }, % [(v replace: '->' with: '::'), (fix applyTo: args @ i)]).
+    }.
+    # Pen writeln: s.
+    ^me eval: s.
+  }.
+}.

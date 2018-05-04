@@ -1,4 +1,4 @@
-plugs=("curl" "ffi" "gmp" "json" "sdl" "keyboardmods")
+plugs=("curl" "ffi" "gmp" "json" "sdl" "keyboardmods" "tcl")
 
 echo "Building $plugs"
 

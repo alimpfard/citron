@@ -1,10 +1,15 @@
-lib is CTypes loadLibrary: Nil.
-fmin is lib fmin.
-float0 is CTypes float.
-float1 is CTypes float.
-float is float0.
-cif is CIF new setABI: 0 return: float argTypes: [float, float].
-float0 set: 10.
-float1 set: 12.
-ret is cif call: fmin withArgs: [float0, float1].
-Pen write: ret get.
+Broom memoryLimit: 1024 * 1024 * 1024.
+
+[syms, gens] is [['f', 'Nil'], [[1,2,3,4], [Nil]]].
+
+Pen writeln: [syms, gens product].
+
+var generator is [syms, gens product] zipWith: {:s:gs 
+    ^gs fmap: {:g ^{:blk const s letEqual: const g in: blk.}.}.
+}, fmap: {:el 
+    ^el foldl: {:acc:x 
+        ^{:v ^const x applyTo: (const acc applyTo: v).}.
+    } accumulator: {:x ^x applyTo: 3.}.
+}.
+
+Pen writeln: (generator head applyTo: {^2.}).

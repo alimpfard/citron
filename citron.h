@@ -59,6 +59,7 @@ extern "C" {
 #define CTR_TOKEN_TUPCLOSE 19
 #define CTR_TOKEN_PASSIGNMENT 20
 #define CTR_TOKEN_SYMBOL 21
+#define CTR_TOKEN_LC_SEP 22
 #define CTR_TOKEN_FIN 99
 //
 //
@@ -99,6 +100,7 @@ extern "C" {
 #define CTR_AST_NODE_RETURNFROMBLOCK 60
 #define CTR_AST_NODE_IMMUTABLE 61
 #define CTR_AST_NODE_SYMBOL 62
+#define CTR_AST_NODE_LISTCOMP 63
 #define CTR_AST_NODE_PARAMLIST 76
 #define CTR_AST_NODE_INSTRLIST 77
 #define CTR_AST_NODE_ENDOFPROGRAM 79
@@ -429,6 +431,8 @@ long    ctr_clex_tok_value_length();
 void 	ctr_clex_putback();
 char*	ctr_clex_readstr();
 char*   ctr_clex_tok_describe( int token );
+int     ctr_clex_save_state();
+int     ctr_clex_restore_state( int id );
 CTR_H_DECLSPEC int     ctr_clex_quiet;
 CTR_H_DECLSPEC char*   ctr_clex_keyword_var;
 CTR_H_DECLSPEC char*   ctr_clex_keyword_me;
@@ -1139,6 +1143,7 @@ ctr_object* ctr_build_empty_string();
 ctr_object* ctr_build_string(char* object, long vlen);
 ctr_object* ctr_build_string_from_cformat(char* format, int count, ...);
 ctr_object* ctr_build_block(ctr_tnode* node);
+ctr_object* ctr_build_listcomp(ctr_tnode* node);
 ctr_object* ctr_build_number(char* object);
 ctr_object* ctr_build_number_from_string(char* fixedStr, ctr_size strLength);
 ctr_object* ctr_build_number_from_float(ctr_number floatNumber);

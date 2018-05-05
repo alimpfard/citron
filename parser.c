@@ -12,6 +12,8 @@ char *ctr_cparse_current_program;
 int do_compare_locals = 0;
 int all_plains_private = 0;
 extern int ctr_cwlk_replace_refs;
+int parsing_list_comp = 0;
+
 int ctr_paramlist_has_name(char* namenode, size_t len) {
 	if(!ctr_cparse_calltime_names || len==0) return 0;
 	else {
@@ -160,6 +162,8 @@ ctr_tnode *ctr_cparse_message(int mode)
 				break;
 			if (t == CTR_TOKEN_PARCLOSE)
 				break;
+			if (t == CTR_TOKEN_LC_SEP)
+				break;
 			if (t == CTR_TOKEN_REF) {
 				long l = ctr_clex_tok_value_length();
 				if ((msgpartlen + l) > 255) {
@@ -241,12 +245,99 @@ ctr_tlistitem *ctr_cparse_messages(ctr_tnode * r, int mode)
 }
 
 /**
+ * CTRParserListComp
+ *
+ * generates a node to represent a list comprehension
+ */
+ctr_tnode *ctr_cparse_list_comp()
+{
+	ctr_tnode *r;
+	ctr_tlistitem *part0, *part1, *part2, *prev;
+
+	int t;
+	ctr_clex_tok(); //eat the '['
+
+	r = ctr_cparse_create_node(CTR_AST_NODE);
+	r->type = CTR_AST_NODE_LISTCOMP;
+
+	part0 = ctr_heap_allocate_tracked(sizeof(ctr_tlistitem));
+	part1 = ctr_heap_allocate_tracked(sizeof(ctr_tlistitem));
+	part2 = ctr_heap_allocate_tracked(sizeof(ctr_tlistitem));
+
+	/*
+			r
+			|_ part0 -- main expression
+			     |_ part1 -- generator
+					     |          |_ gen0
+							 |          |_ gen1, etc
+					     |_ part2 -- predicate
+							                |_ p0
+															|_ p1, etc
+	 */
+	r->nodes = part0;
+	part0->next = part1;
+	part1->next = part2;
+
+	parsing_list_comp = 1;
+	part0->node = ctr_cparse_expr(0); //parse main expression
+	ctr_clex_tok(); //eat the '|'
+	t = ctr_clex_tok();
+	ctr_clex_putback();
+	if(t == CTR_TOKEN_LC_SEP) //no generators
+	{
+		ctr_clex_tok(); //eat the '|'
+		part1->node = NULL;
+		goto parse_predicates;
+	}
+	//parse a series of expressions, separated by CHAIN, put into part1
+	ctr_tnode *gen = ctr_heap_allocate_tracked(sizeof(*gen));
+	gen->nodes = ctr_heap_allocate_tracked(sizeof(*part1));
+	part1->node = gen;
+	part1 = gen->nodes;
+	part1->node = ctr_cparse_expr(0);
+	while((t = ctr_clex_tok()) == CTR_TOKEN_CHAIN) {
+		part1->next = ctr_heap_allocate_tracked(sizeof(*part1));
+		part1 = part1->next;
+		part1->node = ctr_cparse_expr(0);
+	}
+	ctr_clex_putback();
+parse_predicates:;
+	t = ctr_clex_tok();
+	ctr_clex_putback();
+	if(t == CTR_TOKEN_TUPCLOSE) //no predicates either
+	{
+		ctr_clex_tok(); //eat the '|'
+		part2->node = NULL;
+		return r;
+	}
+	//parse a series of expressions, separated by CHAIN, put into part2
+	ctr_tnode *pred = ctr_heap_allocate_tracked(sizeof(*pred));
+	pred->nodes = ctr_heap_allocate_tracked(sizeof(*part2));
+	part2->node = pred;
+	part2 = pred->nodes;
+	part2->node = ctr_cparse_expr(0);
+	while((t = ctr_clex_tok()) == CTR_TOKEN_CHAIN) {
+		part2->next = ctr_heap_allocate_tracked(sizeof(*part1));
+		part2 = part2->next;
+		part2->node = ctr_cparse_expr(0);
+	}
+	ctr_clex_putback();
+	if(t != CTR_TOKEN_TUPCLOSE) {
+		//bitch about it
+		ctr_cparse_emit_error_unexpected(t, "Expected a ']'");
+	}
+	return r;
+}
+
+/**
  * CTRParserTuple
  *
  * Generates a node to represent an immutable array (tuple)
  */
 ctr_tnode *ctr_cparse_tuple()
 {
+	int restore_id = ctr_clex_save_state();//save everything!
+
 	ctr_tnode *r;
 	ctr_tlistitem *codeBlockPart1;
 	ctr_tnode *paramList;
@@ -261,18 +352,29 @@ ctr_tnode *ctr_cparse_tuple()
 	paramList = ctr_cparse_create_node(CTR_AST_NODE);
 	codeBlockPart1->node = paramList;
 	paramList->type = CTR_AST_NODE_NESTED;
-
+	if(restore_id == -1) {
+		ctr_cparse_emit_error_unexpected(0, "Lexer stack overflow");
+		return NULL;
+	}
 	t = ctr_clex_tok();
 	ctr_clex_putback();
 	if (t == CTR_TOKEN_TUPCLOSE) {
 		ctr_clex_tok();	//eat the ending ]
 		return r;
-	} else {
-		ctr_tlistitem *paramListItem = (ctr_tlistitem *)
-		    ctr_heap_allocate_tracked(sizeof(ctr_tlistitem));
-		paramList->nodes = paramListItem;
-		paramListItem->node = ctr_cparse_expr(1);
-		previousListItem = paramListItem;
+	}
+	parsing_list_comp = 1;
+	ctr_tlistitem *paramListItem = (ctr_tlistitem *)
+	    ctr_heap_allocate_tracked(sizeof(ctr_tlistitem));
+	paramList->nodes = paramListItem;
+	paramListItem->node = ctr_cparse_expr(0);
+	previousListItem = paramListItem;
+	//try for a list comprehension: expect |
+	t = ctr_clex_tok();
+	parsing_list_comp = 0;
+	ctr_clex_putback();
+	if (t == CTR_TOKEN_LC_SEP) {
+		ctr_clex_restore_state(restore_id);
+		return ctr_cparse_list_comp();
 	}
 	while ((t = ctr_clex_tok()) == CTR_TOKEN_CHAIN) {
 		/* okay we have new parameter, load it */

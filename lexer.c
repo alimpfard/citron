@@ -6,8 +6,11 @@
 #include <math.h>
 #include <stdint.h>
 #include <regex.h>
+#include <assert.h>
 
 #include "citron.h"
+
+// TODO: implement state saves / restores for lexer_plug.c
 
 int ctr_clex_bflmt = 255;
 ctr_size ctr_clex_tokvlen = 0;	/* length of the string value of a token */
@@ -42,6 +45,7 @@ char *ctr_clex_desc_tok_nil = "Nil";
 char *ctr_clex_desc_tok_assignment = ":=";	//derp
 char *ctr_clex_desc_tok_passignment = "=>";	//REEEE
 char *ctr_clex_desc_tok_symbol = "\\";	//TODO FIXME Find a better character for this
+char *ctr_clex_desc_tok_lc_sep = "|";
 char *ctr_clex_desc_tok_ret = "^";
 char *ctr_clex_desc_tok_ret_unicode = "↑";
 char *ctr_clex_desc_tok_fin = "end of program";
@@ -51,6 +55,93 @@ int ctr_string_interpolation = 0;
 char *ivarname;
 int ivarlen;
 
+extern int parsing_list_comp;
+
+struct lexer_state {
+	int string_interpolation;
+	int ivarlen;
+	ctr_size ctr_clex_tokvlen;
+	char *ctr_clex_buffer;
+	char *ctr_code;
+	char *ctr_code_st;
+	char *ctr_code_eoi;
+	char *ctr_eofcode;
+	char *ctr_clex_oldptr;
+	char *ctr_clex_olderptr;
+	int ctr_clex_verbatim_mode;
+	uintptr_t ctr_clex_verbatim_mode_insert_quote;
+	int ctr_clex_old_line_number;
+	int ctr_transform_lambda_shorthand;
+	char *ivarname;
+};
+
+#define MAX_LEXER_SAVE_STATES 1000
+static struct lexer_state saved_lexer_states[MAX_LEXER_SAVE_STATES];
+static int saved_lexer_state_next_index = 0;
+
+
+/**
+ * Lexer - Save Lexer state
+ *
+ * saves the state of the lexer and
+ * gives a unique ID used for restoring that state.
+ */
+int ctr_clex_save_state() {
+	if(saved_lexer_state_next_index == MAX_LEXER_SAVE_STATES)
+		return -1; //no more space left
+	struct lexer_state ls = {
+		ctr_string_interpolation,
+		ivarlen,
+		ctr_clex_tokvlen,
+		ctr_clex_buffer,
+		ctr_code,
+		ctr_code_st,
+		ctr_code_eoi,
+		ctr_eofcode,
+		ctr_clex_oldptr,
+		ctr_clex_olderptr,
+		ctr_clex_verbatim_mode,
+		ctr_clex_verbatim_mode_insert_quote,
+		ctr_clex_old_line_number,
+		ctr_transform_lambda_shorthand,
+		ivarname
+	};
+	saved_lexer_states[saved_lexer_state_next_index++] = ls;
+	return saved_lexer_state_next_index-1;
+}
+
+/**
+ * Lexer - Restore lexer state
+ *
+ * @param int id - id of the lexer state to restore
+ * if id == TOS-1, set it free
+ * @returns int - whether the last state was freed
+ */
+int ctr_clex_restore_state(int id) {
+	assert(id < MAX_LEXER_SAVE_STATES);
+	if(id == saved_lexer_state_next_index-1) saved_lexer_state_next_index--;
+	struct lexer_state ls = saved_lexer_states[id];
+	ctr_string_interpolation = ls.string_interpolation;
+	ivarlen = ls.ivarlen;
+	ctr_clex_tokvlen = ls.ctr_clex_tokvlen;
+	ctr_clex_buffer = ls.ctr_clex_buffer;
+	ctr_code = ls.ctr_code;
+	ctr_code_st = ls.ctr_code_st;
+	ctr_code_eoi = ls.ctr_code_eoi;
+	ctr_eofcode = ls.ctr_eofcode;
+	ctr_clex_oldptr = ls.ctr_clex_oldptr;
+	ctr_clex_olderptr = ls.ctr_clex_olderptr;
+	ctr_clex_verbatim_mode = ls.ctr_clex_verbatim_mode;
+	ctr_clex_verbatim_mode_insert_quote = ls.ctr_clex_verbatim_mode_insert_quote;
+	ctr_clex_old_line_number = ls.ctr_clex_old_line_number;
+	ctr_transform_lambda_shorthand = ls.ctr_transform_lambda_shorthand;
+	ivarname = ls.ivarname;
+	return id == saved_lexer_state_next_index;
+}
+
+void ctr_clex_pop_saved_state() {
+	saved_lexer_state_next_index--;
+}
 /**
  * Lexer - is Symbol Delimiter ?
  * Determines whether the specified symbol is a delimiter.
@@ -178,6 +269,9 @@ char *ctr_clex_tok_describe(int token)
 		break;
 	case CTR_TOKEN_SYMBOL:
 		description = ctr_clex_desc_tok_symbol;
+		break;
+	case CTR_TOKEN_LC_SEP:
+		description = ctr_clex_desc_tok_lc_sep;
 		break;
 	default:
 		description = ctr_clex_desc_tok_unknown;
@@ -421,6 +515,10 @@ int ctr_clex_tok()
 	if (c == ',') {
 		ctr_code++;
 		return CTR_TOKEN_CHAIN;
+	}
+	if (parsing_list_comp && c == '|') {
+		ctr_code++;
+		return CTR_TOKEN_LC_SEP;
 	}
 	if (((c == 'i') && (ctr_code + 1) < ctr_eofcode
 	     && (*(ctr_code + 1) == 's')

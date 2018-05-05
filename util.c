@@ -107,6 +107,9 @@ void ctr_internal_debug_tree(ctr_tnode * ti, int indent)
 		case CTR_AST_NODE_IMMUTABLE:
 			str = "IMMUTABLE";
 			break;
+		case CTR_AST_NODE_LISTCOMP:
+			str = "LISTCOMP";
+			break;
 		default:
 			str = "UNKNW?";
 			break;

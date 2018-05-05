@@ -290,6 +290,9 @@ ctr_object *ctr_cwlk_expr(ctr_tnode * node, char *wasReturn)
 	case CTR_AST_NODE_NESTED:
 		result = ctr_cwlk_expr(node->nodes->node, wasReturn);
 		break;
+	case CTR_AST_NODE_LISTCOMP:
+		result = ctr_build_listcomp(node);
+		break;
 	case CTR_AST_NODE_ENDOFPROGRAM:
 		if (CtrStdFlow && CtrStdFlow != CtrStdExit
 		    && ctr_cwlk_subprogram == 0) {

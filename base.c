@@ -4749,6 +4749,95 @@ ctr_object *ctr_build_block(ctr_tnode * node)
 	return codeBlockObject;
 }
 
+ctr_tnode *ctr_expr_to_block(ctr_tnode* node) {
+	ctr_tnode* blknode = ctr_heap_allocate(sizeof(*blknode));
+	blknode->type = CTR_AST_NODE_CODEBLOCK;
+	blknode->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
+	blknode->nodes->next = ctr_heap_allocate(sizeof(ctr_tlistitem));
+	blknode->nodes->next->node = ctr_heap_allocate(sizeof(*blknode));
+	blknode->nodes->next->node->type = CTR_AST_NODE_RETURNFROMBLOCK;
+	blknode->nodes->next->node->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
+	blknode->nodes->next->node->nodes->node = node;
+	return blknode;
+}
+ctr_object *ctr_scan_free_refs(ctr_tnode* node) {
+	ctr_object* ret = ctr_array_new(CtrStdArray, NULL);
+	ctr_argument* argm = ctr_heap_allocate(sizeof(ctr_argument));
+	ctr_tlistitem *li;
+	ctr_tnode *t;
+	// if (indent>20) exit(1);
+	li = node->nodes;
+	if (!li)
+		return ret;
+	t = li->node;
+	while (1) {
+		if(!t) {
+			ctr_heap_free(argm);
+			return ret;
+		}
+		switch (t->type) {
+		case CTR_AST_NODE_REFERENCE: {
+			ctr_object *key = ctr_build_string(t->value, t->vlen);
+			ctr_object *value = ctr_find_(key, 1);
+			argm->object = key;
+			if(!value) ctr_array_push(ret, argm);
+ 			break;
+		}
+		case CTR_AST_NODE_CODEBLOCK:
+		  if(!t->lexical) {
+			  argm->object = ctr_scan_free_refs(t);
+			  ret = ctr_array_add(ret, argm);
+			}
+			break;
+
+		case CTR_AST_NODE_LTRNUM:
+		case CTR_AST_NODE_PARAMLIST:
+		case CTR_AST_NODE_ENDOFPROGRAM:
+		case CTR_AST_NODE_LTRSTRING:
+		case CTR_AST_NODE_LTRBOOLFALSE:
+		case CTR_AST_NODE_LTRBOOLTRUE:
+		case CTR_AST_NODE_LTRNIL:
+		default: break;
+		}
+		if (!li->next)
+			break;
+		li = li->next;
+		t = li->node;
+	}
+	ctr_heap_free(argm);
+	return ret;
+}
+ctr_object *ctr_build_listcomp(ctr_tnode * node)
+{
+	//TODO: unpack LISTCOMP into MAIN_EXPR, GENERATORS, PREDS
+	ctr_tnode *main_expr = node->nodes->node,
+						*generators= node->nodes->next->node,
+						*preds     = node->nodes->next->next->node;
+	ctr_object*free_refs = ctr_scan_free_refs(main_expr),
+	          *mainexprb = ctr_build_block(ctr_expr_to_block(main_expr));
+
+	ctr_object*bindings  = ctr_array_new(CtrStdArray, NULL);
+	ctr_object*predicates  = ctr_array_new(CtrStdArray, NULL);
+	ctr_argument* argm = ctr_heap_allocate(sizeof(*argm));
+
+	//(gen*) -> [gen*]
+	ctr_tlistitem *generator = generators->nodes;
+	char dummy;
+	while(generator) {
+		argm->object = ctr_cwlk_expr(generator->node, &dummy);
+		ctr_array_push(bindings, argm);
+		generator = generator->next;
+	}
+	//(pred*) -> [{^pred}*]
+	ctr_tlistitem *predicate = preds->nodes;
+	while(predicate) {
+		argm->object = ctr_build_block(ctr_expr_to_block(predicate->node));
+		ctr_array_push(predicates, argm);
+		predicate = predicate->next;
+	}
+	//generator := ([syms, gens] zipWith: {:s:g ^g fmap: {:v ^\:blk s letEqual: v in: blk.}.}, foldl: {:acc:gen ^\:v acc applyTo: (gen applyTo: v).} accumulator: \:x x)
+}
+
 /**
  * @internal
  *

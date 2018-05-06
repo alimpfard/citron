@@ -1,12 +1,3 @@
-Array on: 'zipWith:' do: {:blk
-    var arr is Array new.
-    var self is me.
-    (me fmap: \:x x count, min) times: {:i
-        arr push: (blk applyAll: (self fmap: \:x x @ i)).
-    }.
-    ^arr.
-}.
-
 [main_expr, syms, gens] is [{^[f,g].}, ['f', 'g'], [[1,2,3], [2, 3]]].
 
 lc is gens zip fmap: {:gen

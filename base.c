@@ -4752,12 +4752,17 @@ ctr_object *ctr_build_block(ctr_tnode * node)
 ctr_tnode *ctr_expr_to_block(ctr_tnode* node) {
 	ctr_tnode* blknode = ctr_heap_allocate(sizeof(*blknode));
 	blknode->type = CTR_AST_NODE_CODEBLOCK;
-	blknode->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
-	blknode->nodes->next = ctr_heap_allocate(sizeof(ctr_tlistitem));
-	blknode->nodes->next->node = ctr_heap_allocate(sizeof(*blknode));
-	blknode->nodes->next->node->type = CTR_AST_NODE_RETURNFROMBLOCK;
+	blknode->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem)); //codeBlockPart1 : arguments
+	blknode->nodes->node = ctr_heap_allocate(sizeof(ctr_tnode)); //arguments
+	blknode->nodes->node->type = CTR_AST_NODE_PARAMLIST;
+	blknode->nodes->next = ctr_heap_allocate(sizeof(ctr_tlistitem)); //codeBlockPart2 : instrlist
+	blknode->nodes->next->node = ctr_heap_allocate(sizeof(*blknode)); //instrlist
+	blknode->nodes->next->node->type = CTR_AST_NODE_INSTRLIST;
 	blknode->nodes->next->node->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
-	blknode->nodes->next->node->nodes->node = node;
+	blknode->nodes->next->node->nodes->node = ctr_heap_allocate(sizeof(ctr_tnode));
+	blknode->nodes->next->node->nodes->node->type = CTR_AST_NODE_RETURNFROMBLOCK;
+	blknode->nodes->next->node->nodes->node->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
+	blknode->nodes->next->node->nodes->node->nodes->node = node;
 	return blknode;
 }
 ctr_object *ctr_scan_free_refs(ctr_tnode* node) {
@@ -4766,30 +4771,66 @@ ctr_object *ctr_scan_free_refs(ctr_tnode* node) {
 	ctr_tlistitem *li;
 	ctr_tnode *t;
 	// if (indent>20) exit(1);
-	li = node->nodes;
-	if (!li)
-		return ret;
-	t = li->node;
-	while (1) {
-		if(!t) {
-			ctr_heap_free(argm);
-			return ret;
-		}
-		switch (t->type) {
+	t = node;
+	// while (1) {
+	// 	if(!t) {
+	// 		ctr_heap_free(argm);
+	// 		return ret;
+	// 	}
+	switch (t->type) {
 		case CTR_AST_NODE_REFERENCE: {
 			ctr_object *key = ctr_build_string(t->value, t->vlen);
 			ctr_object *value = ctr_find_(key, 1);
 			argm->object = key;
-			if(!value) ctr_array_push(ret, argm);
+			if(!value) ret = ctr_array_push(ret, argm);
  			break;
 		}
 		case CTR_AST_NODE_CODEBLOCK:
 		  if(!t->lexical) {
-			  argm->object = ctr_scan_free_refs(t);
+			  argm->object = ctr_scan_free_refs(t->nodes->next->node);//instrlist
 			  ret = ctr_array_add(ret, argm);
 			}
 			break;
-
+		case CTR_AST_NODE_EXPRASSIGNMENT:
+			argm->object = ctr_scan_free_refs(t->nodes->next->node);//expr
+			ret = ctr_array_add(ret, argm);
+			break;
+		case CTR_AST_NODE_EXPRMESSAGE:
+			argm->object = ctr_scan_free_refs(t->nodes->node); //Receiver
+			ret = ctr_array_add(ret, argm);
+			ctr_tlistitem* tli = t->nodes->next;
+			while(tli) {
+				argm->object = ctr_scan_free_refs(tli->node);//argument
+				ret = ctr_array_add(ret, argm);
+				tli = tli->next;
+			}
+			break;
+		case CTR_AST_NODE_BINMESSAGE:
+			argm->object = ctr_scan_free_refs(t->nodes->node);//argument
+			ret = ctr_array_add(ret, argm);
+			break;
+		case CTR_AST_NODE_IMMUTABLE: {
+			ctr_tlistitem* tli = t->nodes->node->nodes;
+			while(tli) {
+				argm->object = ctr_scan_free_refs(tli->node);//argument
+				ret = ctr_array_add(ret, argm);
+				tli = tli->next;
+			}
+			break;
+		}
+		case CTR_AST_NODE_KWMESSAGE: {
+			ctr_tlistitem* tli = t->nodes;
+			while(tli) {
+				argm->object = ctr_scan_free_refs(tli->node);//argument
+				ret = ctr_array_add(ret, argm);
+				tli = tli->next;
+			}
+			break;
+		}
+		case CTR_AST_NODE_NESTED:
+			argm->object = ctr_scan_free_refs(t->nodes->node);//inner
+			ret = ctr_array_add(ret, argm);
+			break;
 		case CTR_AST_NODE_LTRNUM:
 		case CTR_AST_NODE_PARAMLIST:
 		case CTR_AST_NODE_ENDOFPROGRAM:
@@ -4799,43 +4840,89 @@ ctr_object *ctr_scan_free_refs(ctr_tnode* node) {
 		case CTR_AST_NODE_LTRNIL:
 		default: break;
 		}
-		if (!li->next)
-			break;
-		li = li->next;
-		t = li->node;
-	}
+	// 	if (!li->next)
+	// 		break;
+	// 	li = li->next;
+	// 	t = li->node;
+	// }
 	ctr_heap_free(argm);
 	return ret;
 }
 ctr_object *ctr_build_listcomp(ctr_tnode * node)
 {
-	//TODO: unpack LISTCOMP into MAIN_EXPR, GENERATORS, PREDS
 	ctr_tnode *main_expr = node->nodes->node,
 						*generators= node->nodes->next->node,
 						*preds     = node->nodes->next->next->node;
+
 	ctr_object*free_refs = ctr_scan_free_refs(main_expr),
 	          *mainexprb = ctr_build_block(ctr_expr_to_block(main_expr));
 
 	ctr_object*bindings  = ctr_array_new(CtrStdArray, NULL);
 	ctr_object*predicates  = ctr_array_new(CtrStdArray, NULL);
 	ctr_argument* argm = ctr_heap_allocate(sizeof(*argm));
+	char dummy;
 
 	//(gen*) -> [gen*]
-	ctr_tlistitem *generator = generators->nodes;
-	char dummy;
-	while(generator) {
-		argm->object = ctr_cwlk_expr(generator->node, &dummy);
-		ctr_array_push(bindings, argm);
-		generator = generator->next;
+	if(generators) {
+		ctr_tlistitem *generator = generators->nodes;
+		while(generator) {
+			argm->object = ctr_cwlk_expr(generator->node, &dummy);
+			ctr_array_push(bindings, argm);
+			generator = generator->next;
+		}
+	}
+	if(ctr_array_count(bindings, NULL)->value.nvalue != ctr_array_count(free_refs, NULL)->value.nvalue) {
+		CtrStdFlow = ctr_build_string_from_cstring("Number of bindings do not match the number of symbols");
+		return CtrStdNil;
 	}
 	//(pred*) -> [{^pred}*]
-	ctr_tlistitem *predicate = preds->nodes;
-	while(predicate) {
-		argm->object = ctr_build_block(ctr_expr_to_block(predicate->node));
-		ctr_array_push(predicates, argm);
-		predicate = predicate->next;
+	if(preds) {
+		ctr_tlistitem *predicate = preds->nodes;
+		while(predicate) {
+			if(predicate->node) {
+				argm->object = ctr_build_block(ctr_expr_to_block(predicate->node));
+				ctr_array_push(predicates, argm);
+			}
+			predicate = predicate->next;
+		}
 	}
-	//generator := ([syms, gens] zipWith: {:s:g ^g fmap: {:v ^\:blk s letEqual: v in: blk.}.}, foldl: {:acc:gen ^\:v acc applyTo: (gen applyTo: v).} accumulator: \:x x)
+	if(!generators && !preds) {//[e ,,,]
+		ctr_object* res = ctr_array_new(CtrStdArray, NULL);
+		argm->object = ctr_cwlk_expr(main_expr, &dummy);
+		return ctr_array_push(res, argm);
+	}
+	if(!generators && preds) {//[e ,,, p+] -> [e] if all(p) else []
+		ctr_object* res = ctr_array_new(CtrStdArray, NULL);
+		ctr_object* filter_s = ctr_build_string_from_cstring("{:pblk ^pblk run.}");
+		argm->object = ctr_string_eval(filter_s, NULL);
+		if(ctr_array_all(predicates, argm)->value.bvalue) {
+			argm->object = ctr_cwlk_expr(main_expr, &dummy);
+			return ctr_array_push(res, argm);
+		}
+		return res;
+	}
+	if(generators && !preds) {//no filter: [e ,, g+] -> [e for frees in g]
+		ctr_object* filter_s = ctr_build_string_from_cstring("{:gen var syms is my syms. ^\\:blk syms letEqual: gen in: blk.}");
+		argm->object = ctr_string_eval(filter_s, NULL);
+		ctr_internal_object_add_property(argm->object, ctr_build_string_from_cstring("syms"), free_refs, 0);
+		ctr_object* bindingfns = ctr_array_fmap(ctr_array_zip(bindings, NULL), argm);
+		ctr_object* call_s = ctr_build_string_from_cstring("{:blk ^blk applyTo: my main_expr.}");
+		argm->object = ctr_string_eval(call_s, NULL);
+		ctr_internal_object_add_property(argm->object, ctr_build_string_from_cstring("main_expr"), mainexprb, 0);
+		ctr_object* res = ctr_array_fmap(bindingfns, argm);
+		return res;
+	}
+	//expression with generators and predicates
+	ctr_object* filter_s = ctr_build_string_from_cstring("{:gen var syms is my syms. (my filters fmap: \\:filter syms letEqual: gen in: filter) all: {:x ^x.}, not continue. ^\\:blk syms letEqual: gen in: blk.}");
+	argm->object = ctr_string_eval(filter_s, NULL);
+	ctr_internal_object_add_property(argm->object, ctr_build_string_from_cstring("syms"), free_refs, 0);
+	ctr_internal_object_add_property(argm->object, ctr_build_string_from_cstring("filters"), predicates, 0);
+	ctr_object* bindingfns = ctr_array_fmap(ctr_array_zip(bindings, NULL), argm);
+	ctr_object* call_s = ctr_build_string_from_cstring("{:blk ^blk applyTo: my main_expr.}");
+	argm->object = ctr_string_eval(call_s, NULL);
+	ctr_internal_object_add_property(argm->object, ctr_build_string_from_cstring("main_expr"), mainexprb, 0);
+	ctr_object* res = ctr_array_fmap(bindingfns, argm);
+	return res;
 }
 
 /**

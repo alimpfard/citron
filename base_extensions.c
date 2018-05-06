@@ -840,8 +840,6 @@ static char *ctr_lex_token_lookup(int tok) {
     return "PASSIGNMENT";
   case CTR_TOKEN_SYMBOL:
     return "SYMBOL";
-  case CTR_TOKEN_LC_SEP:
-    return "LC_SEP";
   case CTR_TOKEN_FIN:
     return "FIN";
   default:

@@ -45,15 +45,12 @@ static char *ctr_lex_desc_tok_passignment = "=>";	//REEEE
 static char *ctr_lex_desc_tok_ret = "^";
 static char *ctr_lex_desc_tok_ret_unicode = "↑";
 static char *ctr_lex_desc_tok_symbol = "\\"; //TODO FIXME Find a better character for this
-static char *ctr_lex_desc_tok_lc_sep = "|";
 static char *ctr_lex_desc_tok_fin = "end of program";
 static char *ctr_lex_desc_tok_unknown = "(unknown token)";
 
 static int ctr_string_interpolation = 0;
 static char *ivarname;
 static int ivarlen;
-
-extern int parsing_list_comp;
 
 struct lexer_state {
 	int string_interpolation;
@@ -272,9 +269,6 @@ char *ctr_lex_tok_describe(int token)
 	case CTR_TOKEN_SYMBOL:
 		description = ctr_lex_desc_tok_symbol;
 		break;
-	case CTR_TOKEN_LC_SEP:
-		description = ctr_lex_desc_tok_lc_sep;
-		break;
 	default:
 		description = ctr_lex_desc_tok_unknown;
 	}
@@ -450,10 +444,6 @@ int ctr_lex_tok()
 	if (c == ',') {
 		ctr_code++;
 		return CTR_TOKEN_CHAIN;
-	}
-	if (parsing_list_comp && c == '|') {
-		ctr_code++;
-		return CTR_TOKEN_LC_SEP;
 	}
 	if (((c == 'i') && (ctr_code + 1) < ctr_eofcode
 	     && (*(ctr_code + 1) == 's')

@@ -145,9 +145,9 @@ ctr_object *ctr_array_min(ctr_object * myself, ctr_argument * argumentList)
 	double v = 0;
 	ctr_object *el;
 	ctr_size i = 0;
-	for (i = 0; i < myself->value.avalue->head; i++) {
+	for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++) {
 		el = *(myself->value.avalue->elements + i);
-		v = ctr_internal_cast2number(el)->value.bvalue;
+		v = ctr_internal_cast2number(el)->value.nvalue;
 		if (i == 0 || v < min) {
 			min = v;
 		}
@@ -252,9 +252,9 @@ ctr_object *ctr_array_max(ctr_object * myself, ctr_argument * argumentList)
 	double v = 0;
 	ctr_object *el;
 	ctr_size i = 0;
-	for (i = 0; i < myself->value.avalue->head; i++) {
+	for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++) {
 		el = *(myself->value.avalue->elements + i);
-		v = ctr_internal_cast2number(el)->value.bvalue;
+		v = ctr_internal_cast2number(el)->value.nvalue;
 		if (i == 0 || max < v) {
 			max = v;
 		}
@@ -1167,7 +1167,6 @@ ctr_object *ctr_array_zip_with(ctr_object * myself, ctr_argument * argumentList)
 {
 	ctr_object *blk = argumentList->object;
 	ctr_object *ret = ctr_array_new(CtrStdArray, NULL);
-	ctr_argument *argument0 = ctr_heap_allocate(sizeof(ctr_argument));
 	struct arr_element_t {
 		ctr_object *elem;
 		int state;
@@ -1194,8 +1193,10 @@ ctr_object *ctr_array_zip_with(ctr_object * myself, ctr_argument * argumentList)
 		all_iter *= (arredes.max > -1 ? arredes.max : 1);
 		elem_indices[i] = arredes;
 	}
+	ctr_argument *argument0;
 	for (int lit = 0; lit < all_iter; lit++) {
-		ctr_object *parr = ctr_array_new(CtrStdArray, NULL);
+		argument0 = ctr_heap_allocate(sizeof(ctr_argument));
+		ctr_argument* arg0 = argument0;
 		int did_shit = 0;
 		for (ctr_size i = 0;
 		     i <
@@ -1236,14 +1237,14 @@ ctr_object *ctr_array_zip_with(ctr_object * myself, ctr_argument * argumentList)
 				}
 				elem_indices[i] = arrdes;
 			}
-			argument0->object = elem;
-			ctr_array_push(parr, argument0);
+			arg0->object = elem;
+			arg0->next = ctr_heap_allocate(sizeof(ctr_argument));
+			arg0 = arg0->next;
 		}
-		argument0->object = parr;
 		argument0->object = ctr_block_run(blk, argument0, NULL);
 		ctr_array_push(ret, argument0);
+		ctr_free_argumentList(argument0);
 	}
-	ctr_heap_free(argument0);
 	ctr_heap_free(elem_indices);
 	return ret;
 }

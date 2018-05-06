@@ -145,9 +145,9 @@ ctr_object *ctr_array_min(ctr_object * myself, ctr_argument * argumentList)
 	double v = 0;
 	ctr_object *el;
 	ctr_size i = 0;
-	for (i = 0; i < myself->value.avalue->head; i++) {
+	for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++) {
 		el = *(myself->value.avalue->elements + i);
-		v = ctr_internal_cast2number(el)->value.bvalue;
+		v = ctr_internal_cast2number(el)->value.nvalue;
 		if (i == 0 || v < min) {
 			min = v;
 		}
@@ -252,9 +252,9 @@ ctr_object *ctr_array_max(ctr_object * myself, ctr_argument * argumentList)
 	double v = 0;
 	ctr_object *el;
 	ctr_size i = 0;
-	for (i = 0; i < myself->value.avalue->head; i++) {
+	for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++) {
 		el = *(myself->value.avalue->elements + i);
-		v = ctr_internal_cast2number(el)->value.bvalue;
+		v = ctr_internal_cast2number(el)->value.nvalue;
 		if (i == 0 || max < v) {
 			max = v;
 		}

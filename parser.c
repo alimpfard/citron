@@ -380,7 +380,7 @@ ctr_tnode *ctr_cparse_tuple()
 		/* okay we have new parameter, load it */
 		ctr_tlistitem *paramListItem = (ctr_tlistitem *)
 		    ctr_heap_allocate_tracked(sizeof(ctr_tlistitem));
-		paramListItem->node = ctr_cparse_expr(1);
+		paramListItem->node = ctr_cparse_expr(0);
 		previousListItem->next = paramListItem;
 		previousListItem = paramListItem;
 	}

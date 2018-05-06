@@ -1390,6 +1390,11 @@ ctr_object *ctr_array_fmap(ctr_object * myself, ctr_argument * argumentList)
 		arg->object = ctr_build_number_from_float((ctr_number) i);
 		arg->object = ctr_array_get(myself, arg);
 		arg->object = ctr_block_run(func, arg, func);
+		if(CtrStdFlow) {
+			if (CtrStdFlow == CtrStdContinue) { CtrStdFlow = NULL; continue; }
+			if (CtrStdFlow == CtrStdBreak) CtrStdFlow = NULL;
+			break;
+		}
 		ctr_array_push(newArray, arg);
 	}
 	ctr_heap_free(arg);
@@ -2255,6 +2260,11 @@ ctr_object *ctr_map_fmap(ctr_object * myself, ctr_argument * argumentList)
 		arguments->object = m->key;
 		arguments->next->object = m->value;
 		arguments->object = ctr_block_run(block, arguments, myself);
+		if(CtrStdFlow) {
+			if (CtrStdFlow == CtrStdContinue) { CtrStdFlow = NULL; m = m->next; continue; }
+			if (CtrStdFlow == CtrStdBreak) CtrStdFlow = NULL;
+			break;
+		}
 		if (arguments->object == block) {
 			arguments->object = m->key;
 			arguments->next->object = m->value;

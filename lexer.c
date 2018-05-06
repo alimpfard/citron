@@ -45,7 +45,6 @@ char *ctr_clex_desc_tok_nil = "Nil";
 char *ctr_clex_desc_tok_assignment = ":=";	//derp
 char *ctr_clex_desc_tok_passignment = "=>";	//REEEE
 char *ctr_clex_desc_tok_symbol = "\\";	//TODO FIXME Find a better character for this
-char *ctr_clex_desc_tok_lc_sep = "|";
 char *ctr_clex_desc_tok_ret = "^";
 char *ctr_clex_desc_tok_ret_unicode = "↑";
 char *ctr_clex_desc_tok_fin = "end of program";
@@ -54,8 +53,6 @@ char *ctr_clex_desc_tok_unknown = "(unknown token)";
 int ctr_string_interpolation = 0;
 char *ivarname;
 int ivarlen;
-
-extern int parsing_list_comp;
 
 struct lexer_state {
 	int string_interpolation;
@@ -269,9 +266,6 @@ char *ctr_clex_tok_describe(int token)
 		break;
 	case CTR_TOKEN_SYMBOL:
 		description = ctr_clex_desc_tok_symbol;
-		break;
-	case CTR_TOKEN_LC_SEP:
-		description = ctr_clex_desc_tok_lc_sep;
 		break;
 	default:
 		description = ctr_clex_desc_tok_unknown;
@@ -515,10 +509,6 @@ int ctr_clex_tok()
 	if (c == ',') {
 		ctr_code++;
 		return CTR_TOKEN_CHAIN;
-	}
-	if (parsing_list_comp && c == '|') {
-		ctr_code++;
-		return CTR_TOKEN_LC_SEP;
 	}
 	if (((c == 'i') && (ctr_code + 1) < ctr_eofcode
 	     && (*(ctr_code + 1) == 's')

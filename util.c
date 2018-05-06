@@ -48,6 +48,7 @@ void ctr_internal_debug_tree(ctr_tnode * ti, int indent)
 	li = ti->nodes;
 	t = li->node;
 	while (1) {
+		if(!t) goto next;
 		int i;
 		for (i = 0; i < indent; i++)
 			printf(" ");
@@ -119,6 +120,7 @@ void ctr_internal_debug_tree(ctr_tnode * ti, int indent)
 		printf("%s %s (%p)\n", str, vbuf, (void *)t);
 		if (t->nodes)
 			ctr_internal_debug_tree(t, indent + 1);
+next:;
 		if (!li->next)
 			break;
 		li = li->next;

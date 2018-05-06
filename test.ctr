@@ -1,15 +1,16 @@
-Broom memoryLimit: 1024 * 1024 * 1024.
-
-[syms, gens] is [['f', 'Nil'], [[1,2,3,4], [Nil]]].
-
-Pen writeln: [syms, gens product].
-
-var generator is [syms, gens product] zipWith: {:s:gs 
-    ^gs fmap: {:g ^{:blk const s letEqual: const g in: blk.}.}.
-}, fmap: {:el 
-    ^el foldl: {:acc:x 
-        ^{:v ^const x applyTo: (const acc applyTo: v).}.
-    } accumulator: {:x ^x applyTo: 3.}.
+Array on: 'zipWith:' do: {:blk
+    var arr is Array new.
+    var self is me.
+    (me fmap: \:x x count, min) times: {:i
+        arr push: (blk applyAll: (self fmap: \:x x @ i)).
+    }.
+    ^arr.
 }.
 
-Pen writeln: (generator head applyTo: {^2.}).
+[main_expr, syms, gens] is [{^[f,g].}, ['f', 'g'], [[1,2,3], [2, 3]]].
+
+lc is gens zip fmap: {:gen
+    ^\:blk syms letEqual: gen in: blk.
+}.
+
+Pen writeln: (lc fmap: \:a a applyTo: main_expr).

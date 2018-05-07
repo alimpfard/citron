@@ -1250,16 +1250,34 @@ void initiailize_base_extensions() {
                            &ctr_generator_make);
   ctr_internal_create_func(ctr_std_generator,
                            ctr_build_string_from_cstring("fmap:"),
-                           &ctr_generator_map);
+                           &ctr_generator_fmap);
+  ctr_internal_create_func(ctr_std_generator,
+                           ctr_build_string_from_cstring("imap:"),
+                           &ctr_generator_imap);
   ctr_internal_create_func(ctr_std_generator,
                            ctr_build_string_from_cstring("next"),
                            &ctr_generator_next);
   ctr_internal_create_func(ctr_std_generator,
+                           ctr_build_string_from_cstring("inext"),
+                           &ctr_generator_inext);
+  ctr_internal_create_func(ctr_std_generator,
                            ctr_build_string_from_cstring("each:"),
                            &ctr_generator_each);
   ctr_internal_create_func(ctr_std_generator,
+                           ctr_build_string_from_cstring("ieach:"),
+                           &ctr_generator_ieach);
+  ctr_internal_create_func(ctr_std_generator,
+                           ctr_build_string_from_cstring("copy"),
+                           &ctr_generator_copy);
+  ctr_internal_create_func(ctr_std_generator,
+                           ctr_build_string_from_cstring("finished"),
+                           &ctr_generator_isfin);
+  ctr_internal_create_func(ctr_std_generator,
                            ctr_build_string_from_cstring("toString"),
                            &ctr_generator_tostr);
+  ctr_internal_create_func(ctr_std_generator,
+                           ctr_build_string_from_cstring("toArray"),
+                           &ctr_generator_toarray);
   ctr_internal_object_add_property(CtrStdWorld,
                                    ctr_build_string_from_cstring("Generator"),
                                    ctr_std_generator, 0);

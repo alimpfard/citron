@@ -4905,10 +4905,11 @@ ctr_object *ctr_build_listcomp(ctr_tnode * node)
 		ctr_object* filter_s = ctr_build_string_from_cstring("{:gen var syms is my syms. ^\\:blk syms letEqual: gen in: blk.}");
 		argm->object = ctr_string_eval(filter_s, NULL);
 		ctr_internal_object_add_property(argm->object, ctr_build_string_from_cstring("syms"), free_refs, 0);
-		ctr_object* bindingfns = ctr_array_fmap(ctr_array_zip(bindings, NULL), argm);
+		ctr_object* bindingfns = ctr_array_fmap(ctr_array_product(bindings, NULL), argm);
 		ctr_object* call_s = ctr_build_string_from_cstring("{:blk ^blk applyTo: my main_expr.}");
 		argm->object = ctr_string_eval(call_s, NULL);
 		ctr_internal_object_add_property(argm->object, ctr_build_string_from_cstring("main_expr"), mainexprb, 0);
+		// ctr_object* res = ctr_send_message(bindingfns, "fmap:", 5, argm);
 		ctr_object* res = ctr_array_fmap(bindingfns, argm);
 		return res;
 	}
@@ -4917,10 +4918,11 @@ ctr_object *ctr_build_listcomp(ctr_tnode * node)
 	argm->object = ctr_string_eval(filter_s, NULL);
 	ctr_internal_object_add_property(argm->object, ctr_build_string_from_cstring("syms"), free_refs, 0);
 	ctr_internal_object_add_property(argm->object, ctr_build_string_from_cstring("filters"), predicates, 0);
-	ctr_object* bindingfns = ctr_array_fmap(ctr_array_zip(bindings, NULL), argm);
+	ctr_object* bindingfns = ctr_array_fmap(ctr_array_product(bindings, NULL), argm);
 	ctr_object* call_s = ctr_build_string_from_cstring("{:blk ^blk applyTo: my main_expr.}");
 	argm->object = ctr_string_eval(call_s, NULL);
 	ctr_internal_object_add_property(argm->object, ctr_build_string_from_cstring("main_expr"), mainexprb, 0);
+	// ctr_object* res = ctr_send_message(bindingfns, "fmap:", 5, argm);
 	ctr_object* res = ctr_array_fmap(bindingfns, argm);
 	return res;
 }

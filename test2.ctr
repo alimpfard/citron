@@ -1,1 +1,20 @@
-Pen writeln: [2 * f + g ,, [0,1,2,3], [1,2] ,, f + g > 4].
+#Pen writeln: [2 * f + g ,, [0,1,2,3], [1,2] ,, f + g > 4].
+
+Generator on: '*' do: {:other
+    other is (Reflect isObject: other linkedTo: Generator) either: other
+    or: {
+        ^Generator elementsOf: other.
+    }.
+    ^me fmap: \:x other copy fmap: \:y [x, y].
+}.
+
+a is Generator from: 10 to: 30.
+b is Generator from: 10 to: 13.
+
+
+gens is a * b.
+gens is Generator repeat: Nil, fmap: \:_ [gens finished break, gens inext] last, fmap: \:gen \:blk ['f', 'g'] letEqual: gen in: blk.
+
+lc is gens toArray fmap: \:x x applyTo: { ^f + g. }.
+
+Pen writeln: lc.

@@ -28,6 +28,8 @@
 #include "pcre_split.h"
 #endif
 
+#include "generator.h"
+
 /**@I_OBJ_DEF Nil*/
 /**
  *
@@ -4848,6 +4850,52 @@ ctr_object *ctr_scan_free_refs(ctr_tnode* node) {
 	ctr_heap_free(argm);
 	return ret;
 }
+
+ctr_object *ctr_array_internal_zip(ctr_object * myself, ctr_argument * argumentList)
+{
+	int has_argl = !!argumentList;
+	if(!argumentList)
+		argumentList = ctr_heap_allocate(sizeof(ctr_argument));
+	ctr_object *prod;
+	ctr_object *el;
+	ctr_size i = 0;
+	for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++) {
+		if (!i) {
+			prod = *myself->value.avalue->elements;
+			if(myself->value.avalue->head-myself->value.avalue->tail == 1) {//single element, explode it
+				el = prod;
+				switch(el->info.type) {
+					case CTR_OBJECT_TYPE_OTARRAY: {
+						ctr_object* new_arr = ctr_array_new(CtrStdArray, NULL);
+						for (int j = el->value.avalue->tail; j < el->value.avalue->head; j++) {
+							ctr_object* elarr = ctr_array_new(CtrStdArray, NULL);
+							argumentList->object = *(el->value.avalue->elements+j);
+							argumentList->object = ctr_array_push(elarr, argumentList);
+							ctr_array_push(new_arr, argumentList);
+						}
+						if(!has_argl) ctr_heap_free(argumentList);
+						return new_arr;
+					}
+					default: {
+						ctr_object* fmap = ctr_get_responder(el, "fmap:", 5);
+						if(!fmap) return myself;
+						argumentList->object = ctr_string_eval(ctr_build_string_from_cstring("{:value ^[value].}"), NULL);
+						prod = ctr_send_message(el, "fmap:", 5, argumentList);
+						if(prod->interfaces->link == ctr_std_generator) prod = ctr_generator_toarray(prod, argumentList);
+						if(!has_argl) ctr_heap_free(argumentList);
+						return prod;
+					}
+				}
+			}
+			continue;
+		}
+		el = *(myself->value.avalue->elements + i);
+		prod = ctr_send_message_variadic(prod, "*", 1, 1, el);
+	}
+	if(!has_argl) ctr_heap_free(argumentList);
+	return (prod);
+}
+
 ctr_object *ctr_build_listcomp(ctr_tnode * node)
 {
 	ctr_tnode *main_expr = node->nodes->node,
@@ -4905,7 +4953,7 @@ ctr_object *ctr_build_listcomp(ctr_tnode * node)
 		ctr_object* filter_s = ctr_build_string_from_cstring("{:gen var syms is my syms. ^\\:blk syms letEqual: gen in: blk.}");
 		argm->object = ctr_string_eval(filter_s, NULL);
 		ctr_internal_object_add_property(argm->object, ctr_build_string_from_cstring("syms"), free_refs, 0);
-		ctr_object* bindingfns = ctr_array_fmap(ctr_array_product(bindings, NULL), argm);
+		ctr_object* bindingfns = ctr_array_fmap(ctr_array_internal_zip(bindings, NULL), argm);
 		ctr_object* call_s = ctr_build_string_from_cstring("{:blk ^blk applyTo: my main_expr.}");
 		argm->object = ctr_string_eval(call_s, NULL);
 		ctr_internal_object_add_property(argm->object, ctr_build_string_from_cstring("main_expr"), mainexprb, 0);
@@ -4918,7 +4966,7 @@ ctr_object *ctr_build_listcomp(ctr_tnode * node)
 	argm->object = ctr_string_eval(filter_s, NULL);
 	ctr_internal_object_add_property(argm->object, ctr_build_string_from_cstring("syms"), free_refs, 0);
 	ctr_internal_object_add_property(argm->object, ctr_build_string_from_cstring("filters"), predicates, 0);
-	ctr_object* bindingfns = ctr_array_fmap(ctr_array_product(bindings, NULL), argm);
+	ctr_object* bindingfns = ctr_array_fmap(ctr_array_internal_zip(bindings, NULL), argm);
 	ctr_object* call_s = ctr_build_string_from_cstring("{:blk ^blk applyTo: my main_expr.}");
 	argm->object = ctr_string_eval(call_s, NULL);
 	ctr_internal_object_add_property(argm->object, ctr_build_string_from_cstring("main_expr"), mainexprb, 0);

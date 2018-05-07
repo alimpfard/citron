@@ -8,11 +8,16 @@
 #define CTR_E_OF_A_GENNY 4
 #define CTR_E_OF_M_GENNY 5
 #define CTR_FN_OF_GENNY  6
+#define CTR_IFN_OF_GENNY 7
+
+const static ctr_object  generator_end_marker_o;
+static ctr_object* generator_end_marker = (ctr_object*)&generator_end_marker_o;
 
 typedef struct {
   ctr_size seq_index;
   void* data;
   void* sequence;
+  ctr_object* current;
   int finished;
 } ctr_generator;
 
@@ -91,6 +96,7 @@ ctr_object* ctr_generator_make(ctr_object* myself, ctr_argument* argumentList) {
       res->ptr = gen;
       break;
     }
+    case CTR_OBJECT_TYPE_OTEX: if(arg->interfaces->link == ctr_std_generator) return ctr_generator_copy(arg, NULL);
     default: {//repeat | map
       if (ctr_reflect_get_primitive_link(arg) == CtrStdMap) {//map
         res->type = CTR_E_OF_M_GENNY;
@@ -111,7 +117,7 @@ ctr_object* ctr_generator_make(ctr_object* myself, ctr_argument* argumentList) {
   return inst;
 }
 
-ctr_object* ctr_generator_map(ctr_object* myself, ctr_argument* argumentList) {
+ctr_object* ctr_generator_imap(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* blk = argumentList->object;
   ctr_object* inst = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
   ctr_set_link_all(inst, ctr_std_generator);
@@ -136,10 +142,36 @@ ctr_object* ctr_generator_map(ctr_object* myself, ctr_argument* argumentList) {
   return inst;
 }
 
+ctr_object* ctr_generator_fmap(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* blk = argumentList->object;
+  ctr_object* inst = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+  ctr_set_link_all(inst, ctr_std_generator);
+  ctr_generator* under = myself->value.rvalue->ptr;
+  inst->release_hook = ctr_generator_free;
+  inst->value.rvalue = ctr_heap_allocate(sizeof(ctr_resource));
+  ctr_resource* res = inst->value.rvalue;
+  res->type = CTR_IFN_OF_GENNY;
+  ctr_mapping_generator* genny = ctr_heap_allocate(sizeof(*genny));
+  genny->i_type = myself->value.rvalue->type;
+  genny->genny  = myself->value.rvalue->ptr;
+  genny->fn = blk;
+  ctr_generator* generator = ctr_heap_allocate(sizeof(*generator));
+  generator->seq_index = under->seq_index;
+  generator->sequence = genny;
+  ctr_argument* argm = ctr_heap_allocate(sizeof(ctr_argument));
+  argm->next = ctr_heap_allocate(sizeof(ctr_argument));
+  generator->data = argm;
+  generator->finished = under->finished;
+  // ctr_condense_generator(generator, CTR_FN_OF_GENNY);
+  res->ptr = generator;
+  return inst;
+}
+
 ctr_object* ctr_generator_internal_next(ctr_generator* genny, int gtype) {
+  if(genny->finished) return CtrStdNil;
+
   switch(gtype) {
     case CTR_STEP_GENNY: {
-      if(genny->finished) return CtrStdNil;
       genny->seq_index++;
       ctr_step_generator* sg = genny->sequence;
       ctr_object* num = ctr_build_number_from_float(sg->current);
@@ -152,7 +184,6 @@ ctr_object* ctr_generator_internal_next(ctr_generator* genny, int gtype) {
     }
     case CTR_E_OF_S_GENNY: {
       ctr_string* str = genny->sequence;
-      if(genny->finished) return CtrStdNil;
       if(genny->seq_index >= str->vlen) { genny->finished = 1; return CtrStdNil; }
     	long ua = getBytesUtf8(str->value, 0, genny->seq_index);
     	long ub = getBytesUtf8(str->value, ua, 1);
@@ -166,7 +197,6 @@ ctr_object* ctr_generator_internal_next(ctr_generator* genny, int gtype) {
     }
     case CTR_E_OF_A_GENNY: {
       ctr_collection* coll = genny->sequence;
-      if(genny->finished) return CtrStdNil;
       if(genny->seq_index >= coll->head-coll->tail) { genny->finished = 1; return CtrStdNil; }
       ctr_object* elem = coll->elements[genny->seq_index];
       genny->seq_index++;
@@ -174,7 +204,6 @@ ctr_object* ctr_generator_internal_next(ctr_generator* genny, int gtype) {
     }
     case CTR_E_OF_M_GENNY: {
       ctr_map* map = genny->sequence;
-      if(genny->finished) return CtrStdNil;
       if(genny->seq_index >= map->size) { genny->finished = 1; return CtrStdNil; }
       if(!genny->data) {
         genny->data = ctr_heap_allocate(sizeof(ctr_argument));
@@ -200,13 +229,60 @@ ctr_object* ctr_generator_internal_next(ctr_generator* genny, int gtype) {
       int igen_type = mgen->i_type;
       ctr_object* fn = mgen->fn;
       argm->object = ctr_build_number_from_float(genny->seq_index++);
-      argm->next->object = ctr_generator_internal_next(igen, igen_type);
-      genny->finished = igen->finished;
-      if(genny->finished) return CtrStdNil;
-      return ctr_block_run(fn, argm, fn);
+      do {argm->object = ctr_generator_internal_next(igen, igen_type);} while(argm->object == generator_end_marker);
+      ctr_object* res = ctr_block_run(fn, argm, fn);
+      genny->finished = genny->finished || igen->finished;
+      if(CtrStdFlow) {
+        if(CtrStdFlow == CtrStdContinue) { CtrStdFlow = NULL; return ctr_generator_internal_next(genny, gtype); }
+        if(CtrStdFlow == CtrStdBreak) { CtrStdFlow = NULL; genny->finished = 1;}
+      }
+      return genny->current = res;
+    }
+    case CTR_IFN_OF_GENNY: {
+      ctr_mapping_generator* mgen = genny->sequence;
+      ctr_argument* argm = genny->data;
+      ctr_generator* igen = mgen->genny;
+      int igen_type = mgen->i_type;
+      ctr_object* fn = mgen->fn;
+      genny->seq_index++;
+      do {argm->object = ctr_generator_internal_next(igen, igen_type);} while(argm->object == generator_end_marker);
+      ctr_object* res = ctr_block_run(fn, argm, fn);
+      genny->finished = genny->finished || igen->finished;
+      if(CtrStdFlow) {
+        if(CtrStdFlow == CtrStdContinue) { CtrStdFlow = NULL; return ctr_generator_internal_next(genny, gtype); }
+        if(CtrStdFlow == CtrStdBreak) { CtrStdFlow = NULL; genny->finished = 1;}
+      }
+      return genny->current = res;
     }
     default: return NULL;
   }
+}
+
+ctr_object* ctr_generator_internal_inext(ctr_generator* genny, int gtype, ctr_generator* ogenny, int ogtype) {
+  ctr_object* current = genny->current;
+  if(current == generator_end_marker) return ctr_generator_internal_next(genny, gtype);
+  int isnext = 0;
+  int fail = 0;
+  if((isnext = !current))
+    current = ctr_generator_internal_next(genny, gtype);
+  if(current->interfaces->link == ctr_std_generator) {
+    ctr_generator* gen = current->value.rvalue->ptr;
+    int gty = current->value.rvalue->type;
+    if(!gen->finished) {
+       ctr_object* res = ctr_generator_internal_inext(gen, gty, genny, gtype);
+       if(res == generator_end_marker) {
+         ctr_generator_internal_next(gen, gty);
+         return ctr_generator_internal_inext(gen, gty, genny, gtype);
+       } else return res;
+    }
+    if(ogenny) {
+      ctr_generator_internal_next(ogenny, ogtype);
+      return ctr_generator_internal_inext(ogenny, ogtype, NULL, 0);
+    }
+    fail = 1;
+  }
+  current = isnext ? current : ctr_generator_internal_next(genny, gtype);
+  return fail ? generator_end_marker : current;
 }
 
 ctr_object* ctr_generator_next(ctr_object* myself, ctr_argument* argumentList) {
@@ -224,6 +300,27 @@ ctr_object* ctr_generator_next(ctr_object* myself, ctr_argument* argumentList) {
   }
   return next;
 }
+ctr_object* ctr_generator_inext(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_resource* res = myself->value.rvalue;
+  ctr_generator* genny = res->ptr;
+  int gtype = res->type;
+  if(!genny) {
+    CtrStdFlow = ctr_build_string_from_cstring("#inext on uninitialized generator");
+    return CtrStdNil;
+  }
+  ctr_object* next = ctr_generator_internal_inext(genny, gtype, NULL, 0);
+  if(!next) {
+    CtrStdFlow = ctr_build_string_from_cstring("Invalid generator type(probably)");
+    return CtrStdNil;
+  }
+  return next;
+}
+ctr_object* ctr_generator_isfin(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_resource* res = myself->value.rvalue;
+  ctr_generator* genny = res->ptr;
+  if(!genny) return ctr_build_bool(1);
+  return ctr_build_bool(genny->finished);
+}
 ctr_object* ctr_generator_each(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* blk = argumentList->object;
   ctr_resource* res = myself->value.rvalue;
@@ -238,11 +335,41 @@ ctr_object* ctr_generator_each(ctr_object* myself, ctr_argument* argumentList) {
   while(1) {
     ctr_object* next = ctr_generator_internal_next(genny, gtype);
     if(genny->finished) break;
+    if(next == generator_end_marker) continue;
     argm->object = ctr_build_number_from_float(genny->seq_index - 1);
     argm->next->object = next;
     ctr_block_run(blk, argm, blk);
     if(CtrStdFlow) {
       if(CtrStdFlow == CtrStdContinue) { CtrStdFlow = NULL; continue; }
+      if(CtrStdFlow == CtrStdBreak) { CtrStdFlow = NULL; genny->finished = 1; }
+      break;
+    }
+  }
+  if(CtrStdFlow == CtrStdBreak) CtrStdFlow = NULL;
+  ctr_heap_free(argm);
+  return myself;
+}
+ctr_object* ctr_generator_ieach(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* blk = argumentList->object;
+  ctr_resource* res = myself->value.rvalue;
+  ctr_generator* genny = res->ptr;
+  int gtype = res->type;
+  if(!genny) {
+    CtrStdFlow = ctr_build_string_from_cstring("#inext on uninitialized generator");
+    return CtrStdNil;
+  }
+  ctr_argument* argm = ctr_heap_allocate(sizeof(*argm));
+  argm->next = ctr_heap_allocate(sizeof(*argm));
+  while(1) {
+    ctr_object* next = ctr_generator_internal_inext(genny, gtype, NULL, 0);
+    if(genny->finished) break;
+    if(next == generator_end_marker) continue;
+    argm->object = ctr_build_number_from_float(genny->seq_index - 1);
+    argm->next->object = next;
+    ctr_block_run(blk, argm, blk);
+    if(CtrStdFlow) {
+      if(CtrStdFlow == CtrStdContinue) { CtrStdFlow = NULL; continue; }
+      if(CtrStdFlow == CtrStdBreak) { CtrStdFlow = NULL; genny->finished = 1; }
       break;
     }
   }
@@ -257,7 +384,8 @@ ctr_object* ctr_generator_internal_tostr(ctr_generator * gen, int gtype) {
     case CTR_E_OF_A_GENNY: return ctr_build_string_from_cstring("[ArrayGenerator]");
     case CTR_STEP_GENNY  : return ctr_build_string_from_cstring("[StepGenerator]");
     case CTR_E_OF_M_GENNY: return ctr_build_string_from_cstring("[MapGenerator]");
-    case CTR_FN_OF_GENNY: {
+    case CTR_FN_OF_GENNY:
+    case CTR_IFN_OF_GENNY: {
       ctr_object* str = ctr_build_string_from_cstring("[MappedGenerator<");
       ctr_mapping_generator* mgen = gen->sequence;
       ctr_object* inner = ctr_generator_internal_tostr(mgen->genny, mgen->i_type);
@@ -276,6 +404,74 @@ ctr_object* ctr_generator_tostr(ctr_object* myself, ctr_argument* argumentList) 
   if(!myself->value.rvalue)
     return ctr_build_string_from_cstring("[UninitializedGenerator]");
   return ctr_generator_internal_tostr(myself->value.rvalue->ptr, myself->value.rvalue->type);
+}
+
+ctr_generator* ctr_internal_generator_copy(ctr_generator* genny, int gtype) {
+  ctr_generator* gcopy = ctr_heap_allocate(sizeof(ctr_generator));
+  switch (gtype) {
+    case CTR_STEP_GENNY: {
+      *gcopy = *genny;
+      ctr_step_generator* mgen = gcopy->sequence;
+      gcopy->sequence = ctr_heap_allocate(sizeof(*mgen));
+      *((ctr_step_generator*)(gcopy->sequence)) = *mgen;
+      break;
+    }
+    case CTR_REPEAT_GENNY:
+    case CTR_E_OF_S_GENNY:
+    case CTR_E_OF_A_GENNY:
+    case CTR_E_OF_M_GENNY: *gcopy = *genny; break;
+    case CTR_FN_OF_GENNY:
+    case CTR_IFN_OF_GENNY: {
+      *gcopy = *genny;
+      ctr_mapping_generator* mgen = gcopy->sequence;
+      gcopy->sequence = ctr_heap_allocate(sizeof(*mgen));
+      ((ctr_mapping_generator*)(gcopy->sequence))->genny = ctr_internal_generator_copy(mgen->genny, mgen->i_type);
+      ((ctr_mapping_generator*)(gcopy->sequence))->fn = mgen->fn;
+      break;
+    }
+  }
+  return gcopy;
+}
+
+ctr_object* ctr_generator_toarray(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_resource* res = myself->value.rvalue;
+  ctr_generator* genny = res->ptr;
+  int gtype = res->type;
+  ctr_object* array = ctr_array_new(CtrStdArray, NULL);
+  if(!genny) {
+    CtrStdFlow = ctr_build_string_from_cstring("#inext on uninitialized generator");
+    return CtrStdNil;
+  }
+  ctr_argument* argm = ctr_heap_allocate(sizeof(*argm));
+  while(1) {
+    ctr_object* next = ctr_generator_internal_inext(genny, gtype, NULL, 0);
+    if(genny->finished) break;
+    if(next == generator_end_marker) continue;
+    argm->object = next;
+    array = ctr_array_push(array, argm);
+    if(CtrStdFlow) {
+      if(CtrStdFlow == CtrStdContinue) { CtrStdFlow = NULL; continue; }
+      if(CtrStdFlow == CtrStdBreak) { CtrStdFlow = NULL; genny->finished = 1; }
+      break;
+    }
+  }
+  if(CtrStdFlow == CtrStdBreak) CtrStdFlow = NULL;
+  ctr_heap_free(argm);
+  return array;
+}
+
+ctr_object* ctr_generator_copy(ctr_object* myself, ctr_argument* argumentList) {
+  if(!myself->value.rvalue) return myself;
+  ctr_resource* res = myself->value.rvalue;
+  ctr_generator *genny = res->ptr, *gcopy;
+  int gtype = res->type;
+  gcopy = ctr_internal_generator_copy(genny, gtype);
+  ctr_object* inst = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+  ctr_set_link_all(inst, ctr_std_generator);
+  inst->value.rvalue = ctr_heap_allocate(sizeof(ctr_resource));
+  inst->value.rvalue->ptr = gcopy;
+  inst->value.rvalue->type = gtype;
+  return inst;
 }
 
 ctr_generator* ctr_unwrap_generator(ctr_mapping_generator* mg) {
@@ -327,7 +523,8 @@ void* ctr_generator_free(void* res_) {
     case CTR_E_OF_A_GENNY:  ctr_heap_free(res->ptr); return NULL;
     case CTR_STEP_GENNY  :  /* fall through */
     case CTR_E_OF_M_GENNY:  ctr_heap_free(((ctr_generator*)res->ptr)->data); ctr_heap_free(res->ptr); return NULL;
-    case CTR_FN_OF_GENNY :  {
+    case CTR_FN_OF_GENNY :
+    case CTR_IFN_OF_GENNY :  {
       ctr_heap_free(((ctr_generator*)res->ptr)->sequence);
       ctr_argument* argm = ((ctr_generator*)res->ptr)->data;
       ctr_heap_free(argm->next);

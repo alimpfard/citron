@@ -144,6 +144,10 @@ ctr_object* ctr_generator_imap(ctr_object* myself, ctr_argument* argumentList) {
 
 ctr_object* ctr_generator_fmap(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* blk = argumentList->object;
+  if(!blk || blk->info.type != CTR_OBJECT_TYPE_OTBLOCK) {
+    CtrStdFlow = ctr_build_string_from_cstring("Expected a block");
+    return myself;
+  }
   ctr_object* inst = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
   ctr_set_link_all(inst, ctr_std_generator);
   ctr_generator* under = myself->value.rvalue->ptr;
@@ -445,10 +449,10 @@ ctr_object* ctr_generator_toarray(ctr_object* myself, ctr_argument* argumentList
   ctr_argument* argm = ctr_heap_allocate(sizeof(*argm));
   while(1) {
     ctr_object* next = ctr_generator_internal_inext(genny, gtype, NULL, 0);
-    if(genny->finished) break;
     if(next == generator_end_marker) continue;
     argm->object = next;
     array = ctr_array_push(array, argm);
+    if(genny->finished) break;
     if(CtrStdFlow) {
       if(CtrStdFlow == CtrStdContinue) { CtrStdFlow = NULL; continue; }
       if(CtrStdFlow == CtrStdBreak) { CtrStdFlow = NULL; genny->finished = 1; }

@@ -22,6 +22,7 @@ extern "C" {
 #include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #ifdef DEBUG_BUILD
 #define IS_DEBUG_STRING "-debug"
@@ -530,6 +531,7 @@ ctr_object* ctr_assign_value_to_local(ctr_object* key, ctr_object* val);
 ctr_object* ctr_assign_value_to_local_by_ref(ctr_object* key, ctr_object* val);
 ctr_object* ctr_const_assign_value(ctr_object* key, ctr_object* o, ctr_object* context);
 char*       ctr_internal_readf(char* file_name, uint64_t* size_allocated);
+char*       ctr_internal_readfp(FILE* fp, uint64_t* size_allocated);
 void        ctr_internal_debug_tree(ctr_tnode* ti, int indent);
 void 		ctr_capture_refs(ctr_tnode* ti, ctr_object* block);
 ctr_object* ctr_get_responder(ctr_object* receiverObject, char* message, long vlen);
@@ -1078,6 +1080,7 @@ ctr_object* ctr_reflect_unregister_instrumentor(ctr_object* myself, ctr_argument
 ctr_object* ctr_reflect_get_instrumentor(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_glob(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_for_object_in_ctx (ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_run_for_object_in_ctx_as_world (ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_in_new_ctx(ctr_object * myself, ctr_argument * argumentList);
 ctr_object* ctr_reflect_compilerinfo (ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_delegate_set_private_property(ctr_object* itself, ctr_argument* argumentList);
@@ -1176,8 +1179,8 @@ CTR_H_DECLSPEC uint16_t ctr_default_port;
 #include "citron_ensure.h"
 #include "citron_conv.h"
 
-CTR_H_DECLSPEC ctr_string CTR_CLEX_KW_ME_SV, CTR_CLEX_KW_THIS_SV, CTR_CLEX_US_SV;
-CTR_H_DECLSPEC ctr_object CTR_CLEX_KW_ME,    CTR_CLEX_KW_THIS,    CTR_CLEX_US;
+CTR_H_DECLSPEC ctr_string CTR_CLEX_KW_ME_SV, CTR_CLEX_KW_THIS_SV, CTR_CLEX_US_SV, CTR_CLEX_KW_RESPONDTO_SV;
+CTR_H_DECLSPEC ctr_object CTR_CLEX_KW_ME,    CTR_CLEX_KW_THIS,    CTR_CLEX_US,    CTR_CLEX_KW_RESPONDTO;
 
 static inline void ctr_linkstr();
 void ctr_set_link_all(ctr_object*, ctr_object*);
@@ -1185,6 +1188,7 @@ void ctr_deallocate_argument_list(ctr_argument*);
 int ctr_internal_object_is_equal(ctr_object*, ctr_object*);
 int ctr_internal_object_is_constructible_(ctr_object*, ctr_object*, int);
 
+ctr_object* ctr_world_ptr;
 
 #if defined(__clang__)
 	/* Clang/LLVM. ---------------------------------------------- */

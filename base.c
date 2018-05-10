@@ -492,8 +492,18 @@ ctr_object *ctr_object_type(ctr_object * myself, ctr_argument * argumentList)
 ctr_object *ctr_object_to_string(ctr_object * myself,
 				 ctr_argument * argumentList)
 {
-	if (myself->lexical_name) return ctr_build_string(ctr_heap_allocate_cstring(myself->lexical_name), myself->lexical_name->value.svalue->vlen);
-	return ctr_build_string_from_cstring("[Object]");
+	char* name = "";
+	char* np;
+	if (myself->lexical_name) {
+		name = ctr_heap_allocate_cstring(myself->lexical_name);
+		np = ctr_heap_allocate(sizeof(char)*(myself->lexical_name->value.svalue->vlen+10));
+	}
+	else np = ctr_heap_allocate(sizeof(char)*10);
+	sprintf(np, "[%s:Object]", name);
+	if(name[0]) ctr_heap_free(name);
+	ctr_object* res = ctr_build_string_from_cstring(np);
+	ctr_heap_free(np);
+	return res;
 }
 
 /**
@@ -5955,8 +5965,18 @@ ctr_object *ctr_block_catch_type(ctr_object * myself, ctr_argument * argumentLis
 ctr_object *ctr_block_to_string(ctr_object * myself,
 				ctr_argument * argumentList)
 {
-	if (myself->lexical_name) return ctr_build_string(ctr_heap_allocate_cstring(myself->lexical_name), myself->lexical_name->value.svalue->vlen);
-	return ctr_build_string_from_cstring("[Block]");
+	char* name = "";
+	char* np;
+	if (myself->lexical_name) {
+		name = ctr_heap_allocate_cstring(myself->lexical_name);
+		np = ctr_heap_allocate(sizeof(char)*(myself->lexical_name->value.svalue->vlen+9));
+	}
+	else np = ctr_heap_allocate(sizeof(char)*9);
+	sprintf(np, "[%s:Block]", name);
+	if(name[0]) ctr_heap_free(name);
+	ctr_object* res = ctr_build_string_from_cstring(np);
+	ctr_heap_free(np);
+	return res;
 }
 
 int ctr_is_primitive(ctr_object * object)

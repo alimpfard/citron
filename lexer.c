@@ -151,9 +151,9 @@ void ctr_clex_pop_saved_state() {
 uint8_t ctr_clex_is_delimiter(char symbol)
 {
 
-	return (symbol == '('
+	return (symbol == '(' || symbol == '[' || symbol == ']'
 		|| symbol == ')' || symbol == ',' || symbol == '.'
-		|| symbol == ':' || symbol == ' ');
+		|| symbol == ':' || symbol == ' ' || symbol == '\t');
 }
 
 unsigned long ctr_clex_position() {

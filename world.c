@@ -192,6 +192,29 @@ char *ctr_internal_readf(char *file_name, uint64_t * total_size)
 /**
  * @internal
  *
+ * ReadFile
+ *
+ * Reads in an entire file.
+ */
+char *ctr_internal_readfp(FILE* fp, uint64_t * total_size)
+{
+	char *prg;
+	char ch;
+	ctr_size real_size=0, size=1024;
+	ctr_program_length = 0;
+	prg = ctr_heap_allocate(size * sizeof(char));
+	while ((ch = fgetc(fp)) != EOF) {
+		if (size-ctr_program_length < 128) { size*=2; prg=ctr_heap_reallocate(prg, size); }
+		real_size++;
+		prg[ctr_program_length++] = ch;
+	}
+	*total_size = (uint64_t) real_size;
+	return prg;
+}
+
+/**
+ * @internal
+ *
  * InternalObjectIsEqual
  *
  * Detemines whether two objects are identical.
@@ -480,38 +503,6 @@ ctr_object *ctr_internal_object_find_property_ignore(ctr_object * owner,
 	ctr_mapitem *head;
 	uint64_t hashKey = ctr_internal_index_hash(key);
 //	uint64_t ahashKey = ctr_internal_alt_hash(key);
-
-#ifdef CTR_DEBUG_HIDING
-	int did_skip = -1;
-	unsigned t = 0;
-	if (!ignore) {
-		ctr_object *hide_obj = NULL;
-		ctr_object *hide_key = ctr_build_string_from_cstring("hides");
-		hide_obj =
-		    ctr_internal_object_find_property_ignore(owner, hide_key, 0,
-							     1);
-		if (hide_obj != NULL
-		    && hide_obj->info.type == CTR_OBJECT_TYPE_OTARRAY) {
-			ctr_size length =
-			    (int)ctr_array_count(hide_obj, NULL)->value.nvalue;
-			int i = 0;
-			for (i = 0; i < length; i++) {
-				if ((t =
-				     ctr_internal_object_is_equal(key,
-								  *(hide_obj->
-								    value.
-								    avalue->
-								    elements +
-								    i)))) {
-					did_skip = i;
-					//printf("Found object at %d\n",did_skip);
-					break;
-				}
-			}
-		}
-	}
-#endif				//CTR_DEBUG_HIDING
-
 	if (is_method) {
 		if (!owner->methods || owner->methods->size == 0) {
 			return NULL;
@@ -527,18 +518,8 @@ ctr_object *ctr_internal_object_find_property_ignore(ctr_object * owner,
 			// return NULL;
 		head = owner->properties->head;
 	}
-#ifdef CTR_DEBUG_HIDING
-	int i = -1;
-#endif
 	while (head) {
-#ifdef CTR_DEBUG_HIDING
-		i += 1;
-#endif
-		if ((hashKey == head->hashKey)
-		    && ctr_internal_object_is_equal(head->key, key)) {
-#ifdef CTR_DEBUG_HIDING
-			if (ignore || i != did_skip)
-#endif				//CTR_DEBUG_HIDING
+		if ((hashKey == head->hashKey) && ctr_internal_object_is_equal(head->key, key)) {
 				return head->value;
 		}
 		head = head->next;
@@ -1288,10 +1269,33 @@ ctr_object *ctr_find_(ctr_object * key, int noerror)
 		    ctr_internal_object_find_property(context, key, 0);
 		i--;
 	}
+	if(!foundObject && (key==&CTR_CLEX_KW_ME)) return NULL;
 	if (foundObject)
 		return foundObject;
 	ctr_internal_plugin_find(key);
 	foundObject = ctr_internal_object_find_property(CtrStdWorld, key, 0);
+	if(!foundObject) {
+		ctr_object* ctx = ctr_find_(&CTR_CLEX_KW_ME, 1);
+		if(ctx) {
+			ctr_object* msg = ctr_internal_object_find_property(ctx, key, 1);
+			if(msg) {
+				switch(msg->info.type) {
+					case CTR_OBJECT_TYPE_OTNATFUNC:	foundObject = (msg->value.fvalue)(ctx, NULL); break;
+					case CTR_OBJECT_TYPE_OTBLOCK:	  foundObject = ctr_block_run(msg, NULL, ctx); break;
+				}
+			} else {
+				ctr_object* msg = ctr_internal_object_find_property(ctx, &CTR_CLEX_KW_RESPONDTO, 1);
+				if(msg) {
+					static ctr_argument argument = {NULL};
+					argument.object = key;
+					switch(msg->info.type) {
+						case CTR_OBJECT_TYPE_OTNATFUNC:	foundObject = (msg->value.fvalue)(ctx, &argument); break;
+						case CTR_OBJECT_TYPE_OTBLOCK:	  foundObject = ctr_block_run(msg, &argument, ctx); break;
+					}
+				}
+			}
+		}
+	}
 	if (foundObject == NULL) {
 		if (noerror)
 			return NULL;
@@ -1317,38 +1321,7 @@ ctr_object *ctr_find_(ctr_object * key, int noerror)
 
 ctr_object *ctr_find(ctr_object * key)
 {
-	int i = ctr_context_id;
-	ctr_object *foundObject = NULL;
-	if (CtrStdFlow)
-		return CtrStdNil;
-	while ((i > -1 && foundObject == NULL))
-		foundObject =
-		    ctr_internal_object_find_property(ctr_contexts[i--], key,
-						      0);
-
-	if (foundObject)
-		return foundObject;
-	ctr_internal_plugin_find(key);
-	foundObject = ctr_internal_object_find_property(CtrStdWorld, key, 0);
-	if (foundObject == NULL) {
-		char *key_name;
-		char *message;
-		char *full_message;
-		int message_size;
-		message = "Key not found: ";
-		message_size = ((strlen(message)) + key->value.svalue->vlen);
-		full_message = ctr_heap_allocate(message_size * sizeof(char));
-		key_name = ctr_heap_allocate_cstring(key);
-		memcpy(full_message, message, strlen(message));
-		memcpy(full_message + strlen(message), key_name,
-		       key->value.svalue->vlen);
-		CtrStdFlow = ctr_build_string(full_message, message_size);
-		CtrStdFlow->info.sticky = 1;
-		ctr_heap_free(full_message);
-		ctr_heap_free(key_name);
-		return CtrStdNil;
-	}
-	return foundObject;
+	return ctr_find_(key, 0);
 }
 
 /**
@@ -1398,7 +1371,7 @@ void ctr_set(ctr_object * key, ctr_object * object)
 	int i = ctr_context_id;
 	ctr_object *context;
 	ctr_object *foundObject = NULL;
-	if (ctr_contexts[ctr_context_id] == CtrStdWorld) {
+	if (ctr_contexts[ctr_context_id] == ctr_world_ptr) {
 		ctr_internal_object_set_property(ctr_contexts[ctr_context_id],
 						 key, object, 0);
 		return;
@@ -1504,9 +1477,23 @@ void ctr_initialize_world()
 	CTR_CLEX_US.value.svalue = &CTR_CLEX_US_SV;
   CTR_CLEX_US.interfaces = ctr_heap_allocate(sizeof(ctr_interfaces));
 	//----//
+	CTR_CLEX_KW_RESPONDTO_SV.value = "respondTo:";
+	CTR_CLEX_KW_RESPONDTO_SV.vlen = 10;
+	//----//
+	CTR_CLEX_KW_RESPONDTO.info.type = CTR_OBJECT_TYPE_OTSTRING;
+	CTR_CLEX_KW_RESPONDTO.info.mark = 0;
+	CTR_CLEX_KW_RESPONDTO.info.sticky = 1;
+	CTR_CLEX_KW_RESPONDTO.info.chainMode = 0;
+	CTR_CLEX_KW_RESPONDTO.info.remote = 0;
+	CTR_CLEX_KW_RESPONDTO.info.shared = 0;
+	CTR_CLEX_KW_RESPONDTO.info.raw = 0;
+	CTR_CLEX_KW_RESPONDTO.value.svalue = &CTR_CLEX_KW_RESPONDTO_SV;
+  CTR_CLEX_KW_RESPONDTO.interfaces = ctr_heap_allocate(sizeof(ctr_interfaces));
+	//----//
 	CtrStdWorld = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
 	CtrStdWorld->info.sticky = 1;
 	ctr_contexts[0] = CtrStdWorld;
+	ctr_world_ptr = CtrStdWorld;
 
 	ctr_instrumentor_funcs = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);	//register instrumentors to nil
 	// ctr_past_instrumentor_func = NULL;	//register instrumentors to nil
@@ -3161,6 +3148,10 @@ void ctr_initialize_world()
 				 ctr_build_string_from_cstring
 				 ("run:inContext:arguments:"),
 				 &ctr_reflect_run_for_object_in_ctx);
+	ctr_internal_create_func(CtrStdReflect,
+				 ctr_build_string_from_cstring
+				 ("run:inContextAsWorld:arguments:"),
+				 &ctr_reflect_run_for_object_in_ctx_as_world);
 	ctr_internal_create_func(CtrStdReflect,
 				 ctr_build_string_from_cstring
 				 ("runInNewContext:"),

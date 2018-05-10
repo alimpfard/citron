@@ -159,7 +159,7 @@ next:;
 typedef void *(*plugin_init_func) ();
 void *ctr_internal_plugin_find(ctr_object * key)
 {
-	ctr_object *modNameObject = ctr_internal_cast2string(key);
+	ctr_object *modNameObject = key->info.type == CTR_OBJECT_TYPE_OTSTRING ? key : ctr_internal_cast2string(key);
 	void *handle;
 	char pathNameMod[1024];
 	char *modName;

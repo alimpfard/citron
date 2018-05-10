@@ -39,7 +39,7 @@ Eval is Object new.
 Eval on: 'init' do: {
   my end is False.
   my color is 'resetColor'.
-  my prompt is '⠭⠕ '.
+  my prompt is '⠕ '.
   my args is Array new.
   my allowedColors is ('red blue magenta cyan yellow green resetColor' split: ' ') join: '|'.
   my evalQueue is Queue new.
@@ -64,6 +64,8 @@ Eval on: 'init' do: {
   my errd is False.
   my last_error is Nil.
   my inNewBlock is False.
+  my evaluationContext is Map new
+    on: 'toString' do: {^'[GlobalEvalContext]'.}.
   ^me.
 }.
 Eval on: 'handleException:' do: {:e
@@ -280,6 +282,7 @@ Eval on: 'metaCompletion:' do: {:m
 Eval on: 'evaluate:' do: { :str
   my errd is False.
   var eval_result_x is Nil.
+  var evalContext is my evaluationContext.
   var f is (str at: 0, = ':')
     either:
       ({ ^eval_result_x is Eval doMeta: (str skip: 1). } catch: {:e Eval handleException: e.})
@@ -287,7 +290,7 @@ Eval on: 'evaluate:' do: { :str
       ({
           ^(str startsWith: 'import') not
             either: ({
-                ^Reflect runAtGlobal: {:str ^str eval.} arguments: str.
+                ^Reflect run: {:str ^str eval.} inContextAsWorld: evalContext arguments: [str].
                 } catch: {:e Eval handleException: e. ^Nil.}
             ) or: ({
                 ^str eval.
@@ -356,7 +359,7 @@ Eval on: 'flatten:' do: {:list
 }.
 
 Eval on: 'allTheNames' do: {
-  ^(Eval Commands keys fmap: {:i ^':' + i.}) + ['var', 'my', 'is'] + (Eval flatten: Reflect getContext).
+  ^(Eval Commands keys fmap: {:i ^':' + i.}) + ['var', 'my', 'is'] + (Eval flatten: my evaluationContext keys) + (Eval flatten: Reflect getContext).
 }.
 
 Eval on: 'allTheNames:' do: {:obj

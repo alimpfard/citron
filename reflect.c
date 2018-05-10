@@ -1483,9 +1483,11 @@ ctr_object *ctr_reflect_run_for_object_in_ctx(ctr_object * myself,
 	    argumentList->next->next->object, *result = NULL;
 	ctr_argument *argList = ctr_heap_allocate(sizeof(ctr_argument));
 	(void)ctr_array_to_argument_list(arguments, argList);
+	ctr_switch_context(ctx);
 	if(block->info.type == CTR_OBJECT_TYPE_OTNATFUNC) {
 		ctr_object* result = block->value.fvalue(ctx, argList);
 		ctr_free_argumentList(argList);
+		ctr_close_context();
 		return result;
 	}
 	ctr_tnode *node = block->value.block;
@@ -1496,7 +1498,6 @@ ctr_object *ctr_reflect_run_for_object_in_ctx(ctr_object * myself,
 	ctr_tnode *parameter;
 	ctr_object *a;
 	int was_vararg;
-	ctr_switch_context(ctx);
 	if (likely(parameterList && parameterList->node)) {
 		parameter = parameterList->node;
 		while (argList) {
@@ -1611,6 +1612,21 @@ ctr_assign_value_to_local(ctr_build_string(parameterList->node->value+was_vararg
 	}
 	return result;
 }
+
+/**
+ * [Reflect] run: [Block] inContextAsWorld: [Map] arguments: [Array]
+ */
+ ctr_object *ctr_reflect_run_for_object_in_ctx_as_world(ctr_object * myself,
+ 					      ctr_argument * argumentList)
+ {
+	 ctr_object *world = argumentList->next->object, *old_world = ctr_world_ptr;
+	 ctr_world_ptr = world;
+
+	 ctr_object* res = ctr_reflect_run_for_object_in_ctx(myself, argumentList);
+
+	 ctr_world_ptr = old_world;
+	 return res;
+ }
 
 /**
  * [Reflect] runHere: [Block] forObject: [o:Object] arguments: [Array]

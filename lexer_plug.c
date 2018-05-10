@@ -143,13 +143,13 @@ void ctr_lex_pop_saved_state() {
  *
  * @return uint8_t
  */
-static uint8_t ctr_lex_is_delimiter(char symbol)
-{
+ static uint8_t ctr_lex_is_delimiter(char symbol)
+ {
 
-	return (symbol == '('
-		|| symbol == ')' || symbol == ',' || symbol == '.'
-		|| symbol == ':' || symbol == ' ');
-}
+ 	return (symbol == '(' || symbol == '[' || symbol == ']'
+ 		|| symbol == ')' || symbol == ',' || symbol == '.'
+ 		|| symbol == ':' || symbol == ' ' || symbol == '\t');
+ }
 
 unsigned long ctr_lex_position() {
 		return ctr_code - ctr_code_st;

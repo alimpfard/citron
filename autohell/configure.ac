@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([Citron], [0.0.7], [devanothertest@gmail.com])
-AM_INIT_AUTOMAKE(Citron, 0.0.7)
+AC_INIT([Citron], [0.0.8], [devanothertest@gmail.com])
+AM_INIT_AUTOMAKE(Citron, 0.0.8)
 AC_OUTPUT(Makefile src/Makefile doc/Makefile examples/Makefile man/Makefile scripts/Makefile)
 AC_CONFIG_SRCDIR([src/base.c])
 AC_CONFIG_HEADERS([config.h])

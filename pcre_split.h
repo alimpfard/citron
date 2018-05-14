@@ -87,7 +87,7 @@ ctr_object *pcre_split(char *pattern, char *string) {
 	  Check if compilation was successful
 	*/
 	if(re == NULL) {
-    char error[1024];
+    char error[1079];
     size_t len = sprintf(error, "Error: PCRE compilation failed at offset %d: %s\n", erroffset, error);
 		CtrStdFlow = ctr_build_string(error, len);
 		return NULL;

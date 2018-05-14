@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <dlfcn.h>
 #include <errno.h>
+#include <stdarg.h>
 #include "citron.h"
 
 char *np;
@@ -213,4 +214,64 @@ void *ctr_internal_plugin_find_base(char const * modName)
 		return NULL;
 	(void)init_plugin();
 	return handle;
+}
+
+ctr_object* ctr_format_str(const char* str_format, ...) {
+	va_list ap;
+	char psbf[1024];
+	char* ps = ctr_heap_allocate(sizeof(char)*1024);
+	int len=0, reserved=1024;
+	va_start(ap, str_format);
+	int i=0, interpret = 0;
+	for (char c=str_format[i];(c=str_format[++i])!='\0';) {
+		if(reserved-len < 32)
+			ps = ctr_heap_reallocate(ps, reserved*=2);
+		if(interpret) {
+			interpret=0;
+			switch(c) {
+				case '%': //literal percent sign
+					ps[len++] = '%';
+					break;
+				case 's': {//c string
+					const char* s = va_arg(ap, const char*);
+					int slen = strlen(s);
+					if(reserved-len < 32+slen) ps = ctr_heap_reallocate(ps, reserved*=2);
+					strncpy(ps+len, s, slen);
+					len += slen;
+					break;
+				}
+				case 'd': {//c int
+					int d = va_arg(ap, int);
+					int slen = sprintf(psbf, "%d", d);
+					if(reserved-len < 32+slen) ps = ctr_heap_reallocate(ps, reserved*=2);
+					strncpy(ps+len, psbf, slen);
+					len += slen;
+					break;
+				}
+				case 'S': {//ctr string
+					ctr_object* ctrs = va_arg(ap, ctr_object*);
+					int slen = ctrs->value.svalue->vlen;
+					if(reserved-len < 32+slen) ps = ctr_heap_reallocate(ps, reserved*=2);
+					strncpy(ps+len, ctrs->value.svalue->value, ctrs->value.svalue->vlen);
+					len += slen;
+					break;
+				}
+				case 'I': {//ctr number
+					ctr_object* ctrn = va_arg(ap, ctr_object*);
+					int slen = sprintf(psbf, "%f", ctrn->value.nvalue);
+					if(reserved-len < 32+slen) ps = ctr_heap_reallocate(ps, reserved*=2);
+					strncpy(ps+len, psbf, slen);
+					len += slen;
+					break;
+				}
+				default: break;
+			}
+			continue;
+		}
+		if (c == '%') { interpret = 1; continue; }
+		ps[len++] = c;
+	}
+	ctr_object* ss = ctr_build_string(ps, len);
+	ctr_heap_free(ps);
+	return ss;
 }

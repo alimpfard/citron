@@ -767,7 +767,7 @@ ctr_object *ctr_object_on_do(ctr_object * myself, ctr_argument * argumentList)
 
 ctr_object *ctr_sock_error(int fd, int want2close)
 {
-	CtrStdFlow = ctr_build_string_from_cstring(strerror(errno));
+	CtrStdFlow = ctr_format_str("Socket error: %s", strerror(errno));
 	if (want2close) {
 		shutdown(fd, SHUT_RDWR);
 		close(fd);
@@ -837,8 +837,8 @@ ctr_object *ctr_object_send2remote(ctr_object * myself,
 		server = gethostbyname2(ip, AF_INET);
 	if (server == NULL) {
 		CtrStdFlow =
-		    ctr_build_string_from_cstring
-		    ("ERROR : No such host found.");
+		    ctr_format_str
+		    ("ERROR : No such host %s found.", ip);
 		return CtrStdFlow;
 	}
 	memset((char *)&serv_addr, 0, sizeof(serv_addr));
@@ -1456,7 +1456,7 @@ ctr_object *ctr_build_number_from_string(char *str, ctr_size length)
 		numberObject->value.nvalue = strtod(numCStr, &endptr);
 		if (endptr < numCStr+stringNumberLength) {
 			ctr_heap_free(numCStr);
-			CtrStdFlow = ctr_build_string_from_cstring("cannot build number, extranous characters in string");
+			CtrStdFlow = ctr_build_string_from_cstring("cannot build number, extra characters in string");
 			return CtrStdNil;
 		}
 	}
@@ -2673,8 +2673,8 @@ ctr_object *ctr_string_format(ctr_object * myself, ctr_argument * argumentList)
 		return myself;	//if no specifier, just spit the format string back out
 	if (specifier_count > specified_count) {
 		CtrStdFlow =
-		    ctr_build_string_from_cstring
-		    ("Format string requires more objects than was passed.");
+		    ctr_format_str
+		    ("Format string requires more objects than was passed (%d specified, %d required).", specified_count, specifier_count);
 		return myself;
 	}
 	int len = myself->value.svalue->vlen;
@@ -2698,19 +2698,14 @@ ctr_object *ctr_string_format(ctr_object * myself, ctr_argument * argumentList)
 		if (c == '%') {
 			if (i > len - 2) {
  error_out:			;
-				char errf[1024];
-				sprintf(errf,
-					"Malformed format string at index %d(%c)",
-					i, c);
 				CtrStdFlow =
-				    ctr_build_string_from_cstring(errf);
+				    ctr_format_str("Malformed format string at index %d(%c)",
+						i, c);
 				return myself;
  error_out_wrong_args:		;
-				sprintf(errf,
-					"Incorrect format args for spec %d(%c)",
-					specnum, c);
 				CtrStdFlow =
-				    ctr_build_string_from_cstring(errf);
+				    ctr_format_str("Incorrect format args for spec %d(%c)",
+							specnum, c);
 				return myself;
 			}
 			if (fmtct) {
@@ -4929,8 +4924,9 @@ ctr_object *ctr_build_listcomp(ctr_tnode * node)
 			generator = generator->next;
 		}
 	}
-	if(ctr_array_count(bindings, NULL)->value.nvalue != ctr_array_count(free_refs, NULL)->value.nvalue) {
-		CtrStdFlow = ctr_build_string_from_cstring("Number of bindings do not match the number of symbols");
+	size_t ps,fs;
+	if((ps=ctr_array_count(bindings, NULL)->value.nvalue) != (fs=ctr_array_count(free_refs, NULL)->value.nvalue)) {
+		CtrStdFlow = ctr_format_str("Number of bindings do not match the number of symbols (%d vs %d)", ps, fs);
 		return CtrStdNil;
 	}
 	//(pred*) -> [{^pred}*]

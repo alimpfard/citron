@@ -58,7 +58,8 @@ ctr_object *FIBER_YIELDED = NULL;	//to pass values around
   */
 typedef struct {
 	ucontext_t context;	// Stores the current context
-	int active;		// A boolean flag, 0 if it is not active, 1 if it is
+	ctr_object* ctr_context;
+	int active: 1;		// A boolean flag, 0 if it is not active, 1 if it is
 } fiber;
 
  // The fiber "queue"
@@ -104,10 +105,13 @@ void fiberYield()
 
 		// Saved the state to call the next fiber
 		currentFiber = (currentFiber + 1) % numFibers;
+		ctr_object* ctx = ctr_contexts[ctr_context_id];
 
 		LF_DEBUG_OUT("Switching to fiber %d.", currentFiber);
 		inFiber = 1;
+		ctr_switch_context(fiberList[currentFiber].ctr_context);
 		swapcontext(&mainContext, &fiberList[currentFiber].context);
+		ctr_switch_context(ctx);
 		inFiber = 0;
 		LF_DEBUG_OUT("Fiber %d switched to main context.",
 			     currentFiber);
@@ -136,7 +140,7 @@ void fiberYield()
 static void fiberStart(ctr_object * block)
 {
 	fiberList[currentFiber].active = 1;
-	ctr_block_run(block, NULL, block);
+	ctr_block_run_here(block, NULL, block);
 	fiberList[currentFiber].active = 0;
 
 	// Yield control, but because active == 0, this will free the fiber
@@ -156,6 +160,8 @@ int spawnFiber(ctr_object * block)
 	fiberList[numFibers].context.uc_stack.ss_sp = malloc(FIBER_STACK);
 	fiberList[numFibers].context.uc_stack.ss_size = FIBER_STACK;
 	fiberList[numFibers].context.uc_stack.ss_flags = 0;
+
+	fiberList[numFibers].ctr_context = ctr_internal_create_standalone_object(CTR_OBJECT_TYPE_OTOBJECT);
 
 	if (fiberList[numFibers].context.uc_stack.ss_sp == 0) {
 		LF_DEBUG_OUT("Error: Could not allocate stack.", 0);

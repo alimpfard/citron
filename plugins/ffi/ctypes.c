@@ -630,6 +630,36 @@ ctr_object* ctr_ctypes_packed_size(ctr_object* myself, ctr_argument* argumentLis
   return ctr_build_number_from_float(count*esize);
 }
 
+ctr_object* ctr_ctypes_packed_type(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_ctypes_cont_array_t* ptr = myself->value.rvalue->ptr;
+  if(!ptr) {
+    CtrStdFlow = ctr_format_str("Uninitialized PackedArray, has not been assigned a type");
+    return ctr_build_number_from_float(-1);
+  }
+  ffi_type* etype = ptr->etype;
+
+  if(etype == &ffi_type_uint8) return ctr_build_number_from_float(0);
+  else if(etype == &ffi_type_sint8) return ctr_build_number_from_float(1);
+  else if(etype == &ffi_type_uint16) return ctr_build_number_from_float(2);
+  else if(etype == &ffi_type_sint16) return ctr_build_number_from_float(3);
+  else if(etype == &ffi_type_uint32) return ctr_build_number_from_float(4);
+  else if(etype == &ffi_type_sint32) return ctr_build_number_from_float(5);
+  else if(etype == &ffi_type_uint64) return ctr_build_number_from_float(6);
+  else if(etype == &ffi_type_sint64) return ctr_build_number_from_float(7);
+  else if(etype == &ffi_type_uchar) return ctr_build_number_from_float(8);
+  else if(etype == &ffi_type_schar) return ctr_build_number_from_float(9);
+  else if(etype == &ffi_type_ushort) return ctr_build_number_from_float(10);
+  else if(etype == &ffi_type_sshort) return ctr_build_number_from_float(11);
+  else if(etype == &ffi_type_uint) return ctr_build_number_from_float(12);
+  else if(etype == &ffi_type_sint) return ctr_build_number_from_float(13);
+  else if(etype == &ffi_type_ulong) return ctr_build_number_from_float(14);
+  else if(etype == &ffi_type_slong) return ctr_build_number_from_float(15);
+  else if(etype == &ffi_type_float) return ctr_build_number_from_float(16);
+  else if(etype == &ffi_type_double) return ctr_build_number_from_float(17);
+  else if(etype == &ffi_type_longdouble) return ctr_build_number_from_float(18);
+  return ctr_build_number_from_float(-1);
+}
+
 ssize_t ctr_ctype_get_c_size(ctr_object* obj) {
   ctr_object* meta = ctr_ctypes_get_first_meta(obj, CtrStdCType);
   if (meta->info.type == CTR_OBJECT_TYPE_OTSTRING) return sizeof(char)*(meta->value.svalue->vlen+1);
@@ -1731,6 +1761,7 @@ void begin() {
   ctr_internal_create_func(CtrStdCType_cont_pointer, ctr_build_string_from_cstring("at:"), &ctr_ctypes_packed_get);
   ctr_internal_create_func(CtrStdCType_cont_pointer, ctr_build_string_from_cstring("put:at:"), &ctr_ctypes_packed_set);
   ctr_internal_create_func(CtrStdCType_cont_pointer, ctr_build_string_from_cstring("count"), &ctr_ctypes_packed_count);
+  ctr_internal_create_func(CtrStdCType_cont_pointer, ctr_build_string_from_cstring("_type"), &ctr_ctypes_packed_type);
   ctr_internal_create_func(CtrStdCType_cont_pointer, ctr_build_string_from_cstring("getSize"), &ctr_ctypes_packed_size);
 
   ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring("allocateBytes:"), &ctr_ctype_ffi_malloc);

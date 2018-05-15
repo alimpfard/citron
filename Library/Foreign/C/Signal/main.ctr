@@ -65,11 +65,12 @@ Signal on: 'new' do: {
   }, _init.
 }.
 Signal on: 'spec:' do: {:name
-  var spec is my sigmap at: name.
+  var spec is my sigmap at: name upper.
   spec isNil ifTrue: { thisBlock error: 'Unknown signal $$name'. }.
   ^spec head.
 }.
 Signal on: 'describe:' do: {:name
+  name is name upper.
   var spec is my sigmap at: name.
   spec isNil ifTrue: { thisBlock error: 'Unknown signal $$name'. }.
   ^'signal %s, values: [%L] (%s)' % [name, (spec head), (spec last)].
@@ -87,7 +88,7 @@ Signal on: 'handle:with:' do: {:name:handler
 }.
 Signal on: 'kill:PID:' do: {:signum:pid
   var self is me.
-  (signum type !=: Number type) ifTrue: { signum is self spec: signum, min. }.
+  (Reflect isObject: signum linkedTo: Number) ifFalse: { signum is self spec: signum, min. }.
   var res is my kill_ty call: my kill withArgs: [pid, signum].
   (res = 0) ifFalse: { thisBlock error: g_strerror run. }.
   ^res.

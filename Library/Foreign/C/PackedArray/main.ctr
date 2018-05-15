@@ -19,52 +19,37 @@ var TYPEMAP is Map new
   put: 16 at: 'float',
   put: 17 at: 'double',
   put: 18 at: 'longdouble'.
-var REVERSETYPEMAP is TYPEMAP flip.
-
 var PackedArray is Object cnew: {
-  type => -1.
-  count => 0.
   array => Nil.
 }.
 PackedArray on: 'sameFor:' do: {:struct
   ^me cnew: {
     array => struct.
-    count => struct count.
-    type  => struct _type.
   }.
 }.
 PackedArray on: 'initWithType:count:' do: {:t:len
   t is (const TYPEMAP at: t) or: t.
   my array is CTypes packed: t count: len.
-  my type is t.
-  my count is len.
 }.
 PackedArray on: 'array' do: {\ my array }.
 PackedArray on: 'at:' do: {:idx ^my array at: idx. }.
 PackedArray on: 'put:at:' do: {:v:idx my array put: v at: idx. }.
-PackedArray on: 'count' do: { ^my count. }.
-PackedArray on: '_type' do: { ^my type. }.
-PackedArray on: 'type' do: { ^'PackedArray(%s[%d])' % [me rectifyType, my count].}.
-PackedArray on: 'rectifyType' do: { ^const REVERSETYPEMAP at: my type.  }.
+PackedArray on: 'count' do: {\ my array count }.
 PackedArray on: 'copy' do: {
   var self is me.
   ^me cnew: {
     array => self array new.
-    count => self count.
-    type  => self _type.
   }.
 }.
 PackedArray on: 'each:' do: {:blk
-  var self is me.
   my count times: {:i
     Pen writeln: i.
-    blk applyTo: i and: (self at: i) and: self.
+    blk applyTo: i and: (me at: i) and: me.
   }.
 }.
-PackedArray on: 'each_v:' do: {:blk
-  var self is me.
+PackedArray on: 'each_v:' do: {
   my count times: {:i
-    blk applyTo: (self at: i).
+    blk applyTo: (me at: i).
   }.
 }.
 PackedArray on: 'fmap:' do: {:blk
@@ -74,10 +59,5 @@ PackedArray on: 'fmap:' do: {:blk
   }.
   ^n.
 }.
-PackedArray on: 'toString' do: {
-  var s is me type + '['.
-  me each_v: {:v s append: v. s +=: ', '.}.
-  me count > 0 ifTrue: { s is s from: 0 to: s length - 2. }.
-  ^s append: ']'.
-}.
+PackedArray on: 'toString' do: {\ 'PackedArray' }.
 import export: PackedArray as: 'PackedArray'.

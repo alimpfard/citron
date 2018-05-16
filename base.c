@@ -4895,7 +4895,8 @@ ctr_object *ctr_array_internal_zip(ctr_object * myself, ctr_argument * argumentL
 			continue;
 		}
 		el = *(myself->value.avalue->elements + i);
-		prod = ctr_send_message_variadic(prod, "*", 1, 1, el);
+		argumentList->object = el;
+		prod = ctr_send_message(prod, "*", 1, argumentList);
 	}
 	if(!has_argl) ctr_heap_free(argumentList);
 	return (prod);

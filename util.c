@@ -271,6 +271,7 @@ ctr_object* ctr_format_str(const char* str_format, ...) {
 		if (c == '%') { interpret = 1; continue; }
 		ps[len++] = c;
 	}
+	va_end(ap);
 	ctr_object* ss = ctr_build_string(ps, len);
 	ctr_heap_free(ps);
 	return ss;

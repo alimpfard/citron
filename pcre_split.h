@@ -31,10 +31,10 @@ ssize_t pcre_indexof(char* pattern, char* string) {
 	int erroffset;
 	re = pcre_compile(pattern, 0, &error, &erroffset, NULL);
 	if (re == NULL) {
-		char error[1024];
-		size_t len = sprintf(error, "Error: PCRE compilation failed at offset %d: %s\n", erroffset, error);
-		CtrStdFlow = ctr_build_string(error, len);
-		return NULL;
+		char serror[1024];
+		size_t len = sprintf(serror, "Error: PCRE compilation failed at offset %d: %s\n", erroffset, error);
+		CtrStdFlow = ctr_build_string(serror, len);
+		return 0;
 	}
 	ssize_t offset = pcre_indexof_internal(re, string);
 	pcre_free(re);
@@ -47,10 +47,10 @@ ssize_t pcre_last_indexof(char* pattern, char* string) {
 	int erroffset;
 	re = pcre_compile(pattern, 0, &error, &erroffset, NULL);
 	if (re == NULL) {
-		char error[1024];
-		size_t len = sprintf(error, "Error: PCRE compilation failed at offset %d: %s\n", erroffset, error);
-		CtrStdFlow = ctr_build_string(error, len);
-		return NULL;
+		char serror[1024];
+		size_t len = sprintf(serror, "Error: PCRE compilation failed at offset %d: %s\n", erroffset, error);
+		CtrStdFlow = ctr_build_string(serror, len);
+		return 0;
 	}
 	ssize_t offset = pcre_indexof_internal(re, string);
 	size_t position = offset;
@@ -87,9 +87,9 @@ ctr_object *pcre_split(char *pattern, char *string) {
 	  Check if compilation was successful
 	*/
 	if(re == NULL) {
-    char error[1079];
-    size_t len = sprintf(error, "Error: PCRE compilation failed at offset %d: %s\n", erroffset, error);
-		CtrStdFlow = ctr_build_string(error, len);
+    char serror[1079];
+    size_t len = sprintf(serror, "Error: PCRE compilation failed at offset %d: %s\n", erroffset, error);
+		CtrStdFlow = ctr_build_string(serror, len);
 		return NULL;
 	}
 

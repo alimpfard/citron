@@ -1,7 +1,0 @@
-[main_expr, syms, gens] is [{^[f,g].}, ['f', 'g'], [[1,2,3], [2, 3]]].
-
-lc is gens zip fmap: {:gen
-    ^\:blk syms letEqual: gen in: blk.
-}.
-
-Pen writeln: (lc fmap: \:a a applyTo: main_expr).

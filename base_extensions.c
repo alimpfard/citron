@@ -609,6 +609,7 @@ char *ctr_ast_pure_stringify(ctr_tnode *node) {
         ctr_heap_free(rr);
         partnodes = partnodes->next;
       }
+      free(parts);
       ctr_heap_free(rm);
       int len = strlen(buf);
       ret = ctr_heap_allocate(sizeof(char) * len);
@@ -767,7 +768,7 @@ char *ctr_ast_pure_stringify(ctr_tnode *node) {
       memcpy(ret, buf, len);
       break;
     }
-    }
+  }
   (void)printf("[%p] %s :: %s\n", node, ctr_ast_tystr(node), ret);
   return ret;
 }

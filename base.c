@@ -2282,8 +2282,9 @@ char *bitrep(unsigned int v, int s)
 ctr_object *ctr_number_uint_binrep(ctr_object * myself,
 				   ctr_argument * argumentList)
 {
-	int bsize =
-	    ctr_internal_cast2number(argumentList->object)->value.nvalue;
+	int bsize = argumentList
+		? ctr_internal_cast2number(argumentList->object)->value.nvalue
+		: sizeof(double)*8;
 	unsigned int value = ctr_internal_cast2number(myself)->value.nvalue;
 	char *buf = bitrep(value, bsize);
 	ctr_object *str = ctr_build_string(buf, bsize);

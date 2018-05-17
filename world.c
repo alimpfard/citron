@@ -1429,7 +1429,7 @@ void ctr_initialize_world()
 {
 	if(ctr_world_initialized) return;
 	ctr_world_initialized = 1;
-	// register_signal_handlers ();
+	register_signal_handlers ();
 	ctr_instrument = 0;
 	int i;
 	srand((unsigned)time(NULL));

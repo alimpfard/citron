@@ -154,7 +154,7 @@ Highlight on: 'highlight:' do: {:code
                 # token put: (token @ 2) at: 2.
                 token put: (token @ 1 + ':') at: 1.
               }.
-              color is (Colors bold) + (Colors bright) + (Colors magenta).
+              color is (Colors bold) + (Colors bright) + (token @ 0 = '\\' either: Colors green or: Colors magenta).
               after_color is (Colors bold_off) + (Colors bright_off).
               ^token @ 1.
             } or: {

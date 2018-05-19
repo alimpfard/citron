@@ -1150,6 +1150,10 @@ void ctr_int_handler(int isig)
 	} else {
 		switch (isig) {
 		case SIGINT:
+			// if (CtrStdFlow) {
+				CtrStdFlow = ctr_format_str("Interrupt");
+			// }
+				break;
 		case SIGTERM:
 		case SIGSEGV:
 		case SIGBUS:

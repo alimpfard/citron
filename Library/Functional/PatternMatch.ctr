@@ -1,17 +1,31 @@
-Pen red writeln: 'WARNING: Pattern Match will NOT do true pattern matching, it will only check if any given pattern is constructible by the object', resetColor.
-Object on: 'match:' do: {:blkmap
-  var self is me.
+Object on: 'mapmatch:' do: {:self:blkmap
   var ret is Nil.
   var done is False.
-  blkmap each_v: {:kv
-    var k is kv @ 0.
-    var v is kv @ 1.
-    Reflect isObject: self constructibleBy: k, ifTrue: {
-      ret is { self unpack: k. ^Reflect runHere: v forObject: thisBlock arguments: [self]. } run.
+  blkmap each: ({:k:v
+    ret is {
+      self unpack: k.
+      ^Reflect runHere: v forObject: thisBlock arguments: [].
+    } run.
       done is True.
       done break.
-    }.
-  }.
+  } catch: {}).
   done ifFalse: { thisBlock error: 'non-exhaustive Pattern match'. }.
   ^ret.
+}.
+
+var Matcher is Object new
+  on: 'of:' do: {:obj
+    ^me cnew: {
+      matchee => obj.
+      map => Map new.
+    }.
+  },
+  on: 'match:do:' do: {:pat:blk
+    my map put: blk at: pat.
+  },
+  on: 'match' do: {
+    ^my matchee mapmatch: my map.
+  }.
+Object on: 'match:do:' do: {:self:pat:blk
+  ^const Matcher of: self, match: pat do: blk.
 }.

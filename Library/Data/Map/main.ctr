@@ -13,11 +13,9 @@ Map on: 'clear' do: {
   me each: {:k me deleteAt: k. }.
 }.
 
-Map on: 'respondTo:' do: {:msg
-  var self is me.
+Map on: 'respondTo:' do: {:self:msg
   ^(msg startsWith: '@') either: { ^self at: (msg skip: 1). } or: { ^self `respondTo: msg. }.
 }.
-Map on: 'respondTo:and:' do: {:msg:val
-  var self is me.
+Map on: 'respondTo:and:' do: {:self:msg:val
   ^(msg startsWith: '@') either: { ^self put: val at: (msg from: 1 to: msg length - 1). } or: { ^self `respondTo: msg and: val. }.
 }.

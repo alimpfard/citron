@@ -135,9 +135,8 @@ Colors on: 'effect:' do: {:effect
   ^ANSI_EFFECTS at: effect.
 }.
 
-Colors on: 'simple:background:' do: {:name:bg
+Colors on: 'simple:background:' do: {:self:name:bg
   name is name toSymbol.
-  var self is me.
   ^(ANSI_EFFECTS at: name) isNil not
     either: {
       # Pen writeln: ANSI_EFFECTS @ name.

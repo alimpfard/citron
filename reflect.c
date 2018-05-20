@@ -1241,37 +1241,38 @@ int ctr_reflect_check_bind_valid(ctr_object * from, ctr_object * to, int err_)
 	argumentList->object = from;
 	ctr_object *from_type =
 	    ctr_reflect_describe_type(CtrStdReflect, argumentList);
-	if (err_ && !
-	    (ctr_internal_object_is_constructible_
-	     (from_type, to_type, to->info.raw))) {
-		argumentList->object = from_type;
-		 ctr_console_writeln(CtrStdConsole, argumentList);
-		err =
-		    ctr_build_string_from_cstring
-		    ("Cannot bind object of type ");
-		argumentList->object = from;
-		from_type =
-		    ctr_reflect_describe_type_pretty(CtrStdReflect,
-						     argumentList);
-		argumentList->object = ctr_internal_cast2string(from_type);
-		ctr_string_append(err, argumentList);
-		argumentList->object =
-		    ctr_build_string_from_cstring(" to object of type ");
-		ctr_string_append(err, argumentList);
-		argumentList->object = ctr_build_string_from_cstring("String");
-		argumentList->next = ctr_heap_allocate(sizeof(ctr_argument));
-		argumentList->next->object =
-		    ctr_build_string_from_cstring("Binding");
+	if (!
+	    (ctr_internal_object_is_constructible_ (from_type, to_type, to->info.raw))) {
+		if(err_) {
+			argumentList->object = from_type;
+			 ctr_console_writeln(CtrStdConsole, argumentList);
+			err =
+			    ctr_build_string_from_cstring
+			    ("Cannot bind object of type ");
+			argumentList->object = from;
+			from_type =
+			    ctr_reflect_describe_type_pretty(CtrStdReflect,
+							     argumentList);
+			argumentList->object = ctr_internal_cast2string(from_type);
+			ctr_string_append(err, argumentList);
+			argumentList->object =
+			    ctr_build_string_from_cstring(" to object of type ");
+			ctr_string_append(err, argumentList);
+			argumentList->object = ctr_build_string_from_cstring("String");
+			argumentList->next = ctr_heap_allocate(sizeof(ctr_argument));
+			argumentList->next->object =
+			    ctr_build_string_from_cstring("Binding");
 
-		argumentList->object =
-		    ctr_string_replace_with(ctr_internal_cast2string(to_type),
-					    argumentList);
-		ctr_heap_free(argumentList->next);
-		ctr_string_append(err, argumentList);
-		argumentList->object = ctr_build_string_from_cstring(".");
-		ctr_string_append(err, argumentList);
-		ctr_heap_free(argumentList);
-		CtrStdFlow = err;
+			argumentList->object =
+			    ctr_string_replace_with(ctr_internal_cast2string(to_type),
+						    argumentList);
+			ctr_heap_free(argumentList->next);
+			ctr_string_append(err, argumentList);
+			argumentList->object = ctr_build_string_from_cstring(".");
+			ctr_string_append(err, argumentList);
+			ctr_heap_free(argumentList);
+			CtrStdFlow = err;
+		}
 		return 0;
 	}
 	ctr_heap_free(argumentList);

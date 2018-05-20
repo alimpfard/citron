@@ -9,8 +9,7 @@ Array on: 'groupBy:' do: {:fn
   ^rt.
 }.
 
-Array on: 'nubBy:' do: {:fn
-  var self is me.
+Array on: 'nubBy:' do: {:self:fn
   ^me count = 0
     either: me copy
     or: {
@@ -26,8 +25,7 @@ Array on: 'nub' do: {
   ^me nubBy: \:x:y x = y.
 }.
 
-Array on: 'delete:by:' do: {:x:eq
-  var self is me.
+Array on: 'delete:by:' do: {:self:x:eq
   ^self count = 0
     either: self copy
     or: {
@@ -41,8 +39,7 @@ Array on: 'delete:' do: {:x
   ^me delete: x by: \:x x = x.
 }.
 
-Array on: 'difference:' do: {:ys
-  var self is me.
+Array on: 'difference:' do: {:self:ys
   ^ys foldl: (\:x:y x delete: y) accumulator: me.
 }.
 

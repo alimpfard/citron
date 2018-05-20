@@ -35,8 +35,7 @@ Ratio
   on: 'negate' do: {
     ^const Ratio num: my numerator negate de: my denominator.
   },
-  on: '+' do: {:other
-    var self is me.
+  on: '+' do: {:self:other
     ^(other type) = (me type)
       either: {
           ^const Ratio cnew: {
@@ -51,8 +50,7 @@ Ratio
   on: '-' do: {:other
     ^me + other negate.
   },
-  on: '*' do: {:other
-    var self is me.
+  on: '*' do: {:self:other
     var rat is const Ratio.
     ^(other type) = (me type)
       either: {
@@ -62,8 +60,7 @@ Ratio
         ^rat num: other * self numerator de: self denominator.
       }.
   },
-  on: '/' do: {:other
-    var self is me.
+  on: '/' do: {:self:other
     var rat is const Ratio.
     ^(other type) = (me type)
       either: {

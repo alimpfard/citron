@@ -3,19 +3,16 @@ parser on: 'of:' do: {:rule
   my func is rule.
 }.
 #parse sequence, return lhs
-parser on: '<' do: {:other
-  var self is me.
+parser on: '<' do: {:self:other
   ^const parser new of: {:arg var rhs is self parse: arg. var lhs is other parse: rhs @ 0. ^lhs.}.
 }.
 #parse sequence, return rhs
-parser on: '>' do: {:other
-  var self is me.
+parser on: '>' do: {:self:other
   ^const parser new of: {:arg var rhs is self parse: arg. var lhs is other parse: rhs @ 0. ^rhs.}.
 }.
 
 #parse union
-parser on: '|' do: {:other
-  var self is me.
+parser on: '|' do: {:self:other
   ^const parser new of: {:arg
     var rhs is Nil.
     var lhs is Nil.

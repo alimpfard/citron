@@ -10,8 +10,7 @@ var Either is Monad new
       my value is p.
     }.
   },
-  on: 'unpack:' do: {:to
-    var self is me.
+  on: 'unpack:' do: {:self:to
     ^((me type) = (to type))
       either: {^{
         ^const self unwrap unpack: (const to unwrap).
@@ -20,8 +19,7 @@ var Either is Monad new
           thisBlock error: ('%s cannot be constructed by %s' % [(Reflect strTypeOf: to), (Reflect strTypeOf: const self)]).
       }.
   },
-  on: 'equals:' do: {:other
-    var self is me.
+  on: 'equals:' do: {:self:other
     ^(me type) = (var tt is other type)
       either: {
         ^(self unwrap) = (other unwrap).
@@ -31,10 +29,9 @@ var Either is Monad new
   on: 'isLeft' do: {
     ^(me type) = (Left type).
   },
-  on: 'bind:' do: {:fn
+  on: 'bind:' do: {:self:fn
     var thisContext is me.
     var value is my value.
-    var self is me.
     var val is fn applyTo: value.
     (Reflect isObject: val linkedTo: Either) ifFalse: {
       ((var vt is val type) = (value type)) | (value type equals: Nil type) ifTrue: {

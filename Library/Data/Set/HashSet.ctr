@@ -13,12 +13,10 @@ HashSet on: '_marker' do: {^const HashSetValueMarker.}.
 HashSet on: 'add:' do: {:v
   my map put: const HashSetValueMarker at: v.
 }.
-HashSet on: 'extend:' do: {:set
-  var self is me.
+HashSet on: 'extend:' do: {:self:set
   set each_v: {:v self add: v. }.
 }.
-HashSet on: 'addAll:' do: {:iterable
-  var self is me.
+HashSet on: 'addAll:' do: {:self:iterable
   iterable each_v: {:v self add: v.}.
 }.
 HashSet on: 'toArray' do: {

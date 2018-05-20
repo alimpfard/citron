@@ -38,8 +38,7 @@ RegFile put: (Register new init) at: 32. #program counter
 
 var MemoryBlock is Array new.
 
-MemoryBlock on: 'init' do: {
-  var self is me.
+MemoryBlock on: 'init' do: {:self
   my bp is 0.
   64 * 1024 times: {:i self put: 0 at: i.}. #64 KB of accessible memory. for now
 }.
@@ -191,16 +190,14 @@ MIPSAbstractMachine on: 'setBytes:base:offset:value:' do: {:c:base:oreg:val
 MIPSAbstractMachine on: 'rawMemoryFrom:count:' do: {:b:c
   ^my memory from: b length: c.
 }.
-MIPSAbstractMachine on: 'runTillExit'       do: {
-  var self is me.
+MIPSAbstractMachine on: 'runTillExit'       do: {:self
   var step is -1.
   Pen green write: ((step +=: 1) toString paddingRight: 3), resetColor.
   {^(self step @ 1).} whileTrue: {Pen green write: ((step +=: 1) toString paddingRight: 3), resetColor.}.
   Broom sweep.
   Pen magenta write: ('Program terminated in %d steps.' formatObjects: [(step - 1)]), resetColor brk.
 }.
-MIPSAbstractMachine on: 'runQASession' do: {
-  var self is me.
+MIPSAbstractMachine on: 'runQASession' do: {:self
   var q is ''.
   var last_q is q.
   {Pen cyan write: '>>> ', resetColor. ^((q is Program waitForInput trim)). q containsPattern: '^$', ifFalse: {last_q is q.}, else: {q is last_q.}. } whileTrue: {
@@ -263,8 +260,7 @@ MIPSAbstractMachine on: 'runQASession' do: {
     (q containsPattern: '^s(tep)?$') break.
   }.
 }.
-MIPSAbstractMachine on: 'interactiveRun'   do: {
-  var self is me.
+MIPSAbstractMachine on: 'interactiveRun'   do: {:self
   var step is -1.
   var program is me getSrc.
   var breaks := Map new.
@@ -297,14 +293,13 @@ MIPSAbstractMachine on: 'execute_current_instr' do: {
   }.
   ^[me,step].
 }.
-MIPSAbstractMachine on: 'execute_current_instr_g' do: {
+MIPSAbstractMachine on: 'execute_current_instr_g' do: {:self
   var step is False.
   var dirtyregs is my dirtyregs.
   (step is (((me PC) = (me PC toNumber)) & (me PC < (my program count)))) ifTrue: {
     var instr is my program at: (me PC).
     var src is instr src.
     var regs is ''.
-    var self is me.
     instr run.
     var regs is Array new.
     Pen write: (src paddingRight: 16), write: ''.
@@ -332,10 +327,9 @@ MIPSAbstractMachine on: 'PC' do: {
   ^my regfile at: 32, get.
 }.
 
-MIPSIntructions on: 'decode:machine:' do: {:instrs:machine
+MIPSIntructions on: 'decode:machine:' do: {:self:instrs:machine
   #instrs is instrs findPattern: '\#.*\\s' do: {^'\\n'.}, #Ignore comments
   #                 findPattern: '\\s+' do: {^' '.}. #Ignore repeated whitespace
-  var self is me.
   var code is instrs split: '\n'.
   var dec is Array new.
   code each: {:i:v
@@ -346,8 +340,7 @@ MIPSIntructions on: 'decode:machine:' do: {:instrs:machine
   }.
   ^dec.
 }.
-MIPSIntructions on: 'assemble:forMachine:' do: {:instrs:machine
-  var self is me.
+MIPSIntructions on: 'assemble:forMachine:' do: {:self:instrs:machine
   var code is instrs split: '\n'.
   var dec is Array new.
   code each: {:i:v

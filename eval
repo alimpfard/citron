@@ -208,8 +208,7 @@ Eval on: 'Commands' do: {
         Eval addMetaCommand: name function: (Eval evaluate: fn).
         ^'+def %s %s' % [name, fn].
       } at: '!def'.
-    c on: 'get:' do: {:cmd
-      var self is me.
+    c on: 'get:' do: {:self:cmd
       ^me at: cmd, or: {
         ^(cmd containsPattern: '^\\W$')
          either: Nil

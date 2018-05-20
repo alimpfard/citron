@@ -811,6 +811,7 @@ ctr_tnode *ctr_cparse_assignment(ctr_tnode * r)
  *
  * Generates a set of nodes to represent an expression.
  */
+const char* me_s = "me";
 ctr_tnode *ctr_cparse_expr(int mode)
 {
 	ctr_tnode *r;
@@ -818,14 +819,20 @@ ctr_tnode *ctr_cparse_expr(int mode)
 	int t2;
 	ctr_tlistitem *nodes;
 	ctr_tlistitem *rli;
+    struct lexer_state lexer_state;
+    ctr_clex_dump_state(&lexer_state);
 	r = ctr_cparse_receiver();
 	t2 = ctr_clex_tok();
 	ctr_clex_putback();
 
 	/* user tries to put colon directly after recipient */
 	if (t2 == CTR_TOKEN_COLON) {
-		ctr_cparse_emit_error_unexpected(t2,
-						 "Recipient cannot be followed by a colon.\n");
+        /* Parse as if we had a "me" before this */
+        ctr_clex_load_state(lexer_state);
+        if(ctr_clex_inject_token(CTR_TOKEN_REF, me_s, 2))
+            ctr_cparse_emit_error_unexpected(t2,
+                    "Recipient cannot be followed by a colon in this state.\n");
+        return ctr_cparse_expr(mode);
 	}
 
 	if (t2 == CTR_TOKEN_ASSIGNMENT) {

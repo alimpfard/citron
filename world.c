@@ -724,10 +724,11 @@ void
 ctr_internal_object_add_property(ctr_object * owner, ctr_object * key,
 				 ctr_object * value, int m)
 {
-	if (strncmp(key->value.svalue->value, "me", key->value.svalue->vlen) !=
-	    0 &&
-			strncmp(key->value.svalue->value, "thisBlock", key->value.svalue->vlen) !=
-			0)
+	if (
+            value->lexical_name == NULL && 
+            strncmp(key->value.svalue->value, "me", key->value.svalue->vlen) != 0 &&
+			strncmp(key->value.svalue->value, "thisBlock", key->value.svalue->vlen) != 0
+    )
 		value->lexical_name = key;
 	ctr_mapitem *new_item = ctr_heap_allocate(sizeof(ctr_mapitem));
 	ctr_mapitem *current_head = NULL;
@@ -2436,7 +2437,7 @@ void ctr_initialize_world()
 				 (CTR_DICT_TOSTRING), &ctr_iterator_to_string);
 	ctr_internal_create_func(CtrStdIter,
 				 ctr_build_string_from_cstring(CTR_DICT_TYPE),
-				 &CTR_DICT_TYPE);
+				 &ctr_iterator_type);
 
 	ctr_internal_object_add_property(CtrStdWorld,
 					 ctr_build_string_from_cstring

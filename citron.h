@@ -424,6 +424,24 @@ CTR_H_DECLSPEC char* ctr_mode_interactive;
 /**
  * Lexer functions
  */
+struct lexer_state {
+	int string_interpolation;
+	int ivarlen;
+	ctr_size ctr_clex_tokvlen;
+	char *ctr_clex_buffer;
+	char *ctr_code;
+	char *ctr_code_st;
+	char *ctr_code_eoi;
+	char *ctr_eofcode;
+	char *ctr_clex_oldptr;
+	char *ctr_clex_olderptr;
+	int ctr_clex_verbatim_mode;
+	uintptr_t ctr_clex_verbatim_mode_insert_quote;
+	int ctr_clex_old_line_number;
+	int ctr_transform_lambda_shorthand;
+	char *ivarname;
+    int inject_index; //<- this is not sure to work
+};
 void 	ctr_clex_load(char* prg);
 int 	ctr_clex_tok();
 char* 	ctr_clex_tok_value();
@@ -432,7 +450,10 @@ void 	ctr_clex_putback();
 char*	ctr_clex_readstr();
 char*   ctr_clex_tok_describe( int token );
 int     ctr_clex_save_state();
+int     ctr_clex_dump_state(struct lexer_state*);
 int     ctr_clex_restore_state( int id );
+int     ctr_clex_load_state(struct lexer_state);
+int     ctr_clex_inject_token( int token, const char* value, const int vlen );
 CTR_H_DECLSPEC int     ctr_clex_quiet;
 CTR_H_DECLSPEC char*   ctr_clex_keyword_var;
 CTR_H_DECLSPEC char*   ctr_clex_keyword_me;

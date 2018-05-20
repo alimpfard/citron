@@ -320,8 +320,7 @@ ctr_internal_object_is_constructible(ctr_object * object1, ctr_object * object2)
 	return ctr_internal_object_is_constructible_(object1, object2, 0);
 }
 
-int
-ctr_internal_object_is_constructible_(ctr_object * object1,
+int ctr_internal_object_is_constructible_(ctr_object * object1,
 				      ctr_object * object2, int raw)
 {
 	if (object1 == object2)
@@ -331,8 +330,11 @@ ctr_internal_object_is_constructible_(ctr_object * object1,
 	ctr_size len1;
 	ctr_size len2;
 	ctr_size d;
-	if (raw && object2->info.type == CTR_OBJECT_TYPE_OTSTRING)
+	//we're matching a binding and not an actual string
+	if ((/*raw &&*/ object2->info.type == CTR_OBJECT_TYPE_OTSTRING && object1->info.type != CTR_OBJECT_TYPE_OTSTRING)
+	 || (raw && object2->info.type == CTR_OBJECT_TYPE_OTSTRING && object1->info.type == CTR_OBJECT_TYPE_OTSTRING))
 		return 1;
+	//both are strings
 	if (object1->info.type == CTR_OBJECT_TYPE_OTSTRING
 	    && object2->info.type == CTR_OBJECT_TYPE_OTSTRING) {
 		string1 = object1->value.svalue->value;
@@ -346,6 +348,7 @@ ctr_internal_object_is_constructible_(ctr_object * object1,
 			return 1;
 		return 0;
 	}
+	//both are numbers
 	if (object1->info.type == CTR_OBJECT_TYPE_OTNUMBER
 	    && object2->info.type == CTR_OBJECT_TYPE_OTNUMBER) {
 		ctr_number num1 = object1->value.nvalue;
@@ -354,6 +357,7 @@ ctr_internal_object_is_constructible_(ctr_object * object1,
 			return 1;
 		return 0;
 	}
+	//both are bools
 	if (object1->info.type == CTR_OBJECT_TYPE_OTBOOL
 	    && object2->info.type == CTR_OBJECT_TYPE_OTBOOL) {
 		int b1 = object1->value.bvalue;
@@ -362,6 +366,7 @@ ctr_internal_object_is_constructible_(ctr_object * object1,
 			return 1;
 		return 0;
 	}
+	//both are arrays
 	if (object1->info.type == CTR_OBJECT_TYPE_OTARRAY
 	    && object2->info.type == CTR_OBJECT_TYPE_OTARRAY) {
 		int count = ctr_array_count(object2, NULL)->value.nvalue;
@@ -725,7 +730,7 @@ ctr_internal_object_add_property(ctr_object * owner, ctr_object * key,
 				 ctr_object * value, int m)
 {
 	if (
-            value->lexical_name == NULL && 
+            value->lexical_name == NULL &&
             strncmp(key->value.svalue->value, "me", key->value.svalue->vlen) != 0 &&
 			strncmp(key->value.svalue->value, "thisBlock", key->value.svalue->vlen) != 0
     )

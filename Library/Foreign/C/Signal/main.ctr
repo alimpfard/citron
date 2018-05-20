@@ -86,8 +86,7 @@ Signal on: 'handle:with:' do: {:name:handler
     thisBlock error: g_strerror run.
   }.
 }.
-Signal on: 'kill:PID:' do: {:signum:pid
-  var self is me.
+Signal on: 'kill:PID:' do: {:self:signum:pid
   (Reflect isObject: signum linkedTo: Number) ifFalse: { signum is self spec: signum, min. }.
   var res is my kill_ty call: my kill withArgs: [pid, signum].
   (res = 0) ifFalse: { thisBlock error: g_strerror run. }.

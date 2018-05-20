@@ -11,8 +11,7 @@ var Maybe is Monad new
   on: 'nothing' do: {
     ^Nothing.
   },
-  on: 'unpack:' do: {:to
-    var self is me.
+  on: 'unpack:' do: {:self:to
     ^((me type) = (Just type)) & ((to type) = (Just type))
       either: {^{
         ^const self unwrap unpack: (const to unwrap).
@@ -29,8 +28,7 @@ var Maybe is Monad new
         }.
       }.
   },
-  on: 'equals:' do: {:other
-    var self is me.
+  on: 'equals:' do: {:self:other
     ^(me type) = (var tt is other type)
       either: {
         ^tt = (Nothing type) either: True or: {^(self unwrap) = (other unwrap).}.

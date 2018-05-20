@@ -72,10 +72,9 @@ WebSock on: 'onclose:' do: {:fn
   var ptr is CTypes closureOf: (me _prepare_fn_onoc: fn) withCIF: (CIF new setABI: 0 return: my Cint argTypes: [(my Cptr)]).
   my libwebsock_context memberOnclose: ptr.
 }.
-WebSock on: '_prepare_fn_onm:' do: {:fn
+WebSock on: '_prepare_fn_onm:' do: {:self:fn
   var libwebsock_client_state is my libwebsock_client_state.
   var libwebsock_message is my libwebsock_message.
-  var self is me.
   ^{:state:msg
       state is state derefAs: const libwebsock_client_state struct.
       msg is msg derefAs: const libwebsock_message struct.
@@ -83,9 +82,8 @@ WebSock on: '_prepare_fn_onm:' do: {:fn
       ^r.
     }.
 }.
-WebSock on: '_prepare_fn_onoc:' do: {:fn
+WebSock on: '_prepare_fn_onoc:' do: {:self:fn
   var libwebsock_client_state is my libwebsock_client_state.
-  var self is me.
   ^{:state
       state is state derefAs: const libwebsock_client_state struct.
       var r is const fn applyTo: const self and: (const libwebsock_client_state sameFor: state).

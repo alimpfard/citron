@@ -46,23 +46,20 @@ PackedArray on: 'count' do: { ^my count. }.
 PackedArray on: '_type' do: { ^my type. }.
 PackedArray on: 'type' do: { ^'PackedArray(%s[%d])' % [me rectifyType, my count].}.
 PackedArray on: 'rectifyType' do: { ^const REVERSETYPEMAP at: my type.  }.
-PackedArray on: 'copy' do: {
-  var self is me.
+PackedArray on: 'copy' do: {:self
   ^me cnew: {
     array => self array new.
     count => self count.
     type  => self _type.
   }.
 }.
-PackedArray on: 'each:' do: {:blk
-  var self is me.
+PackedArray on: 'each:' do: {:self:blk
   my count times: {:i
     Pen writeln: i.
     blk applyTo: i and: (self at: i) and: self.
   }.
 }.
-PackedArray on: 'each_v:' do: {:blk
-  var self is me.
+PackedArray on: 'each_v:' do: {:self:blk
   my count times: {:i
     blk applyTo: (self at: i).
   }.

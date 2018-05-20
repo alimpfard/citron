@@ -4928,7 +4928,7 @@ ctr_object *ctr_build_listcomp(ctr_tnode * node)
 	}
 	size_t ps,fs;
 	if((ps=ctr_array_count(bindings, NULL)->value.nvalue) != (fs=ctr_array_count(free_refs, NULL)->value.nvalue)) {
-		CtrStdFlow = ctr_format_str("Number of bindings do not match the number of symbols (%d vs %d)", ps, fs);
+		CtrStdFlow = ctr_format_str("-Number of bindings do not match the number of symbols (%d vs %d)", ps, fs);
 		return CtrStdNil;
 	}
 	//(pred*) -> [{^pred}*]

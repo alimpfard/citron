@@ -52,23 +52,6 @@ static int ctr_string_interpolation = 0;
 static char *ivarname;
 static int ivarlen;
 
-struct lexer_state {
-	int string_interpolation;
-	int ivarlen;
-	ctr_size ctr_clex_tokvlen;
-	char *ctr_clex_buffer;
-	char *ctr_code;
-	char *ctr_code_st;
-	char *ctr_code_eoi;
-	char *ctr_eofcode;
-	char *ctr_clex_oldptr;
-	char *ctr_clex_olderptr;
-	int ctr_clex_verbatim_mode;
-	uintptr_t ctr_clex_verbatim_mode_insert_quote;
-	int ctr_clex_old_line_number;
-	char *ivarname;
-};
-
 #define MAX_LEXER_SAVE_STATES 1000
 static struct lexer_state saved_lexer_states[MAX_LEXER_SAVE_STATES];
 static int saved_lexer_state_next_index = 0;
@@ -96,7 +79,7 @@ int ctr_lex_save_state() {
 		ctr_lex_verbatim_mode,
 		ctr_lex_verbatim_mode_insert_quote,
 		ctr_lex_old_line_number,
-		ivarname
+		.ivarname=ivarname
 	};
 	saved_lexer_states[saved_lexer_state_next_index++] = ls;
 	return saved_lexer_state_next_index-1;

@@ -54,28 +54,51 @@ int ctr_string_interpolation = 0;
 char *ivarname;
 int ivarlen;
 
-struct lexer_state {
-	int string_interpolation;
-	int ivarlen;
-	ctr_size ctr_clex_tokvlen;
-	char *ctr_clex_buffer;
-	char *ctr_code;
-	char *ctr_code_st;
-	char *ctr_code_eoi;
-	char *ctr_eofcode;
-	char *ctr_clex_oldptr;
-	char *ctr_clex_olderptr;
-	int ctr_clex_verbatim_mode;
-	uintptr_t ctr_clex_verbatim_mode_insert_quote;
-	int ctr_clex_old_line_number;
-	int ctr_transform_lambda_shorthand;
-	char *ivarname;
-};
 
-#define MAX_LEXER_SAVE_STATES 1000
+#define MAX_LEXER_SAVE_STATES 1024
 static struct lexer_state saved_lexer_states[MAX_LEXER_SAVE_STATES];
 static int saved_lexer_state_next_index = 0;
 
+#define MAX_LEXER_INJECT_VECTOR_COUNT 1024
+static int inject_index = -1; //-1 -> nothing to inject
+typedef struct {
+    int token;
+    int vlen;
+    char* value;
+} token_inj_t;
+static token_inj_t injects[MAX_LEXER_INJECT_VECTOR_COUNT]; //tokens to inject
+
+
+/**
+ * Lexer - Inject token
+ *
+ * Injects a token to be returned before the next actual one
+ * returns 0 unless there's not enough room in the lexer injection 
+ * vector
+ */
+int ctr_clex_inject_token(int token, const char* value, const int vlen) {
+    if (inject_index == MAX_LEXER_INJECT_VECTOR_COUNT) return 1;
+    //printf("Injecting (id=%d) %d (%.*s)\n", inject_index, token, vlen, value);
+    token_inj_t inject = {
+        token,
+        vlen,
+        (char*)value,
+    };
+    injects[++inject_index] = inject;
+    return 0;
+}
+
+__attribute__((always_inline))
+static int do_inject_token() {
+    if(inject_index > -1) {
+        token_inj_t inj = injects[inject_index--];
+        if (inj.value) {
+           strncpy(ctr_clex_buffer, inj.value, inj.vlen);
+           ctr_clex_tokvlen = inj.vlen;
+        }
+        return inj.token;
+    } else return -1;
+}
 
 /**
  * Lexer - Save Lexer state
@@ -101,10 +124,30 @@ int ctr_clex_save_state() {
 		ctr_clex_verbatim_mode_insert_quote,
 		ctr_clex_old_line_number,
 		ctr_transform_lambda_shorthand,
-		ivarname
+		ivarname,
+        inject_index
 	};
 	saved_lexer_states[saved_lexer_state_next_index++] = ls;
 	return saved_lexer_state_next_index-1;
+}
+int ctr_clex_dump_state(struct lexer_state* ls) {
+	 ls->string_interpolation=ctr_string_interpolation ;
+	 ls->ivarlen=ivarlen ;
+	 ls->ctr_clex_tokvlen=ctr_clex_tokvlen ;
+	 ls->ctr_clex_buffer=ctr_clex_buffer ;
+	 ls->ctr_code=ctr_code ;
+	 ls->ctr_code_st=ctr_code_st ;
+	 ls->ctr_code_eoi=ctr_code_eoi ;
+	 ls->ctr_eofcode=ctr_eofcode ;
+	 ls->ctr_clex_oldptr=ctr_clex_oldptr ;
+	 ls->ctr_clex_olderptr=ctr_clex_olderptr ;
+	 ls->ctr_clex_verbatim_mode=ctr_clex_verbatim_mode ;
+	 ls->ctr_clex_verbatim_mode_insert_quote=ctr_clex_verbatim_mode_insert_quote ;
+	 ls->ctr_clex_old_line_number=ctr_clex_old_line_number ;
+	 ls->ctr_transform_lambda_shorthand=ctr_transform_lambda_shorthand ;
+	 ls->ivarname=ivarname ;
+     ls->inject_index=inject_index ;
+     return 0;
 }
 
 /**
@@ -133,8 +176,30 @@ int ctr_clex_restore_state(int id) {
 	ctr_clex_old_line_number = ls.ctr_clex_old_line_number;
 	ctr_transform_lambda_shorthand = ls.ctr_transform_lambda_shorthand;
 	ivarname = ls.ivarname;
+    inject_index = ls.inject_index;
 	return id == saved_lexer_state_next_index;
 }
+
+int ctr_clex_load_state(struct lexer_state ls) {
+	ctr_string_interpolation = ls.string_interpolation;
+	ivarlen = ls.ivarlen;
+	ctr_clex_tokvlen = ls.ctr_clex_tokvlen;
+	ctr_clex_buffer = ls.ctr_clex_buffer;
+	ctr_code = ls.ctr_code;
+	ctr_code_st = ls.ctr_code_st;
+	ctr_code_eoi = ls.ctr_code_eoi;
+	ctr_eofcode = ls.ctr_eofcode;
+	ctr_clex_oldptr = ls.ctr_clex_oldptr;
+	ctr_clex_olderptr = ls.ctr_clex_olderptr;
+	ctr_clex_verbatim_mode = ls.ctr_clex_verbatim_mode;
+	ctr_clex_verbatim_mode_insert_quote = ls.ctr_clex_verbatim_mode_insert_quote;
+	ctr_clex_old_line_number = ls.ctr_clex_old_line_number;
+	ctr_transform_lambda_shorthand = ls.ctr_transform_lambda_shorthand;
+	ivarname = ls.ivarname;
+    inject_index = ls.inject_index;
+    return 0;
+}
+
 
 void ctr_clex_pop_saved_state() {
 	saved_lexer_state_next_index--;
@@ -383,6 +448,13 @@ int ctr_clex_is_valid_digit_in_base(char c, int b)
  */
 int ctr_clex_tok()
 {
+    int tinj;
+    if ((tinj = do_inject_token()) != -1) {
+        //printf("Injected %d\n", tinj);
+        ctr_clex_olderptr = ctr_clex_oldptr;
+        ctr_clex_oldptr = ctr_code;
+        return tinj;
+    }
 	if (ctr_code == ctr_eofcode) {
 		return CTR_TOKEN_FIN;
 	}

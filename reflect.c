@@ -1498,6 +1498,14 @@ ctr_object *ctr_reflect_run_for_object_in_ctx(ctr_object * myself,
 	ctr_tnode *parameter;
 	ctr_object *a;
 	int was_vararg;
+	if(parameterList && parameterList->node) {
+		parameter = parameterList->node;
+		if (parameter->vlen == 4 && strncmp(parameter->value, "self", 4) == 0) {
+		//assign self selectively, skip that parameter
+		ctr_assign_value_to_local_by_ref(ctr_build_string(parameter->value, parameter->vlen), ctx);
+		parameterList = parameterList->next;
+		}
+	}
 	if (likely(parameterList && parameterList->node)) {
 		parameter = parameterList->node;
 		while (argList) {

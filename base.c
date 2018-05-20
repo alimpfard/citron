@@ -5201,6 +5201,14 @@ ctr_object *ctr_block_run_array(ctr_object * myself, ctr_object * argArray,
 	ctr_argument *argList = ctr_heap_allocate(sizeof(ctr_argument));
 	(void)ctr_array_to_argument_list(argArray, argList);
 	ctr_open_context();
+	if(parameterList && parameterList->node) {
+		parameter = parameterList->node;
+		if (parameter->vlen == 4 && strncmp(parameter->value, "self", 4) == 0) {
+		//assign self selectively, skip that parameter
+		ctr_assign_value_to_local_by_ref(ctr_build_string(parameter->value, parameter->vlen), my);
+		parameterList = parameterList->next;
+		}
+	}
 	if (likely(parameterList && parameterList->node)) {
 		parameter = parameterList->node;
 		while (argList) {
@@ -5343,6 +5351,14 @@ ctr_object *ctr_block_run(ctr_object * myself, ctr_argument * argList,
 	ctr_object *a;
 	int was_vararg;
 	ctr_open_context();
+	if(parameterList && parameterList->node) {
+		parameter = parameterList->node;
+		if (parameter->vlen == 4 && strncmp(parameter->value, "self", 4) == 0) {
+		//assign self selectively, skip that parameter
+		ctr_assign_value_to_local_by_ref(ctr_build_string(parameter->value, parameter->vlen), my);
+		parameterList = parameterList->next;
+		}
+	}
 	if (likely(parameterList && parameterList->node)) {
 		parameter = parameterList->node;
 		while (argList) {
@@ -5487,6 +5503,14 @@ ctr_object *ctr_block_run_here(ctr_object * myself, ctr_argument * argList,
 	ctr_object *a;
 	int was_vararg;
 	// ctr_open_context();
+	if(parameterList && parameterList->node) {
+		parameter = parameterList->node;
+		if (parameter->vlen == 4 && strncmp(parameter->value, "self", 4) == 0) {
+		//assign self selectively, skip that parameter
+		ctr_assign_value_to_local_by_ref(ctr_build_string(parameter->value, parameter->vlen), my);
+		parameterList = parameterList->next;
+		}
+	}
 	if (parameterList && parameterList->node) {
 		parameter = parameterList->node;
 		while (argList) {

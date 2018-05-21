@@ -58,10 +58,13 @@ AC_CHECK_FUNCS([atexit bzero dup2 floor getdelim gethostbyname gettimeofday isas
 
 AC_ARG_ENABLE([boehm-gc],
               AS_HELP_STRING([--disable-boehm-gc], [Build without libgc present]))
-
+AC_ARG_ENABLE([forlinux],
+              AS_HELP_STRING([--forlinux], [Build for linux OSs]))
 AS_IF([test "x$enable-boehm-gc" != "xno"], [
        CFLAGS+=" -DwithBoehmGC"
        AC_CHECK_LIB([gc], [GC_free])
 ])
-
+AS_IF([test "x$enable-forlinux" != "xno"], [
+       CFLAGS+=" -D forLinux"
+])
 AC_OUTPUT

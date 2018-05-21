@@ -769,6 +769,7 @@ with_sysroot
 enable_libtool_lock
 with_x
 enable_boehm_gc
+enable_forlinux
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1415,6 +1416,7 @@ Optional Features:
                           speeds up one-time build
   --disable-libtool-lock  avoid locking (might break parallel builds)
   --disable-boehm-gc      Build without libgc present
+  --forlinux              Build for linux OSs
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -16100,6 +16102,10 @@ if test "${enable_boehm_gc+set}" = set; then :
   enableval=$enable_boehm_gc; 
 fi
 
+@%:@ Check whether --enable-forlinux was given.
+if test "${enable_forlinux+set}" = set; then :
+  enableval=$enable_forlinux; 
+fi
 
 if test "x$enable-boehm-gc" != "xno"; then :
   
@@ -16151,7 +16157,11 @@ fi
 
 
 fi
+if test "x$enable-forlinux" != "xno"; then :
+  
+       CFLAGS+=" -D forLinux"
 
+fi
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure

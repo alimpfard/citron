@@ -7,18 +7,18 @@
 
 #include <sys/prctl.h>
 
-int pthread_getname_np(int pth, char* buf, int len) {
+int pthread_getname_np(pthread_t pth, char* buf, size_t len) {
     return prctl(PR_GET_NAME, buf);
 }
-int pthread_setname_np(int pth, char* buf) {
+int pthread_setname_np(pthread_t pth, const char* buf) {
     return prctl(PR_SET_NAME, buf);
 }
 #else //__has_include
 
-int pthread_getname_np(int pth, char* buf, int len) {
+int pthread_getname_np(pthread_t pth, char* buf, size_t len) {
     return 1;
 }
-int pthread_setname_np(int pth, char* buf) {
+int pthread_setname_np(pthread_t pth, const char* buf) {
     return 1;
 }
 
@@ -29,10 +29,10 @@ int pthread_setname_np(int pth, char* buf) {
 #warning "We don't have __has_include. running blind and hoping for the best"
 #include <sys/prctl.h>
 
-int pthread_getname_np(int pth, char* buf, int len) {
+int pthread_getname_np(pthread_t pth, char* buf, size_t len) {
     return prctl(PR_GET_NAME, buf);
 }
-int pthread_setname_np(int pth, char* buf) {
+int pthread_setname_np(pthread_t pth, const char* buf) {
     return prctl(PR_SET_NAME, buf);
 }
 #endif //ifdef  __has_include

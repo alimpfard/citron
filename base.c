@@ -3628,6 +3628,7 @@ ctr_object *ctr_string_find_pattern_options_do(ctr_object * myself,
 	}
 	char *haystack = ctr_heap_allocate_cstring(myself);
 	size_t offset = 0;
+	size_t last_end = 0;
 	ctr_object *newString = ctr_build_empty_string();
 	ctr_argument *blockArguments;
 	ctr_argument *group;
@@ -3653,10 +3654,16 @@ ctr_object *ctr_string_find_pattern_options_do(ctr_object * myself,
 			ctr_heap_free(tmp);
 		}
 		if (matches[0] != -1) {
+			if(offset+matches[1]-last_end > 0) {
+				arg->object =
+				    ctr_build_string(haystack + last_end,
+						     offset+matches[0] - last_end);
+				ctr_string_append(newString, arg);
+			}
+			last_end = offset + matches[1];
 			arg->object =
 			    ctr_build_string(haystack + offset,
 					     matches[1] - matches[0]);
-			// ctr_array_unshift(blockArguments->object, arg);
 			ctr_object *replacement =
 			    ctr_block_run(block, blockArguments, block);
 			arg->object =

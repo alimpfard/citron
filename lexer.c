@@ -73,7 +73,7 @@ static token_inj_t injects[MAX_LEXER_INJECT_VECTOR_COUNT]; //tokens to inject
  * Lexer - Inject token
  *
  * Injects a token to be returned before the next actual one
- * returns 0 unless there's not enough room in the lexer injection 
+ * returns 0 unless there's not enough room in the lexer injection
  * vector
  */
 int ctr_clex_inject_token(int token, const char* value, const int vlen) {
@@ -757,6 +757,58 @@ int ctr_clex_tok()
 	return CTR_TOKEN_REF;
 }
 
+static int ctr_clex_next_number() {
+    int t = *(++ctr_code);
+    return t >= '0' && t <= '9' ? t - '0' : 10 + toupper(t) - 'A';
+}
+
+/**
+ * CtrLexerEncodeUTF-8
+ *
+ * Encodes a code point using UTF-8
+ */
+int ctr_clex_utf8_encode(char *out, uint32_t utf)
+{
+  if (utf <= 0x7F) {
+    // Plain ASCII
+    out[0] = (char) utf;
+    out[1] = 0;
+    return 1;
+  }
+  else if (utf <= 0x07FF) {
+    // 2-byte unicode
+    out[0] = (char) (((utf >> 6) & 0x1F) | 0xC0);
+    out[1] = (char) (((utf >> 0) & 0x3F) | 0x80);
+    out[2] = 0;
+    return 2;
+  }
+  else if (utf <= 0xFFFF) {
+    // 3-byte unicode
+    out[0] = (char) (((utf >> 12) & 0x0F) | 0xE0);
+    out[1] = (char) (((utf >>  6) & 0x3F) | 0x80);
+    out[2] = (char) (((utf >>  0) & 0x3F) | 0x80);
+    out[3] = 0;
+    return 3;
+  }
+  else if (utf <= 0x10FFFF) {
+    // 4-byte unicode
+    out[0] = (char) (((utf >> 18) & 0x07) | 0xF0);
+    out[1] = (char) (((utf >> 12) & 0x3F) | 0x80);
+    out[2] = (char) (((utf >>  6) & 0x3F) | 0x80);
+    out[3] = (char) (((utf >>  0) & 0x3F) | 0x80);
+    out[4] = 0;
+    return 4;
+  }
+  else {
+    // error - use replacement character
+    out[0] = (char) 0xEF;
+    out[1] = (char) 0xBF;
+    out[2] = (char) 0xBD;
+    out[3] = 0;
+    return 0;
+  }
+}
+
 /**
  * CTRLexerStringReader
  *
@@ -855,20 +907,76 @@ char *ctr_clex_readstr()
 			case 'f':
 				c = '\f';
 				break;
-			case 'x':
-				c = 0;
-				while (ctr_clex_is_valid_digit_in_base
-				       (toupper(*(ctr_code + 1)), 16)) {
-					char t = *(ctr_code + 1);
-					c = c * 16 + (t >= '0'
-						      && t <=
-						      '9' ? t - '0' : 10 +
-						      toupper(t) - 'A');
-					ctr_code++;
-				}
-				break;
+			case 'x': {
+            int is_explicitly_enclosed;
+            ctr_code += (is_explicitly_enclosed = ctr_code+1 < ctr_eofcode && *(ctr_code+1) == '{');
+			    	c = 0;
+			    	while (
+                    (is_explicitly_enclosed) ?
+                    *(ctr_code+1) != '}' && ctr_clex_is_valid_digit_in_base(toupper(*(ctr_code + 1)), 16):
+                    ctr_clex_is_valid_digit_in_base(toupper(*(ctr_code + 1)), 16)
+                  ) {
+			    		c = c * 16 + ctr_clex_next_number();
+			    	}
+            if (is_explicitly_enclosed && *(++ctr_code) != '}') {
+              //bitch about it...
+              static char err[] = "Expected a '}' to close the explicit hex embed, not a '$'";
+              err[55] = *(ctr_code+1);
+              ctr_clex_emit_error(err);
+            }
+			    	break;
+        }
+      case 'u': {
+        const char hexs[] = "0123456789ABCDEF";
+        uint32_t uc = 0, is_explicitly_enclosed;
+        ctr_code += (is_explicitly_enclosed = ctr_code+1 < ctr_eofcode && *(ctr_code+1) == '{');
+        while (1) {
+          char cc = *(ctr_code+1);
+          if(is_explicitly_enclosed && cc == '}') {
+              break;
+          }
+          cc = toupper(cc);
+          if(!ctr_clex_is_valid_digit_in_base(cc, 16))
+            break;
+          char *h = strchr(hexs, cc);
+          uc = (uc << 4) + ((int)(h - hexs));
+          ctr_code++;
+        }
+        if(is_explicitly_enclosed&&*(ctr_code+1)!='}') {
+          //bitch about it...
+          static char err[] = "Expected a '}' to close the explicit unicode embed, not a '$'";
+          err[59] = *(ctr_code+1);
+          ctr_clex_emit_error(err);
+        }
+        if (uc > 0x100FFFF) {
+          ctr_clex_emit_error("Character code out of range");
+          if(is_explicitly_enclosed) ctr_code++;
+          c=0;
+          break;
+        }
+        static char pc[5];
+        int count = ctr_clex_utf8_encode(pc, uc);
+        c=pc[0];
+        for(int i=0;i<count-1;i++) {
+          ctr_clex_tokvlen++;
+      		if (ctr_clex_tokvlen >= memblock) {
+      			memblock += page;
+      			beginbuff =
+      			    (char *)ctr_heap_reallocate_tracked(tracking_id,
+      								memblock);
+      			if (beginbuff == NULL) {
+      				ctr_clex_emit_error("Out of memory");
+      			}
+      			/* reset pointer, memory location might have been changed */
+      			strbuff = beginbuff + (ctr_clex_tokvlen - 1);
+      		}
+      		*(strbuff++) = c;
+          c=pc[i+1];
+        }
+        if(is_explicitly_enclosed) { ctr_code++; continue; }
 			}
 		}
+    }
 
 		if (c == '\\' && escape == 0 && ctr_clex_verbatim_mode == 0) {
 			escape = 1;
@@ -889,8 +997,7 @@ char *ctr_clex_readstr()
 			strbuff = beginbuff + (ctr_clex_tokvlen - 1);
 		}
 		escape = 0;
-		*(strbuff) = c;
-		strbuff++;
+		*(strbuff++) = c;
 		ctr_code++;
 		if (ctr_code < ctr_eofcode)
 			c = *ctr_code;

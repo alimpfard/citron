@@ -16,21 +16,24 @@ char *np;
 /**
  * Determines the size of the specified file.
  */
-int fsize(char *filename)
+int
+fsize (char *filename)
 {
-	int size;
-	FILE *fh;
-	fh = fopen(filename, "rb");
-	if (fh != NULL) {
-		if (fseek(fh, 0, SEEK_END)) {
-			fclose(fh);
-			return -1;
-		}
-		size = ftell(fh);
-		fclose(fh);
-		return size;
+  int size;
+  FILE *fh;
+  fh = fopen (filename, "rb");
+  if (fh != NULL)
+    {
+      if (fseek (fh, 0, SEEK_END))
+	{
+	  fclose (fh);
+	  return -1;
 	}
-	return -1;
+      size = ftell (fh);
+      fclose (fh);
+      return size;
+    }
+  return -1;
 }
 
 /**
@@ -38,96 +41,100 @@ int fsize(char *filename)
  *
  * For debugging purposes, prints the internal AST.
  */
-void ctr_internal_debug_tree(ctr_tnode * ti, int indent)
+void
+ctr_internal_debug_tree (ctr_tnode * ti, int indent)
 {
-	char *str;
-	char *vbuf;
-	ctr_tlistitem *li;
-	ctr_tnode *t;
-	if (indent > 20)
-		exit(1);
-	li = ti->nodes;
-	t = li->node;
-	while (1) {
-		if(!t) goto next;
-		int i;
-		for (i = 0; i < indent; i++)
-			printf(" ");
-		str = ctr_heap_allocate(40 * sizeof(char));
-		switch (t->type) {
-		case CTR_AST_NODE_EXPRASSIGNMENT:
-			str = "ASSIGN";
-			break;
-		case CTR_AST_NODE_EXPRMESSAGE:
-			str = "MESSAG";
-			break;
-		case CTR_AST_NODE_UNAMESSAGE:
-			str = "UMSSAG";
-			break;
-		case CTR_AST_NODE_KWMESSAGE:
-			str = "KMSSAG";
-			break;
-		case CTR_AST_NODE_BINMESSAGE:
-			str = "BMSSAG";
-			break;
-		case CTR_AST_NODE_LTRSTRING:
-			str = "STRING";
-			break;
-		case CTR_AST_NODE_REFERENCE:
-			str = "REFRNC";
-			break;
-		case CTR_AST_NODE_LTRNUM:
-			str = "NUMBER";
-			break;
-		case CTR_AST_NODE_CODEBLOCK:
-			str = "CODEBL";
-			break;
-		case CTR_AST_NODE_RETURNFROMBLOCK:
-			str = "RETURN";
-			break;
-		case CTR_AST_NODE_PARAMLIST:
-			str = "PARAMS";
-			break;
-		case CTR_AST_NODE_INSTRLIST:
-			str = "INSTRS";
-			break;
-		case CTR_AST_NODE_ENDOFPROGRAM:
-			str = "EOPROG";
-			break;
-		case CTR_AST_NODE_NESTED:
-			str = "NESTED";
-			break;
-		case CTR_AST_NODE_LTRBOOLFALSE:
-			str = "BFALSE";
-			break;
-		case CTR_AST_NODE_LTRBOOLTRUE:
-			str = "BLTRUE";
-			break;
-		case CTR_AST_NODE_LTRNIL:
-			str = "LTRNIL";
-			break;
-		case CTR_AST_NODE_IMMUTABLE:
-			str = "IMMUTABLE";
-			break;
-		case CTR_AST_NODE_LISTCOMP:
-			str = "LISTCOMP";
-			break;
-		default:
-			str = "UNKNW?";
-			break;
-		}
-		vbuf = ctr_heap_allocate(sizeof(char) * (t->vlen + 1));
-		strncpy(vbuf, t->value, t->vlen);
-		printf("%s %s (%p)\n", str, vbuf, (void *)t);
-		if (t->nodes)
-			ctr_internal_debug_tree(t, indent + 1);
-next:;
-		if (!li->next)
-			break;
-		li = li->next;
-		t = li->node;
-
+  char *str;
+  char *vbuf;
+  ctr_tlistitem *li;
+  ctr_tnode *t;
+  if (indent > 20)
+    exit (1);
+  li = ti->nodes;
+  t = li->node;
+  while (1)
+    {
+      if (!t)
+	goto next;
+      int i;
+      for (i = 0; i < indent; i++)
+	printf (" ");
+      str = ctr_heap_allocate (40 * sizeof (char));
+      switch (t->type)
+	{
+	case CTR_AST_NODE_EXPRASSIGNMENT:
+	  str = "ASSIGN";
+	  break;
+	case CTR_AST_NODE_EXPRMESSAGE:
+	  str = "MESSAG";
+	  break;
+	case CTR_AST_NODE_UNAMESSAGE:
+	  str = "UMSSAG";
+	  break;
+	case CTR_AST_NODE_KWMESSAGE:
+	  str = "KMSSAG";
+	  break;
+	case CTR_AST_NODE_BINMESSAGE:
+	  str = "BMSSAG";
+	  break;
+	case CTR_AST_NODE_LTRSTRING:
+	  str = "STRING";
+	  break;
+	case CTR_AST_NODE_REFERENCE:
+	  str = "REFRNC";
+	  break;
+	case CTR_AST_NODE_LTRNUM:
+	  str = "NUMBER";
+	  break;
+	case CTR_AST_NODE_CODEBLOCK:
+	  str = "CODEBL";
+	  break;
+	case CTR_AST_NODE_RETURNFROMBLOCK:
+	  str = "RETURN";
+	  break;
+	case CTR_AST_NODE_PARAMLIST:
+	  str = "PARAMS";
+	  break;
+	case CTR_AST_NODE_INSTRLIST:
+	  str = "INSTRS";
+	  break;
+	case CTR_AST_NODE_ENDOFPROGRAM:
+	  str = "EOPROG";
+	  break;
+	case CTR_AST_NODE_NESTED:
+	  str = "NESTED";
+	  break;
+	case CTR_AST_NODE_LTRBOOLFALSE:
+	  str = "BFALSE";
+	  break;
+	case CTR_AST_NODE_LTRBOOLTRUE:
+	  str = "BLTRUE";
+	  break;
+	case CTR_AST_NODE_LTRNIL:
+	  str = "LTRNIL";
+	  break;
+	case CTR_AST_NODE_IMMUTABLE:
+	  str = "IMMUTABLE";
+	  break;
+	case CTR_AST_NODE_LISTCOMP:
+	  str = "LISTCOMP";
+	  break;
+	default:
+	  str = "UNKNW?";
+	  break;
 	}
+      vbuf = ctr_heap_allocate (sizeof (char) * (t->vlen + 1));
+      strncpy (vbuf, t->value, t->vlen);
+      printf ("%s %s (%p)\n", str, vbuf, (void *) t);
+      if (t->nodes)
+	ctr_internal_debug_tree (t, indent + 1);
+    next:;
+      if (!li->next)
+	break;
+      li = li->next;
+      t = li->node;
+
+    }
 }
 
 /**
@@ -158,121 +165,140 @@ next:;
  * through a constructor function.
  */
 typedef void *(*plugin_init_func) ();
-void *ctr_internal_plugin_find(ctr_object * key)
+void *
+ctr_internal_plugin_find (ctr_object * key)
 {
-	ctr_object *modNameObject = key->info.type == CTR_OBJECT_TYPE_OTSTRING ? key : ctr_internal_cast2string(key);
-	void *handle;
-	char pathNameMod[1024];
-	char *modName;
-	char *modNameLow;
-	plugin_init_func init_plugin;
-	char *realPathModName = NULL;
-	modName = ctr_heap_allocate_cstring(modNameObject);
-	modNameLow = modName;
-	for (; *modNameLow; ++modNameLow)
-		*modNameLow = tolower(*modNameLow);
-	snprintf(pathNameMod, 1024,
-		 (CTR_STD_EXTENSION_PATH "/mods/%s/libctr%s.so"), modName,
-		 modName);
-	ctr_heap_free(modName);
-	realPathModName = realpath(pathNameMod, NULL);
-	if (access(realPathModName, F_OK) == -1)
-		return NULL;
-	handle = dlopen(realPathModName, RTLD_NOW);
-	if (!handle) {
-		printf("%s: %s\n", "Failed to open file", dlerror());
-		return NULL;
-	}
-	*(void **)(&init_plugin) = dlsym(handle, "begin");
-	if (!init_plugin)
-		return NULL;
-	(void)init_plugin();
-	return handle;
+  ctr_object *modNameObject = key->info.type == CTR_OBJECT_TYPE_OTSTRING ? key : ctr_internal_cast2string (key);
+  void *handle;
+  char pathNameMod[1024];
+  char *modName;
+  char *modNameLow;
+  plugin_init_func init_plugin;
+  char *realPathModName = NULL;
+  modName = ctr_heap_allocate_cstring (modNameObject);
+  modNameLow = modName;
+  for (; *modNameLow; ++modNameLow)
+    *modNameLow = tolower (*modNameLow);
+  snprintf (pathNameMod, 1024, (CTR_STD_EXTENSION_PATH "/mods/%s/libctr%s.so"), modName, modName);
+  ctr_heap_free (modName);
+  realPathModName = realpath (pathNameMod, NULL);
+  if (access (realPathModName, F_OK) == -1)
+    return NULL;
+  handle = dlopen (realPathModName, RTLD_NOW);
+  if (!handle)
+    {
+      printf ("%s: %s\n", "Failed to open file", dlerror ());
+      return NULL;
+    }
+  *(void **) (&init_plugin) = dlsym (handle, "begin");
+  if (!init_plugin)
+    return NULL;
+  (void) init_plugin ();
+  return handle;
 }
 
-void *ctr_internal_plugin_find_base(char const * modName)
+void *
+ctr_internal_plugin_find_base (char const *modName)
 {
-	void *handle;
-	char pathNameMod[1024];
-	plugin_init_func init_plugin;
-	char *realPathModName = NULL;
-	snprintf(pathNameMod, 1024,
-		 (CTR_STD_EXTENSION_PATH "/basemods/%s/libctr%s.so"), modName,
-		 modName);
-	realPathModName = realpath(pathNameMod, NULL);
-	if (access(realPathModName, F_OK) == -1) {
-		printf("Error: %s\n", strerror(errno));
-		return NULL;
-	}
-	handle = dlopen(realPathModName, RTLD_NOW);
-	if (!handle) {
-		printf("%s: %s\n", "Failed to open file", dlerror());
-		return NULL;
-	}
-	*(void **)(&init_plugin) = dlsym(handle, "begin");
-	if (!init_plugin)
-		return NULL;
-	(void)init_plugin();
-	return handle;
+  void *handle;
+  char pathNameMod[1024];
+  plugin_init_func init_plugin;
+  char *realPathModName = NULL;
+  snprintf (pathNameMod, 1024, (CTR_STD_EXTENSION_PATH "/basemods/%s/libctr%s.so"), modName, modName);
+  realPathModName = realpath (pathNameMod, NULL);
+  if (access (realPathModName, F_OK) == -1)
+    {
+      printf ("Error: %s\n", strerror (errno));
+      return NULL;
+    }
+  handle = dlopen (realPathModName, RTLD_NOW);
+  if (!handle)
+    {
+      printf ("%s: %s\n", "Failed to open file", dlerror ());
+      return NULL;
+    }
+  *(void **) (&init_plugin) = dlsym (handle, "begin");
+  if (!init_plugin)
+    return NULL;
+  (void) init_plugin ();
+  return handle;
 }
 
-ctr_object* ctr_format_str(const char* str_format, ...) {
-	va_list ap;
-	char psbf[1024];
-	char* ps = ctr_heap_allocate(sizeof(char)*1024);
-	int len=0, reserved=1024;
-	va_start(ap, str_format);
-	int i=0, interpret = 0;
-	for (char c=str_format[i];(c=str_format[++i])!='\0';) {
-		if(reserved-len < 32)
-			ps = ctr_heap_reallocate(ps, reserved*=2);
-		if(interpret) {
-			interpret=0;
-			switch(c) {
-				case '%': //literal percent sign
-					ps[len++] = '%';
-					break;
-				case 's': {//c string
-					const char* s = va_arg(ap, const char*);
-					int slen = strlen(s);
-					if(reserved-len < 32+slen) ps = ctr_heap_reallocate(ps, reserved*=2);
-					strncpy(ps+len, s, slen);
-					len += slen;
-					break;
-				}
-				case 'd': {//c int
-					int d = va_arg(ap, int);
-					int slen = sprintf(psbf, "%d", d);
-					if(reserved-len < 32+slen) ps = ctr_heap_reallocate(ps, reserved*=2);
-					strncpy(ps+len, psbf, slen);
-					len += slen;
-					break;
-				}
-				case 'S': {//ctr string
-					ctr_object* ctrs = va_arg(ap, ctr_object*);
-					int slen = ctrs->value.svalue->vlen;
-					if(reserved-len < 32+slen) ps = ctr_heap_reallocate(ps, reserved*=2);
-					strncpy(ps+len, ctrs->value.svalue->value, ctrs->value.svalue->vlen);
-					len += slen;
-					break;
-				}
-				case 'I': {//ctr number
-					ctr_object* ctrn = va_arg(ap, ctr_object*);
-					int slen = sprintf(psbf, "%f", ctrn->value.nvalue);
-					if(reserved-len < 32+slen) ps = ctr_heap_reallocate(ps, reserved*=2);
-					strncpy(ps+len, psbf, slen);
-					len += slen;
-					break;
-				}
-				default: break;
-			}
-			continue;
-		}
-		if (c == '%') { interpret = 1; continue; }
-		ps[len++] = c;
+ctr_object *
+ctr_format_str (const char *str_format, ...)
+{
+  va_list ap;
+  char psbf[1024];
+  char *ps = ctr_heap_allocate (sizeof (char) * 1024);
+  int len = 0, reserved = 1024;
+  va_start (ap, str_format);
+  int i = 0, interpret = 0;
+  for (char c = str_format[i]; (c = str_format[++i]) != '\0';)
+    {
+      if (reserved - len < 32)
+	ps = ctr_heap_reallocate (ps, reserved *= 2);
+      if (interpret)
+	{
+	  interpret = 0;
+	  switch (c)
+	    {
+	    case '%':		//literal percent sign
+	      ps[len++] = '%';
+	      break;
+	    case 's':
+	      {			//c string
+		const char *s = va_arg (ap, const char *);
+		int slen = strlen (s);
+		if (reserved - len < 32 + slen)
+		  ps = ctr_heap_reallocate (ps, reserved *= 2);
+		strncpy (ps + len, s, slen);
+		len += slen;
+		break;
+	      }
+	    case 'd':
+	      {			//c int
+		int d = va_arg (ap, int);
+		int slen = sprintf (psbf, "%d", d);
+		if (reserved - len < 32 + slen)
+		  ps = ctr_heap_reallocate (ps, reserved *= 2);
+		strncpy (ps + len, psbf, slen);
+		len += slen;
+		break;
+	      }
+	    case 'S':
+	      {			//ctr string
+		ctr_object *ctrs = va_arg (ap, ctr_object *);
+		int slen = ctrs->value.svalue->vlen;
+		if (reserved - len < 32 + slen)
+		  ps = ctr_heap_reallocate (ps, reserved *= 2);
+		strncpy (ps + len, ctrs->value.svalue->value, ctrs->value.svalue->vlen);
+		len += slen;
+		break;
+	      }
+	    case 'I':
+	      {			//ctr number
+		ctr_object *ctrn = va_arg (ap, ctr_object *);
+		int slen = sprintf (psbf, "%f", ctrn->value.nvalue);
+		if (reserved - len < 32 + slen)
+		  ps = ctr_heap_reallocate (ps, reserved *= 2);
+		strncpy (ps + len, psbf, slen);
+		len += slen;
+		break;
+	      }
+	    default:
+	      break;
+	    }
+	  continue;
 	}
-	va_end(ap);
-	ctr_object* ss = ctr_build_string(ps, len);
-	ctr_heap_free(ps);
-	return ss;
+      if (c == '%')
+	{
+	  interpret = 1;
+	  continue;
+	}
+      ps[len++] = c;
+    }
+  va_end (ap);
+  ctr_object *ss = ctr_build_string (ps, len);
+  ctr_heap_free (ps);
+  return ss;
 }

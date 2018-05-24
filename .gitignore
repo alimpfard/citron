@@ -16,3 +16,4 @@ tools/*
 sync.sh
 integration/vscode
 tut
+.bac

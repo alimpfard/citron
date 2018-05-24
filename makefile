@@ -61,6 +61,25 @@ compiler: $(COBJS)
 .c.o:
 	$(CC) -fopenmp $(CFLAGS) -c $<
 
+define SHVAL =
+for f in *.c; do\
+	echo "Formatting $f";\
+	indent -l150 -hnl -bbo $f;\
+done
+endef
+
+format:
+	mkdir -p .bac
+	rm -rf .bac/*.c
+	cp *.c .bac/
+	$(value SHVAL)
+	rm -rf *.c~
+
+.ONESHELL:
+
+unback:
+	cp .bac/*.c .
+
 clean:
 	rm -rf ${OBJS} ctr
 

@@ -258,9 +258,11 @@ ctr_clex_position ()
 void
 ctr_clex_emit_error (char *message)
 {
-  printf ("%s on line: %d. \n", message, ctr_clex_line_number);
 #ifdef EXIT_ON_ERROR
+printf ("%s on line: %d. \n", message, ctr_clex_line_number);
   exit (1);
+#else
+CtrStdFlow = ctr_format_str("E%s on line: %d.\n", ctr_clex_line_number, message);
 #endif
 }
 

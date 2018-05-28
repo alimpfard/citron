@@ -2780,7 +2780,7 @@ typedef struct
   pthread_mutex_t *mutex;
   pthread_t *thread;
 } ctr_thread_t;
-
+static pthread_mutex_t GLOBAL_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 void *
 ctr_run_thread_func (ctr_thread_t * threadt)
 {
@@ -2788,19 +2788,25 @@ ctr_run_thread_func (ctr_thread_t * threadt)
   sigfillset (&set);
   sigset_t oset;
   ctr_thread_return_t *rv = ctr_heap_allocate (sizeof (ctr_thread_return_t));
+  // ctr_object* ctx = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
+  pthread_mutex_lock (&GLOBAL_MUTEX);
   pthread_mutex_lock (threadt->mutex);
+  // ctr_object* oct = ctr_contexts[ctr_context_id];
   int sets = pthread_sigmask (SIG_SETMASK, &set, &oset);
+  // ctr_switch_context(ctx);
 
   ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
   (void) ctr_array_to_argument_list (threadt->args, args);
-  ctr_object *result = ctr_block_run (threadt->target, args, threadt->target);
+  ctr_object *result = ctr_block_run_here (threadt->target, args, threadt->target);
   ctr_deallocate_argument_list (args);
 
+  // ctr_switch_context(oct);
   rv->retval = result;
   rv->stdFlow = CtrStdFlow;
   threadt->last_result = rv;
   sets = pthread_sigmask (SIG_SETMASK, &oset, NULL);
   pthread_mutex_unlock (threadt->mutex);
+  pthread_mutex_unlock (&GLOBAL_MUTEX);
   pthread_exit (rv);
 }
 
@@ -2925,7 +2931,7 @@ ctr_object *
 ctr_thread_make_set_target (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *inst = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
-  ctr_set_link_all (inst, myself);
+  ctr_set_link_all (inst, CtrStdThread);
   inst->value.rvalue = ctr_heap_allocate (sizeof (ctr_resource));
   inst->release_hook = &ctr_thread_free_res;
   pthread_t *thread;
@@ -2973,7 +2979,11 @@ ctr_thread_run (ctr_object * myself, ctr_argument * argumentList)
       CtrStdFlow = ctr_build_string_from_cstring ("Attempt to run a thread without a target");
       return CtrStdFlow;
     }
-  pthread_mutex_unlock (((ctr_thread_t *) myself->value.rvalue->ptr)->mutex);
+  if(!pthread_mutex_trylock(&GLOBAL_MUTEX))
+  {
+    pthread_mutex_unlock(&GLOBAL_MUTEX);
+    pthread_mutex_unlock (((ctr_thread_t *) myself->value.rvalue->ptr)->mutex);
+  }
   return myself;
 }
 

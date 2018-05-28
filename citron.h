@@ -578,9 +578,16 @@ void ctr_switch_context();
 /**
  * Global Scoping variables
  */
-CTR_H_DECLSPEC ctr_object* ctr_contexts[10000];
+#define CTR_CONTEXT_VECTOR_DEPTH  10000
+struct ctr_context_t {
+    ctr_object* contexts[CTR_CONTEXT_VECTOR_DEPTH ];
+    int id;
+};
+CTR_H_DECLSPEC void ctr_dump_context(struct ctr_context_t*);
+CTR_H_DECLSPEC void ctr_load_context(struct ctr_context_t);
+CTR_H_DECLSPEC ctr_object* ctr_contexts[CTR_CONTEXT_VECTOR_DEPTH];
 CTR_H_DECLSPEC int ctr_context_id;
-CTR_H_DECLSPEC ctr_tnode* ctr_callstack[10000]; //That should be enough... right?
+CTR_H_DECLSPEC ctr_tnode* ctr_callstack[CTR_CONTEXT_VECTOR_DEPTH]; //That should be enough... right?
 CTR_H_DECLSPEC uint8_t ctr_callstack_index;
 
 /**
@@ -1210,7 +1217,7 @@ void ctr_deallocate_argument_list(ctr_argument*);
 int ctr_internal_object_is_equal(ctr_object*, ctr_object*);
 int ctr_internal_object_is_constructible_(ctr_object*, ctr_object*, int);
 
-ctr_object* ctr_world_ptr;
+static ctr_object* ctr_world_ptr;
 
 #if defined(__clang__)
 	/* Clang/LLVM. ---------------------------------------------- */

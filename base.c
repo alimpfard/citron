@@ -3861,7 +3861,6 @@ ctr_string_contains_pattern (ctr_object * myself, ctr_argument * argumentList)
 	}
     }
   pcre_free (pattern);
-  free (error_message);
   ctr_heap_free (needle);
   ctr_heap_free (haystack);
   return answer;

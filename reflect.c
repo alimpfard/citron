@@ -1583,9 +1583,15 @@ ctr_reflect_run_for_object_in_ctx_as_world (ctr_object * myself, ctr_argument * 
 {
   ctr_object *world = argumentList->next->object, *old_world = ctr_world_ptr;
   ctr_world_ptr = world;
+    
+  static struct ctr_context_t ctx_l;
+  ctr_dump_context(&ctx_l);
+  ctr_context_id = 0;
+  ctr_contexts[0] = world;
 
   ctr_object *res = ctr_reflect_run_for_object_in_ctx (myself, argumentList);
-
+  
+  ctr_load_context(ctx_l);
   ctr_world_ptr = old_world;
   return res;
 }

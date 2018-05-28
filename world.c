@@ -1288,6 +1288,38 @@ ctr_switch_context (ctr_object * context)
 
 /**
  * @internal
+ * 
+ * ContextDump
+ *
+ * Dumps a context to a given struct
+ *
+ * @param ctx
+ *     Pointer to the structure that will be filled
+ */
+void ctr_dump_context(struct ctr_context_t* ctx)
+{
+    for(int index = 0; index<CTR_CONTEXT_VECTOR_DEPTH; index++)
+        ctx->contexts[index] = ctr_contexts[index];
+    ctx->id = ctr_context_id;
+}
+
+/**
+ *
+ * ContextLoad
+ *
+ * Load a whole context system
+ * @param ctx
+ *     The structure that is loaded
+ */
+void ctr_load_context(struct ctr_context_t ctx)
+{
+    for (int index=0; index<CTR_CONTEXT_VECTOR_DEPTH; index++)
+        ctr_contexts[index] = ctx.contexts[index];
+    ctr_context_id = ctx.id;
+}
+
+/**
+ * @internal
  *
  * ContextOpen
  *
@@ -1480,6 +1512,8 @@ ctr_set (ctr_object * key, ctr_object * object)
     }
   if (!foundObject)
     {
+      if (ctr_context_id <= 1) 
+          goto assign_anyway;
       char *key_name;
       char *message;
       char *full_message;
@@ -1496,6 +1530,7 @@ ctr_set (ctr_object * key, ctr_object * object)
       ctr_heap_free (key_name);
       return;
     }
+assign_anyway:
   if (strncmp (key->value.svalue->value, "me", key->value.svalue->vlen) != 0)
     object->lexical_name = key;
   ctr_internal_object_set_property (context, key, object, 0);
@@ -1526,7 +1561,7 @@ ctr_initialize_world ()
   if (ctr_world_initialized)
     return;
   ctr_world_initialized = 1;
-  register_signal_handlers ();
+  //register_signal_handlers ();
   ctr_instrument = 0;
   int i;
   srand ((unsigned) time (NULL));

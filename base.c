@@ -5362,7 +5362,6 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
       else
 	result = myself;
     }
-  ctr_close_context ();
   if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak && CtrStdFlow != CtrStdContinue && CtrStdFlow != CtrStdExit)
     {
       ctr_object *catchBlock = ctr_internal_object_find_property (myself,
@@ -5378,13 +5377,14 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
 	  if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 	    {
 	      CtrStdFlow = NULL;
-	      ctr_object *alternative = ctr_block_run (catchBlock, a, my);
+	      ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
 	      result = alternative;
 	    }
 	  ctr_heap_free (a->next);
 	  ctr_heap_free (a);
 	}
     }
+    ctr_close_context ();
   ctr_deallocate_argument_list (argList);
   //ctr_block_run_cache_result_if_expensive(myself, argList, result);
   return result;
@@ -5514,7 +5514,6 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
       else
 	result = myself;
     }
-  ctr_close_context ();
   if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak && CtrStdFlow != CtrStdContinue && CtrStdFlow != CtrStdExit)
     {
       ctr_object *catchBlock = ctr_internal_object_find_property (myself,
@@ -5530,13 +5529,15 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 	  if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 	    {
 	      CtrStdFlow = NULL;
-	      ctr_object *alternative = ctr_block_run (catchBlock, a, my);
+	      ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
 	      result = alternative;
 	    }
 	  ctr_heap_free (a->next);
 	  ctr_heap_free (a);
 	}
     }
+    ctr_close_context ();
+
   //ctr_block_run_cache_result_if_expensive(myself, argList, result);
   return result;
 }
@@ -5653,7 +5654,7 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
 	  if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 	    {
 	      CtrStdFlow = NULL;
-	      ctr_object *alternative = ctr_block_run (catchBlock, a, my);
+	      ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
 	      result = alternative;
 	    }
 	  ctr_heap_free (a->next);

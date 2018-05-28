@@ -60,6 +60,8 @@ ctr_cparse_emit_error_unexpected (int t, char *hint)
     }
 #ifdef EXIT_ON_ERROR
   exit (1);
+#else 
+  CtrStdFlow = ctr_format_str("EParser error, unexpected %s ( %s: %d)\n%s%s", message, ctr_cparse_current_program, ctr_clex_line_number+1, hint?"-> ":"", hint?hint:"");
 #endif
 }
 

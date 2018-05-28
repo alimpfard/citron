@@ -53,14 +53,14 @@ ctr_cparse_emit_error_unexpected (int t, char *hint)
   if (ctr_cparse_quiet)
     return;
   //memcpy(ctr_last_parser_error, buf, strlen(buf));
-  printf ("%s", buf);
-  if (hint)
-    {
-      printf ("%s", hint);
-    }
 #ifdef EXIT_ON_ERROR
+printf ("%s", buf);
+if (hint)
+{
+  printf ("%s", hint);
+}
   exit (1);
-#else 
+#else
   CtrStdFlow = ctr_format_str("EParser error, unexpected %s ( %s: %d)\n%s%s", message, ctr_cparse_current_program, ctr_clex_line_number+1, hint?"-> ":"", hint?hint:"");
 #endif
 }

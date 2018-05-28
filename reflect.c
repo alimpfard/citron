@@ -907,7 +907,29 @@ ctr_reflect_share_memory (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *ty = argumentList->object;
   ctr_object *shared = ctr_internal_create_mapped_object (ty ? ty->info.type : CTR_OBJECT_TYPE_OTOBJECT, 1);
-  ctr_set_link_all (shared, CtrStdObject);
+  ctr_set_link_all (shared, ty ? ctr_reflect_get_primitive_link(ty) : CtrStdObject);
+  if (ty) {
+      switch(ty->info.type) {
+        case CTR_OBJECT_TYPE_OTARRAY:
+            {
+        shared->value.avalue = (ctr_collection *) ctr_heap_allocate_shared(sizeof (ctr_collection));
+        shared->value.avalue->immutable = 0;
+        shared->value.avalue->length = 2;
+        shared->value.avalue->elements = (ctr_object **) ctr_heap_allocate_shared(sizeof (ctr_object *) * 2);
+        shared->value.avalue->head = 0;
+        shared->value.avalue->tail = 0;
+        break;
+            }
+        case CTR_OBJECT_TYPE_OTSTRING:
+            {
+        shared->value.svalue = ctr_heap_allocate_shared(sizeof (ctr_string));
+        shared->value.svalue->value = ctr_heap_allocate_shared(1);
+        shared->value.svalue->vlen = 0;
+        break;
+            }
+        default: break;
+      }
+  }
   return shared;
 }
 
@@ -1549,7 +1571,6 @@ ctr_reflect_run_for_object_in_ctx (ctr_object * myself, ctr_argument * argumentL
     {
       result = block;
     }
-  ctr_close_context ();
   if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak && CtrStdFlow != CtrStdContinue && CtrStdFlow != CtrStdExit)
     {
       ctr_object *catchBlock = ctr_internal_object_find_property (myself,
@@ -1565,13 +1586,14 @@ ctr_reflect_run_for_object_in_ctx (ctr_object * myself, ctr_argument * argumentL
 	  if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 	    {
 	      CtrStdFlow = NULL;
-	      ctr_object *alternative = ctr_block_run (catchBlock, a, ctx);
+	      ctr_object *alternative = ctr_block_run_here (catchBlock, a, ctx);
 	      result = alternative;
 	    }
 	  ctr_heap_free (a->next);
 	  ctr_heap_free (a);
 	}
     }
+    ctr_close_context ();
   return result;
 }
 
@@ -1583,14 +1605,14 @@ ctr_reflect_run_for_object_in_ctx_as_world (ctr_object * myself, ctr_argument * 
 {
   ctr_object *world = argumentList->next->object, *old_world = ctr_world_ptr;
   ctr_world_ptr = world;
-    
+
   static struct ctr_context_t ctx_l;
   ctr_dump_context(&ctx_l);
   ctr_context_id = 0;
   ctr_contexts[0] = world;
 
   ctr_object *res = ctr_reflect_run_for_object_in_ctx (myself, argumentList);
-  
+
   ctr_load_context(ctx_l);
   ctr_world_ptr = old_world;
   return res;

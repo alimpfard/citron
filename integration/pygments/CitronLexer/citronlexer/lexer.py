@@ -28,18 +28,18 @@ class CitronLexer(RegexLexer):
             (u'([^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*)', bygroups(Generic), 'main__8'),
             ('(\n|\r|\r\n)', String),
             ('.', String),
-        ], 
+        ],
         'main__1' : [
             (u'([^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*)', bygroups(Name.Variable), '#pop'),
             ('(\n|\r|\r\n)', String),
             ('.', Name.Variable),
-        ], 
+        ],
         'main__2' : [
             (u'(<\\?)', bygroups(String.Regex), '#pop'),
             (u'(.)', bygroups(String.Regex)),
             ('(\n|\r|\r\n)', String),
             ('.', String),
-        ], 
+        ],
         'main__3' : [
             (u'((?!<\\\\)\')', bygroups(String), '#pop'),
             (u'(\\\\[^xu\\n\\r])', bygroups(String.Escape)),
@@ -47,27 +47,27 @@ class CitronLexer(RegexLexer):
             (u'(.)', bygroups(String)),
             ('(\n|\r|\r\n)', String),
             ('.', String),
-        ], 
+        ],
         'main__4' : [
             (u'(\\s*)', bygroups(Name), '#pop'),
             ('(\n|\r|\r\n)', String),
             ('.', Name),
-        ], 
+        ],
         'main__5' : [
             (u'(\\s*)', bygroups(Name), '#pop'),
             ('(\n|\r|\r\n)', String),
             ('.', Name),
-        ], 
+        ],
         'main__6' : [
             (u'(?:([^:\\n\\r]\\w*)|(\\:(?:[^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*)))', bygroups(String.Escape, Keyword.Reserved), '#pop'),
             ('(\n|\r|\r\n)', String),
             ('.', Keyword.Reserved),
-        ], 
+        ],
         'main__7' : [
             (u'(\\s*)', bygroups(Name), '#pop'),
             ('(\n|\r|\r\n)', String),
             ('.', Name),
-        ], 
+        ],
         'main__8' : [
             (u'(\\s*)', bygroups(Name), '#pop'),
             ('(\n|\r|\r\n)', String),
@@ -75,3 +75,10 @@ class CitronLexer(RegexLexer):
         ]
     }
 
+    def analyse_text(text):
+        shbang = re.match(r'\#\!.*ctr', text.strip().split('\n', 1)[0]) is not None
+        if shbang: return 1
+        maybe = len(filter(lambda x: x in text,
+            ['Reflect', 'Map', 'String', '?>', '<?',
+             'Pen', 'Library/', 'is']))
+        return maybe / 8

@@ -292,6 +292,9 @@ typedef struct ctr_tlistitem ctr_tlistitem;
 
 struct ctr_source_map {
 	ctr_tnode* node;
+	char* p_ptr;
+	char* s_ptr;
+	char* e_ptr;
 	uint32_t line;
 	struct ctr_source_map* next;
 };
@@ -454,6 +457,10 @@ int     ctr_clex_dump_state(struct lexer_state*);
 int     ctr_clex_restore_state( int id );
 int     ctr_clex_load_state(struct lexer_state);
 int     ctr_clex_inject_token( int token, const char* value, const int vlen );
+CTR_H_DECLSPEC char*   ctr_clex_code_init;
+CTR_H_DECLSPEC char*   ctr_clex_code_end;
+CTR_H_DECLSPEC char*   ctr_clex_oldptr;
+CTR_H_DECLSPEC char*   ctr_clex_olderptr;
 CTR_H_DECLSPEC int     ctr_clex_quiet;
 CTR_H_DECLSPEC char*   ctr_clex_keyword_var;
 CTR_H_DECLSPEC char*   ctr_clex_keyword_me;
@@ -568,6 +575,11 @@ ctr_object* ctr_get_stack_trace();
 void ctr_print_stack_trace();
 ctr_object* ctr_get_or_create_symbol_table_entry(char* name, ctr_size len);
 int ctr_str_count_substr(char *str, char *substr, int overlap);
+
+#define CTR_TRACE_IGNORE_VEC_DEPTH 1024
+#define CTR_TRACE_IGNORE_LENGTH 2048
+CTR_H_DECLSPEC char ignore_in_trace[CTR_TRACE_IGNORE_LENGTH][CTR_TRACE_IGNORE_VEC_DEPTH]; //ignore named files.
+int trace_ignore_count;
 /**
  * Scoping functions
  */
@@ -1113,6 +1125,7 @@ ctr_object* ctr_reflect_run_for_object_in_ctx_as_world (ctr_object* myself, ctr_
 ctr_object* ctr_reflect_run_in_new_ctx(ctr_object * myself, ctr_argument * argumentList);
 ctr_object* ctr_reflect_compilerinfo (ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_delegate_set_private_property(ctr_object* itself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_set_ignore_file (ctr_object* myself, ctr_argument* argumentList);
 ctr_argument* ctr_array_to_argument_list (ctr_object * arr, ctr_argument * provided);
 int ctr_internal_has_own_responder(ctr_object* myself, ctr_object* meth);
 int ctr_internal_has_responder(ctr_object* myself, ctr_object* meth);

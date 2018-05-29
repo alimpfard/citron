@@ -1,6 +1,7 @@
 #!/usr/bin/env ctr
 #
 Broom autoAlloc: True.
+Reflect ignoreInTrace: (Program argument: 1). #eval or whatever it is
 contextPurity is False. #This is not a pure context, since objects are mutated in-between evaluations. so disallowing purely functional things.
 #Pen write: 'Extensions: ' + (File extensionsPath), brk.
 File new: (File extensionsPath) + '/extensions/fileutils.ctr', include.

@@ -1,11 +1,12 @@
-#me/my should point to block when using apply and to object otherwise
+#me/my should point to block.
+#Test self as a formal parameter
 
 #should point to object
 Deck is Array new.
-Deck on: 'print' do: {
+Deck on: 'print' do: {:self
         var len is me count - 1.
         1 to: len step: 1 do: { :i
-                var len2 is me count - 1.
+                var len2 is self count - 1.
                 Pen write: 'len: '.
                 Pen write: len, brk.
                 Pen write: 'len2: '.

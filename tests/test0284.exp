@@ -1,5 +1,10 @@
-Failed to open file: libffi.so.7: cannot open shared object file: No such file or directory
-Uncaught error has occurred.
-Key not found: CTypes
-#2 CTypes (tests/test0284.ctr: 5)
-#1 ptr (tests/test0284.ctr: 5)
+Python statistics:
+    ran command: len( "    " * (2000 - i) ),
+    total time: 73028,
+    best time: 23,
+    average over 2000 : 36.514
+Citron statistics:
+    ran command: ('    ' * (2000 - i)) length,
+    total time: 189023,
+    best time: 17,
+    average over 2000 : 94.5115

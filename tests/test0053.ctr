@@ -1,10 +1,10 @@
-60 * {
+60 times: {
 	var x is Dice roll.
 	(x <=: 6) ifFalse: { Pen write: 'FAIL'. }.
 	(x >=:0) ifFalse: { Pen write: 'FAIL'. }.
 	x is Dice rollWithSides: 3.
 	(x < 3) ifFalse: { Pen write: 'FAIL'. }.
-	(x>-1) ifFalse: { Pen write: 'FAIL'. }.
+	(x > -1) ifFalse: { Pen write: 'FAIL'. }.
 	x is ((Boolean flip) toNumber).
 	(x = 0 or: x = 1) ifFalse: { Pen write: 'FAIL'. }.
 	x is ((True flip) toNumber).
@@ -13,4 +13,3 @@
 	(x = 'HEAD' | x = 'TAIL') ifFalse: { Pen write: 'FAIL'. }.
 }.
 Pen write: 'DONE'.
-

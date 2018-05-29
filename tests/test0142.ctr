@@ -1,7 +1,7 @@
 #NOAST
 #If an object does not understand a message
-#it should NOT trigger error, but using a non-existing variable
-#should trigger an exception with a stack trace.
+#and it does not know about respondTo:(and:)*,
+#it should trigger an error.
 x is Object new.
 x doesNotUnderstand this.
 y doYouExist.

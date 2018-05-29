@@ -1,10 +1,1 @@
-Let's make a nice cup of coffee!
-No more coffee.
-Ohno! Add some coffee (3) and water (2)!
-Let's brew...
-No more coffee.
-Let's brew some more...
-No more coffee.
-Let's brew some more...
-No more coffee.
-Ah fine, that's enough coffee for today!
+{"poof": {"1234": null}, "Not_An_Array": [1, 2, ["Array?"]], "0": "string", "string": 64}

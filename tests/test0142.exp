@@ -1,3 +1,10 @@
 Uncaught error has occurred.
-Key not found: y
-#1 y (tests/test0142.ctr: 7)
+Unknown method Object::'doesNotUnderstand' was called
+#1 doesNotUnderstand (tests/test0142.ctr: 6)
+------------------------------------
+The probable cause of the exception: 
+4 | 
+5 | x is Object new.
+6 | x doesNotUnderstand this.
+~~~~~~~~~~~~~~~~~~~~~^
+7 | y doYouExist.

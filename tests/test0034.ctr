@@ -4,7 +4,7 @@ a on: 'test1' do: {
 	x is 123.
 }.
 a test1.
-#x should still be 0.
+#x should not be 0.
 Pen write: x.
 b is Object new.
 b on: 'test2' do: {

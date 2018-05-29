@@ -1,9 +1,11 @@
+Broom autoAlloc: True.
+
 1000 times: {
 	var a is 'First'.
 	var b is 'Second'.
 	a is b.
 	var garbageMaker is Object new.
-	garbageMaker method: 'putGarbageOnScreen' does: {
+	garbageMaker on: 'putGarbageOnScreen' do: {
 		var x is 1.
 		var y is 2.
 		Broom sweep.

@@ -1,12 +1,12 @@
 #Test the Citron equivalent of 'closures'
 
 makeAdder is { :x
-	var f is { :y ^ (my x + y). } set: 'x' value: x. 
+	var f is { :y ^ (my x + y). } set: 'x' value: x.
 	^ f.
 }.
 
 mapper is { :array :func
-	var mapping is { :i my q put: (my f applyTo: (my q @ i)) at: i. } 
+	var mapping is { :i my q put: (my f applyTo: (my q @ i)) at: i. }
 	set: 'q' value: array,
 	set: 'f' value: func.
 	(array count) times: { :i mapping applyTo: i. }.
@@ -17,3 +17,16 @@ mapper applyTo: a and: (makeAdder applyTo: 100).
 Pen write: (a at: 0), brk.
 Pen write: (a at: 1), brk.
 Pen write: (a at: 2), brk.
+
+# -- Fancy mode!
+
+fancyadder  is \:y \:x x + y.
+
+fancymapper is {:q:f
+	^q count times: \:i q put: (f applyTo: q @ i) at: i.
+}.
+
+a is Array < 1; 2; 3.
+fancymapper applyTo: a and: (fancyadder applyTo: 100).
+#Test list formatting
+Pen writeln: '%:L' % ['\n', a].

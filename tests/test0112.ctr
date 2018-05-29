@@ -1,4 +1,4 @@
-#Nil error should not be catched.
+#Nil error should not be caught.
 {
 	Pen write: 'Block 1.\n'.
 	True break.

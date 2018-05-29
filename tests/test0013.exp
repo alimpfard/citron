@@ -1,0 +1,9 @@
+Uncaught error has occurred.
+Unknown method Object::'`makeSound' was called
+#1 `makeSound (tests/test0013.ctr: 12)
+------------------------------------
+The probable cause of the exception: 
+10 | 
+11 | Tom is Cat new.
+12 | Tom `makeSound.
+~~~~~~~~~~~~~~~~~^

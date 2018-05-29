@@ -13,11 +13,11 @@ failing=()
 j=1
 useless_input="test
 ";
-for i in $(find tests -name 'test*.ctr'); do
+for i in $(find tests -maxdepth 1 -name 'test*.ctr'); do
 	fitem=$i
 	echo -n "$fitem interpret";
 	fexpect="${i%%.ctr}.exp"
-	result=`echo "$useless_input" | ./ctr ${fitem}`
+	result=`echo "$useless_input" | timeout 15 ./ctr ${fitem}`
 	expected=`cat $fexpect`
 	if [ "$result" = "$expected" ]; then
 		echo "[$j]"

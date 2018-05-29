@@ -3,3 +3,10 @@ Object property not found: tealeaves
 #3 tealeaves (tests/test0144.ctr: 16)
 #2 makeTea (tests/test0144.ctr: 27)
 #1 write: (tests/test0144.ctr: 25)
+------------------------------------
+The probable cause of the exception: 
+14 | 
+15 | 
+16 | CoffeeMachine on: 'makeTea' do: {	^ (my tealeaves extract). }. #tealeaves is not defined!
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+17 | CoffeeMachine on: 'makeCoffee' do: { ^ (my coffeegrounds extract). }.

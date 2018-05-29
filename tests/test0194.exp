@@ -1,3 +1,7 @@
 Uncaught error has occurred.
 Number cannot be constructed by 2
 #1 2 (tests/test0194.ctr: 1)
+------------------------------------
+The probable cause of the exception: 
+1 | 2 is 1.
+~~~~^

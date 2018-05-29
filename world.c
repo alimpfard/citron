@@ -1288,7 +1288,7 @@ ctr_switch_context (ctr_object * context)
 
 /**
  * @internal
- * 
+ *
  * ContextDump
  *
  * Dumps a context to a given struct
@@ -1512,7 +1512,7 @@ ctr_set (ctr_object * key, ctr_object * object)
     }
   if (!foundObject)
     {
-      if (ctr_context_id <= 1) 
+      if (ctr_context_id <= 1)
           goto assign_anyway;
       char *key_name;
       char *message;
@@ -1560,6 +1560,7 @@ ctr_initialize_world ()
 {
   if (ctr_world_initialized)
     return;
+  trace_ignore_count = 0;
   ctr_world_initialized = 1;
   //register_signal_handlers ();
   ctr_instrument = 0;
@@ -2233,6 +2234,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("version"), &ctr_give_version);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("compilerInfo"), &ctr_reflect_compilerinfo);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("setPrivate:value:"), &ctr_reflect_delegate_set_private_property);
+  ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("ignoreInTrace:"), &ctr_reflect_set_ignore_file);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("&method:"), &ctr_reflect_object_delegate_get_responder);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("&responder:"), &ctr_reflect_object_get_responder);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("lastTrace"), &ctr_get_last_trace);

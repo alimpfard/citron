@@ -9,7 +9,7 @@ Broom mode: 0.
 
 txt is ' Word Salad '.
 txt is txt replace: 'Word' with: 'Ceasar'.
-txt is txt ltrim rtrim trim.
+txt is txt leftTrim rightTrim trim.
 Pen write: txt, brk.
 
 Broom sweep.
@@ -19,7 +19,7 @@ usedMemory1 is Broom keptAlloc.
 
 txt is ' Word Salad '.
 txt is txt replace: 'Word' with: 'Ceasar'.
-txt is txt ltrim rtrim trim.
+txt is txt leftTrim rightTrim trim.
 Pen write: txt, brk.
 
 Broom sweep.
@@ -28,7 +28,7 @@ usedMemory2 is Broom keptAlloc.
 
 txt is ' Word Salad '.
 txt is txt replace: 'Word' with: 'Ceasar'.
-txt is txt ltrim rtrim trim.
+txt is txt leftTrim rightTrim trim.
 Pen write: txt, brk.
 
 Broom sweep.
@@ -36,7 +36,7 @@ usedMemory3 is Broom keptAlloc.
 #Pen write: usedMemory3, brk.
 
 #memory counters need to be equal!
-( usedMemory1 = usedMemory2 and: usedMemory1 = usedMemory3, and: usedMemory2 = usedMemory3 ) ifTrue: {
+( (usedMemory1 = usedMemory2) & (usedMemory1 = usedMemory3) & (usedMemory2 = usedMemory3) ) ifTrue: {
 	Pen write: 'No memory leaks here'.
 }, ifFalse: {
 	Pen write: 'Leaking memory...'.

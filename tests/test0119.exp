@@ -1,4 +1,12 @@
 search=table&restaurant=pizzaria&menu=spaghetti&menu=macaroni&course[main]=canneloni&course[dessert]=tiramisu
-I was looking for a free table in a pizzaria, 
-but the waiter told me all tables have been corrupted by 
-spaghetti, macaroni and canneloni code.
+Uncaught error has occurred.
+Key not found: Request
+#2 Request (tests/test0119.ctr: 5)
+#1 s (tests/test0119.ctr: 5)
+------------------------------------
+The probable cause of the exception: 
+3 | 
+4 | Pen write: (Program env: 'QUERY_STRING'), brk.
+5 | s is Request get: 'search'.
+~~~~~~~~~~~~~~^
+6 | Pen write: 'I was looking for a free ' + s.

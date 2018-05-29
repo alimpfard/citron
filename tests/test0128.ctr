@@ -5,4 +5,4 @@ a is Array < 1 ; 9.
 Pen write: (a sum), brk. #10
 a is Array < 'o' ; 2.
 Pen write: (a sum), brk. #2
-Pen write: (Array new sum), brk. #0
+Pen write: (Array new sum), brk. #Empty block

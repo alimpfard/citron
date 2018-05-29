@@ -3,6 +3,7 @@
 #as proposed in GH80/84
 
 Broom mode: 4.
+Broom autoAlloc: True.
 j is 1.
 
 func is {

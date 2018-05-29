@@ -1,22 +1,22 @@
- animal is Object new. 
- 
+ animal is Object new.
+
  animal on: 'name:' do: { :n
 my name is n.
-}. 
+}.
 
 
-animal name: 'Diva'. 
- 
+animal name: 'Diva'.
+
 animal on: 'name' do: {
-^ name.
+^ my name.
 }.
 
 cat is animal new.
- 
- cat name: 'Diva'. 
- 
+
+ cat name: 'Diva'.
+
  cat on: 'name' do: {
-^ 'your royal highness '
+^ 'her royal highness '
 + (me `name).
 }.
 

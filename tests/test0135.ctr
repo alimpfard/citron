@@ -1,4 +1,4 @@
-#Test GC: a block getting runned should cause no remaining garbage - expected 0,0
+#Test GC: a block getting run should cause no remaining garbage - expected 0,0
 
 kept1   is Broom keptCount.
 sticky1 is Broom stickyCount.

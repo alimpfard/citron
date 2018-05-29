@@ -4,12 +4,14 @@ z on: 'value:' do: { :v
 	^ me.
 }.
 z on: 'value' do: { ^ my value. }.
-(z setValue: 1) value: 2.
+(z value: 1) value: 2.
 Pen write: z value.
 x is z.
 Pen write: x value.
 z is Nil.
-Pen write: z value. #should print [Nil]
+{
+	Pen write: z value. #should error
+} catch: {:e Pen write: e.}, run.
 Pen write: x value. #x should still have a reference to the object z had
 Pen write: 'hello'.
 Pen write: 3 + 2.

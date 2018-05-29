@@ -1,2 +1,2 @@
-#Test invalid left hand assignment with Nil
+#Test invalid left hand assignment with Nil (No-op)
 Nil is True.

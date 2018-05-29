@@ -1,3 +1,9 @@
 Uncaught error has occurred.
 Key not found: is
 #1 is (tests/test0152.ctr: 3)
+------------------------------------
+The probable cause of the exception: 
+1 | 
+2 | #Test parser error
+3 | var is.
+~~~~~^

@@ -1870,6 +1870,29 @@ ctr_reflect_delegate_set_private_property (ctr_object * itself, ctr_argument * a
   return itself;
 }
 
+/**
+ * [Reflect] ignoreInTrace: [String]
+ *
+ * Set the file to be ignored in stack traces
+ */
+ctr_object *
+ctr_reflect_set_ignore_file (ctr_object * myself, ctr_argument * argumentList)
+{
+  if(trace_ignore_count == CTR_TRACE_IGNORE_VEC_DEPTH) {
+    CtrStdFlow = ctr_build_string_from_cstring("Ignore Vector has no more room");
+    return CtrStdNil;
+  }
+  ctr_object *name = ctr_internal_cast2string(argumentList->object);
+  if (name->value.svalue->vlen > CTR_TRACE_IGNORE_LENGTH) {
+    CtrStdFlow = ctr_format_str("EFilename too long for ignore vector (%d > %d)",
+      name->value.svalue->vlen, CTR_TRACE_IGNORE_LENGTH);
+    return CtrStdNil;
+  }
+  char* s = ctr_heap_allocate_cstring(name);
+  strcpy(ignore_in_trace[trace_ignore_count++], s);
+  return CtrStdNil;
+}
+
 ///Trash v
 ctr_object *
 ctr_reflect_cons_value (ctr_object * myself, ctr_argument * argumentList)

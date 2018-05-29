@@ -133,6 +133,8 @@ main (int argc, char *argv[])
   ctr_internal_next_return = 0;
   ctr_clex_quiet = 0;
   ctr_cparse_quiet = 0;
+  ctr_initialize_world ();
+  
 #if (DO_PROFILE)
   ProfilerStart ("citron.log");
 #endif
@@ -176,7 +178,6 @@ main (int argc, char *argv[])
 #endif
       if (debug)
 	ctr_internal_debug_tree (program, 1);	      /*-- for debugging */
-      ctr_initialize_world ();
       ctr_cwlk_run (program);
       ctr_gc_sweep (1);
       ctr_heap_free (prg);

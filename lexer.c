@@ -280,6 +280,8 @@ ctr_clex_load (char *prg)
   ctr_clex_buffer[0] = '\0';
   ctr_eofcode = (ctr_code + ctr_program_length);
   ctr_clex_line_number = 0;
+  ctr_clex_code_init = ctr_code;
+  ctr_clex_code_end = ctr_eofcode;
 }
 
 /**

@@ -318,6 +318,20 @@ ctr_internal_object_is_constructible (ctr_object * object1, ctr_object * object2
   return ctr_internal_object_is_constructible_ (object1, object2, 0);
 }
 
+ctr_object*
+ctr_object_is_constructible (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *sl0 = myself, *sl1 = argumentList->object;
+  if (sl1->properties->size > sl0->properties->size) return ctr_build_bool(0);
+
+  ctr_mapitem *sp1 = sl1->properties->head;
+  for(int i = 0; i<sl1->properties->size; i++) {
+    if(ctr_internal_object_find_property(sl0, sp1->key, CTR_CATEGORY_PRIVATE_PROPERTY) == NULL) return ctr_build_bool(0);
+    sp1 = sp1->next;
+  }
+  return ctr_build_bool(1);
+}
+
 int
 ctr_internal_object_is_constructible_ (ctr_object * object1, ctr_object * object2, int raw)
 {
@@ -328,6 +342,9 @@ ctr_internal_object_is_constructible_ (ctr_object * object1, ctr_object * object
   ctr_size len1;
   ctr_size len2;
   ctr_size d;
+  //ignore
+  if (object2->info.type == CTR_OBJECT_TYPE_OTSTRING && object2->value.svalue->vlen == 1 && *object2->value.svalue->value == '_')
+    return 1;
   //we're matching a binding and not an actual string
   if (( /*raw && */ object2->info.type == CTR_OBJECT_TYPE_OTSTRING && object1->info.type != CTR_OBJECT_TYPE_OTSTRING)
       || (raw && object2->info.type == CTR_OBJECT_TYPE_OTSTRING && object1->info.type == CTR_OBJECT_TYPE_OTSTRING))
@@ -368,23 +385,50 @@ ctr_internal_object_is_constructible_ (ctr_object * object1, ctr_object * object
   if (object1->info.type == CTR_OBJECT_TYPE_OTARRAY && object2->info.type == CTR_OBJECT_TYPE_OTARRAY)
     {
       int count = ctr_array_count (object2, NULL)->value.nvalue;
-      ctr_object *last = ctr_array_last (object1, NULL);
-      if (ctr_array_count (object1, NULL)->value.nvalue != count && !(last->info.type == CTR_OBJECT_TYPE_OTSTRING))
+      int count1 = ctr_array_count (object1, NULL)->value.nvalue;
+      int catch_all = 0;
+      char* ignores = ctr_heap_allocate(sizeof(char)*count);
+      int ignore = 0;
+      ctr_object* f;
+      for(int _i=0; _i<count; _i++) {
+        f = object2->value.avalue->elements[_i];
+        if (f->info.type==CTR_OBJECT_TYPE_OTSTRING && f->value.svalue->vlen > 1 && *f->value.svalue->value == '*')
+          catch_all++;
+        if (f->info.type==CTR_OBJECT_TYPE_OTSTRING && f->value.svalue->vlen == 1 && *f->value.svalue->value == '_') {
+          ignores[_i] = 1;
+          ignore++;
+        }
+        else
+          ignores[_i] = 0;
+      }
+      if (ctr_array_count (object1, NULL)->value.nvalue-ignore != count && catch_all == 0)
 	return 0;		//It requires more parameters than object1 can provide, and we don't have a catch-all binding
       int i = 1;
+      int _x = 0;
+      int _y = 0;
+      int _i = count;
       ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
-      ctr_argument *elnu = ctr_heap_allocate (sizeof (ctr_argument));
-      for (; count > 0 && i; count--)
+      ctr_argument *elnu1 = ctr_heap_allocate (sizeof (ctr_argument));
+      ctr_argument *elnu2 = ctr_heap_allocate (sizeof (ctr_argument));
+      for (; count>0 && _x<_i&&i; count--,_x++)
 	{
-	  elnu->object = ctr_build_number_from_float (i - 1);
-	  args->object = ctr_array_get (object2, elnu);
+    if (++_y<count1);//the rest goes into the catch_all
+    else {
+      _y = 0;
+      catch_all = -2;
+    }
+    elnu1->object = ctr_build_number_from_float (_y);
+    while(ignores[_x]) _x--;
+	  elnu2->object = ctr_build_number_from_float (_x);
+	  args->object = ctr_array_get (object2, elnu2);
 	  i = i
-	    && ((args->object->info.type ==
-		 CTR_OBJECT_TYPE_OTARRAY
-		 &&
-		 ctr_internal_object_is_constructible_
-		 (ctr_array_get (object1, elnu), args->object,
-		  raw)) || args->object->info.type == CTR_OBJECT_TYPE_OTSTRING || ctr_array_contains (object1, args)->value.bvalue);
+	    && (
+    (
+      args->object->info.type = CTR_OBJECT_TYPE_OTARRAY
+		  &&
+		  (catch_all==-2||ctr_internal_object_is_constructible_ (ctr_array_get (object1, elnu1), args->object, raw))
+    )  || args->object->info.type == CTR_OBJECT_TYPE_OTSTRING
+       || ctr_array_contains (object1, args)->value.bvalue);
 	}
       ctr_heap_free (args);
       return i;
@@ -1673,6 +1717,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("destruct"), &ctr_object_destruct);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring (CTR_DICT_UNPACK), &ctr_object_assign);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("iHash"), &ctr_object_hash);
+  ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("isConstructible:"), &ctr_object_is_constructible);
 
   ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring (CTR_DICT_OBJECT), CtrStdObject, 0);
   CtrStdObject->interfaces->link = NULL;
@@ -1842,7 +1887,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("paddingRight:"), &ctr_string_padding_right);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("randomizeBytesWithLength:"), &ctr_string_randomize_bytes);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("reverse"), &ctr_string_reverse);
-  ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("isConstructible:"), &ctr_string_is_ctor);
+  // ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("isConstructible:"), &ctr_string_is_ctor);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_UNPACK), &ctr_string_assign);
   ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring (CTR_DICT_STRING), CtrStdString, 0);
   ctr_set_link_all (CtrStdString, CtrStdObject);

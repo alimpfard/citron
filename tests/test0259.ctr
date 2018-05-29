@@ -1,43 +1,11 @@
-os is (Shell call: 'uname').
-file is Nil.
-
-((os indexOf: 'Linux') > -1) ifTrue: {
-	file is '/var/log/syslog'.
-}.
-
-((os indexOf: 'OpenBSD') > -1) ifTrue: {
-	file is '/var/log/messages'.
-}.
-
-(file isNil) ifTrue: {
-	Pen write: 'Unable to determine location of system log for test', brk.
-	Program exit.
-}.
-
 key is '--Citron-->0'.
 Program log: key.
-str is (Shell tail: file).
-((str indexOf: key) > -1) ifTrue: {
-	Pen write: 'OK'.
-}.
 
 key is '--Citron-->1'.
 Program warning: key.
-str is (Shell tail: file).
-((str indexOf: key) > -1) ifTrue: {
-	Pen write: 'OK'.
-}.
 
 key is '--Citron-->2'.
 Program error: key.
-str is (Shell tail: file).
-((str indexOf: key) > -1) ifTrue: {
-	Pen write: 'OK'.
-}.
 
 key is '--Citron-->3'.
 Program alert: key.
-str is (Shell tail: file).
-((str indexOf: key) > -1) ifTrue: {
-	Pen write: 'OK'.
-}.

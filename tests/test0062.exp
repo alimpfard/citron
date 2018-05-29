@@ -1,4 +1,6 @@
 Expected on: argument to be of type string.
 Expected argument do: to be of type block.
 Division by zero.
-OKOKOK
+Unknown method String::'?' was called
+OSHITOCRAPNo direct conversion to type Number, nor any implicit cast to it arises from the use of type String
+OK

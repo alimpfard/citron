@@ -2,3 +2,7 @@ Uncaught error has occurred.
 Failed to open folder.
 #2 list: (tests/test0270.ctr: 1)
 #1 q (tests/test0270.ctr: 1)
+------------------------------------
+The probable cause of the exception: 
+1 | q is (File list: 'nonexistant').
+~~~~~~~~~~~~~~~~~~^

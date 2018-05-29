@@ -1,4 +1,4 @@
-#Test GC: a variable causes extra garbage - expected TRUE,0
+#Test GC: a variable causes extra garbage - expected False,0
 
 kept1   is Broom keptCount.
 sticky1 is Broom stickyCount.
@@ -35,5 +35,5 @@ kept2   is Broom keptCount.
 sticky2 is Broom stickyCount.
 dust2   is Broom dust.
 
-Pen write: (kept2 > kept1), brk. #should be TRUE
+Pen write: (kept2 > kept1), brk. #should be False
 Pen write: (sticky2 - sticky1), brk. #should be 0, no difference

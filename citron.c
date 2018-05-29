@@ -9,6 +9,7 @@
 #include <math.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <syslog.h>
 #include "citron.h"
 #include "siphash.h"
 
@@ -133,8 +134,9 @@ main (int argc, char *argv[])
   ctr_internal_next_return = 0;
   ctr_clex_quiet = 0;
   ctr_cparse_quiet = 0;
+  openlog(argv[0], LOG_PID|LOG_CONS, LOG_USER);
   ctr_initialize_world ();
-  
+
 #if (DO_PROFILE)
   ProfilerStart ("citron.log");
 #endif
@@ -174,6 +176,7 @@ main (int argc, char *argv[])
       // ctr_initialize_world ();
       // ctr_ccomp_run (program);
 
+      closelog();
       exit (0);
 #endif
       if (debug)
@@ -186,6 +189,7 @@ main (int argc, char *argv[])
       if (ctr_gc_alloc != 0 && (CTR_LOG_WARNINGS & 1) == 1)
 	{
 	  printf ("[WARNING] Citron has detected an internal memory leak of: %" PRIu64 " bytes.\n", ctr_gc_alloc);
+    closelog();
 	  exit (1);
 	}
       //exit(0);

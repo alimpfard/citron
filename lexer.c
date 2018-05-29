@@ -262,7 +262,7 @@ ctr_clex_emit_error (char *message)
 printf ("%s on line: %d. \n", message, ctr_clex_line_number);
   exit (1);
 #else
-CtrStdFlow = ctr_format_str("E%s on line: %d.\n", ctr_clex_line_number, message);
+CtrStdFlow = ctr_format_str("E%s on line: %d.\n", message, ctr_clex_line_number);
 #endif
 }
 
@@ -709,6 +709,7 @@ ctr_clex_tok ()
       c = toupper (*ctr_code);
       if (xnum_likely)
 	base = c == 'X' ? 16 : c == 'C' ? 8 : 10;	//let the parser handle incorrect values
+      if (base == 10) xnum_likely = 0; //not an xnum
       if (base != 10)
 	{
 	  if (c != 'C')

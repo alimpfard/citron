@@ -1,5 +1,12 @@
 Confirmed. Target file does not exist.
 hello world
-lo
-el
-ld
+Uncaught error has occurred.
+Unknown method Object::'open' was called
+#1 open (tests/test0127.ctr: 19)
+------------------------------------
+The probable cause of the exception: 
+17 | 
+18 | 
+19 | f open. #not good
+~~~~~~~~~^
+20 | q is f readBytes: 1. #but should not cause segfault

@@ -3,3 +3,10 @@ Oops
 #3 error: (tests/test0145.ctr: 4)
 #2 times: (tests/test0145.ctr: 3)
 #1 times: (tests/test0145.ctr: 2)
+------------------------------------
+The probable cause of the exception: 
+2 | 
+3 | 	3 times: {
+4 | 		thisBlock error: 'Oops'.
+~~~~~~~~~~~~~~~~~~~^
+5 | 	}.

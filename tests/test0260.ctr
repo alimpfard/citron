@@ -7,4 +7,4 @@ q is Program new: { :x
 }.
 
 q join.
-Pen write: (q pid isNil) brk.
+Pen write: (q pid isNil), brk.

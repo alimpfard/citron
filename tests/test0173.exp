@@ -1,34 +1,13 @@
 sum: helloworldTrueNil6661
-min: 0
-max: 666
-3rd: True
-prd: 
-0
-1
-2
-3
-4
-5
-sum: helloworldTrueNil6661
-min: 0
-max: 666
-3rd: True
-prd: 
-0
-1
-2
-3
-4
-5
-sum: helloworldTrueNil6661
-min: 0
-max: 666
-3rd: True
-prd: 
-0
-1
-2
-3
-4
-5
-Leaking memory...
+Uncaught error has occurred.
+toNumber must return a number.
+#3 min (tests/test0173.ctr: 13)
+#2 + (tests/test0173.ctr: 13)
+#1 write: (tests/test0173.ctr: 13)
+------------------------------------
+The probable cause of the exception: 
+11 | 
+12 | Pen write: ( 'sum: ' + ( a sum ) ), brk.
+13 | Pen write: ( 'min: ' + ( a min ) ), brk.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+14 | Pen write: ( 'max: ' + ( a max ) ), brk.

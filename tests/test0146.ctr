@@ -1,5 +1,4 @@
-#NOAST
-#Trying to assign to an undefined variable should trigger error
+# Should be fine as destruction
 {
 	undef is 1.
 } run.

@@ -1,16 +1,16 @@
 $ is Object new.
 
 $ on: 'respondTo:' do: { :x
-	
+
 	var operation is x @ 0.
 	var valuta    is x @ 1.
-	var money     is x skip: 2.
+	var money     is x ~ 's/[^\\d]//g'.
 	var amount    is 0.
-		
+
 	( operation = '+' ) ifTrue: {
 		( valuta = '£' ) ifTrue: { amount is 1.28 * money. }.
 	}.
-	
+
 	^ amount.
 }.
 
@@ -36,16 +36,16 @@ Fruit on: 'apples' do: { ^ my apples. }.
 Fruit on: 'oranges' do: { ^ my oranges. }.
 
 Fruit on: '+' do: { :f
-	
+
 	var n is Fruit new.
-	
+
 	n apples: (f apples + my apples).
 	n oranges:  (f oranges  + my oranges).
 	^ n.
 }.
 
 Fruit on: 'toString' do: {
-	
+
 	^ ( my apples toString + ' apples and ' + my oranges + ' oranges' ).
 }.
 
@@ -74,6 +74,3 @@ String on: 'twice' do: {
 
 
 Pen write: '❤❤❤' twice.
-
-
-

@@ -1455,7 +1455,7 @@ ctr_build_number_from_string (char *str, ctr_size length)
   /* max length is 40 (and that's probably even too long... ) */
   numCStr = (char *) ctr_heap_allocate (41 * sizeof (char));
   memcpy (numCStr, str, stringNumberLength);
-  if (numCStr[0] == '0')
+  if (numCStr[0] == '0' && length > 1 && strchr("xXcCoO", numCStr[1]) != NULL)
     {
       numberObject->value.nvalue = strtol (numCStr, 0, 0);
     }
@@ -6184,15 +6184,23 @@ ctr_print_stack_trace ()
 	}
       printf ("\n");
     }
+  if(!first) return;
   char* ptr = first->p_ptr, *bptr = ptr, *here = ptr;
   if(!ptr) return;
-  printf("------------------------------------%s\n", CTR_ANSI_COLOR_RED);
+  int p_tty = isatty(fileno(stdout));
+  char *red="", *reset="", *magenta="";
+  if(p_tty) {
+    red = CTR_ANSI_COLOR_RED;
+    reset = CTR_ANSI_COLOR_RESET;
+    magenta = CTR_ANSI_COLOR_MAGENTA;
+  }
+  printf("------------------------------------%s\n", red);
   printf("The probable cause of the exception: ");
-  printf("%s", CTR_ANSI_COLOR_RESET);
+  printf("%s", reset);
   int current_line = 0;
   int p = 2;
   if (is_eval>-1) {
-    printf(CTR_ANSI_COLOR_MAGENTA "Evaluated string (at index %d)\n" CTR_ANSI_COLOR_RESET, is_eval);
+    printf("%sEvaluated string (at index %d)%s\n", magenta, is_eval, reset);
     return;
   }
   putchar('\n');
@@ -6220,17 +6228,17 @@ ctr_print_stack_trace ()
     slen = sprintf(numd, "%d | ", ++current_line);
     printf("%s", numd);
     while((c = *(ptr++)) != '\n') {
-      if(ptr == here-csl+1) printf("%s", CTR_ANSI_COLOR_MAGENTA);
+      if(ptr == here-csl+1) printf("%s", magenta);
       putchar(c);
-      if(ptr == here) { printf("%s", CTR_ANSI_COLOR_RESET); print_caret = pos_in_line;}
+      if(ptr == here) { printf("%s", reset); print_caret = pos_in_line;}
       pos_in_line++;
     }
     putchar('\n');
     if(print_caret > -1) {
-      printf("%s", CTR_ANSI_COLOR_MAGENTA);
+      printf("%s", magenta);
       for(int i=0; i<print_caret+slen-1; i++) putchar('~');
       putchar('^');
-      puts(CTR_ANSI_COLOR_RESET);
+      puts(reset);
       print_caret = -1;
     }
   }

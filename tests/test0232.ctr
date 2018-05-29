@@ -4,5 +4,5 @@ x + 3.
 Pen write: (x obtain), brk.
 x echo: 'Hello world'.
 Pen write: (x obtain), brk.
-x tellme: 123 and: 987.
+x tellme: 123 and: 987. #This should fail...maybe change that?
 Pen write: (x obtain), brk.

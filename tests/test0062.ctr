@@ -4,10 +4,10 @@ o on: 'hello' do: {}.
 { o on: 2 do: 3.} catch: { :e Pen write: e, brk. }, run.
 { o on: 'test' do: 3.} catch: { :e Pen write: e, brk. }, run.
 { o on: 'hello' do: {}.} catch: { :e Pen write: e, brk. }, run. #allowed
-{ var z is 4 / 0. } catch: { :e Pen write: e, brk. }, run. 
+{ var z is 4 / 0. } catch: { :e Pen write: e, brk. }, run.
 { (True & Nil) ifTrue: { Pen write: 'X'.}. } catch: { :e Pen write: e, brk. }, run. #allowed
-{ ('' ? 0) ifTrue: { Pen write: 'X'.}. } catch: { :e Pen write: e, brk. }, run. #allowed
-{ (1 < '2') ifTrue: { Pen write: 'OK'. }. } catch: { :e Pen write: e, brk. }, run. #allowed, cast
-{ (1 < '2.0') ifTrue: { Pen write: 'OK'. }. } catch: { :e Pen write: e, brk. }, run. #allowed, cast
-{ (1 < 'x2.0') ifTrue: { Pen write: 'NO!'. }. } catch: { :e Pen write: e, brk. }, run. #allowed, cast
+{ ('' ? 0) ifTrue: { Pen write: 'X'.}. } catch: { :e Pen write: e, brk. }, run. #unknown method
+{ (1 < '2') ifTrue: { Pen write: 'OSHIT'. }. } catch: { :e Pen write: e, brk. }, run. #disallowed, implicit string to number
+{ (1 < '2.0') ifTrue: { Pen write: 'OCRAP'. }. } catch: { :e Pen write: e, brk. }, run. #disallowed, implicit string to number
+{ (1 < 'x2.0') ifTrue: { Pen write: 'NO!'. }. } catch: { :e Pen write: e, brk. }, run. #disallowed, implicit string to number
 { Pen write: ('hello OK there' from: '6' to: '8'). } run. #allowed, cast

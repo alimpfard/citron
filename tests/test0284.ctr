@@ -1,6 +1,6 @@
 Broom memoryLimit: 1024 * 1024 * 128.
 
-rept is 1000.
+rept is 2000.
 
 ptr is CTypes pointer.
 int is CTypes sint.
@@ -16,7 +16,7 @@ ptime is 0.
 pbest is 10 pow: 10.
 rept times: {:i
   ptr destruct.
-  ptr is 'len( "    " * $$i )'.
+  ptr is CTypes fromString: 'len( "    " * %d )' % [rept - i].
   ptime +=: (var bestc is (Clock timeExecutionOf: {
       cif call: pyrun withArgs: [ptr].
   })).
@@ -29,28 +29,29 @@ cif call: pyfinalize withArgs: [].
 Broom sweep.
 
 ll is CTypes loadLibrary: Nil.
-ptr is ''.
 cif setABI: 0 return: Nil argTypes: [ptr].
 execstr is ll execute_string.
 
 rtime is 0.
 rbest is 10 pow: 10.
 rept times:{:i
-  ptr is '\'    \' * $$i length'.
+  ptr destruct.
+  ptr is CTypes fromString: '( \'    \' * %d ) length' % [rept - i].
   rtime +=: (var bestc is (Clock timeExecutionOf: {
         cif call: execstr withArgs: [ptr].
   })).
   rbest is rbest min: bestc.
 }.
 
+Broom sweep.
 
 Pen write: 'Python statistics:
-    ran command: len( "    " * i ),
+    ran command: len( "    " * ($$rept - i) ),
     total time: %d,
     best time: %d,
     average over $$rept : %d
 Citron statistics:
-    ran command: \'    \' * i length,
+    ran command: (\'    \' * ($$rept - i)) length,
     total time: %d,
     best time: %d,
     average over $$rept : %d

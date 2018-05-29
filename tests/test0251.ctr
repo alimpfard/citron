@@ -2,10 +2,10 @@
 
 Number on: 'describe' do: {
 	var text is Nil.
-	( me = 0 ) ifTrue: {
+	( equals: 0 ) ifTrue: {
 		text is 'zero'.
 	}.
-	( me = 1 ) ifTrue: {
+	( equals: 1 ) ifTrue: {
 		text is 'one'.
 	}.
 	↑ text.

@@ -1,0 +1,202 @@
+name                             = Citron
+file_extensions []               = ctr;
+textmate_compatible              = false 
+#textmate_compatible              = true
+##################################################
+#  Styles                                        #
+##################################################
+
+styles[] {
+   .punctuation : style {
+      color                           = #aaf
+      pygments_scope                  = Name
+      textmate_scope                  = entity.name
+   }
+   .variable : style {
+      textmate_scope                  = variable
+      pygments_scope                  = Name.Variable
+   }
+   .sl_defn : style {
+      color                           = violet  
+      pygments_scope                  = Keyword.Pseudo
+      textmate_scope                  = keyword.other.unit
+   }
+   .sl_assign : style {
+      color                           = violet_red
+      pygments_scope                  = Keyword.Reserved
+      textmate_scope                  = keyword.control
+   }
+   .sl_comment : style {
+      color                           = grey
+      textmate_scope                  = comment
+      pygments_scope                  = Comment
+      highlight_js_scope              = .hljs-comment
+      ace_scope                       = comment
+   }
+   .sl_message : style {
+      color                           = purple   
+      pygments_scope                  = Name.Decorator
+      textmate_scope                  = entity.name.function
+   }
+   .sl_string : style {
+      color                           = yellow
+      pygments_scope                  = String
+      textmate_scope                  = string
+   }
+   .sl_strescape : style {
+      color                           = light_blue
+      pygments_scope                  = String.Escape
+      textmate_scope                  = string punctuation
+   }
+   .sl_rawstring : style {
+      color                           = light_green
+      pygments_scope                  = String.Regex
+      textmate_scope                  = string.regexp
+   }
+   .sl_number : style {
+      color                           = green
+      pygments_scope                  = Number
+      textmate_scope                  = constant.numeric
+   }
+   .text : style {
+      color                           = white
+      pygments_scope                  = Generic
+      textmate_scope                  = text
+   }
+   
+}
+
+
+
+##################################################
+#  Contexts                                      #
+##################################################
+
+contexts[] {
+   main : context {
+      : inline_push {
+         regex      \= \b(var|my|const)\b
+         styles []   = .sl_defn;
+         default_style     = .variable
+         : pop {
+            regex      \= ([^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*)
+            styles []   = .variable;
+         }
+         
+      }
+      
+      : set {
+         regex      \= (\.)
+         styles []   = .punctuation;
+         context []  = main;
+      }
+      // : pop {
+      //    regex      \= (\.)
+      //    styles []   = .punctuation;
+      // }
+      
+      : pattern {
+         regex      \= ([\[\]\(\)\^\}])
+         styles []   = .punctuation;
+      }
+      
+      : pattern {
+         regex      \= (?:(\s*)(\bis\b|\:\=|\=\>)(\s*))
+         styles []   = .text, .sl_assign, .text;
+      }
+      : inline_push {
+         regex      \= (?:(\?>))
+         styles []   = .sl_rawstring;
+         
+         : pop {
+            regex      \= (<\?)
+            styles []   = .sl_rawstring;
+         }
+         
+         : pattern {
+            regex      \= (.)
+            styles []   = .sl_rawstring;
+         }
+      }
+      : pattern {
+         regex      \= (0[xX][0-9a-fA-F]+|0[cC][0-7]|\d+\.\d+|\d+)
+         styles []   = .sl_number;
+      }
+      : inline_push {
+         regex      \= (')
+         styles []   = .sl_string;
+         
+         :pop {
+            regex      \= ((?!<\\)')
+            styles []   = .sl_string;
+         }
+         
+         : pattern {
+            regex      \= (\\[^xu])
+            styles []   = .sl_strescape;
+         }
+         
+         : pattern {
+            regex      \= (?:(\\[xuXU])([{]?)([0-9a-fA-F]+)([}]?))
+            styles []   = .sl_strescape, .sl_strescape, .sl_number, .sl_strescape;
+         }
+         
+         : pattern {
+            regex      \= (.)
+            styles []   = .sl_string;
+         }
+      }
+      : inline_push {
+         regex      \= (?:(\{)((?:\:(?:[^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*))*))
+         styles []   = .punctuation, .sl_defn;
+         default_style     = .punctuation
+         : pop {
+            regex            \= (\s*)
+            styles []         = .punctuation;
+         }
+         
+      }
+      : pattern {
+         regex      \= (\#.*$)
+         styles []   = .sl_comment;
+      }
+      : inline_push {
+            regex            \= ((?:[^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*)\:)
+            styles []         = .sl_message;
+            default_style     = .punctuation
+            : pop {
+               regex            \= (\s*)
+               styles []         = .punctuation;
+            }
+         }
+      : inline_push {
+         regex      \= (\\)
+         styles []         = .sl_strescape;
+         default_style     = .sl_assign
+         : pop {
+            regex      \= (?:([^:]\w*)|(\:(?:[^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*)))
+            styles []   = .sl_strescape, .sl_assign;
+         }
+      }
+      : inline_push {
+         regex            \= (?:(\s+)([^\s\d:.,\[\]\(\)\{\}\#])(\s+))
+         styles []         = .punctuation, .sl_message, .punctuation;
+         default_style     = .punctuation
+         : pop {
+            regex            \= (\s*)
+            styles []         = .punctuation;
+         }
+      }
+      
+      : inline_push {
+         regex      \= ([^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*)
+         styles []   = .text;
+         default_style     = .punctuation
+         : pop {
+            regex      \= (\s*)
+            styles []   = .punctuation;
+         }
+      }
+      
+   }
+}

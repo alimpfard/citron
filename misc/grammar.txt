@@ -1,0 +1,73 @@
+translationUnit ::= program
+program ::= fin
+        | statement program
+statement ::= fin
+          | ret Dot
+          | expr Dot
+fin ::= EOF
+ret ::= RET expr
+expr ::= receiver ':'
+     | receiver 'is' expr
+     | receiver ':=' expr
+     | receiver '=>' expr
+     | receiver messages
+     | receiver
+
+receiver ::= 'Nil'
+         | 'True'
+         | 'False'
+         | NUMBER
+         | STRING
+         | ref
+         | block
+         | lambda
+         | parens
+         | tuple
+         | symbol
+         | list_comp
+
+ref ::= 'my' REF
+    | 'var' REF
+    | 'const' REF
+    | REF
+
+block_arguments ::= ':' REF block_arguments
+                | <empty>
+
+instruction_list ::= statement instruction_list
+                 | <empty>
+
+lambda_arguments ::= ':' REF lambda_arguments
+
+block ::= '{' block_arguments instruction_list '}'
+      | '{\' block_arguments instruction_list '}'
+
+lambda ::= '\' lambda_arguments expr
+
+parens ::= '(' expr ')'
+
+symbol ::= '\' REF
+
+tuple ::= '[' commasep_vals ']'
+
+commasep_vals ::= expr ',' commasep_vals
+              | expr
+              | <empty>
+
+list_comp ::= '[' expr ',' ',' commasep_vals ',' ',' commasep_vals ']'
+          | '[' expr ',' ',' commasep_vals ']'
+          | '[' expr ',' ',' ']'
+
+messages ::= REF{length>1} messages
+         | REF{length=1} expr messages
+         | kwmessage ',' messages
+
+kwmessage ::= REF ':' expr kwmessage
+          | REF ':' expr
+
+
+EOF ::= <end-of-file>
+RET ::= '^' | '↑'
+REF ::= [^\d,:'()[]{}\\\s][^,:'()[]{}\s]*
+NUMBER ::= -?('0x' [0-9a-fA-F] | '0c' [0-7] | \d+ | \d+\.\d+)
+STRING ::= '?>' [^(<?)]* '<?' | "'" (\\\'|[^(\')])* "'"

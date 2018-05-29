@@ -79,6 +79,9 @@ ctr_cparse_create_node (int type)
       ctr_source_map *m = (ctr_source_map *) ctr_heap_allocate_tracked (sizeof (ctr_source_map));
       m->line = ctr_clex_line_number;
       m->node = node;
+      m->p_ptr = ctr_code;
+      m->e_ptr = ctr_clex_code_end;
+      m->s_ptr = ctr_clex_code_init;
       if (ctr_source_map_head)
 	{
 	  m->next = ctr_source_map_head;

@@ -6,10 +6,6 @@ Array ← 'hello' ; 'world' ; True ; Nil ; 666 ; 1
 (Map new) put:Nil at:Nil
 helloworldTrueNil6661
 Error noted: toNumber must return a number.
-Error noted: toBoolean must return a boolean.
 Error noted: toNumber must return a number.
-Error noted: toBoolean must return a boolean.
 Error noted: toNumber must return a number.
-Error noted: toBoolean must return a boolean.
 Error noted: toNumber must return a number.
-Error noted: toBoolean must return a boolean.

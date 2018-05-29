@@ -4,3 +4,9 @@ Uncaught error has occurred.
 Key must be exactly 16 bytes long.
 #2 hashWithKey: (tests/test0229.ctr: 4)
 #1 write: (tests/test0229.ctr: 4)
+------------------------------------
+The probable cause of the exception: 
+2 | 
+3 | Pen write: ('hello' hashWithKey: '1234567890123456'), brk.
+4 | Pen write: ('hello' hashWithKey: '123'), brk.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^

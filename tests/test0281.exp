@@ -1,4 +1,2 @@
-Uncaught error has occurred.
-Cannot bind object of type ['Number', ['Nil', 'Number', 'Number']] to object of type ['Binding', 'Binding', 'Binding'].
-#2  (tests/test0281.ctr: 4)
-#1 run (tests/test0281.ctr: 19)
+1 []
+1 (S emicolo n)

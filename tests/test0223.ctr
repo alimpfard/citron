@@ -5,7 +5,7 @@ Pen write: ( 'hello world' containsPattern: 'h[eai]llo' ), brk.
 Pen write: ( 'hello world' containsPattern: 'h[iao]llo' ), brk.
 Pen write: ( 'hello world' containsPattern: 'h([eai])llo' ), brk.
 Pen write: ( 'hello world' containsPattern: 'h([iao])llo' ), brk.
-Pen write: ( 'hello world' containsPattern: '[:space:]' ), brk.
+Pen write: ( 'hello world' containsPattern: '[[:space:]]' ), brk.
 { Pen write: ( 'hello world' containsPattern: '[:space:' ), brk. } catch: { :e
 	Pen write: e, brk.
 }, run.

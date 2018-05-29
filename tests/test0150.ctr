@@ -1,3 +1,2 @@
-#NOAST
-#Test No Parser error
+#Test empty block okay
 {}.

@@ -1,7 +1,7 @@
 #Test scope, common scenarios
 santaLaugh is 'ho'.
 laugh is ''.
-3 times: { laugh is laugh + santaLaugh. }.
+3 times: { laugh is laugh + santaLaugh. }.#This should capture and modify dynamically
 Pen write: laugh, brk.
 
 locked is False.

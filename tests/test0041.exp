@@ -1,0 +1,9 @@
+Uncaught error has occurred.
+Unknown method Object::'nonexistantmessage' was called
+#1 nonexistantmessage (tests/test0041.ctr: 2)
+------------------------------------
+The probable cause of the exception: 
+1 | #a non existing message should not trigger an error or produce any output.
+2 | Pen nonexistantmessage.
+~~~~~~~~~~~~~~~~~~~~~~~~^
+3 | Pen nonexistantmessage: 'b'.

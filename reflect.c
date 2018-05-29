@@ -1119,10 +1119,14 @@ ctr_reflect_describe_type (ctr_object * myself, ctr_argument * argumentList)
 
   switch (object->info.type)
     {
+    case CTR_OBJECT_TYPE_OTSTRING:
+      if (object->value.svalue->vlen > 1 && *object->value.svalue->value == '*') {
+        type_descriptor = ctr_build_string_from_cstring("*String");
+        break;
+      }
     case CTR_OBJECT_TYPE_OTNIL:
     case CTR_OBJECT_TYPE_OTBOOL:
     case CTR_OBJECT_TYPE_OTNUMBER:
-    case CTR_OBJECT_TYPE_OTSTRING:
     case CTR_OBJECT_TYPE_OTNATFUNC:
     case CTR_OBJECT_TYPE_OTMISC:
     case CTR_OBJECT_TYPE_OTEX:

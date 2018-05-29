@@ -6196,16 +6196,16 @@ ctr_print_stack_trace ()
     return;
   }
   putchar('\n');
-  while(ptr>=first->s_ptr&&*ptr!='\n'&&p>=0) {
+  while(ptr>=first->s_ptr) {
     if (*ptr == '\n') p--;
-    if (*ptr == 0) break;
+    if (*ptr == 0 || p == 0) break;
     else ptr--;
   }
   current_line = first->line-2+p;
   p = 2;
-  while(bptr<first->e_ptr&&*bptr!='\n'&&p>=0) {
+  while(bptr<first->e_ptr&&p>=0) {
     if (*bptr == '\n') p--;
-    if (*bptr == 0) break;
+    if (*bptr == 0 || p == 0) break;
     else bptr++;
   }
   int pos_in_line = 0;
@@ -6230,7 +6230,7 @@ ctr_print_stack_trace ()
       printf("%s", CTR_ANSI_COLOR_MAGENTA);
       for(int i=0; i<print_caret+slen-1; i++) putchar('~');
       putchar('^');
-      printf("%s", CTR_ANSI_COLOR_RESET);
+      puts(CTR_ANSI_COLOR_RESET);
       print_caret = -1;
     }
   }

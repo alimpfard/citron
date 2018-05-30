@@ -5047,15 +5047,15 @@ ctr_build_listcomp (ctr_tnode * node)
  * If a nested block requires a capture, it will be added right now, and ignored
  * if the binding cannot be found at the time
  */
-void ctr_capture_refs_ (ctr_tnode * ti, ctr_object * block, int noerror);
+void ctr_capture_refs_ (ctr_tnode * ti, ctr_object * block, ctr_object * parent, int noerror);
 void
 ctr_capture_refs (ctr_tnode * ti, ctr_object * block)
 {
-  ctr_capture_refs_ (ti, block, 0);
+  ctr_capture_refs_ (ti, block, ctr_find_(&CTR_CLEX_KW_ME, 0), 0);
 }
 
 void
-ctr_capture_refs_ (ctr_tnode * ti, ctr_object * block, int noerror)
+ctr_capture_refs_ (ctr_tnode * ti, ctr_object * block, ctr_object * parent, int noerror)
 {
   ctr_tlistitem *li;
   ctr_tnode *t;
@@ -5079,14 +5079,18 @@ ctr_capture_refs_ (ctr_tnode * ti, ctr_object * block, int noerror)
 	      ctr_object *key = ctr_build_string (t->value, t->vlen);
 	      if (! !ctr_internal_object_find_property (block, key, 0))
 		return;
-	      ctr_object *value = ctr_find_ (key, noerror);
+	      ctr_object *value = ctr_find_ (key, 1);
+        if (!value && parent)
+          value = ctr_internal_object_find_property(parent, key, CTR_CATEGORY_PRIVATE_PROPERTY);
 	      if (value)
 		ctr_internal_object_add_property (block, key, value, 0);
+        else if (!noerror)
+          ctr_find_(key, noerror);
 	    }
 	  break;
 
 	case CTR_AST_NODE_CODEBLOCK:
-	  ctr_capture_refs_ (t, block, 1);	//capture all that we can
+	  ctr_capture_refs_ (t, block, parent, 1);	//capture all that we can
 	  break;
 
 	case CTR_AST_NODE_LTRNUM:
@@ -5097,7 +5101,7 @@ ctr_capture_refs_ (ctr_tnode * ti, ctr_object * block, int noerror)
 	case CTR_AST_NODE_LTRBOOLTRUE:
 	case CTR_AST_NODE_LTRNIL:
 	default:
-	  ctr_capture_refs_ (t, block, noerror);
+	  ctr_capture_refs_ (t, block, parent, noerror);
 
 	}
       if (!li->next)

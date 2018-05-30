@@ -17,21 +17,29 @@ extern char *ctr_code;
 int
 ctr_paramlist_has_name (char *namenode, size_t len)
 {
-  if (!ctr_cparse_calltime_names || len == 0)
+  ctr_tnode* ctr_cparse_calltime_name;
+  // printf("%d -- %.*s\n", ctr_cparse_calltime_name_id, len, namenode);
+  if (ctr_cparse_calltime_name_id < 0 || len == 0)
     return 0;
   else
     {
-      ctr_tlistitem *name = ctr_cparse_calltime_names->nodes;
-      while (name)
-	{
-	  int vararg = name->node->value[0] == '*';
-	  if (unlikely (name->node->vlen == len || vararg))
-	    {
-	      if (strncmp (name->node->value + vararg, namenode, len - vararg) == 0)
-		return 1;
-	    }
-	  name = name->next;
-	}
+      // for(int i=0; i<=ctr_cparse_calltime_name_id; i++)
+      int i = ctr_cparse_calltime_name_id;
+      {
+        ctr_cparse_calltime_name = ctr_cparse_calltime_names[i];
+        ctr_tlistitem *name = ctr_cparse_calltime_name->nodes;
+        while (name)
+	       {
+           // printf("  -- %d %.*s\n", i, name->node->vlen, name->node->value);
+	          int vararg = name->node->value[0] == '*';
+	          if (unlikely (name->node->vlen == len || vararg))
+	           {
+	             if (strncmp (name->node->value + vararg, namenode, len - vararg) == 0)
+		             return 1;
+	           }
+	         name = name->next;
+	      }
+      }
       return 0;
     }
 }
@@ -580,8 +588,8 @@ ctr_cparse_block_ (int autocap)
   int oldallpl = all_plains_private;
   int olddcl = do_compare_locals;
   do_compare_locals = autocap;
-  ctr_tnode *oldcalltime = ctr_cparse_calltime_names;
-  ctr_cparse_calltime_names = paramList;
+  int oldcalltime = ctr_cparse_calltime_name_id;
+  ctr_cparse_calltime_names[++ctr_cparse_calltime_name_id] = paramList;
   all_plains_private = autocap;
   if (ctr_transform_lambda_shorthand)
     {
@@ -641,7 +649,7 @@ ctr_cparse_block_ (int autocap)
     }
   all_plains_private = oldallpl;
   do_compare_locals = olddcl;
-  ctr_cparse_calltime_names = oldcalltime;
+  ctr_cparse_calltime_name_id = oldcalltime;
   r->modifier = /*CTR_MODIFIER_AUTOCAPTURE */ autocap == 1;
   return r;
 }

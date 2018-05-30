@@ -134,6 +134,7 @@ main (int argc, char *argv[])
   ctr_internal_next_return = 0;
   ctr_clex_quiet = 0;
   ctr_cparse_quiet = 0;
+  ctr_cparse_calltime_name_id = -1;
   openlog(argv[0], LOG_PID|LOG_CONS, LOG_USER);
   ctr_initialize_world ();
 

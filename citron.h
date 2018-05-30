@@ -512,8 +512,11 @@ ctr_tnode* ctr_cparse_expr(int mode);
 ctr_tnode* ctr_cparse_ret();
 CTR_H_DECLSPEC int     ctr_cparse_quiet;
 
+#define CTR_CONTEXT_VECTOR_DEPTH  10000
+
 CTR_H_DECLSPEC char* ctr_last_parser_error;
-CTR_H_DECLSPEC ctr_tnode* ctr_cparse_calltime_names;
+CTR_H_DECLSPEC int        ctr_cparse_calltime_name_id;
+CTR_H_DECLSPEC ctr_tnode* ctr_cparse_calltime_names[CTR_CONTEXT_VECTOR_DEPTH];
 /**
  * Abstract Tree Walker functions
  */
@@ -590,7 +593,6 @@ void ctr_switch_context();
 /**
  * Global Scoping variables
  */
-#define CTR_CONTEXT_VECTOR_DEPTH  10000
 struct ctr_context_t {
     ctr_object* contexts[CTR_CONTEXT_VECTOR_DEPTH ];
     int id;

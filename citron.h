@@ -402,6 +402,7 @@ ctr_object* get_CTR_FILE_STDERR_STR();
  * only combine
  */
 CTR_H_DECLSPEC ctr_object* ctr_instrumentor_funcs;
+CTR_H_DECLSPEC ctr_object* ctr_global_instrum;
 CTR_H_DECLSPEC int ctr_instrument;
 
 CTR_H_DECLSPEC int ctr_internal_next_return;
@@ -773,6 +774,7 @@ ctr_object* ctr_string_to_string( ctr_object* myself, ctr_argument* argumentList
 ctr_object* ctr_string_format( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_string_format_map( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_string_eval( ctr_object* myself, ctr_argument* argumentList );
+ctr_object* ctr_string_exec( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_string_quotes_escape( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_string_dquotes_escape( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_string_characters( ctr_object* myself, ctr_argument* argumentList );
@@ -1121,6 +1123,8 @@ ctr_object* ctr_reflect_instrmsg(ctr_object* myself, ctr_argument* argumentList)
 ctr_object* ctr_reflect_register_instrumentor(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_unregister_instrumentor(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_get_instrumentor(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_ginstr(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_noginstr(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_glob(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_for_object_in_ctx (ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_for_object_in_ctx_as_world (ctr_object* myself, ctr_argument* argumentList);

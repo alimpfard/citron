@@ -1,26 +1,28 @@
-true is \:x \:y x.                                                             # lambda xy. x
-false is \:x \:y y.                                                            # lambda xy. y
-
 CodeBlock learn: '$' means: 'applyTo:'.
+
+var true is \:x \:y x.                                                         # lambda xy. x
+var false is \:x \:y y.                                                        # lambda xy. y
+
 CodeBlock on: 'toBoolean' do: { ^me = const true. }.
 
-and is \:p \:q p $ q $ p.                                                      # lambda pq. p q p
-or is \:p \:q p $ p $ q.                                                       # lambda pq. p p q
-not is \:p p $ false $ true.                                                   # lambda p. p false true
-ifte is \:p \:a \:b p $ a $ b.                                                 # lambda pab. p a b
+
+var and is \:p \:q p $ q $ p.                                                  # lambda pq. p q p
+var or is \:p \:q p $ p $ q.                                                   # lambda pq. p p q
+var not is \:p p $ false $ true.                                               # lambda p. p false true
+var ifte is \:p \:a \:b p $ a $ b.                                             # lambda pab. p a b
 
 Pen writeln: 'if (true and (false or (true and false))) then 1 else 2: ' + (ifte $ (and $ true $ (or $ false $ (and $ true $ false))) $ 1 $ 2).
 Pen brk.
 
-pair is \:x \:y \:f f $ x $ y.                                                 # lambda xyf. f x y
-first is \:x x $ true.                                                         # lambda x. x true
-second is \:x x $ false.                                                       # lambda x. x false
-nil is \:x \:y y $ true.                                                       # lambda xy. y true
-nul? is \:x x $ (\:x \:y \:z false) $ (\:_ true).                              # lambda x. x (lambda xyz. false) (lambda. true)
-cons is \:x \:ll pair $ x $ ll.                                                # lambda xl. pair x l
-length is \:l l $ (\:_ \:t \:_ 1 + (length $ t)) $ (\:_ 0).                    # lambda l. l (lambda htz. succ (length t) (lambda. zero))
+var pair is \:x \:y \:f f $ x $ y.                                             # lambda xyf. f x y
+var first is \:x x $ true.                                                     # lambda x. x true
+var second is \:x x $ false.                                                   # lambda x. x false
+var nil is \:x \:y y $ true.                                                   # lambda xy. y true
+var nul? is \:x x $ (\:x \:y \:z false) $ (\:_ true).                          # lambda x. x (lambda xyz. false) (lambda. true)
+var cons is \:x \:ll pair $ x $ ll.                                            # lambda xl. pair x l
+var length is \:l l $ (\:_ \:t \:_ 1 + (length $ t)) $ (\:_ 0).                # lambda l. l (lambda htz. succ (length t) (lambda. zero))
 
-l is cons $ 'a' $ (cons $ 2 $ nil).
+var l is cons $ 'a' $ (cons $ 2 $ nil).
 Pen writeln: 'Empty list is empty? ' + (nul? $ nil) toBoolean.
 Pen writeln: 'List of 1 element is empty? ' + (nul? $ l) toBoolean.
 Pen writeln: 'First element of l? ' + (first $ l).

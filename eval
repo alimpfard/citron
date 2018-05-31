@@ -24,8 +24,8 @@ var errPen is Pen for: stderr.
 var GREEN_COLOR is 'green' toSymbol.
 var ITALIC_EFFECT is 'italic' toSymbol.
 var inBlock is 0.
+var enterRepeat is False.
 
-ImportLib Queue.
 ImportLib LRArray.
 import
   Library/Foreign/C/NamedStruct
@@ -43,7 +43,6 @@ Eval on: 'init' do: {
   my prompt is '⠕ '.
   my args is Array new.
   my allowedColors is ('red blue magenta cyan yellow green resetColor' split: ' ') join: '|'.
-  my evalQueue is Queue new.
   my globalvars is False.
   my history is LRArray new init: 100.
   my hs_file is File new: '~/.ctrhist'.
@@ -65,6 +64,10 @@ Eval on: 'init' do: {
   my errd is False.
   my last_error is Nil.
   my inNewBlock is False.
+  my breakpoints is Map new.
+  my debug is False.
+  my stepDebug is False.
+  my returnValue is Array new.
   my evaluationContext is Map new
     on: 'toString' do: {^'[GlobalEvalContext]'.}.
   ^me.
@@ -83,8 +86,10 @@ Eval on: 'lastError' do: {^my last_error.}.
 Eval on: 'trace' do: {^Reflect lastTrace.}.
 Eval on: 'end' do: {
   my end is True.
-  me stopEvalServer.
-  my hs_file write: ({:json JSON parse: json. ^json.} catch: {:e ^''.}, applyTo: (JSON serialize: my history, ~ ?>s/\\/\\\\/g<?)).
+  my debug ifFalse: {
+    me stopEvalServer.
+    my hs_file write: ({:json JSON parse: json. ^json.} catch: {:e ^''.}, applyTo: (JSON serialize: my history, ~ ?>s/\\/\\\\/g<?)).
+  }.
 }.
 Eval on: 'break' do: { my end ifTrue: {Broom sweep.}. ^my end. }.
 Eval on: 'allowedColors' do: { ^my allowedColors. }.
@@ -114,6 +119,7 @@ Eval on: 'inNewBlock' do: {^my inNewBlock.}.
 Eval on: 'newBlock' do: { my inNewBlock is True. }.
 Eval on: 'endBlock' do: { my inNewBlock is False. }.
 Eval on: 'continuation' do: { ^my continuation. }.
+Eval on: 'evalContext' do: { ^my evaluationContext. }.
 Eval on: 'shiftArgs' do: { ^(my args shift). }.
 Eval on: 'enableFlag:' do: {:flag my flags put: True at: flag. }.
 Eval on: 'disableFlag:' do: {:flag my flags put: False at: flag. }.
@@ -173,6 +179,10 @@ Eval on: 'userDefs' do: {
   }.
 }.
 
+Eval on: 'returnValue:' do: {:x my returnValue do pop push: x, done. }.
+Eval on: 'stepDebug:' do: {:x my stepDebug is x. }.
+Eval on: 'debug' do: { ^my debug. }.
+
 Eval on: 'Commands' do: {
   my commands is my commands or: {
     var c is Map new
@@ -193,9 +203,16 @@ Eval on: 'Commands' do: {
       + !def <name> <expression> -- create a metacommand
       + p <expression> -- prints the value of expression
       + c -- clear screen and history
+      + break <obj> <msg> -- break on object\'s message
+      + !enable <b[reak]> -- enable option
       + h -- show this help
       - ! <cmd> -- execute shell command
       - %{ stmt* %} -- block expression (\'%{\' and \'%}\' will not be echoed)'
+      + '\nDebug Mode commands (Currently Experimental):
+      + !return <value> -- return value for this message
+      + !step -- single step through messages
+      + !cont -- continue
+      + !frame [show, all, <id>] -- show frames'
       + '\nUser-defined commands:
       ' + (Eval userDefs fmap: \:k:v '+ %s -- %s' % [k, v], values join: '\n', or: '-None-').} at: 'h',
       put: {^Eval stopEvalServer.} at: '!server',
@@ -203,6 +220,62 @@ Eval on: 'Commands' do: {
       put: {:args Pen writeln: (Eval evaluate: args). ^''.} at: 'p',
       put: {:args Pen clear. (var h is Eval getHistory) count times: { h pop. }. ^''.} at: 'c',
       put: {:args ^Reflect getMethodsOf: (Eval evaluate: args).} at: '!m',
+      put: {:args
+        [obj, *msgs] is args reSplit: '\\s+'.
+        obj is Eval evaluate: obj.
+        msgs each_v: \:msg Eval breakFor: obj message: msg.
+        ^'will break on messages %L' % [msgs].
+      } at: 'break',
+      put: {:args
+        args startsWith: 'b', either: {
+          Eval instrument.
+        } or: {
+          thisBlock error: 'Invalid option $$args'.
+        }.
+        ^''.
+      } at: '!enable',
+      put: {:args
+        Eval debug ifTrue: {
+          Eval returnValue: (Eval evaluate: args).
+          Eval end.
+        }.
+        ^''.
+      } at: '!return',
+      put: {
+        Eval debug ifTrue: {
+          Eval stepDebug: False.
+          Eval end.
+        }.
+        ^''.
+      } at: '!continue',
+      put: {
+        Eval debug ifTrue: {
+          Eval stepDebug: True.
+          Eval end.
+        }.
+        ^''.
+      } at: '!step',
+      put: {:args
+        var name is args reSplit: '\\s+'.
+        ^Reflect run: {:name
+          name count = 0 ifTrue: {
+            ^Reflect frame: (Reflect frameId - 2).
+          }.
+          name is name head.
+          ^(name case: 'show' do: {
+              var s is Reflect frame: (Reflect frameId - 2), kvlist: \:kv [kv head, (Reflect strTypeOf: kv last), kv last], fmap: \:x '%s (%s) = %s' % x, join: ', '.
+              ^'frame %d { %s }' % [Reflect frameId - 2, s].
+          }, case: 'all' do: {
+            var x is Array new.
+            Reflect frameId - 1 times: ({:i
+              x push: (Reflect frame: i + 1).
+            } catch: {}).
+            ^x imap: (\:i:f 'frame %d { %s }' % [i + 1, (f kvlist: \:kv [kv head, (Reflect strTypeOf: kv last), kv last], fmap: \:x '%s (%s) = %s' % x, join: ', ')]), join: '\n'.
+          }, default: {
+            ^Reflect frame: (name toNumber), kvlist: \:kv [kv head, (Reflect strTypeOf: kv last), kv last], fmap: \:x '%s (%s) = %s' % x, join: ', '.
+          }, switch).
+        } inContextAsWorld: Eval evalContext arguments: [name].
+      } at: '!frame',
       put: {:args
         [name, fn] is args split: ' ' max: 1.
         Eval addUserDef: name definition: fn.
@@ -240,7 +313,7 @@ Eval on: 'CommandCompletions' do: {
         ^argstr count either: {
           var flag is argstr head trim.
           flag startsWith: 'no-', either: { flag is flag skip: 3. } or: { }.
-          ^flags filter: \:i:v v startsWith: flag.
+          ^flags filter: \:i:v v startsWith: flag, fmap: \:x x skip: flag length.
         } or: flags.
       } at: ':!f',
       put: {:argstr
@@ -298,23 +371,10 @@ Eval on: 'evaluate:' do: { :str
         }).
     ^(Eval getFlag: 'jsonout') either: { ^JSON serialize: [(f toString replace: '\\' with: '\\\\'), (JSON serialize: [(Eval errored?), (Eval lastError), (Eval trace)])]. } or: {^f.}.
 }.
-Eval on: 'evaluateFile:' do: { :fl
-  {
-    Pen yellow write: 'File ', magenta write: fl, yellow write: ' : Interpreting...', brk.
-    File new: fl, include.
-  } catch: { :e
-      Eval handleException: e.
-      # get rid of the trash.
-      Broom sweep.
-  }, run.
+
+Eval on: 'addFile:named:' do: {:str:fname
+  Reflect run: {:str str exec. } inContextAsWorld: my evaluationContext arguments: ['var %s is { %s }.' % [(fname split: '.' max: 1, head), str]].
 }.
-Eval on: 'enqueue:' do: { :str
-  my evalQueue enqueue: str.
-}.
-Eval on: 'queueHasItem' do: {
-  ^(my evalQueue count !=: 0).
-}.
-Eval on: 'dequeue' do: { ^my evalQueue dequeue. }.
 Eval on: 'pushHist:' do: {:h
   my history push: h.
 }.
@@ -334,7 +394,7 @@ Eval onlyRelevantArgs.
 #arguments that were not consumed
 var args is Array new.
 
-#global vars for evaler
+#global vars for evaluator
 var it is Nil.
 var _  is Nil.
 var __ is Nil.
@@ -356,6 +416,33 @@ Eval on: 'flatten:' do: {:list
     }.
   }.
   ^lst.
+}.
+
+Eval on: 'instrument' do: {
+  Reflect globalInstrument: me tryDebug.
+  Reflect enableInstrumentation.
+}.
+
+Eval on: 'breakFor:message:' do: {:o:m
+  my breakpoints put: True at: (o &responder: m).
+}.
+
+Eval on: 'hasBreakPoint:message:' do: {:object:message
+  ^my breakpoints at: (object &responder: message), or: my stepDebug.
+}.
+Eval on: 'tryDebug' do: {:self
+  var ctx is my evaluationContext.
+  ^{:object:message:args
+    var this is me.
+    var eval is const self.
+    (Reflect isInFrame: const ctx) ifFalse: {^this.}.
+    var bp is eval hasBreakPoint: object message: message.
+    ^bp either: {
+        ^eval debugRepl: [this, object, message, args].
+        } or: {
+          ^this.
+        }.
+  }.
 }.
 
 Eval on: 'allTheNames' do: {
@@ -380,7 +467,7 @@ Eval on: 'togglePasteMode' do: {
         args pop. #consume option.
         Pen green write: 'Citron Evaluator.\n', resetColor.
         var P is Pen.
-        P on: 'indent:write:' do: {:i :w Pen write: (((Array < '  ') * i) join: ''). Pen write: w. }.
+        P on: 'indent:write:' do: {:i :w Pen write: ('  ' * i). Pen write: w. }.
         P indent: 1 write: 'Eval mode help:', brk.
         P cyan indent: 1 write: 'Eval namespace', resetColor brk.
         P magenta indent: 2 write: '[Eval] setPrompt: [String] ', resetColor write: '-- Sets the prompt.', brk.
@@ -399,18 +486,19 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '--pc : set the prompt continuation\n',
           indent: 2 write: '-c : set the result color\n',
           indent: 2 write: '-h : show this help\n',
-          indent: 2 write: '-f : evaluate file. many can be passed, evals in passed order\n',
+          indent: 2 write: '-f : evaluate file. many can be passed, evals in passed order (currently bugged)\n',
           indent: 2 write: '-F<[no-]flag> : enables the passed flag\n',
           indent: 2 write: '--Fs : display all the available flags\n',
           indent: 2 write: '--meta <command> : execute a metacommand (sans the initial :)\n',
           indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
           indent: 2 write: '-v : print version information and exit\n',
           indent: 2 write: '-s <port>: start a evaluation server on the specified port (Forked and the current process will be killed. pidfile at ~/.ctrpid.pid)\n',
+          indent: 2 write: '-m <executable module> <modu_arg>* : Execute an executable module (at Library/Executable)\n',
           indent: 2 write: '--pid <pidfile>: set the pid file. value is ignored unless [-s <port>] comes after\n',
           indent: 2 write: '--no-logo : don\'t display the ascii logo, use normal text instead\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
         P green write: 'default imported modules in eval are:',
-          cyan indent: 1 write: ('Queue LRArray ' + (import __loaded_modules keys reverse join: ' ') ~ 's/\\s|^/\\n+ /g').
+          cyan indent: 1 write: ('LRArray ' + (import __loaded_modules keys reverse join: ' ') ~ 's/\\s|^/\\n+ /g').
         P resetColor brk.
         Program exit.
     # when passed -p, get the next arg, and set the prompt to that.
@@ -435,7 +523,7 @@ Eval on: 'togglePasteMode' do: {
         args pop. #consume option.
         var file is Eval shiftArgs.
         (file isNil) ifTrue: { thisBlock error: '-f requires a file name.'. }.
-        Eval enqueue: file.
+        Eval addFile: (File new: file, read) named: file.
     }, case: '--Fs' do: {
         args pop. #consume option.
         Pen writeln: (Eval flags keys join: '\n').
@@ -530,15 +618,6 @@ display_logo
     'run with \'-h\' to read the eval mode help.\n'.
   }.
 
-# Eval on: 'redraw:at:' do: {:inp:cursor
-#   var cols is Program env: 'COLUMNS', or: '89', toNumber.
-#   var remainingCols is cols - (inp length) max: 0.
-#   remainingCols < 2 ifTrue: {
-#     Pen write: ('\b' * cursor) + '<' + (inp is inp from: (inp length - cols) length: cols - 1) + ('\b' * (inp length - 1)).
-#   }, else: {
-#     Pen write: ('\b' * cursor) + inp + ('\b' * (inp length - cursor - 1)).
-#   }.
-# }.
 Eval on: 'redraw:at:comment:' do: {:inp:cursor:cmt
   cursor -=: inpbrk.
   inp is inp from: inpbrk to: inp length.
@@ -557,7 +636,6 @@ Eval on: 'redraw:at:comment:' do: {:inp:cursor:cmt
     var iinp is (cursor > (var first_visible is (inp length - TerminalWidth run - (ctn length) max: 0))) either: { ^inp skip: first_visible - 2. } or: { var tdiff is TerminalWidth run - (ctn length). var f is inp skip: cursor - 1. diff is f length - tdiff. ^f from: 0 length: tdiff. }.
     (Eval getFlag: 'highlight') ifTrue: {iinp is Highlight highlight: iinp.}.
     Pen cyan write: ctn, resetColor.
-    # Pen for: (File special: 'stderr'), writeln: [first_visible, cursor].
     Pen write: '%s%s' % [iinp, ('\b' * (inp length - cursor - diff - 1 max: 0, min: inp length))].
   }, else: {
     Pen cyan write: ctn, resetColor write: inp.
@@ -567,292 +645,302 @@ Eval on: 'redraw:at:comment:' do: {:inp:cursor:cmt
 
 Eval genAccessors: ['exectime', '__eval_ret', 'statsb', 'statsa'].
 
-Eval on: 'repl' do: {
-  {^True.} whileTrue: ({
-    var hindex is Eval getHistory count.
-    var ncmessage is ' <- No completion'.
-    var stdin is File special: 'stdin'.
-    inp is ''.
-    # break the repl when `end` is True.
-    Eval break break.
-    (Eval queueHasItem) ifTrue: {
-      var item is Eval dequeue.
-      Eval statsb: 0, statsa: 0, exectime: 0.
-      Eval statsb: Broom keptAlloc.
-      Eval exectime: (Clock timeExecutionOf: { Eval evaluateFile: item. }).
-      Eval statsa: Broom keptAlloc.
-      Eval getFlag: 'stats', ifTrue: {
-        var str is '(%s seconds (%d cycles), %s bytes)' % [Eval exectime / (Clock ticksPerSecond), Eval exectime, ((Eval statsa - Eval statsb) toString reverse reSplit: '(?<=\\G...)', join: ',', reverse)].
-        Pen write: Colors % [str, GREEN_COLOR, ITALIC_EFFECT].
-      }.
-    }.
-    Eval queueHasItem continue.
-    Pen cyan write: (Eval prompt), resetColor.
-
-    var inc is stdin readBytes: 1.
-    var last_was_comp is False.
-    var last_comp_entry is ''.
-    var last_comp_index is -1.
-    var last_comp_rewind is 0.
-    var last_toc is 'Object'.
-    var done is False.
-    var cursor is 0.
-    var multichar_in is Array new.
-    inBlock is 0.
-    Eval endBlock.
-    var lastEscape is False.
-    var inString is False.
-    var inpbrk is 0.
-    var last_comp_entry_len is 0.
-    var ce_idx is 0.
-    var cmt is ''.
-    var comp_set is HashSet new.
-    var have_context is False.
-    {^done & (inBlock = 0).} whileFalse: {
-      cmt is ''.
-      inc = '\t' ifTrue: {#<Tab>
-          clear_next_line run. have_context is False.
-          comp_set clear.
-          inp containsPattern: ?>^\s*:<?, either: {
-            last_was_comp ifTrue: {
-              inp is inp removeFrom: (cursor - last_comp_entry_len) to: cursor.
-              cursor is (cursor - last_comp_entry_len) max: 0.
-              }.
-            var comps is Eval metaCompletion: (inp split: ' ' max: 1).
-            comps count > 0 either: {
-              comps count <=: ce_idx, ifTrue: { ce_idx is 0. }.
-              # Pen writeln: comps.
-              last_comp_entry is comps @ ce_idx.
-              ce_idx +=: 1.
-              last_comp_entry_len is last_comp_entry length.
-              inp +=: last_comp_entry.
-              cursor +=: last_comp_entry_len.
-              last_was_comp is True.
-            } or: { cmt is '<- No completion'. }.
-          } or: {
-            var candidate is 'Nil'.
-            var toc is (inp trim or: '  ') split: ' ', last.
-
-            last_was_comp ifTrue: {
-              var toremove is ((toc length) - (last_comp_entry length)).
-              Pen write: '\b \b' * toremove.
-              inp is inp removeFrom: (cursor - toremove) to: cursor.
-              cursor is (cursor - toremove) max: 0.
-            }.
-            toc is last_was_comp either: last_comp_entry or: toc.
-            last_comp_entry is toc.
-            var flipper is OneGateFlipper new.
-            last_toc is (inp trim or: 'Nil') split: ' ', filter: {:_:v (v endsWith: ':') ifTrue: {flipper set. ^False.}. ^((v endsWith: ':') | (flipper get)) not | (v containsPattern: ?>(-?(0[xXcC])?[\d]+(\.[\d]+)?)|($\')<?). }.
-            last_toc is (last_toc count) >=: 2, either: {^last_toc init last.} or: 'Nil'.
-            last_toc containsPattern: ?>(-?(0[xXcC])?[\d]+(\.[\d]+)?)<?, ifTrue: { last_toc is 'Number'. }.
-            last_toc containsPattern: ?>^\'<?, ifTrue: { last_toc is 'String'. }.
-            var candidates is Eval allTheNames: ({^Reflect getObject: (['my', 'var'] contains: last_toc, either: Nil or: last_toc).} catch: {^Nil.}, run).
-            var skipthis is candidates @ 0.
-            candidates is (candidates @ 1) filter: {:_:i ^i startsWith: toc.}.
-            candidates count !=: 0, ifTrue: {
-              have_context is True.
-              candidate is candidates @ (last_comp_index is (last_comp_index +=: 1) >=: (candidates count), either: 0 or: last_comp_index).
-              var uniq is comp_set addAll: candidates, toArray.
-              var uid is uniq indexOf: candidate.
-              generate_context_menu applyTo: uniq and: uid.
-              var cc is candidate skip: toc length.
-              cmt is (var iis is '[from %s]' % [last_toc]).
-              last_comp_rewind is iis length.
-              inp is inp insert: cc at: cursor.
-              cursor +=: cc length.
-            }, else: {
-              cmt is ncmessage.
-            }.
-            last_was_comp is True.
-            skipthis ifTrue: {last_toc is candidate.}.
-          }.
-        }, else: {
-          inc case: '\xd' do: {#<Enter>
-            clear_next_line run.
-            have_context ifFalse: {
-            # Pen brk.
-            # (cursor !=: inp length) ifTrue: {
-            #   Pen write: (inp from: cursor length: (inp length - cursor)).
-            # }.
-            inp length > 0 ifTrue: {
-              (inp containsPattern: ?>^\s*:<?) ifTrue: {done is True.}, else: {
-                (inp containsPattern: ?>\.\s*$<?, not) & (inBlock = 0) ifTrue: {
-                  inp +=: '.'.
-                }.
-                done is inBlock = 0.
-              }.
-              inBlock !=: 0, ifTrue: { Eval newBlock. Pen brk. inp +=: ' '. inpbrk is inp length. cursor +=: 1.}.
-            }, else: { Pen brk. done is True. }.
-            }.
-            have_context is False.
-          }, case: '\x3' do: {#<^C>
-            clear_next_line run. have_context is False.
-            inp is ''.
-            cursor is 0.
-            inBlock is 0.
-            cmt is '<Broke block>'.
-            # Pen red writeln: 'Interrupted', resetColor.
-            # done is True.
-          }, case: '\b' do: {#<\b>
-            clear_next_line run. have_context is False.
-            cursor > 0 ifTrue: {
-              inp is inp removeFrom: (cursor - 1) to: cursor.
-              cursor -=: 1.
-              Pen write: '\b \b'.
-            }, else: { Pen write: '\a'. }.
-          }, case: ('' appendByte: 127) do: {#<\b>
-            clear_next_line run. have_context is False.
-            cursor > 0 ifTrue: {
-              inp is inp removeFrom: (cursor - 1) to: cursor.
-              cursor -=: 1.
-              Pen write: '\b \b'.
-            }, else: { Pen write: '\a'. }.
-          }, case: '\x11' do: {
-            var toc is (inp trim or: '  ') split: ' ', last.
-            var recs is '%:L' % [' ', (Eval allTheNames filter: {:_:n ^n startsWith: toc.})].
-            Pen cyan write: recs, resetColor.
-            clear_next_line run. have_context is False.
-
-          }, case: '\x1b' do: {
-            inc is stdin readBytes: 2.
-            inc case: '\x5b\x41' do: { #Up Arrow
-              hindex > 0 ifTrue: {
-                cursor is (inp is Eval getHistory at: (hindex is hindex - 1)) length.
-              }.
-              clear_next_line run. have_context is False.
-
-            }, case: '\x5b\x42' do: { #Down Arrow
-              (hindex > 0) & (Eval getHistory count > 0) ifTrue: {
-                hindex +=: 1.
-                Pen write: '\b' * (inp length).
-                inp is Eval getHistory.
-                inp count <=: hindex, ifTrue: {hindex is inp count.}.
-                inp is inp at: hindex - 1.
-                cursor is inp length.
-              }, else: {
-                hindex is 0.
-                Pen write: '\b \b' * (inp length).
-                inp is ''.
-                cursor is 0.
-              }.
-              clear_next_line run. have_context is False.
-
-            }, case: '\x5b\x43' do: { #Right Arrow
-              (cursor < inp length) ifTrue: {
-                cursor +=: 1.
-              }, else: {Pen write: '\a'.}.
-              clear_next_line run. have_context is False.
-
-            }, case: '\x5b\x44' do: { #Left Arrow
-              (cursor > 0) ifTrue: {
-                cursor -=: 1.
-              }, else: {Pen write: '\a'.}.
-              clear_next_line run. have_context is False.
-
-            }, case: '\x5b\x31' do: { #Supposedly <ctrl>
-              inc is stdin readBytes: 3.
-                (inc = '\x3b\x35\x44') & (cursor > 0) ifTrue: { #^Left Arrow
-                  var ct is inp from: 0 to: cursor.
-                  var ct is ct trim.
-                  ct is (ct reLastIndexOf: ?>\s|\'<?).
-                  ct is ct equals: cursor - 1, either: ct - 1 or: ct.
-                  cursor is ct + 1.
-                }, else: {
-                  (inc = '\x3b\x35\x43') ifTrue: { #^Right Arrow
-                    var ct is (var ix is inp from: cursor to: (inp length), trim) reIndexOf: ?>\s|\'<?, - 1.
-                    ct is ct equals: 0, either: ct + 1 or: ct.
-                    cursor is cursor + ct + ((inp length) - (ix length)).
-                  }.#, else: { Pen red write: inc. }.
-                }.
-                clear_next_line run. have_context is False.
-            }, case: '\x4f\x51' do: { #F2
-                clear_next_line run. have_context is False.
-                Eval togglePasteMode.
-            }, default: {
-              Pen write: inc toByteArray.
-            }, switch.
-          }, default: {
-            have_context ifTrue: { clear_next_line run. have_context is False. }.
-            (inc
-              case: '\'' do: {
-                  inString is (inString & lastEscape not) | (inString not).
-              },
-              case: '\\' do: {
-                  lastEscape is True.
-              },
-              case: '%' do: {
-                (var cdi is stdin readBytes: 1).
-                  cdi
-                    case: '{' do: {
-                      inc is inc from: 0 to: inc length - 1.
-                      inBlock +=: (inString either: 0 or: 1).
-                    },
-                    case: '}' do: {
-                      inc is inc from: 0 to: inc length - 1.
-                      inBlock -=: (inString either: 0 or: 1).
-                    }, default: {
-                      inc +=: cdi.
-                    }, switch.
-              }, switch).
-            inp is inp insert: inc at: cursor.
-            cursor +=: inc length.
-            # Eval redraw: inp at: cursor comment: ''.
-          }, switch.
-          last_was_comp is False.
-        }.
-      Eval redraw: inp at: cursor - 1 comment: (inBlock either: '%s%d' % ['%{', inBlock] or: cmt).
-      # Pen write: inc toByteArray.
-      done is (done & (inBlock = 0)).
-      done break.
-      inc is stdin readBytes: 1.
-    }.
-    hindex is Eval getHistory count.
-    # Pen cyan write: ' [cursor %d in (%s)]' % [cursor, (inp)], resetColor.
-    (inp trim = '') continue.
-    Eval getFlag: 'printvs', ifTrue: { Pen brk. }.
-    # {^Eval queryState: inp.} whileFalse: {
-    #  inp append: (inp countOf: '\'', even either: '\n' or: '') + ({
-    #    Pen cyan write: Eval continuation * (1 + (inp countOf: '{') - (inp countOf: '}')), resetColor.
-    #    ^Program waitForInput.
-    #    } run).
-    #  }.
-    # if it ends in a dot, get rid of it.
-    inp is inp trim.
-    (inp at: (inp length - 1), = '.') ifTrue: {
-      inp is inp from: 0 length: (inp length - 1).
-    }.
-    # Pen writeln: inp.
-    # Syntactic errors will not be passed to the eval. # TODO: handle that.
-    Eval statsb: 0, statsa: 0, exectime: 0.
-    Eval getFlag: 'stats', either: {
-      Eval statsb: Broom keptAlloc.
-      Eval exectime: (Clock timeExecutionOf: { Eval __eval_ret: (Eval evaluate: inp). }).
-      Eval statsa: Broom keptAlloc.
-    }
-    or: {
-      Eval __eval_ret: (Eval evaluate: inp).
-    }.
-    Eval pushHist: inp.
-    __ is _.
-    _ is Eval __eval_ret.
-    Eval errored? not ifTrue: {
-      var printed is False.
-      Eval getFlag: 'printvs', ifTrue: { Pen message: Eval color arguments: [], write: var str is Eval __eval_ret toString. printed is str length > 0. }.
-      Pen resetColor.
-      Eval getFlag: 'ptype', ifTrue: {
-        Pen yellow write: '%s=> (%s)%s' % [(printed either: ' ' or: ''), (Reflect strTypeOf: Eval __eval_ret, replace: '\'' with: ''), (printed either: '' or: '\n')].
-        Pen resetColor.
-      }.
-      Eval getFlag: 'stats', ifTrue: {
-        var str is '%s(%s seconds (%d cycles), %s bytes)' % [(printed either: '\n' or: ''), Eval exectime / (Clock ticksPerSecond), Eval exectime, ((Eval statsa - Eval statsb) toString reverse reSplit: '(?<=\\G...)', join: ',', reverse)].
-        Pen write: Colors % [str, GREEN_COLOR, ITALIC_EFFECT].
-        printed ifFalse: { Pen brk. }.
-      }.
-      it is _.
-      #Broom sweep. #Keep the darn pointers in memory
-      Eval __eval_ret toString length > 0 ifTrue: { Pen brk. }.
-    }.
-  }).#catch: Eval::'handleInternalException:').
+Eval on: 'repl' do: {:self
+  {^True.} whileTrue: { self read_eval_print: self prompt. }.
 }.
+
+Eval on: 'enableDebugStuff' do: {
+  my debug is True.
+}, on: 'disableDebugStuff' do: {
+  my debug is False.
+  my stepDebug is False.
+  my end is False.
+}.
+
+Eval on: 'debugRepl:' do: {:self:stuff
+  [continue, *vals] is stuff.
+  Pen writeln: 'Break on %s::\'%s\' (%L)' % vals.
+  var prompt is '%s %s(%s)%s' % (vals + [self prompt]).
+  var inp is ''.
+  var _ is Nil.
+  var __ is Nil.
+  var it is Nil.
+  var stderr is File special: 'stderr'.
+  var errPen is Pen for: stderr.
+  var GREEN_COLOR is 'green' toSymbol.
+  var ITALIC_EFFECT is 'italic' toSymbol.
+  var inBlock is 0.
+  enableDebugStuff.
+  my returnValue push: continue.
+  {^True.} whileTrue: { self read_eval_print: prompt. }.
+  disableDebugStuff.
+  ^my returnValue pop.
+}.
+
+Eval on: 'read_eval_print:' do: ({:prompt
+  var hindex is me getHistory count.
+  var ncmessage is ' <- No completion'.
+  var stdin is File special: 'stdin'.
+  inp is ''.
+  # break the repl when `end` is True.
+  Eval break break.
+  Pen cyan write: prompt, resetColor.
+
+  var inc is stdin readBytes: 1.
+  var last_was_comp is False.
+  var last_comp_entry is ''.
+  var last_comp_index is -1.
+  var last_comp_rewind is 0.
+  var last_toc is 'Object'.
+  var done is False.
+  var cursor is 0.
+  var multichar_in is Array new.
+  inBlock is 0.
+  Eval endBlock.
+  var lastEscape is False.
+  var inString is False.
+  var inpbrk is 0.
+  var last_comp_entry_len is 0.
+  var ce_idx is 0.
+  var cmt is ''.
+  var comp_set is HashSet new.
+  var have_context is False.
+  {^done & (inBlock = 0).} whileFalse: {
+    cmt is ''.
+    inc = '\t' ifTrue: {#<Tab>
+        clear_next_line run. have_context is False.
+        comp_set clear.
+        inp containsPattern: ?>^\s*:<?, either: {
+          last_was_comp ifTrue: {
+            inp is inp removeFrom: (cursor - last_comp_entry_len) to: cursor.
+            cursor is (cursor - last_comp_entry_len) max: 0.
+            }.
+          var comps is Eval metaCompletion: (inp split: ' ' max: 1).
+          comps count > 0 either: {
+            comps count <=: ce_idx, ifTrue: { ce_idx is 0. }.
+            # Pen writeln: comps.
+            last_comp_entry is comps @ ce_idx.
+            ce_idx +=: 1.
+            last_comp_entry_len is last_comp_entry length.
+            inp +=: last_comp_entry.
+            cursor +=: last_comp_entry_len.
+            last_was_comp is True.
+          } or: { cmt is '<- No completion'. }.
+        } or: {
+          var candidate is 'Nil'.
+          var toc is (inp trim or: '  ') split: ' ', last.
+
+          last_was_comp ifTrue: {
+            var toremove is ((toc length) - (last_comp_entry length)).
+            Pen write: '\b \b' * toremove.
+            inp is inp removeFrom: (cursor - toremove) to: cursor.
+            cursor is (cursor - toremove) max: 0.
+          }.
+          toc is last_was_comp either: last_comp_entry or: toc.
+          last_comp_entry is toc.
+          var flipper is OneGateFlipper new.
+          last_toc is (inp trim or: 'Nil') split: ' ', filter: {:_:v (v endsWith: ':') ifTrue: {flipper set. ^False.}. ^((v endsWith: ':') | (flipper get)) not | (v containsPattern: ?>(-?(0[xXcC])?[\d]+(\.[\d]+)?)|($\')<?). }.
+          last_toc is (last_toc count) >=: 2, either: {^last_toc init last.} or: 'Nil'.
+          last_toc containsPattern: ?>(-?(0[xXcC])?[\d]+(\.[\d]+)?)<?, ifTrue: { last_toc is 'Number'. }.
+          last_toc containsPattern: ?>^\'<?, ifTrue: { last_toc is 'String'. }.
+          var candidates is Eval allTheNames: ({^Reflect getObject: (['my', 'var'] contains: last_toc, either: Nil or: last_toc).} catch: {^Nil.}, run).
+          var skipthis is candidates @ 0.
+          candidates is (candidates @ 1) filter: {:_:i ^i startsWith: toc.}.
+          candidates count !=: 0, ifTrue: {
+            have_context is True.
+            candidate is candidates @ (last_comp_index is (last_comp_index +=: 1) >=: (candidates count), either: 0 or: last_comp_index).
+            var uniq is comp_set addAll: candidates, toArray.
+            var uid is uniq indexOf: candidate.
+            generate_context_menu applyTo: uniq and: uid.
+            var cc is candidate skip: toc length.
+            cmt is (var iis is '[from %s]' % [last_toc]).
+            last_comp_rewind is iis length.
+            inp is inp insert: cc at: cursor.
+            cursor +=: cc length.
+          }, else: {
+            cmt is ncmessage.
+          }.
+          last_was_comp is True.
+          skipthis ifTrue: {last_toc is candidate.}.
+        }.
+      }, else: {
+        inc case: '\xd' do: {#<Enter>
+          clear_next_line run.
+          have_context ifFalse: {
+          inp length > 0 ifTrue: {
+            (inp containsPattern: ?>^\s*:<?) ifTrue: {done is True.}, else: {
+              (inp containsPattern: ?>\.\s*$<?, not) & (inBlock = 0) ifTrue: {
+                inp +=: '.'.
+              }.
+              done is inBlock = 0.
+            }.
+            inBlock !=: 0, ifTrue: { Eval newBlock. Pen brk. inp +=: ' '. inpbrk is inp length. cursor +=: 1.}.
+          }, else: { Pen brk. done is True. }.
+          }.
+          have_context is False.
+        }, case: '\x3' do: {#<^C>
+          clear_next_line run. have_context is False.
+          inp is ''.
+          cursor is 0.
+          inBlock is 0.
+          cmt is '<Broke block>'.
+          # Pen red writeln: 'Interrupted', resetColor.
+          # done is True.
+        }, case: '\b' do: {#<\b>
+          clear_next_line run. have_context is False.
+          cursor > 0 ifTrue: {
+            inp is inp removeFrom: (cursor - 1) to: cursor.
+            cursor -=: 1.
+            Pen write: '\b \b'.
+          }, else: { Pen write: '\a'. }.
+        }, case: ('' appendByte: 127) do: {#<\b>
+          clear_next_line run. have_context is False.
+          cursor > 0 ifTrue: {
+            inp is inp removeFrom: (cursor - 1) to: cursor.
+            cursor -=: 1.
+            Pen write: '\b \b'.
+          }, else: { Pen write: '\a'. }.
+        }, case: '\x11' do: {
+          var toc is (inp trim or: '  ') split: ' ', last.
+          var recs is '%:L' % [' ', (Eval allTheNames filter: {:_:n ^n startsWith: toc.})].
+          Pen cyan write: recs, resetColor.
+          clear_next_line run. have_context is False.
+
+        }, case: '\x1b' do: {
+          inc is stdin readBytes: 2.
+          inc case: '\x5b\x41' do: { #Up Arrow
+            hindex > 0 ifTrue: {
+              cursor is (inp is Eval getHistory at: (hindex is hindex - 1)) length.
+            }.
+            clear_next_line run. have_context is False.
+
+          }, case: '\x5b\x42' do: { #Down Arrow
+            (hindex > 0) & (Eval getHistory count > 0) ifTrue: {
+              hindex +=: 1.
+              Pen write: '\b' * (inp length).
+              inp is Eval getHistory.
+              inp count <=: hindex, ifTrue: {hindex is inp count.}.
+              inp is inp at: hindex - 1.
+              cursor is inp length.
+            }, else: {
+              hindex is 0.
+              Pen write: '\b \b' * (inp length).
+              inp is ''.
+              cursor is 0.
+            }.
+            clear_next_line run. have_context is False.
+
+          }, case: '\x5b\x43' do: { #Right Arrow
+            (cursor < inp length) ifTrue: {
+              cursor +=: 1.
+            }, else: {Pen write: '\a'.}.
+            clear_next_line run. have_context is False.
+
+          }, case: '\x5b\x44' do: { #Left Arrow
+            (cursor > 0) ifTrue: {
+              cursor -=: 1.
+            }, else: {Pen write: '\a'.}.
+            clear_next_line run. have_context is False.
+
+          }, case: '\x5b\x31' do: { #Supposedly <ctrl>
+            inc is stdin readBytes: 3.
+              (inc = '\x3b\x35\x44') & (cursor > 0) ifTrue: { #^Left Arrow
+                var ct is inp from: 0 to: cursor.
+                var ct is ct trim.
+                ct is (ct reLastIndexOf: ?>\s|\'<?).
+                ct is ct equals: cursor - 1, either: ct - 1 or: ct.
+                cursor is ct + 1.
+              }, else: {
+                (inc = '\x3b\x35\x43') ifTrue: { #^Right Arrow
+                  var ct is (var ix is inp from: cursor to: (inp length), trim) reIndexOf: ?>\s|\'<?, - 1.
+                  ct is ct equals: 0, either: ct + 1 or: ct.
+                  cursor is cursor + ct + ((inp length) - (ix length)).
+                }.#, else: { Pen red write: inc. }.
+              }.
+              clear_next_line run. have_context is False.
+          }, case: '\x4f\x51' do: { #F2
+              clear_next_line run. have_context is False.
+              Eval togglePasteMode.
+          }, default: {
+            Pen write: inc toByteArray.
+          }, switch.
+        }, default: {
+          have_context ifTrue: { clear_next_line run. have_context is False. }.
+          (inc
+            case: '\'' do: {
+                inString is (inString & lastEscape not) | (inString not).
+            },
+            case: '\\' do: {
+                lastEscape is True.
+            },
+            case: '%' do: {
+              (var cdi is stdin readBytes: 1).
+                cdi
+                  case: '{' do: {
+                    inc is inc from: 0 to: inc length - 1.
+                    inBlock +=: (inString either: 0 or: 1).
+                  },
+                  case: '}' do: {
+                    inc is inc from: 0 to: inc length - 1.
+                    inBlock -=: (inString either: 0 or: 1).
+                  }, default: {
+                    inc +=: cdi.
+                  }, switch.
+            }, switch).
+          inp is inp insert: inc at: cursor.
+          cursor +=: inc length.
+          # Eval redraw: inp at: cursor comment: ''.
+        }, switch.
+        last_was_comp is False.
+      }.
+    Eval redraw: inp at: cursor - 1 comment: (inBlock either: '%s%d' % ['%{', inBlock] or: cmt).
+    # Pen write: inc toByteArray.
+    done is (done & (inBlock = 0)).
+    done break.
+    inc is stdin readBytes: 1.
+  }.
+  hindex is Eval getHistory count.
+  # Pen cyan write: ' [cursor %d in (%s)]' % [cursor, (inp)], resetColor.
+  (inp trim = '') do ifTrue: {
+    enterRepeat ifTrue: {
+      inp is Eval getHistory or: ['Nil'], head.
+    }.
+  }, continue done.
+  Eval getFlag: 'printvs', ifTrue: { Pen brk. }.
+  # if it ends in a dot, get rid of it.
+  inp is inp trim.
+  (inp at: (inp length - 1), = '.') ifTrue: {
+    inp is inp from: 0 length: (inp length - 1).
+  }.
+  Eval statsb: 0, statsa: 0, exectime: 0.
+  Eval getFlag: 'stats', either: {
+    Eval statsb: Broom keptAlloc.
+    Eval exectime: (Clock timeExecutionOf: { Eval __eval_ret: (Eval evaluate: inp). }).
+    Eval statsa: Broom keptAlloc.
+  }
+  or: {
+    Eval __eval_ret: (Eval evaluate: inp).
+  }.
+  Eval pushHist: inp.
+  __ is _.
+  _ is Eval __eval_ret.
+  Eval errored? not ifTrue: {
+    var printed is False.
+    Eval getFlag: 'printvs', ifTrue: { Pen message: Eval color arguments: [], write: var str is Eval __eval_ret toString. printed is str length > 0. }.
+    Pen resetColor.
+    Eval getFlag: 'ptype', ifTrue: {
+      Pen yellow write: '%s=> (%s)%s' % [(printed either: ' ' or: ''), (Reflect strTypeOf: Eval __eval_ret, replace: '\'' with: ''), (printed either: '' or: '\n')].
+      Pen resetColor.
+    }.
+    Eval getFlag: 'stats', ifTrue: {
+      var str is '%s(%s seconds (%d cycles), %s bytes)' % [(printed either: '\n' or: ''), Eval exectime / (Clock ticksPerSecond), Eval exectime, ((Eval statsa - Eval statsb) toString reverse reSplit: '(?<=\\G...)', join: ',', reverse)].
+      Pen write: Colors % [str, GREEN_COLOR, ITALIC_EFFECT].
+      printed ifFalse: { Pen brk. }.
+    }.
+    it is _.
+    #Broom sweep. #Keep the darn pointers in memory
+    Eval __eval_ret toString length > 0 ifTrue: { Pen brk. }.
+  }.
+} catch: Eval::'handleInternalException:').
 
 Eval repl.

@@ -1592,6 +1592,48 @@ ctr_object_destruct (ctr_object * object, ctr_argument * nothing)
   return CtrStdNil;
 }
 
+ctr_object *
+ctr_get_frame (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object * c = ctr_contexts[ctr_context_id];
+  ctr_object* map = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
+  ctr_set_link_all(map, CtrStdMap);
+  map->value = c->value;
+  map->properties = c->properties;
+  return map;
+}
+
+ctr_object *
+ctr_get_frame_id (ctr_object * myself, ctr_argument * argumentList)
+{
+  return ctr_build_number_from_float(ctr_context_id);
+}
+
+ctr_object *
+ctr_get_frame_with_id (ctr_object * myself, ctr_argument * argumentList)
+{
+  int id = argumentList->object->value.nvalue;
+  if (id < 0 || id > ctr_context_id) {
+    CtrStdFlow = ctr_format_str("ENo frame with id %d: IDs must be in range(0, %d)", id, ctr_context_id);
+    return CtrStdNil;
+  }
+  ctr_object* c = ctr_contexts[id];
+  ctr_object* map = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
+  ctr_set_link_all(map, CtrStdMap);
+  map->value = c->value;
+  map->properties = c->properties;
+  return map;
+}
+
+ctr_object *
+ctr_frame_present (ctr_object * myself, ctr_argument * argumentList)
+{
+  int p = 0;
+  ctr_object* frame = argumentList->object;
+  for (int i=ctr_context_id; i>=0&&!p; i--,p=p||ctr_contexts[i]==frame);
+  return ctr_build_bool(p);
+}
+
 /**
  * @internal
  *
@@ -1608,6 +1650,7 @@ ctr_initialize_world ()
   ctr_world_initialized = 1;
   //register_signal_handlers ();
   ctr_instrument = 0;
+  ctr_global_instrum = NULL;
   int i;
   srand ((unsigned) time (NULL));
   for (i = 0; i < 16; i++)
@@ -1675,7 +1718,6 @@ ctr_initialize_world ()
 
   ctr_instrumentor_funcs = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);	//register instrumentors to nil
   // ctr_past_instrumentor_func = NULL;   //register instrumentors to nil
-  ctr_cparse_calltime_names = NULL;
   /* Object */
   CtrStdObject = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
   CtrStdString = ctr_internal_create_object (CTR_OBJECT_TYPE_OTSTRING);
@@ -1871,6 +1913,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_CONTAINS_PATTERN), &ctr_string_contains_pattern);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_HASH_WITH_KEY), &ctr_string_hash_with_key);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_EVAL), &ctr_string_eval);
+  ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("exec"), &ctr_string_exec);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_TOSTRING), &ctr_string_to_string);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_STRFMT), &ctr_string_format);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("%"), &ctr_string_format);
@@ -2275,6 +2318,8 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdReflect,
 			    ctr_build_string_from_cstring ("unregisterInstrumetationForObject:"), &ctr_reflect_unregister_instrumentor);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("currentInstrumentorFor:"), &ctr_reflect_get_instrumentor);
+  ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("globalInstrument:"), &ctr_reflect_ginstr);
+  ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("disableGlobalInstrument"), &ctr_reflect_noginstr);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("runAtGlobal:arguments:"), &ctr_reflect_run_glob);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("version"), &ctr_give_version);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("compilerInfo"), &ctr_reflect_compilerinfo);
@@ -2283,6 +2328,10 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("&method:"), &ctr_reflect_object_delegate_get_responder);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("&responder:"), &ctr_reflect_object_get_responder);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("lastTrace"), &ctr_get_last_trace);
+  ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("frame"), &ctr_get_frame);
+  ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("frame:"), &ctr_get_frame_with_id);
+  ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("frameId"), &ctr_get_frame_id);
+  ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("isInFrame:"), &ctr_frame_present);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("run:inContext:arguments:"), &ctr_reflect_run_for_object_in_ctx);
   ctr_internal_create_func (CtrStdReflect,
 			    ctr_build_string_from_cstring ("run:inContextAsWorld:arguments:"), &ctr_reflect_run_for_object_in_ctx_as_world);
@@ -2364,6 +2413,9 @@ ctr_initialize_world ()
 ctr_object *
 ctr_get_responder (ctr_object * receiverObject, char *message, long vlen)
 {
+  if (receiverObject->info.type == 0 && receiverObject->interfaces == NULL) {
+    return NULL;
+  }
   ctr_object *methodObject;
   ctr_object *searchObject;
   methodObject = NULL;
@@ -2436,6 +2488,7 @@ ctr_object *
 ctr_internal_argumentptr2tuple (ctr_argument * argumentList)
 {
   ctr_object *ret = ctr_array_new (CtrStdArray, NULL);
+  if (!argumentList) return ret;
   while (argumentList->object)
     {
       ctr_array_push (ret, argumentList);
@@ -2500,9 +2553,15 @@ ctr_send_message (ctr_object * receiverObject, char *message, long vlen, ctr_arg
   if (unlikely (receiverObject != CtrStdReflect && ctr_instrument))
     {
       ctr_instrument = 0;
-      ctr_object *ctr_instrumentor_func =
+      ctr_object *ctr_instrumentor_func;
+      if (ctr_global_instrum) {
+        ctr_instrumentor_func = ctr_global_instrum;
+        goto skip_intern;
+      }
+      ctr_instrumentor_func =
 	ctr_internal_object_find_property_with_hash (ctr_instrumentor_funcs, receiverObject,
 						     ctr_send_message (receiverObject, "iHash", 5, NULL)->value.nvalue, 0);
+      skip_intern:;
       if (unlikely (ctr_instrumentor_func))
 	{
 	  ctr_argument *blkargs = ctr_heap_allocate (sizeof (ctr_argument));
@@ -2511,7 +2570,7 @@ ctr_send_message (ctr_object * receiverObject, char *message, long vlen, ctr_arg
 	  blkargs->next->object = ctr_build_string (message, vlen);
 	  blkargs->next->next = ctr_heap_allocate (sizeof (ctr_argument));
 	  blkargs->next->next->object = ctr_internal_argumentptr2tuple (argumentList);
-	  ctr_object *result = ctr_block_run_here (ctr_instrumentor_func, blkargs,
+	  ctr_object *result = ctr_block_run (ctr_instrumentor_func, blkargs,
 						   ctr_instrumentor_func);
 	  ctr_instrument = 1;
 	  if (result == ctr_instrumentor_func)

@@ -15,8 +15,8 @@ CaseConstruct on: 'switch:' do: {:value
 }.
 CaseConstruct on: 'switch' do: {
   var ans is my casemap at: my obj.
-  var default is my default or: {\ {^Nil.}. }.
-  ^ans isNil either: {^default run.} or: {^ans run.}.
+  var default is my default or: \:_ {^Nil.}.
+  ^ans isNil either: default or: ans.
 }.
 Object on: 'case:do:' do: { :s :b
   var ret is const CaseConstruct new initFor: me.

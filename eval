@@ -18,13 +18,9 @@ var logo is ?>  _____ _ _
 
 var display_logo is True.
 
-inp is ''.
-var stderr is File special: 'stderr'.
-var errPen is Pen for: stderr.
 var GREEN_COLOR is 'green' toSymbol.
 var ITALIC_EFFECT is 'italic' toSymbol.
-var inBlock is 0.
-var enterRepeat is False.
+
 
 ImportLib LRArray.
 import
@@ -373,7 +369,10 @@ Eval on: 'evaluate:' do: { :str
 }.
 
 Eval on: 'addFile:named:' do: {:str:fname
-  Reflect run: {:str str exec. } inContextAsWorld: my evaluationContext arguments: ['var %s is { %s }.' % [(fname split: '.' max: 1, head), str]].
+  var varname is fname split: '.' max: 1, head.
+  Reflect run: {:fname:ctx:str ('var %s is {
+    Reflect run: {:str str exec.} inContext: const ctx arguments: [const str].
+  }.' % [fname]) exec. } inContextAsWorld: my evaluationContext arguments: [varname, my evaluationContext, str].
 }.
 Eval on: 'pushHist:' do: {:h
   my history push: h.
@@ -486,7 +485,7 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '--pc : set the prompt continuation\n',
           indent: 2 write: '-c : set the result color\n',
           indent: 2 write: '-h : show this help\n',
-          indent: 2 write: '-f : evaluate file. many can be passed, evals in passed order (currently bugged)\n',
+          indent: 2 write: '-f : evaluate file. many can be passed. All the files get added as runnable blocks (fully-qualified path without extensions)\n',
           indent: 2 write: '-F<[no-]flag> : enables the passed flag\n',
           indent: 2 write: '--Fs : display all the available flags\n',
           indent: 2 write: '--meta <command> : execute a metacommand (sans the initial :)\n',
@@ -646,6 +645,14 @@ Eval on: 'redraw:at:comment:' do: {:inp:cursor:cmt
 Eval genAccessors: ['exectime', '__eval_ret', 'statsb', 'statsa'].
 
 Eval on: 'repl' do: {:self
+  var inp is ''.
+  var _ is Nil.
+  var __ is Nil.
+  var it is Nil.
+  var stderr is File special: 'stderr'.
+  var errPen is Pen for: stderr.
+  var inBlock is 0.
+  var enterRepeat is False.
   {^True.} whileTrue: { self read_eval_print: self prompt. }.
 }.
 
@@ -667,8 +674,7 @@ Eval on: 'debugRepl:' do: {:self:stuff
   var it is Nil.
   var stderr is File special: 'stderr'.
   var errPen is Pen for: stderr.
-  var GREEN_COLOR is 'green' toSymbol.
-  var ITALIC_EFFECT is 'italic' toSymbol.
+  var enterRepeat is True.
   var inBlock is 0.
   enableDebugStuff.
   my returnValue push: continue.
@@ -786,6 +792,8 @@ Eval on: 'read_eval_print:' do: ({:prompt
           cmt is '<Broke block>'.
           # Pen red writeln: 'Interrupted', resetColor.
           # done is True.
+        }, case: '\x4' do: {#^D
+          Program exit.
         }, case: '\b' do: {#<\b>
           clear_next_line run. have_context is False.
           cursor > 0 ifTrue: {
@@ -793,7 +801,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
             cursor -=: 1.
             Pen write: '\b \b'.
           }, else: { Pen write: '\a'. }.
-        }, case: ('' appendByte: 127) do: {#<\b>
+        }, case: '\x{7f}' do: {#<\b>
           clear_next_line run. have_context is False.
           cursor > 0 ifTrue: {
             inp is inp removeFrom: (cursor - 1) to: cursor.

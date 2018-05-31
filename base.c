@@ -4576,6 +4576,33 @@ ctr_string_eval (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
+ * <b>[String] exec</b>
+ *
+ * Executes the contents of the string as code.
+ * Does <i>not</i> return a value unless the code itself does.
+ */
+ctr_object *
+ctr_string_exec (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_tnode *parsedCode;
+  char *pathString;
+  ctr_object *result;
+
+  if (myself->value.svalue->vlen == 0)
+    return CtrStdNil;
+
+  pathString = ctr_heap_allocate_tracked (sizeof (char) * 5);
+  memcpy (pathString, "<eval>\0", 7);
+  ctr_program_length = myself->value.svalue->vlen;
+  parsedCode = ctr_cparse_parse (myself->value.svalue->value, pathString);
+  ctr_cwlk_subprogram++;
+  result = ctr_cwlk_run (parsedCode);
+  ctr_cwlk_subprogram--;
+
+  return CtrStdNil;
+}
+
+/**
  * <b>[String] escapeQuotes.</b>
  *
  * Escapes all single quotes in a string. Sending this message to a

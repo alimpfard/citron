@@ -1727,6 +1727,37 @@ ctr_reflect_get_property (ctr_object * myself, ctr_argument * argumentList)
 // #ifdef WITH_INSTRUMENTORS
 
 /**
+ * [Reflect] globalInstrument: [Block<obj, msg, arg>:result]
+ *
+ * Set a global instrumentor (overrides all instrumentors)
+ */
+ctr_object *
+ctr_reflect_ginstr(ctr_object * myself, ctr_argument * argumentList)
+{
+  if (ctr_global_instrum) {
+    CtrStdFlow = ctr_build_string_from_cstring("A global instrumentor has already been registered");
+    return myself;
+  }
+    ctr_global_instrum = argumentList->object;
+    return myself;
+}
+
+/**
+ * [Reflect] disableGlobalInstrument
+ *
+ * unset the global instrumentor
+ */
+ctr_object *
+ctr_reflect_noginstr(ctr_object * myself, ctr_argument * argumentList)
+{
+  if (!ctr_global_instrum) {
+    CtrStdFlow = ctr_build_string_from_cstring("no global instrumentor has been registered");
+    return myself;
+  }
+    ctr_global_instrum = NULL;
+    return myself;
+}
+/**
  * [Reflect] disableInstrumentation
  * Sends a message to an object with some arguments bypassing the instrumentor
  */
@@ -1753,7 +1784,7 @@ ctr_reflect_instrmsg (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * [Reflect] registerInstrumentor: [Block<object, message, arguments>:<object, message, arguments>] forObject: [Object]
+ * [Reflect] registerInstrumentor: [Block<object, message, arguments>:<result>] forObject: [Object]
  *
  * register to an event that fires every time a message is sent for an specific object.
  * This instrumentor will have to handle all message sending operations

@@ -1,4 +1,4 @@
-#include <Citron/citron.h>
+#include "../../citron.h"
 #include <tcl.h>
 #include <tk.h>
 #include <limits.h>

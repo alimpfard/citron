@@ -16,8 +16,10 @@ script:
 
 after_success:
   - ls -lh autohell/build/*
+  - tar cjf release.tar.bz2 -C autohell/build .
+  - (cd autohell/build && zip -r - .) > release.zip
   - wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
-  - bash upload.sh autohell/build/*
+  - bash upload.sh release.tar.bz2 release.zip
 
 branches:
   except:

@@ -1,0 +1,2 @@
+check:
+	sh ./runtests

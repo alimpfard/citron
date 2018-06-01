@@ -9,4 +9,4 @@ install:
   - cd .. && bash ./makeplugs.sh
 
 script:
-  - bash ./runtests.sh
+  - bash ./runtests.sh autohell/build

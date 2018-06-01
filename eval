@@ -20,7 +20,7 @@ var display_logo is True.
 
 var GREEN_COLOR is 'green' toSymbol.
 var ITALIC_EFFECT is 'italic' toSymbol.
-
+var inBlock is 0.
 
 ImportLib LRArray.
 import
@@ -371,6 +371,7 @@ Eval on: 'evaluate:' do: { :str
 Eval on: 'addFile:named:' do: {:str:fname
   var varname is fname split: '.' max: 1, head.
   Reflect run: {:fname:ctx:str ('var %s is {
+    Eval statsb: 0, statsa: 0, exectime: 0.
     Reflect run: {:str str exec.} inContext: const ctx arguments: [const str].
   }.' % [fname]) exec. } inContextAsWorld: my evaluationContext arguments: [varname, my evaluationContext, str].
 }.

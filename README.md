@@ -1,6 +1,10 @@
 [![Build Status](https://travis-ci.com/alimpfard/citron.svg?branch=master)](https://travis-ci.com/alimpfard/citron)
 ## Citron :: A Programming Language for the crazy and people that like functions
 
+### Release
+A binary release (x86_64 ELF) is available, however it __cannot__ use neither *import*, nor dynamic modules.
+Please build from the source.
+
 ### Build guide
 minimum required libraries:
 * `libdl`   -- for dynamic loading of modules

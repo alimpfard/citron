@@ -1,0 +1,8 @@
+var Butler is Object new.
+Butler on: 'greet:' do: { :name
+	Pen write: 'Welcome ' + name.
+}.
+var james is Butler new.
+james greet: 'visitor'.
+
+import export: james as: 'James'.

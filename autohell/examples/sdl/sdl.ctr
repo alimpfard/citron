@@ -1,0 +1,101 @@
+Broom memoryLimit: 1024 * 1024 * 512.
+Broom autoAlloc: True.
+
+import Library/Data/SwitchCase.
+
+var w is 640.
+var h is 480.
+var window is SDL new set: 'windowName' to: 'meme Generator 9001', set: 'windowWidth' to: w, set: 'windowHeight' to: h, init.
+var c is Color rgb: [0,0,0].
+var evt is SDLEvent new.
+var in_boop is False.
+var shift is False.
+var font is SDL loadFont: 'examples/sdl/wowsers_italic.ttf' size: 14.
+var evthandler is {:e
+  (var evtname is SDLEventTypes at: e toNumber)
+      case: 'keyDown' do: {
+     (var ks is e keysym)
+        case: 'q' do: {
+          Program exit.
+      },case: 'return' do: {
+        in_boop is in_boop not.
+        in_boop ifTrue: {
+          Pen writeln: 'boop'.
+          duck is SDL loadImage: 'examples/sdl/boop.jpg'.
+        }, else: {
+          Pen writeln: 'duck'.
+          duck is SDL loadImage: 'examples/sdl/razavi.jpg'.
+        }.
+        duck scaleToW: w / 2 andH: h.
+        duck_rect is duck clipRect.
+        dc is duck pixelAtX: 0 andY: 0.
+        duck setColorKey: dc.
+      }, case: 'space' do: {
+        pTEXT +=: ' '.
+      }, case: 'backspace' do: {
+        pTEXT is pTEXT from: 0 length: pTEXT length - 1.
+      }, case: 'down' do: {
+        TEXTY is (TEXTY + (shift either: 10 or: 1)) min: h.
+      }, case: 'up' do: {
+        TEXTY is (TEXTY - (shift either: 10 or: 1)) max: 0.
+      }, case: 'right' do: {
+        TEXTX is (TEXTX + (shift either: 10 or: 1)) max: 0.
+      }, case: 'left' do: {
+        TEXTX is (TEXTX - (shift either: 10 or: 1)) min: w.
+      }, case: 'left shift' do: {
+        shift is True.
+      }, case: 'right shift' do: {
+        shift is True.
+      }, default: {
+        pTEXT +=: ks.
+      }, switch.
+   }, case: 'keyUp' do: {
+      (e keysym lower indexOf: 'shift', !=: -1) ifTrue: {
+        shift is False.
+      }.
+   }, case: 'quit' do: {
+     Program exit.
+   }, case: 'mouseMotion' do: {
+     (e mouseState at: 'left') ifTrue: {
+       var pos is e mousePosition.
+       TEXTX is pos @ 0.
+       TEXTY is pos @ 1.
+     }.
+   }, switch.
+}.
+var duck is SDL loadImage: 'examples/sdl/lol.bmp'.
+duck scaleToW: w / 2 andH: h.
+var dc is duck pixelAtX: 0 andY: 0.
+duck setColorKey: dc.
+var TEXT is ''.
+var pTEXT is ''.
+var TEXTX is 0.
+var TEXTY is 0.
+var rtext is {
+  TEXT length > 0 either: {
+    var vf is font renderBlendedUnicode: TEXT color: dc.
+    var rect is vf clipRect.
+    var nrect is vf clipRect setX: TEXTX, setY: TEXTY.
+    ^window blit: vf fromRect: rect toRect: nrect.
+  } or: {^Nil.}.
+}.
+var fps is 0.
+var last_tick is 0.
+var duck_rect is duck clipRect.
+var r is SDL newRectWithX: 0 andY: 0 andW: 0 andH: 0.
+var x is w.
+var white is Color rgb: [256,256,255]. #Totally white
+{\ True } whileTrue: {
+  fps is 1000 / (var tick is SDL ticks - last_tick).
+  last_tick is tick + last_tick.
+  TEXT is '%s (fps: %d)' % [pTEXT, (fps round)].
+  r setX: x abs.
+  window blit: duck fromRect: duck_rect toRect: r.
+  rtext run.
+  window update.
+  evt poll: evthandler.
+  Clock wait: 13 ms. #magic 60fps time weee
+  window fillRect: Nil withColor: white.
+  x is x -=: 1.
+  (x equals: 0 - w) ifTrue: {x is w.}.
+}.

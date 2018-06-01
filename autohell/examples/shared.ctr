@@ -1,0 +1,13 @@
+var ra is Reflect newSharedObject.
+var i is Reflect newSharedObject.
+Reflect link: i to: 1.
+Pen write: i, brk.
+
+ra on: 'test' do: {i +=: 1. Pen write: 'test' + i, brk.}.
+
+var c is Program new: {:c Pen write: 'in child: $$i', brk. ra test. Pen write: 'in child after test: $$i', brk.}.
+
+c join.
+
+Pen write: 'in parent: $$i', brk.
+Broom sweep.

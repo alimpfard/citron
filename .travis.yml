@@ -1,0 +1,7 @@
+language: c
+compiler: clang
+before_install:
+    - sudo apt-get -qq update
+    - sudo apt-get install -y libffi-dev libbsd-dev libpcre2-dev libgc-dev
+script: cd autohell && mkdir -p build && ./configure --prefix=build && make
+install: make install

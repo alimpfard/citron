@@ -2,5 +2,8 @@ language: c
 compiler: clang
 before_install:
     - sudo apt-get -qq update
-    - sudo apt-get install -y libffi-dev libbsd-dev libpcre3-dev libgc-dev
-install: cd autohell && mkdir -p build && ./configure --prefix=$(realpath ./build) && make
+    - sudo apt-get install -y libffi-dev libbsd-dev libpcre3-dev libgc-dev realpath
+install:
+  - cd autohell && aclocal && autoconf && automake --add-missing && libtoolize
+  - cd autohell && mkdir -p build && ./configure --prefix=$(realpath ./build) && make
+  - sh ./makeplugs.sh

@@ -1,0 +1,19 @@
+# Fizz Buzz
+
+1 to: 100 step: 1 do: {  :i
+	var f is 'Fizz'.
+	var b is 'Buzz'.
+
+	var s is i toString.
+	i mod: 15, = 0 ifTrue: {
+		s is f + b.
+	}, ifFalse: {
+		i mod: 3, = 0 ifTrue: {
+			s is f.
+		}.
+		i mod: 5, = 0 ifTrue: {
+			s is b.
+		}.
+	}.
+	Pen write: ' $$s \n'.
+}.

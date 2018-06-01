@@ -4,11 +4,9 @@
 # set -x
 
 echo "Where is your libffi? tell me, please!"
-ffi_path="/usr/local/lib";
+ffi_path=$(ldconfig -p | grep libffi | tr ' ' '\n' | grep / | head -n1);
 LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$ffi_path";
 OS=`uname -s`
-# make clean;
-# make;
 failing=()
 j=1
 useless_input="test

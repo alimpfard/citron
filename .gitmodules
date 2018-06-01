@@ -7,3 +7,6 @@
 [submodule "integration/atom/language-citron"]
     path = integration/atom/language-citron
     url = https://github.com/alimpfard/atom-language-citron
+[submodule "libbsd"]
+    path = libbsd
+    url = https://github.com/LuaDist/libbsd.git

@@ -2,16 +2,16 @@ default_target: all
 
 all: libjansson ctrjson
 
-libjansson: 
+libjansson:
 	cd jansson && cmake . && make
-ctrjson: 
-	cc -c json.c -fPIC -g3 -o json.o
+ctrjson:
+	cc -c json.c -fPIC -g3 -Ijansson/include -o json.o
 	cp jansson/lib/libjansson.a .
 	cc -shared -o libctrjson.so json.o libjansson.a
 	mkdir -p ../../mods/json
 	cp -f libctrjson.so ../../mods/json
 
-clearctr: 
+clearctr:
 	rm -f *.o *.so *.a
-clearlibjansson: 
+clearlibjansson:
 	cd jansson && make clear

@@ -3,9 +3,6 @@
 # set -v
 # set -x
 
-echo "Where is your libffi? tell me, please!"
-ffi_path=$(ldconfig -p | grep libffi | tr ' ' '\n' | grep / | head -n1);
-LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$ffi_path";
 OS=`uname -s`
 failing=()
 j=1

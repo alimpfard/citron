@@ -1,2 +1,5 @@
 check:
-	sh ./runtests
+	sh ./runtests.sh
+
+all:
+	echo "Done"

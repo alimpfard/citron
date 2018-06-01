@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
-#include <Citron/citron.h>
+#include "../../citron.h"
 
 #define KG_SHIFT        0
 #define KG_CTRL         2

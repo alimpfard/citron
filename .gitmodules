@@ -3,4 +3,7 @@
 	url = https://github.com/nsf/termbox/
 [submodule "plugins/json/jansson"]
 	path = plugins/json/jansson
-	url = https://github.com/akheron/jansson
+    url = https://github.com/akheron/jansson
+[submodule "integration/atom/language-citron"]
+    path = integration/atom/language-citron
+    url = https://github.com/alimpfard/atom-language-citron

@@ -37,6 +37,7 @@ import on: '__load:' do: {:name
   my searchPaths each: {:i:v
   # Pen write: v, brk.
     file isNil not break.
+    v is File new: v, realPath.
     (var f is File new: (v + '/$$name' + '.ctr')) exists ifTrue: {
       (File typeOf: (f realPath), = 'file') ifTrue: {
         path is File new: v, realPath.

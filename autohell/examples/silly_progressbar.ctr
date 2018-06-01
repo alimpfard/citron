@@ -1,0 +1,39 @@
+Broom mode: 1.
+Broom memoryLimit: 1024 * 1024 * 1024.
+
+var Progressbar is Object cnew: {
+  var ra is ''.
+  60 times: {:i ra appendByte: (i + 59).}.
+  my initc is ra randomizeBytesWithLength: 10000.#'This is a huge wall of text! Can you read it? I\'m sure you can\'t read this!'.
+  my horiz is my initc length + 10.
+  my initc is my initc + (my initc reverse).
+  my enc is ' '.
+  my endc is '▪️'.
+  my pformat is '%{percent}%%%{pspace}'.
+  my format is '%{percent}%%%{pspace}%{pinit}%{pintern}%{pend}'.
+  my formatter is Map new
+    put: ' ' at: 'pspace',
+    put: '' at: 'pinit',
+    put: '' at: 'pend'.
+}.
+String on: 'mul:' do: {:t
+  var s is me from: 0 to: (t % (me length)).
+  ^s.
+}.
+Progressbar on: 'show:' do: {:percent
+  my formatter put: (percent toString paddingRight: 5) at: 'percent'.
+  var init is my pformat formatMap: (my formatter).
+  var horiz is my horiz - (init length) - 2.
+  var s is horiz * percent / 100 floor.
+  #var r is horiz - s.
+  var pintern is '%s' formatObjects: [(my initc mul: (s))].
+  Pen write: (my format formatMap: my formatter), brk.
+  my formatter put: pintern at: 'pintern'.
+}.
+
+
+500 times: {:i
+  Pen clear.
+  Progressbar show: (i / 5).
+  Clock wait: 10000.
+}.

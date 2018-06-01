@@ -1,0 +1,13 @@
+Program port: 10500.
+#Broom memoryLimit: 10 * 1024 * 1024 * 1024.
+
+var obj is Object cnew: {my test is 'test'.}.
+obj on: 'test:' do: {:m:shit
+    Pen write: 'testt'.
+    ^JSON serialize: shit. 
+}.
+obj on: 'respondTo:' do: {:msg ^JSON serialize: msg.}.
+obj on: 'respondTo:and:' do: {:msg:arg ^JSON serialize: (Object cnew: {my message is msg. my arg is arg.}).}.
+obj on: 'respondTo:and:and:' do: {:msg:arg0:arg1 ^JSON serialize: (Object cnew: {my message is msg. my arg0 is arg0. my arg1 is arg1.}).}.
+
+Program do waitForInput serve: obj, done.

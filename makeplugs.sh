@@ -9,6 +9,6 @@ do
     if [[ -e "./configure" ]]; then
       ./configure
     fi
-    echo $(make >/dev/null 2>&1 && echo "Succ $plug" || echo "$plug Failed")
+    echo $(make && echo "Succ $plug" || echo "$plug Failed")
     cd ../..
 done

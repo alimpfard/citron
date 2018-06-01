@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.com/alimpfard/citron.svg?branch=master)](https://travis-ci.com/alimpfard/citron)
 ## Citron :: A Programming Language for the crazy and people that like functions
 
 ### Build guide

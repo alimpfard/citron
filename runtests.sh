@@ -4,11 +4,13 @@
 # set -x
 
 OS=`uname -s`
+dir=$(pwd)
+cd $1
 failing=()
 j=1
 useless_input="test
 ";
-for i in $(find tests -maxdepth 1 -name 'test*.ctr'); do
+for i in $(find $dir/tests -maxdepth 1 -name 'test*.ctr'); do
 	fitem=$i
 	echo -n "$fitem interpret";
 	fexpect="${i%%.ctr}.exp"

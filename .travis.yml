@@ -6,4 +6,7 @@ before_install:
 install:
   - cd autohell && aclocal && libtoolize && autoconf && automake --add-missing
   - mkdir -p build && ./configure --prefix=$(realpath ./build) && make
-  - cd .. && sh ./makeplugs.sh
+  - cd .. && bash ./makeplugs.sh
+
+script:
+  - bash ./runtests.sh

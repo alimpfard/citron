@@ -20,7 +20,14 @@ var display_logo is True.
 
 var GREEN_COLOR is 'green' toSymbol.
 var ITALIC_EFFECT is 'italic' toSymbol.
+var inp is ''.
+var _ is Nil.
+var __ is Nil.
+var it is Nil.
+var stderr is File special: 'stderr'.
+var errPen is Pen for: stderr.
 var inBlock is 0.
+var enterRepeat is False.
 
 ImportLib LRArray.
 import
@@ -646,14 +653,6 @@ Eval on: 'redraw:at:comment:' do: {:inp:cursor:cmt
 Eval genAccessors: ['exectime', '__eval_ret', 'statsb', 'statsa'].
 
 Eval on: 'repl' do: {:self
-  var inp is ''.
-  var _ is Nil.
-  var __ is Nil.
-  var it is Nil.
-  var stderr is File special: 'stderr'.
-  var errPen is Pen for: stderr.
-  var inBlock is 0.
-  var enterRepeat is False.
   {^True.} whileTrue: { self read_eval_print: self prompt. }.
 }.
 

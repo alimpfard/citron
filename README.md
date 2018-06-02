@@ -1,5 +1,4 @@
-[![Build Status](https://travis-ci.com/alimpfard/citron.svg?branch=master)](https://travis-ci.com/alimpfard/citron)
-## Citron :: A Programming Language for the crazy and people that like functions
+## Citron :: A Programming Language for the crazy and people that like functions [![Build Status](https://travis-ci.com/alimpfard/citron.svg?branch=master)](https://travis-ci.com/alimpfard/citron)
 
 ### Release
 A binary release (x86_64 ELF) is available, however it __cannot__ use neither *import*, nor dynamic modules.

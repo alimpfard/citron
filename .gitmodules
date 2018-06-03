@@ -10,11 +10,6 @@
 [submodule "libbsd"]
     path = libbsd
 	url = https://github.com/LuaDist/libbsd.git
-
 [submodule "bdwgc"]
 	path = bdwgc
-	url = https://github.com/ivami/bdwgc
-
-[submodule "bdwgc/libatomic_ops"]
-	path = bdwgc/libatomic_ops
-	url = https://github.com/ivmai/libatomic_ops
+	url = https://github.com/ivmai/bdwgc

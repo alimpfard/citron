@@ -582,6 +582,16 @@ ctr_gc_sweep_this (ctr_object * myself, ctr_argument * argumentList)
     }
   return myself;
 }
+/**
+ * [Broom] dust
+ *
+ * Returns the number of objects collected.
+ */
+ctr_object *
+ctr_gc_dust (ctr_object * myself, ctr_argument * argumentList)
+{
+  return ctr_build_number_from_float ((ctr_number) ctr_gc_dust_counter);
+}
 #else //withBoehmGC
 
 void
@@ -608,8 +618,6 @@ ctr_gc_sweep_this (ctr_object * myself, ctr_argument * argumentList)
 {
   return ctr_build_nil ();
 }				//no-op
-
-#endif //withBoehmGC
 /**
  * [Broom] dust
  *
@@ -618,8 +626,11 @@ ctr_gc_sweep_this (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_gc_dust (ctr_object * myself, ctr_argument * argumentList)
 {
-  return ctr_build_number_from_float ((ctr_number) ctr_gc_dust_counter);
+  struct GC_prof_stats_s ps;
+  GC_get_prof_stats(&ps, sizeof(ps));
+  return ctr_build_number_from_float ((ctr_number) ps.bytes_reclaimed_since_gc);
 }
+#endif //withBoehmGC
 
 /**
  * [Broom] unpack: [String:Ref]
@@ -664,9 +675,13 @@ ctr_gc_kept_count (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_gc_kept_alloc (ctr_object * myself, ctr_argument * argumentList)
 {
+  #ifdef withBoehmGC
+  struct GC_prof_stats_s ps;
+  GC_get_prof_stats(&ps, sizeof(ps));
+  #endif
   return ctr_build_number_from_float ((ctr_number)
 #ifdef withBoehmGC
-				      GC_get_total_bytes ()
+				      (ps.heapsize_full-ps.free_bytes_full)
 #else
 				      ctr_gc_alloc
 #endif
@@ -686,7 +701,7 @@ ctr_gc_sticky_count (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * [Broom] memoryLimit
+ * [Broom] memoryLimit: [Number]
  *
  * Sets the memory limit, if this limit gets exceeded the program will produce
  * an out-of-memory error.

@@ -1,9 +1,9 @@
-#ifndef CTR_STD_EXTENSION_PATH
-#define CTR_STD_EXTENSION_PATH                   "."
-#endif
-
 #ifndef CTR_H_GUARD
 #define CTR_H_GUARD
+
+#include "config.h"
+
+char const* ctr_file_stdext_path_raw();
 
 #ifdef  __cplusplus
 

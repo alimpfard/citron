@@ -1,4 +1,9 @@
+#ifdef existing
+#include <Citron/citron.h>
+#else
+#warning "We don't have Citron installed"
 #include "../../citron.h"
+#endif
 #include <tcl.h>
 #include <tk.h>
 #include <limits.h>

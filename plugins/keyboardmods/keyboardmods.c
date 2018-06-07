@@ -1,8 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
+#ifdef existing
+#include <Citron/citron.h>
+#else
+#warning "We don't have Citron installed"
 #include "../../citron.h"
-
+#endif
 #define KG_SHIFT        0
 #define KG_CTRL         2
 #define KG_ALT          3

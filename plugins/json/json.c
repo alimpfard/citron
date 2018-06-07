@@ -1,4 +1,9 @@
+#ifdef existing
+#include <Citron/citron.h>
+#else
+#warning "We don't have Citron installed"
 #include "../../citron.h"
+#endif
 #include "jansson.h"
 
 ctr_object* ctr_json_create_object(json_t* root, ctr_object* gt) {

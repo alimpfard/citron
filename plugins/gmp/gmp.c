@@ -1,6 +1,11 @@
 #define DEBUG
 
+#ifdef existing
+#include <Citron/citron.h>
+#else
+#warning "We don't have Citron installed"
 #include "../../citron.h"
+#endif
 #include <gmp.h>
 
 #ifdef DEBUG
@@ -237,7 +242,7 @@ void begin() {
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("+"), &ctr_gmp_nadd);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("-"), &ctr_gmp_nsub);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("*"), &ctr_gmp_nmul);
-  
+
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("div:"), &ctr_gmp_div);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("mod:"), &ctr_gmp_mod);
 

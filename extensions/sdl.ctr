@@ -1,5 +1,4 @@
-Reflect addGlobalVariable: 'SDLEventTypes'.
-SDLEventTypes is (Map new)
+var SDLEventTypes is (Map new)
   put: 'noEvent' at: 0,
   put: 'activeEvent' at: 1,
   put: 'keyDown' at: 2,

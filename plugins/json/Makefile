@@ -5,7 +5,7 @@ all: libjansson ctrjson
 libjansson:
 	cd jansson && cmake -DJANSSON_BUILD_SHARED_LIBS=1 . && make && make install
 ctrjson:
-	cc -c json.c -fPIC -g3 -Ijansson/include -o json.o
+	cc ${EXTRAS} -c json.c -fPIC -g3 -Ijansson/include -o json.o
 	cp jansson/lib/libjansson.so .
 	cc -shared -o libctrjson.so json.o libjansson.so
 	mkdir -p ../../mods/json

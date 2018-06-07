@@ -1,4 +1,4 @@
-AM_CFLAGS = --pedantic -O2 -Wall -D withTermios -D forLinux -DCTR_STD_EXTENSION_PATH=\"$(pkgdatadir)\"
+AM_CFLAGS = --pedantic -O2 -Wall -D withTermios -D forLinux -DCTR_STD_EXTENSION_PATH=\"$(pkgdatadir)\" -DWITH_AUTOMAKE=\"$(pkgdatadir)\"
 AM_LDFLAGS = -rdynamic -lm -ldl -lbsd -lpcre -lpthread -o ctr
 
 bin_PROGRAMS = ctr
@@ -10,7 +10,7 @@ ctr_SOURCES = citron.c base.c world.c importlib.c fiber.c reflect.c\
 ctr_CFLAGS = $(AM_CFLAGS)
 
 pkginclude_HEADERS = citron.h citron_conv.h citron_ensure.h coroutine.h dictionary.h\
-			  siphash.h generator.h symbol.h
+			  siphash.h generator.h symbol.h config.h
 
 lib_LTLIBRARIES = libcitron.la
 libcitron_la_SOURCES = citron.c base.c world.c importlib.c fiber.c reflect.c\

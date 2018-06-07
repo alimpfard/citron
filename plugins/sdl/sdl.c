@@ -1,4 +1,10 @@
+#ifdef existing
+#include <Citron/citron.h>
+#else
+#warning "We don't have Citron installed"
 #include "../../citron.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -1484,7 +1490,9 @@ void begin() {
   //types
   ctr_argument* ArgumentList = ctr_heap_allocate(sizeof(ctr_argument));
 	ArgumentList->next = NULL;
-  ArgumentList->object = ctr_build_string_from_cstring( CTR_STD_EXTENSION_PATH "/extensions/sdl.ctr");
+  char s[1024];
+  int len = sprintf(s, "%s/extensions/sdl.ctr", ctr_file_stdext_path_raw());
+  ArgumentList->object = ctr_build_string(s, len);
   ctr_object* ext = ctr_file_new(CtrStdFile, ArgumentList);
   ctr_file_include(ext, NULL);
   ctr_heap_free(ArgumentList);

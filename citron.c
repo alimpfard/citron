@@ -40,6 +40,7 @@ ctr_cli_welcome (char *invoked_by)
   puts ("\t-fc | --from-compiled : assume file is a serialized AST, execute that");
   puts ("\t-d | enable debug mode");
   puts ("\t-e | read from stdin");
+  puts ("\t--ext | print ext path and exit");
   printf ("\n");
 }
 
@@ -48,6 +49,10 @@ ctr_question_intent (void)
 {
   puts ("What is it that you meant to do?");
   ctr_cli_welcome ("<exec>");
+}
+
+char const* ctr_file_stdext_path_raw() {
+  return CTR_STD_EXTENSION_PATH;
 }
 
 /**
@@ -74,6 +79,10 @@ ctr_cli_read_args (int argc, char *argv[])
 	debug = 1;
       else if (strcmp (argv[0], "-e") == 0)
 	from_stdin = 1;
+      else if (strcmp (argv[0], "--ext") == 0) {
+  puts(CTR_STD_EXTENSION_PATH);
+  exit(0);
+      }
       else
 	break;
       argv++;

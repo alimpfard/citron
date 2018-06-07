@@ -1,6 +1,14 @@
 plugs=("curl" "ffi" "gmp" "json" "sdl" "keyboardmods" "tcl")
 
-echo "Building $plugs"
+has_citron=$(echo "#include <Citron/citron.h>" | gcc -E -)
+has_citron=$?
+makefvar=""
+
+if [[ $has_citron -eq 0 ]]; then
+    makefvar="-Dexisting=1 -DCTR_STD_EXTENSION_PATH=\"$(ctr --ext)\""
+fi
+
+echo "built Citron: " $makefvar
 
 for plug in ${plugs[*]}
 do
@@ -9,6 +17,6 @@ do
     if [[ -e "./configure" ]]; then
       ./configure
     fi
-    echo $(make && echo "Succ $plug" || echo "$plug Failed")
+    echo $(sudo make "EXTRAS=$makefvar" >/dev/null 2>&1 && echo "Succ $plug" || echo "$plug Failed")
     cd ../..
 done

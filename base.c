@@ -1455,7 +1455,7 @@ ctr_build_number_from_string (char *str, ctr_size length)
   /* max length is 40 (and that's probably even too long... ) */
   numCStr = (char *) ctr_heap_allocate (41 * sizeof (char));
   memcpy (numCStr, str, stringNumberLength);
-  if (numCStr[0] == '0' && length > 1 && strchr("xXcCoO", numCStr[1]) != NULL)
+  if (numCStr[0] == '0' && length > 1 && strchr ("xXcCoO", numCStr[1]) != NULL)
     {
       numberObject->value.nvalue = strtol (numCStr, 0, 0);
     }
@@ -5078,7 +5078,7 @@ void ctr_capture_refs_ (ctr_tnode * ti, ctr_object * block, ctr_object * parent,
 void
 ctr_capture_refs (ctr_tnode * ti, ctr_object * block)
 {
-  ctr_capture_refs_ (ti, block, ctr_find_(&CTR_CLEX_KW_ME, 0), 0);
+  ctr_capture_refs_ (ti, block, ctr_find_ (&CTR_CLEX_KW_ME, 0), 0);
 }
 
 void
@@ -5107,12 +5107,12 @@ ctr_capture_refs_ (ctr_tnode * ti, ctr_object * block, ctr_object * parent, int 
 	      if (! !ctr_internal_object_find_property (block, key, 0))
 		return;
 	      ctr_object *value = ctr_find_ (key, 1);
-        if (!value && parent)
-          value = ctr_internal_object_find_property(parent, key, CTR_CATEGORY_PRIVATE_PROPERTY);
+	      if (!value && parent)
+		value = ctr_internal_object_find_property (parent, key, CTR_CATEGORY_PRIVATE_PROPERTY);
 	      if (value)
 		ctr_internal_object_add_property (block, key, value, 0);
-        else if (!noerror)
-          ctr_find_(key, noerror);
+	      else if (!noerror)
+		ctr_find_ (key, noerror);
 	    }
 	  break;
 
@@ -5415,7 +5415,7 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
 	  ctr_heap_free (a);
 	}
     }
-    ctr_close_context ();
+  ctr_close_context ();
   ctr_deallocate_argument_list (argList);
   //ctr_block_run_cache_result_if_expensive(myself, argList, result);
   return result;
@@ -5567,7 +5567,7 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 	  ctr_heap_free (a);
 	}
     }
-    ctr_close_context ();
+  ctr_close_context ();
 
   //ctr_block_run_cache_result_if_expensive(myself, argList, result);
   return result;
@@ -6173,7 +6173,7 @@ ctr_print_stack_trace ()
   ctr_source_map *mapItem;
   ctr_tnode *stackNode;
   ctr_source_map *first = NULL, *lfirst = NULL;
-  char* first_p = NULL, *lfirst_p = NULL;
+  char *first_p = NULL, *lfirst_p = NULL;
   int first_ignore = 1;
   int is_eval = -1;
   for (int i = ctr_callstack_index; i > 0; i--)
@@ -6181,10 +6181,11 @@ ctr_print_stack_trace ()
       printf ("#%d ", i);
       stackNode = ctr_callstack[i - 1];
       fwrite (stackNode->value, sizeof (char), stackNode->vlen, stdout);
-      if(!first_p) {
-        first_p = ctr_heap_allocate(sizeof(char)*stackNode->vlen);
-        memcpy(first_p, stackNode->value, stackNode->vlen);
-      }
+      if (!first_p)
+	{
+	  first_p = ctr_heap_allocate (sizeof (char) * stackNode->vlen);
+	  memcpy (first_p, stackNode->value, stackNode->vlen);
+	}
       mapItem = ctr_source_map_head;
       line = -1;
       while (mapItem)
@@ -6192,88 +6193,122 @@ ctr_print_stack_trace ()
 	  if (line > -1 && mapItem->node->type == CTR_AST_NODE_PROGRAM)
 	    {
 	      currentProgram = mapItem->node->value;
-        int ignored = 0;
-        for (int j=0; j<trace_ignore_count; j++) {
-          char *s = ignore_in_trace[j];
-          int l = strlen(s);
-          if (l == mapItem->node->vlen && strncmp(mapItem->node->value, s, l)==0) {
-            ignored=1;
-            break;
-          }
-        }
-        if(ignored&&first_ignore) {lfirst=first; lfirst_p=first_p; first=NULL; first_p=NULL;}
-        else if (first_ignore) {first_ignore = 0; is_eval=strncmp(mapItem->node->value, "<eval>", 6)==0?i:-1;/*first=lfirst; first_p=lfirst_p;*/}
-	      printf (" (%s: %d)%s", currentProgram, line + 1, ignored?CTR_ANSI_COLOR_CYAN" [Ignored]"CTR_ANSI_COLOR_RESET:"");
+	      int ignored = 0;
+	      for (int j = 0; j < trace_ignore_count; j++)
+		{
+		  char *s = ignore_in_trace[j];
+		  int l = strlen (s);
+		  if (l == mapItem->node->vlen && strncmp (mapItem->node->value, s, l) == 0)
+		    {
+		      ignored = 1;
+		      break;
+		    }
+		}
+	      if (ignored && first_ignore)
+		{
+		  lfirst = first;
+		  lfirst_p = first_p;
+		  first = NULL;
+		  first_p = NULL;
+		}
+	      else if (first_ignore)
+		{
+		  first_ignore = 0;
+		  is_eval = strncmp (mapItem->node->value, "<eval>", 6) == 0 ? i : -1;	/*first=lfirst; first_p=lfirst_p; */
+		}
+	      printf (" (%s: %d)%s", currentProgram, line + 1, ignored ? CTR_ANSI_COLOR_CYAN " [Ignored]" CTR_ANSI_COLOR_RESET : "");
 	      break;
 	    }
-    if (line == -1 && mapItem->node == stackNode)
+	  if (line == -1 && mapItem->node == stackNode)
 	    {
 	      line = mapItem->line;
-        if(!first) first = mapItem;
+	      if (!first)
+		first = mapItem;
 	    }
 	  mapItem = mapItem->next;
 	}
       printf ("\n");
     }
-  if(!first) return;
-  char* ptr = first->p_ptr, *bptr = ptr, *here = ptr;
-  if(!ptr) return;
-  int p_tty = isatty(fileno(stdout));
-  char *red="", *reset="", *magenta="";
-  if(p_tty) {
-    red = CTR_ANSI_COLOR_RED;
-    reset = CTR_ANSI_COLOR_RESET;
-    magenta = CTR_ANSI_COLOR_MAGENTA;
-  }
-  printf("------------------------------------%s\n", red);
-  printf("The probable cause of the exception: ");
-  printf("%s", reset);
+  if (!first)
+    return;
+  char *ptr = first->p_ptr, *bptr = ptr, *here = ptr;
+  if (!ptr)
+    return;
+  int p_tty = isatty (fileno (stdout));
+  char *red = "", *reset = "", *magenta = "";
+  if (p_tty)
+    {
+      red = CTR_ANSI_COLOR_RED;
+      reset = CTR_ANSI_COLOR_RESET;
+      magenta = CTR_ANSI_COLOR_MAGENTA;
+    }
+  printf ("------------------------------------%s\n", red);
+  printf ("The probable cause of the exception: ");
+  printf ("%s", reset);
   int current_line = 0;
   int p = 2;
-  if (is_eval>-1) {
-    printf("%sEvaluated string (at index %d)%s\n", magenta, is_eval, reset);
-    return;
-  }
-  putchar('\n');
-  while(ptr>=first->s_ptr) {
-    if (*ptr == '\n') p--;
-    if (*ptr == 0 || p == 0) break;
-    else ptr--;
-  }
-  current_line = first->line-2+p;
+  if (is_eval > -1)
+    {
+      printf ("%sEvaluated string (at index %d)%s\n", magenta, is_eval, reset);
+      return;
+    }
+  putchar ('\n');
+  while (ptr >= first->s_ptr)
+    {
+      if (*ptr == '\n')
+	p--;
+      if (*ptr == 0 || p == 0)
+	break;
+      else
+	ptr--;
+    }
+  current_line = first->line - 2 + p;
   p = 2;
-  while(bptr<first->e_ptr&&p>=0) {
-    if (*bptr == '\n') p--;
-    if (*bptr == 0 || p == 0) break;
-    else bptr++;
-  }
+  while (bptr < first->e_ptr && p >= 0)
+    {
+      if (*bptr == '\n')
+	p--;
+      if (*bptr == 0 || p == 0)
+	break;
+      else
+	bptr++;
+    }
   int pos_in_line = 0;
   int print_caret = 0;
   char c;
   static char numd[79];
   int slen = 0;
-  int csl = strlen(first_p);
-  while(ptr < bptr) {
-    pos_in_line = 0;
-    print_caret = -1;
-    slen = sprintf(numd, "%d | ", ++current_line);
-    printf("%s", numd);
-    while((c = *(ptr++)) != '\n') {
-      if(ptr == here-csl+1) printf("%s", magenta);
-      putchar(c);
-      if(ptr == here) { printf("%s", reset); print_caret = pos_in_line;}
-      pos_in_line++;
-    }
-    putchar('\n');
-    if(print_caret > -1) {
-      printf("%s", magenta);
-      for(int i=0; i<print_caret+slen-1; i++) putchar('~');
-      putchar('^');
-      puts(reset);
+  int csl = strlen (first_p);
+  while (ptr < bptr)
+    {
+      pos_in_line = 0;
       print_caret = -1;
+      slen = sprintf (numd, "%d | ", ++current_line);
+      printf ("%s", numd);
+      while ((c = *(ptr++)) != '\n')
+	{
+	  if (ptr == here - csl + 1)
+	    printf ("%s", magenta);
+	  putchar (c);
+	  if (ptr == here)
+	    {
+	      printf ("%s", reset);
+	      print_caret = pos_in_line;
+	    }
+	  pos_in_line++;
+	}
+      putchar ('\n');
+      if (print_caret > -1)
+	{
+	  printf ("%s", magenta);
+	  for (int i = 0; i < print_caret + slen - 1; i++)
+	    putchar ('~');
+	  putchar ('^');
+	  puts (reset);
+	  print_caret = -1;
+	}
     }
-  }
-  putchar('\n');
+  putchar ('\n');
 }
 
 ctr_object *

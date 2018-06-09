@@ -78,7 +78,7 @@ ctr_file_special (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_file_stdext_path (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object *path = ctr_build_string_from_cstring (CTR_STD_EXTENSION_PATH);
+  ctr_object *path = ctr_build_string_from_cstring ((char *) ctr_file_stdext_path_raw ());
   return path;
 }
 

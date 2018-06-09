@@ -177,9 +177,10 @@ ctr_internal_plugin_find (ctr_object * key)
   char *realPathModName = NULL;
   modName = ctr_heap_allocate_cstring (modNameObject);
   modNameLow = modName;
+  char const *extPath = ctr_file_stdext_path_raw ();
   for (; *modNameLow; ++modNameLow)
     *modNameLow = tolower (*modNameLow);
-  snprintf (pathNameMod, 1024, (CTR_STD_EXTENSION_PATH "/mods/%s/libctr%s.so"), modName, modName);
+  snprintf (pathNameMod, 1024, ("%s/mods/%s/libctr%s.so"), extPath, modName, modName);
   ctr_heap_free (modName);
   realPathModName = realpath (pathNameMod, NULL);
   if (access (realPathModName, F_OK) == -1)
@@ -200,11 +201,12 @@ ctr_internal_plugin_find (ctr_object * key)
 void *
 ctr_internal_plugin_find_base (char const *modName)
 {
+  char const *extPath = ctr_file_stdext_path_raw ();
   void *handle;
   char pathNameMod[1024];
   plugin_init_func init_plugin;
   char *realPathModName = NULL;
-  snprintf (pathNameMod, 1024, (CTR_STD_EXTENSION_PATH "/basemods/%s/libctr%s.so"), modName, modName);
+  snprintf (pathNameMod, 1024, ("%s/basemods/%s/libctr%s.so"), extPath, modName, modName);
   realPathModName = realpath (pathNameMod, NULL);
   if (access (realPathModName, F_OK) == -1)
     {

@@ -145,7 +145,7 @@ operations:
   var compilepp_opt is {:cliargs #compile given cpp files
     [*cliargs, name] is cliargs.
     Pen writeln: 'Compiling %L into libctr%s.so' % [cliargs, name].
-    var ret is Shell call: '%s --std=c++17 -lcitron -rdynamic %:L -o libctr%s.so && echo True' % [(Program env: 'CXX', or: 'clang++'), ' ', (cliargs filter: \:_:x x endsWith: 'cpp'), name].
+    var ret is Shell call: '%s --std=c++17 -lcitron -shared -fpic -rdynamic %:L -o libctr%s.so && echo True' % [(Program env: 'CXX', or: 'clang++'), ' ', (cliargs filter: \:_:x x endsWith: 'cpp'), name].
     ret trim = 'True' either: {
       Pen green writeln: 'Compilation succeeded'.
     } or: {
@@ -182,14 +182,14 @@ operations:
     case: '-compile++' do: {
       cliargs is compilepp_opt applyTo: cliargs.
       {
-        rmmod_opt applyTo: (cliargs from: 0 length: cliargs count).
+        rmmod_opt applyTo: (cliargs copy).
       } catch: {}, run.
       cliargs is insmod_opt applyTo: cliargs.
     },
     case: '-compile' do: {
       cliargs is compile_opt applyTo: cliargs.
       {
-        rmmod_opt applyTo: (cliargs from: 0 length: cliargs count).
+        rmmod_opt applyTo: (cliargs copy).
       } catch: {}, run.
       cliargs is insmod_opt applyTo: cliargs.
     },
@@ -199,11 +199,12 @@ operations:
 
 import __is_being_imported ifFalse: {
   var cliargs is Array new fill: Program argCount with: \:i Program argument: i.
+  Pen writeln: cliargs.
   { ^(cliargs head or: '') startsWith: '-'. } whileFalse: {
     cliargs shift.
     (cliargs count = 0) break.
   }.
 
   # Main catch: {:e Pen red writeln: e, resetColor. }, run.
-  Main run.
+  Main applyTo: cliargs.
 }.

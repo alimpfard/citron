@@ -1634,6 +1634,97 @@ ctr_frame_present (ctr_object * myself, ctr_argument * argumentList)
   return ctr_build_bool(p);
 }
 
+void
+ctr_initialize_world_minimal ()
+{
+  if (ctr_world_initialized)
+    return;
+    trace_ignore_count = 0;
+    ctr_world_initialized = 1;
+    //register_signal_handlers ();
+    ctr_instrument = 0;
+    ctr_global_instrum = NULL;
+    int i;
+    srand ((unsigned) time (NULL));
+    for (i = 0; i < 16; i++)
+      {
+        CtrHashKey[i] = (rand () % 255);
+      }
+    ctr_first_object = NULL;
+    //----//
+    CTR_CLEX_KW_ME_SV.value = "me";
+    CTR_CLEX_KW_ME_SV.vlen = 2;
+    //----//
+    CTR_CLEX_KW_ME.info.type = CTR_OBJECT_TYPE_OTSTRING;
+    CTR_CLEX_KW_ME.info.mark = 0;
+    CTR_CLEX_KW_ME.info.sticky = 1;
+    CTR_CLEX_KW_ME.info.chainMode = 0;
+    CTR_CLEX_KW_ME.info.remote = 0;
+    CTR_CLEX_KW_ME.info.shared = 0;
+    CTR_CLEX_KW_ME.info.raw = 0;
+    CTR_CLEX_KW_ME.value.svalue = &CTR_CLEX_KW_ME_SV;
+    CTR_CLEX_KW_ME.interfaces = ctr_heap_allocate (sizeof (ctr_interfaces));
+    //----//
+    CTR_CLEX_KW_THIS_SV.value = "thisBlock";
+    CTR_CLEX_KW_THIS_SV.vlen = 9;
+    //----//
+    CTR_CLEX_KW_THIS.info.type = CTR_OBJECT_TYPE_OTSTRING;
+    CTR_CLEX_KW_THIS.info.mark = 0;
+    CTR_CLEX_KW_THIS.info.sticky = 1;
+    CTR_CLEX_KW_THIS.info.chainMode = 0;
+    CTR_CLEX_KW_THIS.info.remote = 0;
+    CTR_CLEX_KW_THIS.info.shared = 0;
+    CTR_CLEX_KW_THIS.info.raw = 0;
+    CTR_CLEX_KW_THIS.value.svalue = &CTR_CLEX_KW_THIS_SV;
+    CTR_CLEX_KW_THIS.interfaces = ctr_heap_allocate (sizeof (ctr_interfaces));
+    //----//
+    CTR_CLEX_US_SV.value = "_";
+    CTR_CLEX_US_SV.vlen = 1;
+    //----//
+    CTR_CLEX_US.info.type = CTR_OBJECT_TYPE_OTSTRING;
+    CTR_CLEX_US.info.mark = 0;
+    CTR_CLEX_US.info.sticky = 1;
+    CTR_CLEX_US.info.chainMode = 0;
+    CTR_CLEX_US.info.remote = 0;
+    CTR_CLEX_US.info.shared = 0;
+    CTR_CLEX_US.info.raw = 0;
+    CTR_CLEX_US.value.svalue = &CTR_CLEX_US_SV;
+    CTR_CLEX_US.interfaces = ctr_heap_allocate (sizeof (ctr_interfaces));
+    //----//
+    CTR_CLEX_KW_RESPONDTO_SV.value = "respondTo:";
+    CTR_CLEX_KW_RESPONDTO_SV.vlen = 10;
+    //----//
+    CTR_CLEX_KW_RESPONDTO.info.type = CTR_OBJECT_TYPE_OTSTRING;
+    CTR_CLEX_KW_RESPONDTO.info.mark = 0;
+    CTR_CLEX_KW_RESPONDTO.info.sticky = 1;
+    CTR_CLEX_KW_RESPONDTO.info.chainMode = 0;
+    CTR_CLEX_KW_RESPONDTO.info.remote = 0;
+    CTR_CLEX_KW_RESPONDTO.info.shared = 0;
+    CTR_CLEX_KW_RESPONDTO.info.raw = 0;
+    CTR_CLEX_KW_RESPONDTO.value.svalue = &CTR_CLEX_KW_RESPONDTO_SV;
+    CTR_CLEX_KW_RESPONDTO.interfaces = ctr_heap_allocate (sizeof (ctr_interfaces));
+    //----//
+    CtrStdWorld = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
+    CtrStdWorld->info.sticky = 1;
+    ctr_contexts[0] = CtrStdWorld;
+    ctr_world_ptr = CtrStdWorld;
+
+    ctr_instrumentor_funcs = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);	//register instrumentors to nil
+    // ctr_past_instrumentor_func = NULL;   //register instrumentors to nil
+    /* Object */
+    CtrStdObject = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
+    CtrStdString = ctr_internal_create_object (CTR_OBJECT_TYPE_OTSTRING);
+    CtrStdBlock = ctr_internal_create_object (CTR_OBJECT_TYPE_OTBLOCK);
+    ctr_set_link_all (CtrStdString, CtrStdObject);
+    ctr_set_link_all (CtrStdBlock, CtrStdObject);
+    CtrStdObject->interfaces->link = NULL;
+    CtrStdObject->interfaces->count = 0;
+    CtrStdObject->interfaces->ifs = ctr_heap_allocate (sizeof (ctr_object *));
+    CtrStdObject->interfaces->ifs[0] = NULL;
+    CtrStdObject->info.sticky = 1;
+    ctr_set_link_all (CtrStdString, CtrStdObject);
+}
+
 /**
  * @internal
  *

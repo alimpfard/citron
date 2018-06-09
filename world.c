@@ -318,18 +318,21 @@ ctr_internal_object_is_constructible (ctr_object * object1, ctr_object * object2
   return ctr_internal_object_is_constructible_ (object1, object2, 0);
 }
 
-ctr_object*
+ctr_object *
 ctr_object_is_constructible (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *sl0 = myself, *sl1 = argumentList->object;
-  if (sl1->properties->size > sl0->properties->size) return ctr_build_bool(0);
+  if (sl1->properties->size > sl0->properties->size)
+    return ctr_build_bool (0);
 
   ctr_mapitem *sp1 = sl1->properties->head;
-  for(int i = 0; i<sl1->properties->size; i++) {
-    if(ctr_internal_object_find_property(sl0, sp1->key, CTR_CATEGORY_PRIVATE_PROPERTY) == NULL) return ctr_build_bool(0);
-    sp1 = sp1->next;
-  }
-  return ctr_build_bool(1);
+  for (int i = 0; i < sl1->properties->size; i++)
+    {
+      if (ctr_internal_object_find_property (sl0, sp1->key, CTR_CATEGORY_PRIVATE_PROPERTY) == NULL)
+	return ctr_build_bool (0);
+      sp1 = sp1->next;
+    }
+  return ctr_build_bool (1);
 }
 
 int
@@ -387,21 +390,23 @@ ctr_internal_object_is_constructible_ (ctr_object * object1, ctr_object * object
       int count = ctr_array_count (object2, NULL)->value.nvalue;
       int count1 = ctr_array_count (object1, NULL)->value.nvalue;
       int catch_all = 0;
-      char* ignores = ctr_heap_allocate(sizeof(char)*count);
+      char *ignores = ctr_heap_allocate (sizeof (char) * count);
       int ignore = 0;
-      ctr_object* f;
-      for(int _i=0; _i<count; _i++) {
-        f = object2->value.avalue->elements[_i];
-        if (f->info.type==CTR_OBJECT_TYPE_OTSTRING && f->value.svalue->vlen > 1 && *f->value.svalue->value == '*')
-          catch_all++;
-        if (f->info.type==CTR_OBJECT_TYPE_OTSTRING && f->value.svalue->vlen == 1 && *f->value.svalue->value == '_') {
-          ignores[_i] = 1;
-          ignore++;
-        }
-        else
-          ignores[_i] = 0;
-      }
-      if (ctr_array_count (object1, NULL)->value.nvalue-ignore != count && catch_all == 0)
+      ctr_object *f;
+      for (int _i = 0; _i < count; _i++)
+	{
+	  f = object2->value.avalue->elements[_i];
+	  if (f->info.type == CTR_OBJECT_TYPE_OTSTRING && f->value.svalue->vlen > 1 && *f->value.svalue->value == '*')
+	    catch_all++;
+	  if (f->info.type == CTR_OBJECT_TYPE_OTSTRING && f->value.svalue->vlen == 1 && *f->value.svalue->value == '_')
+	    {
+	      ignores[_i] = 1;
+	      ignore++;
+	    }
+	  else
+	    ignores[_i] = 0;
+	}
+      if (ctr_array_count (object1, NULL)->value.nvalue - ignore != count && catch_all == 0)
 	return 0;		//It requires more parameters than object1 can provide, and we don't have a catch-all binding
       int i = 1;
       int _x = 0;
@@ -410,25 +415,24 @@ ctr_internal_object_is_constructible_ (ctr_object * object1, ctr_object * object
       ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
       ctr_argument *elnu1 = ctr_heap_allocate (sizeof (ctr_argument));
       ctr_argument *elnu2 = ctr_heap_allocate (sizeof (ctr_argument));
-      for (; count>0 && _x<_i&&i; count--,_x++)
+      for (; count > 0 && _x < _i && i; count--, _x++)
 	{
-    if (++_y<count1);//the rest goes into the catch_all
-    else {
-      _y = 0;
-      catch_all = -2;
-    }
-    elnu1->object = ctr_build_number_from_float (_y);
-    while(ignores[_x]) _x--;
+	  if (++_y < count1);	//the rest goes into the catch_all
+	  else
+	    {
+	      _y = 0;
+	      catch_all = -2;
+	    }
+	  elnu1->object = ctr_build_number_from_float (_y);
+	  while (ignores[_x])
+	    _x--;
 	  elnu2->object = ctr_build_number_from_float (_x);
 	  args->object = ctr_array_get (object2, elnu2);
 	  i = i
-	    && (
-    (
-      args->object->info.type = CTR_OBJECT_TYPE_OTARRAY
-		  &&
-		  (catch_all==-2||ctr_internal_object_is_constructible_ (ctr_array_get (object1, elnu1), args->object, raw))
-    )  || args->object->info.type == CTR_OBJECT_TYPE_OTSTRING
-       || ctr_array_contains (object1, args)->value.bvalue);
+	    && ((args->object->info.type = CTR_OBJECT_TYPE_OTARRAY
+		 &&
+		 (catch_all == -2 || ctr_internal_object_is_constructible_ (ctr_array_get (object1, elnu1), args->object, raw)))
+		|| args->object->info.type == CTR_OBJECT_TYPE_OTSTRING || ctr_array_contains (object1, args)->value.bvalue);
 	}
       ctr_heap_free (args);
       return i;
@@ -1340,11 +1344,12 @@ ctr_switch_context (ctr_object * context)
  * @param ctx
  *     Pointer to the structure that will be filled
  */
-void ctr_dump_context(struct ctr_context_t* ctx)
+void
+ctr_dump_context (struct ctr_context_t *ctx)
 {
-    for(int index = 0; index<CTR_CONTEXT_VECTOR_DEPTH; index++)
-        ctx->contexts[index] = ctr_contexts[index];
-    ctx->id = ctr_context_id;
+  for (int index = 0; index < CTR_CONTEXT_VECTOR_DEPTH; index++)
+    ctx->contexts[index] = ctr_contexts[index];
+  ctx->id = ctr_context_id;
 }
 
 /**
@@ -1355,11 +1360,12 @@ void ctr_dump_context(struct ctr_context_t* ctx)
  * @param ctx
  *     The structure that is loaded
  */
-void ctr_load_context(struct ctr_context_t ctx)
+void
+ctr_load_context (struct ctr_context_t ctx)
 {
-    for (int index=0; index<CTR_CONTEXT_VECTOR_DEPTH; index++)
-        ctr_contexts[index] = ctx.contexts[index];
-    ctr_context_id = ctx.id;
+  for (int index = 0; index < CTR_CONTEXT_VECTOR_DEPTH; index++)
+    ctr_contexts[index] = ctx.contexts[index];
+  ctr_context_id = ctx.id;
 }
 
 /**
@@ -1557,7 +1563,7 @@ ctr_set (ctr_object * key, ctr_object * object)
   if (!foundObject)
     {
       if (ctr_context_id <= 1)
-          goto assign_anyway;
+	goto assign_anyway;
       char *key_name;
       char *message;
       char *full_message;
@@ -1595,9 +1601,9 @@ ctr_object_destruct (ctr_object * object, ctr_argument * nothing)
 ctr_object *
 ctr_get_frame (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object * c = ctr_contexts[ctr_context_id];
-  ctr_object* map = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-  ctr_set_link_all(map, CtrStdMap);
+  ctr_object *c = ctr_contexts[ctr_context_id];
+  ctr_object *map = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
+  ctr_set_link_all (map, CtrStdMap);
   map->value = c->value;
   map->properties = c->properties;
   return map;
@@ -1606,20 +1612,21 @@ ctr_get_frame (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_get_frame_id (ctr_object * myself, ctr_argument * argumentList)
 {
-  return ctr_build_number_from_float(ctr_context_id);
+  return ctr_build_number_from_float (ctr_context_id);
 }
 
 ctr_object *
 ctr_get_frame_with_id (ctr_object * myself, ctr_argument * argumentList)
 {
   int id = argumentList->object->value.nvalue;
-  if (id < 0 || id > ctr_context_id) {
-    CtrStdFlow = ctr_format_str("ENo frame with id %d: IDs must be in range(0, %d)", id, ctr_context_id);
-    return CtrStdNil;
-  }
-  ctr_object* c = ctr_contexts[id];
-  ctr_object* map = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-  ctr_set_link_all(map, CtrStdMap);
+  if (id < 0 || id > ctr_context_id)
+    {
+      CtrStdFlow = ctr_format_str ("ENo frame with id %d: IDs must be in range(0, %d)", id, ctr_context_id);
+      return CtrStdNil;
+    }
+  ctr_object *c = ctr_contexts[id];
+  ctr_object *map = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
+  ctr_set_link_all (map, CtrStdMap);
   map->value = c->value;
   map->properties = c->properties;
   return map;
@@ -1629,9 +1636,9 @@ ctr_object *
 ctr_frame_present (ctr_object * myself, ctr_argument * argumentList)
 {
   int p = 0;
-  ctr_object* frame = argumentList->object;
-  for (int i=ctr_context_id; i>=0&&!p; i--,p=p||ctr_contexts[i]==frame);
-  return ctr_build_bool(p);
+  ctr_object *frame = argumentList->object;
+  for (int i = ctr_context_id; i >= 0 && !p; i--, p = p || ctr_contexts[i] == frame);
+  return ctr_build_bool (p);
 }
 
 void
@@ -1639,90 +1646,90 @@ ctr_initialize_world_minimal ()
 {
   if (ctr_world_initialized)
     return;
-    trace_ignore_count = 0;
-    ctr_world_initialized = 1;
-    //register_signal_handlers ();
-    ctr_instrument = 0;
-    ctr_global_instrum = NULL;
-    int i;
-    srand ((unsigned) time (NULL));
-    for (i = 0; i < 16; i++)
-      {
-        CtrHashKey[i] = (rand () % 255);
-      }
-    ctr_first_object = NULL;
-    //----//
-    CTR_CLEX_KW_ME_SV.value = "me";
-    CTR_CLEX_KW_ME_SV.vlen = 2;
-    //----//
-    CTR_CLEX_KW_ME.info.type = CTR_OBJECT_TYPE_OTSTRING;
-    CTR_CLEX_KW_ME.info.mark = 0;
-    CTR_CLEX_KW_ME.info.sticky = 1;
-    CTR_CLEX_KW_ME.info.chainMode = 0;
-    CTR_CLEX_KW_ME.info.remote = 0;
-    CTR_CLEX_KW_ME.info.shared = 0;
-    CTR_CLEX_KW_ME.info.raw = 0;
-    CTR_CLEX_KW_ME.value.svalue = &CTR_CLEX_KW_ME_SV;
-    CTR_CLEX_KW_ME.interfaces = ctr_heap_allocate (sizeof (ctr_interfaces));
-    //----//
-    CTR_CLEX_KW_THIS_SV.value = "thisBlock";
-    CTR_CLEX_KW_THIS_SV.vlen = 9;
-    //----//
-    CTR_CLEX_KW_THIS.info.type = CTR_OBJECT_TYPE_OTSTRING;
-    CTR_CLEX_KW_THIS.info.mark = 0;
-    CTR_CLEX_KW_THIS.info.sticky = 1;
-    CTR_CLEX_KW_THIS.info.chainMode = 0;
-    CTR_CLEX_KW_THIS.info.remote = 0;
-    CTR_CLEX_KW_THIS.info.shared = 0;
-    CTR_CLEX_KW_THIS.info.raw = 0;
-    CTR_CLEX_KW_THIS.value.svalue = &CTR_CLEX_KW_THIS_SV;
-    CTR_CLEX_KW_THIS.interfaces = ctr_heap_allocate (sizeof (ctr_interfaces));
-    //----//
-    CTR_CLEX_US_SV.value = "_";
-    CTR_CLEX_US_SV.vlen = 1;
-    //----//
-    CTR_CLEX_US.info.type = CTR_OBJECT_TYPE_OTSTRING;
-    CTR_CLEX_US.info.mark = 0;
-    CTR_CLEX_US.info.sticky = 1;
-    CTR_CLEX_US.info.chainMode = 0;
-    CTR_CLEX_US.info.remote = 0;
-    CTR_CLEX_US.info.shared = 0;
-    CTR_CLEX_US.info.raw = 0;
-    CTR_CLEX_US.value.svalue = &CTR_CLEX_US_SV;
-    CTR_CLEX_US.interfaces = ctr_heap_allocate (sizeof (ctr_interfaces));
-    //----//
-    CTR_CLEX_KW_RESPONDTO_SV.value = "respondTo:";
-    CTR_CLEX_KW_RESPONDTO_SV.vlen = 10;
-    //----//
-    CTR_CLEX_KW_RESPONDTO.info.type = CTR_OBJECT_TYPE_OTSTRING;
-    CTR_CLEX_KW_RESPONDTO.info.mark = 0;
-    CTR_CLEX_KW_RESPONDTO.info.sticky = 1;
-    CTR_CLEX_KW_RESPONDTO.info.chainMode = 0;
-    CTR_CLEX_KW_RESPONDTO.info.remote = 0;
-    CTR_CLEX_KW_RESPONDTO.info.shared = 0;
-    CTR_CLEX_KW_RESPONDTO.info.raw = 0;
-    CTR_CLEX_KW_RESPONDTO.value.svalue = &CTR_CLEX_KW_RESPONDTO_SV;
-    CTR_CLEX_KW_RESPONDTO.interfaces = ctr_heap_allocate (sizeof (ctr_interfaces));
-    //----//
-    CtrStdWorld = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
-    CtrStdWorld->info.sticky = 1;
-    ctr_contexts[0] = CtrStdWorld;
-    ctr_world_ptr = CtrStdWorld;
+  trace_ignore_count = 0;
+  ctr_world_initialized = 1;
+  //register_signal_handlers ();
+  ctr_instrument = 0;
+  ctr_global_instrum = NULL;
+  int i;
+  srand ((unsigned) time (NULL));
+  for (i = 0; i < 16; i++)
+    {
+      CtrHashKey[i] = (rand () % 255);
+    }
+  ctr_first_object = NULL;
+  //----//
+  CTR_CLEX_KW_ME_SV.value = "me";
+  CTR_CLEX_KW_ME_SV.vlen = 2;
+  //----//
+  CTR_CLEX_KW_ME.info.type = CTR_OBJECT_TYPE_OTSTRING;
+  CTR_CLEX_KW_ME.info.mark = 0;
+  CTR_CLEX_KW_ME.info.sticky = 1;
+  CTR_CLEX_KW_ME.info.chainMode = 0;
+  CTR_CLEX_KW_ME.info.remote = 0;
+  CTR_CLEX_KW_ME.info.shared = 0;
+  CTR_CLEX_KW_ME.info.raw = 0;
+  CTR_CLEX_KW_ME.value.svalue = &CTR_CLEX_KW_ME_SV;
+  CTR_CLEX_KW_ME.interfaces = ctr_heap_allocate (sizeof (ctr_interfaces));
+  //----//
+  CTR_CLEX_KW_THIS_SV.value = "thisBlock";
+  CTR_CLEX_KW_THIS_SV.vlen = 9;
+  //----//
+  CTR_CLEX_KW_THIS.info.type = CTR_OBJECT_TYPE_OTSTRING;
+  CTR_CLEX_KW_THIS.info.mark = 0;
+  CTR_CLEX_KW_THIS.info.sticky = 1;
+  CTR_CLEX_KW_THIS.info.chainMode = 0;
+  CTR_CLEX_KW_THIS.info.remote = 0;
+  CTR_CLEX_KW_THIS.info.shared = 0;
+  CTR_CLEX_KW_THIS.info.raw = 0;
+  CTR_CLEX_KW_THIS.value.svalue = &CTR_CLEX_KW_THIS_SV;
+  CTR_CLEX_KW_THIS.interfaces = ctr_heap_allocate (sizeof (ctr_interfaces));
+  //----//
+  CTR_CLEX_US_SV.value = "_";
+  CTR_CLEX_US_SV.vlen = 1;
+  //----//
+  CTR_CLEX_US.info.type = CTR_OBJECT_TYPE_OTSTRING;
+  CTR_CLEX_US.info.mark = 0;
+  CTR_CLEX_US.info.sticky = 1;
+  CTR_CLEX_US.info.chainMode = 0;
+  CTR_CLEX_US.info.remote = 0;
+  CTR_CLEX_US.info.shared = 0;
+  CTR_CLEX_US.info.raw = 0;
+  CTR_CLEX_US.value.svalue = &CTR_CLEX_US_SV;
+  CTR_CLEX_US.interfaces = ctr_heap_allocate (sizeof (ctr_interfaces));
+  //----//
+  CTR_CLEX_KW_RESPONDTO_SV.value = "respondTo:";
+  CTR_CLEX_KW_RESPONDTO_SV.vlen = 10;
+  //----//
+  CTR_CLEX_KW_RESPONDTO.info.type = CTR_OBJECT_TYPE_OTSTRING;
+  CTR_CLEX_KW_RESPONDTO.info.mark = 0;
+  CTR_CLEX_KW_RESPONDTO.info.sticky = 1;
+  CTR_CLEX_KW_RESPONDTO.info.chainMode = 0;
+  CTR_CLEX_KW_RESPONDTO.info.remote = 0;
+  CTR_CLEX_KW_RESPONDTO.info.shared = 0;
+  CTR_CLEX_KW_RESPONDTO.info.raw = 0;
+  CTR_CLEX_KW_RESPONDTO.value.svalue = &CTR_CLEX_KW_RESPONDTO_SV;
+  CTR_CLEX_KW_RESPONDTO.interfaces = ctr_heap_allocate (sizeof (ctr_interfaces));
+  //----//
+  CtrStdWorld = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
+  CtrStdWorld->info.sticky = 1;
+  ctr_contexts[0] = CtrStdWorld;
+  ctr_world_ptr = CtrStdWorld;
 
-    ctr_instrumentor_funcs = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);	//register instrumentors to nil
-    // ctr_past_instrumentor_func = NULL;   //register instrumentors to nil
-    /* Object */
-    CtrStdObject = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
-    CtrStdString = ctr_internal_create_object (CTR_OBJECT_TYPE_OTSTRING);
-    CtrStdBlock = ctr_internal_create_object (CTR_OBJECT_TYPE_OTBLOCK);
-    ctr_set_link_all (CtrStdString, CtrStdObject);
-    ctr_set_link_all (CtrStdBlock, CtrStdObject);
-    CtrStdObject->interfaces->link = NULL;
-    CtrStdObject->interfaces->count = 0;
-    CtrStdObject->interfaces->ifs = ctr_heap_allocate (sizeof (ctr_object *));
-    CtrStdObject->interfaces->ifs[0] = NULL;
-    CtrStdObject->info.sticky = 1;
-    ctr_set_link_all (CtrStdString, CtrStdObject);
+  ctr_instrumentor_funcs = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);	//register instrumentors to nil
+  // ctr_past_instrumentor_func = NULL;   //register instrumentors to nil
+  /* Object */
+  CtrStdObject = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
+  CtrStdString = ctr_internal_create_object (CTR_OBJECT_TYPE_OTSTRING);
+  CtrStdBlock = ctr_internal_create_object (CTR_OBJECT_TYPE_OTBLOCK);
+  ctr_set_link_all (CtrStdString, CtrStdObject);
+  ctr_set_link_all (CtrStdBlock, CtrStdObject);
+  CtrStdObject->interfaces->link = NULL;
+  CtrStdObject->interfaces->count = 0;
+  CtrStdObject->interfaces->ifs = ctr_heap_allocate (sizeof (ctr_object *));
+  CtrStdObject->interfaces->ifs[0] = NULL;
+  CtrStdObject->info.sticky = 1;
+  ctr_set_link_all (CtrStdString, CtrStdObject);
 }
 
 /**
@@ -2504,9 +2511,10 @@ ctr_initialize_world ()
 ctr_object *
 ctr_get_responder (ctr_object * receiverObject, char *message, long vlen)
 {
-  if (receiverObject->info.type == 0 && receiverObject->interfaces == NULL) {
-    return NULL;
-  }
+  if (receiverObject->info.type == 0 && receiverObject->interfaces == NULL)
+    {
+      return NULL;
+    }
   ctr_object *methodObject;
   ctr_object *searchObject;
   methodObject = NULL;
@@ -2579,7 +2587,8 @@ ctr_object *
 ctr_internal_argumentptr2tuple (ctr_argument * argumentList)
 {
   ctr_object *ret = ctr_array_new (CtrStdArray, NULL);
-  if (!argumentList) return ret;
+  if (!argumentList)
+    return ret;
   while (argumentList->object)
     {
       ctr_array_push (ret, argumentList);
@@ -2645,14 +2654,15 @@ ctr_send_message (ctr_object * receiverObject, char *message, long vlen, ctr_arg
     {
       ctr_instrument = 0;
       ctr_object *ctr_instrumentor_func;
-      if (ctr_global_instrum) {
-        ctr_instrumentor_func = ctr_global_instrum;
-        goto skip_intern;
-      }
+      if (ctr_global_instrum)
+	{
+	  ctr_instrumentor_func = ctr_global_instrum;
+	  goto skip_intern;
+	}
       ctr_instrumentor_func =
 	ctr_internal_object_find_property_with_hash (ctr_instrumentor_funcs, receiverObject,
 						     ctr_send_message (receiverObject, "iHash", 5, NULL)->value.nvalue, 0);
-      skip_intern:;
+    skip_intern:;
       if (unlikely (ctr_instrumentor_func))
 	{
 	  ctr_argument *blkargs = ctr_heap_allocate (sizeof (ctr_argument));
@@ -2662,7 +2672,7 @@ ctr_send_message (ctr_object * receiverObject, char *message, long vlen, ctr_arg
 	  blkargs->next->next = ctr_heap_allocate (sizeof (ctr_argument));
 	  blkargs->next->next->object = ctr_internal_argumentptr2tuple (argumentList);
 	  ctr_object *result = ctr_block_run (ctr_instrumentor_func, blkargs,
-						   ctr_instrumentor_func);
+					      ctr_instrumentor_func);
 	  ctr_instrument = 1;
 	  if (result == ctr_instrumentor_func)
 	    goto no_instrum;

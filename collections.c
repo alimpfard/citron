@@ -172,7 +172,7 @@ ctr_array_all (ctr_object * myself, ctr_argument * argumentList)
   if ((fn = argumentList->object))
     {
       ctr_open_context ();
-      for (i = 0; i < myself->value.avalue->head; i++)
+      for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
 	{
 	  argumentList->object = *(myself->value.avalue->elements + i);
 	  el = ctr_block_run_here (fn, argumentList, fn);
@@ -188,7 +188,7 @@ ctr_array_all (ctr_object * myself, ctr_argument * argumentList)
     }
   else
     {
-      for (i = 0; i < myself->value.avalue->head; i++)
+      for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
 	{
 	  el = *(myself->value.avalue->elements + i);
 	  if ((el->info.type == CTR_OBJECT_TYPE_OTBOOL && el->value.bvalue) || (ctr_internal_cast2bool (el)->value.bvalue));
@@ -219,7 +219,7 @@ ctr_array_any (ctr_object * myself, ctr_argument * argumentList)
   if ((fn = argumentList->object))
     {
       ctr_open_context ();
-      for (i = 0; i < myself->value.avalue->head; i++)
+      for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
 	{
 	  argumentList->object = *(myself->value.avalue->elements + i);
 	  el = ctr_block_run_here (fn, argumentList, fn);
@@ -234,7 +234,7 @@ ctr_array_any (ctr_object * myself, ctr_argument * argumentList)
     }
   else
     {
-      for (i = 0; i < myself->value.avalue->head; i++)
+      for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
 	{
 	  el = *(myself->value.avalue->elements + i);
 	  if ((el->info.type == CTR_OBJECT_TYPE_OTBOOL && el->value.bvalue) || (ctr_internal_cast2bool (el)->value.bvalue))
@@ -296,7 +296,7 @@ ctr_array_sum (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *sum;
   ctr_object *el;
   ctr_size i = 0;
-  for (i = 0; i < myself->value.avalue->head; i++)
+  for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
     {
       if (!i)
 	{
@@ -331,7 +331,7 @@ ctr_array_product (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *prod;
   ctr_object *el;
   ctr_size i = 0;
-  for (i = 0; i < myself->value.avalue->head; i++)
+  for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
     {
       if (!i)
 	{
@@ -411,7 +411,7 @@ ctr_array_intersperse (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *newArr = ctr_array_new (CtrStdArray, NULL);
   ctr_size i = 0;
   ctr_argument *pushArg = ctr_heap_allocate (sizeof (ctr_argument));
-  for (i = 0; i < myself->value.avalue->head; i++)
+  for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
     {
       pushArg->object = *(myself->value.avalue->elements + i);
       newArr = ctr_array_push (newArr, pushArg);

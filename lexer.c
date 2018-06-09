@@ -403,6 +403,7 @@ ctr_clex_putback ()
 int
 check_next_line_empty ()
 {
+  if (!regexLineCheck) return 0;
   switch (regexLineCheck->value)
     {
     case 0:

@@ -123,7 +123,7 @@ Eval on: 'newBlock' do: { my inNewBlock is True. }.
 Eval on: 'endBlock' do: { my inNewBlock is False. }.
 Eval on: 'continuation' do: { ^my continuation. }.
 Eval on: 'evalContext' do: { ^my evaluationContext. }.
-Eval on: 'shiftArgs' do: { ^(my args shift). }.
+Eval on: 'shiftArgs' do: { ^my args shift. }.
 Eval on: 'enableFlag:' do: {:flag my flags put: True at: flag. }.
 Eval on: 'disableFlag:' do: {:flag my flags put: False at: flag. }.
 Eval on: 'getFlag:' do: {:flag ^my flags at: flag. }.
@@ -395,7 +395,7 @@ Eval on: 'queryState:' do: {:query
 }.
 
 Eval init.
-Eval setArgs: (Array with: {:i ^Program argument: i. } count: (Program argCount)).
+Eval setArgs: (Array new fill: Program argCount with: {:i ^Program argument: i.}).
 Eval onlyRelevantArgs.
 
 #arguments that were not consumed
@@ -573,13 +573,15 @@ Eval on: 'togglePasteMode' do: {
       Eval startEvalServerOnPort: f.
       Program exit.
     }, case: '-m' do: {
+      args pop.
       var mod is Eval shiftArgs.
       (mod isNil) ifTrue: { thisBlock error: 'no module to run?'. }.
       var args is Eval args.
       import respondTo: 'Library/Executable/%s:' % [mod] and: ['Main'].
-      { Main applyTo: args. } catch: Eval::'handleException:', run.
+      { Main applyTo: args. } catch: {:e Pen red writeln: e, resetColor.}, run.
       Program exit.
     }, case: '--no-logo' do: {
+      args pop.
       display_logo is False.
     }, case: '-F' do: {
       args pop.
@@ -590,6 +592,7 @@ Eval on: 'togglePasteMode' do: {
       }.
     }, default: {
       (opt startsWith: '-') & (opt startsWith: '--', not) ifTrue: {
+        args pop.
         opt skip: 1, reverse characters each_v: \:c args push: '-' + c.
       }.
     }, switch. # do not consume any other option.

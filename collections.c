@@ -54,7 +54,7 @@ ctr_array_copy (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *arr = ctr_array_new (CtrStdArray, NULL);
   ctr_argument *pushArg = ctr_heap_allocate (sizeof (ctr_argument));
-  for (ctr_size i = 0; i < myself->value.avalue->head - myself->value.avalue->tail; i++)
+  for (ctr_size i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
     {
       pushArg->object = *(myself->value.avalue->elements + i);
       ctr_array_push (arr, pushArg);

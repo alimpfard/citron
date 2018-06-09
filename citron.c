@@ -14,6 +14,7 @@
 #include "siphash.h"
 
 #define DO_PROFILE 0
+#define CTR_STD_EXTENSION_ENV_NAME "CITRON_EXT_PATH"
 
 #if DO_PROFILE
 #include <gperftools/profiler.h>
@@ -33,7 +34,7 @@ ctr_cli_welcome (char *invoked_by)
   printf ("\n");
   printf ("CTR Programming Language V " CTR_VERSION "\n");
   printf ("Written by AnotherTest (c) copyright 2017, Licensed BSD.\n");
-  printf ("\tbuilt with Extensions at: " CTR_STD_EXTENSION_PATH "\n");
+  printf ("\tbuilt with Extensions at: %s\n", ctr_file_stdext_path_raw ());
   printf ("Usage: %s [options] filename\n", invoked_by);
   puts ("Options:");
   puts ("\t-c | --compile : serialize AST to stdout and exit");
@@ -51,7 +52,23 @@ ctr_question_intent (void)
   ctr_cli_welcome ("<exec>");
 }
 
-char const* ctr_file_stdext_path_raw() {
+static char *EXT_PATH = 0;
+
+char const *
+ctr_file_stdext_path_raw ()
+{
+  if (EXT_PATH)
+    return EXT_PATH;
+  char *env = getenv (CTR_STD_EXTENSION_ENV_NAME);
+#ifdef DEBUG_BUILD
+  printf ("%s = %p(%s)\n", CTR_STD_EXTENSION_ENV_NAME, env, env == 0 ? "()" : env);
+#endif
+  if (env)
+    {
+      EXT_PATH = env;
+      return (char const *) env;
+    }
+  EXT_PATH = CTR_STD_EXTENSION_PATH;
   return CTR_STD_EXTENSION_PATH;
 }
 
@@ -79,10 +96,11 @@ ctr_cli_read_args (int argc, char *argv[])
 	debug = 1;
       else if (strcmp (argv[0], "-e") == 0)
 	from_stdin = 1;
-      else if (strcmp (argv[0], "--ext") == 0) {
-  puts(CTR_STD_EXTENSION_PATH);
-  exit(0);
-      }
+      else if (strcmp (argv[0], "--ext") == 0)
+	{
+	  puts (ctr_file_stdext_path_raw ());
+	  exit (0);
+	}
       else
 	break;
       argv++;
@@ -144,7 +162,7 @@ main (int argc, char *argv[])
   ctr_clex_quiet = 0;
   ctr_cparse_quiet = 0;
   ctr_cparse_calltime_name_id = -1;
-  openlog(argv[0], LOG_PID|LOG_CONS, LOG_USER);
+  openlog (argv[0], LOG_PID | LOG_CONS, LOG_USER);
   ctr_initialize_world ();
 
 #if (DO_PROFILE)
@@ -186,7 +204,7 @@ main (int argc, char *argv[])
       // ctr_initialize_world ();
       // ctr_ccomp_run (program);
 
-      closelog();
+      closelog ();
       exit (0);
 #endif
       if (debug)
@@ -199,7 +217,7 @@ main (int argc, char *argv[])
       if (ctr_gc_alloc != 0 && (CTR_LOG_WARNINGS & 1) == 1)
 	{
 	  printf ("[WARNING] Citron has detected an internal memory leak of: %" PRIu64 " bytes.\n", ctr_gc_alloc);
-    closelog();
+	  closelog ();
 	  exit (1);
 	}
       //exit(0);
@@ -249,7 +267,10 @@ initialize (int extensions)
   if (extensions)
     {
       ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
-      args->object = ctr_build_string_from_cstring (CTR_STD_EXTENSION_PATH "/extensions/fileutils.ctr");
+      const char *epath = ctr_file_stdext_path_raw ();
+      static char path_[2048];
+      size_t len = sprintf (path_, "%s/extensions/fileutils.ctr", epath);
+      args->object = ctr_build_string (path_, len);
       ctr_object *futi = ctr_send_message (CtrStdFile, "new:", 4, args);
       ctr_heap_free (args);
       ctr_file_include (futi, NULL);

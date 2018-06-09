@@ -17,7 +17,7 @@ extern char *ctr_code;
 int
 ctr_paramlist_has_name (char *namenode, size_t len)
 {
-  ctr_tnode* ctr_cparse_calltime_name;
+  ctr_tnode *ctr_cparse_calltime_name;
   // printf("%d -- %.*s\n", ctr_cparse_calltime_name_id, len, namenode);
   if (ctr_cparse_calltime_name_id < 0 || len == 0)
     return 0;
@@ -26,19 +26,19 @@ ctr_paramlist_has_name (char *namenode, size_t len)
       // for(int i=0; i<=ctr_cparse_calltime_name_id; i++)
       int i = ctr_cparse_calltime_name_id;
       {
-        ctr_cparse_calltime_name = ctr_cparse_calltime_names[i];
-        ctr_tlistitem *name = ctr_cparse_calltime_name->nodes;
-        while (name)
-	       {
-           // printf("  -- %d %.*s\n", i, name->node->vlen, name->node->value);
-	          int vararg = name->node->value[0] == '*';
-	          if (unlikely (name->node->vlen == len || vararg))
-	           {
-	             if (strncmp (name->node->value + vararg, namenode, len - vararg) == 0)
-		             return 1;
-	           }
-	         name = name->next;
+	ctr_cparse_calltime_name = ctr_cparse_calltime_names[i];
+	ctr_tlistitem *name = ctr_cparse_calltime_name->nodes;
+	while (name)
+	  {
+	    // printf("  -- %d %.*s\n", i, name->node->vlen, name->node->value);
+	    int vararg = name->node->value[0] == '*';
+	    if (unlikely (name->node->vlen == len || vararg))
+	      {
+		if (strncmp (name->node->value + vararg, namenode, len - vararg) == 0)
+		  return 1;
 	      }
+	    name = name->next;
+	  }
       }
       return 0;
     }
@@ -62,14 +62,16 @@ ctr_cparse_emit_error_unexpected (int t, char *hint)
     return;
   //memcpy(ctr_last_parser_error, buf, strlen(buf));
 #ifdef EXIT_ON_ERROR
-printf ("%s", buf);
-if (hint)
-{
-  printf ("%s", hint);
-}
+  printf ("%s", buf);
+  if (hint)
+    {
+      printf ("%s", hint);
+    }
   exit (1);
 #else
-  CtrStdFlow = ctr_format_str("EParser error, unexpected %s ( %s: %d)\n%s%s", message, ctr_cparse_current_program, ctr_clex_line_number+1, hint?"-> ":"", hint?hint:"");
+  CtrStdFlow =
+    ctr_format_str ("EParser error, unexpected %s ( %s: %d)\n%s%s", message, ctr_cparse_current_program, ctr_clex_line_number + 1, hint ? "-> " : "",
+		    hint ? hint : "");
 #endif
 }
 

@@ -907,29 +907,32 @@ ctr_reflect_share_memory (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *ty = argumentList->object;
   ctr_object *shared = ctr_internal_create_mapped_object (ty ? ty->info.type : CTR_OBJECT_TYPE_OTOBJECT, 1);
-  ctr_set_link_all (shared, ty ? ctr_reflect_get_primitive_link(ty) : CtrStdObject);
-  if (ty) {
-      switch(ty->info.type) {
-        case CTR_OBJECT_TYPE_OTARRAY:
-            {
-        shared->value.avalue = (ctr_collection *) ctr_heap_allocate_shared(sizeof (ctr_collection));
-        shared->value.avalue->immutable = 0;
-        shared->value.avalue->length = 2;
-        shared->value.avalue->elements = (ctr_object **) ctr_heap_allocate_shared(sizeof (ctr_object *) * 2);
-        shared->value.avalue->head = 0;
-        shared->value.avalue->tail = 0;
-        break;
-            }
-        case CTR_OBJECT_TYPE_OTSTRING:
-            {
-        shared->value.svalue = ctr_heap_allocate_shared(sizeof (ctr_string));
-        shared->value.svalue->value = ctr_heap_allocate_shared(1);
-        shared->value.svalue->vlen = 0;
-        break;
-            }
-        default: break;
-      }
-  }
+  ctr_set_link_all (shared, ty ? ctr_reflect_get_primitive_link (ty) : CtrStdObject);
+  if (ty)
+    {
+      switch (ty->info.type)
+	{
+	case CTR_OBJECT_TYPE_OTARRAY:
+	  {
+	    shared->value.avalue = (ctr_collection *) ctr_heap_allocate_shared (sizeof (ctr_collection));
+	    shared->value.avalue->immutable = 0;
+	    shared->value.avalue->length = 2;
+	    shared->value.avalue->elements = (ctr_object **) ctr_heap_allocate_shared (sizeof (ctr_object *) * 2);
+	    shared->value.avalue->head = 0;
+	    shared->value.avalue->tail = 0;
+	    break;
+	  }
+	case CTR_OBJECT_TYPE_OTSTRING:
+	  {
+	    shared->value.svalue = ctr_heap_allocate_shared (sizeof (ctr_string));
+	    shared->value.svalue->value = ctr_heap_allocate_shared (1);
+	    shared->value.svalue->vlen = 0;
+	    break;
+	  }
+	default:
+	  break;
+	}
+    }
   return shared;
 }
 
@@ -1120,10 +1123,11 @@ ctr_reflect_describe_type (ctr_object * myself, ctr_argument * argumentList)
   switch (object->info.type)
     {
     case CTR_OBJECT_TYPE_OTSTRING:
-      if (object->value.svalue->vlen > 1 && *object->value.svalue->value == '*') {
-        type_descriptor = ctr_build_string_from_cstring("*String");
-        break;
-      }
+      if (object->value.svalue->vlen > 1 && *object->value.svalue->value == '*')
+	{
+	  type_descriptor = ctr_build_string_from_cstring ("*String");
+	  break;
+	}
     case CTR_OBJECT_TYPE_OTNIL:
     case CTR_OBJECT_TYPE_OTBOOL:
     case CTR_OBJECT_TYPE_OTNUMBER:
@@ -1597,7 +1601,7 @@ ctr_reflect_run_for_object_in_ctx (ctr_object * myself, ctr_argument * argumentL
 	  ctr_heap_free (a);
 	}
     }
-    ctr_close_context ();
+  ctr_close_context ();
   return result;
 }
 
@@ -1611,13 +1615,13 @@ ctr_reflect_run_for_object_in_ctx_as_world (ctr_object * myself, ctr_argument * 
   ctr_world_ptr = world;
 
   static struct ctr_context_t ctx_l;
-  ctr_dump_context(&ctx_l);
+  ctr_dump_context (&ctx_l);
   ctr_context_id = 0;
   ctr_contexts[0] = world;
 
   ctr_object *res = ctr_reflect_run_for_object_in_ctx (myself, argumentList);
 
-  ctr_load_context(ctx_l);
+  ctr_load_context (ctx_l);
   ctr_world_ptr = old_world;
   return res;
 }
@@ -1732,14 +1736,15 @@ ctr_reflect_get_property (ctr_object * myself, ctr_argument * argumentList)
  * Set a global instrumentor (overrides all instrumentors)
  */
 ctr_object *
-ctr_reflect_ginstr(ctr_object * myself, ctr_argument * argumentList)
+ctr_reflect_ginstr (ctr_object * myself, ctr_argument * argumentList)
 {
-  if (ctr_global_instrum) {
-    CtrStdFlow = ctr_build_string_from_cstring("A global instrumentor has already been registered");
-    return myself;
-  }
-    ctr_global_instrum = argumentList->object;
-    return myself;
+  if (ctr_global_instrum)
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("A global instrumentor has already been registered");
+      return myself;
+    }
+  ctr_global_instrum = argumentList->object;
+  return myself;
 }
 
 /**
@@ -1748,15 +1753,17 @@ ctr_reflect_ginstr(ctr_object * myself, ctr_argument * argumentList)
  * unset the global instrumentor
  */
 ctr_object *
-ctr_reflect_noginstr(ctr_object * myself, ctr_argument * argumentList)
+ctr_reflect_noginstr (ctr_object * myself, ctr_argument * argumentList)
 {
-  if (!ctr_global_instrum) {
-    CtrStdFlow = ctr_build_string_from_cstring("no global instrumentor has been registered");
-    return myself;
-  }
-    ctr_global_instrum = NULL;
-    return myself;
+  if (!ctr_global_instrum)
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("no global instrumentor has been registered");
+      return myself;
+    }
+  ctr_global_instrum = NULL;
+  return myself;
 }
+
 /**
  * [Reflect] disableInstrumentation
  * Sends a message to an object with some arguments bypassing the instrumentor
@@ -1821,9 +1828,8 @@ ctr_reflect_unregister_instrumentor (ctr_object * myself, ctr_argument * argumen
 ctr_object *
 ctr_reflect_get_instrumentor (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object *instr =
-    ctr_internal_object_find_property_with_hash (ctr_instrumentor_funcs, argumentList->object,
-						 ctr_send_message (argumentList->object, "iHash", 5, NULL)->value.nvalue, 0);
+  ctr_object *instr = ctr_internal_object_find_property_with_hash (ctr_instrumentor_funcs, argumentList->object,
+								   ctr_send_message (argumentList->object, "iHash", 5, NULL)->value.nvalue, 0);
   return instr ? instr : ctr_build_nil ();
 }
 
@@ -1913,18 +1919,19 @@ ctr_reflect_delegate_set_private_property (ctr_object * itself, ctr_argument * a
 ctr_object *
 ctr_reflect_set_ignore_file (ctr_object * myself, ctr_argument * argumentList)
 {
-  if(trace_ignore_count == CTR_TRACE_IGNORE_VEC_DEPTH) {
-    CtrStdFlow = ctr_build_string_from_cstring("Ignore Vector has no more room");
-    return CtrStdNil;
-  }
-  ctr_object *name = ctr_internal_cast2string(argumentList->object);
-  if (name->value.svalue->vlen > CTR_TRACE_IGNORE_LENGTH) {
-    CtrStdFlow = ctr_format_str("EFilename too long for ignore vector (%d > %d)",
-      name->value.svalue->vlen, CTR_TRACE_IGNORE_LENGTH);
-    return CtrStdNil;
-  }
-  char* s = ctr_heap_allocate_cstring(name);
-  strcpy(ignore_in_trace[trace_ignore_count++], s);
+  if (trace_ignore_count == CTR_TRACE_IGNORE_VEC_DEPTH)
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("Ignore Vector has no more room");
+      return CtrStdNil;
+    }
+  ctr_object *name = ctr_internal_cast2string (argumentList->object);
+  if (name->value.svalue->vlen > CTR_TRACE_IGNORE_LENGTH)
+    {
+      CtrStdFlow = ctr_format_str ("EFilename too long for ignore vector (%d > %d)", name->value.svalue->vlen, CTR_TRACE_IGNORE_LENGTH);
+      return CtrStdNil;
+    }
+  char *s = ctr_heap_allocate_cstring (name);
+  strcpy (ignore_in_trace[trace_ignore_count++], s);
   return CtrStdNil;
 }
 

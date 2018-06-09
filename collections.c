@@ -1695,15 +1695,10 @@ ctr_array_assign (ctr_object * myself, ctr_argument * argumentList)
 	  elnumArg->object = elnum;
 	  ctr_object *to_elem;
 	  accArg->object = ctr_array_get (to, elnumArg);
-    if (accArg->object->info.type ==
-        CTR_OBJECT_TYPE_OTSTRING
-        &&
-        accArg->object->value.svalue->vlen == 1 && *accArg->object->value.svalue->value == '_') continue;
 	  if (accArg->object->info.type ==
-	      CTR_OBJECT_TYPE_OTSTRING
-	      &&
-	      *accArg->object->value.svalue->value == '*'
-      )
+	      CTR_OBJECT_TYPE_OTSTRING && accArg->object->value.svalue->vlen == 1 && *accArg->object->value.svalue->value == '_')
+	    continue;
+	  if (accArg->object->info.type == CTR_OBJECT_TYPE_OTSTRING && *accArg->object->value.svalue->value == '*')
 	    {
 	      //We got a catch-all *var
 	      if (saw_catch_all)
@@ -1719,11 +1714,12 @@ ctr_array_assign (ctr_object * myself, ctr_argument * argumentList)
 	      accArg->object->info.raw = 1;
 	      int skip = ctr_array_count (myself,
 					  NULL)->value.nvalue - to->value.avalue->head - i;
-	      to_elem = ctr_array_new(CtrStdArray, NULL);
-        for (int _i=other - to->value.avalue->tail; _i<skip + 2*other - 2*to->value.avalue->tail + 1; _i++) {
-          elnumArg->object = myself->value.avalue->elements[_i];
-          ctr_array_push(to_elem, elnumArg);
-        }
+	      to_elem = ctr_array_new (CtrStdArray, NULL);
+	      for (int _i = other - to->value.avalue->tail; _i < skip + 2 * other - 2 * to->value.avalue->tail + 1; _i++)
+		{
+		  elnumArg->object = myself->value.avalue->elements[_i];
+		  ctr_array_push (to_elem, elnumArg);
+		}
 	      to_elem->value.avalue->immutable = myself->value.avalue->immutable;
 	      other += skip + other - to->value.avalue->tail;
 	    }

@@ -1356,7 +1356,8 @@ ctr_load_required_native_modules ()
 #endif
   struct dirent *dp;
   DIR *dfd;
-  const static char *dir = CTR_STD_EXTENSION_PATH "/basemods";
+  static char dir[2048];
+  sprintf (dir, "%s/basemods", ctr_file_stdext_path_raw ());
   if ((dfd = opendir (dir)) == NULL)
     {
       perror ("Can't open basemods dir");

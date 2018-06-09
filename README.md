@@ -1,8 +1,7 @@
 ## Citron :: A Programming Language for the crazy and people that like functions [![Build Status](https://travis-ci.com/alimpfard/citron.svg?branch=master)](https://travis-ci.com/alimpfard/citron)
 
 ### Release
-A binary release (x86_64 ELF) is available, however it __cannot__ use neither *import*, nor dynamic modules.
-Please build from the source.
+A binary release (x86_64 ELF) is available (see [Default Module Resolution](#default-module-resolution) for dynamic modules)
 
 ### Build guide
 minimum required libraries:
@@ -10,7 +9,7 @@ minimum required libraries:
 * `libbsd`  -- for utility functions (compile without forLinux defined to get rid of this dependency)
 * `libpcre` -- for regular expressions
 * `libpthread` -- for threading support
-* `libgc` -- if compiling with the boehm garbage collector
+* `libgc` -- for Garbage Collection
 
 building for debug:
 
@@ -29,3 +28,7 @@ All operations are done through sending and receiving messages between objects.
 there are some examples in the `examples` directory.
 
 running the interpreter is quite simple: `ctr eval` in the directory that the file `eval` is.
+
+### Default Module Resolution
+A default module resolution path is assigned at build-time, which normally points to the data directory of the install;
+However, this can always be overridden by specifying an environment variable (CITRON_EXT_PATH by default).

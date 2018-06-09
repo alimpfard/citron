@@ -1459,8 +1459,8 @@ ctr_command_fork (ctr_object * myself, ctr_argument * argumentList)
       fclose (*((FILE **) rs->ptr + 2));
       ctr_heap_free (newArgumentList);
       ctr_heap_free (ps);
-      if(CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
-        CtrStdFlow = CtrStdExit; //promote it to exit
+      if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
+	CtrStdFlow = CtrStdExit;	//promote it to exit
       return CtrStdNil;
     }
   else
@@ -1594,19 +1594,21 @@ ctr_command_join (ctr_object * myself, ctr_argument * argumentList)
   pid = (int) ctr_internal_object_find_property (myself, ctr_build_string_from_cstring ("pid"), CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue;
   fclose (*((FILE **) rs->ptr + 3));
   waitpid (pid, 0, 0);
-  ctr_object* retval = CtrStdNil;
-  size_t sz=0;
-  char* blob = ctr_heap_allocate(sizeof(size_t));
-  char* blobptr = blob;
-  FILE* rfp = *((FILE **) rs->ptr + 0);
-  ssize_t iret = read(fileno(rfp), &sz, sizeof(size_t));
-  if (iret == -1 || iret == 0) goto end_close;
+  ctr_object *retval = CtrStdNil;
+  size_t sz = 0;
+  char *blob = ctr_heap_allocate (sizeof (size_t));
+  char *blobptr = blob;
+  FILE *rfp = *((FILE **) rs->ptr + 0);
+  ssize_t iret = read (fileno (rfp), &sz, sizeof (size_t));
+  if (iret == -1 || iret == 0)
+    goto end_close;
   //we've read something, try to return.
-  iret = read(fileno(rfp), blobptr, sz); //this program won't write anything else
-  if (iret < sz) goto end_close;
-  retval = ctr_build_string(blob, sz);
-  end_close:
-  ctr_heap_free(blob);
+  iret = read (fileno (rfp), blobptr, sz);	//this program won't write anything else
+  if (iret < sz)
+    goto end_close;
+  retval = ctr_build_string (blob, sz);
+end_close:
+  ctr_heap_free (blob);
   fclose (rfp);
   return retval;
 }
@@ -2993,11 +2995,11 @@ ctr_thread_run (ctr_object * myself, ctr_argument * argumentList)
       CtrStdFlow = ctr_build_string_from_cstring ("Attempt to run a thread without a target");
       return CtrStdFlow;
     }
-  if(!pthread_mutex_trylock(&GLOBAL_MUTEX))
-  {
-    pthread_mutex_unlock(&GLOBAL_MUTEX);
-    pthread_mutex_unlock (((ctr_thread_t *) myself->value.rvalue->ptr)->mutex);
-  }
+  if (!pthread_mutex_trylock (&GLOBAL_MUTEX))
+    {
+      pthread_mutex_unlock (&GLOBAL_MUTEX);
+      pthread_mutex_unlock (((ctr_thread_t *) myself->value.rvalue->ptr)->mutex);
+    }
   return myself;
 }
 

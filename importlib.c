@@ -16,6 +16,9 @@ ctr_importlib_begin (ctr_object * myself, ctr_argument * argumentList)
   ctr_internal_object_add_property (instance,
 				    ctr_build_string_from_cstring ("searchPaths"), CtrStdImportLib_SearchPaths, CTR_CATEGORY_PRIVATE_PROPERTY);
   ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring ("import"), instance, 0);
-  ctr_file_include_here (ctr_invoke_variadic (CtrStdFile, &ctr_file_new, 1, ctr_build_string_from_cstring (CTR_STD_EXTENSION_PATH "/extensions/importlib.ctr")), NULL);	//get all definitions
+  const char *epath = ctr_file_stdext_path_raw ();
+  static char path_[2048];
+  size_t len = sprintf (path_, "%s/extensions/importlib.ctr", epath);
+  ctr_file_include_here (ctr_invoke_variadic (CtrStdFile, &ctr_file_new, 1, ctr_build_string (path_, len)), NULL);	//get all definitions
   return instance;
 }

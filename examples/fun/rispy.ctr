@@ -63,6 +63,7 @@ var add_globals is {:env
     put: (\:x Reflect isObject: x linkedTo: Array) at: ('list?'),
     put: (\:x x isNil) at: ('null?'),
     put: (\:x Reflect isObject: x linkedTo: String) at: ('symbol?'),
+    put: (\:x {x toNumber. ^True.} catch: {^False.}, run) at: ('number?'),
     put: (\:x x not) at: ('not'),
     put: (\:x [(Pen writeln: x), Nil] last) at: ('display'),
     put: True at: '#t',
@@ -75,7 +76,11 @@ var memoized is Map new.
 var eval is {:x:env
   var p is Nil.
   ^(Reflect isObject: x linkedTo: String) either: {
-      ^env at: x.
+      var f is env at: x.
+      f isNil ifTrue: {
+        thisBlock error: 'Lookup of %s Failed, no such value' % [x].
+      }.
+      ^f.
    }
   or: {
     ^(Reflect isObject: x linkedTo: Array, not) either: {

@@ -33,7 +33,9 @@ ctr_cwlk_return (ctr_tnode * node)
       printf ("Invalid return expression 2 (Return statement has no parse node -- %p has no node %p).\n", li, li->node);
       exit (1);
     }
+  ctr_current_node_is_return = 1;
   e = ctr_cwlk_expr (li->node, &wasReturn);
+  ctr_current_node_is_return = 0;
   return e;
 }
 

@@ -29,6 +29,7 @@ after_success:
   - echo "Exec=ctr" >> appimage/AppDir/usr/share/application/citron.desktop
   - echo "Icon=citron" >> appimage/AppDir/usr/share/application/citron.desktop
   - echo "Categories=Development;" >> appimage/AppDir/usr/share/application/citron.desktop
+  - echo "Terminal=true" >> appimage/AppDir/usr/share/application/citron.desktop # Needed for CLI tools
   - ./linuxdeployqt-continuous-x86_64.AppImage appimage/AppDir/usr/share/application/citron.desktop -appimage
   - cd autohell/build/bin
   - ../../../linuxdeployqt-continuous-x86_64.AppImage ctr -bundle-non-qt-libs

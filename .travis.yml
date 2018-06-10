@@ -13,18 +13,32 @@ install:
 
 script:
   - echo "bash ./runtests.sh autohell/build/bin" #Ignore tests for now
+  - export VERSION=$(git rev-parse --short HEAD)
 
 after_success:
   - wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
   - chmod a+x linuxdeployqt-continuous-x86_64.AppImage
+  - mkdir -p appimage/AppDir/usr && cp -r autohell/build/* appimage/AppDir/usr
+  - mkdir -p appimage/AppDir/usr/share/application
+  - mkdir -p appimage/AppDir/usr/share/icons/hicolor/256x256
+  - cp image/citron.png appimage/AppDir/usr/share/icons/hicolor/256x256/
+  - echo "[Desktop Entry]" > appimage/AppDir/usr/share/application/citron.desktop
+  - echo "Type=Application" >> appimage/AppDir/usr/share/application/citron.desktop
+  - echo "Name=Citron" >> appimage/AppDir/usr/share/application/citron.desktop
+  - echo "Comment=Citron Interp" >> appimage/AppDir/usr/share/application/citron.desktop
+  - echo "Exec=ctr" >> appimage/AppDir/usr/share/application/citron.desktop
+  - echo "Icon=citron" >> appimage/AppDir/usr/share/application/citron.desktop
+  - echo "Categories=Development;" >> appimage/AppDir/usr/share/application/citron.desktop
+  - ./linuxdeployqt-continuous-x86_64.AppImage appimage/AppDir/usr/share/application/citron.desktop -appimage
   - cd autohell/build/bin
   - ../../../linuxdeployqt-continuous-x86_64.AppImage ctr -bundle-non-qt-libs
   - cd ../../..
   - ls -lh autohell/build/*
+  - ls -lh *.AppImage
   - tar cjf release.tar.bz2 -C autohell/build .
   - (cd autohell/build && zip -r - .) > release.zip
   - wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
-  - bash upload.sh release.tar.bz2 release.zip
+  - bash upload.sh release.tar.bz2 release.zip Citron*.AppImage*
 
 branches:
   except:

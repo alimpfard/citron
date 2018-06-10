@@ -1230,6 +1230,7 @@ CTR_H_DECLSPEC uint16_t ctr_default_port;
 
 CTR_H_DECLSPEC ctr_string CTR_CLEX_KW_ME_SV, CTR_CLEX_KW_THIS_SV, CTR_CLEX_US_SV, CTR_CLEX_KW_RESPONDTO_SV;
 CTR_H_DECLSPEC ctr_object CTR_CLEX_KW_ME,    CTR_CLEX_KW_THIS,    CTR_CLEX_US,    CTR_CLEX_KW_RESPONDTO;
+CTR_H_DECLSPEC int ctr_current_node_is_return;
 
 static inline void ctr_linkstr();
 void ctr_set_link_all(ctr_object*, ctr_object*);

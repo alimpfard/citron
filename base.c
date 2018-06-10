@@ -1745,7 +1745,10 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
   block->info.sticky = 1;
   t = myself->value.nvalue;
   arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
-  ctr_open_context ();
+  if (block->value.block->lexical)
+    ctr_contexts[++ctr_context_id] = block;
+  else
+    ctr_open_context ();
   for (i = 0; i < t; i++)
     {
       indexNumber = ctr_internal_create_standalone_object (CTR_OBJECT_TYPE_OTNUMBER);
@@ -2017,6 +2020,7 @@ ctr_number_to_step_do (ctr_object * myself, ctr_argument * argumentList)
       CtrStdFlow = ctr_build_string_from_cstring ("Expected block.");
       return myself;
     }
+  if (!codeBlock->value.block->lexical)
   ctr_open_context ();
   arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   while (((forward && curValue <= endValue) || (!forward && curValue >= endValue)) && !CtrStdFlow)
@@ -2032,6 +2036,7 @@ ctr_number_to_step_do (ctr_object * myself, ctr_argument * argumentList)
       curValue += incValue;
     }
   ctr_heap_free (arguments);
+if (!codeBlock->value.block->lexical)
   ctr_close_context ();
   if (CtrStdFlow == CtrStdBreak)
     CtrStdFlow = NULL;		/* consume break */
@@ -5178,54 +5183,6 @@ ctr_block_assign (ctr_object * myself, ctr_argument * argumentList)
  * and if lookup fails, it will be swapped for the block itself
  */
 
-// typedef struct ctr_block_run_cache_key {
-//      ctr_object *block;
-//      ctr_argument *argumentList;
-// } ctr_block_run_cache_key;
-//
-// typedef struct {
-//      ctr_block_run_cache_key *key;
-//      ctr_object *value;
-//      struct ctr_cache_item *next;
-// } ctr_cache_item;
-//
-// struct {
-//      ctr_cache_item *map;
-// } ctr_block_run_cached_keyvalue_map;
-//
-// long ctr_block_run_cache_ready_timer = 0;
-// long ctr_block_run_last_cache_lookup_time = 0;
-// void
-// ctr_block_run_cache_result_if_expensive(ctr_object * myself,
-//                                      ctr_argument * arglist,
-//                                      ctr_object * result)
-// {
-//      if (clock() - ctr_block_run_cache_ready_timer >
-//          ctr_block_run_last_cache_lookup_time) {
-//              ctr_block_run_cache_key *key =
-//                  ctr_heap_allocate(sizeof(ctr_block_run_cache_key));
-//              key->block = myself;
-//              key->argumentList = arglist;
-//              ctr_cache_item *newitem =
-//                  ctr_heap_allocate_tracked(sizeof(ctr_cache_item));
-//              if (!ctr_block_run_cached_keyvalue_map.map) {
-//                      ctr_block_run_cached_keyvalue_map.map = newitem;
-//                      newitem->key = key;
-//                      newitem->value = result;
-//                      return;
-//              }
-//              newitem->next = ctr_block_run_cached_keyvalue_map.map;
-//              ctr_block_run_cached_keyvalue_map.map = newitem;
-//              newitem->key = key;
-//              newitem->value = result;
-//      }
-// }
-//
-// void ctr_block_run_cache_set_ready_for_comp()
-// {
-//      ctr_block_run_cache_ready_timer = clock();
-// }
-
 int
 ctr_args_eq (ctr_argument * arg0, ctr_argument * arg1)
 {
@@ -5245,28 +5202,6 @@ ctr_args_eq (ctr_argument * arg0, ctr_argument * arg1)
   return 1;
 }
 
-// ctr_object *ctr_block_run_try_get_result_for(ctr_object * myself,
-//                                           ctr_argument * arglist)
-// {
-//      ctr_cache_item *m;
-//      m = ctr_block_run_cached_keyvalue_map.map;
-//      long init = clock();
-//      while (m) {
-//              if (clock() - init > ctr_block_run_last_cache_lookup_time + 10)
-//                      return NULL;    //cache miss on timeout
-//              if (m->key->block == myself
-//                  && ctr_args_eq(m->key->argumentList, arglist)) {
-//                      printf("cache hit: %p <=> %p -> %p\n", myself, arglist,
-//                             m->value);
-//                      ctr_block_run_last_cache_lookup_time = clock() - init;
-//                      return m->value;
-//              }
-//              m = m->next;
-//      }
-//      ctr_block_run_last_cache_lookup_time = clock() - init;
-//      return NULL;
-// }
-
 ctr_object *
 ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my)
 {
@@ -5278,6 +5213,15 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
       ctr_free_argumentList (argList);
       return result;
     }
+  int is_tail_call = 0, id;
+  for(id=ctr_context_id;id>0&&!is_tail_call&&ctr_current_node_is_return;id--,is_tail_call=ctr_contexts[id]==myself);
+  if(is_tail_call) {
+#   ifdef DEBUG_BUILD
+      printf("tailcall at %p (%d from %d)\n", myself, id, ctr_context_id);
+#   endif
+    ctr_context_id = id;
+  }
+
   ctr_object *result;
   ctr_tnode *node = myself->value.block;
   ctr_tlistitem *codeBlockParts = node->nodes;
@@ -5289,7 +5233,12 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
   int was_vararg;
   ctr_argument *argList = ctr_heap_allocate (sizeof (ctr_argument));
   (void) ctr_array_to_argument_list (argArray, argList);
-  ctr_open_context ();
+  if (!is_tail_call) {
+    if (myself->value.block->lexical && (!my || my == myself))
+      ctr_contexts[++ctr_context_id] = myself;
+    else
+      ctr_open_context ();
+  }
   if (parameterList && parameterList->node)
     {
       parameter = parameterList->node;
@@ -5384,7 +5333,6 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
       head = head->next;
       p--;
     }
-  //ctr_block_run_cache_set_ready_for_comp();
   result = ctr_cwlk_run (codeBlockPart2);
   if (result == NULL)
     {
@@ -5415,6 +5363,7 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
 	  ctr_heap_free (a);
 	}
     }
+  if (!is_tail_call)
   ctr_close_context ();
   ctr_deallocate_argument_list (argList);
   //ctr_block_run_cache_result_if_expensive(myself, argList, result);
@@ -5430,9 +5379,15 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
       ctr_object *result = myself->value.fvalue (my, argList);
       return result;
     }
+  int is_tail_call = 0, id;
+  for(id=ctr_context_id;id>0&&!is_tail_call&&ctr_current_node_is_return;id--,is_tail_call=ctr_contexts[id]==myself);
+  if(is_tail_call) {
+#   ifdef DEBUG_BUILD
+      printf("tailcall at %p (%d from %d)\n", myself, id, ctr_context_id);
+#   endif
+    ctr_context_id = id;
+  }
   ctr_object *result;
-  //result = ctr_block_run_try_get_result_for(myself, argList);
-  //if(result) return result;
   ctr_tnode *node = myself->value.block;
   ctr_tlistitem *codeBlockParts = node->nodes;
   ctr_tnode *codeBlockPart1 = codeBlockParts->node;
@@ -5441,7 +5396,12 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
   ctr_tnode *parameter;
   ctr_object *a;
   int was_vararg;
-  ctr_open_context ();
+  if (!is_tail_call) {
+    if (myself->value.block->lexical && (!my || my == myself))
+      ctr_contexts[++ctr_context_id] = myself;
+    else
+      ctr_open_context ();
+  }
   if (parameterList && parameterList->node)
     {
       parameter = parameterList->node;
@@ -5567,7 +5527,8 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 	  ctr_heap_free (a);
 	}
     }
-  ctr_close_context ();
+    if (!is_tail_call)
+    ctr_close_context ();
 
   //ctr_block_run_cache_result_if_expensive(myself, argList, result);
   return result;
@@ -5719,7 +5680,10 @@ ctr_block_while_true (ctr_object * myself, ctr_argument * argumentList)
   sticky2 = argumentList->object->info.sticky;
   myself->info.sticky = 1;
   argumentList->object->info.sticky = 1;
-  ctr_open_context ();
+  if (myself->value.block->lexical)
+    ctr_contexts[++ctr_context_id] = myself;
+  else
+    ctr_open_context ();
   while (1 && !CtrStdFlow)
     {
       ctr_object *result = ctr_internal_cast2bool (ctr_block_run_here (myself, argumentList, myself));
@@ -5756,7 +5720,10 @@ ctr_block_while_true (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_block_while_false (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_open_context ();
+  if (myself->value.block->lexical)
+    ctr_contexts[++ctr_context_id] = myself;
+  else
+    ctr_open_context ();
   while (1 && !CtrStdFlow)
     {
       ctr_object *result = ctr_internal_cast2bool (ctr_block_run_here (myself, argumentList, myself));

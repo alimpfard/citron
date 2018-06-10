@@ -13,6 +13,14 @@ Map on: 'clear' do: {
   me each: {:k me deleteAt: k. }.
 }.
 
+Map on: 'fromArray:' do: {:arr
+  var map is new.
+  arr each_v: {:v
+    map put: v last at: v head.
+  }.
+  ^map.
+}.
+
 Map on: 'respondTo:' do: {:self:msg
   ^(msg startsWith: '@') either: { ^self at: (msg skip: 1). } or: { ^self `respondTo: msg. }.
 }.

@@ -630,7 +630,7 @@ ctr_clex_tok ()
         case '\'': //quote
           q = 1;
         case '!': //literal unescape
-          if (ctr_code+1<ctr_eofcode && *(++ctr_code) == '(') {
+          if (ctr_code+1<ctr_eofcode && !isspace(*(++ctr_code))) {
             ctr_clex_tokvlen = -3 - q; //unescape mode (q=1 quote)
             return CTR_TOKEN_LITERAL_ESC;
           }

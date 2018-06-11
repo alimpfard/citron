@@ -1,3 +1,4 @@
+### DEPRECATE v
 Object on: 'mapmatch:' do: {:self:blkmap
   var ret is Nil.
   var done is False.
@@ -28,4 +29,27 @@ var Matcher is Object new
   }.
 Object on: 'match:do:' do: {:self:pat:blk
   ^const Matcher of: self, match: pat do: blk.
+}.
+### DEPRECATE ^
+
+Object on: 'match:' do: {:self:ast
+  #ast -> $[
+  # [$!(pattern), consequence],
+  # [$!(pattern), consequence]
+  # ...
+  #]
+  var done is True.
+  var ret is Nil.
+  var cblk is thisBlock.
+  ast each_v: {:cc
+    cc is $!(cc). #Parse the tuple
+    done is True.
+    ret is {
+      self unpack: $!(cc head).
+      ^Reflect runHere: (\:_ $!(cc last)) forObject: thisBlock arguments: [].
+    } catch: {:e done is False. }, run.
+    done break.
+  }.
+  done ifFalse: { cblk error: 'non-exhaustive pattern match'. }.
+  ^ret.
 }.

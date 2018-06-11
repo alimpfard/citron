@@ -102,6 +102,7 @@ ctr_cwlk_message (ctr_tnode * paramNode)
       break;
     case CTR_AST_NODE_IMMUTABLE:
     case CTR_AST_NODE_NESTED:
+    case CTR_AST_NODE_RAW:
       r = ctr_cwlk_expr (receiverNode, &wasReturn);
       break;
     case CTR_AST_NODE_CODEBLOCK:

@@ -60,6 +60,7 @@ extern "C" {
 #define CTR_TOKEN_TUPCLOSE 19
 #define CTR_TOKEN_PASSIGNMENT 20
 #define CTR_TOKEN_SYMBOL 21
+#define CTR_TOKEN_LITERAL_ESC 22
 #define CTR_TOKEN_FIN 99
 //
 //
@@ -101,6 +102,7 @@ extern "C" {
 #define CTR_AST_NODE_IMMUTABLE 61
 #define CTR_AST_NODE_SYMBOL 62
 #define CTR_AST_NODE_LISTCOMP 63
+#define CTR_AST_NODE_RAW 64
 #define CTR_AST_NODE_PARAMLIST 76
 #define CTR_AST_NODE_INSTRLIST 77
 #define CTR_AST_NODE_ENDOFPROGRAM 79
@@ -512,6 +514,9 @@ ctr_tnode* ctr_cparse_parse(char* prg, char* pathString);
 ctr_tnode* ctr_cparse_expr(int mode);
 ctr_tnode* ctr_cparse_ret();
 CTR_H_DECLSPEC int     ctr_cparse_quiet;
+ctr_object* ctr_ast_from_node (ctr_tnode * node);
+int ctr_ast_is_splice (ctr_object* obj);
+ctr_object* ctr_ast_splice (ctr_object* obj);
 
 #define CTR_CONTEXT_VECTOR_DEPTH  10000
 

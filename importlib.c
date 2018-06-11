@@ -13,7 +13,7 @@ ctr_importlib_begin (ctr_object * myself, ctr_argument * argumentList)
   CtrStdImportLib_SearchPaths = ctr_array_new (CtrStdArray, NULL);
   const char *epath = ctr_file_stdext_path_raw ();
   ctr_invoke_variadic (CtrStdImportLib_SearchPaths, &ctr_array_push, 1, ctr_build_string_from_cstring ("."));
-  ctr_invoke_variadic (CtrStdImportLib_SearchPaths, &ctr_array_push, 1, ctr_build_string_from_cstring ((char*)epath));
+  ctr_invoke_variadic (CtrStdImportLib_SearchPaths, &ctr_array_push, 1, ctr_build_string_from_cstring ((char *) epath));
   ctr_internal_object_add_property (instance,
 				    ctr_build_string_from_cstring ("searchPaths"), CtrStdImportLib_SearchPaths, CTR_CATEGORY_PRIVATE_PROPERTY);
   ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring ("import"), instance, 0);

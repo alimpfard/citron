@@ -2021,7 +2021,7 @@ ctr_number_to_step_do (ctr_object * myself, ctr_argument * argumentList)
       return myself;
     }
   if (!codeBlock->value.block->lexical)
-  ctr_open_context ();
+    ctr_open_context ();
   arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   while (((forward && curValue <= endValue) || (!forward && curValue >= endValue)) && !CtrStdFlow)
     {
@@ -2036,8 +2036,8 @@ ctr_number_to_step_do (ctr_object * myself, ctr_argument * argumentList)
       curValue += incValue;
     }
   ctr_heap_free (arguments);
-if (!codeBlock->value.block->lexical)
-  ctr_close_context ();
+  if (!codeBlock->value.block->lexical)
+    ctr_close_context ();
   if (CtrStdFlow == CtrStdBreak)
     CtrStdFlow = NULL;		/* consume break */
   return myself;
@@ -5214,13 +5214,14 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
       return result;
     }
   int is_tail_call = 0, id;
-  for(id=ctr_context_id;id>0&&!is_tail_call&&ctr_current_node_is_return;id--,is_tail_call=ctr_contexts[id]==myself);
-  if(is_tail_call) {
-#   ifdef DEBUG_BUILD
-      printf("tailcall at %p (%d from %d)\n", myself, id, ctr_context_id);
-#   endif
-    ctr_context_id = id;
-  }
+  for (id = ctr_context_id; id > 0 && !is_tail_call && ctr_current_node_is_return; id--, is_tail_call = ctr_contexts[id] == myself);
+  if (is_tail_call)
+    {
+#ifdef DEBUG_BUILD
+      printf ("tailcall at %p (%d from %d)\n", myself, id, ctr_context_id);
+#endif
+      ctr_context_id = id;
+    }
 
   ctr_object *result;
   ctr_tnode *node = myself->value.block;
@@ -5233,12 +5234,13 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
   int was_vararg;
   ctr_argument *argList = ctr_heap_allocate (sizeof (ctr_argument));
   (void) ctr_array_to_argument_list (argArray, argList);
-  if (!is_tail_call) {
-    if (myself->value.block->lexical && (!my || my == myself))
-      ctr_contexts[++ctr_context_id] = myself;
-    else
-      ctr_open_context ();
-  }
+  if (!is_tail_call)
+    {
+      if (myself->value.block->lexical && (!my || my == myself))
+	ctr_contexts[++ctr_context_id] = myself;
+      else
+	ctr_open_context ();
+    }
   if (parameterList && parameterList->node)
     {
       parameter = parameterList->node;
@@ -5364,7 +5366,7 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
 	}
     }
   if (!is_tail_call)
-  ctr_close_context ();
+    ctr_close_context ();
   ctr_deallocate_argument_list (argList);
   //ctr_block_run_cache_result_if_expensive(myself, argList, result);
   return result;
@@ -5380,13 +5382,14 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
       return result;
     }
   int is_tail_call = 0, id;
-  for(id=ctr_context_id;id>0&&!is_tail_call&&ctr_current_node_is_return;id--,is_tail_call=ctr_contexts[id]==myself);
-  if(is_tail_call) {
-#   ifdef DEBUG_BUILD
-      printf("tailcall at %p (%d from %d)\n", myself, id, ctr_context_id);
-#   endif
-    ctr_context_id = id;
-  }
+  for (id = ctr_context_id; id > 0 && !is_tail_call && ctr_current_node_is_return; id--, is_tail_call = ctr_contexts[id] == myself);
+  if (is_tail_call)
+    {
+#ifdef DEBUG_BUILD
+      printf ("tailcall at %p (%d from %d)\n", myself, id, ctr_context_id);
+#endif
+      ctr_context_id = id;
+    }
   ctr_object *result;
   ctr_tnode *node = myself->value.block;
   ctr_tlistitem *codeBlockParts = node->nodes;
@@ -5396,12 +5399,13 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
   ctr_tnode *parameter;
   ctr_object *a;
   int was_vararg;
-  if (!is_tail_call) {
-    if (myself->value.block->lexical && (!my || my == myself))
-      ctr_contexts[++ctr_context_id] = myself;
-    else
-      ctr_open_context ();
-  }
+  if (!is_tail_call)
+    {
+      if (myself->value.block->lexical && (!my || my == myself))
+	ctr_contexts[++ctr_context_id] = myself;
+      else
+	ctr_open_context ();
+    }
   if (parameterList && parameterList->node)
     {
       parameter = parameterList->node;
@@ -5527,7 +5531,7 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 	  ctr_heap_free (a);
 	}
     }
-    if (!is_tail_call)
+  if (!is_tail_call)
     ctr_close_context ();
 
   //ctr_block_run_cache_result_if_expensive(myself, argList, result);

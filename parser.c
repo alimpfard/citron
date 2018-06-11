@@ -459,11 +459,7 @@ ctr_cparse_lit_esc ()
     /* Fallthrough */
     case -3:
       ctr_transform_template_expr = 0;
-      r = ctr_cparse_popen();
-      v = r->nodes->node;
-      ctr_transform_template_expr = texpr_res;
-      ctr_heap_free(r); //this node is not needed, we remove the parens in the expression
-      r = v;
+      r = ctr_cparse_expr(0);
       unescape = 1;
       ctr_transform_template_expr = texpr_res;
       break;

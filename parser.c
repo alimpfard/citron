@@ -13,6 +13,36 @@ int do_compare_locals = 0;
 int all_plains_private = 0;
 extern int ctr_cwlk_replace_refs;
 extern char *ctr_code;
+static int ctr_transform_template_expr; /* flag: indicates whether the parser is supposed to parse a templated expr */
+
+
+ctr_tnode* ctr_cparse_assignment ();
+ctr_tnode* ctr_cparse_block ();
+ctr_tnode* ctr_cparse_block_ ();
+ctr_tnode* ctr_cparse_block_capture ();
+ctr_tnode* ctr_cparse_create_node ();
+ctr_tnode* ctr_cparse_create_node ();
+ctr_tnode* ctr_cparse_expr (int);
+ctr_tnode* ctr_cparse_false ();
+ctr_tnode* ctr_cparse_fin ();
+ctr_tnode* ctr_cparse_list_comp ();
+ctr_tnode* ctr_cparse_lit_esc ();
+ctr_tnode* ctr_cparse_message ();
+ctr_tlistitem* ctr_cparse_messages (ctr_tnode*,int);
+ctr_tnode* ctr_cparse_nil ();
+ctr_tnode* ctr_cparse_number ();
+ctr_tnode* ctr_cparse_parse ();
+ctr_tnode* ctr_cparse_popen ();
+ctr_tnode* ctr_cparse_program ();
+ctr_tnode* ctr_cparse_receiver ();
+ctr_tnode* ctr_cparse_ref ();
+ctr_tnode* ctr_cparse_ret ();
+ctr_tlistitem* ctr_cparse_statement ();
+ctr_tnode* ctr_cparse_string ();
+ctr_tnode* ctr_cparse_symbol ();
+ctr_tnode* ctr_cparse_true ();
+ctr_tnode* ctr_cparse_tuple ();
+
 
 int
 ctr_paramlist_has_name (char *namenode, size_t len)
@@ -398,6 +428,61 @@ parse_predicates:;
 }
 
 /**
+ * CTRParserLiteralEscape
+ *
+ * Generates a node for literal escapes
+ */
+ctr_tnode *
+ctr_cparse_lit_esc ()
+{
+  ctr_tnode *r, *v;
+  ctr_clex_tok();
+  char texpr_res = ctr_transform_template_expr;
+  int len = ctr_clex_tok_value_length();
+  int unescape = 0, quote=0;
+  switch (len) {
+    case -1: //$()
+      ctr_transform_template_expr = 1; //flip it
+      r = ctr_cparse_popen();
+      v = r->nodes->node;
+      ctr_transform_template_expr = texpr_res;
+      ctr_heap_free(r); //this node is not needed, we remove the parens in the expression
+      r = v;
+      break;
+    case -2:
+      ctr_transform_template_expr = 2;
+      r = ctr_cparse_tuple();
+      ctr_transform_template_expr = texpr_res;
+      break;
+    case -4:
+      quote=1;
+    /* Fallthrough */
+    case -3:
+      ctr_transform_template_expr = 0;
+      r = ctr_cparse_popen();
+      v = r->nodes->node;
+      ctr_transform_template_expr = texpr_res;
+      ctr_heap_free(r); //this node is not needed, we remove the parens in the expression
+      r = v;
+      unescape = 1;
+      ctr_transform_template_expr = texpr_res;
+      break;
+    default:
+      ctr_cparse_emit_error_unexpected(ctr_clex_tok(), "Expected any of '(', '[', '{'");
+      return NULL;
+  }
+  v = ctr_cparse_create_node(CTR_AST_NODE);
+  v->type = CTR_AST_NODE_RAW;
+  v->nodes = ctr_heap_allocate(sizeof (ctr_tlistitem));
+  v->nodes->node = r;
+  if (!unescape)
+    v->modifier = -len;
+  else {
+    v->modifier = -quote; //0 or -1
+  }
+  return v;
+}
+/**
  * CTRParserTuple
  *
  * Generates a node to represent an immutable array (tuple)
@@ -428,6 +513,14 @@ ctr_cparse_tuple ()
   ctr_tlistitem *paramListItem = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
   paramList->nodes = paramListItem;
   paramListItem->node = ctr_cparse_expr (0);
+  if (ctr_transform_template_expr == 2) {
+    ctr_tnode* nd = ctr_cparse_create_node(CTR_AST_NODE);
+    nd->type = CTR_AST_NODE_RAW;
+    nd->nodes = ctr_heap_allocate(sizeof (ctr_tlistitem));
+    nd->nodes->node = paramListItem->node;
+    nd->modifier = 1;
+    paramListItem->node = nd;
+  }
   previousListItem = paramListItem;
 
   int restore_id = ctr_clex_save_state ();	//save lexer state
@@ -452,13 +545,21 @@ ctr_cparse_tuple ()
     {				//list comp
       return ctr_cparse_list_comp (r->nodes->node);
     }
-  ctr_clex_restore_state (restore_id);	//restore before checking for listcomp
+  ctr_clex_restore_state (restore_id);	//restore after checking for listcomp
 
   while ((t = ctr_clex_tok ()) == CTR_TOKEN_CHAIN)
     {
-      /* okay we have new parameter, load it */
+      /* okay we have new expr, parse it */
       ctr_tlistitem *paramListItem = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
       paramListItem->node = ctr_cparse_expr (0);
+      if (ctr_transform_template_expr == 2) {
+        ctr_tnode* nd = ctr_cparse_create_node(CTR_AST_NODE);
+        nd->type = CTR_AST_NODE_RAW;
+        nd->nodes = ctr_heap_allocate(sizeof (ctr_tlistitem));
+        nd->nodes->node = paramListItem->node;
+        nd->modifier = 1;
+        paramListItem->node = nd;
+      }
       previousListItem->next = paramListItem;
       previousListItem = paramListItem;
     }
@@ -587,12 +688,17 @@ ctr_cparse_block_ (int autocap)
       t = ctr_clex_tok ();
     }
   first = 1;
-  int oldallpl = all_plains_private;
-  int olddcl = do_compare_locals;
-  do_compare_locals = autocap;
-  int oldcalltime = ctr_cparse_calltime_name_id;
-  ctr_cparse_calltime_names[++ctr_cparse_calltime_name_id] = paramList;
-  all_plains_private = autocap;
+  int oldallpl;
+  int olddcl;
+  int oldcalltime;
+  if(!ctr_transform_template_expr) {
+    oldallpl = all_plains_private;
+    olddcl = do_compare_locals;
+    do_compare_locals = autocap;
+    oldcalltime = ctr_cparse_calltime_name_id;
+    ctr_cparse_calltime_names[++ctr_cparse_calltime_name_id] = paramList;
+    all_plains_private = autocap;
+  }
   if (ctr_transform_lambda_shorthand)
     {
       ctr_transform_lambda_shorthand = 0;
@@ -649,9 +755,11 @@ ctr_cparse_block_ (int autocap)
 	    }
 	}
     }
-  all_plains_private = oldallpl;
-  do_compare_locals = olddcl;
-  ctr_cparse_calltime_name_id = oldcalltime;
+  if (!ctr_transform_template_expr) {
+    all_plains_private = oldallpl;
+    do_compare_locals = olddcl;
+    ctr_cparse_calltime_name_id = oldcalltime;
+  }
   r->modifier = /*CTR_MODIFIER_AUTOCAPTURE */ autocap == 1;
   return r;
 }
@@ -848,6 +956,8 @@ ctr_cparse_receiver ()
       return ctr_cparse_popen ();
     case CTR_TOKEN_TUPOPEN:
       return ctr_cparse_tuple ();
+    case CTR_TOKEN_LITERAL_ESC:
+      return ctr_cparse_lit_esc ();
     case CTR_TOKEN_SYMBOL:
       return ctr_cparse_symbol ();
     default:

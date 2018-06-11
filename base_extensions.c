@@ -100,6 +100,30 @@ ctr_ast_parse (ctr_object * myself, ctr_argument * argumentList)
   return ast;
 }
 
+ctr_object*
+ctr_ast_from_node (ctr_tnode * node)
+{
+  ctr_object *ast = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
+  ctr_set_link_all (ast, CtrStdAst);
+  ast->value.rvalue = ctr_heap_allocate (sizeof (ctr_resource));
+  ast->value.rvalue->ptr = node;
+  ast->value.rvalue->type = CTR_AST_TYPE;
+  return ast;
+}
+
+int
+ctr_ast_is_splice (ctr_object* obj)
+{
+  return obj->interfaces->link == CtrStdAst;
+}
+
+ctr_object*
+ctr_ast_splice (ctr_object* obj)//assume it _is_ a splice
+{
+  char ret;
+  return ctr_cwlk_expr(obj->value.rvalue->ptr, &ret);
+}
+
 ctr_object *
 ctr_ast_instrcount (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -957,6 +981,8 @@ ctr_lex_token_lookup (int tok)
       return "PASSIGNMENT";
     case CTR_TOKEN_SYMBOL:
       return "SYMBOL";
+    case CTR_TOKEN_LITERAL_ESC:
+      return "LITERAL_ESC";
     case CTR_TOKEN_FIN:
       return "FIN";
     default:
@@ -970,7 +996,7 @@ ctr_ast_lextoken (ctr_object * myself, ctr_argument * argumentList)
   int tok = ctr_lex_tok ();
   char *toktype = ctr_lex_token_lookup (tok);
   char *value = ctr_lex_tok_value ();
-  size_t len = ctr_lex_tok_value_length ();
+  ssize_t len = ctr_lex_tok_value_length ();
   unsigned long pos = ctr_lex_position ();
   ctr_argument *arg = ctr_heap_allocate (sizeof (*arg));
 
@@ -978,10 +1004,12 @@ ctr_ast_lextoken (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *tokType = ctr_build_string_from_cstring (toktype);
   arg->object = tokType;
   ctr_array_push (obj, arg);
-  tokType = ctr_build_string (value, len);
+  tokType = ctr_build_string (value, len>=0?len:0);
   arg->object = tokType;
   ctr_array_push (obj, arg);
   arg->object = ctr_build_number_from_float (pos);
+  ctr_array_push (obj, arg);
+  arg->object = ctr_build_number_from_float (len);
   ctr_array_push (obj, arg);
   ctr_heap_free (arg);
   return obj;

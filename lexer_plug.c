@@ -45,6 +45,7 @@ static char *ctr_lex_desc_tok_passignment = "=>";	//REEEE
 static char *ctr_lex_desc_tok_ret = "^";
 static char *ctr_lex_desc_tok_ret_unicode = "↑";
 static char *ctr_lex_desc_tok_symbol = "\\";	//TODO FIXME Find a better character for this
+static char *ctr_lex_desc_tok_lit_esc = "$";
 static char *ctr_lex_desc_tok_fin = "end of program";
 static char *ctr_lex_desc_tok_unknown = "(unknown token)";
 
@@ -279,6 +280,9 @@ ctr_lex_tok_describe (int token)
     case CTR_TOKEN_SYMBOL:
       description = ctr_lex_desc_tok_symbol;
       break;
+    case CTR_TOKEN_LITERAL_ESC:
+      description = ctr_lex_desc_tok_lit_esc;
+      break;
     default:
       description = ctr_lex_desc_tok_unknown;
     }
@@ -434,6 +438,33 @@ ctr_lex_tok ()
 	  return CTR_TOKEN_REF;
 	}
       return CTR_TOKEN_SYMBOL;
+    }
+  if (c == '$' && ctr_code+1<ctr_eofcode)
+    {
+      char _t = *(++ctr_code);
+      int q = 0;
+      /* The lexer state should this succeed
+       *   $(expr)
+       *   ^
+       */
+      switch (_t) {
+        case '(':
+          ctr_lex_tokvlen = -1; //literal escape mode
+          return CTR_TOKEN_LITERAL_ESC;
+        case '[':
+          ctr_lex_tokvlen = -2; //tuple escape mode
+          return CTR_TOKEN_LITERAL_ESC;
+        case '\'': //quote
+          q = 1;
+        case '!': //literal unescape
+          if (ctr_code+1<ctr_eofcode && *(++ctr_code) == '(') {
+            ctr_lex_tokvlen = -3 - q; //unescape mode (q=1 quote)
+            return CTR_TOKEN_LITERAL_ESC;
+          }
+          ctr_code--;
+      }
+      ctr_code--;
+      /* Fallthrough */
     }
   if (c == '(')
     {

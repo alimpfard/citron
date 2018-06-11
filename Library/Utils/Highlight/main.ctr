@@ -15,6 +15,7 @@ Highlight on: 'highlight:' do: {:code
     var color is ''.
     var last_toc_override is Nil.
     var after_color is ''.
+    var noquote is False.
     token @ 0
        case: 'RET' do: {
         color is (Colors bold) + (Colors magenta).
@@ -84,45 +85,50 @@ Highlight on: 'highlight:' do: {:code
         this_thing is '('.
     }, case: 'QUOTE' do: {
         this_thing is ''.
-        var string is AST getlexbuf.
-        var in_escape is False.
-        var begin is '\''.
-        var maybe_in_quot is False.
-        string characters each_v: {:c
-          maybe_in_quot ifTrue: {
-            maybe_in_quot is False.
-            (c = '?') ifTrue: {
-              this_thing append: c.
-              begin is '?>'.
-              rlen -=: 1.
-              True break.
+        noquote not either: {
+          var string is AST getlexbuf.
+          var in_escape is False.
+          var begin is '\''.
+          var maybe_in_quot is False.
+          string characters each_v: {:c
+            maybe_in_quot ifTrue: {
+              maybe_in_quot is False.
+              (c = '?') ifTrue: {
+                this_thing append: c.
+                begin is '?>'.
+                rlen -=: 1.
+                True break.
+              }.
             }.
-          }.
-          (c = '\'') & (in_escape not) ifTrue: { this_thing append: c. True break. }.
-          (c = '<') ifTrue: {
-            this_thing append: c.
-            maybe_in_quot is True.
-            True continue.
-          }.
-          (c = '\\') ifTrue: {
-            in_escape ifTrue: {
-              in_escape is False.
-              True continue.
-            }, else: {
-              in_escape is True.
-            }.
-          }.
-            in_escape ifTrue: {
+            (c = '\'') & (in_escape not) ifTrue: { this_thing append: c. True break. }.
+            (c = '<') ifTrue: {
               this_thing append: c.
-              in_escape is False.
+              maybe_in_quot is True.
               True continue.
             }.
-            this_thing append: c.
+            (c = '\\') ifTrue: {
+              in_escape ifTrue: {
+                in_escape is False.
+                True continue.
+              }, else: {
+                in_escape is True.
+              }.
+            }.
+              in_escape ifTrue: {
+                this_thing append: c.
+                in_escape is False.
+                True continue.
+              }.
+              this_thing append: c.
+          }.
+          AST lexSkip: this_thing length.
+          token put: AST lexpos - (begin length - 1) at: 2.
+          color is Colors yellow.
+          this_thing is begin + this_thing.
+        } or: {
+          this_thing is '\''.
+          color is Colors magenta.
         }.
-        AST lexSkip: this_thing length.
-        token put: AST lexpos - (begin length - 1) at: 2.
-        color is Colors yellow.
-        this_thing is begin + this_thing.
     }, case: 'REF' do: {
         (last_toc = 'PARAMC') ifTrue: {
           color is (Colors bold) + (Colors bright) + (Colors magenta).
@@ -188,6 +194,12 @@ Highlight on: 'highlight:' do: {:code
           ifTrue: { token put: (t @ 2) at: 2. },
           else:   { token put: (t @ 2) at: 2. }.
         this_thing is '\\' + (t @ 1).
+    }, case: 'LITERAL_ESC' do: {
+      this_thing is '$'.
+      token last case: -1 do: {}, case: -2 do: {},
+                 case: -3 do: { this_thing +=: '!'. }, case: -4 do: { this_thing +=: '\''. noquote is True.},
+                 switch.
+      color is Colors cyan.
     }, default: {
         # Pen writeln: token.
         this_thing is token @ 1.

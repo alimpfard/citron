@@ -8,9 +8,10 @@
 
 #include "citron.h"
 
-int ctr_cwlk_replace_refs = 0;
-int ctr_cwlk_msg_level = 0;	//toplevel
-int ctr_cwlk_last_msg_level = 0;	//toplevel old
+static int ctr_cwlk_replace_refs = 0;
+static int force_quote = 0;
+static int ctr_cwlk_msg_level = 0;	//toplevel
+static int ctr_cwlk_last_msg_level = 0;	//toplevel old
 /**
  * CTRWalkerReturn
  *
@@ -270,7 +271,7 @@ ctr_cwlk_expr (ctr_tnode * node, char *wasReturn)
       result = ctr_build_block (node);
       break;
     case CTR_AST_NODE_REFERENCE:
-      if (ctr_cwlk_replace_refs && ctr_cwlk_msg_level <= ctr_cwlk_last_msg_level)
+      if ((ctr_cwlk_replace_refs && ctr_cwlk_msg_level <= ctr_cwlk_last_msg_level) || force_quote)
 	{
 	  // printf("%.*s\n", node->vlen, node->value);
 	  result = ctr_build_string (node->value, node->vlen);
@@ -302,6 +303,32 @@ ctr_cwlk_expr (ctr_tnode * node, char *wasReturn)
       break;
     case CTR_AST_NODE_SYMBOL:
       result = (ctr_object *) (node->value);
+      break;
+    case CTR_AST_NODE_RAW: {
+      int quote = 0;
+      switch (node->modifier) {
+        case 1:
+          result = ctr_ast_from_node(node->nodes->node);
+          break;
+        case 2:
+          result = ctr_build_immutable(node->nodes->node);
+          break;
+        case -1:
+          quote = 1;
+        /* Fallthrough */
+        case 0: {
+          char ret;
+          int oldquote = force_quote;
+          force_quote = quote;
+          ctr_cwlk_last_msg_level = ctr_cwlk_msg_level;
+          result = ctr_cwlk_expr(node->nodes->node, &ret);
+          force_quote = oldquote;	//set back in case we didn't reset
+          if (ctr_ast_is_splice(result))
+            result = ctr_ast_splice(result);
+          break;
+        }
+      }
+      }
       break;
     case CTR_AST_NODE_RETURNFROMBLOCK:
       result = ctr_cwlk_return (node);

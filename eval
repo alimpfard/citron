@@ -28,6 +28,7 @@ var stderr is File special: 'stderr'.
 var errPen is Pen for: stderr.
 var inBlock is 0.
 var enterRepeat is False.
+var TerminalWidth is 85.
 
 ImportLib LRArray.
 import

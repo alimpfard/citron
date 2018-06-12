@@ -23,6 +23,7 @@
 
 #include "citron.h"
 #include "siphash.h"
+#include "symbol.h"
 
 #ifndef POSIXRE
 #include "pcre_split.h"
@@ -111,23 +112,22 @@ ctr_nil_to_boolean (ctr_object * myself, ctr_argument * ctr_argumentList)
 ctr_object *
 ctr_nil_assign (ctr_object * myself, ctr_argument * argumentList)
 {
-  if (!ctr_reflect_check_bind_valid (myself, argumentList->object, 0))
+  if (!ctr_reflect_check_bind_valid (myself, argumentList->object, 0)) {
+    CtrStdFlow = ctr_build_string_from_cstring ("Invalid bind");
     return CtrStdNil;
-  if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTSTRING)
+  }
+  if (argumentList->object->interfaces->link != CtrStdSymbol)
     {
       if (!ctr_internal_object_is_equal (myself, argumentList->object))
 	{
-	  CtrStdFlow = ctr_build_string_from_cstring ("Number cannot be constructed by ");
+	  CtrStdFlow = ctr_build_string_from_cstring ("Nil cannot be constructed by ");
 	  ctr_string_append (CtrStdFlow, argumentList);
 	}
-      CtrStdFlow = ctr_build_string_from_cstring ("Nil cannot be constructed by ");
-      ctr_string_append (CtrStdFlow, argumentList);
       return myself;
     }
-  if (ctr_internal_object_is_equal (argumentList->object, &CTR_CLEX_US)
-      || ctr_internal_object_is_equal (argumentList->object, ctr_build_empty_string ()))
+  if (argumentList->object->value.svalue->vlen == 0 || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
     return myself;
-  ctr_internal_object_set_property (ctr_contexts[ctr_context_id], ctr_internal_cast2string (argumentList->object), CtrStdNil, 0);
+  ctr_internal_object_set_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string(argumentList->object), CtrStdNil, 0);
   return myself;
 }
 
@@ -311,8 +311,10 @@ ctr_object_attr_writer (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_object_assign (ctr_object * myself, ctr_argument * argumentList)
 {
-  if (!ctr_reflect_check_bind_valid (myself, argumentList->object, 0))
+  if (!ctr_reflect_check_bind_valid (myself, argumentList->object, 0)) {
+    CtrStdFlow = ctr_build_string_from_cstring ("Invalid bind");
     return CtrStdNil;
+  }
   ctr_object *oldlink = myself->interfaces->link;
   ctr_set_link_all (myself, CtrStdMap);	//cast to map
   ctr_map_assign (myself, argumentList);
@@ -1032,23 +1034,22 @@ ctr_build_bool (int truth)
 ctr_object *
 ctr_bool_assign (ctr_object * myself, ctr_argument * argumentList)
 {
-  if (!ctr_reflect_check_bind_valid (myself, argumentList->object, 0))
+  if (!ctr_reflect_check_bind_valid (myself, argumentList->object, 0)) {
+    CtrStdFlow = ctr_build_string_from_cstring ("Invalid bind");
     return CtrStdNil;
-  if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTSTRING)
+  }
+  if (argumentList->object->interfaces->link != CtrStdSymbol)
     {
       if (!ctr_internal_object_is_equal (myself, argumentList->object))
 	{
-	  CtrStdFlow = ctr_build_string_from_cstring ("Number cannot be constructed by ");
+	  CtrStdFlow = ctr_build_string_from_cstring ("Boolean cannot be constructed by ");
 	  ctr_string_append (CtrStdFlow, argumentList);
 	}
-      CtrStdFlow = ctr_build_string_from_cstring ("Boolean cannot be constructed by ");
-      ctr_string_append (CtrStdFlow, argumentList);
       return myself;
     }
-  if (ctr_internal_object_is_equal (argumentList->object, &CTR_CLEX_US)
-      || ctr_internal_object_is_equal (argumentList->object, ctr_build_empty_string ()))
+  if (argumentList->object->value.svalue->vlen == 0 || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
     return myself;
-  ctr_internal_object_add_property (ctr_contexts[ctr_context_id], argumentList->object, myself, 0);
+  ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string(argumentList->object), myself, 0);
   return myself;
 }
 
@@ -1418,15 +1419,12 @@ ctr_build_number (char *n)
 ctr_object *
 ctr_number_assign (ctr_object * myself, ctr_argument * argumentList)
 {
-  if (!ctr_reflect_check_bind_valid (myself, argumentList->object, 0))
+  if (!ctr_reflect_check_bind_valid (myself, argumentList->object, 0)) {
+    CtrStdFlow = ctr_build_string_from_cstring ("Invalid bind");
     return CtrStdNil;
-  if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTSTRING)
+  }
+  if (argumentList->object->interfaces->link != CtrStdSymbol)
     {
-      if (!ctr_internal_object_is_equal (myself, argumentList->object))
-	{
-	  CtrStdFlow = ctr_build_string_from_cstring ("Number cannot be constructed by ");
-	  ctr_string_append (CtrStdFlow, argumentList);
-	}
       if (!ctr_internal_object_is_equal (myself, argumentList->object))
 	{
 	  CtrStdFlow = ctr_build_string_from_cstring ("Number cannot be constructed by ");
@@ -1434,10 +1432,9 @@ ctr_number_assign (ctr_object * myself, ctr_argument * argumentList)
 	}
       return myself;
     }
-  if (ctr_internal_object_is_equal (argumentList->object, &CTR_CLEX_US)
-      || ctr_internal_object_is_equal (argumentList->object, ctr_build_empty_string ()))
+  if (argumentList->object->value.svalue->vlen == 0 || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
     return myself;
-  ctr_internal_object_add_property (ctr_contexts[ctr_context_id], argumentList->object, myself, 0);
+  ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string(argumentList->object), myself, 0);
   return myself;
 }
 
@@ -2435,26 +2432,64 @@ ctr_string_assign (ctr_object * myself, ctr_argument * argumentList)
 {
   if (argumentList->object->info.type == CTR_OBJECT_TYPE_OTARRAY)
     {
-      ctr_object *myarr = ctr_string_characters (myself, NULL);
-      return ctr_array_assign (myarr, argumentList);
+      ctr_collection* coll = argumentList->object->value.avalue;
+      int idx = 0;
+      int len = myself->value.svalue->vlen;
+      for(int i=coll->tail; i<coll->head; i++) {
+        ctr_object* cs = coll->elements[i];
+        if(cs->info.type == CTR_OBJECT_TYPE_OTSTRING) {
+          int ln = cs->value.svalue->vlen;
+          if (ln <= len-idx && strncmp(myself->value.svalue->value+idx, cs->value.svalue->value, ln) == 0) {
+            idx += ln;
+            continue;
+          }
+        }
+        if(cs->interfaces->link == CtrStdSymbol) {
+          int x = 1;
+          again:;
+          if (i+x == coll->head) {
+            if (cs->value.svalue->vlen != 0 && !(cs->value.svalue->vlen == 1 && *cs->value.svalue->value == '_'))
+              ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string(cs), ctr_build_string(myself->value.svalue->value+idx, len-idx), 0);
+            return myself;
+          }
+          ctr_object* csnext = coll->elements[i+x];
+          if (csnext->info.type == CTR_OBJECT_TYPE_OTSTRING) {
+            if (csnext->value.svalue->vlen == 0) {
+              x++;
+              goto again;
+            }
+            char* t = csnext->value.svalue->value;
+            char* s = myself->value.svalue->value+idx;
+            char* r = strstr(s, t);
+            if (r != NULL) {
+              if (cs->value.svalue->vlen != 0 && !(cs->value.svalue->vlen == 1 && *cs->value.svalue->value == '_'))
+                ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string(cs), ctr_build_string(myself->value.svalue->value+idx, r-s), 0);
+              idx += r-s;
+              continue;
+            }
+          }
+        }
+        CtrStdFlow = ctr_build_string_from_cstring("Invalid pattern in string-to-string match");
+        return CtrStdNil;
+      }
+      return myself;
     }
-  if (!ctr_reflect_check_bind_valid (myself, argumentList->object, 0))
+  if (!ctr_reflect_check_bind_valid (myself, argumentList->object, 0)) {
+    CtrStdFlow = ctr_build_string_from_cstring ("Invalid bind");
     return CtrStdNil;
-  if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTSTRING)
+  }
+  if (argumentList->object->interfaces->link != CtrStdSymbol)
     {
       if (!ctr_internal_object_is_equal (myself, argumentList->object))
 	{
-	  CtrStdFlow = ctr_build_string_from_cstring ("Number cannot be constructed by ");
+	  CtrStdFlow = ctr_build_string_from_cstring ("String cannot be constructed by ");
 	  ctr_string_append (CtrStdFlow, argumentList);
 	}
-      CtrStdFlow = ctr_build_string_from_cstring ("String cannot be constructed by ");
-      ctr_string_append (CtrStdFlow, argumentList);
       return myself;
     }
-  if (ctr_internal_object_is_equal (argumentList->object, &CTR_CLEX_US)
-      || ctr_internal_object_is_equal (argumentList->object, ctr_build_empty_string ()))
+  if (argumentList->object->value.svalue->vlen == 0 || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
     return myself;
-  ctr_internal_object_add_property (ctr_contexts[ctr_context_id], argumentList->object, myself, 0);
+  ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string(argumentList->object), myself, 0);
   return myself;
 }
 
@@ -4191,6 +4226,7 @@ ctr_string_characters (ctr_object * myself, ctr_argument * argumentList)
     {
       charSize = ctr_utf8size (*(myself->value.svalue->value + i));
       newArgumentList->object = ctr_build_string (myself->value.svalue->value + i, charSize);
+      if(!newArgumentList->object) continue;
       ctr_array_push (arr, newArgumentList);
       i += charSize;
     }
@@ -5125,6 +5161,18 @@ ctr_capture_refs_ (ctr_tnode * ti, ctr_object * block, ctr_object * parent, int 
 	  ctr_capture_refs_ (t, block, parent, 1);	//capture all that we can
 	  break;
 
+  case CTR_AST_NODE_EMBED: {
+    if (t->modifier) break;
+    ctr_object * p = ctr_cwlk_expr(t->nodes->node, "\0");
+    if(CtrStdFlow && CtrStdFlow != CtrStdExit && CtrStdFlow != CtrStdContinue && CtrStdFlow != CtrStdBreak) {
+      ctr_heap_free(CtrStdFlow);
+      CtrStdFlow = NULL;
+    } else {
+      t->nodes->node = (ctr_tnode*)p;
+      t->modifier = 1;
+    }
+    break;
+  }
 	case CTR_AST_NODE_LTRNUM:
 	case CTR_AST_NODE_PARAMLIST:
 	case CTR_AST_NODE_ENDOFPROGRAM:
@@ -5152,23 +5200,22 @@ ctr_capture_refs_ (ctr_tnode * ti, ctr_object * block, ctr_object * parent, int 
 ctr_object *
 ctr_block_assign (ctr_object * myself, ctr_argument * argumentList)
 {
-  if (!ctr_reflect_check_bind_valid (myself, argumentList->object, 0))
+  if (!ctr_reflect_check_bind_valid (myself, argumentList->object, 0)) {
+    CtrStdFlow = ctr_build_string_from_cstring ("Invalid bind");
     return CtrStdNil;
-  if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTSTRING)
+  }
+  if (argumentList->object->interfaces->link != CtrStdSymbol)
     {
       if (!ctr_internal_object_is_equal (myself, argumentList->object))
 	{
-	  CtrStdFlow = ctr_build_string_from_cstring ("Number cannot be constructed by ");
+	  CtrStdFlow = ctr_build_string_from_cstring ("Block cannot be constructed by ");
 	  ctr_string_append (CtrStdFlow, argumentList);
 	}
-      CtrStdFlow = ctr_build_string_from_cstring ("Block cannot be constructed by ");
-      ctr_string_append (CtrStdFlow, argumentList);
       return myself;
     }
-  if (ctr_internal_object_is_equal (argumentList->object, &CTR_CLEX_US)
-      || ctr_internal_object_is_equal (argumentList->object, ctr_build_empty_string ()))
+  if (argumentList->object->value.svalue->vlen == 0 || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
     return myself;
-  ctr_internal_object_add_property (ctr_contexts[ctr_context_id], argumentList->object, myself, 0);
+  ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string(argumentList->object), myself, 0);
   return myself;
 }
 

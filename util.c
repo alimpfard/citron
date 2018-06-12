@@ -119,6 +119,12 @@ ctr_internal_debug_tree (ctr_tnode * ti, int indent)
 	case CTR_AST_NODE_LISTCOMP:
 	  str = "LISTCOMP";
 	  break;
+	case CTR_AST_NODE_EMBED:
+	  str = "EMBED";
+	  break;
+	case CTR_AST_NODE_RAW:
+	  str = "RAW";
+	  break;
 	default:
 	  str = "UNKNW?";
 	  break;
@@ -126,7 +132,7 @@ ctr_internal_debug_tree (ctr_tnode * ti, int indent)
       vbuf = ctr_heap_allocate (sizeof (char) * (t->vlen + 1));
       strncpy (vbuf, t->value, t->vlen);
       printf ("%s %s (%p)\n", str, vbuf, (void *) t);
-      if (t->nodes)
+      if (t->nodes && t->type != CTR_AST_NODE_EMBED)
 	ctr_internal_debug_tree (t, indent + 1);
     next:;
       if (!li->next)

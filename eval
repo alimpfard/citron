@@ -952,6 +952,6 @@ Eval on: 'read_eval_print:' do: ({:prompt
     #Broom sweep. #Keep the darn pointers in memory
     Eval __eval_ret toString length > 0 ifTrue: { Pen brk. }.
   }.
-} catch: Eval::'handleInternalException:').
+}).# catch: {:e Eval handleInternalException: e.}).
 
 Eval repl.

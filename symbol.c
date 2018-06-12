@@ -3,15 +3,17 @@
 
 static ctr_object **ctr_static_symbol_table = 0;
 static ctr_size ctr_static_symbol_table_count = 0;
+static ctr_size ctr_static_symbol_table_max = 4;
 ctr_object *
 ctr_get_or_create_symbol_table_entry (char *name, ctr_size length)
 {
   ctr_initialize_world ();
   if (!ctr_static_symbol_table)
     {
-      ctr_static_symbol_table = ctr_heap_allocate (sizeof (ctr_object *));
+      ctr_static_symbol_table = ctr_heap_allocate (sizeof (ctr_object *) * 4);
       ctr_object *ptr = (ctr_static_symbol_table[0] = ctr_build_string (name, length));
       ctr_static_symbol_table_count = 1;
+      ctr_static_symbol_table_max = 4;
       ctr_set_link_all (ptr, CtrStdSymbol);
       ptr->info.type = CTR_OBJECT_TYPE_OTMISC;
       return ptr;
@@ -25,7 +27,8 @@ ctr_get_or_create_symbol_table_entry (char *name, ctr_size length)
       if (len == length && strncmp (ptr->value.svalue->value, name, length) == 0)
 	return ptr;
     }
-  ctr_static_symbol_table = ctr_heap_reallocate (ctr_static_symbol_table, (ctr_static_symbol_table_count + 1) * sizeof (ctr_object *));
+  if (ctr_static_symbol_table_count > (int)(0.8*ctr_static_symbol_table_max))
+    ctr_static_symbol_table = ctr_heap_reallocate (ctr_static_symbol_table, (ctr_static_symbol_table_max=ctr_static_symbol_table_count * 2) * sizeof (ctr_object *));
   ctr_object *ptr = (ctr_static_symbol_table[ctr_static_symbol_table_count++] = ctr_build_string (name, length));
   ctr_set_link_all (ptr, CtrStdSymbol);
   ptr->info.type = CTR_OBJECT_TYPE_OTMISC;
@@ -36,11 +39,22 @@ ctr_object *
 ctr_symbol_to_string (ctr_object * myself, ctr_argument * argumentList)
 {
   if (unlikely (myself == CtrStdSymbol))
-    return ctr_build_string_from_cstring ("#Symbol");
+    return ctr_build_string_from_cstring ("Symbol#");
   char *name = ctr_heap_allocate (sizeof (char) * (myself->value.svalue->vlen + 1));
   ctr_size len = sprintf (name, "\\%.*s", myself->value.svalue->vlen, myself->value.svalue->value);
   ctr_object *nameS = ctr_build_string (name, len);
   ctr_heap_free (name);
+  return nameS;
+}
+
+ctr_object *
+ctr_symbol_as_string (ctr_object * symbol)
+{
+  if (unlikely (symbol == CtrStdSymbol))
+    return ctr_build_string_from_cstring ("Symbol#");
+  ctr_object * nameS = ctr_internal_create_object(CTR_OBJECT_TYPE_OTSTRING);
+  nameS->value.svalue = symbol->value.svalue;
+  ctr_set_link_all(nameS, CtrStdString);
   return nameS;
 }
 

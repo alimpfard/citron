@@ -1,0 +1,5 @@
+Broom memoryLimit: 1024 * 1024 * 1024.
+
+var f is \:self:x x > 3000 either: x or: { Pen writeln: x. ^self applyTo: x + 1. }.
+f applyTo: 0.
+

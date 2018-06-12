@@ -1,0 +1,24 @@
+import Library/Functional/PatternMatch.
+
+x is [1, 2, ['yay pmatch']].
+
+Pen writeln: (x match: $[
+    [ $'([1, 3, _]), 'shit it broke' ],
+    [ $'([1, 2, [x]]), x ],
+    [ $'(_), 'whatever' ]
+]).
+
+f is Object new.
+f on: 'test:blah:' pdo: $[
+    [ 
+    $'([x, y]), (Reflect isObject: x linkedTo: String), 
+        x + y
+    ],
+    [
+    $'([x, y]), (Reflect isObject: x linkedTo: Number), 
+        x * y 
+    ]
+].
+
+Pen writeln: (f test: 10 blah: 64).
+Pen writeln: (f test: 'Hello ' blah: 64).

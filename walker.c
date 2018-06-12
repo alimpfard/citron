@@ -100,6 +100,14 @@ ctr_cwlk_message (ctr_tnode * paramNode)
     case CTR_AST_NODE_LTRNUM:
       r = ctr_build_number_from_string (receiverNode->value, receiverNode->vlen);
       break;
+    case CTR_AST_NODE_EMBED:
+      if (receiverNode->modifier)
+        result = ctr_cwlk_expr(receiverNode->nodes->node, "\0");
+      else {
+        result = CtrStdNil;
+        CtrStdFlow = ctr_build_string_from_cstring("Attempt to execute a meta-expression");
+      }
+      break;
     case CTR_AST_NODE_IMMUTABLE:
     case CTR_AST_NODE_NESTED:
     case CTR_AST_NODE_RAW:
@@ -245,6 +253,7 @@ ctr_cwlk_assignment (ctr_tnode * node)
 ctr_object *
 ctr_cwlk_expr (ctr_tnode * node, char *wasReturn)
 {
+  char c;
   if (!node)
     {
       CtrStdFlow = ctr_build_string_from_cstring ("Encounered null parse node");
@@ -271,11 +280,19 @@ ctr_cwlk_expr (ctr_tnode * node, char *wasReturn)
     case CTR_AST_NODE_CODEBLOCK:
       result = ctr_build_block (node);
       break;
+    case CTR_AST_NODE_EMBED:
+      if (node->modifier)
+        result = (ctr_object*)node->nodes->node;
+      else {
+        result = CtrStdNil;
+        CtrStdFlow = ctr_build_string_from_cstring("Attempt to execute a meta-expression");
+      }
+      break;
     case CTR_AST_NODE_REFERENCE:
       if ((ctr_cwlk_replace_refs && ctr_cwlk_msg_level <= ctr_cwlk_last_msg_level) || force_quote)
 	{
 	  // printf("%.*s\n", node->vlen, node->value);
-	  result = ctr_build_string (node->value, node->vlen);
+	  result = ctr_get_or_create_symbol_table_entry (node->value, node->vlen);
 	  break;
 	}
       if (CtrStdFlow == NULL)

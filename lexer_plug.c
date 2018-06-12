@@ -454,6 +454,9 @@ ctr_lex_tok ()
         case '[':
           ctr_lex_tokvlen = -2; //tuple escape mode
           return CTR_TOKEN_LITERAL_ESC;
+        case '`':
+          ctr_lex_tokvlen = -5; //literal embed
+          return CTR_TOKEN_LITERAL_ESC;
         case '\'': //quote
           q = 1;
         case '!': //literal unescape

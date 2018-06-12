@@ -457,14 +457,44 @@ ctr_cparse_lit_esc ()
     case -4:
       quote=1;
     /* Fallthrough */
-    case -3:
+    case -3: {
+      int t = ctr_clex_tok();
+      ctr_clex_putback();
       ctr_transform_template_expr = 0;
-      r = ctr_cparse_expr(0);
+      if (t == CTR_TOKEN_PAROPEN) {
+        r = ctr_cparse_popen();
+        ctr_tnode* f = r->nodes->node;
+        ctr_heap_free(r);
+        r = f;
+      }
+      else
+        r = ctr_cparse_expr(0);
       unescape = 1;
       ctr_transform_template_expr = texpr_res;
       break;
+    }
+    case -5: {
+      int t = ctr_clex_tok();
+      ctr_clex_putback();
+      ctr_transform_template_expr = 0;
+      if (t == CTR_TOKEN_PAROPEN) {
+        r = ctr_cparse_popen();
+        r->type = CTR_AST_NODE_EMBED;
+        r->modifier = 0;
+      }
+      else {
+        r = ctr_cparse_create_node(CTR_AST_NODE);
+        r->type = CTR_AST_NODE_EMBED;
+        r->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
+        r->nodes->node = ctr_cparse_expr(0); //temporarily
+        r->modifier = 0;
+      }
+      unescape = 1;
+      ctr_transform_template_expr = texpr_res;
+      break;
+    }
     default:
-      ctr_cparse_emit_error_unexpected(ctr_clex_tok(), "Expected any of '(', '[', '{'");
+      ctr_cparse_emit_error_unexpected(ctr_clex_tok(), "Expected any of '(', '[', '!', '`', '\''");
       return NULL;
   }
   v = ctr_cparse_create_node(CTR_AST_NODE);

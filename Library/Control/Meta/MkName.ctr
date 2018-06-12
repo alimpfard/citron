@@ -1,0 +1,15 @@
+var __nid is 0.
+var MkName is {:prefix
+  var id is const __nid.
+  var name is prefix + id.
+  var avail is Reflect objectExists: name, not.
+  {^avail.} whileFalse: {
+    name is prefix + id.
+    id +=: 1.
+    avail is Reflect objectExists: name, not.
+  }.
+  ^name toSymbol.
+}.
+MkName on: 'new' do: {
+  ^me applyTo: 'gen_name_'.
+}.

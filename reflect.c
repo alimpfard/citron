@@ -1122,24 +1122,18 @@ ctr_reflect_describe_type (ctr_object * myself, ctr_argument * argumentList)
 
   switch (object->info.type)
     {
+    case CTR_OBJECT_TYPE_OTMISC:
     case CTR_OBJECT_TYPE_OTSTRING:
-      if (object->value.svalue->vlen > 1 && *object->value.svalue->value == '*')
-	{
-	  type_descriptor = ctr_build_string_from_cstring ("*String");
-	  break;
-	}
     case CTR_OBJECT_TYPE_OTNIL:
     case CTR_OBJECT_TYPE_OTBOOL:
     case CTR_OBJECT_TYPE_OTNUMBER:
     case CTR_OBJECT_TYPE_OTNATFUNC:
-    case CTR_OBJECT_TYPE_OTMISC:
     case CTR_OBJECT_TYPE_OTEX:
-      //No Data structure, just primitive, return primitive link
-      type_descriptor = ctr_reflect_get_primitive_link (object);
-      arg->object = type_descriptor;
-      type_descriptor = ctr_reflect_type_descriptor_print (myself, arg);
+      //No Data structure, just primitive, return itself
+      type_descriptor = object;
 
       break;
+
 
     case CTR_OBJECT_TYPE_OTBLOCK:
       type_descriptor = ctr_reflect_cb_ac_ (myself, argumentList);
@@ -1155,7 +1149,7 @@ ctr_reflect_describe_type (ctr_object * myself, ctr_argument * argumentList)
     case CTR_OBJECT_TYPE_OTARRAY:
       //List ds, generate a list of content types
       type_descriptor = ctr_array_new (CtrStdArray, NULL);
-      int i = 0;
+      int i = object->value.avalue->tail;
       int c = ctr_array_count (object, NULL)->value.nvalue;
       ctr_argument *arg = ctr_heap_allocate (sizeof (ctr_argument));
       for (; i < c; i++)
@@ -1252,14 +1246,9 @@ ctr_reflect_check_bind_valid (ctr_object * from, ctr_object * to, int err_)
 	  ctr_string_append (err, argumentList);
 	  argumentList->object = ctr_build_string_from_cstring (" to object of type ");
 	  ctr_string_append (err, argumentList);
-	  argumentList->object = ctr_build_string_from_cstring ("String");
-	  argumentList->next = ctr_heap_allocate (sizeof (ctr_argument));
-	  argumentList->next->object = ctr_build_string_from_cstring ("Binding");
 
-	  argumentList->object = ctr_string_replace_with (ctr_internal_cast2string (to_type), argumentList);
+	  argumentList->object = ctr_internal_cast2string (to_type);
 	  ctr_heap_free (argumentList->next);
-	  ctr_string_append (err, argumentList);
-	  argumentList->object = ctr_build_string_from_cstring (".");
 	  ctr_string_append (err, argumentList);
 	  ctr_heap_free (argumentList);
 	  CtrStdFlow = err;

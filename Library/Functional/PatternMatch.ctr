@@ -1,37 +1,3 @@
-### DEPRECATE v
-# Object on: 'mapmatch:' do: {:self:blkmap
-#   var ret is Nil.
-#   var done is False.
-#   blkmap each: ({:k:v
-#     ret is {
-#       self unpack: k.
-#       ^Reflect runHere: v forObject: thisBlock arguments: [].
-#     } run.
-#       done is True.
-#       done break.
-#   } catch: {}).
-#   done ifFalse: { thisBlock error: 'non-exhaustive Pattern match'. }.
-#   ^ret.
-# }.
-#
-# var Matcher is Object new
-#   on: 'of:' do: {:obj
-#     ^me cnew: {
-#       matchee => obj.
-#       map => Map new.
-#     }.
-#   },
-#   on: 'match:do:' do: {:pat:blk
-#     my map put: blk at: pat.
-#   },
-#   on: 'match' do: {
-#     ^my matchee mapmatch: my map.
-#   }.
-# Object on: 'match:do:' do: {:self:pat:blk
-#   ^const Matcher of: self, match: pat do: blk.
-# }.
-### DEPRECATE ^
-
 Object on: 'match:' do: {:self:ast
   #ast -> $[
   # [pattern, guard*, consequence],
@@ -44,18 +10,31 @@ Object on: 'match:' do: {:self:ast
   var done is True.
   var ret is Nil.
   var cblk is thisBlock.
-  ast each_v: {:cc
-    cc is $!(cc). #Parse the tuple
+  ast each_v: {:__PMATCH_V0
+    __PMATCH_V0 is $!(__PMATCH_V0). #Parse the tuple
     done is True.
     ret is {
-      self unpack: $!(cc head).
-      $!(cc tail init) all: (\:x Reflect runHere: $!(x) forObject: self arguments: []), ifFalse: {
+      self unpack: $!(__PMATCH_V0 head).
+      $!(__PMATCH_V0 tail init) all: (\:__PMATCH_V1 Reflect runHere: {^$!(__PMATCH_V1).} forObject: self arguments: []), ifFalse: {
         cblk error: 'guard fail'.
       }.
-      ^Reflect runHere: {^$!(cc last).} forObject: self arguments: [].
+      ^Reflect runHere: {^$!(__PMATCH_V0 last).} forObject: self arguments: [].
     } catch: {:e done is False. }, run.
     done break.
   }.
   done ifFalse: { cblk error: 'non-exhaustive pattern match'. }.
   ^ret.
+}.
+
+Object on: 'on:pdo:' do: {:msg:ast
+  #ast -> $[
+  # [pattern, guard*, return],
+  # [pattern, guard*, return]
+  # ...
+  #]
+  #pattern -> Array of quoted or literal expression
+  var blk is $!$({:*args
+    ^args match: $`(ast).
+  }).
+  me on: msg do: blk.
 }.

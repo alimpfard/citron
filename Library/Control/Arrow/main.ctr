@@ -5,7 +5,7 @@ Object on: 'arrow:' do: {:name
 Object learn: '~' means: 'arrow:'.
 
 Object on: 'farrow:' do: {:name
-  ^Reflect closure: name of: me.
+  ^$!$({:*args $`(me) message: $`(name) arguments: args.}).
 }.
 Object learn: '⇒' means: 'farrow:'.
 

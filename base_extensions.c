@@ -167,12 +167,16 @@ ctr_ast_nth (ctr_object * myself, ctr_argument * argumentList)
     }
   if (!pitem)
     goto err;
-  ctr_object *ast = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
-  ctr_set_link_all (ast, CtrStdAst);
-  ast->value.rvalue = ctr_heap_allocate (sizeof (ctr_resource));
-  ast->value.rvalue->ptr = pitem->node;
-  ast->value.rvalue->type = CTR_AST_TYPE;
-  return ast;
+  if (pitem->node->type == CTR_AST_NODE_EMBED) {
+    return (ctr_object*)(pitem->node->nodes->node);
+  } else {
+    ctr_object *ast = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
+    ctr_set_link_all (ast, CtrStdAst);
+    ast->value.rvalue = ctr_heap_allocate (sizeof (ctr_resource));
+    ast->value.rvalue->ptr = pitem->node;
+    ast->value.rvalue->type = CTR_AST_TYPE;
+    return ast;
+  }
 }
 
 ctr_object *
@@ -392,6 +396,10 @@ ctr_ast_tystr (ctr_tnode * ast)
       return "PROGRAM";
     case CTR_AST_NODE_SYMBOL:
       return "SYMBOL";
+    case CTR_AST_NODE_RAW:
+      return "RAW";
+    case CTR_AST_NODE_EMBED:
+      return "EMBED";
     default:
       return "UNKNOWN";
     }
@@ -456,6 +464,10 @@ ctr_ast_tyfstr (char *type)
     return CTR_AST_NODE_PROGRAM;
   if (strcasecmp ("SYMBOL", type) == 0)
     return CTR_AST_NODE_SYMBOL;
+  if (strcasecmp ("RAW", type) == 0)
+    return CTR_AST_NODE_RAW;
+  if (strcasecmp ("EMBED", type) == 0)
+    return CTR_AST_NODE_EMBED;
   return CTR_AST_NODE_ENDOFPROGRAM;
 }
 

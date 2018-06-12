@@ -1,12 +1,12 @@
 var send_message is Object new.
 
 send_message on: 'respondTo:' do: {:msg
-  ^{:obj:*args ^obj message: const msg arguments: args. }.
+  ^$!$({:obj:*args ^obj message: $`(msg) arguments: args. }).
 }.
 send_message on: '&' do: {:msg
-  ^{:obj:*args ^obj message: const msg arguments: args. }.
+  ^$!$({:obj:*args ^obj message: $`(msg) arguments: args. }).
 }.
 send_message on: 'name:apply:' do: {:msg:as
-  ^{:obj:*args ^obj message: const msg arguments: const as + args. }.
+  ^$!$({:obj:*args ^obj message: $`(msg) arguments: $`(as) + args. }).
 }.
 import export: send_message as: '&Meth'.

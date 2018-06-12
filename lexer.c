@@ -627,8 +627,10 @@ ctr_clex_tok ()
         case '[':
           ctr_clex_tokvlen = -2; //tuple escape mode
           return CTR_TOKEN_LITERAL_ESC;
+        case '`': //literal replace mode
+          q = 2;
         case '\'': //quote
-          q = 1;
+          if (!q) q = 1;
         case '!': //literal unescape
           if (ctr_code+1<ctr_eofcode && !isspace(*(++ctr_code))) {
             ctr_clex_tokvlen = -3 - q; //unescape mode (q=1 quote)

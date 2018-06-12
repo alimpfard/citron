@@ -10,6 +10,7 @@
 
 #include "citron.h"
 #include "siphash.h"
+#include "symbol.h"
 /**@I_OBJ_DEF Array*/
 
 /**
@@ -1679,8 +1680,10 @@ ctr_object *
 ctr_array_assign (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *to = argumentList->object;
-  if (!ctr_reflect_check_bind_valid (myself, to, 0))
+  if (!ctr_reflect_check_bind_valid (myself, to, 0)) {
+    CtrStdFlow = ctr_build_string_from_cstring("Invalid bind");
     return CtrStdNil;
+  }
 
   ctr_argument *elnumArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   ctr_argument *accArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
@@ -1695,10 +1698,9 @@ ctr_array_assign (ctr_object * myself, ctr_argument * argumentList)
 	  elnumArg->object = elnum;
 	  ctr_object *to_elem;
 	  accArg->object = ctr_array_get (to, elnumArg);
-	  if (accArg->object->info.type ==
-	      CTR_OBJECT_TYPE_OTSTRING && accArg->object->value.svalue->vlen == 1 && *accArg->object->value.svalue->value == '_')
+	  if (accArg->object->interfaces->link == CtrStdSymbol && accArg->object->value.svalue->vlen == 1 && *accArg->object->value.svalue->value == '_')
 	    continue;
-	  if (accArg->object->info.type == CTR_OBJECT_TYPE_OTSTRING && *accArg->object->value.svalue->value == '*')
+	  if (accArg->object->interfaces->link == CtrStdSymbol && *accArg->object->value.svalue->value == '*')
 	    {
 	      //We got a catch-all *var
 	      if (saw_catch_all)
@@ -1710,11 +1712,11 @@ ctr_array_assign (ctr_object * myself, ctr_argument * argumentList)
 		  goto clear;
 		}
 	      saw_catch_all = 1;
-	      accArg->object = ctr_send_message_variadic (accArg->object, "skip:", 5, 1, ctr_build_number_from_float (1));	//skip the '*'
-	      accArg->object->info.raw = 1;
+	      accArg->object = ctr_get_or_create_symbol_table_entry(accArg->object->value.svalue->value+1, accArg->object->value.svalue->vlen-1);
 	      int skip = ctr_array_count (myself,
-					  NULL)->value.nvalue - to->value.avalue->head - i;
+					  NULL)->value.nvalue - i;
 	      to_elem = ctr_array_new (CtrStdArray, NULL);
+        if (other-to->value.avalue->tail < myself->value.avalue->head-myself->value.avalue->tail)
 	      for (int _i = other - to->value.avalue->tail; _i < skip + 2 * other - 2 * to->value.avalue->tail + 1; _i++)
 		{
 		  elnumArg->object = myself->value.avalue->elements[_i];
@@ -1731,12 +1733,11 @@ ctr_array_assign (ctr_object * myself, ctr_argument * argumentList)
 	  ctr_send_message (to_elem, "unpack:", 7, accArg);
 	}
     }
-  else if (to->info.type == CTR_OBJECT_TYPE_OTSTRING)
+  else if (to->interfaces->link == CtrStdSymbol)
     {
-      if (ctr_internal_object_is_equal
-	  (argumentList->object, &CTR_CLEX_US) || ctr_internal_object_is_equal (argumentList->object, ctr_build_empty_string ()))
-	goto clear;
-      ctr_internal_object_add_property (ctr_contexts[ctr_context_id], to, myself, 0);
+      if (argumentList->object->value.svalue->vlen == 0 || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
+        goto clear;
+      ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string(to), myself, 0);
     }
 clear:
   ctr_heap_free (elnumArg);

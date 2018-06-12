@@ -338,20 +338,20 @@ ctr_object_is_constructible (ctr_object * myself, ctr_argument * argumentList)
 int
 ctr_internal_object_is_constructible_ (ctr_object * object1, ctr_object * object2, int raw)
 {
+  // char* s = ctr_heap_allocate_cstring(ctr_format_str("+unification of %S -> %S", ctr_internal_cast2string(object1), ctr_internal_cast2string(object2)));
+  // printf("%s\n", s);
   if (object1 == object2)
     return 1;
   char *string1;
   char *string2;
   ctr_size len1;
   ctr_size len2;
-  ctr_size d;
   //ignore
-  if (object2->info.type == CTR_OBJECT_TYPE_OTSTRING && object2->value.svalue->vlen == 1 && *object2->value.svalue->value == '_')
+  if (object2->interfaces->link == CtrStdSymbol) //it's a binding
+  {
+    // printf("Accepting binding\n");
     return 1;
-  //we're matching a binding and not an actual string
-  if (( /*raw && */ object2->info.type == CTR_OBJECT_TYPE_OTSTRING && object1->info.type != CTR_OBJECT_TYPE_OTSTRING)
-      || (raw && object2->info.type == CTR_OBJECT_TYPE_OTSTRING && object1->info.type == CTR_OBJECT_TYPE_OTSTRING))
-    return 1;
+  }
   //both are strings
   if (object1->info.type == CTR_OBJECT_TYPE_OTSTRING && object2->info.type == CTR_OBJECT_TYPE_OTSTRING)
     {
@@ -361,28 +361,21 @@ ctr_internal_object_is_constructible_ (ctr_object * object1, ctr_object * object
       len2 = object2->value.svalue->vlen;
       if (len1 != len2)
 	return 0;
-      d = memcmp (string1, string2, len1);
-      if (d == 0)
-	return 1;
-      return 0;
+      return memcmp (string1, string2, len1) == 0;
     }
   //both are numbers
   if (object1->info.type == CTR_OBJECT_TYPE_OTNUMBER && object2->info.type == CTR_OBJECT_TYPE_OTNUMBER)
     {
       ctr_number num1 = object1->value.nvalue;
       ctr_number num2 = object2->value.nvalue;
-      if (num1 == num2)
-	return 1;
-      return 0;
+      return num1 == num2;
     }
   //both are bools
   if (object1->info.type == CTR_OBJECT_TYPE_OTBOOL && object2->info.type == CTR_OBJECT_TYPE_OTBOOL)
     {
       int b1 = object1->value.bvalue;
       int b2 = object2->value.bvalue;
-      if (b1 == b2)
-	return 1;
-      return 0;
+      return (b1 == b2);
     }
   //both are arrays
   if (object1->info.type == CTR_OBJECT_TYPE_OTARRAY && object2->info.type == CTR_OBJECT_TYPE_OTARRAY)
@@ -396,18 +389,21 @@ ctr_internal_object_is_constructible_ (ctr_object * object1, ctr_object * object
       for (int _i = 0; _i < count; _i++)
 	{
 	  f = object2->value.avalue->elements[_i];
-	  if (f->info.type == CTR_OBJECT_TYPE_OTSTRING && f->value.svalue->vlen > 1 && *f->value.svalue->value == '*')
-	    catch_all++;
-	  if (f->info.type == CTR_OBJECT_TYPE_OTSTRING && f->value.svalue->vlen == 1 && *f->value.svalue->value == '_')
-	    {
-	      ignores[_i] = 1;
-	      ignore++;
-	    }
-	  else
-	    ignores[_i] = 0;
+    if (f->interfaces->link == CtrStdSymbol) {
+      //we have a binding on our hands
+  	  if (f->value.svalue->vlen > 1 && *f->value.svalue->value == '*')
+  	    catch_all++;
+  	  if (f->value.svalue->vlen == 1 && *f->value.svalue->value == '_')
+  	    {
+  	      ignores[_i] = 1;
+  	      ignore++;
+  	    }
+  	  else
+  	    ignores[_i] = 0;
+    }
 	}
       if (ctr_array_count (object1, NULL)->value.nvalue - ignore != count && catch_all == 0)
-	return 0;		//It requires more parameters than object1 can provide, and we don't have a catch-all binding
+	return 0;		//It requires more/less parameters than object1 can provide, and we don't have a catch-all binding
       int i = 1;
       int _x = 0;
       int _y = 0;
@@ -415,10 +411,12 @@ ctr_internal_object_is_constructible_ (ctr_object * object1, ctr_object * object
       ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
       ctr_argument *elnu1 = ctr_heap_allocate (sizeof (ctr_argument));
       ctr_argument *elnu2 = ctr_heap_allocate (sizeof (ctr_argument));
-      for (; count > 0 && _x < _i && i; count--, _x++)
+      // char* s = ctr_heap_allocate_cstring(ctr_format_str("-UNIFY %S <-> %S", ctr_internal_cast2string(object1), ctr_internal_cast2string(object2)));
+      // printf("%s\n", s);
+      for (; count > 0 && _x < _i && i; count--, _x++, _y++)
 	{
-	  if (++_y < count1);	//the rest goes into the catch_all
-	  else
+    // printf("%d -- %d (%d -- %d)\n", _x, _i, _y, count1);
+	  if (_y > count1)	//the rest goes into the catch_all
 	    {
 	      _y = 0;
 	      catch_all = -2;
@@ -429,12 +427,14 @@ ctr_internal_object_is_constructible_ (ctr_object * object1, ctr_object * object
 	  elnu2->object = ctr_build_number_from_float (_x);
 	  args->object = ctr_array_get (object2, elnu2);
 	  i = i
-	    && ((args->object->info.type = CTR_OBJECT_TYPE_OTARRAY
-		 &&
-		 (catch_all == -2 || ctr_internal_object_is_constructible_ (ctr_array_get (object1, elnu1), args->object, raw)))
-		|| args->object->info.type == CTR_OBJECT_TYPE_OTSTRING || ctr_array_contains (object1, args)->value.bvalue);
+	    && (
+           catch_all == -2
+        || args->object->interfaces->link == CtrStdSymbol
+        || ctr_internal_object_is_constructible_ (ctr_array_get (object1, elnu1), args->object, raw)
+      );
 	}
       ctr_heap_free (args);
+      // printf("array unification -> %d\n", i);
       return i;
     }
   if (object1->info.type == CTR_OBJECT_TYPE_OTOBJECT

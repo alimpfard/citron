@@ -92,7 +92,9 @@ Eval on: 'end' do: {
   my end is True.
   my debug ifFalse: {
     me stopEvalServer.
-    my hs_file write: ({:json JSON parse: json. ^json.} catch: {:e ^''.}, applyTo: (JSON serialize: my history, ~ ?>s/\\/\\\\/g<?)).
+    my hs_file write: (
+      {:json JSON parse: json. ^json.} catch: {:e ^'[]'.}, applyTo: (JSON serialize: my history, ~ ?>s/\\/\\\\/g<?)
+    ).
   }.
 }.
 Eval on: 'break' do: { my end ifTrue: {Broom sweep.}. ^my end. }.

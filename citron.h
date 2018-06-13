@@ -1228,6 +1228,7 @@ char* ctr_heap_allocate_cstring( ctr_object* o );
 char* ctr_heap_allocate_cstring_shared( ctr_object* o );
 
 void initiailize_base_extensions();
+void ctypes_begin();
 
 CTR_H_DECLSPEC uint8_t  ctr_accept_n_connections;
 CTR_H_DECLSPEC uint16_t ctr_default_port;

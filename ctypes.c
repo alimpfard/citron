@@ -1576,7 +1576,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_STR(functionptr) {
   return str_rep;
 }
 
-void begin() {
+void ctypes_begin() {
   CtrStdCType = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
   ctr_set_link_all(CtrStdCType, CtrStdObject);
   CtrStdCType->info.sticky = 1;

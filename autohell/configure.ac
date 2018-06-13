@@ -20,7 +20,7 @@ AC_PROG_RANLIB
 # Checks for header files.
 AC_PATH_X
 AC_FUNC_ALLOCA
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h inttypes.h malloc.h memory.h netdb.h netinet/in.h stddef.h stdint.h stdlib.h string.h strings.h sys/file.h sys/socket.h sys/time.h syslog.h termios.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h inttypes.h malloc.h memory.h netdb.h netinet/in.h stddef.h stdint.h stdlib.h string.h strings.h ffi.h sys/file.h sys/socket.h sys/time.h syslog.h termios.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_UID_T
@@ -40,6 +40,7 @@ AC_TYPE_UINT64_T
 AC_TYPE_UINT8_T
 AC_CHECK_TYPES([ptrdiff_t])
 
+AC_CHECK_LIB([ffi], [ffi_prep_closure_loc])
 # Checks for library functions.
 AC_FUNC_FORK
 AC_FUNC_FSEEKO

@@ -12,7 +12,7 @@
 #undef TEST
 
 #ifndef TEST
-#include "../../citron.h"
+#include "citron.h"
 #else
 #include <stddef.h>
 #define ctr_heap_allocate malloc

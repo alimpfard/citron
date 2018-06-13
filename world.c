@@ -2475,6 +2475,7 @@ ctr_initialize_world ()
   // Fiber
   ctr_fiber_begin_init ();
   initiailize_base_extensions ();
+  ctypes_begin();
 
   /* Other objects */
   CtrStdBreak = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);

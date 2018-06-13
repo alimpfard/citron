@@ -137,7 +137,8 @@ am_libcitron_la_OBJECTS = citron.lo base.lo world.lo importlib.lo \
 	fiber.lo reflect.lo walker.lo parser.lo lexer.lo lexer_plug.lo \
 	system.lo file.lo collections.lo util.lo memory.lo utf8.lo \
 	symbol.lo siphash.lo coroutine.lo generator.lo \
-	base_extensions.lo marshal.lo symbol_cxx.lo
+	base_extensions.lo marshal.lo symbol_cxx.lo _struct.lo \
+	structmember.lo ctypes.lo
 libcitron_la_OBJECTS = $(am_libcitron_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -154,7 +155,8 @@ am_ctr_OBJECTS = ctr-citron.$(OBJEXT) ctr-base.$(OBJEXT) \
 	ctr-symbol.$(OBJEXT) ctr-siphash.$(OBJEXT) \
 	ctr-coroutine.$(OBJEXT) ctr-generator.$(OBJEXT) \
 	ctr-base_extensions.$(OBJEXT) ctr-marshal.$(OBJEXT) \
-	ctr-symbol_cxx.$(OBJEXT)
+	ctr-symbol_cxx.$(OBJEXT) ctr-_struct.$(OBJEXT) \
+	ctr-structmember.$(OBJEXT) ctr-ctypes.$(OBJEXT)
 ctr_OBJECTS = $(am_ctr_OBJECTS)
 ctr_LDADD = $(LDADD)
 ctr_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
@@ -366,23 +368,27 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = --pedantic -O2 -Wall -D withTermios -D forLinux -DCTR_STD_EXTENSION_PATH=\"$(pkgdatadir)\" -DWITH_AUTOMAKE=\"$(pkgdatadir)\"
 AM_LDFLAGS = -rdynamic -lm -ldl -lbsd -lpcre -lpthread -o ctr
+AM_CXXFLAGS = $(CXXFLAGS) -std=c++0x
 ctr_SOURCES = citron.c base.c world.c importlib.c fiber.c reflect.c\
 			  walker.c parser.c lexer.c lexer_plug.c system.c file.c\
 			  collections.c util.c memory.c utf8.c symbol.c siphash.c\
 			  coroutine.c generator.c base_extensions.c dictionary.h\
-			  siphash.h marshal.c symbol_cxx.cpp symbol.hpp
+			  siphash.h marshal.c symbol_cxx.cpp symbol.hpp _struct.h\
+			  _struct.c structmember.h structmember.c ctypes.h ctypes.c
 
 ctr_CFLAGS = $(AM_CFLAGS)
 ctr_CXXFLAGS = $(AM_CXXFLAGS)
 pkginclude_HEADERS = citron.h citron_conv.h citron_ensure.h coroutine.h dictionary.h\
-			  siphash.h generator.h symbol_cxx.hpp symbol.h config.h
+			  siphash.h generator.h symbol.hpp symbol.h _struct.h structmember.h\
+			  ctypes.h config.h 
 
 lib_LTLIBRARIES = libcitron.la
 libcitron_la_SOURCES = citron.c base.c world.c importlib.c fiber.c reflect.c\
                		   walker.c parser.c lexer.c lexer_plug.c system.c file.c\
                		   collections.c util.c memory.c utf8.c symbol.c siphash.c\
                        coroutine.c generator.c base_extensions.c dictionary.h\
-					   siphash.h marshal.c symbol_cxx.cpp symbol.hpp
+					   siphash.h marshal.c symbol_cxx.cpp symbol.hpp _struct.h\
+			  		   _struct.c structmember.h structmember.c ctypes.h ctypes.c
 
 all: all-am
 
@@ -397,9 +403,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign src/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu src/Makefile
+	  $(AUTOMAKE) --foreign src/Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \
@@ -515,16 +521,19 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/_struct.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/base.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/base_extensions.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/citron.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/collections.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/coroutine.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-_struct.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-base.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-base_extensions.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-citron.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-collections.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-coroutine.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-ctypes.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-fiber.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-file.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-generator.Po@am__quote@
@@ -536,6 +545,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-parser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-reflect.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-siphash.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-structmember.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-symbol.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-symbol_cxx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-system.Po@am__quote@
@@ -543,6 +553,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-util.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-walker.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-world.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctypes.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fiber.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/file.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/generator.Plo@am__quote@
@@ -554,6 +565,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parser.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reflect.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/siphash.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/structmember.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/symbol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/symbol_cxx.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/system.Plo@am__quote@
@@ -890,6 +902,48 @@ ctr-marshal.obj: marshal.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='marshal.c' object='ctr-marshal.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -c -o ctr-marshal.obj `if test -f 'marshal.c'; then $(CYGPATH_W) 'marshal.c'; else $(CYGPATH_W) '$(srcdir)/marshal.c'; fi`
+
+ctr-_struct.o: _struct.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -MT ctr-_struct.o -MD -MP -MF $(DEPDIR)/ctr-_struct.Tpo -c -o ctr-_struct.o `test -f '_struct.c' || echo '$(srcdir)/'`_struct.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ctr-_struct.Tpo $(DEPDIR)/ctr-_struct.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='_struct.c' object='ctr-_struct.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -c -o ctr-_struct.o `test -f '_struct.c' || echo '$(srcdir)/'`_struct.c
+
+ctr-_struct.obj: _struct.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -MT ctr-_struct.obj -MD -MP -MF $(DEPDIR)/ctr-_struct.Tpo -c -o ctr-_struct.obj `if test -f '_struct.c'; then $(CYGPATH_W) '_struct.c'; else $(CYGPATH_W) '$(srcdir)/_struct.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ctr-_struct.Tpo $(DEPDIR)/ctr-_struct.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='_struct.c' object='ctr-_struct.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -c -o ctr-_struct.obj `if test -f '_struct.c'; then $(CYGPATH_W) '_struct.c'; else $(CYGPATH_W) '$(srcdir)/_struct.c'; fi`
+
+ctr-structmember.o: structmember.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -MT ctr-structmember.o -MD -MP -MF $(DEPDIR)/ctr-structmember.Tpo -c -o ctr-structmember.o `test -f 'structmember.c' || echo '$(srcdir)/'`structmember.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ctr-structmember.Tpo $(DEPDIR)/ctr-structmember.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='structmember.c' object='ctr-structmember.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -c -o ctr-structmember.o `test -f 'structmember.c' || echo '$(srcdir)/'`structmember.c
+
+ctr-structmember.obj: structmember.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -MT ctr-structmember.obj -MD -MP -MF $(DEPDIR)/ctr-structmember.Tpo -c -o ctr-structmember.obj `if test -f 'structmember.c'; then $(CYGPATH_W) 'structmember.c'; else $(CYGPATH_W) '$(srcdir)/structmember.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ctr-structmember.Tpo $(DEPDIR)/ctr-structmember.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='structmember.c' object='ctr-structmember.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -c -o ctr-structmember.obj `if test -f 'structmember.c'; then $(CYGPATH_W) 'structmember.c'; else $(CYGPATH_W) '$(srcdir)/structmember.c'; fi`
+
+ctr-ctypes.o: ctypes.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -MT ctr-ctypes.o -MD -MP -MF $(DEPDIR)/ctr-ctypes.Tpo -c -o ctr-ctypes.o `test -f 'ctypes.c' || echo '$(srcdir)/'`ctypes.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ctr-ctypes.Tpo $(DEPDIR)/ctr-ctypes.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ctypes.c' object='ctr-ctypes.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -c -o ctr-ctypes.o `test -f 'ctypes.c' || echo '$(srcdir)/'`ctypes.c
+
+ctr-ctypes.obj: ctypes.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -MT ctr-ctypes.obj -MD -MP -MF $(DEPDIR)/ctr-ctypes.Tpo -c -o ctr-ctypes.obj `if test -f 'ctypes.c'; then $(CYGPATH_W) 'ctypes.c'; else $(CYGPATH_W) '$(srcdir)/ctypes.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ctr-ctypes.Tpo $(DEPDIR)/ctr-ctypes.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ctypes.c' object='ctr-ctypes.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -c -o ctr-ctypes.obj `if test -f 'ctypes.c'; then $(CYGPATH_W) 'ctypes.c'; else $(CYGPATH_W) '$(srcdir)/ctypes.c'; fi`
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

@@ -7,16 +7,19 @@ ctr_SOURCES = citron.c base.c world.c importlib.c fiber.c reflect.c\
 			  walker.c parser.c lexer.c lexer_plug.c system.c file.c\
 			  collections.c util.c memory.c utf8.c symbol.c siphash.c\
 			  coroutine.c generator.c base_extensions.c dictionary.h\
-			  siphash.h marshal.c symbol_cxx.cpp symbol.hpp
+			  siphash.h marshal.c symbol_cxx.cpp symbol.hpp _struct.h\
+			  _struct.c structmember.h structmember.c ctypes.h ctypes.c
 ctr_CFLAGS = $(AM_CFLAGS)
 ctr_CXXFLAGS = $(AM_CXXFLAGS)
 
 pkginclude_HEADERS = citron.h citron_conv.h citron_ensure.h coroutine.h dictionary.h\
-			  siphash.h generator.h symbol.hpp symbol.h config.h
+			  siphash.h generator.h symbol.hpp symbol.h _struct.h structmember.h\
+			  ctypes.h config.h 
 
 lib_LTLIBRARIES = libcitron.la
 libcitron_la_SOURCES = citron.c base.c world.c importlib.c fiber.c reflect.c\
                		   walker.c parser.c lexer.c lexer_plug.c system.c file.c\
                		   collections.c util.c memory.c utf8.c symbol.c siphash.c\
                        coroutine.c generator.c base_extensions.c dictionary.h\
-					   siphash.h marshal.c symbol_cxx.cpp symbol.hpp
+					   siphash.h marshal.c symbol_cxx.cpp symbol.hpp _struct.h\
+			  		   _struct.c structmember.h structmember.c ctypes.h ctypes.c

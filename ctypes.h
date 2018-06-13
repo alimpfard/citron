@@ -19,12 +19,7 @@ ctr_internal_object_add_property(CtrStdCType, ctr_build_string_from_cstring("typ
 #define CTR_CT_INTRODUCE_SET(type)         ctr_internal_create_func(CtrStdCType_##type, ctr_build_string_from_cstring("set:"), &ctr_ctypes_set_##type)
 #define CTR_CT_INTRODUCE_GET(type)         ctr_internal_create_func(CtrStdCType_##type, ctr_build_string_from_cstring("get"), &ctr_ctypes_get_##type)
 #include <ffi.h>
-#ifdef existing
-#include <Citron/citron.h>
-#else
-#warning "We don't have Citron installed"
-#include "../../citron.h"
-#endif
+#include "citron.h"
 #include "_struct.h"
 #include "structmember.h"
 

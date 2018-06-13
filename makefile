@@ -1,4 +1,4 @@
-LEXTRACF := ${LEXTRACF} -flto -lstdc++
+LEXTRACF := ${LEXTRACF} -flto -lstdc++ -l:libffi.so.7
 fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
 
 ifeq ($(strip ${WITH_ICU}),)
@@ -33,7 +33,7 @@ gc_check:
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o\
 		   world.o lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o\
 			 importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o\
-			 symbol_cxx.o
+			 symbol_cxx.o structmember.o _struct.o ctypes.o
 
 COBJS = ${OBJS} compiler.o
 

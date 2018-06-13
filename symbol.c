@@ -21,6 +21,12 @@ ctr_symbol_to_string (ctr_object * myself, ctr_argument * argumentList)
 }
 
 ctr_object *
+ctr_symbol_to_string_s (ctr_object * myself, ctr_argument * argumentList)
+{
+  return ctr_get_or_create_symbol_table_entry_s(myself->value.svalue->value, myself->value.svalue->vlen);
+}
+
+ctr_object *
 ctr_symbol_as_string (ctr_object * symbol)
 {
   if (unlikely (symbol == CtrStdSymbol))

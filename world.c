@@ -1819,8 +1819,10 @@ ctr_initialize_world ()
   /* Object */
   CtrStdObject = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
   CtrStdString = ctr_internal_create_object (CTR_OBJECT_TYPE_OTSTRING);
+  CtrStdSymbol = ctr_internal_create_object (CTR_OBJECT_TYPE_OTMISC);
   CtrStdBlock = ctr_internal_create_object (CTR_OBJECT_TYPE_OTBLOCK);
   ctr_set_link_all (CtrStdString, CtrStdObject);
+  ctr_set_link_all (CtrStdSymbol, CtrStdString);
   ctr_set_link_all (CtrStdBlock, CtrStdObject);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring (CTR_DICT_NEW), &ctr_object_make);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring (CTR_DICT_CTOR_NEW), &ctr_object_ctor);

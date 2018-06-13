@@ -1350,8 +1350,6 @@ initiailize_base_extensions ()
   ctr_internal_create_func (CtrStdCoro_co, ctr_build_string_from_cstring ("yield:"), &ctr_coro_yield);
   ctr_internal_create_func (CtrStdCoro_co, ctr_build_string_from_cstring ("isRunning"), &ctr_coro_isrunning);
   ctr_internal_create_func (CtrStdCoro_co, ctr_build_string_from_cstring ("state"), &ctr_coro_state);
-  CtrStdSymbol = ctr_internal_create_object (CTR_OBJECT_TYPE_OTMISC);
-  ctr_set_link_all (CtrStdSymbol, CtrStdObject);
   ctr_internal_create_func (CtrStdSymbol, ctr_build_string_from_cstring ("toString"), &ctr_symbol_to_string);
   ctr_internal_create_func (CtrStdSymbol, ctr_build_string_from_cstring ("equals:"), &ctr_symbol_equals);
   ctr_internal_create_func (CtrStdSymbol, ctr_build_string_from_cstring ("="), &ctr_symbol_equals);
@@ -1359,6 +1357,7 @@ initiailize_base_extensions ()
   ctr_internal_create_func (CtrStdSymbol, ctr_build_string_from_cstring ("id"), &ctr_symbol_ihash);
   ctr_internal_create_func (CtrStdSymbol, ctr_build_string_from_cstring ("type"), &ctr_symbol_type);
   ctr_internal_create_func (CtrStdSymbol, ctr_build_string_from_cstring ("unpack:"), &ctr_symbol_unpack);
+  ctr_internal_create_func (CtrStdSymbol, ctr_build_string_from_cstring ("instance"), &ctr_symbol_to_string_s);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("toSymbol"), &ctr_string_to_symbol);
   ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring ("Symbol"), CtrStdSymbol, 0);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("inheritFrom:"), &ctr_object_inherit);

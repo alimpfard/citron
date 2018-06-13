@@ -584,7 +584,8 @@ void ctr_internal_create_func(ctr_object* o, ctr_object* key, ctr_object* (*func
 int ctr_is_primitive(ctr_object* object);
 ctr_object* ctr_get_stack_trace();
 void ctr_print_stack_trace();
-ctr_object* ctr_get_or_create_symbol_table_entry(const char* name, ctr_size len);
+ctr_object* ctr_get_or_create_symbol_table_entry  (const char* name, ctr_size len);
+ctr_object* ctr_get_or_create_symbol_table_entry_s(const char* name, ctr_size len);
 int ctr_str_count_substr(char *str, char *substr, int overlap);
 
 #define CTR_TRACE_IGNORE_VEC_DEPTH 1024

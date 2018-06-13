@@ -2,7 +2,7 @@ language: c
 compiler: clang
 before_install:
     - sudo apt-get -qq update
-    - sudo apt-get install -y libffi-dev libbsd-dev libpcre3-dev libgc-dev realpath libcurl4-openssl-dev
+    - sudo apt-get install -y libffi-dev libbsd-dev libpcre3-dev libgc-dev realpath libcurl4-openssl-dev libsparsehash-dev sparsehash
 install:
   - cd autohell && aclocal && libtoolize && autoconf && automake --add-missing
   - mkdir -p build && ./configure --prefix=$(realpath ./build) && make

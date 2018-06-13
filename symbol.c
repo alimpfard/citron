@@ -1,35 +1,8 @@
 #include "symbol.h"
 #include <stdio.h>
 
-static ctr_object **ctr_static_symbol_table = 0;
-static ctr_size ctr_static_symbol_table_count = 0;
-static ctr_size ctr_static_symbol_table_max = 4;
-ctr_object *
-ctr_get_or_create_symbol_table_entry (char *name, ctr_size length)
-{
-  ctr_initialize_world ();
-  if (!ctr_static_symbol_table)
-    {
-      ctr_static_symbol_table = ctr_heap_allocate (sizeof (ctr_object *) * 4);
-      ctr_object *ptr = (ctr_static_symbol_table[0] = ctr_build_string (name, length));
-      ctr_static_symbol_table_count = 1;
-      ctr_static_symbol_table_max = 4;
-      ctr_set_link_all (ptr, CtrStdSymbol);
-      ptr->info.type = CTR_OBJECT_TYPE_OTMISC;
-      return ptr;
-    }
-  for (ctr_size i = 0; i < ctr_static_symbol_table_count; i++)
-    {
-      ctr_object *ptr = ctr_static_symbol_table[i];
-      if (!ptr)
-	continue;
-      ctr_size len = ptr->value.svalue->vlen;
-      if (len == length && strncmp (ptr->value.svalue->value, name, length) == 0)
-	return ptr;
-    }
-  if (ctr_static_symbol_table_count > (int)(0.8*ctr_static_symbol_table_max))
-    ctr_static_symbol_table = ctr_heap_reallocate (ctr_static_symbol_table, (ctr_static_symbol_table_max=ctr_static_symbol_table_count * 2) * sizeof (ctr_object *));
-  ctr_object *ptr = (ctr_static_symbol_table[ctr_static_symbol_table_count++] = ctr_build_string (name, length));
+ctr_object * ctr_create_symbol(const char* s, ctr_size length) {
+  ctr_object *ptr = ctr_build_string ((char*)s, length);
   ctr_set_link_all (ptr, CtrStdSymbol);
   ptr->info.type = CTR_OBJECT_TYPE_OTMISC;
   return ptr;

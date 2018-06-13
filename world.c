@@ -2969,214 +2969,214 @@ ctr_object *
 get_CtrStdWorld ()
 {
   return CtrStdWorld;
-};
+}
 
 ctr_object *
 get_CtrStdObject ()
 {
   return CtrStdObject;
-};
+}
 
 ctr_object *
 get_CtrStdBlock ()
 {
   return CtrStdBlock;
-};
+}
 
 ctr_object *
 get_CtrStdString ()
 {
   return CtrStdString;
-};
+}
 
 ctr_object *
 get_CtrStdNumber ()
 {
   return CtrStdNumber;
-};
+}
 
 ctr_object *
 get_CtrStdBool ()
 {
   return CtrStdBool;
-};
+}
 
 ctr_object *
 get_CtrStdConsole ()
 {
   return CtrStdConsole;
-};
+}
 
 ctr_object *
 get_CtrStdNil ()
 {
   return CtrStdNil;
-};
+}
 
 ctr_object *
 get_CtrStdGC ()
 {
   return CtrStdGC;
-};
+}
 
 ctr_object *
 get_CtrStdMap ()
 {
   return CtrStdMap;
-};
+}
 
 ctr_object *
 get_CtrStdArray ()
 {
   return CtrStdArray;
-};
+}
 
 ctr_object *
 get_CtrStdIter ()
 {
   return CtrStdIter;
-};
+}
 
 ctr_object *
 get_CtrStdFile ()
 {
   return CtrStdFile;
-};
+}
 
 ctr_object *
 get_CtrStdSystem ()
 {
   return CtrStdSystem;
-};
+}
 
 ctr_object *
 get_CtrStdDice ()
 {
   return CtrStdDice;
-};
+}
 
 ctr_object *
 get_CtrStdCommand ()
 {
   return CtrStdCommand;
-};
+}
 
 ctr_object *
 get_CtrStdSlurp ()
 {
   return CtrStdSlurp;
-};
+}
 
 ctr_object *
 get_CtrStdShell ()
 {
   return CtrStdShell;
-};
+}
 
 ctr_object *
 get_CtrStdClock ()
 {
   return CtrStdClock;
-};
+}
 
 ctr_object *
 get_CtrStdFlow ()
 {
   return CtrStdFlow;
-};
+}
 
 ctr_object *
 get_CtrExceptionType ()
 {
   return CtrExceptionType;
-};
+}
 
 ctr_object *
 get_CtrStdBreak ()
 {
   return CtrStdBreak;
-};
+}
 
 ctr_object *
 get_CtrStdContinue ()
 {
   return CtrStdContinue;
-};
+}
 
 ctr_object *
 get_CtrStdExit ()
 {
   return CtrStdExit;
-};
+}
 
 ctr_object *
 get_CtrStdReflect ()
 {
   return CtrStdReflect;
-};
+}
 
 ctr_object *
 get_CtrStdReflect_cons ()
 {
   return CtrStdReflect_cons;
-};
+}
 
 ctr_object *
 get_CtrStdFiber ()
 {
   return CtrStdFiber;
-};
+}
 
 ctr_object *
 get_CtrStdThread ()
 {
   return CtrStdThread;
-};
+}
 
 ctr_object *
 get_CtrStdSymbol ()
 {
   return CtrStdSymbol;
-};
+}
 
 ctr_object *
 get_ctr_first_object ()
 {
   return ctr_first_object;
-};
+}
 
 ctr_object *
 get_CTR_FILE_STDIN ()
 {
   return CTR_FILE_STDIN;
-};
+}
 
 ctr_object *
 get_CTR_FILE_STDOUT ()
 {
   return CTR_FILE_STDOUT;
-};
+}
 
 ctr_object *
 get_CTR_FILE_STDERR ()
 {
   return CTR_FILE_STDERR;
-};
+}
 
 ctr_object *
 get_CTR_FILE_STDIN_STR ()
 {
   return CTR_FILE_STDIN_STR;
-};
+}
 
 ctr_object *
 get_CTR_FILE_STDOUT_STR ()
 {
   return CTR_FILE_STDOUT_STR;
-};
+}
 
 ctr_object *
 get_CTR_FILE_STDERR_STR ()
 {
   return CTR_FILE_STDERR_STR;
-};
+}

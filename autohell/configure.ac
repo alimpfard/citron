@@ -12,14 +12,10 @@ LT_INIT
 # Checks for programs.
 AC_PROG_AWK
 AC_PROG_CC
+AC_PROG_CXX
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 
-# Checks for libraries.
-# FIXME: Replace `main' with a function in `-lccgi':
-AC_CHECK_LIB([ccgi], [main])
-# FIXME: Replace `main' with a function in `-lcrypto':
-AC_CHECK_LIB([crypto], [main])
 
 # Checks for header files.
 AC_PATH_X

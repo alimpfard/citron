@@ -1,4 +1,4 @@
-LEXTRACF := ${LEXTRACF} -flto
+LEXTRACF := ${LEXTRACF} -flto -lstdc++
 fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
 
 ifeq ($(strip ${WITH_ICU}),)
@@ -30,19 +30,22 @@ gc_check:
 
 -include gc_check
 
-OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
-       world.o lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o\
-	   importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o
+OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o\
+		   world.o lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o\
+			 importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o\
+			 symbol_cxx.o
 
 COBJS = ${OBJS} compiler.o
 
-.SUFFIXES:	.o .c
+# .SUFFIXES:	.o .c
 
 all: CFALGS := $(CFLAGS) -O2
+all: cxx
 all: ctr
 
 debug: CFLAGS := ${CFLAGS} -DDEBUG_BUILD -Og -g3 -ggdb3 -Wno-unused-function
 	   #LEXTRACF := -lefence ${LEXTRACF}
+debug: cxx
 debug: ctr
 
 install:
@@ -52,13 +55,19 @@ ctr:	$(OBJS)
 	$(CC) -fopenmp $(OBJS) -rdynamic -lm -ldl -lbsd -lpcre -lpthread ${LEXTRACF} -o ctr
 
 libctr: CFLAGS := $(CFLAGS) -fPIC -DCITRON_LIBRARY
+libctr: symbol_cxx
 libctr: $(OBJS)
 	$(CC) $(OBJS) -shared -export-dynamic -ldl -lbsd -lpcre -lpthread -o libctr.so
 
 compiler: CFLAGS := $(CFLAGS) -D comp=1
+compiler: cxx
 compiler: $(COBJS)
 	$(CC) $(COBJS) -rdynamic -lm -ldl -lbsd -lpcre -lprofiler -lpthread ${LEXTRACF} -o ctrc
-.c.o:
+
+cxx:
+	echo "blah"
+
+%.o: %.c
 	$(CC) -fopenmp $(CFLAGS) -c $<
 
 define SHVAL =

@@ -36,9 +36,12 @@ import
   Library/Data/Map
   Library/Data/Set
   Library/Utils/Highlight
-  Library/Utils/OneGateFlipper
   Library/Control/MethodResolve
   Library/Utils/CLIContextMenu: ['generate_context_menu', 'clear_next_line'].
+
+var OneGateFlipper is Object new on: 'new' do: { ^me cnew: {my value is False.}. }.
+OneGateFlipper on: 'set' do: { my value is True. }.
+OneGateFlipper on: 'get' do: { var v is my value. my value is False. ^v. }.
 
 Eval is Object new.
 Eval on: 'init' do: {

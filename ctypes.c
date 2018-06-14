@@ -1284,7 +1284,8 @@ CTR_CT_FFI_BIND(prep_cif) { //cif*, int<abi>, type* rtype, type** atypes
   }
   ffi_abi abi;
   switch(abi_mask) {
-    default: abi=FFI_DEFAULT_ABI; break;
+    case 0: abi=FFI_DEFAULT_ABI; break;
+    default: abi = FFI_FIRST_ABI+abi_mask; break;
   }
   ffi_status status = ffi_prep_cif(cif_res, abi, asize, rtype, atypes);
   ctr_heap_free(args);
@@ -1305,6 +1306,10 @@ CTR_CT_FFI_BIND(prep_cif_inferred) { //[*atypes, rtype]
   int           i       = 0;
   ffi_type*     rtype;
   ffi_type* ty;
+  if(asize < 0) {
+    CtrStdFlow = ctr_build_string_from_cstring("Expected at least one member in type array (return type), but found none");
+    return CtrStdNil;
+  }
   ctr_ctypes_set_type(cifobj, CTR_CTYPE_CIF);
   ctr_set_link_all(cifobj, CtrStdCType_ffi_cif);
   cifobj->value.rvalue->ptr = cif_res;
@@ -1754,7 +1759,7 @@ void ctypes_begin() {
   ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("new"), &ctr_ctype_ffi_cif_new);
   ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("destruct"), &ctr_ctype_ffi_cif_destruct);
   ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("setABI:return:argTypes:"), &ctr_ctype_ffi_prep_cif);
-  ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("newByInferreingTypes:"), &ctr_ctype_ffi_prep_cif_inferred);
+  ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("newByInferringTypes:"), &ctr_ctype_ffi_prep_cif_inferred);
   ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("call:withArgs:"), &ctr_ctype_ffi_call);
   CTR_CT_INTRODUCE_TYPE(cont_pointer);
   ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring("packed:count:"), &ctr_ctypes_make_packed);

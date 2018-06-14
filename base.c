@@ -5810,8 +5810,6 @@ ctr_block_runIt (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *result;
   result = ctr_block_run (myself, argumentList, myself);	/* here me/my refers to block itself not object - this allows closures. */
-  if (CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
-    CtrStdFlow = NULL;		/* consume break */
   return result;
 }
 

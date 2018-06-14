@@ -1,5 +1,0 @@
-var OneGateFlipper is Object new on: 'new' do: { ^me cnew: {my value is False.}. }.
-OneGateFlipper on: 'set' do: { my value is True. }.
-OneGateFlipper on: 'get' do: { var v is my value. my value is False. ^v. }.
-
-import export: OneGateFlipper as: 'OneGateFlipper'.

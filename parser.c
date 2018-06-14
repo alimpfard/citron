@@ -248,6 +248,19 @@ ctr_cparse_message (int mode)
       m->value = msg;
       m->vlen = msgpartlen;
     }
+  else if (t == CTR_TOKEN_TUPOPEN)
+      {
+        ctr_clex_putback();
+        memcpy(msg, "applyAll:", 9);
+        msgpartlen = 9;
+        li = ctr_heap_allocate_tracked(sizeof(*li));
+        li->node = ctr_cparse_tuple();
+        m->type = CTR_AST_NODE_KWMESSAGE;
+        m->nodes = li;
+        m->value = msg;
+        m->vlen = msgpartlen;
+        m->modifier = -2; //chain nothing
+      }
   else
     {
       m->type = CTR_AST_NODE_UNAMESSAGE;
@@ -273,7 +286,7 @@ ctr_cparse_messages (ctr_tnode * r, int mode)
   int first = 1;
   ctr_tnode *node = NULL;
   /* explicit chaining (,) only allowed for keyword message: Console write: 3 factorial, write: 3 factorial is not possible otherwise. */
-  while ((t == CTR_TOKEN_REF || (t == CTR_TOKEN_CHAIN && node && node->type == CTR_AST_NODE_KWMESSAGE)))
+  while ((t == CTR_TOKEN_REF || (t == CTR_TOKEN_CHAIN && node && node->type == CTR_AST_NODE_KWMESSAGE && node->modifier != -2) || (t == CTR_TOKEN_TUPOPEN)))
     {
       if (t == CTR_TOKEN_CHAIN)
 	{

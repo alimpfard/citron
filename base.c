@@ -311,6 +311,12 @@ ctr_object_attr_writer (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_object_assign (ctr_object * myself, ctr_argument * argumentList)
 {
+  if(argumentList->object->info.type == CTR_OBJECT_TYPE_OTMISC && argumentList->object->interfaces->link == CtrStdSymbol) {
+    if (argumentList->object->value.svalue->vlen == 0 || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
+      return myself;
+    ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string(argumentList->object), myself, 0);
+    return myself;
+  }
   if (!ctr_reflect_check_bind_valid (myself, argumentList->object, 0)) {
     CtrStdFlow = ctr_build_string_from_cstring ("Invalid bind");
     return CtrStdNil;

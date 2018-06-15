@@ -21,6 +21,12 @@ Map on: 'fromArray:' do: {:arr
   ^map.
 }.
 
+Map on: 'copy' do: {
+  var m is Map new.
+  each: {:k:v m put: v at: k.}.
+  ^m.
+}.
+
 Map on: 'respondTo:' do: {:self:msg
   ^(msg startsWith: '@') either: { ^self at: (msg skip: 1). } or: { ^self `respondTo: msg. }.
 }.

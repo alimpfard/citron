@@ -34,13 +34,19 @@ import on: '__load:' do: {:name
   var file is Nil.
   var path is Nil.
   var is_dir is False.
+  var xc_path is name split: '/'.
+  name is xc_path last.
+  var ext_path is xc_path init join: '/'.
+  var full_path is Nil.
   my searchPaths each: {:i:v
   # Pen write: v, brk.
     file isNil not break.
+    v is v + '/' + ext_path.
     v is File new: v, realPath.
     (var f is File new: (v + '/$$name' + '.ctr')) exists ifTrue: {
       (File typeOf: (f realPath), = 'file') ifTrue: {
         path is File new: v, realPath.
+        full_path is path + '/$$name' + '.ctr'.
         file is f.
       }.
     }.
@@ -48,6 +54,7 @@ import on: '__load:' do: {:name
       (File typeOf: (v + '/$$name'), = 'folder') ifTrue: {
         path is f realPath.
         file is File new: (path + '/main.ctr').
+        full_path is path + '/main.ctr'.
         is_dir is True.
       }.
     }.
@@ -56,10 +63,10 @@ import on: '__load:' do: {:name
     thisBlock error: ('Could not find neither a package, nor a standalone file representing $$name in the search paths: \n%s' % [(my searchPaths fmap: {:p ^p + ' aka (' + (File new: p, realPath) + ')'.}, join: '\n')]).
   }.
   var _lm is my __loaded_modules.
-  ^(_lm contains: path)
+  ^(_lm contains: full_path)
     either: {
       Program warning: '[ctr]::module $$path was already loaded'.
-      ^_lm at: path.
+      ^_lm at: full_path.
     }
     or: {
       var oldp is Program changeDirectory: path.

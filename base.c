@@ -5258,12 +5258,13 @@ ctr_args_eq (ctr_argument * arg0, ctr_argument * arg1)
 ctr_object *
 ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my)
 {
+  ctr_object *result;
+  ctr_argument *argList = ctr_array_to_argument_list (argArray, NULL);
+  int count = ctr_array_count(argArray, NULL)->value.nvalue;
   if (myself->info.type == CTR_OBJECT_TYPE_OTNATFUNC)
     {
       ctr_argument *argList = ctr_heap_allocate (sizeof (ctr_argument));
-      (void) ctr_array_to_argument_list (argArray, argList);
       ctr_object *result = myself->value.fvalue (my, argList);
-      ctr_free_argumentList (argList);
       return result;
     }
   int is_tail_call = 0, id;
@@ -5275,8 +5276,6 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
 #endif
       ctr_context_id = id;
     }
-
-  ctr_object *result;
   ctr_tnode *node = myself->value.block;
   ctr_tlistitem *codeBlockParts = node->nodes;
   ctr_tnode *codeBlockPart1 = codeBlockParts->node;
@@ -5284,9 +5283,7 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
   ctr_tlistitem *parameterList = codeBlockPart1->nodes;
   ctr_tnode *parameter;
   ctr_object *a;
-  int was_vararg;
-  ctr_argument *argList = ctr_heap_allocate (sizeof (ctr_argument));
-  (void) ctr_array_to_argument_list (argArray, argList);
+  int was_vararg, noskip=0;
   if (!is_tail_call)
     {
       if (myself->value.block->lexical && (!my || my == myself))
@@ -5315,14 +5312,13 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
 	      was_vararg = (strncmp (parameter->value, "*", 1) == 0);
 	      if (!argList->object)
 		{
-		  if (was_vararg)
-		    {
-		      ctr_object *arr = ctr_array_new (CtrStdArray,
-						       NULL);
-		      ctr_assign_value_to_local (ctr_build_string (parameter->value + 1, parameter->vlen - 1), arr);
-		    }
-		  if (!argList || !argList->next)
-		    break;
+      ctr_object *arr = was_vararg?ctr_array_new (CtrStdArray,
+				       NULL) : CtrStdNil;
+      ctr_assign_value_to_local (ctr_build_string (parameter->value + was_vararg, parameter->vlen - was_vararg), arr);
+		  if (!argList || !argList->next) {
+        noskip = 1;
+        break;
+      }
 		  argList = argList->next;
 		  if (!parameterList->next)
 		    break;
@@ -5362,7 +5358,8 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
 	  parameterList = parameterList->next;
 	  parameter = parameterList->node;
 	}
-      parameterList = parameterList->next;
+      if(count)
+        parameterList = parameterList->next;
       while (parameterList)
 	{
 	  was_vararg = (strncmp (parameterList->node->value, "*", 1) == 0);
@@ -5388,6 +5385,7 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
       head = head->next;
       p--;
     }
+  //ctr_block_run_cache_set_ready_for_comp();
   result = ctr_cwlk_run (codeBlockPart2);
   if (result == NULL)
     {
@@ -5451,7 +5449,7 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
   ctr_tlistitem *parameterList = codeBlockPart1->nodes;
   ctr_tnode *parameter;
   ctr_object *a;
-  int was_vararg;
+  int was_vararg, noskip=0;
   if (!is_tail_call)
     {
       if (myself->value.block->lexical && (!my || my == myself))
@@ -5480,14 +5478,13 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 	      was_vararg = (strncmp (parameter->value, "*", 1) == 0);
 	      if (!argList->object)
 		{
-		  if (was_vararg)
-		    {
-		      ctr_object *arr = ctr_array_new (CtrStdArray,
-						       NULL);
-		      ctr_assign_value_to_local (ctr_build_string (parameter->value + 1, parameter->vlen - 1), arr);
-		    }
-		  if (!argList || !argList->next)
-		    break;
+      ctr_object *arr = was_vararg?ctr_array_new (CtrStdArray,
+				       NULL) : CtrStdNil;
+      ctr_assign_value_to_local (ctr_build_string (parameter->value + was_vararg, parameter->vlen - was_vararg), arr);
+		  if (!argList || !argList->next) {
+        noskip = 1;
+        break;
+      }
 		  argList = argList->next;
 		  if (!parameterList->next)
 		    break;

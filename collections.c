@@ -1556,6 +1556,7 @@ ctr_array_to_argument_list (ctr_object * arr, ctr_argument * provided)
   if (!arr)
     return NULL;
   ctr_size i = arr->value.avalue->tail, arr_max_len = arr->value.avalue->head - arr->value.avalue->tail;
+  if (arr_max_len == 0) return provided;
   if (!provided)
     provided = ctr_heap_allocate (sizeof (ctr_argument));
   ctr_argument *arg = provided;

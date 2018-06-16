@@ -226,6 +226,7 @@ struct ctr_object {
 		unsigned int type: 4;
 		unsigned int mark: 1;
 		unsigned int sticky: 1;
+		unsigned int asyncMode: 1;
 		unsigned int chainMode: 1;
 		unsigned int remote: 1;
 		unsigned int shared: 1;
@@ -576,6 +577,8 @@ void        ctr_internal_debug_tree(ctr_tnode* ti, int indent);
 void 		ctr_capture_refs(ctr_tnode* ti, ctr_object* block);
 ctr_object* ctr_get_responder(ctr_object* receiverObject, char* message, long vlen);
 ctr_object* ctr_send_message(ctr_object* receiver, char* message, long len, ctr_argument* argumentList);
+ctr_object* ctr_send_message_blocking(ctr_object* receiver, char* message, long len, ctr_argument* argumentList);
+ctr_object* ctr_send_message_async(ctr_object* receiver, char* message, long len, ctr_argument* argumentList);
 ctr_object* ctr_send_message_variadic(ctr_object* myself, char* message, int msglen, int count, ...) ;
 ctr_object* ctr_invoke_variadic(ctr_object* myself, ctr_object * (*fun)(ctr_object *, ctr_argument *), int count, ...);
 ctr_argument* ctr_allocate_argumentList (int count, ...);

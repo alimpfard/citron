@@ -5263,7 +5263,6 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
   int count = ctr_array_count(argArray, NULL)->value.nvalue;
   if (myself->info.type == CTR_OBJECT_TYPE_OTNATFUNC)
     {
-      ctr_argument *argList = ctr_heap_allocate (sizeof (ctr_argument));
       ctr_object *result = myself->value.fvalue (my, argList);
       return result;
     }
@@ -5428,7 +5427,6 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 {
   if (myself->info.type == CTR_OBJECT_TYPE_OTNATFUNC)
     {
-      ctr_argument *argList = ctr_heap_allocate (sizeof (ctr_argument));
       ctr_object *result = myself->value.fvalue (my, argList);
       return result;
     }
@@ -5598,7 +5596,6 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
 {
   if (myself->info.type == CTR_OBJECT_TYPE_OTNATFUNC)
     {
-      ctr_argument *argList = ctr_heap_allocate (sizeof (ctr_argument));
       ctr_object *result = myself->value.fvalue (my, argList);
       return result;
     }

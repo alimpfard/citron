@@ -29,13 +29,15 @@ static int ctr_world_initialized = 0;
 
 #ifdef withGIL
 #include <pthread.h>
-static pthread_mutex_t ctr_message_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t ctr_message_mutex = {{PTHREAD_MUTEX_RECURSIVE}};
 #define CTR_THREAD_LOCK() pthread_mutex_lock(&ctr_message_mutex)
 #define CTR_THREAD_UNLOCK() pthread_mutex_unlock(&ctr_message_mutex)
 #else
 #define CTR_THREAD_LOCK()
 #define CTR_THREAD_UNLOCK()
 #endif
+
+#include "promise.h"
 
 void ctr_load_required_native_modules ();
 
@@ -452,7 +454,7 @@ ctr_internal_object_is_constructible_ (ctr_object * object1, ctr_object * object
     }
   ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
   args->object = object2;
-  ctr_object *ret = (ctr_send_message (object1, "isConstructible:", 16, args));
+  ctr_object *ret = (ctr_send_message_blocking (object1, "isConstructible:", 16, args));
   ctr_heap_free (args);
   return (ret->info.type == CTR_OBJECT_TYPE_OTBOOL) ? ret->value.bvalue : 0;
 }
@@ -1039,7 +1041,7 @@ ctr_internal_create_mapped_object_shared (int type)
   o->methods->head = NULL;
   o->release_hook = NULL;
   o->info.type = type;
-  o->info.sticky = 0;
+  o->info.asyncMode = 0;
   o->info.mark = 0;
   o->info.remote = 0;
   o->info.shared = 1;
@@ -1092,7 +1094,7 @@ ctr_internal_create_mapped_object_unshared (int type)
   o->methods->head = NULL;
   o->release_hook = NULL;
   o->info.type = type;
-  o->info.sticky = 0;
+  o->info.asyncMode = 0;
   o->info.mark = 0;
   o->info.remote = 0;
   o->info.shared = 0;
@@ -1161,7 +1163,7 @@ ctr_internal_create_mapped_standalone_object (int type, int shared)
   o->methods->head = NULL;
   o->release_hook = NULL;
   o->info.type = type;
-  o->info.sticky = 0;
+  o->info.asyncMode = 0;
   o->info.mark = 0;
   o->info.remote = 0;
   o->info.shared = shared;
@@ -1229,7 +1231,7 @@ ctr_internal_cast2number (ctr_object * o)
     return o;
   ctr_argument *a = ctr_heap_allocate (sizeof (ctr_argument));
   a->object = CtrStdNil;
-  ctr_object *numObject = ctr_send_message (o, "toNumber", 8, a);
+  ctr_object *numObject = ctr_send_message_blocking (o, "toNumber", 8, a);
   ctr_heap_free (a);
   if (numObject->info.type != CTR_OBJECT_TYPE_OTNUMBER)
     {
@@ -1269,10 +1271,10 @@ ctr_internal_cast2string (ctr_object * o)
       stringObject = ctr_number_to_string (o, NULL);
       break;
     case CTR_OBJECT_TYPE_OTOBJECT:
-      stringObject = ctr_reflect_get_primitive_link (o) == CtrStdMap ? ctr_map_to_string (o, NULL) : ctr_send_message (o, "toString", 8, a);
+      stringObject = ctr_reflect_get_primitive_link (o) == CtrStdMap ? ctr_map_to_string (o, NULL) : ctr_send_message_blocking (o, "toString", 8, a);
       break;
     default:
-      stringObject = ctr_send_message (o, "toString", 8, a);
+      stringObject = ctr_send_message_blocking (o, "toString", 8, a);
       break;
     }
   ctr_heap_free (a);
@@ -1303,7 +1305,7 @@ ctr_internal_cast2bool (ctr_object * o)
     return o;
   ctr_argument *a = ctr_heap_allocate (sizeof (ctr_argument));
   a->object = CtrStdNil;
-  ctr_object *boolObject = ctr_send_message (o, "toBoolean", 9, a);
+  ctr_object *boolObject = ctr_send_message_blocking (o, "toBoolean", 9, a);
   ctr_heap_free (a);
   if (boolObject->info.type != CTR_OBJECT_TYPE_OTBOOL)
     {
@@ -2475,6 +2477,7 @@ ctr_initialize_world ()
   // Fiber
   ctr_fiber_begin_init ();
   initiailize_base_extensions ();
+  promise_begin();
 
   /* Other objects */
   CtrStdBreak = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
@@ -2650,7 +2653,7 @@ ctr_get_appropriate_catch_all (char *message, long vlen, int argCount)
  * Sends a message to a receiver object.
  */
 ctr_object *
-ctr_send_message (ctr_object * receiverObject, char *message, long vlen, ctr_argument * argumentList)
+ctr_send_message_blocking (ctr_object * receiverObject, char *message, long vlen, ctr_argument * argumentList)
 {
   if (unlikely (receiverObject != CtrStdReflect && ctr_instrument))
     {
@@ -2663,7 +2666,7 @@ ctr_send_message (ctr_object * receiverObject, char *message, long vlen, ctr_arg
 	}
       ctr_instrumentor_func =
 	ctr_internal_object_find_property_with_hash (ctr_instrumentor_funcs, receiverObject,
-						     ctr_send_message (receiverObject, "iHash", 5, NULL)->value.nvalue, 0);
+						     ctr_send_message_blocking (receiverObject, "iHash", 5, NULL)->value.nvalue, 0);
     skip_intern:;
       if (unlikely (ctr_instrumentor_func))
 	{
@@ -2735,7 +2738,7 @@ no_instrum:;
       mesgArgument->object = ctr_build_string (message, vlen);
       mesgArgument->next = argumentList;
       CTR_THREAD_UNLOCK ();
-      returnValue = ctr_send_message (receiverObject, catch_all, catch_all_v, mesgArgument);
+      returnValue = ctr_send_message_blocking (receiverObject, catch_all, catch_all_v, mesgArgument);
       ctr_heap_free (mesgArgument);
       msg->info.sticky = 0;
       if (receiverObject->info.chainMode == 1)
@@ -2764,7 +2767,7 @@ no_instrum:;
 	      exit (1);
 	    }
 	}
-#endif
+#endif //EVALSECURITY
 
       CTR_THREAD_UNLOCK ();
       result = funct (receiverObject, argumentList);
@@ -2778,7 +2781,7 @@ no_instrum:;
 	  ctr_print_stack_trace ();
 	  exit (1);
 	}
-#endif
+#endif //EVALSECURITY
       CTR_THREAD_UNLOCK ();
       result = ctr_block_run (methodObject, argumentList, receiverObject);
     }
@@ -2787,6 +2790,34 @@ no_instrum:;
   if (receiverObject->info.chainMode == 1)
     return receiverObject;
   return result;		//Normally cascade down to native functions, so get the return type
+}
+
+__attribute__((always_inline))
+ctr_object *
+ctr_send_message (ctr_object * receiverObject, char *message, long vlen, ctr_argument * argumentList)
+{
+  if (receiverObject->info.asyncMode) {
+    receiverObject->info.asyncMode = 0;
+    return ctr_send_message_async(receiverObject, message, vlen, argumentList);
+  }
+  return ctr_send_message_blocking(receiverObject, message, vlen, argumentList);
+}
+
+ctr_object *
+ctr_send_message_async (ctr_object * receiverObject, char *message, long vlen, ctr_argument * argumentList)
+{
+  ctr_object* methodObject = ctr_get_responder (receiverObject, message, vlen);
+  if(!methodObject && receiverObject->interfaces->link == CtrStdPromise) {
+    ctr_argument* args = ctr_heap_allocate(sizeof(*args));
+    args->next = argumentList;
+    args->object = ctr_build_string(message, vlen);
+    return ctr_promise_pass_message(receiverObject, args);
+  }
+  if(!methodObject) {
+    CtrStdFlow = ctr_format_str("ENo such async responder '%s'", message);
+    return CtrStdNil;
+  }
+  return ctr_promise_make(CtrStdPromise, methodObject, argumentList, receiverObject);
 }
 
 /**
@@ -2962,8 +2993,8 @@ ctr_set_link_all (ctr_object * what, ctr_object * to)
   what->interfaces->count = count;
   what->interfaces->ifs =
     what->info.shared ? ctr_heap_allocate_shared (sizeof (ctr_object *) * (count + 1)) : ctr_heap_allocate (sizeof (ctr_object *) * (count + 1));
-  for (int i = 0; i < count; i++)
-    memcpy (what->interfaces->ifs + i, to->interfaces->ifs + i, sizeof (ctr_object *));
+  // for (int i = 0; i < count; i++)
+  memcpy (what->interfaces->ifs, to->interfaces->ifs, sizeof (ctr_object *)*count);
 }
 
 

@@ -137,7 +137,7 @@ am_libcitron_la_OBJECTS = citron.lo base.lo world.lo importlib.lo \
 	fiber.lo reflect.lo walker.lo parser.lo lexer.lo lexer_plug.lo \
 	system.lo file.lo collections.lo util.lo memory.lo utf8.lo \
 	symbol.lo siphash.lo coroutine.lo generator.lo \
-	base_extensions.lo marshal.lo symbol_cxx.lo
+	base_extensions.lo marshal.lo promise.lo symbol_cxx.lo
 libcitron_la_OBJECTS = $(am_libcitron_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -154,7 +154,7 @@ am_ctr_OBJECTS = ctr-citron.$(OBJEXT) ctr-base.$(OBJEXT) \
 	ctr-symbol.$(OBJEXT) ctr-siphash.$(OBJEXT) \
 	ctr-coroutine.$(OBJEXT) ctr-generator.$(OBJEXT) \
 	ctr-base_extensions.$(OBJEXT) ctr-marshal.$(OBJEXT) \
-	ctr-symbol_cxx.$(OBJEXT)
+	ctr-promise.$(OBJEXT) ctr-symbol_cxx.$(OBJEXT)
 ctr_OBJECTS = $(am_ctr_OBJECTS)
 ctr_LDADD = $(LDADD)
 ctr_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
@@ -366,23 +366,26 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = --pedantic -O2 -Wall -D withTermios -D forLinux -DCTR_STD_EXTENSION_PATH=\"$(pkgdatadir)\" -DWITH_AUTOMAKE=\"$(pkgdatadir)\"
 AM_LDFLAGS = -rdynamic -lm -ldl -lbsd -lpcre -lpthread -o ctr
+AM_CXXFLAGS = $(CXXFLAGS) -std=c++0x
 ctr_SOURCES = citron.c base.c world.c importlib.c fiber.c reflect.c\
 			  walker.c parser.c lexer.c lexer_plug.c system.c file.c\
 			  collections.c util.c memory.c utf8.c symbol.c siphash.c\
 			  coroutine.c generator.c base_extensions.c dictionary.h\
-			  siphash.h marshal.c symbol_cxx.cpp symbol.hpp
+			  siphash.h marshal.c promise.c symbol_cxx.cpp symbol.hpp\
+			  promise.h
 
 ctr_CFLAGS = $(AM_CFLAGS)
 ctr_CXXFLAGS = $(AM_CXXFLAGS)
 pkginclude_HEADERS = citron.h citron_conv.h citron_ensure.h coroutine.h dictionary.h\
-			  siphash.h generator.h symbol_cxx.hpp symbol.h config.h
+			  siphash.h generator.h symbol.hpp symbol.h config.h
 
 lib_LTLIBRARIES = libcitron.la
 libcitron_la_SOURCES = citron.c base.c world.c importlib.c fiber.c reflect.c\
                		   walker.c parser.c lexer.c lexer_plug.c system.c file.c\
                		   collections.c util.c memory.c utf8.c symbol.c siphash.c\
                        coroutine.c generator.c base_extensions.c dictionary.h\
-					   siphash.h marshal.c symbol_cxx.cpp symbol.hpp
+					   siphash.h marshal.c promise.c symbol_cxx.cpp symbol.hpp\
+					   promise.h
 
 all: all-am
 
@@ -534,6 +537,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-marshal.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-memory.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-parser.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-promise.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-reflect.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-siphash.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-symbol.Po@am__quote@
@@ -552,6 +556,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/marshal.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memory.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parser.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/promise.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reflect.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/siphash.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/symbol.Plo@am__quote@
@@ -890,6 +895,20 @@ ctr-marshal.obj: marshal.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='marshal.c' object='ctr-marshal.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -c -o ctr-marshal.obj `if test -f 'marshal.c'; then $(CYGPATH_W) 'marshal.c'; else $(CYGPATH_W) '$(srcdir)/marshal.c'; fi`
+
+ctr-promise.o: promise.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -MT ctr-promise.o -MD -MP -MF $(DEPDIR)/ctr-promise.Tpo -c -o ctr-promise.o `test -f 'promise.c' || echo '$(srcdir)/'`promise.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ctr-promise.Tpo $(DEPDIR)/ctr-promise.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='promise.c' object='ctr-promise.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -c -o ctr-promise.o `test -f 'promise.c' || echo '$(srcdir)/'`promise.c
+
+ctr-promise.obj: promise.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -MT ctr-promise.obj -MD -MP -MF $(DEPDIR)/ctr-promise.Tpo -c -o ctr-promise.obj `if test -f 'promise.c'; then $(CYGPATH_W) 'promise.c'; else $(CYGPATH_W) '$(srcdir)/promise.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ctr-promise.Tpo $(DEPDIR)/ctr-promise.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='promise.c' object='ctr-promise.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -c -o ctr-promise.obj `if test -f 'promise.c'; then $(CYGPATH_W) 'promise.c'; else $(CYGPATH_W) '$(srcdir)/promise.c'; fi`
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

@@ -7,7 +7,8 @@ ctr_SOURCES = citron.c base.c world.c importlib.c fiber.c reflect.c\
 			  walker.c parser.c lexer.c lexer_plug.c system.c file.c\
 			  collections.c util.c memory.c utf8.c symbol.c siphash.c\
 			  coroutine.c generator.c base_extensions.c dictionary.h\
-			  siphash.h marshal.c symbol_cxx.cpp symbol.hpp
+			  siphash.h marshal.c promise.c symbol_cxx.cpp symbol.hpp\
+			  promise.h
 ctr_CFLAGS = $(AM_CFLAGS)
 ctr_CXXFLAGS = $(AM_CXXFLAGS)
 
@@ -19,4 +20,5 @@ libcitron_la_SOURCES = citron.c base.c world.c importlib.c fiber.c reflect.c\
                		   walker.c parser.c lexer.c lexer_plug.c system.c file.c\
                		   collections.c util.c memory.c utf8.c symbol.c siphash.c\
                        coroutine.c generator.c base_extensions.c dictionary.h\
-					   siphash.h marshal.c symbol_cxx.cpp symbol.hpp
+					   siphash.h marshal.c promise.c symbol_cxx.cpp symbol.hpp\
+					   promise.h

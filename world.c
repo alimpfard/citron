@@ -404,7 +404,7 @@ ctr_internal_object_is_constructible_ (ctr_object * object1, ctr_object * object
   	    ignores[_i] = 0;
     }
 	}
-      if (ctr_array_count (object1, NULL)->value.nvalue - ignore != count && catch_all == 0)
+      if (ctr_array_count (object1, NULL)->value.nvalue != count && catch_all == 0)
 	return 0;		//It requires more/less parameters than object1 can provide, and we don't have a catch-all binding
       int i = 1;
       int _x = 0;
@@ -443,14 +443,20 @@ ctr_internal_object_is_constructible_ (ctr_object * object1, ctr_object * object
       && object2->info.type == CTR_OBJECT_TYPE_OTOBJECT
       && ctr_reflect_get_primitive_link (object1) == CtrStdMap && ctr_reflect_get_primitive_link (object2) == CtrStdMap)
     {
-      ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
-      args->object = object1;
-      ctr_object *o1t = ctr_reflect_describe_value (CtrStdReflect, args);
-      args->object = object2;
-      ctr_object *o2t = ctr_reflect_describe_value (CtrStdReflect, args);
-      ctr_heap_free (args);
-
-      return ctr_internal_object_is_constructible_ (o1t, o2t, raw);
+      if(object2->properties->size == 0)
+        return 1;
+      if(object2->properties->size > object1->properties->size)
+        return 0;
+      ctr_mapitem* mI = object2->properties->head;
+      ctr_argument arg;
+      while(mI) {
+        arg.object = mI->key;
+        ctr_object* tI = ctr_map_get(object1, &arg);
+        if(!tI) return 0;
+        if(!ctr_internal_object_is_constructible_(tI, mI->value, raw)) return 0;
+        mI = mI->next;
+      }
+      return 1;
     }
   ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
   args->object = object2;

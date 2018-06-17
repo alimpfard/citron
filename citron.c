@@ -23,6 +23,7 @@
 static int compile_and_quit = 0;
 static int debug = 0;
 static int from_stdin = 0;
+int with_stdlib = 1;
 /**
  * CommandLine Display Welcome Message
  * Displays a Welcome message, copyright information,
@@ -41,6 +42,7 @@ ctr_cli_welcome (char *invoked_by)
   puts ("\t-fc | --from-compiled : assume file is a serialized AST, execute that");
   puts ("\t-d | enable debug mode");
   puts ("\t-e | read from stdin");
+  puts ("\t--no-std | launch without the stdlib");
   puts ("\t--ext | print ext path and exit");
   printf ("\n");
 }
@@ -101,12 +103,14 @@ ctr_cli_read_args (int argc, char *argv[])
 	  puts (ctr_file_stdext_path_raw ());
 	  exit (0);
 	}
+      else if (strcmp (argv[0], "--no-std") == 0)
+  with_stdlib = 0;
       else
 	break;
       argv++;
       argc--;
     }
-  if (!from_stdin && argv == NULL)
+  if (!from_stdin && argv[0] == NULL)
     {
       ctr_question_intent ();
       exit (0);
@@ -264,7 +268,7 @@ initialize (int extensions)
   memcpy (ctr_mode_input_file, "lib", 3);
   *(ctr_mode_input_file + 3) = '\0';
   ctr_initialize_world ();
-  if (extensions)
+  if (extensions && with_stdlib)
     {
       ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
       const char *epath = ctr_file_stdext_path_raw ();

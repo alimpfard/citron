@@ -1693,6 +1693,7 @@ ctr_array_assign (ctr_object * myself, ctr_argument * argumentList)
     {
       int other;
       int saw_catch_all = 0;
+      int m_count = myself->value.avalue->head-myself->value.avalue->tail;
       for (other = (i = to->value.avalue->tail); i < to->value.avalue->head; other++, i++)
 	{
 	  ctr_object *elnum = ctr_build_number_from_float ((ctr_number) i);
@@ -1714,17 +1715,19 @@ ctr_array_assign (ctr_object * myself, ctr_argument * argumentList)
 		}
 	      saw_catch_all = 1;
 	      accArg->object = ctr_get_or_create_symbol_table_entry(accArg->object->value.svalue->value+1, accArg->object->value.svalue->vlen-1);
-	      int skip = ctr_array_count (myself,
-					  NULL)->value.nvalue - i;
+	      int g_skip = m_count - other - 1;
 	      to_elem = ctr_array_new (CtrStdArray, NULL);
-        if (other-to->value.avalue->tail < myself->value.avalue->head-myself->value.avalue->tail)
-	      for (int _i = other - to->value.avalue->tail; _i < skip + 2 * other - 2 * to->value.avalue->tail + 1; _i++)
+        if (other-to->value.avalue->tail <= myself->value.avalue->head-myself->value.avalue->tail)
+	      for (int _i = other - to->value.avalue->tail + myself->value.avalue->tail;
+            _i < g_skip + other - to->value.avalue->tail + myself->value.avalue->tail;
+            _i++
+        )
 		{
 		  elnumArg->object = myself->value.avalue->elements[_i];
 		  ctr_array_push (to_elem, elnumArg);
 		}
 	      to_elem->value.avalue->immutable = myself->value.avalue->immutable;
-	      other += skip + other - to->value.avalue->tail;
+	      // other += g_skip - to->value.avalue->tail;
 	    }
 	  else
 	    {
@@ -2542,8 +2545,10 @@ ctr_object *
 ctr_map_assign (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *to = argumentList->object;
-  if (!ctr_reflect_check_bind_valid (myself, to, 0))
+  if (!ctr_reflect_check_bind_valid (myself, to, 0)) {
+    CtrStdFlow = ctr_build_string_from_cstring("Invalid bind");
     return CtrStdNil;
+  }
 
   ctr_mapitem *mapItem;
   ctr_argument *newArgumentList;
@@ -2565,10 +2570,12 @@ ctr_map_assign (ctr_object * myself, ctr_argument * argumentList)
       value->info.raw = 1;
       if (!ctr_reflect_check_bind_valid (mapItem->value, value, 0))
 	{
-	  // CtrStdFlow = NULL; //get rid of the error, and bind the result back to the name
-	  newArgumentList->object = mapItem->key;
-	  ctr_send_message (mapItem->value, "unpack:", 7, newArgumentList);
-	  value->info.raw = 0;
+	  // // CtrStdFlow = NULL; //get rid of the error, and bind the result back to the name
+	  // newArgumentList->object = mapItem->key;
+	  // ctr_send_message (mapItem->value, "unpack:", 7, newArgumentList);
+	  // value->info.raw = 0;
+    CtrStdFlow = ctr_build_string_from_cstring("Invalid bind");
+    break;
 	}
       else
 	{

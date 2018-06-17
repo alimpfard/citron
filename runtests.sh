@@ -17,7 +17,7 @@ for i in $(find $dir/tests -maxdepth 1 -name 'test*.ctr'); do
 	result=`echo "$useless_input" | timeout 15 ./ctr ${fitem}`
 	expected=`cat $fexpect`
 	if [ "$result" = "$expected" ]; then
-		echo "[$j]"
+		echo " [$j]"
 		j=$((j+1))
 	else
 		echo "FAIL."
@@ -26,7 +26,7 @@ for i in $(find $dir/tests -maxdepth 1 -name 'test*.ctr'); do
 		echo ""
 		echo "BUT GOT:"
 		echo $result
-		failing+=("$fitem");
+		failing=($failing "$fitem");
 	fi
 	headline=$(head -n 1 $fitem)
 done

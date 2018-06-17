@@ -1,20 +1,20 @@
 {
     #Can we unpack tuples?
-    var ra is [1, [Nil, 3, 4]].
-    [a, *b, _] is ra. #Can we ignore values when we have specified a catch-all?
-    Pen write: '%s %s' % [a, b], brk.
+    var ra is [1, [Nil, 3, 4], 2].
+    [a0, *b0, __] is ra. #Can we ignore values when we have specified a catch-all?
+    Pen write: '%s %s' % [a0, b0], brk.
 
-    ra is Object cnew: {
-        my test is Object cnew: {my name is 'Semicolon'.}.
+    ra is Map cnew: {
+        my test is Map cnew: {my name is 'Semicolon'.}.
         my list is Array < ([6]).
     }. #Can we unpack complex data structures?
-    (Object cnew: {
-      my list is [[a]].
-      my test is Object cnew: {
-        my name is ['b', '*c', 'd'].
+    (Map cnew: {
+      my list is [[\a1]].
+      my test is Map cnew: {
+        my name is [\b1, 'i', \c1, 'o', \d1].
       }.
     }
     ) is ra.
 
-    Pen write: ('%s (%s %s %s)' formatObjects: [a,b,(c join:''),d]), brk.
+    Pen write: ('%s (%si%so%s)' formatObjects: [a1,b1,c1,d1]), brk.
 } run.

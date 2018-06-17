@@ -1363,11 +1363,12 @@ initiailize_base_extensions ()
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("inheritFrom:"), &ctr_object_inherit);
   ctr_std_generator = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
   ctr_set_link_all (ctr_std_generator, CtrStdObject);
-  ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("repeat:"), &ctr_generator_make);
+  ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("repeat:"), &ctr_generator_make_rept);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("from:to:"), &ctr_generator_make);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("from:to:step:"), &ctr_generator_make);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("elementsOf:"), &ctr_generator_make);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("fmap:"), &ctr_generator_fmap);
+  ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("ifmap:"), &ctr_generator_ifmap);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("imap:"), &ctr_generator_imap);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("next"), &ctr_generator_next);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("inext"), &ctr_generator_inext);

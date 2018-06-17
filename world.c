@@ -2477,8 +2477,14 @@ ctr_initialize_world ()
   ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring ("%ctor"), CtrStdReflect_cons, 0);
   CtrStdReflect_cons->info.sticky = 1;
 
+  static ctr_object ctr_dummy_import;
+  static ctr_interfaces ifs;
+  if(!with_stdlib) {
+    ctr_dummy_import.interfaces = &ifs;
+    ctr_set_link_all(&ctr_dummy_import, CtrStdObject);
+  }
   // importlib
-  CtrStdImportLib = ctr_importlib_begin (CtrStdObject, NULL);
+  CtrStdImportLib = ctr_importlib_begin (CtrStdObject, NULL)?:&ctr_dummy_import;
 
   // Fiber
   ctr_fiber_begin_init ();

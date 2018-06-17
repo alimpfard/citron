@@ -104,8 +104,7 @@ ctr_cwlk_message (ctr_tnode * paramNode)
       if (receiverNode->modifier)
         result = ctr_cwlk_expr(receiverNode->nodes->node, "\0");
       else {
-        result = CtrStdNil;
-        CtrStdFlow = ctr_build_string_from_cstring("Attempt to execute a meta-expression");
+        result = receiverNode->nodes->node;
       }
       break;
     case CTR_AST_NODE_IMMUTABLE:
@@ -284,8 +283,7 @@ ctr_cwlk_expr (ctr_tnode * node, char *wasReturn)
       if (node->modifier)
         result = (ctr_object*)node->nodes->node;
       else {
-        result = CtrStdNil;
-        CtrStdFlow = ctr_build_string_from_cstring("Attempt to execute a meta-expression");
+        result = ctr_cwlk_expr(node->nodes->node, "");
       }
       break;
     case CTR_AST_NODE_REFERENCE:

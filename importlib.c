@@ -8,6 +8,8 @@
 ctr_object *
 ctr_importlib_begin (ctr_object * myself, ctr_argument * argumentList)
 {
+  if(!with_stdlib)
+    return NULL;
   ctr_object *instance = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
   ctr_set_link_all (instance, myself);
   CtrStdImportLib_SearchPaths = ctr_array_new (CtrStdArray, NULL);

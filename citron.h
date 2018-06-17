@@ -320,6 +320,7 @@ typedef struct ctr_code_pragma ctr_code_pragma;
 CTR_H_DECLSPEC int CTR_CCOMP_SIMULATION; //in compiler simulation mode
 ctr_object* ctr_ccomp_get_stub(ctr_object*(*nfunc)(ctr_object*,ctr_argument*), ctr_object* receiver, ctr_argument* args); //stub generator lookup table
 CTR_H_DECLSPEC ctr_argument* CtrCompilerStub; //returned object in case of stub error
+extern int with_stdlib;
 
 /**
  * Core Objects

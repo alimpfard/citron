@@ -1,0 +1,36 @@
+Generator on: '*' do: {:self:other
+  ^self copy fmap: \:x other copy fmap: {\:y ^[x, y].}.
+}.
+Generator on: 'zip:' do: {:self:other
+  ^self copy fmap: \:x [x, other next].
+}.
+Generator on: 'zip:with:' do: {:self:other:blk
+  ^self copy fmap: \:x blk applyAll: [x, other next].
+}.
+Generator on: 'izip:' do: {:self:other
+  ^self copy fmap: \:x [x, other inext].
+}.
+Generator on: 'izip:with:' do: {:self:other:blk
+  ^self copy fmap: \:x blk applyAll: [x, other inext].
+}.
+Generator on: 'take:' do: {:self:count
+  ^Array new fill: count with: {^self next.}.
+}.
+Generator on: 'itake:' do: {:self:count
+  ^Array new fill: count with: {^self inext.}.
+}.
+Generator on: 'skip:' do: {:self:count
+  count times: {^self next.}.
+}.
+Generator on: 'iskip:' do: {:self:count
+  count times: {^self inext.}.
+}.
+Number on: 'enumTo:until:' do: {:self:n:last
+  ^Generator from: me to: last step: n - self.
+}.
+Number on: 'enumUntil:' do: {:last
+  ^Generator from: me to: last.
+}.
+Number on: 'enumStep:' do: {:self:n
+  ^Generator repeat: Nil, imap: \:i:_ i * n + self.
+}.

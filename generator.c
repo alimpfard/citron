@@ -9,6 +9,7 @@
 #define CTR_E_OF_M_GENNY 5
 #define CTR_FN_OF_GENNY  6
 #define CTR_IFN_OF_GENNY 7
+#define CTR_XFN_OF_GENNY 8
 
 const static ctr_object generator_end_marker_o;
 static ctr_object *generator_end_marker = (ctr_object *) & generator_end_marker_o;
@@ -36,6 +37,7 @@ typedef struct
 
 void ctr_condense_generator (ctr_generator *, int);
 ctr_mapping_generator *ctr_combine_generators (ctr_mapping_generator *, ctr_mapping_generator *);
+ctr_object* ctr_generator_internal_inext (ctr_generator * genny, int gtype, ctr_generator * ogenny, int ogtype);
 
 ctr_object *
 ctr_generator_make (ctr_object * myself, ctr_argument * argumentList)
@@ -139,6 +141,23 @@ ctr_generator_make (ctr_object * myself, ctr_argument * argumentList)
 }
 
 ctr_object *
+ctr_generator_make_rept (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *inst = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
+  ctr_set_link_all (inst, myself);
+  inst->release_hook = ctr_generator_free;
+  inst->value.rvalue = ctr_heap_allocate (sizeof (ctr_resource));
+  ctr_resource *res = inst->value.rvalue;
+  ctr_object *arg = argumentList->object;
+  res->type = CTR_REPEAT_GENNY;
+  ctr_generator *gen = ctr_heap_allocate (sizeof (*gen));
+  gen->finished = 0;
+  gen->sequence = arg;
+  res->ptr = gen;
+  return inst;
+}
+
+ctr_object *
 ctr_generator_imap (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *blk = argumentList->object;
@@ -198,10 +217,41 @@ ctr_generator_fmap (ctr_object * myself, ctr_argument * argumentList)
 }
 
 ctr_object *
+ctr_generator_ifmap (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *blk = argumentList->object;
+  if (!blk || blk->info.type != CTR_OBJECT_TYPE_OTBLOCK)
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("Expected a block");
+      return myself;
+    }
+  ctr_object *inst = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
+  ctr_set_link_all (inst, ctr_std_generator);
+  ctr_generator *under = myself->value.rvalue->ptr;
+  inst->release_hook = ctr_generator_free;
+  inst->value.rvalue = ctr_heap_allocate (sizeof (ctr_resource));
+  ctr_resource *res = inst->value.rvalue;
+  res->type = CTR_XFN_OF_GENNY;
+  ctr_mapping_generator *genny = ctr_heap_allocate (sizeof (*genny));
+  genny->i_type = myself->value.rvalue->type;
+  genny->genny = myself->value.rvalue->ptr;
+  genny->fn = blk;
+  ctr_generator *generator = ctr_heap_allocate (sizeof (*generator));
+  generator->seq_index = under->seq_index;
+  generator->sequence = genny;
+  ctr_argument *argm = ctr_heap_allocate (sizeof (ctr_argument));
+  argm->next = ctr_heap_allocate (sizeof (ctr_argument));
+  generator->data = argm;
+  generator->finished = under->finished;
+  res->ptr = generator;
+  return inst;
+}
+
+ctr_object *
 ctr_generator_internal_next (ctr_generator * genny, int gtype)
 {
   if (genny->finished)
-    return CtrStdNil;
+    return generator_end_marker;
 
   switch (gtype)
     {
@@ -227,7 +277,7 @@ ctr_generator_internal_next (ctr_generator * genny, int gtype)
 	if (genny->seq_index >= str->vlen)
 	  {
 	    genny->finished = 1;
-	    return CtrStdNil;
+	    return generator_end_marker;
 	  }
 	long ua = getBytesUtf8 (str->value, 0, genny->seq_index);
 	long ub = getBytesUtf8 (str->value, ua, 1);
@@ -245,7 +295,7 @@ ctr_generator_internal_next (ctr_generator * genny, int gtype)
 	if (genny->seq_index >= coll->head - coll->tail)
 	  {
 	    genny->finished = 1;
-	    return CtrStdNil;
+	    return generator_end_marker;
 	  }
 	ctr_object *elem = coll->elements[genny->seq_index];
 	genny->seq_index++;
@@ -257,7 +307,7 @@ ctr_generator_internal_next (ctr_generator * genny, int gtype)
 	if (genny->seq_index >= map->size)
 	  {
 	    genny->finished = 1;
-	    return CtrStdNil;
+	    return generator_end_marker;
 	  }
 	if (!genny->data)
 	  {
@@ -288,17 +338,49 @@ ctr_generator_internal_next (ctr_generator * genny, int gtype)
 	argm->object = ctr_build_number_from_float (genny->seq_index++);
 	do
 	  {
-	    argm->object = ctr_generator_internal_next (igen, igen_type);
+	    argm->next->object = ctr_generator_internal_next (igen, igen_type);
 	  }
-	while (argm->object == generator_end_marker);
+	while (argm->next->object == generator_end_marker && !igen->finished);
+  genny->finished = genny->finished || igen->finished;
+  if (argm->next->object == generator_end_marker) return argm->next->object;
 	ctr_object *res = ctr_block_run (fn, argm, fn);
-	genny->finished = genny->finished || igen->finished;
 	if (CtrStdFlow)
 	  {
 	    if (CtrStdFlow == CtrStdContinue)
 	      {
 		CtrStdFlow = NULL;
 		return ctr_generator_internal_next (genny, gtype);
+	      }
+	    if (CtrStdFlow == CtrStdBreak)
+	      {
+		CtrStdFlow = NULL;
+		genny->finished = 1;
+	      }
+	  }
+	return genny->current = res;
+      }
+    case CTR_XFN_OF_GENNY:
+      {
+	ctr_mapping_generator *mgen = genny->sequence;
+	ctr_argument *argm = genny->data;
+	ctr_generator *igen = mgen->genny;
+	int igen_type = mgen->i_type;
+	ctr_object *fn = mgen->fn;
+	genny->seq_index++;
+	do
+	  {
+	    argm->object = ctr_generator_internal_inext (igen, igen_type, NULL, 0);
+	  }
+    while (argm->object == generator_end_marker && !igen->finished);
+  genny->finished = genny->finished || igen->finished;
+  if (argm->object == generator_end_marker) return argm->object;
+	ctr_object *res = ctr_block_run (fn, argm, fn);
+	if (CtrStdFlow)
+	  {
+	    if (CtrStdFlow == CtrStdContinue)
+	      {
+		CtrStdFlow = NULL;
+		return ctr_generator_internal_inext (genny, gtype, NULL, 0);
 	      }
 	    if (CtrStdFlow == CtrStdBreak)
 	      {
@@ -320,9 +402,10 @@ ctr_generator_internal_next (ctr_generator * genny, int gtype)
 	  {
 	    argm->object = ctr_generator_internal_next (igen, igen_type);
 	  }
-	while (argm->object == generator_end_marker);
+    while (argm->object == generator_end_marker && !igen->finished);
+  genny->finished = genny->finished || igen->finished;
+  if (argm->object == generator_end_marker) return argm->object;
 	ctr_object *res = ctr_block_run (fn, argm, fn);
-	genny->finished = genny->finished || igen->finished;
 	if (CtrStdFlow)
 	  {
 	    if (CtrStdFlow == CtrStdContinue)
@@ -348,7 +431,7 @@ ctr_generator_internal_inext (ctr_generator * genny, int gtype, ctr_generator * 
 {
   ctr_object *current = genny->current;
   if (current == generator_end_marker)
-    return ctr_generator_internal_next (genny, gtype);
+    current = ctr_generator_internal_next (genny, gtype);
   int isnext = 0;
   int fail = 0;
   if ((isnext = !current))
@@ -536,6 +619,7 @@ ctr_generator_internal_tostr (ctr_generator * gen, int gtype)
       return ctr_build_string_from_cstring ("[MapGenerator]");
     case CTR_FN_OF_GENNY:
     case CTR_IFN_OF_GENNY:
+    case CTR_XFN_OF_GENNY:
       {
 	ctr_object *str = ctr_build_string_from_cstring ("[MappedGenerator<");
 	ctr_mapping_generator *mgen = gen->sequence;
@@ -582,6 +666,7 @@ ctr_internal_generator_copy (ctr_generator * genny, int gtype)
       break;
     case CTR_FN_OF_GENNY:
     case CTR_IFN_OF_GENNY:
+    case CTR_XFN_OF_GENNY:
       {
 	*gcopy = *genny;
 	ctr_mapping_generator *mgen = gcopy->sequence;
@@ -610,12 +695,12 @@ ctr_generator_toarray (ctr_object * myself, ctr_argument * argumentList)
   while (1)
     {
       ctr_object *next = ctr_generator_internal_inext (genny, gtype, NULL, 0);
+      if (genny->finished)
+      break;
       if (next == generator_end_marker)
 	continue;
       argm->object = next;
       array = ctr_array_push (array, argm);
-      if (genny->finished)
-	break;
       if (CtrStdFlow)
 	{
 	  if (CtrStdFlow == CtrStdContinue)
@@ -725,6 +810,7 @@ ctr_generator_free (void *res_)
       return NULL;
     case CTR_FN_OF_GENNY:
     case CTR_IFN_OF_GENNY:
+    case CTR_XFN_OF_GENNY:
       {
 	ctr_heap_free (((ctr_generator *) res->ptr)->sequence);
 	ctr_argument *argm = ((ctr_generator *) res->ptr)->data;

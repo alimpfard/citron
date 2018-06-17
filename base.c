@@ -5087,30 +5087,38 @@ ctr_build_listcomp (ctr_tnode * node)
     }
   if (generators && !preds)
     {				//no filter: [e ,, g+] -> [e for frees in g]
-      ctr_object *filter_s = ctr_build_string_from_cstring ("{:gen var syms is my syms. ^\\:blk syms letEqual: gen in: blk.}");
+      ctr_object *filter_s =
+        ctr_build_string_from_cstring ("{:gen var syms is my syms."
+                                       "^\\:blk syms letEqual: gen in: blk.}");
       argm->object = ctr_string_eval (filter_s, NULL);
       ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("syms"), free_refs, 0);
-      ctr_object *bindingfns = ctr_array_fmap (ctr_array_internal_zip (bindings, NULL), argm);
+      ctr_object *gss = ctr_array_internal_zip (bindings, NULL);
+      int g_is_gen = gss->interfaces->link == ctr_std_generator;
+      ctr_object *bindingfns = ctr_send_message(gss, g_is_gen?"ifmap:":"fmap:", 5+g_is_gen, argm);
       ctr_object *call_s = ctr_build_string_from_cstring ("{:blk ^blk applyTo: my main_expr.}");
       argm->object = ctr_string_eval (call_s, NULL);
       ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("main_expr"), mainexprb, 0);
-      // ctr_object* res = ctr_send_message(bindingfns, "fmap:", 5, argm);
-      ctr_object *res = ctr_array_fmap (bindingfns, argm);
+      ctr_object* res = ctr_send_message(bindingfns, "fmap:", 5, argm);
+      // ctr_object *res = ctr_array_fmap (bindingfns, argm);
       return res;
     }
   //expression with generators and predicates
   ctr_object *filter_s =
     ctr_build_string_from_cstring
-    ("{:gen var syms is my syms. (my filters fmap: \\:filter syms letEqual: gen in: filter) all: {:x ^x.}, not continue. ^\\:blk syms letEqual: gen in: blk.}");
+    ("{:gen var syms is my syms."
+     "(my filters fmap: \\:filter syms letEqual: gen in: filter) all: {:x ^x.},"
+     "not continue. ^\\:blk syms letEqual: gen in: blk.}");
   argm->object = ctr_string_eval (filter_s, NULL);
   ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("syms"), free_refs, 0);
   ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("filters"), predicates, 0);
-  ctr_object *bindingfns = ctr_array_fmap (ctr_array_internal_zip (bindings, NULL), argm);
+  ctr_object *gss = ctr_array_internal_zip (bindings, NULL);
+  int g_is_gen = gss->interfaces->link == ctr_std_generator;
+  ctr_object *bindingfns = ctr_send_message(gss, g_is_gen?"ifmap:":"fmap:", 5+g_is_gen, argm);
   ctr_object *call_s = ctr_build_string_from_cstring ("{:blk ^blk applyTo: my main_expr.}");
   argm->object = ctr_string_eval (call_s, NULL);
   ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("main_expr"), mainexprb, 0);
-  // ctr_object* res = ctr_send_message(bindingfns, "fmap:", 5, argm);
-  ctr_object *res = ctr_array_fmap (bindingfns, argm);
+  ctr_object* res = ctr_send_message(bindingfns, "fmap:", 5, argm);
+  // ctr_object *res = ctr_array_fmap (bindingfns, argm);
   return res;
 }
 

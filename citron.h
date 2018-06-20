@@ -755,6 +755,7 @@ ctr_object* ctr_string_html_escape(ctr_object* myself, ctr_argument* argumentLis
 ctr_object* ctr_string_count_of(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_slice(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_at(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_put_at(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_byte_at(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_fmap(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_imap(ctr_object* myself, ctr_argument* argumentList);

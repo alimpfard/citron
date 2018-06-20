@@ -89,7 +89,6 @@ ctr_object* ctr_promise_make(ctr_object* myself, ctr_object* target, ctr_argumen
   return instance;
 }
 
-__attribute__((always_inline))
 ctr_object* ctr_promise_then(ctr_object* myself, ctr_object* target) {
   ctr_resource* res = ctr_heap_allocate(sizeof(*res));
   static struct ctr_promise_entry sentry = {

@@ -1985,6 +1985,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_SLICEFROMTO), &ctr_string_slice);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_AT), &ctr_string_at);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_AT_SYMBOL), &ctr_string_at);
+  ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_PUT_AT), &ctr_string_put_at);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_BYTE_AT), &ctr_string_byte_at);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_INDEX_OF), &ctr_string_index_of);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("fmap:"), &ctr_string_fmap);

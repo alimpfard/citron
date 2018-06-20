@@ -77,12 +77,28 @@ Eval on: 'init' do: {
   my returnValue is Array new.
   my evaluationContext is Map new
     on: 'toString' do: {^'[GlobalEvalContext]'.}.
+  my displayObject is Pen. #override from commandline, maybe?
   ^me.
 }.
-Eval on: 'handleException:' do: {:e
+Eval on: 'display' do: {
+  ^my displayObject.
+}.
+Eval on: 'display:' do: {:x
+  my displayObject is x.
+}.
+['clear', 'green', 'cyan', 'magenta',
+ 'purple', 'blue', 'yellow', 'resetColor',
+ 'red', 'brk', 'clearLine', 'write:',
+ 'writeln:']
+ each_v: {:v
+   Eval on: 'display/$$v' do: {:*args
+     ^my displayObject message: const v arguments: args.
+   }.
+}.
+Eval on: 'handleException:' do: {:self:e
   my errd is True.
   my last_error is e.
-  ^me getFlag: 'equit', either: {thisBlock error: e.} or: {Pen red write: e, resetColor brk. ^e.}.
+  ^me getFlag: 'equit', either: {thisBlock error: e.} or: {self display/red write: e, resetColor brk. ^e.}.
 }.
 Eval on: 'handleInternalException:' do: {:e
   File new: '~/citron_eval_bug_track_%s' % [Clock new time], write: '%s\nTime %s\n===========================\n%s' % [e, Clock new, (Reflect lastTrace tail tail tail chunks: 2, fmap: (\:x x join: ' at '), join: '\n')].
@@ -226,8 +242,8 @@ Eval on: 'Commands' do: {
       ' + (Eval userDefs fmap: \:k:v '+ %s -- %s' % [k, v], values join: '\n', or: '-None-').} at: 'h',
       put: {^Eval stopEvalServer.} at: '!server',
       put: {:args ^Reflect getPropertiesOf: (Eval evaluate: args).} at: '!p',
-      put: {:args Pen writeln: (Eval evaluate: args). ^''.} at: 'p',
-      put: {:args Pen clear. (var h is Eval getHistory) count times: { h pop. }. ^''.} at: 'c',
+      put: {:args Eval display/writeln: (Eval evaluate: args). ^''.} at: 'p',
+      put: {:args Eval display/clear. (var h is Eval getHistory) count times: { h pop. }. ^''.} at: 'c',
       put: {:args ^Reflect getMethodsOf: (Eval evaluate: args).} at: '!m',
       put: {:args
         [obj, *msgs] is args reSplit: '\\s+'.
@@ -478,9 +494,9 @@ Eval on: 'togglePasteMode' do: {
     # when passed -h, show help, then exit.
     opt case: '-h' do: {
         args pop. #consume option.
-        Pen green write: 'Citron Evaluator.\n', resetColor.
-        var P is Pen.
-        P on: 'indent:write:' do: {:i :w Pen write: ('  ' * i). Pen write: w. }.
+        Eval display/green write: 'Citron Evaluator.\n', resetColor.
+        var P is Eval display.
+        P on: 'indent:write:' do: {:self:i:w self write: ('  ' * i), write: w. }.
         P indent: 1 write: 'Eval mode help:', brk.
         P cyan indent: 1 write: 'Eval namespace', resetColor brk.
         P magenta indent: 2 write: '[Eval] setPrompt: [String] ', resetColor write: '-- Sets the prompt.', brk.
@@ -509,6 +525,7 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '-m <executable module> <modu_arg>* : Execute an executable module (at Library/Executable)\n',
           indent: 2 write: '--pid <pidfile>: set the pid file. value is ignored unless [-s <port>] comes after\n',
           indent: 2 write: '--no-logo : don\'t display the ascii logo, use normal text instead\n',
+          indent: 2 write: '--display-object : Use this object instead of `Pen\' to print values\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
         P green write: 'default imported modules in eval are:',
           cyan indent: 1 write: ('LRArray ' + (import __loaded_modules keys reverse join: ' ') ~ 's/\\s|^/\\n+ /g').
@@ -539,7 +556,7 @@ Eval on: 'togglePasteMode' do: {
         Eval addFile: (File new: file, read) named: file.
     }, case: '--Fs' do: {
         args pop. #consume option.
-        Pen writeln: (Eval flags keys join: '\n').
+        Eval display/writeln: (Eval flags keys join: '\n').
         Program exit.
     }, case: '--meta' do: {
         args pop.
@@ -555,16 +572,16 @@ Eval on: 'togglePasteMode' do: {
         Reflect addGlobalVariable: '&_'.
         &_ is args.
         value findPattern: '(.*)\\.' do: {:p value is p at: 1.}.
-        Pen write: (Eval evaluate: value).
+        Eval display/write: (Eval evaluate: value).
         Program exit.
     }, case: '-v' do: {
-        Pen writeln: 'Citron Version ' + Reflect version.
-        Pen writeln: 'Built with the extension prefix of ' + File extensionsPath.
-        Pen writeln: 'Compiled with ' + Reflect compilerInfo.
+        Eval display/writeln: 'Citron Version ' + Reflect version.
+        Eval display/writeln: 'Built with the extension prefix of ' + File extensionsPath.
+        Eval display/writeln: 'Compiled with ' + Reflect compilerInfo.
         Program exit.
     }, case: '-V' do: {
-        Pen writeln: 'Citron'.
-        Pen writeln: '[%L]' % [(Reflect version split: '.')].
+        Eval display/writeln: 'Citron'.
+        Eval display/writeln: '[%L]' % [(Reflect version split: '.')].
         Program exit.
     }, case: '--pid' do: {
       args pop.
@@ -584,14 +601,19 @@ Eval on: 'togglePasteMode' do: {
       (mod isNil) ifTrue: { thisBlock error: 'no module to run?'. }.
       var args is Eval args.
       import respondTo: 'Library/Executable/%s:' % [mod] and: ['Main'].
-      { Main applyTo: args. } catch: {:e Pen red writeln: e, resetColor.}, run.
+      { Main applyTo: args. } catch: {:e Eval display/red writeln: e, resetColor.}, run.
       Program exit.
     }, case: '--no-logo' do: {
       args pop.
       display_logo is False.
+    }, case: '--display-object' do: {
+      args pop.
+      var obj is Eval shiftArgs.
+      obj is Eval evaluate: obj, or: \:_ thisBlock error: '--display-object requires an argument'.
+      Eval display: obj.
     }, case: '-F' do: {
       args pop.
-      var opts is Eval shiftArgs reSplit: '(,|/)(\\s*)'.
+      var opts is Eval shiftArgs or: '', reSplit: '(,|/)(\\s*)'.
       opts each: {:i:flag
         (flag = '') ifTrue: { errPen yellow writeln: '[Warn]: empty -F flag index#$$i was ignored', resetColor. }.
         Eval modifyFlags: flag.
@@ -621,14 +643,14 @@ winsize is {:_
 }.
 
 TerminalWidth is 85.
-Pen writeln: 'Terminal: %sx%s - %sx%s' % winsize run.
+Eval display/writeln: 'Terminal: %sx%s - %sx%s' % winsize run.
 Signal new handle: 'SIGWINCH' with: winsize.
 
 
 display_logo
-  either: {Pen writeln: (Colors % [logo, GREEN_COLOR, ITALIC_EFFECT] % ['Project Citron', Reflect version, Reflect compilerInfo]).}
+  either: {Eval display/writeln: (Colors % [logo, GREEN_COLOR, ITALIC_EFFECT] % ['Project Citron', Reflect version, Reflect compilerInfo]).}
   or: {
-    Pen green write: ?>Project Citron : The Programming Language (V<?, write:(Reflect version) + ')', resetColor brk
+    Eval display/green write: ?>Project Citron : The Programming Language (V<?, write:(Reflect version) + ')', resetColor brk
     write:
     'Eval Mode, parameters related to eval are in the Eval namespace.\n' +
     'run with \'-h\' to read the eval mode help.\n'.
@@ -646,17 +668,17 @@ Eval on: 'redraw:at:comment:' do: {:inp:cursor:cmt
   }, else: {
     cmt is '\x1b[%dC%s\x1b[%dD' % [twext, cmt, twext + cmt length].
   }.
-  Pen clearLine.
+  Eval display/clearLine.
   inp length > 1 ifTrue: {
     var diff is 0.
     var iinp is (cursor > (var first_visible is (inp length - TerminalWidth run - (ctn length) max: 0))) either: { ^inp skip: first_visible - 2. } or: { var tdiff is TerminalWidth run - (ctn length). var f is inp skip: cursor - 1. diff is f length - tdiff. ^f from: 0 length: tdiff. }.
     (Eval getFlag: 'highlight') ifTrue: {iinp is Highlight highlight: iinp.}.
-    Pen cyan write: ctn, resetColor.
-    Pen write: '%s%s' % [iinp, ('\b' * (inp length - cursor - diff - 1 max: 0, min: inp length))].
+    Eval display/cyan write: ctn, resetColor.
+    Eval display/write: '%s%s' % [iinp, ('\b' * (inp length - cursor - diff - 1 max: 0, min: inp length))].
   }, else: {
-    Pen cyan write: ctn, resetColor write: inp.
+    Eval display/cyan write: ctn, resetColor write: inp.
   }.
-  (cmt length > 0) ifTrue: { Pen yellow write: cmt, resetColor. }.
+  (cmt length > 0) ifTrue: { Eval display/yellow write: cmt, resetColor. }.
 }.
 
 Eval genAccessors: ['exectime', '__eval_ret', 'statsb', 'statsa'].
@@ -699,7 +721,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
   inp is ''.
   # break the repl when `end` is True.
   Eval break break.
-  Pen cyan write: prompt, resetColor.
+  Eval display/cyan write: prompt, resetColor.
 
   var inc is stdin readBytes: 1.
   var last_was_comp is False.
@@ -808,19 +830,19 @@ Eval on: 'read_eval_print:' do: ({:prompt
           cursor > 0 ifTrue: {
             inp is inp removeFrom: (cursor - 1) to: cursor.
             cursor -=: 1.
-            Pen write: '\b \b'.
-          }, else: { Pen write: '\a'. }.
+            Eval display/write: '\b \b'.
+          }, else: { Eval display/write: '\a'. }.
         }, case: '\x{7f}' do: {#<\b>
           clear_next_line run. have_context is False.
           cursor > 0 ifTrue: {
             inp is inp removeFrom: (cursor - 1) to: cursor.
             cursor -=: 1.
-            Pen write: '\b \b'.
-          }, else: { Pen write: '\a'. }.
+            Eval display/write: '\b \b'.
+          }, else: { Eval display/write: '\a'. }.
         }, case: '\x11' do: {
           var toc is (inp trim or: '  ') split: ' ', last.
           var recs is '%:L' % [' ', (Eval allTheNames filter: {:_:n ^n startsWith: toc.})].
-          Pen cyan write: recs, resetColor.
+          Eval display/cyan write: recs, resetColor.
           clear_next_line run. have_context is False.
 
         }, case: '\x1b' do: {
@@ -834,14 +856,14 @@ Eval on: 'read_eval_print:' do: ({:prompt
           }, case: '\x5b\x42' do: { #Down Arrow
             (hindex > 0) & (Eval getHistory count > 0) ifTrue: {
               hindex +=: 1.
-              Pen write: '\b' * (inp length).
+              Eval display/write: '\b' * (inp length).
               inp is Eval getHistory.
               inp count <=: hindex, ifTrue: {hindex is inp count.}.
               inp is inp at: hindex - 1.
               cursor is inp length.
             }, else: {
               hindex is 0.
-              Pen write: '\b \b' * (inp length).
+              Eval display/write: '\b \b' * (inp length).
               inp is ''.
               cursor is 0.
             }.
@@ -850,13 +872,13 @@ Eval on: 'read_eval_print:' do: ({:prompt
           }, case: '\x5b\x43' do: { #Right Arrow
             (cursor < inp length) ifTrue: {
               cursor +=: 1.
-            }, else: {Pen write: '\a'.}.
+            }, else: {Eval display/write: '\a'.}.
             clear_next_line run. have_context is False.
 
           }, case: '\x5b\x44' do: { #Left Arrow
             (cursor > 0) ifTrue: {
               cursor -=: 1.
-            }, else: {Pen write: '\a'.}.
+            }, else: {Eval display/write: '\a'.}.
             clear_next_line run. have_context is False.
 
           }, case: '\x5b\x31' do: { #Supposedly <ctrl>
@@ -872,7 +894,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
                   var ct is (var ix is inp from: cursor to: (inp length), trim) reIndexOf: ?>\s|\'<?, - 1.
                   ct is ct equals: 0, either: ct + 1 or: ct.
                   cursor is cursor + ct + ((inp length) - (ix length)).
-                }.#, else: { Pen red write: inc. }.
+                }.#, else: { Eval display/red write: inc. }.
               }.
               clear_next_line run. have_context is False.
           }, case: '\x4f\x51' do: { #F2
@@ -911,19 +933,19 @@ Eval on: 'read_eval_print:' do: ({:prompt
         last_was_comp is False.
       }.
     Eval redraw: inp at: cursor - 1 comment: (inBlock either: '%s%d' % ['%{', inBlock] or: cmt).
-    # Pen write: inc toByteArray.
+    # Eval display/write: inc toByteArray.
     done is (done & (inBlock = 0)).
     done break.
     inc is stdin readBytes: 1.
   }.
   hindex is Eval getHistory count.
-  # Pen cyan write: ' [cursor %d in (%s)]' % [cursor, (inp)], resetColor.
+  # Eval display/cyan write: ' [cursor %d in (%s)]' % [cursor, (inp)], resetColor.
   (inp trim = '') do ifTrue: {
     enterRepeat ifTrue: {
       inp is Eval getHistory or: ['Nil'], head.
     }.
   }, continue done.
-  Eval getFlag: 'printvs', ifTrue: { Pen brk. }.
+  Eval getFlag: 'printvs', ifTrue: { Eval display/brk. }.
   # if it ends in a dot, get rid of it.
   inp is inp trim.
   (inp at: (inp length - 1), = '.') ifTrue: {
@@ -944,19 +966,19 @@ Eval on: 'read_eval_print:' do: ({:prompt
   Eval errored? not ifTrue: {
     var printed is False.
     Eval getFlag: 'printvs', ifTrue: { Pen message: Eval color arguments: [], write: var str is Eval __eval_ret toString. printed is str length > 0. }.
-    Pen resetColor.
+    Eval display/resetColor.
     Eval getFlag: 'ptype', ifTrue: {
-      Pen yellow write: '%s=> (%s)%s' % [(printed either: ' ' or: ''), (Reflect strTypeOf: Eval __eval_ret, replace: '\'' with: ''), (printed either: '' or: '\n')].
-      Pen resetColor.
+      Eval display/yellow write: '%s=> (%s)%s' % [(printed either: ' ' or: ''), (Reflect strTypeOf: Eval __eval_ret, replace: '\'' with: ''), (printed either: '' or: '\n')].
+      Eval display/resetColor.
     }.
     Eval getFlag: 'stats', ifTrue: {
       var str is '%s(%s seconds (%d cycles), %s bytes)' % [(printed either: '\n' or: ''), Eval exectime / (Clock ticksPerSecond), Eval exectime, ((Eval statsa - Eval statsb) toString reverse reSplit: '(?<=\\G...)', join: ',', reverse)].
-      Pen write: Colors % [str, GREEN_COLOR, ITALIC_EFFECT].
-      printed ifFalse: { Pen brk. }.
+      Eval display/write: Colors % [str, GREEN_COLOR, ITALIC_EFFECT].
+      printed ifFalse: { Eval display/brk. }.
     }.
     it is _.
     #Broom sweep. #Keep the darn pointers in memory
-    Eval __eval_ret toString length > 0 ifTrue: { Pen brk. }.
+    Eval __eval_ret toString length > 0 ifTrue: { Eval display/brk. }.
   }.
 }).# catch: {:e Eval handleInternalException: e.}).
 

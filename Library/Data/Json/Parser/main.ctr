@@ -1,0 +1,134 @@
+import
+  Library/Data/String
+  Library/Data/SwitchCase.
+
+var Json is Object new.
+Json on: 'toString' do: {
+  ^'[JSON]'.
+}.
+Json on: 'type' do: {
+  ^'JSON'.
+}.
+Json on: 'parse:' do: {:json
+  var res is me _internal_parse_toplevel: json toType: Map.
+  ^res head.
+}.
+
+Json on: 'parse:genericType:' do: {:json:type
+  var res is me _internal_parse_toplevel: json toType: type.
+  ^res head.
+}.
+
+Json on: '_internal_parse_toplevel:toType:' do: {:self:json:type
+  json is json leftTrim.
+  ^ json head
+    case: '{' do: {
+        ^ self _internal_parse_object: json toType: type.
+    },
+    case: '[' do: {
+        ^ self _internal_parse_array: json toType: type.
+    },
+    case: '"' do: {
+        ^ self _internal_parse_string: json toType: type.
+    },
+    default: {
+        var res is self _internal_parse_numeric: json toType: type.
+        res last = json ifTrue: {
+          thisBlock error: 'Invalid character: <%s>' % [json head].
+        }.
+        ^res.
+    },
+    switch.
+}.
+
+Json on: '_internal_skip_comma:optional:' do: {:json:op
+  json is json leftTrim.
+  var skip is 1.
+  json head = ',' ifFalse: {
+    op either: { skip is 0. } or: {
+      thisBlock error: 'Expected a <,> but found a <%s>' % [json head].
+      True break.
+      skip is 0.
+    }.
+  }.
+  ^json skip: skip.
+}.
+
+Json on: '_internal_skip_colon:' do: {:json
+  json is json leftTrim.
+  json head = ':' ifFalse: { thisBlock error: 'Expected a <:> but found a <%s>' % [json head]. }.
+  ^json skip: 1.
+}.
+
+Json on: '_internal_parse_object:toType:' do: {:self:json:type
+  var result is Map new.
+  json is json leftTrim.
+  json head !=: '{', ifTrue: { thisBlock error: 'Expected a <{> but found a ' + json head. }.
+  var json_ is json tail.
+  { json_ is json_ leftTrim. json is json_. ^json_ head !=: '}'. } whileTrue: {
+      [key, json_] is self _internal_parse_string: json_ toType: type.
+      json_ is self _internal_skip_colon: json_.
+      [value, json_] is self _internal_parse_toplevel: json_ toType: type.
+      { json_ is self _internal_skip_comma: json_ optional: False. } catch: {
+        json_ is json_ leftTrim.
+        json_ head = '}' ifFalse: { thisBlock error: 'Expected a <}> but found a <%s>' % [json_ head]. }.
+        result put: value at: key.
+        True break.
+      }, run.
+      result put: value at: key.
+      json head isNil break.
+  }.
+  Reflect link: result to: type.
+  ^[result, json tail].
+}.
+Json on: '_internal_parse_array:toType:' do: {:self:json:type
+  var result is Array new.
+  json head !=: '[', ifTrue: { thisBlock error: 'Expected a <[> but found a ' + json head. }.
+  var json_ is json tail.
+  { json_ is json_ leftTrim. json is json_. ^json_ head !=: ']'. } whileTrue: {
+    var value is self _internal_parse_toplevel: json_ toType: type.
+    json_ is value last.
+    value is value head.
+    result push: value.
+    { json_ is self _internal_skip_comma: json_ optional: False. } catch: {
+      json_ is json_ leftTrim.
+      json_ head = ']' ifFalse: { thisBlock error: 'Expected a <]> but found a <%s>' % [json_ head]. }.
+      # json is json_.
+      True break.
+    }, run.
+    # json is json_.
+  }.
+  # json head = ']' ifFalse: { thisBlock error: 'Expected a <]> but found a <%s>' % [json head]. }.
+  ^[result, json tail].
+}.
+Json on: '_internal_parse_string:toType:' do: {:json
+  var result is ''.
+  var head is ''.
+  json head !=: '"', ifTrue: { thisBlock error: 'Expected a <"> but found a ' + json head. }.
+  json is json tail.
+  { head is json head. ^head !=: '"'. } whileTrue: {
+    head = '\\' either: {
+      result +=: (json take: 2).
+      json is json skip: 2.
+    } or: {
+      result +=: json head.
+      json is json tail.
+    }.
+    json head isNil break.
+  }.
+  ^[result, json tail].
+}.
+Json on: '_internal_read_number:' do: {:spec
+  ^spec toNumber. # TODO: read
+}.
+Json on: '_internal_parse_numeric:toType:' do: {:self:json
+  var result is Nil.
+
+  json findPattern: ?>^\s*(-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?)(.*)$<? do: {:groups
+    result is [(self _internal_read_number: groups @ 1), groups @ 2].
+  }.
+  result isNil ifTrue: {
+    thisBlock error: 'Expected a number but found a ' + json head.
+  }.
+  ^result.
+}.

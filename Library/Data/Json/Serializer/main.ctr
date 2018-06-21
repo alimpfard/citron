@@ -1,0 +1,28 @@
+import Library/Data/Json/Parser: 'Json'.
+
+Json on: '_internal_serialize:' do: {:obj
+  ^obj toJSON.
+}.
+
+Json on: 'serialize:' do: {:obj
+  ^obj toJSON.
+}.
+
+Nil on: 'toJSON' do: {
+  ^'null'.
+}.
+Number on: 'toJSON' do: {
+  ^me toString.
+}.
+String on: 'toJSON' do: {
+  ^'"%s"' % [me escapeDoubleQuotes].
+}.
+Array on: 'toJSON' do: {
+  ^'[%:L]' % [',', (me fmap: \:x x toJSON)].
+}.
+Map on: 'toJSON' do: {
+  ^'{%:L}' % [',', (me kvmap: \:kv kv fmap: \:x x toJSON, join: ':')].
+}.
+Object on: 'toJSON' do: {
+  thisBlock error: 'Cannot serialize object of type ' + me type.
+}.

@@ -37,6 +37,7 @@ import
   Library/Data/Set
   Library/Utils/Highlight
   Library/Control/MethodResolve
+  Library/Data/Json
   Library/Utils/CLIContextMenu: ['generate_context_menu', 'clear_next_line'].
 
 var OneGateFlipper is Object new on: 'new' do: { ^me cnew: {my value is False.}. }.
@@ -55,7 +56,7 @@ Eval on: 'init' do: {
   my hs_file is File new: '~/.ctrhist'.
   my hs_file exists ifFalse: { my hs_file write: '[]'. }.
   var history is my history.
-  (JSON parse: (my hs_file read or: '[]') genericType: Object) each_v: \:x history push: x.
+  (Json parse: (my hs_file read or: '[]') genericType: Object) each_v: \:x history push: x.
   my commands is Nil.
   my command_comps is Nil.
   my userDefs is Nil.
@@ -112,7 +113,7 @@ Eval on: 'end' do: {
   my debug ifFalse: {
     me stopEvalServer.
     my hs_file write: (
-      {:json JSON parse: json. ^json.} catch: {:e ^'[]'.}, applyTo: (JSON serialize: my history, ~ ?>s/\\/\\\\/g<?)
+      {:json Json parse: json. ^json.} catch: {:e ^'[]'.}, applyTo: (Json serialize: my history, ~ ?>s/\\/\\\\/g<?)
     ).
   }.
 }.
@@ -348,6 +349,10 @@ Eval on: 'CommandCompletions' do: {
               ^(File expand: path2, fmap: (\:x x skip: path length)).
           } or: [].
       } at: ':!',
+      put: {:filter
+        filter is filter or: [''], last.
+        ^(['all', 'show'] + (Array new fill: Reflect frameId with: \:i i toString)) filter: (\:_:x x startsWith: filter), fmap: \:x x skip: filter length.
+      } at: ':!frame',
       put: {:filter ^Eval Commands keys filter: (\:_:x x startsWith: filter), fmap: \:x x skip: filter length.} at: 'generic'.
   }.
 }.
@@ -369,7 +374,8 @@ Eval on: 'doMeta:' do: {:str:ptr
 }.
 
 Eval on: 'metaCompletion:' do: {:m
-  [meta, *argstrs] is m.
+  var meta is m head.
+  var argstrs is m tail.
   var cmds is Eval CommandCompletions.
   ^cmds at: meta, or: {
       argstrs is meta skip: 1.
@@ -394,7 +400,7 @@ Eval on: 'evaluate:' do: { :str
                 ^str eval.
                 } catch: {:e Eval handleException: e. ^Nil.}).
         }).
-    ^(Eval getFlag: 'jsonout') either: { ^JSON serialize: [(f toString replace: '\\' with: '\\\\'), (JSON serialize: [(Eval errored?), (Eval lastError), (Eval trace)])]. } or: {^f.}.
+    ^(Eval getFlag: 'jsonout') either: { ^Json serialize: [(f toString replace: '\\' with: '\\\\'), (Json serialize: [(Eval errored?), (Eval lastError), (Eval trace)])]. } or: {^f.}.
 }.
 
 Eval on: 'addFile:named:' do: {:str:fname
@@ -525,7 +531,7 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '-m <executable module> <modu_arg>* : Execute an executable module (at Library/Executable)\n',
           indent: 2 write: '--pid <pidfile>: set the pid file. value is ignored unless [-s <port>] comes after\n',
           indent: 2 write: '--no-logo : don\'t display the ascii logo, use normal text instead\n',
-          indent: 2 write: '--display-object : Use this object instead of `Pen\' to print values\n',
+          indent: 2 write: '--interactive-print : Use this object instead of `Pen\' to print values\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
         P green write: 'default imported modules in eval are:',
           cyan indent: 1 write: ('LRArray ' + (import __loaded_modules keys reverse join: ' ') ~ 's/\\s|^/\\n+ /g').
@@ -606,10 +612,10 @@ Eval on: 'togglePasteMode' do: {
     }, case: '--no-logo' do: {
       args pop.
       display_logo is False.
-    }, case: '--display-object' do: {
+    }, case: '--interactive-print' do: {
       args pop.
       var obj is Eval shiftArgs.
-      obj is Eval evaluate: obj, or: \:_ thisBlock error: '--display-object requires an argument'.
+      obj is Eval evaluate: obj, or: \:_ thisBlock error: '--interactive-print requires an argument'.
       Eval display: obj.
     }, case: '-F' do: {
       args pop.

@@ -40,7 +40,7 @@ Pen on: 'for:' do: {:io
       my file write: const COLOR_RED.
     }, on: 'file' do: {
       ^my file.
-    }, learn: '>' means: 'write'.
+    }, learn: '>' means: 'write:'.
   }.
 }.
 

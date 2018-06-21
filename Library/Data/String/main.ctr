@@ -1,0 +1,14 @@
+String on: 'head' do: {:self
+  ^self either: { ^self at: 0. } or: Nil.
+}.
+String on: 'tail' do: {
+  ^me skip: 1.
+}.
+String on: 'take:' do: {:len
+  ^me from: 0 length: len.
+}.
+String on: 'span:' do: {:blk
+  var s0 is -1.
+  me characters each: \:i:x blk[x] ifTrue: { s0 is i. }, not break.
+  ^[(me from: 0 length: s0 + 1), (me skip: s0 + 1)].
+}.

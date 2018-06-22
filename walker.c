@@ -8,10 +8,10 @@
 
 #include "citron.h"
 
-static int ctr_cwlk_replace_refs = 0;
-static int force_quote = 0;
-static int ctr_cwlk_msg_level = 0;	//toplevel
-static int ctr_cwlk_last_msg_level = 0;	//toplevel old
+int ctr_cwlk_replace_refs = 0;
+int force_quote = 0;
+int ctr_cwlk_msg_level = 0;	//toplevel
+int ctr_cwlk_last_msg_level = 0;	//toplevel old
 /**
  * CTRWalkerReturn
  *
@@ -287,9 +287,8 @@ ctr_cwlk_expr (ctr_tnode * node, char *wasReturn)
       }
       break;
     case CTR_AST_NODE_REFERENCE:
-      if ((ctr_cwlk_replace_refs && ctr_cwlk_msg_level <= ctr_cwlk_last_msg_level) || force_quote)
+      if ((ctr_cwlk_replace_refs /*&& ctr_cwlk_msg_level <= ctr_cwlk_last_msg_level*/) || force_quote)
 	{
-	  // printf("%.*s\n", node->vlen, node->value);
 	  result = ctr_get_or_create_symbol_table_entry (node->value, node->vlen);
 	  break;
 	}

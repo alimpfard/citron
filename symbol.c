@@ -47,7 +47,7 @@ ctr_object *
 ctr_symbol_equals (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *other = argumentList->object;
-  return ctr_build_bool (myself == other);
+  return ctr_build_bool (myself->value.svalue == other->value.svalue);
 }
 
 ctr_object *
@@ -56,7 +56,7 @@ ctr_symbol_ihash (ctr_object * myself, ctr_argument * argumentList)
   if (myself == CtrStdSymbol)
     return ctr_build_number_from_float (ctr_internal_index_hash (myself));
   else
-    return ctr_build_number_from_float ((uintptr_t) (myself));
+    return ctr_build_number_from_float ((uintptr_t) (myself->value.svalue));
 }
 
 ctr_object *

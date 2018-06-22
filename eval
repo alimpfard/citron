@@ -247,9 +247,9 @@ Eval on: 'Commands' do: {
       put: {:args Eval display/clear. (var h is Eval getHistory) count times: { h pop. }. ^''.} at: 'c',
       put: {:args ^Reflect getMethodsOf: (Eval evaluate: args).} at: '!m',
       put: {:args
-        [obj, *msgs] is args reSplit: '\\s+'.
-        obj is Eval evaluate: obj.
-        msgs each_v: \:msg Eval breakFor: obj message: msg.
+        var msgs is args reSplit: '\\s+'.
+        var obj is Eval evaluate: msgs head.
+        msgs tail each_v: \:msg Eval breakFor: obj message: msg.
         ^'will break on messages %L' % [msgs].
       } at: 'break',
       put: {:args
@@ -702,9 +702,8 @@ Eval on: 'enableDebugStuff' do: {
 }.
 
 Eval on: 'debugRepl:' do: {:self:stuff
-  [continue, *vals] is stuff.
-  Pen writeln: 'Break on %s::\'%s\' (%L)' % vals.
-  var prompt is '%s %s(%s)%s' % (vals + [self prompt]).
+  Pen writeln: 'Break on %s::\'%s\' (%L)' % stuff tail.
+  var prompt is '%s %s(%s)%s' % (stuff tail + [self prompt]).
   var inp is ''.
   var _ is Nil.
   var __ is Nil.
@@ -714,7 +713,7 @@ Eval on: 'debugRepl:' do: {:self:stuff
   var enterRepeat is True.
   var inBlock is 0.
   enableDebugStuff.
-  my returnValue push: continue.
+  my returnValue push: stuff head.
   {^True.} whileTrue: { self read_eval_print: prompt. }.
   disableDebugStuff.
   ^my returnValue pop.

@@ -1556,7 +1556,8 @@ ctr_array_to_argument_list (ctr_object * arr, ctr_argument * provided)
   if (!arr)
     return NULL;
   ctr_size i = arr->value.avalue->tail, arr_max_len = arr->value.avalue->head - arr->value.avalue->tail;
-  if (arr_max_len == 0) return provided;
+  if (arr_max_len == 0)
+    return provided;
   if (!provided)
     provided = ctr_heap_allocate (sizeof (ctr_argument));
   ctr_argument *arg = provided;
@@ -1681,10 +1682,11 @@ ctr_object *
 ctr_array_assign (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *to = argumentList->object;
-  if (!ctr_reflect_check_bind_valid (myself, to, 0)) {
-    CtrStdFlow = ctr_build_string_from_cstring("Invalid bind");
-    return CtrStdNil;
-  }
+  if (!ctr_reflect_check_bind_valid (myself, to, 0))
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("Invalid bind");
+      return CtrStdNil;
+    }
 
   ctr_argument *elnumArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   ctr_argument *accArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
@@ -1693,14 +1695,15 @@ ctr_array_assign (ctr_object * myself, ctr_argument * argumentList)
     {
       int other;
       int saw_catch_all = 0;
-      int m_count = myself->value.avalue->head-myself->value.avalue->tail;
+      int m_count = myself->value.avalue->head - myself->value.avalue->tail;
       for (other = (i = to->value.avalue->tail); i < to->value.avalue->head; other++, i++)
 	{
 	  ctr_object *elnum = ctr_build_number_from_float ((ctr_number) i);
 	  elnumArg->object = elnum;
 	  ctr_object *to_elem;
 	  accArg->object = ctr_array_get (to, elnumArg);
-	  if (accArg->object->interfaces->link == CtrStdSymbol && accArg->object->value.svalue->vlen == 1 && *accArg->object->value.svalue->value == '_')
+	  if (accArg->object->interfaces->link == CtrStdSymbol && accArg->object->value.svalue->vlen == 1
+	      && *accArg->object->value.svalue->value == '_')
 	    continue;
 	  if (accArg->object->interfaces->link == CtrStdSymbol && *accArg->object->value.svalue->value == '*')
 	    {
@@ -1714,18 +1717,16 @@ ctr_array_assign (ctr_object * myself, ctr_argument * argumentList)
 		  goto clear;
 		}
 	      saw_catch_all = 1;
-	      accArg->object = ctr_get_or_create_symbol_table_entry(accArg->object->value.svalue->value+1, accArg->object->value.svalue->vlen-1);
+	      accArg->object = ctr_get_or_create_symbol_table_entry (accArg->object->value.svalue->value + 1, accArg->object->value.svalue->vlen - 1);
 	      int g_skip = m_count - other - 1;
 	      to_elem = ctr_array_new (CtrStdArray, NULL);
-        if (other-to->value.avalue->tail <= myself->value.avalue->head-myself->value.avalue->tail)
-	      for (int _i = other - to->value.avalue->tail + myself->value.avalue->tail;
-            _i < g_skip + other - to->value.avalue->tail + myself->value.avalue->tail;
-            _i++
-        )
-		{
-		  elnumArg->object = myself->value.avalue->elements[_i];
-		  ctr_array_push (to_elem, elnumArg);
-		}
+	      if (other - to->value.avalue->tail <= myself->value.avalue->head - myself->value.avalue->tail)
+		for (int _i = other - to->value.avalue->tail + myself->value.avalue->tail;
+		     _i < g_skip + other - to->value.avalue->tail + myself->value.avalue->tail; _i++)
+		  {
+		    elnumArg->object = myself->value.avalue->elements[_i];
+		    ctr_array_push (to_elem, elnumArg);
+		  }
 	      to_elem->value.avalue->immutable = myself->value.avalue->immutable;
 	      // other += g_skip - to->value.avalue->tail;
 	    }
@@ -1739,9 +1740,10 @@ ctr_array_assign (ctr_object * myself, ctr_argument * argumentList)
     }
   else if (to->interfaces->link == CtrStdSymbol)
     {
-      if (argumentList->object->value.svalue->vlen == 0 || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
-        goto clear;
-      ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string(to), myself, 0);
+      if (argumentList->object->value.svalue->vlen == 0
+	  || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
+	goto clear;
+      ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string (to), myself, 0);
     }
 clear:
   ctr_heap_free (elnumArg);
@@ -2545,10 +2547,11 @@ ctr_object *
 ctr_map_assign (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *to = argumentList->object;
-  if (!ctr_reflect_check_bind_valid (myself, to, 0)) {
-    CtrStdFlow = ctr_build_string_from_cstring("Invalid bind");
-    return CtrStdNil;
-  }
+  if (!ctr_reflect_check_bind_valid (myself, to, 0))
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("Invalid bind");
+      return CtrStdNil;
+    }
 
   ctr_mapitem *mapItem;
   ctr_argument *newArgumentList;
@@ -2574,8 +2577,8 @@ ctr_map_assign (ctr_object * myself, ctr_argument * argumentList)
 	  // newArgumentList->object = mapItem->key;
 	  // ctr_send_message (mapItem->value, "unpack:", 7, newArgumentList);
 	  // value->info.raw = 0;
-    CtrStdFlow = ctr_build_string_from_cstring("Invalid bind");
-    break;
+	  CtrStdFlow = ctr_build_string_from_cstring ("Invalid bind");
+	  break;
 	}
       else
 	{
@@ -2609,27 +2612,27 @@ ctr_map_contains (ctr_object * myself, ctr_argument * argumentList)
 
       /* If developer returns something other than string (ouch, toString), then cast anyway */
       if (searchKey->info.type != CTR_OBJECT_TYPE_OTSTRING)
-  {
-    searchKey = ctr_internal_cast2string (searchKey);
-  }
+	{
+	  searchKey = ctr_internal_cast2string (searchKey);
+	}
 
       foundObject = ctr_internal_object_find_property (myself, searchKey, 0);
-      return ctr_build_bool(foundObject != NULL);
+      return ctr_build_bool (foundObject != NULL);
     }
   else
     {
       ctr_number hashk;
       ctr_object *searchKeyHasho = ctr_send_message (searchKey, "iHash", 5, NULL);
       if (searchKeyHasho->info.type != CTR_OBJECT_TYPE_OTNUMBER)
-  {
-    foundObject = ctr_internal_object_find_property (myself, searchKey, 0);
-  }
+	{
+	  foundObject = ctr_internal_object_find_property (myself, searchKey, 0);
+	}
       else
-  {
-    hashk = searchKeyHasho->value.nvalue;
-    foundObject = ctr_internal_object_find_property_with_hash (myself, searchKey, *(uint64_t *) & hashk, 0);
-  }
-      return ctr_build_bool(foundObject != NULL);
+	{
+	  hashk = searchKeyHasho->value.nvalue;
+	  foundObject = ctr_internal_object_find_property_with_hash (myself, searchKey, *(uint64_t *) & hashk, 0);
+	}
+      return ctr_build_bool (foundObject != NULL);
     }
 }
 

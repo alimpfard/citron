@@ -102,10 +102,11 @@ ctr_cwlk_message (ctr_tnode * paramNode)
       break;
     case CTR_AST_NODE_EMBED:
       if (receiverNode->modifier)
-        result = ctr_cwlk_expr(receiverNode->nodes->node, "\0");
-      else {
-        result = receiverNode->nodes->node;
-      }
+	result = ctr_cwlk_expr (receiverNode->nodes->node, "\0");
+      else
+	{
+	  result = receiverNode->nodes->node;
+	}
       break;
     case CTR_AST_NODE_IMMUTABLE:
     case CTR_AST_NODE_NESTED:
@@ -281,13 +282,14 @@ ctr_cwlk_expr (ctr_tnode * node, char *wasReturn)
       break;
     case CTR_AST_NODE_EMBED:
       if (node->modifier)
-        result = (ctr_object*)node->nodes->node;
-      else {
-        result = ctr_cwlk_expr(node->nodes->node, "");
-      }
+	result = (ctr_object *) node->nodes->node;
+      else
+	{
+	  result = ctr_cwlk_expr (node->nodes->node, "");
+	}
       break;
     case CTR_AST_NODE_REFERENCE:
-      if ((ctr_cwlk_replace_refs /*&& ctr_cwlk_msg_level <= ctr_cwlk_last_msg_level*/) || force_quote)
+      if ((ctr_cwlk_replace_refs /*&& ctr_cwlk_msg_level <= ctr_cwlk_last_msg_level */ ) || force_quote)
 	{
 	  result = ctr_get_or_create_symbol_table_entry (node->value, node->vlen);
 	  break;
@@ -319,30 +321,33 @@ ctr_cwlk_expr (ctr_tnode * node, char *wasReturn)
     case CTR_AST_NODE_SYMBOL:
       result = (ctr_object *) (node->value);
       break;
-    case CTR_AST_NODE_RAW: {
-      int quote = 0;
-      switch (node->modifier) {
-        case 1:
-          result = ctr_ast_from_node(node->nodes->node);
-          break;
-        case 2:
-          result = ctr_build_immutable(node->nodes->node);
-          break;
-        case -1:
-          quote = 1;
-        /* Fallthrough */
-        case 0: {
-          char ret;
-          int oldquote = force_quote;
-          force_quote = quote;
-          ctr_cwlk_last_msg_level = ctr_cwlk_msg_level;
-          result = ctr_cwlk_expr(node->nodes->node, &ret);
-          force_quote = oldquote;	//set back in case we didn't reset
-          if (ctr_ast_is_splice(result))
-            result = ctr_ast_splice(result);
-          break;
-        }
-      }
+    case CTR_AST_NODE_RAW:
+      {
+	int quote = 0;
+	switch (node->modifier)
+	  {
+	  case 1:
+	    result = ctr_ast_from_node (node->nodes->node);
+	    break;
+	  case 2:
+	    result = ctr_build_immutable (node->nodes->node);
+	    break;
+	  case -1:
+	    quote = 1;
+	    /* Fallthrough */
+	  case 0:
+	    {
+	      char ret;
+	      int oldquote = force_quote;
+	      force_quote = quote;
+	      ctr_cwlk_last_msg_level = ctr_cwlk_msg_level;
+	      result = ctr_cwlk_expr (node->nodes->node, &ret);
+	      force_quote = oldquote;	//set back in case we didn't reset
+	      if (ctr_ast_is_splice (result))
+		result = ctr_ast_splice (result);
+	      break;
+	    }
+	  }
       }
       break;
     case CTR_AST_NODE_RETURNFROMBLOCK:
@@ -415,7 +420,9 @@ ctr_cwlk_run (ctr_tnode * program)
       /* Perform garbage collection cycle */
       if (((ctr_gc_mode & 1) && ctr_gc_alloc > (ctr_gc_memlimit * 0.8)) || ctr_gc_mode & 4)
 	{
+    printf ("GC : %d bytes\n", ctr_gc_alloc);
 	  ctr_gc_internal_collect ();	//collect on limit mode
+    printf ("GC : %d bytes\n", ctr_gc_alloc);
 	}
       if (!li->next)
 	break;

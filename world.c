@@ -29,7 +29,8 @@ static int ctr_world_initialized = 0;
 
 #ifdef withGIL
 #include <pthread.h>
-static pthread_mutex_t ctr_message_mutex = {{PTHREAD_MUTEX_RECURSIVE}};
+static pthread_mutex_t ctr_message_mutex = { {PTHREAD_MUTEX_RECURSIVE} };
+
 #define CTR_THREAD_LOCK() pthread_mutex_lock(&ctr_message_mutex)
 #define CTR_THREAD_UNLOCK() pthread_mutex_unlock(&ctr_message_mutex)
 #else
@@ -349,11 +350,11 @@ ctr_internal_object_is_constructible_ (ctr_object * object1, ctr_object * object
   ctr_size len1;
   ctr_size len2;
   //ignore
-  if (object2->interfaces->link == CtrStdSymbol) //it's a binding
-  {
-    // printf("Accepting binding\n");
-    return 1;
-  }
+  if (object2->interfaces->link == CtrStdSymbol)	//it's a binding
+    {
+      // printf("Accepting binding\n");
+      return 1;
+    }
   //both are strings
   if (object1->info.type == CTR_OBJECT_TYPE_OTSTRING && object2->info.type == CTR_OBJECT_TYPE_OTSTRING)
     {
@@ -391,18 +392,19 @@ ctr_internal_object_is_constructible_ (ctr_object * object1, ctr_object * object
       for (int _i = 0; _i < count; _i++)
 	{
 	  f = object2->value.avalue->elements[_i];
-    if (f->interfaces->link == CtrStdSymbol) {
-      //we have a binding on our hands
-  	  if (f->value.svalue->vlen > 1 && *f->value.svalue->value == '*')
-  	    catch_all++;
-  	  if (f->value.svalue->vlen == 1 && *f->value.svalue->value == '_')
-  	    {
-  	      ignores[_i] = 1;
-  	      ignore++;
-  	    }
-  	  else
-  	    ignores[_i] = 0;
-    }
+	  if (f->interfaces->link == CtrStdSymbol)
+	    {
+	      //we have a binding on our hands
+	      if (f->value.svalue->vlen > 1 && *f->value.svalue->value == '*')
+		catch_all++;
+	      if (f->value.svalue->vlen == 1 && *f->value.svalue->value == '_')
+		{
+		  ignores[_i] = 1;
+		  ignore++;
+		}
+	      else
+		ignores[_i] = 0;
+	    }
 	}
       if (ctr_array_count (object1, NULL)->value.nvalue != count && catch_all == 0)
 	return 0;		//It requires more/less parameters than object1 can provide, and we don't have a catch-all binding
@@ -417,7 +419,7 @@ ctr_internal_object_is_constructible_ (ctr_object * object1, ctr_object * object
       // printf("%s\n", s);
       for (; count > 0 && _x < _i && i; count--, _x++, _y++)
 	{
-    // printf("%d -- %d (%d -- %d)\n", _x, _i, _y, count1);
+	  // printf("%d -- %d (%d -- %d)\n", _x, _i, _y, count1);
 	  if (_y > count1)	//the rest goes into the catch_all
 	    {
 	      _y = 0;
@@ -429,11 +431,9 @@ ctr_internal_object_is_constructible_ (ctr_object * object1, ctr_object * object
 	  elnu2->object = ctr_build_number_from_float (_x);
 	  args->object = ctr_array_get (object2, elnu2);
 	  i = i
-	    && (
-           catch_all == -2
-        || args->object->interfaces->link == CtrStdSymbol
-        || ctr_internal_object_is_constructible_ (ctr_array_get (object1, elnu1), args->object, raw)
-      );
+	    && (catch_all == -2
+		|| args->object->interfaces->link == CtrStdSymbol
+		|| ctr_internal_object_is_constructible_ (ctr_array_get (object1, elnu1), args->object, raw));
 	}
       ctr_heap_free (args);
       // printf("array unification -> %d\n", i);
@@ -443,19 +443,22 @@ ctr_internal_object_is_constructible_ (ctr_object * object1, ctr_object * object
       && object2->info.type == CTR_OBJECT_TYPE_OTOBJECT
       && ctr_reflect_get_primitive_link (object1) == CtrStdMap && ctr_reflect_get_primitive_link (object2) == CtrStdMap)
     {
-      if(object2->properties->size == 0)
-        return 1;
-      if(object2->properties->size > object1->properties->size)
-        return 0;
-      ctr_mapitem* mI = object2->properties->head;
+      if (object2->properties->size == 0)
+	return 1;
+      if (object2->properties->size > object1->properties->size)
+	return 0;
+      ctr_mapitem *mI = object2->properties->head;
       ctr_argument arg;
-      while(mI) {
-        arg.object = mI->key;
-        ctr_object* tI = ctr_map_get(object1, &arg);
-        if(!tI) return 0;
-        if(!ctr_internal_object_is_constructible_(tI, mI->value, raw)) return 0;
-        mI = mI->next;
-      }
+      while (mI)
+	{
+	  arg.object = mI->key;
+	  ctr_object *tI = ctr_map_get (object1, &arg);
+	  if (!tI)
+	    return 0;
+	  if (!ctr_internal_object_is_constructible_ (tI, mI->value, raw))
+	    return 0;
+	  mI = mI->next;
+	}
       return 1;
     }
   ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
@@ -2063,6 +2066,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdBlock, ctr_build_string_from_cstring ("catch:type:"), &ctr_block_catch_type);
   ctr_internal_create_func (CtrStdBlock, ctr_build_string_from_cstring (CTR_DICT_WHILE_TRUE), &ctr_block_while_true);
   ctr_internal_create_func (CtrStdBlock, ctr_build_string_from_cstring (CTR_DICT_WHILE_FALSE), &ctr_block_while_false);
+  ctr_internal_create_func (CtrStdBlock, ctr_build_string_from_cstring ("forever"), &ctr_block_forever);
   ctr_internal_create_func (CtrStdBlock, ctr_build_string_from_cstring (CTR_DICT_TOSTRING), &ctr_block_to_string);
   ctr_internal_create_func (CtrStdBlock, ctr_build_string_from_cstring (CTR_DICT_UNPACK), &ctr_block_assign);
   ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring (CTR_DICT_CODE_BLOCK), CtrStdBlock, 0);
@@ -2481,17 +2485,18 @@ ctr_initialize_world ()
 
   static ctr_object ctr_dummy_import;
   static ctr_interfaces ifs;
-  if(!with_stdlib) {
-    ctr_dummy_import.interfaces = &ifs;
-    ctr_set_link_all(&ctr_dummy_import, CtrStdObject);
-  }
+  if (!with_stdlib)
+    {
+      ctr_dummy_import.interfaces = &ifs;
+      ctr_set_link_all (&ctr_dummy_import, CtrStdObject);
+    }
   // importlib
-  CtrStdImportLib = ctr_importlib_begin (CtrStdObject, NULL)?:&ctr_dummy_import;
+  CtrStdImportLib = ctr_importlib_begin (CtrStdObject, NULL) ? : &ctr_dummy_import;
 
   // Fiber
   ctr_fiber_begin_init ();
   initiailize_base_extensions ();
-  promise_begin();
+  promise_begin ();
 
   /* Other objects */
   CtrStdBreak = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
@@ -2806,32 +2811,34 @@ no_instrum:;
   return result;		//Normally cascade down to native functions, so get the return type
 }
 
-__attribute__((always_inline))
-ctr_object *
-ctr_send_message (ctr_object * receiverObject, char *message, long vlen, ctr_argument * argumentList)
+__attribute__ ((always_inline))
+     ctr_object *ctr_send_message (ctr_object * receiverObject, char *message, long vlen, ctr_argument * argumentList)
 {
-  if (receiverObject->info.asyncMode) {
-    receiverObject->info.asyncMode = 0;
-    return ctr_send_message_async(receiverObject, message, vlen, argumentList);
-  }
-  return ctr_send_message_blocking(receiverObject, message, vlen, argumentList);
+  if (receiverObject->info.asyncMode)
+    {
+      receiverObject->info.asyncMode = 0;
+      return ctr_send_message_async (receiverObject, message, vlen, argumentList);
+    }
+  return ctr_send_message_blocking (receiverObject, message, vlen, argumentList);
 }
 
 ctr_object *
 ctr_send_message_async (ctr_object * receiverObject, char *message, long vlen, ctr_argument * argumentList)
 {
-  ctr_object* methodObject = ctr_get_responder (receiverObject, message, vlen);
-  if(!methodObject && receiverObject->interfaces->link == CtrStdPromise) {
-    ctr_argument* args = ctr_heap_allocate(sizeof(*args));
-    args->next = argumentList;
-    args->object = ctr_build_string(message, vlen);
-    return ctr_promise_pass_message(receiverObject, args);
-  }
-  if(!methodObject) {
-    CtrStdFlow = ctr_format_str("ENo such async responder '%s'", message);
-    return CtrStdNil;
-  }
-  return ctr_promise_make(CtrStdPromise, methodObject, argumentList, receiverObject);
+  ctr_object *methodObject = ctr_get_responder (receiverObject, message, vlen);
+  if (!methodObject && receiverObject->interfaces->link == CtrStdPromise)
+    {
+      ctr_argument *args = ctr_heap_allocate (sizeof (*args));
+      args->next = argumentList;
+      args->object = ctr_build_string (message, vlen);
+      return ctr_promise_pass_message (receiverObject, args);
+    }
+  if (!methodObject)
+    {
+      CtrStdFlow = ctr_format_str ("ENo such async responder '%s'", message);
+      return CtrStdNil;
+    }
+  return ctr_promise_make (CtrStdPromise, methodObject, argumentList, receiverObject);
 }
 
 /**
@@ -3008,7 +3015,7 @@ ctr_set_link_all (ctr_object * what, ctr_object * to)
   what->interfaces->ifs =
     what->info.shared ? ctr_heap_allocate_shared (sizeof (ctr_object *) * (count + 1)) : ctr_heap_allocate (sizeof (ctr_object *) * (count + 1));
   // for (int i = 0; i < count; i++)
-  memcpy (what->interfaces->ifs, to->interfaces->ifs, sizeof (ctr_object *)*count);
+  memcpy (what->interfaces->ifs, to->interfaces->ifs, sizeof (ctr_object *) * count);
 }
 
 

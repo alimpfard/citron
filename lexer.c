@@ -612,7 +612,7 @@ ctr_clex_tok ()
 	}
       return CTR_TOKEN_SYMBOL;
     }
-  if (c == '$' && ctr_code+1<ctr_eofcode)
+  if (c == '$' && ctr_code + 1 < ctr_eofcode)
     {
       char _t = *(++ctr_code);
       int q = 0;
@@ -620,24 +620,27 @@ ctr_clex_tok ()
        *   $(expr)
        *   ^
        */
-      switch (_t) {
-        case '(':
-          ctr_clex_tokvlen = -1; //literal escape mode
-          return CTR_TOKEN_LITERAL_ESC;
-        case '[':
-          ctr_clex_tokvlen = -2; //tuple escape mode
-          return CTR_TOKEN_LITERAL_ESC;
-        case '`': //literal replace mode
-          q = 2;
-        case '\'': //quote
-          if (!q) q = 1;
-        case '!': //literal unescape
-          if (ctr_code+1<ctr_eofcode && !isspace(*(++ctr_code))) {
-            ctr_clex_tokvlen = -3 - q; //unescape mode (q=1 quote)
-            return CTR_TOKEN_LITERAL_ESC;
-          }
-          ctr_code--;
-      }
+      switch (_t)
+	{
+	case '(':
+	  ctr_clex_tokvlen = -1;	//literal escape mode
+	  return CTR_TOKEN_LITERAL_ESC;
+	case '[':
+	  ctr_clex_tokvlen = -2;	//tuple escape mode
+	  return CTR_TOKEN_LITERAL_ESC;
+	case '`':		//literal replace mode
+	  q = 2;
+	case '\'':		//quote
+	  if (!q)
+	    q = 1;
+	case '!':		//literal unescape
+	  if (ctr_code + 1 < ctr_eofcode && !isspace (*(++ctr_code)))
+	    {
+	      ctr_clex_tokvlen = -3 - q;	//unescape mode (q=1 quote)
+	      return CTR_TOKEN_LITERAL_ESC;
+	    }
+	  ctr_code--;
+	}
       ctr_code--;
       /* Fallthrough */
     }

@@ -1,0 +1,20 @@
+var Runloop is {:self:start:draw:end:size:caption
+  start isNil | draw isNil | end isNil ifTrue: {
+    self error: 'start/draw/end blocks are required'.
+  }.
+  var windowProto is SDL new.
+  [width, height] is size or: [400, 600].
+  windowProto set: 'windowWidth' to: width.
+  windowProto set: 'windowHeight' to: height.
+  caption ifTrue: { windowProto caption: caption. }.
+  var window_ is windowProto init.
+  var STOP_LOOP is Object new.
+  Reflect run: start inContext: self arguments: [window_].
+  {
+    (Reflect run: draw inContext: self arguments: [window_], = STOP_LOOP) break.
+    window_ update.
+    #Broom sweep.
+  } forever.
+  Reflect run: end inContext: self arguments: [window_].
+  SDL quit.
+}.

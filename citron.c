@@ -104,7 +104,7 @@ ctr_cli_read_args (int argc, char *argv[])
 	  exit (0);
 	}
       else if (strcmp (argv[0], "--no-std") == 0)
-  with_stdlib = 0;
+	with_stdlib = 0;
       else
 	break;
       argv++;

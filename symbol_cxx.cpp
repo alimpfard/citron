@@ -1,4 +1,6 @@
 #include "symbol.hpp"
+#include <map>
+#include <iostream>
 
 struct eqstr
 {
@@ -8,19 +10,21 @@ struct eqstr
   }
 };
 
-static dense_hash_map<std::string, ctr_object*, hash<std::string>, eqstr> symbols;
-static bool initialized = 0;
+static google::dense_hash_map<std::string, ctr_object, std::hash<std::string>, eqstr> symbols;
+static int initialized = 0;
 
 inline ctr_object* get_or_create(const char* name, ctr_size length) {
     std::string s (name, length);
-    ctr_object* sym;
     if (symbols.count(s) == 0) {
-        sym = ctr_create_symbol(name, length);
-        symbols[s] = sym;
-    } else {
-        sym = symbols[s];
+        ctr_object* spp = ctr_create_symbol(name, length);
+        symbols[s] = *spp;
     }
-    return sym;
+    auto& p = symbols[s];
+    ctr_object* op = ctr_internal_create_object(CTR_OBJECT_TYPE_OTSTRING);
+    ctr_set_link_all(op, CtrStdSymbol);
+    op->value.svalue = p.value.svalue;
+    op->info.type = CTR_OBJECT_TYPE_OTMISC;
+    return op;
 }
 
 extern "C"
@@ -39,5 +43,6 @@ ctr_object *ctr_get_or_create_symbol_table_entry (const char *name, ctr_size len
         symbols.set_empty_key("");
         initialized = 1;
     }
-    return get_or_create(name, length);
+    ctr_object* s = get_or_create(name, length);
+    return s;
 }

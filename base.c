@@ -2538,7 +2538,7 @@ ctr_string_bytes (ctr_object * myself, ctr_argument * argumentList)
 }
 
 ctr_object *
-ctr_string_put_at (ctr_object * myself, ctr_argument * argumentList) 
+ctr_string_put_at (ctr_object * myself, ctr_argument * argumentList)
 {
     if (!myself->value.svalue->vlen)
      {
@@ -2548,11 +2548,11 @@ ctr_string_put_at (ctr_object * myself, ctr_argument * argumentList)
    ctr_object* fromPos = ctr_internal_cast2number(argumentList->next->object);
    long a = (fromPos->value.nvalue);
    long ua = getBytesUtf8 (myself->value.svalue->value, 0, a);
-   if (ua >= myself->value.svalue->vlen) 
+   if (ua >= myself->value.svalue->vlen)
      {
        CtrStdFlow = ctr_build_string_from_cstring ("Index out of bounds");
        return ctr_build_nil ();
-     }  
+     }
    long ub = getBytesUtf8 (myself->value.svalue->value, ua, 1);
    ctr_string *replacement = ctr_internal_cast2string(argumentList->object)->value.svalue;
    int diff=0;
@@ -2771,7 +2771,7 @@ ctr_string_format (ctr_object * myself, ctr_argument * argumentList)
   if (specifier_count > specified_count)
     {
       CtrStdFlow =
-	ctr_format_str ("Format string requires more objects than was passed (%d specified, %d required).", specified_count, specifier_count);
+	ctr_format_str ("EFormat string requires more objects than was passed (%d specified, %d required).", specified_count, specifier_count);
       return myself;
     }
   int len = myself->value.svalue->vlen;

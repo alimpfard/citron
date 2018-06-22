@@ -79,7 +79,7 @@ void *ctr_heap_allocate(size_t size)
 
 void *ctr_heap_allocate_typed(size_t size, int otype) {
 	switch(otype) {
-		case CTR_OBJECT_TYPE_OTNIL: 
+		case CTR_OBJECT_TYPE_OTNIL:
 		case CTR_OBJECT_TYPE_OTBOOL:
 		case CTR_OBJECT_TYPE_OTNUMBER:
 		case CTR_OBJECT_TYPE_OTOBJECT:
@@ -113,7 +113,7 @@ void *ctr_heap_allocate_shared(size_t size)
 	size += q;
 
 	/* Check whether we can afford to allocate this much */
-	ctr_gc_alloc += size;
+	ctr_gc_alloc = GC_get_heap_size() - GC_get_free_bytes() - GC_get_unmapped_bytes();
 
 	if (ctr_gc_memlimit < ctr_gc_alloc) {
 		if (CTR_LIMIT_MEM) {
@@ -338,7 +338,7 @@ char *ctr_heap_allocate_cstring_shared(ctr_object * stringObject)
 }
 
 void setup_types() {
-	GC_word  bitmap[GC_BITMAP_SIZE(ctr_object)] = {0}; 
+	GC_word  bitmap[GC_BITMAP_SIZE(ctr_object)] = {0};
 	GC_set_bit(bitmap, GC_WORD_OFFSET(ctr_object, properties));
 	GC_set_bit(bitmap, GC_WORD_OFFSET(ctr_object, methods));
 	GC_set_bit(bitmap, GC_WORD_OFFSET(ctr_object, link));
@@ -346,8 +346,8 @@ void setup_types() {
 	GC_set_bit(bitmap, GC_WORD_OFFSET(ctr_object, release_hook));
 
 	VT_descr = GC_make_descriptor(bitmap, GC_WORD_LEN(ctr_object));
-	
-	GC_word    bitmap_[GC_BITMAP_SIZE(ctr_object)] = {0}; 
+
+	GC_word    bitmap_[GC_BITMAP_SIZE(ctr_object)] = {0};
 	GC_set_bit(bitmap_, GC_WORD_OFFSET(ctr_object, properties));
 	GC_set_bit(bitmap_, GC_WORD_OFFSET(ctr_object, methods));
 	GC_set_bit(bitmap_, GC_WORD_OFFSET(ctr_object, link));

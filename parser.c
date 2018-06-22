@@ -13,35 +13,35 @@ int do_compare_locals = 0;
 int all_plains_private = 0;
 extern int ctr_cwlk_replace_refs;
 extern char *ctr_code;
-static int ctr_transform_template_expr; /* flag: indicates whether the parser is supposed to parse a templated expr */
+static int ctr_transform_template_expr;	/* flag: indicates whether the parser is supposed to parse a templated expr */
 
 
-ctr_tnode* ctr_cparse_assignment ();
-ctr_tnode* ctr_cparse_block ();
-ctr_tnode* ctr_cparse_block_ ();
-ctr_tnode* ctr_cparse_block_capture ();
-ctr_tnode* ctr_cparse_create_node ();
-ctr_tnode* ctr_cparse_create_node ();
-ctr_tnode* ctr_cparse_expr (int);
-ctr_tnode* ctr_cparse_false ();
-ctr_tnode* ctr_cparse_fin ();
-ctr_tnode* ctr_cparse_list_comp ();
-ctr_tnode* ctr_cparse_lit_esc ();
-ctr_tnode* ctr_cparse_message ();
-ctr_tlistitem* ctr_cparse_messages (ctr_tnode*,int);
-ctr_tnode* ctr_cparse_nil ();
-ctr_tnode* ctr_cparse_number ();
-ctr_tnode* ctr_cparse_parse ();
-ctr_tnode* ctr_cparse_popen ();
-ctr_tnode* ctr_cparse_program ();
-ctr_tnode* ctr_cparse_receiver ();
-ctr_tnode* ctr_cparse_ref ();
-ctr_tnode* ctr_cparse_ret ();
-ctr_tlistitem* ctr_cparse_statement ();
-ctr_tnode* ctr_cparse_string ();
-ctr_tnode* ctr_cparse_symbol ();
-ctr_tnode* ctr_cparse_true ();
-ctr_tnode* ctr_cparse_tuple ();
+ctr_tnode *ctr_cparse_assignment ();
+ctr_tnode *ctr_cparse_block ();
+ctr_tnode *ctr_cparse_block_ ();
+ctr_tnode *ctr_cparse_block_capture ();
+ctr_tnode *ctr_cparse_create_node ();
+ctr_tnode *ctr_cparse_create_node ();
+ctr_tnode *ctr_cparse_expr (int);
+ctr_tnode *ctr_cparse_false ();
+ctr_tnode *ctr_cparse_fin ();
+ctr_tnode *ctr_cparse_list_comp ();
+ctr_tnode *ctr_cparse_lit_esc ();
+ctr_tnode *ctr_cparse_message ();
+ctr_tlistitem *ctr_cparse_messages (ctr_tnode *, int);
+ctr_tnode *ctr_cparse_nil ();
+ctr_tnode *ctr_cparse_number ();
+ctr_tnode *ctr_cparse_parse ();
+ctr_tnode *ctr_cparse_popen ();
+ctr_tnode *ctr_cparse_program ();
+ctr_tnode *ctr_cparse_receiver ();
+ctr_tnode *ctr_cparse_ref ();
+ctr_tnode *ctr_cparse_ret ();
+ctr_tlistitem *ctr_cparse_statement ();
+ctr_tnode *ctr_cparse_string ();
+ctr_tnode *ctr_cparse_symbol ();
+ctr_tnode *ctr_cparse_true ();
+ctr_tnode *ctr_cparse_tuple ();
 
 
 int
@@ -249,18 +249,18 @@ ctr_cparse_message (int mode)
       m->vlen = msgpartlen;
     }
   else if (t == CTR_TOKEN_TUPOPEN)
-      {
-        ctr_clex_putback();
-        memcpy(msg, "applyAll:", 9);
-        msgpartlen = 9;
-        li = ctr_heap_allocate_tracked(sizeof(*li));
-        li->node = ctr_cparse_tuple();
-        m->type = CTR_AST_NODE_KWMESSAGE;
-        m->nodes = li;
-        m->value = msg;
-        m->vlen = msgpartlen;
-        m->modifier = -2; //chain nothing
-      }
+    {
+      ctr_clex_putback ();
+      memcpy (msg, "applyAll:", 9);
+      msgpartlen = 9;
+      li = ctr_heap_allocate_tracked (sizeof (*li));
+      li->node = ctr_cparse_tuple ();
+      m->type = CTR_AST_NODE_KWMESSAGE;
+      m->nodes = li;
+      m->value = msg;
+      m->vlen = msgpartlen;
+      m->modifier = -2;		//chain nothing
+    }
   else
     {
       m->type = CTR_AST_NODE_UNAMESSAGE;
@@ -286,7 +286,8 @@ ctr_cparse_messages (ctr_tnode * r, int mode)
   int first = 1;
   ctr_tnode *node = NULL;
   /* explicit chaining (,) only allowed for keyword message: Console write: 3 factorial, write: 3 factorial is not possible otherwise. */
-  while ((t == CTR_TOKEN_REF || (t == CTR_TOKEN_CHAIN && node && node->type == CTR_AST_NODE_KWMESSAGE && node->modifier != -2) || (t == CTR_TOKEN_TUPOPEN)))
+  while ((t == CTR_TOKEN_REF || (t == CTR_TOKEN_CHAIN && node && node->type == CTR_AST_NODE_KWMESSAGE && node->modifier != -2)
+	  || (t == CTR_TOKEN_TUPOPEN)))
     {
       if (t == CTR_TOKEN_CHAIN)
 	{
@@ -449,78 +450,86 @@ ctr_tnode *
 ctr_cparse_lit_esc ()
 {
   ctr_tnode *r, *v;
-  ctr_clex_tok();
+  ctr_clex_tok ();
   char texpr_res = ctr_transform_template_expr;
-  int len = ctr_clex_tok_value_length();
-  int unescape = 0, quote=0;
-  switch (len) {
-    case -1: //$()
-      ctr_transform_template_expr = 1; //flip it
-      r = ctr_cparse_popen();
+  int len = ctr_clex_tok_value_length ();
+  int unescape = 0, quote = 0;
+  switch (len)
+    {
+    case -1:			//$()
+      ctr_transform_template_expr = 1;	//flip it
+      r = ctr_cparse_popen ();
       v = r->nodes->node;
       ctr_transform_template_expr = texpr_res;
-      ctr_heap_free(r); //this node is not needed, we remove the parens in the expression
+      ctr_heap_free (r);	//this node is not needed, we remove the parens in the expression
       r = v;
       break;
     case -2:
       ctr_transform_template_expr = 2;
-      r = ctr_cparse_tuple();
+      r = ctr_cparse_tuple ();
       ctr_transform_template_expr = texpr_res;
       break;
     case -4:
-      quote=1;
-    /* Fallthrough */
-    case -3: {
-      int t = ctr_clex_tok();
-      ctr_clex_putback();
-      ctr_transform_template_expr = 0;
-      if (t == CTR_TOKEN_PAROPEN) {
-        r = ctr_cparse_popen();
-        ctr_tnode* f = r->nodes->node;
-        ctr_heap_free(r);
-        r = f;
+      quote = 1;
+      /* Fallthrough */
+    case -3:
+      {
+	int t = ctr_clex_tok ();
+	ctr_clex_putback ();
+	ctr_transform_template_expr = 0;
+	if (t == CTR_TOKEN_PAROPEN)
+	  {
+	    r = ctr_cparse_popen ();
+	    ctr_tnode *f = r->nodes->node;
+	    ctr_heap_free (r);
+	    r = f;
+	  }
+	else
+	  r = ctr_cparse_expr (0);
+	unescape = 1;
+	ctr_transform_template_expr = texpr_res;
+	break;
       }
-      else
-        r = ctr_cparse_expr(0);
-      unescape = 1;
-      ctr_transform_template_expr = texpr_res;
-      break;
-    }
-    case -5: {
-      int t = ctr_clex_tok();
-      ctr_clex_putback();
-      ctr_transform_template_expr = 0;
-      if (t == CTR_TOKEN_PAROPEN) {
-        r = ctr_cparse_popen();
-        r->type = CTR_AST_NODE_EMBED;
-        r->modifier = 0;
+    case -5:
+      {
+	int t = ctr_clex_tok ();
+	ctr_clex_putback ();
+	ctr_transform_template_expr = 0;
+	if (t == CTR_TOKEN_PAROPEN)
+	  {
+	    r = ctr_cparse_popen ();
+	    r->type = CTR_AST_NODE_EMBED;
+	    r->modifier = 0;
+	  }
+	else
+	  {
+	    r = ctr_cparse_create_node (CTR_AST_NODE);
+	    r->type = CTR_AST_NODE_EMBED;
+	    r->nodes = ctr_heap_allocate (sizeof (ctr_tlistitem));
+	    r->nodes->node = ctr_cparse_expr (0);	//temporarily
+	    r->modifier = 0;
+	  }
+	unescape = 1;
+	ctr_transform_template_expr = texpr_res;
+	break;
       }
-      else {
-        r = ctr_cparse_create_node(CTR_AST_NODE);
-        r->type = CTR_AST_NODE_EMBED;
-        r->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
-        r->nodes->node = ctr_cparse_expr(0); //temporarily
-        r->modifier = 0;
-      }
-      unescape = 1;
-      ctr_transform_template_expr = texpr_res;
-      break;
-    }
     default:
-      ctr_cparse_emit_error_unexpected(ctr_clex_tok(), "Expected any of '(', '[', '!', '`', '\''");
+      ctr_cparse_emit_error_unexpected (ctr_clex_tok (), "Expected any of '(', '[', '!', '`', '\''");
       return NULL;
-  }
-  v = ctr_cparse_create_node(CTR_AST_NODE);
+    }
+  v = ctr_cparse_create_node (CTR_AST_NODE);
   v->type = CTR_AST_NODE_RAW;
-  v->nodes = ctr_heap_allocate(sizeof (ctr_tlistitem));
+  v->nodes = ctr_heap_allocate (sizeof (ctr_tlistitem));
   v->nodes->node = r;
   if (!unescape)
     v->modifier = -len;
-  else {
-    v->modifier = -quote; //0 or -1
-  }
+  else
+    {
+      v->modifier = -quote;	//0 or -1
+    }
   return v;
 }
+
 /**
  * CTRParserTuple
  *
@@ -552,14 +561,15 @@ ctr_cparse_tuple ()
   ctr_tlistitem *paramListItem = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
   paramList->nodes = paramListItem;
   paramListItem->node = ctr_cparse_expr (0);
-  if (ctr_transform_template_expr == 2) {
-    ctr_tnode* nd = ctr_cparse_create_node(CTR_AST_NODE);
-    nd->type = CTR_AST_NODE_RAW;
-    nd->nodes = ctr_heap_allocate(sizeof (ctr_tlistitem));
-    nd->nodes->node = paramListItem->node;
-    nd->modifier = 1;
-    paramListItem->node = nd;
-  }
+  if (ctr_transform_template_expr == 2)
+    {
+      ctr_tnode *nd = ctr_cparse_create_node (CTR_AST_NODE);
+      nd->type = CTR_AST_NODE_RAW;
+      nd->nodes = ctr_heap_allocate (sizeof (ctr_tlistitem));
+      nd->nodes->node = paramListItem->node;
+      nd->modifier = 1;
+      paramListItem->node = nd;
+    }
   previousListItem = paramListItem;
 
   int restore_id = ctr_clex_save_state ();	//save lexer state
@@ -591,14 +601,15 @@ ctr_cparse_tuple ()
       /* okay we have new expr, parse it */
       ctr_tlistitem *paramListItem = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
       paramListItem->node = ctr_cparse_expr (0);
-      if (ctr_transform_template_expr == 2) {
-        ctr_tnode* nd = ctr_cparse_create_node(CTR_AST_NODE);
-        nd->type = CTR_AST_NODE_RAW;
-        nd->nodes = ctr_heap_allocate(sizeof (ctr_tlistitem));
-        nd->nodes->node = paramListItem->node;
-        nd->modifier = 1;
-        paramListItem->node = nd;
-      }
+      if (ctr_transform_template_expr == 2)
+	{
+	  ctr_tnode *nd = ctr_cparse_create_node (CTR_AST_NODE);
+	  nd->type = CTR_AST_NODE_RAW;
+	  nd->nodes = ctr_heap_allocate (sizeof (ctr_tlistitem));
+	  nd->nodes->node = paramListItem->node;
+	  nd->modifier = 1;
+	  paramListItem->node = nd;
+	}
       previousListItem->next = paramListItem;
       previousListItem = paramListItem;
     }
@@ -730,14 +741,15 @@ ctr_cparse_block_ (int autocap)
   int oldallpl;
   int olddcl;
   int oldcalltime;
-  if(!ctr_transform_template_expr) {
-    oldallpl = all_plains_private;
-    olddcl = do_compare_locals;
-    do_compare_locals = autocap;
-    oldcalltime = ctr_cparse_calltime_name_id;
-    ctr_cparse_calltime_names[++ctr_cparse_calltime_name_id] = paramList;
-    all_plains_private = autocap;
-  }
+  if (!ctr_transform_template_expr)
+    {
+      oldallpl = all_plains_private;
+      olddcl = do_compare_locals;
+      do_compare_locals = autocap;
+      oldcalltime = ctr_cparse_calltime_name_id;
+      ctr_cparse_calltime_names[++ctr_cparse_calltime_name_id] = paramList;
+      all_plains_private = autocap;
+    }
   if (ctr_transform_lambda_shorthand)
     {
       ctr_transform_lambda_shorthand = 0;
@@ -794,11 +806,12 @@ ctr_cparse_block_ (int autocap)
 	    }
 	}
     }
-  if (!ctr_transform_template_expr) {
-    all_plains_private = oldallpl;
-    do_compare_locals = olddcl;
-    ctr_cparse_calltime_name_id = oldcalltime;
-  }
+  if (!ctr_transform_template_expr)
+    {
+      all_plains_private = oldallpl;
+      do_compare_locals = olddcl;
+      ctr_cparse_calltime_name_id = oldcalltime;
+    }
   r->modifier = /*CTR_MODIFIER_AUTOCAPTURE */ autocap == 1;
   return r;
 }

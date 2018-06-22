@@ -100,7 +100,7 @@ ctr_ast_parse (ctr_object * myself, ctr_argument * argumentList)
   return ast;
 }
 
-ctr_object*
+ctr_object *
 ctr_ast_from_node (ctr_tnode * node)
 {
   ctr_object *ast = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
@@ -112,16 +112,16 @@ ctr_ast_from_node (ctr_tnode * node)
 }
 
 int
-ctr_ast_is_splice (ctr_object* obj)
+ctr_ast_is_splice (ctr_object * obj)
 {
   return obj->interfaces->link == CtrStdAst;
 }
 
-ctr_object*
-ctr_ast_splice (ctr_object* obj)//assume it _is_ a splice
+ctr_object *
+ctr_ast_splice (ctr_object * obj)	//assume it _is_ a splice
 {
   char ret;
-  return ctr_cwlk_expr(obj->value.rvalue->ptr, &ret);
+  return ctr_cwlk_expr (obj->value.rvalue->ptr, &ret);
 }
 
 ctr_object *
@@ -167,16 +167,19 @@ ctr_ast_nth (ctr_object * myself, ctr_argument * argumentList)
     }
   if (!pitem)
     goto err;
-  if (pitem->node->type == CTR_AST_NODE_EMBED) {
-    return (ctr_object*)(pitem->node->nodes->node);
-  } else {
-    ctr_object *ast = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
-    ctr_set_link_all (ast, CtrStdAst);
-    ast->value.rvalue = ctr_heap_allocate (sizeof (ctr_resource));
-    ast->value.rvalue->ptr = pitem->node;
-    ast->value.rvalue->type = CTR_AST_TYPE;
-    return ast;
-  }
+  if (pitem->node->type == CTR_AST_NODE_EMBED)
+    {
+      return (ctr_object *) (pitem->node->nodes->node);
+    }
+  else
+    {
+      ctr_object *ast = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
+      ctr_set_link_all (ast, CtrStdAst);
+      ast->value.rvalue = ctr_heap_allocate (sizeof (ctr_resource));
+      ast->value.rvalue->ptr = pitem->node;
+      ast->value.rvalue->type = CTR_AST_TYPE;
+      return ast;
+    }
 }
 
 ctr_object *
@@ -1016,7 +1019,7 @@ ctr_ast_lextoken (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *tokType = ctr_build_string_from_cstring (toktype);
   arg->object = tokType;
   ctr_array_push (obj, arg);
-  tokType = ctr_build_string (value, len>=0?len:0);
+  tokType = ctr_build_string (value, len >= 0 ? len : 0);
   arg->object = tokType;
   ctr_array_push (obj, arg);
   arg->object = ctr_build_number_from_float (pos);

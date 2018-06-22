@@ -813,6 +813,7 @@ ctr_object* ctr_block_catch(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_catch_type(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_while_true(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_while_false(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_block_forever(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList, ctr_object* my);
 ctr_object* ctr_block_run_here(ctr_object* myself, ctr_argument* argList, ctr_object* my);
 ctr_object* ctr_block_times(ctr_object* myself, ctr_argument* argumentList);

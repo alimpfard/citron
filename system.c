@@ -378,7 +378,7 @@ ctr_gc_sweep (int all)
   while (currentObject)
     {
       ctr_gc_object_counter++;
-     if (all)
+      if (all)
 	{
 	  // if (currentObject->info.type == CTR_OBJECT_TYPE_OTEX) ctr_send_message(currentObject, "destruct", 8, NULL);
 	  void (*free_heap_maybe_shared) (void *) = currentObject->info.shared == 0 ? &ctr_heap_free : &ctr_heap_free_shared;
@@ -463,7 +463,7 @@ ctr_gc_sweep (int all)
       else
 	{
 	  ctr_gc_kept_counter++;
-//	  // if (currentObject->info.sticky == 1)
+//        // if (currentObject->info.sticky == 1)
 	  //   ctr_gc_sticky_counter++;
 	  if (currentObject->info.mark == 1)
 	    {
@@ -666,7 +666,7 @@ ctr_gc_kept_alloc (ctr_object * myself, ctr_argument * argumentList)
 {
   return ctr_build_number_from_float ((ctr_number)
 #ifdef withBoehmGC
-				      GC_get_total_bytes ()
+	            GC_get_heap_size() - GC_get_free_bytes() - GC_get_unmapped_bytes()
 #else
 				      ctr_gc_alloc
 #endif

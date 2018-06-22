@@ -37,7 +37,7 @@ typedef struct
 
 void ctr_condense_generator (ctr_generator *, int);
 ctr_mapping_generator *ctr_combine_generators (ctr_mapping_generator *, ctr_mapping_generator *);
-ctr_object* ctr_generator_internal_inext (ctr_generator * genny, int gtype, ctr_generator * ogenny, int ogtype);
+ctr_object *ctr_generator_internal_inext (ctr_generator * genny, int gtype, ctr_generator * ogenny, int ogtype);
 
 ctr_object *
 ctr_generator_make (ctr_object * myself, ctr_argument * argumentList)
@@ -341,8 +341,9 @@ ctr_generator_internal_next (ctr_generator * genny, int gtype)
 	    argm->next->object = ctr_generator_internal_next (igen, igen_type);
 	  }
 	while (argm->next->object == generator_end_marker && !igen->finished);
-  genny->finished = genny->finished || igen->finished;
-  if (argm->next->object == generator_end_marker) return argm->next->object;
+	genny->finished = genny->finished || igen->finished;
+	if (argm->next->object == generator_end_marker)
+	  return argm->next->object;
 	ctr_object *res = ctr_block_run (fn, argm, fn);
 	if (CtrStdFlow)
 	  {
@@ -371,9 +372,10 @@ ctr_generator_internal_next (ctr_generator * genny, int gtype)
 	  {
 	    argm->object = ctr_generator_internal_inext (igen, igen_type, NULL, 0);
 	  }
-    while (argm->object == generator_end_marker && !igen->finished);
-  genny->finished = genny->finished || igen->finished;
-  if (argm->object == generator_end_marker) return argm->object;
+	while (argm->object == generator_end_marker && !igen->finished);
+	genny->finished = genny->finished || igen->finished;
+	if (argm->object == generator_end_marker)
+	  return argm->object;
 	ctr_object *res = ctr_block_run (fn, argm, fn);
 	if (CtrStdFlow)
 	  {
@@ -402,9 +404,10 @@ ctr_generator_internal_next (ctr_generator * genny, int gtype)
 	  {
 	    argm->object = ctr_generator_internal_next (igen, igen_type);
 	  }
-    while (argm->object == generator_end_marker && !igen->finished);
-  genny->finished = genny->finished || igen->finished;
-  if (argm->object == generator_end_marker) return argm->object;
+	while (argm->object == generator_end_marker && !igen->finished);
+	genny->finished = genny->finished || igen->finished;
+	if (argm->object == generator_end_marker)
+	  return argm->object;
 	ctr_object *res = ctr_block_run (fn, argm, fn);
 	if (CtrStdFlow)
 	  {
@@ -696,7 +699,7 @@ ctr_generator_toarray (ctr_object * myself, ctr_argument * argumentList)
     {
       ctr_object *next = ctr_generator_internal_inext (genny, gtype, NULL, 0);
       if (genny->finished)
-      break;
+	break;
       if (next == generator_end_marker)
 	continue;
       argm->object = next;

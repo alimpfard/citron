@@ -111,7 +111,7 @@ void *ctr_heap_allocate(size_t size)
 	size += q;
 
 	/* Check whether we can afford to allocate this much */
-	ctr_gc_alloc += size;
+	ctr_gc_alloc = GC_get_heap_size() - GC_get_free_bytes() - GC_get_unmapped_bytes();
 
 	if (ctr_gc_memlimit < ctr_gc_alloc) {
 		ctr_gc_sweep(0);

@@ -1,19 +1,27 @@
-var Runloop is {:self:start:draw:end:size:caption
+import screenPen: 'mkPen'.
+
+var Runloop is {:self:start:draw:end:size:caption:font
   start isNil | draw isNil | end isNil ifTrue: {
     self error: 'start/draw/end blocks are required'.
   }.
   var windowProto is SDL new.
-  [width, height] is size or: [400, 600].
+  [width, height, pensize] is size or: [400, 600, 8].
   windowProto set: 'windowWidth' to: width.
   windowProto set: 'windowHeight' to: height.
   caption ifTrue: { windowProto caption: caption. }.
   var window_ is windowProto init.
   var STOP_LOOP is Object new.
+  var Console is Pen.
+  var Pen is mkPen[window_, font, pensize].
+  var empty_color is Color rgb: [0, 0, 0].
+  window_ on: 'clear' do: {
+    me fillRect: Nil withColor: const empty_color.
+    me update.
+  }.
   Reflect run: start inContext: self arguments: [window_].
   {
     (Reflect run: draw inContext: self arguments: [window_], = STOP_LOOP) break.
     window_ update.
-    #Broom sweep.
   } forever.
   Reflect run: end inContext: self arguments: [window_].
   SDL quit.

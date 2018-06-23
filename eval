@@ -25,7 +25,6 @@ var _ is Nil.
 var __ is Nil.
 var it is Nil.
 var stderr is File special: 'stderr'.
-var errPen is Pen for: stderr.
 var inBlock is 0.
 var enterRepeat is False.
 var TerminalWidth is 85.
@@ -38,11 +37,14 @@ import
   Library/Utils/Highlight
   Library/Control/MethodResolve
   Library/Data/Json
-  Library/Utils/CLIContextMenu: ['generate_context_menu', 'clear_next_line'].
+  Library/Utils/CLIContextMenu: ['generate_context_menu', 'clear_next_line']
+  Library/Data/IO/Pen: 'pPen'.
 
 var OneGateFlipper is Object new on: 'new' do: { ^me cnew: {my value is False.}. }.
 OneGateFlipper on: 'set' do: { my value is True. }.
 OneGateFlipper on: 'get' do: { var v is my value. my value is False. ^v. }.
+Pen is pPen for: (File special: 'stdout').
+var errPen is Pen for: stderr.
 
 Eval is Object new.
 Eval on: 'init' do: {
@@ -407,8 +409,8 @@ Eval on: 'addFile:named:' do: {:str:fname
   var varname is fname split: '.' max: 1, head.
   Reflect run: {:fname:ctx:str ('var %s is {
     Eval statsb: 0, statsa: 0, exectime: 0.
-    Reflect run: {:str str exec.} inContext: const ctx arguments: [const str].
-  }.' % [fname]) exec. } inContextAsWorld: my evaluationContext arguments: [varname, my evaluationContext, str].
+    Reflect run: {:str str eval.} inContext: const ctx arguments: [const str].
+  }' % [fname]) eval. } inContextAsWorld: my evaluationContext arguments: [varname, my evaluationContext, str].
 }.
 Eval on: 'pushHist:' do: {:h
   my history push: h.

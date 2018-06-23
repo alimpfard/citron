@@ -2,12 +2,15 @@
 var StringIO is Object new.
 StringIO on: 'new' do: {
   ^me cnew: {
-    my internalBuffer is ''.
-    my position is 0.
+    me init.
   }.
+}, on: 'init' do: {
+  my internalBuffer is ''.
+  my position is 0.
 }.
 
 StringIO on: 'write:' do: { :s
+  s is s toString.
   my internalBuffer append: s.
   my position +=: s length.
 }.

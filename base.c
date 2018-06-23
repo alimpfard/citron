@@ -3769,7 +3769,7 @@ ctr_string_find_pattern_options_do (ctr_object * myself, ctr_argument * argument
   pattern = pcre_compile (needle, eflags, &err, &regex_error_offset, NULL);
   if (pattern == NULL)
     {
-      CtrStdFlow = ctr_build_string_from_cstring (err);
+      CtrStdFlow = ctr_format_str ("E(pcre) %s at index %d", err, regex_error_offset);
       return CtrStdNil;
     }
   char *haystack = ctr_heap_allocate_cstring (myself);

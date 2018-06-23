@@ -1,0 +1,52 @@
+var pPen is Object new.
+
+pPen on: 'for:' do: {:io
+  var COLOR_RED      is '\x1b[31m'.
+  var COLOR_GREEN    is '\x1b[32m'.
+  var COLOR_YELLOW   is '\x1b[33m'.
+  var COLOR_BLUE     is '\x1b[34m'.
+  var COLOR_MAGENTA  is '\x1b[35m'.
+  var COLOR_CYAN     is '\x1b[36m'.
+  var COLOR_RESET    is '\x1b[0m'.
+  ^me cnew: {
+    my file is io.
+    me on: 'write:' do: {:str
+      my file write: str.
+    }, on: 'writeln:' do: {:str
+      my file write: str, write: '\n'.
+    }, on: 'brk' do: {
+      my file write: '\n'.
+    }, on: 'clearLine' do: {
+      my file write: '\x1b[2K\r'.
+    }, on: 'clear' do: {
+      my file write: '\x1b[H\x1b[J'.
+    }, on: 'line' do: {
+      my file write: '---------------------------------------\n'.
+    }, on: 'tab' do: {
+      my file write: '\t'.
+    }, on: 'resetColor' do: {
+      my file write: const COLOR_RESET.
+    }, on: 'cyan' do: {
+      my file write: const COLOR_CYAN.
+    }, on: 'purple' do: {
+      my file write: const COLOR_MAGENTA.
+    }, on: 'magenta' do: {
+      my file write: const COLOR_MAGENTA.
+    }, on: 'blue' do: {
+      my file write: const COLOR_BLUE.
+    }, on: 'yellow' do: {
+      my file write: const COLOR_YELLOW.
+    }, on: 'green' do: {
+      my file write: const COLOR_GREEN.
+    }, on: 'red' do: {
+      my file write: const COLOR_RED.
+    }, on: 'file' do: {
+      ^my file.
+    }, on: 'flush' do: {
+      my file flush.
+    }, learn: '>' means: 'write:',
+       learn: 'of:' means: 'for:'.
+  }.
+}.
+
+var Pen is pPen for: (File special: 'stdout').

@@ -1,0 +1,25 @@
+import
+  Library/Data/IO/StringIO: 'StringIO'
+  Library/Data/IO/Pen: 'pPen'.
+var WindowTextBuffer is StringIO new.
+WindowTextBuffer
+  on: 'new:' do: {:fw ^me cnew: {
+    me init.
+    font => fw head.
+    window => fw last.
+    color => Color rgb: [255, 255, 255].
+  }. },
+  on: 'flush' do: {:self
+    var s is me read.
+    s length > 0 ifFalse: { ^self. }.
+    var v is my font renderBlendedUnicode: s color: my color.
+    var rect is v clipRect.
+    var nrect is v clipRect setX: 0, setY: 0.
+    my window blit: v fromRect: rect toRect: nrect.
+  }.
+
+var mkPen is {:window:font:size
+  var font is SDL loadFont: (font or: 'default.ttf') size: (size or: 12).
+  var SDLWindowTextBuffer is const WindowTextBuffer new: [font, window].
+  ^pPen for: SDLWindowTextBuffer.
+}.

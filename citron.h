@@ -538,6 +538,7 @@ void ctr_marshal_ast(ctr_tnode* rnode, char** stream, size_t* stream_len, size_t
  * Internal World functions
  */
 ctr_object* ctr_get_last_trace(ctr_object* myself, ctr_argument* argumentList);
+void        ctr_initialize_ex(int, int);
 void        ctr_initialize_world();
 void        ctr_initialize_world_minimal();
 char*       ctr_internal_memmem(char* haystack, long hlen, char* needle, long nlen, int reverse );

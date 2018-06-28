@@ -322,7 +322,7 @@ void Citron::llvmCoreValues::populateCache() {
 
 int main() {
     Citron::llvmCoreValues::populateCache();
-    initialize(0, 83886080);
+    ctr_initialize_ex(83886080, 0);
     std::ifstream t("file.txt");
     std::stringstream buffer;
     buffer << t.rdbuf();

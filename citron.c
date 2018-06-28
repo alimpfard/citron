@@ -233,7 +233,7 @@ main (int argc, char *argv[])
 }
 #endif //CITRON_LIBRARY
 void
-initialize (int extensions)
+ctr_initialize_ex (int heap_length, int extensions)
 {
   //pragma rules
   ctr_code_pragma o = {.type = 't',.value = 0 }, f =
@@ -246,7 +246,7 @@ initialize (int extensions)
   regexLineCheck = &r;
 
   ctr_gc_mode = 1;		/* default GC mode: activate GC */
-  ctr_gc_memlimit = 32 * 1024 * 1024;	// 32 MB
+  ctr_gc_memlimit = heap_length;	// 32 MB
   CTR_LIMIT_MEM = 1;		//enfore GC
   ctr_callstack_index = 0;
   ctr_source_map_head = NULL;
@@ -255,10 +255,10 @@ initialize (int extensions)
   ctr_command_security_profile = 0;
   ctr_command_tick = 0;
   ctr_source_mapping = 1;
-  ctr_clex_keyword_me = CTR_DICT_ME;
-  ctr_clex_keyword_my = CTR_DICT_MY;
-  ctr_clex_keyword_var = CTR_DICT_VAR;
-  ctr_clex_keyword_const = CTR_DICT_CONST;
+  ctr_clex_keyword_me = strdup(CTR_DICT_ME);
+  ctr_clex_keyword_my = strdup(CTR_DICT_MY);
+  ctr_clex_keyword_var = strdup(CTR_DICT_VAR);
+  ctr_clex_keyword_const = strdup(CTR_DICT_CONST);
   ctr_clex_keyword_my_len = strlen (ctr_clex_keyword_my);
   ctr_clex_keyword_var_len = strlen (ctr_clex_keyword_var);
   ctr_clex_keyword_const_len = strlen (ctr_clex_keyword_const);

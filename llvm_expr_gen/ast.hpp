@@ -12,6 +12,7 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
+#include "llvm/IR/IntrinsicInst.h"
 #include <cstdlib>
 #include <vector>
 #include <string>
@@ -44,11 +45,20 @@ std::ostream& operator << (std::ostream& os, const std::pair<llvm::Function*, st
 }
 namespace Citron {
 
+typedef llvm::Value* valProv_f(std::vector<llvm::Value*>, std::vector<Citron::TypeC>);
+using valProv_ = std::function<valProv_f>;
+
+llvm::Value* emptyllvmValueProvider_(std::vector<llvm::Value*> arg, std::vector<Citron::TypeC> argtypes) {
+    return nullptr;
+}
+const static valProv_ emptyllvmValueProvider = &emptyllvmValueProvider_;
+using mCache_t = std::pair<llvm::Function*, valProv_>;
+
 namespace llvmCoreValues {
     static llvm::LLVMContext TheContext;
     static llvm::IRBuilder<> Builder(TheContext);
     static std::unique_ptr<llvm::Module> TheModule (new llvm::Module("citron", TheContext));
-    static std::map<std::string, std::map<std::vector<Citron::Type>, std::pair<Citron::Type, mCache_t>>> MethodCache;
+    static std::map<std::string, std::map<std::vector<Citron::TypeC>, std::pair<Citron::TypeC, mCache_t>>> MethodCache;
     static int id = 0;
     static std::ostringstream _temp_os;
     static std::string fresh() {
@@ -58,7 +68,7 @@ namespace llvmCoreValues {
     }
     static std::string errors;
     static void populateCache();
-    static std::map<std::string, std::pair<Citron::Type, llvm::Value*>> NamedValues;
+    static std::map<std::string, std::pair<Citron::TypeC, llvm::Value*>> NamedValues;
 }
 
 namespace llvmTypes {
@@ -66,14 +76,14 @@ namespace llvmTypes {
     static llvm::Type* CharTy = llvm::Type::getInt8Ty(llvmCoreValues::TheContext);
     static llvm::Type* BoolTy = llvm::Type::getInt1Ty(llvmCoreValues::TheContext);
     static llvm::Type* VoidTy = llvm::Type::getVoidTy(llvmCoreValues::TheContext);
-    static std::function<llvm::ArrayType*(uint64_t)> StringTy_gen = [](uint64_t length){ return llvm::ArrayType::get(llvmTypes::CharTy, length); };
+    static std::function<llvm::ArrayType*(uint64_t)> StringTy_gen = [](uint64_t length){ return llvm::ArrayType::get(llvmTypes::CharTy, length+1); };
 };
 
 namespace llvmCoreValues {
-    static llvm::Type* getLLVMTy(Citron::Type t, std::variant<bool, uint64_t, std::monostate> data = {}) {
+    static llvm::Type* getLLVMTy(Citron::TypeC t) {
         switch(t) {
         case Citron::Type::NumberTy: return llvmTypes::DoubleTy;
-        case Citron::Type::StringTy: return llvmTypes::StringTy_gen(std::get<uint64_t>(data));
+        case Citron::Type::StringTy: return llvmTypes::StringTy_gen(t.data());
         case Citron::Type::BoolTy  : return llvmTypes::BoolTy;
         case Citron::Type::DummyTy : return llvmTypes::VoidTy;
         }
@@ -84,8 +94,10 @@ class ExprAST;
 
 using argT = std::shared_ptr<ExprAST>;
 using argVec = std::vector<argT>;
-using pipeline_t = std::vector<std::tuple<mCache_t, std::vector<llvm::Value*>, int>>;
-using codegen_t = std::pair<llvm::Value*, std::tuple<argT, pipeline_t, Citron::Type>>;
+using pipeline_t = std::vector<std::tuple<mCache_t, std::vector<llvm::Value*>, std::vector<Citron::TypeC>, int>>;
+using codegen_t = std::pair<llvm::Value*, std::tuple<argT, pipeline_t, Citron::TypeC>>;
+
+
 
 class ExprAST {
 public:
@@ -96,8 +108,22 @@ public:
         return v.print(os);
     } 
     virtual codegen_t codegen(bool intern=false) = 0;
-    virtual Citron::Type ty() const = 0;
+    virtual Citron::TypeC ty() const = 0;
 };
+
+class NilExprAST : public ExprAST {
+public:
+    NilExprAST() {}
+    virtual std::ostream& print (std::ostream& os) const {
+        return os << "(void)";
+    }
+    virtual codegen_t codegen(bool intern=false) ;
+    virtual Citron::TypeC ty() const { return Citron::Type::DummyTy; }
+};
+
+namespace Constants {
+    static auto Nil = std::make_shared<NilExprAST>(NilExprAST());
+}
 
 class NumberExprAST : public ExprAST {
     double val;
@@ -108,7 +134,7 @@ public:
         return os << val;
     }
     virtual codegen_t codegen(bool intern=false);
-    virtual Citron::Type ty() const { return Citron::Type::NumberTy; }
+    virtual Citron::TypeC ty() const { return Citron::Type::NumberTy; }
 };
 
 class BoolExprAST : public ExprAST {
@@ -119,7 +145,18 @@ public:
         return os << (val ? "True" : "False");
     }
     virtual codegen_t codegen(bool intern=false);
-    virtual Citron::Type ty() const { return Citron::Type::BoolTy; }
+    virtual Citron::TypeC ty() const { return Citron::Type::BoolTy; }
+};
+
+class StringExprAST : public ExprAST {
+    std::string val;
+public:
+    StringExprAST(char* s, size_t l) : val{s, l} {}
+    virtual std::ostream& print (std::ostream& os) const {
+        return os << '\'' << val << '\'';
+    }
+    virtual codegen_t codegen(bool intern=false);
+    virtual Citron::TypeC ty() const { return Citron::Type::StringTy.transform(val.length()); }
 };
 
 class Message {
@@ -171,14 +208,14 @@ public:
         return os << "(" << message_line << " to " << *(receiver) << ")";
     }
     virtual codegen_t codegen(bool intern=false);
-    virtual Citron::Type ty() const { 
+    virtual Citron::TypeC ty() const { 
         if(message_line.size() == 0) 
             return receiver->ty();
-        Citron::Type last_type = receiver->ty();
+        Citron::TypeC last_type = receiver->ty();
         for(int i=0; i<message_line.size(); i++) {
             auto msg = message_line[i];
             auto&& protos = llvmCoreValues::MethodCache[msg.name];
-            auto arg_v = std::vector<Citron::Type>{last_type};
+            auto arg_v = std::vector<Citron::TypeC>{last_type};
             for (auto arg : msg.arguments)
                 arg_v.push_back(arg->ty());
             bool foundty = false;
@@ -187,7 +224,7 @@ public:
                 if (proto_kv.first.size() != arg_v.size()) continue;
                 if (!std::equal(proto_kv.first.begin(), proto_kv.first.end(), arg_v.begin(), citron_type_equals)) continue;
                 foundty = true;
-                last_type = proto_kv.second.first;
+                last_type = proto_kv.second.first.resolve(arg_v);
                 break;
             }
             if(!foundty) {
@@ -210,48 +247,58 @@ public:
 static std::vector<Message> vectorize_names(ctr_tlistitem* tl);
 
 struct nLLVMBasicNumericOp {
-    static auto ffadd (std::vector<llvm::Value*> args) {
+    static auto ffadd (std::vector<llvm::Value*> args, std::vector<Citron::TypeC> arg_ts) {
         return Citron::llvmCoreValues::Builder.CreateFAdd(args[0], args[1], "faddtmp");
     }
-    static auto ffsub(std::vector<llvm::Value*> args) {
+    static auto ffsub(std::vector<llvm::Value*> args, std::vector<Citron::TypeC> arg_ts) {
         return Citron::llvmCoreValues::Builder.CreateFSub(args[0], args[1], "fsubtmp");
     }
-    static auto ffmul(std::vector<llvm::Value*> args) {
+    static auto ffmul(std::vector<llvm::Value*> args, std::vector<Citron::TypeC> arg_ts) {
         return Citron::llvmCoreValues::Builder.CreateFMul(args[0], args[1], "fmultmp");
     }
-    static auto ffdiv(std::vector<llvm::Value*> args) {
+    static auto ffdiv(std::vector<llvm::Value*> args, std::vector<Citron::TypeC> arg_ts) {
         return Citron::llvmCoreValues::Builder.CreateFDiv(args[0], args[1], "fdivtmp");
     }
-    static auto ffcmpoeq(std::vector<llvm::Value*> args) {
+    static auto ffcmpoeq(std::vector<llvm::Value*> args, std::vector<Citron::TypeC> arg_ts) {
         return Citron::llvmCoreValues::Builder.CreateFCmpOEQ(args[0], args[1], "cmpoeqtmp");
     }
-    static auto ffcmpogt(std::vector<llvm::Value*> args) {
+    static auto ffcmpogt(std::vector<llvm::Value*> args, std::vector<Citron::TypeC> arg_ts) {
         return Citron::llvmCoreValues::Builder.CreateFCmpOGT(args[0], args[1], "cmpogttmp");
     }
-    static auto ffcmpolt(std::vector<llvm::Value*> args) {
+    static auto ffcmpolt(std::vector<llvm::Value*> args, std::vector<Citron::TypeC> arg_ts) {
         return Citron::llvmCoreValues::Builder.CreateFCmpOLT(args[0], args[1], "cmpolttmp");
     }
-    static auto ffcmpole(std::vector<llvm::Value*> args) {
+    static auto ffcmpole(std::vector<llvm::Value*> args, std::vector<Citron::TypeC> arg_ts) {
         return Citron::llvmCoreValues::Builder.CreateFCmpOLE(args[0], args[1]);
     }
-    static auto ffcmpoge(std::vector<llvm::Value*> args) {
+    static auto ffcmpoge(std::vector<llvm::Value*> args, std::vector<Citron::TypeC> arg_ts) {
         return Citron::llvmCoreValues::Builder.CreateFCmpOGE(args[0], args[1]);
     }
-    static auto fnot(std::vector<llvm::Value*> args) {
+    static auto fnot(std::vector<llvm::Value*> args, std::vector<Citron::TypeC> arg_ts) {
         return Citron::llvmCoreValues::Builder.CreateNot(args[0]);
     }
-    static auto beq(std::vector<llvm::Value*> args) {
+    static auto beq(std::vector<llvm::Value*> args, std::vector<Citron::TypeC> arg_ts) {
         return Citron::llvmCoreValues::Builder.CreateICmpEQ(args[0], args[1]);
     }
-    static auto nbeq(std::vector<llvm::Value*> args) {
+    static auto nbeq(std::vector<llvm::Value*> args, std::vector<Citron::TypeC> arg_ts) {
         auto v = Citron::llvmCoreValues::Builder.CreateUIToFP(args[1], Citron::llvmTypes::DoubleTy);
         return Citron::llvmCoreValues::Builder.CreateFCmpOEQ(v, args[0]);
     }
-    static auto bneq(std::vector<llvm::Value*> args) {
+    static auto bneq(std::vector<llvm::Value*> args, std::vector<Citron::TypeC> arg_ts) {
         auto v = Citron::llvmCoreValues::Builder.CreateUIToFP(args[0], Citron::llvmTypes::DoubleTy);
         return Citron::llvmCoreValues::Builder.CreateFCmpOEQ(v, args[1]);
     }
-    valProv_* operator() (char op) {
+    static llvm::Value* ssadd(std::vector<llvm::Value*> args, std::vector<Citron::TypeC> arg_ts) {
+        llvm::Value *s0 = args[0], *s1 = args[1];
+        uint64_t e0 = arg_ts[0].data(), e1 = arg_ts[1].data();
+        auto t0 = Citron::llvmCoreValues::getLLVMTy(arg_ts[0]);
+        auto t1 = Citron::llvmCoreValues::getLLVMTy(arg_ts[1]);
+        llvm::Type* t2 = static_cast<llvm::Type*>(llvm::ArrayType::get(Citron::llvmTypes::CharTy, e0+e1+1));
+        auto memp = Citron::llvmCoreValues::Builder.CreateAlloca(t2, 0, "alloca_sdest");
+        //TODO: Handle strcat
+        return Citron::llvmCoreValues::Builder.CreateLoad(memp);
+    }
+    valProv_ operator() (char op) {
         switch(op) {
             case '+':
                 return &ffadd;
@@ -269,7 +316,7 @@ struct nLLVMBasicNumericOp {
                 return &ffcmpolt;
         }
     }
-    valProv_* operator() (std::string name) {
+    valProv_ operator() (std::string name) {
             if (name == "<=:")
                 return &ffcmpole;
             if (name == ">=:")
@@ -282,6 +329,8 @@ struct nLLVMBasicNumericOp {
                 return &nbeq;
             if (name == "bn=")
                 return &bneq;
+            if (name == "s+")
+                return &ssadd;
             std::__throw_invalid_argument(("Invalid method " + name).c_str());
         }
 };

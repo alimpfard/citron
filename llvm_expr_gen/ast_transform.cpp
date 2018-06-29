@@ -38,8 +38,10 @@ argT Citron::ExprAST::transform_expr(ctr_tnode* node) {
         return std::make_unique<BoolExprAST>(BoolExprAST(true));
     case CTR_AST_NODE_LTRBOOLFALSE:
         return std::make_unique<BoolExprAST>(BoolExprAST(false));
+    case CTR_AST_NODE_LTRSTRING:
+        return std::make_unique<StringExprAST>(StringExprAST(node->value, node->vlen));
     default:
-        std::__throw_runtime_error("Unimplemented node type");
+        std::__throw_runtime_error(("Unimplemented node type " + std::to_string(node->type)).c_str());
     }
 }
 
@@ -74,26 +76,71 @@ std::vector<Citron::Message> Citron::vectorize_names(ctr_tlistitem* li) {
     return vs;
 }
 
-codegen_t Citron::NumberExprAST::codegen(bool intern) {
-    return std::make_pair<llvm::Value*, std::tuple<argT, std::vector<std::tuple<mCache_t, std::vector<llvm::Value*>, int>>, Citron::Type>>(
-        llvm::ConstantFP::get(llvmCoreValues::TheContext, llvm::APFloat(val)), 
-        std::make_tuple<argT, std::vector<std::tuple<mCache_t, std::vector<llvm::Value*>, int>>, Citron::Type>(
+codegen_t Citron::NilExprAST::codegen(bool intern) {
+    auto ty = Citron::Type::DummyTy;
+    return std::make_pair<llvm::Value*, std::tuple<argT, std::vector<std::tuple<mCache_t, std::vector<llvm::Value*>, std::vector<Citron::TypeC>, int>>, Citron::TypeC>>(
+        llvm::ConstantPointerNull::get(static_cast<llvm::PointerType*>(llvm::Type::getVoidTy(Citron::llvmCoreValues::TheContext))),
+        std::make_tuple<argT, std::vector<std::tuple<mCache_t, std::vector<llvm::Value*>, std::vector<Citron::TypeC>, int>>, Citron::TypeC>(
             {nullptr},
             {}, 
-            Citron::Type::DummyTy
+            std::move(ty)
+        )
+    );
+}
+
+
+codegen_t Citron::NumberExprAST::codegen(bool intern) {
+    auto ty = Citron::Type::DummyTy;
+    return std::make_pair<llvm::Value*, std::tuple<argT, std::vector<std::tuple<mCache_t, std::vector<llvm::Value*>, std::vector<Citron::TypeC>, int>>, Citron::TypeC>>(
+        llvm::ConstantFP::get(llvmCoreValues::TheContext, llvm::APFloat(val)), 
+        std::make_tuple<argT, std::vector<std::tuple<mCache_t, std::vector<llvm::Value*>, std::vector<Citron::TypeC>, int>>, Citron::TypeC>(
+            {nullptr},
+            {}, 
+            std::move(ty)
         )
     );
 }
 
 codegen_t Citron::BoolExprAST::codegen(bool intern) {
-    return std::make_pair<llvm::Value*, std::tuple<argT, std::vector<std::tuple<mCache_t, std::vector<llvm::Value*>, int>>, Citron::Type>>(
+    auto ty = Citron::Type::DummyTy;
+    return std::make_pair<llvm::Value*, std::tuple<argT, std::vector<std::tuple<mCache_t, std::vector<llvm::Value*>, std::vector<Citron::TypeC>, int>>, Citron::TypeC>>(
         llvm::ConstantInt::get(llvmCoreValues::TheContext, llvm::APInt(1, val, false)), 
-        std::make_tuple<argT, std::vector<std::tuple<mCache_t, std::vector<llvm::Value*>, int>>, Citron::Type>(
+        std::make_tuple<argT, std::vector<std::tuple<mCache_t, std::vector<llvm::Value*>, std::vector<Citron::TypeC>, int>>, Citron::TypeC>(
             {nullptr},
             {}, 
-            Citron::Type::DummyTy
+            std::move(ty)
         )
     );
+}
+
+codegen_t Citron::StringExprAST::codegen(bool intern) {
+    auto ty = Citron::TypeC{Citron::Type::StringTy, val.length()}; //PASS THE SALT
+    if (intern) {
+        std::string val_ = val;
+        valProv_ lambda = [val_](std::vector<llvm::Value*> _, std::vector<Citron::TypeC> _v) -> llvm::Value* {
+            auto mem = Citron::llvmCoreValues::Builder.CreateAlloca(Citron::llvmTypes::StringTy_gen(val_.length()), 0, "alloca_s");
+            auto data = llvm::ConstantDataArray::getString(Citron::llvmCoreValues::TheContext, val_);
+            Citron::llvmCoreValues::Builder.CreateStore(data, mem);
+            return Citron::llvmCoreValues::Builder.CreateLoad(mem);
+        };
+        return std::make_pair<llvm::Value*, std::tuple<argT, std::vector<std::tuple<mCache_t, std::vector<llvm::Value*>, std::vector<Citron::TypeC>, int>>, Citron::TypeC>>(
+            nullptr,
+            std::make_tuple<argT, std::vector<std::tuple<mCache_t, std::vector<llvm::Value*>, std::vector<Citron::TypeC>, int>>, Citron::TypeC>(
+                Citron::Constants::Nil, //<- no receiver requested
+                {{mCache_t{nullptr, std::move(lambda)}, {}, {}, 0}}, //faux valprov
+                std::move(ty) //TOO MUCH SALT
+            )
+        );
+    } else {
+        return std::make_pair<llvm::Value*, std::tuple<argT, std::vector<std::tuple<mCache_t, std::vector<llvm::Value*>, std::vector<Citron::TypeC>, int>>, Citron::TypeC>>(
+            llvm::ConstantDataArray::getString(Citron::llvmCoreValues::TheContext, val),
+            std::make_tuple<argT, std::vector<std::tuple<mCache_t, std::vector<llvm::Value*>, std::vector<Citron::TypeC>, int>>, Citron::TypeC>(
+                {nullptr},
+                {}, 
+                std::move(ty)
+            )
+        );
+    }
 }
 
 void resolve_argument(int& did_recurse, codegen_t& v, std::vector<llvm::Value*>& ArgsV, pipeline_t& pipeline) {
@@ -101,17 +148,19 @@ void resolve_argument(int& did_recurse, codegen_t& v, std::vector<llvm::Value*>&
         auto vs = v.second;
         for(int vi=0, e=std::get<1>(vs).size(); vi<e; vi++) {
             did_recurse = 2;
-            std::tuple<mCache_t, std::vector<llvm::Value*>, int> vf = std::get<1>(vs)[vi];
+            pipeline_t::value_type vf = std::get<1>(vs)[vi];
             if(vi == 0) {
                 if (e == 1)
                     did_recurse = 1;
-                v = std::get<0>(vs)->codegen(true);
+                auto x = std::get<0>(vs);
+                v = x->codegen(true);
                 if(v.first) {
                     auto va = std::get<1>(vf);
                     va.insert(va.begin(), {v.first});
                     vf = std::make_tuple(
                         std::get<0>(vf),
                         va,
+                        std::get<2>(vf),
                         did_recurse
                     );
                 } else
@@ -141,16 +190,29 @@ codegen_t Citron::MessagesExpr::codegen(bool intern) {
     std::cout << " >> " << message_line << '\n';
     if(message_line.size() == 0) 
         return receiver->codegen(intern);
-    Citron::Type last_type = receiver->ty();
+    Citron::TypeC last_type = receiver->ty();
     pipeline_t pipeline;
     for(int i=0; i<message_line.size(); i++) {
         Message msg = message_line[i];
         std::cout << "Processing some " << msg << "\n"; 
-        auto& protos = llvmCoreValues::MethodCache[msg.name];
-        auto arg_v = std::vector<Citron::Type>{last_type};
+        auto protos_it = llvmCoreValues::MethodCache.find(msg.name);
+        if (protos_it == llvmCoreValues::MethodCache.end()) {
+            std::string err = "Unknown method " + msg.name;
+            std::__throw_runtime_error(err.c_str());
+        }
+        auto& protos = protos_it->second;
+        auto arg_v = std::vector<Citron::TypeC>{last_type};
         for (auto arg : msg.arguments)
             arg_v.push_back(arg->ty());
-        auto& proto = protos[arg_v];
+        auto proto_it = protos.find(arg_v);
+        if (proto_it == protos.end()) {
+            std::vector<std::string> argnames;
+            argnames.resize(arg_v.size());
+            std::transform(arg_v.begin(), arg_v.end(), argnames.begin(), ty_as_string);
+            std::string err = "Invalid argument types for " + msg.name + " (Used type: " + (boost::algorithm::join(argnames, " -> ")) + " -> ?)";
+            std::__throw_runtime_error(err.c_str());
+        }
+        auto& proto = proto_it->second;
         bool native_op = true;
         mCache_t fn = std::get<1>(proto);
         std::vector<llvm::Value*> ArgsV {};
@@ -164,22 +226,27 @@ codegen_t Citron::MessagesExpr::codegen(bool intern) {
             if(ArgsV.size() > 0 && !ArgsV.back()) {
                 std::cout << "Saw a null argument: " << ArgsV << std::endl;
                 std::__throw_bad_variant_access("ArgsV");
-                return {nullptr, {{nullptr}, {}, Citron::Type::DummyTy}};
             }
         }
         std::cout << " << (" << msg.name << "): ArgsV " << std::flush;
         for(auto arg : ArgsV) arg->print(llvm::errs(), false);
         std::cout << "  did_recurse " << did_recurse << "\n";
-        valProv_* fp = fn.second;
-        if(!fn.first && !fp) {
-            std::string err = "Invalid function target for op " + msg.name;
+        valProv_ fp = fn.second;
+        if(!fn.first && !fp.target<valProv_f*>()) {
+            std::vector<std::string> argnames;
+            argnames.resize(arg_v.size());
+            std::transform(arg_v.begin(), arg_v.end(), argnames.begin(), ty_as_string);
+            std::string err = "Invalid function target for (" + msg.name + ") :: " + (boost::algorithm::join(argnames, " -> ")) + " -> " + ty_as_string(std::get<0>(proto));
             std::__throw_runtime_error(err.c_str());
         }
-        pipeline.push_back(std::make_tuple(fn, ArgsV, did_recurse?msg.arguments.size()+2:0));
-        last_type = std::get<0>(proto);
+        pipeline.push_back(std::make_tuple(fn, ArgsV, arg_v, did_recurse?msg.arguments.size()+2:0));
+        auto curtype = std::get<0>(proto).resolve(arg_v);
+        std::cout << "Resolved subexpression type down to " << ty_as_string(curtype) << "\n";
+        last_type = curtype;
     }
     //std::cout << pipeline << "\n";
     if(intern) return {nullptr, {receiver, pipeline, last_type}};
+    std::cout << "Resolved expression type down to " << ty_as_string(last_type) << "\n";
     llvm::FunctionType* FT = llvm::FunctionType::get(llvmCoreValues::getLLVMTy(last_type), false);
     llvm::Function* F = llvm::Function::Create(FT, llvm::Function::InternalLinkage, llvmCoreValues::fresh(), llvmCoreValues::TheModule.get());
     llvm::BasicBlock *BB = llvm::BasicBlock::Create(llvmCoreValues::TheContext, "entry", F);
@@ -191,7 +258,7 @@ codegen_t Citron::MessagesExpr::codegen(bool intern) {
     for(decltype(pipeline)::iterator it = pipeline.begin(); it < pipeline.end(); it++) {
         llvmCoreValues::Builder.SetInsertPoint(BB);
         std::vector<llvm::Value*> vec = std::get<1>(*it);
-        int val = std::get<2>(*it);
+        int val = std::get<3>(*it);
         std::cout << "val = " << val << ", vec = " << vec << ", last_value = " << last_value << ", tmp = " << tmp <<'\n';
         if(val == 0)
             vec.insert(vec.begin(), {last_value});
@@ -220,8 +287,8 @@ codegen_t Citron::MessagesExpr::codegen(bool intern) {
         if((fp = variant.first))
             vp = llvmCoreValues::Builder.CreateCall(fp, vec, "calltmp");
         else {
-            valProv_* f = variant.second;
-            vp = f(vec);
+            valProv_ f = variant.second;
+            vp = f(vec, std::get<2>(*it));
         }
         std::cout << vp << " = {" << std::flush;
         vp->print(llvm::errs(), false);
@@ -244,9 +311,10 @@ codegen_t Citron::MessagesExpr::codegen(bool intern) {
 }
 
 void Citron::llvmCoreValues::populateCache() {
-    Citron::Type NumberTy = Citron::Type::NumberTy;
-    Citron::Type BoolTy = Citron::Type::BoolTy;
-    std::map<std::vector<Citron::Type>, std::pair<Citron::Type, llvm::Function*>> fps;
+    Citron::TypeC NumberTy = Citron::Type::NumberTy;
+    Citron::TypeC BoolTy = Citron::Type::BoolTy;
+    Citron::TypeC StringTy = Citron::Type::StringTy;
+    std::map<std::vector<Citron::TypeC>, std::pair<Citron::TypeC, llvm::Function*>> fps;
     // llvm::Module* TheeModule = TheModule.get();
     // auto ebuild = llvm::EngineBuilder(std::move(TheModule));
     LLVMInitializeNativeTarget();
@@ -260,11 +328,15 @@ void Citron::llvmCoreValues::populateCache() {
     llvm::Function* fp;
     //  llvm::Function::Create(FT, llvm::Function::ExternalLinkage, "mplus_num", TheModule.get());
     Citron::nLLVMBasicNumericOp opgen;
-    std::vector<Citron::Type> twoDoubles = {NumberTy, NumberTy};
-    auto opV = opgen('+');
-    mCache_t plusop = mCache_t(nullptr, opV);
     MethodCache["+"] = {
-        {twoDoubles, {NumberTy, plusop}}
+        {{NumberTy, NumberTy}, {NumberTy, mCache_t(nullptr, opgen('+'))}},
+        {{StringTy, StringTy}, {StringTy.transform(
+            [](std::vector<Citron::TypeC> args){
+                std::cout << "Resolving s+ " << ty_as_string(args[0]) << " " << ty_as_string(args[1]) << ": ";
+                auto v = args[0].transform(args[0].data()+args[1].data());
+                std::cout << ty_as_string(v) << "\n";
+                return v;
+            }), mCache_t(nullptr, opgen("s+"))}}
     };
     // fp = llvm::Function::Create(FT, llvm::Function::ExternalLinkage, "msub_num", TheModule.get());
     MethodCache["-"] = {
@@ -310,8 +382,8 @@ void Citron::llvmCoreValues::populateCache() {
         {{NumberTy, NumberTy, NumberTy}, {NumberTy, mCache_t(fp, emptyllvmValueProvider)}}
     };
 
-    auto vtest = MethodCache["+"][{NumberTy, NumberTy}];
-    MethodCache["+"][{NumberTy, NumberTy}] = vtest;
+    auto vtest = MethodCache["+"][{StringTy, StringTy}];
+    MethodCache["+"][{StringTy, StringTy}] = vtest;
 }
 
 #ifdef TEST

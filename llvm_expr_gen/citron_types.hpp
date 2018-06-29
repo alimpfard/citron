@@ -39,16 +39,47 @@ public:
     bool operator== (const TyVar& t) { return id == t.id; }
 };
 
-enum class Type {
-    DummyTy,
-    NumberTy,
-    StringTy,
-    BoolTy
+// enum class Type {
+//     DummyTy,
+//     NumberTy,
+//     StringTy,
+//     BoolTy
+// };
+
+class TypeC {
+    //typedef TypeC* resolve_t (TypeC, std::vector<TypeC>);
+    int index;
+    size_t data_;
+    static TypeC no_op_resolve(std::vector<TypeC> args) {
+        return args[0]; //self
+    }
+public:
+    using resolve_t = decltype(no_op_resolve)*;
+
+    resolve_t res_fn;
+    static constexpr int length() { return 4; }
+    TypeC(size_t data = 0) : index(0), data_(data), res_fn((&no_op_resolve)) {}
+    constexpr explicit TypeC(int index, size_t data = 0, resolve_t resolve = nullptr) : index(index), data_(data), res_fn(resolve?:(&no_op_resolve)) {}
+    constexpr operator int() const { return index; }
+
+    bool operator == (const TypeC& other) { return index == other.index; }
+    
+    const TypeC transform(size_t data) const { return TypeC{index, data, res_fn}; }
+    const TypeC transform(resolve_t resolver) const { return TypeC{index, data_, resolver}; }
+    inline TypeC resolve(std::vector<TypeC> args) const { return res_fn(args); }
+    size_t data() { return data_; }
 };
 
-static std::map<TyVar, Type> TypeVarMap;
+namespace Type {
+constexpr TypeC DummyTy(0);
+constexpr TypeC NumberTy(1);
+constexpr TypeC StringTy(2); //no-op transform string type
+constexpr TypeC BoolTy(3);
+}
 
-static const std::string ty_as_string(Citron::Type ty) {
+static std::map<TyVar, TypeC> TypeVarMap;
+
+static const std::string ty_as_string(Citron::TypeC ty) {
     switch (ty) {
     case Citron::Type::DummyTy:
         return "Dummy";
@@ -57,24 +88,12 @@ static const std::string ty_as_string(Citron::Type ty) {
     case Citron::Type::BoolTy:
         return "Boolean";
     case Citron::Type::StringTy:
-        return "String";
+        return ("String[" + std::to_string(ty.data()) + "]");
     }
     return "Unknown";
 }
 
-typedef EnumValues<Type,
-    Type::DummyTy,
-    Type::NumberTy,
-    Type::StringTy,
-    Type::BoolTy
-> TypesEnum;
-
-Type& operator++(Type& t) {
-    TypesEnum::advance(t);
-    return t;
-}
-
-bool citron_type_equals (const Type& t0, const Type& t1) {
+bool citron_type_equals (const TypeC& t0, const TypeC& t1) {
     return static_cast<int>(t0) == static_cast<int>(t1);
 }
 // bool citron_type_equals (const Type& t0, const TyVar& tv) {

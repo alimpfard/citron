@@ -63,7 +63,7 @@ namespace llvmCoreValues {
     static std::ostringstream _temp_os;
     static std::string fresh() {
         _temp_os.str("");
-        _temp_os << "_fresh$#" << id++;
+        _temp_os << "_fresh_block$" << id++;
         return _temp_os.str();
     }
     static std::string errors;
@@ -110,6 +110,8 @@ public:
     virtual codegen_t codegen(bool intern=false) = 0;
     virtual Citron::TypeC ty() const = 0;
 };
+
+static const std::shared_ptr<ExprAST> EOP = {};
 
 class NilExprAST : public ExprAST {
 public:
@@ -241,6 +243,34 @@ public:
                 }
         }
         return last_type;
+    }
+};
+
+class SequenceExprAST : public ExprAST {
+    std::vector<argT> sequence;
+    bool main;
+public:
+    SequenceExprAST(ctr_tlistitem* list, bool main) : sequence(), main(main) {
+        while (list) {
+            auto t_expr = ExprAST::transform_expr(list->node);
+            if (t_expr == Citron::EOP) 
+                break;
+            sequence.push_back(t_expr);
+            list = list->next;
+        }
+    }
+    virtual std::ostream& print (std::ostream& os) const {
+        os << "[";
+        std::for_each(sequence.begin(), sequence.end(), [&](argT v) { v->print(os); os << " : "; });
+        os << "]";
+        return os;
+    }
+    virtual codegen_t codegen(bool intern=false);
+    virtual Citron::TypeC ty() const { //force last type to be returned
+        Citron::TypeC type;
+        for (auto expr : sequence) //eagerly typecheck all
+            type = expr->ty();
+        return type;
     }
 };
 

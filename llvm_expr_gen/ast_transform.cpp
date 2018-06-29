@@ -22,6 +22,7 @@ using Citron::codegen_t;
 using Citron::pipeline_t;
 
 argT Citron::ExprAST::transform_expr(ctr_tnode* node) {
+    bool is_main = false;
     switch(node->type) {
     case CTR_AST_NODE_EXPRMESSAGE: {
         auto receiver = transform_expr(node->nodes->node);
@@ -40,6 +41,12 @@ argT Citron::ExprAST::transform_expr(ctr_tnode* node) {
         return std::make_unique<BoolExprAST>(BoolExprAST(false));
     case CTR_AST_NODE_LTRSTRING:
         return std::make_unique<StringExprAST>(StringExprAST(node->value, node->vlen));
+    case CTR_AST_NODE_PROGRAM:
+        is_main = true;
+    case CTR_AST_NODE_INSTRLIST:
+        return std::make_unique<SequenceExprAST>(SequenceExprAST(node->nodes, is_main));
+    case CTR_AST_NODE_ENDOFPROGRAM:
+        return Citron::EOP;
     default:
         std::__throw_runtime_error(("Unimplemented node type " + std::to_string(node->type)).c_str());
     }
@@ -87,7 +94,6 @@ codegen_t Citron::NilExprAST::codegen(bool intern) {
         )
     );
 }
-
 
 codegen_t Citron::NumberExprAST::codegen(bool intern) {
     auto ty = Citron::Type::DummyTy;
@@ -186,6 +192,57 @@ void resolve_receiver(argT& receiver, llvm::Value*& last_value, pipeline_t& pipe
     }
 }
 
+inline llvm::Value* process_pipeline(pipeline_t& pipeline, std::vector<llvm::Value*>& tmp, llvm::Value*& last_value, llvm::BasicBlock*& BB) {
+    llvm::Value* vp;
+    for(pipeline_t::iterator it = pipeline.begin(); it < pipeline.end(); it++) {
+        Citron::llvmCoreValues::Builder.SetInsertPoint(BB);
+        std::vector<llvm::Value*> vec = std::get<1>(*it);
+        int val = std::get<3>(*it);
+        std::cout << "val = " << val << ", vec = " << vec << ", last_value = " << last_value << ", tmp = " << tmp <<'\n';
+        if(val == 0) {
+            if (last_value)
+                vec.insert(vec.begin(), {last_value});
+        } else {
+            if (tmp.size() == 0) {
+                if (val == 2) {
+                    if (last_value)
+                        vec.insert(vec.begin(), {last_value});
+                } else if (val > 2) {
+                    std::__throw_runtime_error("Too many temporaries requested");
+                }
+            } else {
+                if (val >= 2) {
+                    std::vector<llvm::Value*> pvs;
+                    if (last_value)
+                        pvs.push_back(last_value);
+                    for (int x=0; x<val-2; x++) {
+                        last_value = tmp.back();
+                        tmp.pop_back();
+                        pvs.push_back(last_value);
+                    }
+                    vec.insert(vec.begin(), pvs.rbegin(), pvs.rend());
+                }
+            }
+            if (last_value)
+                tmp.push_back(last_value);
+        }
+        llvm::Function* fp;
+        auto& variant = std::get<0>(*it);
+        if((fp = variant.first))
+            vp = Citron::llvmCoreValues::Builder.CreateCall(fp, vec, "calltmp");
+        else {
+            Citron::valProv_ f = variant.second;
+            vp = f(vec, std::get<2>(*it));
+        }
+        std::cout << vp << " = {" << std::flush;
+        vp->print(llvm::errs(), false);
+        std::cout << "  }" << std::endl;
+
+        last_value = vp;
+    }
+    return vp;
+}
+
 codegen_t Citron::MessagesExpr::codegen(bool intern) {
     std::cout << " >> " << message_line << '\n';
     if(message_line.size() == 0) 
@@ -255,47 +312,9 @@ codegen_t Citron::MessagesExpr::codegen(bool intern) {
     llvm::Value* last_value;
     resolve_receiver(receiver, last_value, pipeline);
     bool addnext = false;
-    for(decltype(pipeline)::iterator it = pipeline.begin(); it < pipeline.end(); it++) {
-        llvmCoreValues::Builder.SetInsertPoint(BB);
-        std::vector<llvm::Value*> vec = std::get<1>(*it);
-        int val = std::get<3>(*it);
-        std::cout << "val = " << val << ", vec = " << vec << ", last_value = " << last_value << ", tmp = " << tmp <<'\n';
-        if(val == 0)
-            vec.insert(vec.begin(), {last_value});
-        else {
-            if (tmp.size() == 0) {
-                if (val == 2) {
-                    vec.insert(vec.begin(), {last_value});
-                } else if (val > 2) {
-                    std::__throw_runtime_error("Too many temporaries requested");
-                }
-            } else {
-                if (val >= 2) {
-                    std::vector<llvm::Value*> pvs = {last_value};
-                    for (int x=0; x<val-2; x++) {
-                        last_value = tmp.back();
-                        tmp.pop_back();
-                        pvs.push_back(last_value);
-                    }
-                    vec.insert(vec.begin(), pvs.rbegin(), pvs.rend());
-                }
-            }
-            tmp.push_back(last_value);
-        }
-        llvm::Function* fp;
-        auto& variant = std::get<0>(*it);
-        if((fp = variant.first))
-            vp = llvmCoreValues::Builder.CreateCall(fp, vec, "calltmp");
-        else {
-            valProv_ f = variant.second;
-            vp = f(vec, std::get<2>(*it));
-        }
-        std::cout << vp << " = {" << std::flush;
-        vp->print(llvm::errs(), false);
-        std::cout << "  }" << std::endl;
+    
+    vp = process_pipeline(pipeline, tmp, last_value, BB);
 
-        last_value = vp;
-    }
     llvmCoreValues::Builder.CreateRet(vp);
     llvm::raw_fd_ostream os(1, false, false);
     std::cout << "v-----------------------------------------------v\n";
@@ -303,6 +322,27 @@ codegen_t Citron::MessagesExpr::codegen(bool intern) {
     if(llvm::verifyFunction(*F, &os)) {
         // Citron::llvmCoreValues::TheModule->print(llvm::errs(), nullptr, false, true);
         // return nullptr;
+    }
+    std::cout << "^-----------------------------------------------^\n";
+    auto p = F;//llvmCoreValues::Builder.CreateCall(F, {}, "calltmp");
+    
+    return {p, {nullptr, {}, Citron::Type::DummyTy}};
+}
+
+codegen_t Citron::SequenceExprAST::codegen(bool intern) {
+    llvm::FunctionType* FT = llvm::FunctionType::get(llvmCoreValues::getLLVMTy(ty()), false);
+    llvm::Function* F = llvm::Function::Create(FT, llvm::Function::InternalLinkage, main?"main":llvmCoreValues::fresh(), llvmCoreValues::TheModule.get());
+    llvm::BasicBlock *BB = llvm::BasicBlock::Create(llvmCoreValues::TheContext, "entry", F);
+    llvm::Value* vp = nullptr;
+    llvm::IRBuilder<> builder(llvmCoreValues::TheContext);
+    builder.SetInsertPoint(BB);
+    for (auto expr : sequence) {
+        vp = builder.CreateCall(expr->codegen().first, {});
+    }
+    builder.CreateRet(vp);
+    llvm::raw_fd_ostream os(1, false, false);
+    std::cout << "v-----------------------------------------------v\n";
+    if(llvm::verifyFunction(*F, &os)) {
     }
     std::cout << "^-----------------------------------------------^\n";
     auto p = F;//llvmCoreValues::Builder.CreateCall(F, {}, "calltmp");
@@ -403,7 +443,7 @@ int main() {
     ctr_program_length = s.length();
     ctr_clex_load(const_cast<char*>(s.c_str()));
     ctr_tnode* tnode = ctr_cparse_parse(const_cast<char*>(s.c_str()), "llvm");
-    tnode = tnode->nodes->node;
+    // tnode = tnode->nodes->node;
     Citron::argT ast = Citron::ExprAST::transform_expr(tnode);
     std::cout << "\x1b[91mAST: " << *ast << "\x1b[0m\nDebug stuff:\n\x1b[2m";
     auto fn = ast->codegen();

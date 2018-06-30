@@ -62,7 +62,8 @@ public:
     constexpr explicit TypeC(int index, size_t data = 0, resolve_t resolve = nullptr) : index(index), data_(data), res_fn(resolve?:(&no_op_resolve)) {}
     constexpr operator int() const { return index; }
 
-    bool operator == (const TypeC& other) { return index == other.index; }
+    bool operator == (const TypeC& other) { return index == other.index || other.index == length() || index == length(); }
+    bool operator != (const TypeC& other) { return index != other.index && other.index != length() && index != length(); }
     
     const TypeC transform(size_t data) const { return TypeC{index, data, res_fn}; }
     const TypeC transform(resolve_t resolver) const { return TypeC{index, data_, resolver}; }
@@ -71,6 +72,7 @@ public:
 };
 
 namespace Type {
+constexpr TypeC AnyTy(TypeC::length()); // out of range of length()
 constexpr TypeC DummyTy(0);
 constexpr TypeC NumberTy(1);
 constexpr TypeC StringTy(2); //no-op transform string type

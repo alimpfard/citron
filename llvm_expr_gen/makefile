@@ -1,2 +1,2 @@
 all:
-	clang++ -I/usr/include -march=x86-64 -mtune=generic -O2 -pipe -fstack-protector-strong -fno-plt -fPIC -fvisibility-inlines-hidden -Werror=date-time -std=c++17 -lcitron -Wall -W -Wno-unused-parameter -Wwrite-strings -Wcast-qual -Wno-missing-field-initializers -pedantic -Wno-long-long -Wno-maybe-uninitialized -Wdelete-non-virtual-dtor -Wno-comment -ffunction-sections -fdata-sections -O3 -DNDEBUG  -fno-exceptions -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -L/usr/lib -ggdb *.cpp -lLLVM-6.0
+	g++ -std=c++2a -lcitron -ggdb -Og -Wall -pedantic -Wno-format -Wno-sign-compare ast_transform.cpp fns.cpp -L/usr/lib -lLLVM-6.0

@@ -8,11 +8,18 @@
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/Instructions.h"
 #include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
-#include "llvm/IR/IntrinsicInst.h"
+#include "llvm/Support/TargetSelect.h"
+#include "llvm/Target/TargetMachine.h"
+#include "llvm/Transforms/InstCombine/InstCombine.h"
+#include "llvm/Transforms/Scalar.h"
+#include "llvm/Transforms/Scalar/GVN.h"
+#include "llvm/Transforms/Utils/Mem2Reg.h"
 #include <cstdlib>
 #include <vector>
 #include <string>
@@ -58,6 +65,7 @@ namespace llvmCoreValues {
     static llvm::LLVMContext TheContext;
     static llvm::IRBuilder<> Builder(TheContext);
     static std::unique_ptr<llvm::Module> TheModule (new llvm::Module("citron", TheContext));
+    static std::unique_ptr<llvm::legacy::FunctionPassManager> TheFPM (new llvm::legacy::FunctionPassManager(TheModule.get()));
     static std::map<std::string, std::map<std::vector<Citron::TypeC>, std::pair<Citron::TypeC, mCache_t>>> MethodCache;
     static int id = 0;
     static std::ostringstream _temp_os;
@@ -92,10 +100,22 @@ namespace llvmCoreValues {
 
 class ExprAST;
 
+class vPtrC {
+public:
+    llvm::Value* v;
+    bool callable;
+    vPtrC(llvm::Value* v) : v(v), callable(true) {}
+    vPtrC(llvm::Value* v, bool c) : v(v), callable(c) {}
+    bool is_call() const { return callable; }
+    explicit operator llvm::Value* () const { return v; }
+    bool operator! () { return !v; }
+    explicit operator bool () { return !!v; }
+};
+
 using argT = std::shared_ptr<ExprAST>;
 using argVec = std::vector<argT>;
 using pipeline_t = std::vector<std::tuple<mCache_t, std::vector<llvm::Value*>, std::vector<Citron::TypeC>, int>>;
-using codegen_t = std::pair<llvm::Value*, std::tuple<argT, pipeline_t, Citron::TypeC>>;
+using codegen_t = std::pair<vPtrC, std::tuple<argT, pipeline_t, Citron::TypeC>>;
 
 
 
@@ -159,6 +179,44 @@ public:
     }
     virtual codegen_t codegen(bool intern=false);
     virtual Citron::TypeC ty() const { return Citron::Type::StringTy.transform(val.length()); }
+};
+
+class VariableExprAST : public ExprAST {
+    std::string name_;
+public:
+    VariableExprAST(char* s, size_t l) : name_(s, l) {}
+    virtual std::ostream& print (std::ostream& os) const {
+        return os << "var " << name_;
+    }
+    virtual codegen_t codegen(bool intern=false);
+    virtual Citron::TypeC ty() const {
+        auto x = llvmCoreValues::NamedValues.find(name_);
+        if (x == llvmCoreValues::NamedValues.end())
+            return Citron::Type::DummyTy;
+        else
+            return (*x).second.first; //type
+    }
+    std::string name() { return name_; }
+};
+
+class AssignmentExprAST : public ExprAST {
+    argT target, assignee;
+public:
+    AssignmentExprAST(argT v, argT assignee) : target(v), assignee(assignee) {}
+    virtual std::ostream& print (std::ostream& os) const {
+        return os << "let " << *target << " = " << *assignee << " in ";
+    }
+    virtual codegen_t codegen(bool intern=false);
+    virtual Citron::TypeC ty() const {
+        VariableExprAST* var = dynamic_cast<VariableExprAST*>(target.get());
+        auto type = assignee->ty();
+        auto varty = target->ty();
+        if (varty == Citron::Type::DummyTy)
+            llvmCoreValues::NamedValues[var->name()] = {type, nullptr};
+        else if (varty != type)
+            std::__throw_invalid_argument(("Invalid rebinding for variable " + var->name()).c_str());
+        return type;
+    }
 };
 
 class Message {

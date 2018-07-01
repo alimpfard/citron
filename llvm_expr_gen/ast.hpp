@@ -80,11 +80,17 @@ namespace llvmCoreValues {
 }
 
 namespace llvmTypes {
+    static llvm::Type* getLLVMTy(Citron::TypeC t);
     static llvm::Type* DoubleTy = llvm::Type::getDoubleTy(llvmCoreValues::TheContext);
     static llvm::Type* CharTy = llvm::Type::getInt8Ty(llvmCoreValues::TheContext);
     static llvm::Type* BoolTy = llvm::Type::getInt1Ty(llvmCoreValues::TheContext);
     static llvm::Type* VoidTy = llvm::Type::getVoidTy(llvmCoreValues::TheContext);
     static std::function<llvm::ArrayType*(uint64_t)> StringTy_gen = [](uint64_t length){ return llvm::ArrayType::get(llvmTypes::CharTy, length+1); };
+    static llvm::Type* FnTy_gen(std::vector<llvm::Type*> vs) {
+        auto v = vs.back();
+        vs.pop_back();
+        return llvm::FunctionType::get(v, vs, false);
+    }
 };
 
 namespace llvmCoreValues {
@@ -94,6 +100,12 @@ namespace llvmCoreValues {
         case Citron::Type::StringTy: return llvmTypes::StringTy_gen(t.data());
         case Citron::Type::BoolTy  : return llvmTypes::BoolTy;
         case Citron::Type::DummyTy : return llvmTypes::VoidTy;
+        case Citron::Type::FunTy: 
+            std::vector<llvm::Type*> ms;
+            auto vs = Citron::Type::incomplete_types[t.data()-1];
+            ms.resize(vs.size());
+            std::transform(vs.begin(), vs.end(), ms.begin(), getLLVMTy);
+            return llvmTypes::FnTy_gen(ms);
         }
     }
 };
@@ -104,9 +116,12 @@ class vPtrC {
 public:
     llvm::Value* v;
     bool callable;
-    vPtrC(llvm::Value* v) : v(v), callable(true) {}
-    vPtrC(llvm::Value* v, bool c) : v(v), callable(c) {}
+    bool literal;
+    vPtrC(llvm::Value* v) : v(v), callable(true), literal(true) {}
+    vPtrC(llvm::Value* v, bool c) : v(v), callable(c), literal(true) {}
+    vPtrC(llvm::Value* v, bool c, bool l) : v(v), callable(c), literal(l) {}
     bool is_call() const { return callable; }
+    bool is_lit() const { return literal; }
     explicit operator llvm::Value* () const { return v; }
     bool operator! () { return !v; }
     explicit operator bool () { return !!v; }
@@ -324,11 +339,52 @@ public:
         return os;
     }
     virtual codegen_t codegen(bool intern=false);
+    llvm::Function* codegen(std::vector<Citron::TypeC> argtys);
     virtual Citron::TypeC ty() const { //force last type to be returned
         Citron::TypeC type;
         for (auto expr : sequence) //eagerly typecheck all
             type = expr->ty();
         return type;
+    }
+};
+
+class BlockExprAST : public ExprAST {
+    std::vector<std::string> formal_params;
+    argT body;
+    bool takes_self;
+    std::map<std::vector<Citron::TypeC>, llvm::Function*> instances;
+    std::vector<Citron::TypeC> tyvars;
+public:
+    BlockExprAST(ctr_tlistitem* args, argT b) : formal_params(), body(b), takes_self(false) {
+        if(args && args->node && args->node->vlen == 4 && strncmp(args->node->value, "self", 4) == 0) {
+            takes_self = true;
+            args = args->next;
+        }
+        while (args) {
+            if(!args->node) break;
+            formal_params.push_back({args->node->value, args->node->vlen});
+            tyvars.push_back(Citron::Type::tyvar({}));
+            args = args->next;
+        }
+        auto rty = Citron::Type::tyvar(tyvars);
+        tyvars.push_back(Citron::Type::FunTy.transform(rty));
+    }
+    virtual std::ostream& print (std::ostream& os) const {
+        os << '{';
+        std::for_each(formal_params.begin(), formal_params.end(), [&](std::string s) { os << ':' << s; });
+        return os << ' ' << *body << " }";
+    }
+    virtual codegen_t codegen(bool intern=false);
+    llvm::Function* codegen(std::vector<llvm::Value*>, std::vector<Citron::TypeC>);
+
+    virtual Citron::TypeC ty() const {
+        return tyvars.back();
+    }
+    llvm::Function* generate_now(std::vector<llvm::Value*> args, std::vector<Citron::TypeC> argtys) {
+        auto& instance = instances[argtys];
+        if(instance) return instance;
+        instance = codegen(args, argtys);
+        return instance;
     }
 };
 
@@ -386,6 +442,13 @@ struct nLLVMBasicNumericOp {
         //TODO: Handle strcat
         return Citron::llvmCoreValues::Builder.CreateLoad(memp);
     }
+    static auto bcall3(std::vector<llvm::Value*> args, std::vector<Citron::TypeC> arg_ts) {
+        Citron::BlockExprAST* block = reinterpret_cast<Citron::BlockExprAST*>(args[0]);
+        args.erase(args.begin());
+        arg_ts.erase(arg_ts.begin());
+        auto val = block->generate_now(args, arg_ts);
+        return Citron::llvmCoreValues::Builder.CreateCall(val, args);
+    }
     valProv_ operator() (char op) {
         switch(op) {
             case '+':
@@ -419,6 +482,8 @@ struct nLLVMBasicNumericOp {
                 return &bneq;
             if (name == "s+")
                 return &ssadd;
+            if (name == "apply3")
+                return &bcall3;
             std::__throw_invalid_argument(("Invalid method " + name).c_str());
         }
 };

@@ -57,7 +57,7 @@ public:
     using resolve_t = decltype(no_op_resolve)*;
 
     resolve_t res_fn;
-    static constexpr int length() { return 4; }
+    static constexpr int length() { return 5; }
     TypeC(size_t data = 0) : index(0), data_(data), res_fn((&no_op_resolve)) {}
     constexpr explicit TypeC(int index, size_t data = 0, resolve_t resolve = nullptr) : index(index), data_(data), res_fn(resolve?:(&no_op_resolve)) {}
     constexpr operator int() const { return index; }
@@ -69,14 +69,33 @@ public:
     const TypeC transform(resolve_t resolver) const { return TypeC{index, data_, resolver}; }
     inline TypeC resolve(std::vector<TypeC> args) const { return res_fn(args); }
     size_t data() { return data_; }
+
+    TypeC operator+ (size_t i) const { return transform(data_+i); }
 };
 
 namespace Type {
-constexpr TypeC AnyTy(TypeC::length()); // out of range of length()
+constexpr TypeC TyInfer(TypeC::length()); // TyVar : out of range of length()
 constexpr TypeC DummyTy(0);
 constexpr TypeC NumberTy(1);
 constexpr TypeC StringTy(2); //no-op transform string type
 constexpr TypeC BoolTy(3);
+constexpr TypeC FunTy(4); //indexes into Type::funtypes
+
+static std::map<int, std::vector<TypeC>> funtypes = {
+    {0, {DummyTy}}
+};
+static std::map<int, std::vector<TypeC>> incomplete_types = {};
+
+static size_t tyvar(std::vector<TypeC> args) {
+    auto tyv = TyInfer.transform(args.size()); 
+    args.insert(args.begin(), tyv);
+    incomplete_types[incomplete_types.size()] = args;
+    return tyv;
+}
+
+static bool unify(size_t tys, TypeC tyt) {
+    return true; //TODO finish
+}
 }
 
 static std::map<TyVar, TypeC> TypeVarMap;
@@ -91,12 +110,17 @@ static const std::string ty_as_string(Citron::TypeC ty) {
         return "Boolean";
     case Citron::Type::StringTy:
         return ("String[" + std::to_string(ty.data()) + "]");
+    case Citron::Type::TyInfer:
+        return ("UnknownType[" + std::to_string(ty.data()) + "]");
     }
     return "Unknown";
 }
 
 bool citron_type_equals (const TypeC& t0, const TypeC& t1) {
-    return static_cast<int>(t0) == static_cast<int>(t1);
+    int i0 = t0, i1 = t1;
+    int l = TypeC::length();
+    // std::cout << i0 << "," << i1 << '\n';
+    return i0 == i1 || i0 == l || i1 == l;
 }
 // bool citron_type_equals (const Type& t0, const TyVar& tv) {
 //     auto mt = TypeVarMap.find(tv);

@@ -51,6 +51,8 @@ argT Citron::ExprAST::transform_expr(ctr_tnode* node) {
         return std::make_unique<SequenceExprAST>(SequenceExprAST(node->nodes, is_main));
     case CTR_AST_NODE_ENDOFPROGRAM:
         return Citron::EOP;
+    case CTR_AST_NODE_CODEBLOCK:
+        return std::make_unique<BlockExprAST>(BlockExprAST(node->nodes->node->nodes, transform_expr(node->nodes->next->node)));
     default:
         std::__throw_runtime_error(("Unimplemented node type " + std::to_string(node->type)).c_str());
     }
@@ -339,7 +341,15 @@ static std::vector<llvm::Function*> blocks_vec;
 static std::vector<llvm::BasicBlock*> current_bb;
 
 codegen_t Citron::SequenceExprAST::codegen(bool intern) {
-    llvm::FunctionType* FT = llvm::FunctionType::get(llvmCoreValues::getLLVMTy(ty()), false);
+    llvm::Value* p = codegen(std::vector<Citron::TypeC>{});
+    return {p, {nullptr, {}, Citron::Type::DummyTy}};
+}
+
+llvm::Function* Citron::SequenceExprAST::codegen(std::vector<Citron::TypeC> argtys) {
+    std::vector<llvm::Type*> tys;
+    tys.resize(argtys.size());
+    std::transform(argtys.begin(), argtys.end(), tys.begin(), llvmCoreValues::getLLVMTy);
+    llvm::FunctionType* FT = llvm::FunctionType::get(llvmCoreValues::getLLVMTy(ty()), tys, false);
     llvm::Function* F = llvm::Function::Create(FT, llvm::Function::InternalLinkage, main?"main":llvmCoreValues::fresh(), llvmCoreValues::TheModule.get());
     blocks_vec.push_back(F);
     llvm::BasicBlock *BB = llvm::BasicBlock::Create(llvmCoreValues::TheContext, "entry", F);
@@ -375,7 +385,7 @@ codegen_t Citron::SequenceExprAST::codegen(bool intern) {
     std::cout << "^-----------------------------------------------^\n";
     auto p = F;//llvmCoreValues::Builder.CreateCall(F, {}, "calltmp");
     blocks_vec.pop_back();
-    return {p, {nullptr, {}, Citron::Type::DummyTy}};
+    return p;
 }
 
 static llvm::AllocaInst *CreateEntryBlockAlloca(llvm::Function *TheFunction, const std::string &VarName, const Citron::TypeC type) {
@@ -434,6 +444,21 @@ codegen_t Citron::AssignmentExprAST::codegen(bool intern) {
     };
 }
 
+codegen_t Citron::BlockExprAST::codegen(bool intern) {
+    return {{reinterpret_cast<llvm::Value*>(this), false, false}, {nullptr, {}, ty()}}; //blocks are deferred until used; cheat: pass raw pointer
+}
+
+llvm::Function* Citron::BlockExprAST::codegen(std::vector<llvm::Value*> args, std::vector<Citron::TypeC> argtys) {
+    auto old_map = llvmCoreValues::NamedValues;
+    for(int i=0; i<formal_params.size(); i++)
+        llvmCoreValues::NamedValues[formal_params[i]] = {argtys[i], args[i]};
+
+    auto f = (dynamic_cast<SequenceExprAST*>(body.get()))->codegen(argtys);
+    
+    llvmCoreValues::NamedValues = old_map;
+    return f;
+}
+
 static void initFPM() {
     Citron::llvmCoreValues::TheFPM->add(llvm::createPromoteMemoryToRegisterPass());
     Citron::llvmCoreValues::TheFPM->add(llvm::createInstructionCombiningPass());
@@ -444,6 +469,9 @@ void Citron::llvmCoreValues::populateCache() {
     Citron::TypeC NumberTy = Citron::Type::NumberTy;
     Citron::TypeC BoolTy = Citron::Type::BoolTy;
     Citron::TypeC StringTy = Citron::Type::StringTy;
+    Citron::TypeC TyInfer = Citron::Type::TyInfer;
+    Citron::TypeC FunTy = Citron::Type::FunTy;
+
     std::map<std::vector<Citron::TypeC>, std::pair<Citron::TypeC, llvm::Function*>> fps;
     // llvm::Module* TheeModule = TheModule.get();
     // auto ebuild = llvm::EngineBuilder(std::move(TheModule));
@@ -513,9 +541,52 @@ void Citron::llvmCoreValues::populateCache() {
         {{NumberTy, NumberTy, NumberTy}, {NumberTy, mCache_t(fp, emptyllvmValueProvider)}}
     };
 
-    auto vtest = MethodCache["+"][{StringTy, StringTy}];
-    MethodCache["+"][{StringTy, StringTy}] = vtest;
+    MethodCache["applyTo:and:and:"] = {
+        {{TyInfer, TyInfer, TyInfer, TyInfer}, {TyInfer, mCache_t(nullptr, opgen("apply3"))}}
+    };
+
+    std::cout << "HERE OKAY!" << std::endl;
+
+    auto vtest = MethodCache["applyTo:and:and:"][{TyInfer, TyInfer, TyInfer, TyInfer}];
+    MethodCache["applyTo:and:and:"][{TyInfer, TyInfer, TyInfer, TyInfer}] = vtest;
 }
+
+#pragma region cdecl
+
+extern "C" int is_node_pure(ctr_tnode* node) {
+    bool is_main = false;
+    switch(node->type) {
+    case CTR_AST_NODE_EXPRMESSAGE: {
+        auto receiver = is_node_pure(node->nodes->node);
+        return receiver; //TODO: Handle messages
+    }
+    case CTR_AST_NODE_LTRNUM:
+        return 1;
+    case CTR_AST_NODE_NESTED:
+        return is_node_pure(node->nodes->node);
+    case CTR_AST_NODE_LTRBOOLTRUE:
+        return 1;
+    case CTR_AST_NODE_LTRBOOLFALSE:
+        return 1;
+    case CTR_AST_NODE_LTRSTRING:
+        return 1;
+    case CTR_AST_NODE_REFERENCE:
+        return 1; //TODO: Handle dangling names
+    case CTR_AST_NODE_EXPRASSIGNMENT:
+        return is_node_pure(node->nodes->node) && is_node_pure(node->nodes->next->node);
+    case CTR_AST_NODE_PROGRAM:
+        is_main = true;
+    case CTR_AST_NODE_INSTRLIST:
+        return is_node_pure(node->nodes->node); //TODO: all()
+    case CTR_AST_NODE_ENDOFPROGRAM:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+#pragma endregion cdecl
+
 
 #ifdef TEST
 

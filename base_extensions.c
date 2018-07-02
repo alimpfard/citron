@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+extern int ctr_lex_line_number;
 /**
  * [Array|String] letEqual: [Array|Object] in: [Block]
  *
@@ -1031,6 +1032,12 @@ ctr_ast_lextoken (ctr_object * myself, ctr_argument * argumentList)
 }
 
 ctr_object *
+ctr_ast_lexline (ctr_object * myself, ctr_argument * argumentList)
+{
+    return ctr_build_number_from_float(ctr_lex_line_number);
+}
+
+ctr_object *
 ctr_ast_lexstring (ctr_object * myself, ctr_argument * argumentList)
 {
   char *toktype = "STRING";
@@ -1333,6 +1340,7 @@ initiailize_base_extensions ()
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("getlexbuf"), &ctr_ast_lexbuf);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("lexSkip:"), &ctr_ast_lexskip);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("lexpos"), &ctr_ast_lexpos);
+  ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("lexline"), &ctr_ast_lexline);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("lexPutBack"), &ctr_ast_lexputback);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("marshal"), &ctr_ast_marshal);
   ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring ("AST"), CtrStdAst, 0);

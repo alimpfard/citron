@@ -1,3 +1,5 @@
+import Library/Data/Numeric/Double: 'defaultEpsilon'.
+
 var Ratio is Object cnew: { numerator => 1. denominator => 1. }.
 Ratio
   on: 'new' do: {
@@ -74,3 +76,4 @@ Number on: 'negate' do: {^0 - me.}.
 Number on: '%' do: {:den
   ^const Ratio num: me de: den.
 }.
+Number on: 'toRatio' do: { ^const Ratio approxNumber: me epsilon: const defaultEpsilon. }.

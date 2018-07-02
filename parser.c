@@ -41,7 +41,7 @@ ctr_tlistitem *ctr_cparse_statement ();
 ctr_tnode *ctr_cparse_string ();
 ctr_tnode *ctr_cparse_symbol ();
 ctr_tnode *ctr_cparse_true ();
-ctr_tnode *ctr_cparse_tuple ();
+ctr_tnode *ctr_cparse_tuple (int);
 
 
 int
@@ -248,13 +248,13 @@ ctr_cparse_message (int mode)
       m->value = msg;
       m->vlen = msgpartlen;
     }
-  else if (t == CTR_TOKEN_TUPOPEN)
+  else if (t == callShorthand->value)
     {
-      ctr_clex_putback ();
+      ctr_clex_putback();
       memcpy (msg, "applyAll:", 9);
       msgpartlen = 9;
       li = ctr_heap_allocate_tracked (sizeof (*li));
-      li->node = ctr_cparse_tuple ();
+      li->node = ctr_cparse_tuple (callShorthand->value_e);
       m->type = CTR_AST_NODE_KWMESSAGE;
       m->nodes = li;
       m->value = msg;
@@ -287,7 +287,7 @@ ctr_cparse_messages (ctr_tnode * r, int mode)
   ctr_tnode *node = NULL;
   /* explicit chaining (,) only allowed for keyword message: Console write: 3 factorial, write: 3 factorial is not possible otherwise. */
   while ((t == CTR_TOKEN_REF || (t == CTR_TOKEN_CHAIN && node && node->type == CTR_AST_NODE_KWMESSAGE && node->modifier != -2)
-	  || (t == CTR_TOKEN_TUPOPEN)))
+	  || (t == callShorthand->value)))
     {
       if (t == CTR_TOKEN_CHAIN)
 	{
@@ -466,7 +466,7 @@ ctr_cparse_lit_esc ()
       break;
     case -2:
       ctr_transform_template_expr = 2;
-      r = ctr_cparse_tuple ();
+      r = ctr_cparse_tuple (CTR_TOKEN_TUPCLOSE);
       ctr_transform_template_expr = texpr_res;
       break;
     case -4:
@@ -536,14 +536,14 @@ ctr_cparse_lit_esc ()
  * Generates a node to represent an immutable array (tuple)
  */
 ctr_tnode *
-ctr_cparse_tuple ()
+ctr_cparse_tuple (int ending_tok)
 {
   ctr_tnode *r;
   ctr_tlistitem *codeBlockPart1;
   ctr_tnode *paramList;
   ctr_tlistitem *previousListItem;
   int t;
-  ctr_clex_tok ();		//eat the [
+  t = ctr_clex_tok ();		//eat the [
   r = ctr_cparse_create_node (CTR_AST_NODE);
   r->type = CTR_AST_NODE_IMMUTABLE;
   codeBlockPart1 = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
@@ -553,7 +553,7 @@ ctr_cparse_tuple ()
   paramList->type = CTR_AST_NODE_NESTED;
   t = ctr_clex_tok ();
   ctr_clex_putback ();
-  if (t == CTR_TOKEN_TUPCLOSE)
+  if (t == ending_tok)
     {
       ctr_clex_tok ();		//eat the ending ]
       return r;
@@ -580,12 +580,12 @@ ctr_cparse_tuple ()
     }
   //try for a list comprehension: expect ,,
   t = ctr_clex_tok ();
-  if (t != CTR_TOKEN_CHAIN && t != CTR_TOKEN_TUPCLOSE)
+  if (t != CTR_TOKEN_CHAIN && t != ending_tok)
     {				//common element
       ctr_cparse_emit_error_unexpected (t, "Expected a ',' or a ']'");
       return r;
     }
-  if (t == CTR_TOKEN_TUPCLOSE)
+  if (t == ending_tok)
     {
       return r;
     }
@@ -613,7 +613,7 @@ ctr_cparse_tuple ()
       previousListItem->next = paramListItem;
       previousListItem = paramListItem;
     }
-  if (t != CTR_TOKEN_TUPCLOSE)
+  if (t != ending_tok)
     ctr_cparse_emit_error_unexpected (t, "Expected ].");
   return r;
 }
@@ -1007,7 +1007,7 @@ ctr_cparse_receiver ()
     case CTR_TOKEN_PAROPEN:
       return ctr_cparse_popen ();
     case CTR_TOKEN_TUPOPEN:
-      return ctr_cparse_tuple ();
+      return ctr_cparse_tuple (CTR_TOKEN_TUPCLOSE);
     case CTR_TOKEN_LITERAL_ESC:
       return ctr_cparse_lit_esc ();
     case CTR_TOKEN_SYMBOL:
@@ -1159,6 +1159,8 @@ ctr_cparse_ret ()
 ctr_tnode *
 ctr_cparse_fin ()
 {
+  callShorthand->value = CTR_TOKEN_TUPOPEN;
+  callShorthand->value_e = CTR_TOKEN_TUPCLOSE;
   ctr_tnode *f;
   ctr_clex_tok ();
   f = ctr_cparse_create_node (CTR_AST_NODE);

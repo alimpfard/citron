@@ -24,6 +24,12 @@ static int compile_and_quit = 0;
 static int debug = 0;
 static int from_stdin = 0;
 int with_stdlib = 1;
+
+ctr_code_pragma oneline_p  = {.type = 't',.value = 0},
+                flex_const = {.type = 'o',.value = 0},
+                regex_lc   = {.type = 't',.value = 0},
+                callshorth = {.type = 'o',.value = CTR_TOKEN_TUPOPEN,.value_e = CTR_TOKEN_TUPCLOSE};
+
 /**
  * CommandLine Display Welcome Message
  * Displays a Welcome message, copyright information,
@@ -133,14 +139,11 @@ main (int argc, char *argv[])
   uint64_t program_text_size = 0;
 
   //pragma rules
-  ctr_code_pragma o = {.type = 't',.value = 0 }, f =
-  {
-  .type = 'o',.value = 0}, r =
-  {
-  .type = 't',.value = 0};
-  oneLineExpressions = &o;
-  flexibleConstructs = &f;
-  regexLineCheck = &r;
+
+  oneLineExpressions = &oneline_p;
+  flexibleConstructs = &flex_const;
+  regexLineCheck = &regex_lc;
+  callShorthand = &callshorth;
 
   ctr_gc_mode = 1;		/* default GC mode: activate GC */
   ctr_argc = argc;
@@ -236,14 +239,11 @@ void
 initialize (int extensions)
 {
   //pragma rules
-  ctr_code_pragma o = {.type = 't',.value = 0 }, f =
-  {
-  .type = 'o',.value = 0}, r =
-  {
-  .type = 't',.value = 0};
-  oneLineExpressions = &o;
-  flexibleConstructs = &f;
-  regexLineCheck = &r;
+
+  oneLineExpressions = &oneline_p;
+  flexibleConstructs = &flex_const;
+  regexLineCheck = &regex_lc;
+  callShorthand = &callshorth;
 
   ctr_gc_mode = 1;		/* default GC mode: activate GC */
   ctr_gc_memlimit = 32 * 1024 * 1024;	// 32 MB

@@ -21,7 +21,7 @@ static char *ctr_lex_oldptr;
 static char *ctr_lex_olderptr;
 static int ctr_lex_verbatim_mode = 0;	/* flag: indicates whether lexer operates in verbatim mode or not (1 = ON, 0 = OFF) */
 static uintptr_t ctr_lex_verbatim_mode_insert_quote = 0;	/* pointer to 'overlay' the 'fake quote' for verbatim mode */
-static int ctr_lex_line_number = 0;
+int ctr_lex_line_number = 0;
 static int ctr_lex_old_line_number = 0;
 
 static char *ctr_lex_desc_tok_ref = "reference";
@@ -56,6 +56,8 @@ static int ivarlen;
 #define MAX_LEXER_SAVE_STATES 1000
 static struct lexer_state saved_lexer_states[MAX_LEXER_SAVE_STATES];
 static int saved_lexer_state_next_index = 0;
+
+static int commented_s = 0;
 
 /**
  * Lexer - Save Lexer state
@@ -145,7 +147,7 @@ ctr_lex_is_delimiter (char symbol)
 unsigned long
 ctr_lex_position ()
 {
-  return ctr_code - ctr_code_st;
+  return ctr_code - ctr_code_st - commented_s;
 }
 
 char *
@@ -408,19 +410,14 @@ ctr_lex_tok ()
       if (c == '\n')
 	{
 	  comment_mode = 0;
-	  pragma_mode = 0;
 	  ctr_lex_line_number++;
 	}
       if (c == '#')
-	{
 	  comment_mode = 1;
-	  if (*(ctr_code + 1) == ':')
-	    pragma_mode = 1;
-	}
-      if (pragma_mode)
-	ctr_match_toggle_pragma ();
-      ctr_code++;
-      c = *ctr_code;
+    ctr_code++;
+    c = *ctr_code;
+    if(comment_mode)
+    commented_s++;
     }
   if (ctr_code == ctr_eofcode)
     {

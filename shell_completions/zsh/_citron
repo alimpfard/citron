@@ -24,6 +24,8 @@ args=(
     '-s[start a server on port]:port'
     '--pid[set the pidfile path]:path:_files'
     '--no-logo[do not show ascii logo]'
+    '--interactive-print[value display object]'
+    '--highlight-file[highlight a file and exit]:path:_files'
     )
 
 _arguments -C -s -S "$args[@]"

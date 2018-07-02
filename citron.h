@@ -313,6 +313,7 @@ CTR_H_DECLSPEC int ctr_source_mapping;
 struct ctr_code_pragma {
  char type; // t -> toggle, o -> one-shot
  int value;
+ int value_e;
 };
 typedef struct ctr_code_pragma ctr_code_pragma;
 
@@ -500,6 +501,7 @@ ctr_object* ctr_lex_get_buf_str();
 CTR_H_DECLSPEC ctr_code_pragma* oneLineExpressions;
 CTR_H_DECLSPEC ctr_code_pragma* flexibleConstructs;
 CTR_H_DECLSPEC ctr_code_pragma* regexLineCheck;
+CTR_H_DECLSPEC ctr_code_pragma* callShorthand;
 
 /**
  * UTF-8 functions

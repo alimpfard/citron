@@ -209,7 +209,9 @@ Highlight on: 'highlight:' do: {:code
     returned +=: color + this_thing + (Colors default) + (after_color).
     last_toc is last_toc_override or: token @ 0.
     skip continue.
+    var lin is AST lexline.
     token is AST token.
+    returned +=: '\n' * (AST lexline - lin).
   }.
   ^returned.
 }.

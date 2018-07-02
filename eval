@@ -534,6 +534,7 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '--pid <pidfile>: set the pid file. value is ignored unless [-s <port>] comes after\n',
           indent: 2 write: '--no-logo : don\'t display the ascii logo, use normal text instead\n',
           indent: 2 write: '--interactive-print : Use this object instead of `Pen\' to print values\n',
+          indent: 2 write: '--highlight-file <file|-> : highlight the file (or stdin) and quit\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
         P green write: 'default imported modules in eval are:',
           cyan indent: 1 write: ('LRArray ' + (import __loaded_modules keys reverse join: ' ') ~ 's/\\s|^/\\n+ /g').
@@ -626,6 +627,12 @@ Eval on: 'togglePasteMode' do: {
         (flag = '') ifTrue: { errPen yellow writeln: '[Warn]: empty -F flag index#$$i was ignored', resetColor. }.
         Eval modifyFlags: flag.
       }.
+    }, case: '--highlight-file' do: {
+      var files is Eval shiftArgs or: '-', reSplit: '(\\s+)'.
+      files each_v: \:f f = '-' either: {
+          Pen writeln: (Highlight highlight: (Program input)).
+      } or: \:_ Pen writeln: (Highlight highlight: (File new: f, read)).
+      Program exit.
     }, default: {
       (opt startsWith: '-') & (opt startsWith: '--', not) ifTrue: {
         args pop.

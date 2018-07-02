@@ -1308,6 +1308,16 @@ ctr_object_inherit (ctr_object * myself, ctr_argument * argumentList)
   return myself;
 }
 
+ctr_object *
+ctr_object_inh_check (ctr_object * myself, ctr_argument * argumentList) {
+  ctr_argument arg0, arg1;
+  arg0.next = &arg1;
+  arg1.next = NULL;
+  arg0.object = myself;
+  arg1.object = argumentList->object;
+  return ctr_reflect_is_linked_to(CtrStdReflect, &arg0);
+}
+
 void
 initiailize_base_extensions ()
 {
@@ -1372,6 +1382,7 @@ initiailize_base_extensions ()
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("toSymbol"), &ctr_string_to_symbol);
   ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring ("Symbol"), CtrStdSymbol, 0);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("inheritFrom:"), &ctr_object_inherit);
+  ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring("isA:"), &ctr_object_inh_check);
   ctr_std_generator = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
   ctr_set_link_all (ctr_std_generator, CtrStdObject);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("repeat:"), &ctr_generator_make_rept);

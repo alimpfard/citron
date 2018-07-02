@@ -408,7 +408,7 @@ int
 check_next_line_empty ()
 {
   if (!regexLineCheck)
-    return 0;
+    return *(ctr_code + 1) != '\n';
   switch (regexLineCheck->value)
     {
     case 0:
@@ -449,6 +449,10 @@ ctr_activate_pragma (ctr_code_pragma * pragma)
     }
 }
 
+void ctr_set_pragma(ctr_code_pragma* pragma, int val, int val2) {
+  pragma->value = val;
+  pragma->value_e = val2;
+}
 /**
  * CTRLexPragmaToken
  *
@@ -473,6 +477,14 @@ ctr_match_toggle_pragma ()
       ctr_activate_pragma (flexibleConstructs);
       ctr_code += 18;
     }
+  if (strncmp (ctr_code, ":callShorthand", 14) == 0) {
+    ctr_code += 14;
+    int t0 = ctr_clex_tok(), t1 = ctr_clex_tok();
+    ctr_set_pragma(callShorthand, t0, t1);
+    while(isspace(*ctr_clex_oldptr)) ctr_clex_oldptr++; //no chance of it falling off
+    ctr_clex_oldptr++;
+    while(*(ctr_code--) != '\n'); //go back out
+  }
 }
 
 int

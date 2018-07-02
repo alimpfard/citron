@@ -60,7 +60,12 @@ import on: '__load:' do: {:name
     }.
   }.
   file isNil ifTrue: {
-    thisBlock error: ('Could not find neither a package, nor a standalone file representing $$name in the search paths: \n%s' % [(my searchPaths fmap: {:p ^p + ' aka (' + (File new: p, realPath) + ')'.}, join: '\n')]).
+    ^name = 'name' either: Nil or: {
+      thisBlock error: (
+        'Could not find neither a package, nor a standalone file representing $$name in the search paths: \n%s'
+          %
+        [(my searchPaths fmap: {:p ^p + ' aka (' + (File new: p, realPath) + ')'.}, join: '\n')]).
+      }.
   }.
   var _lm is my __loaded_modules.
   ^(_lm contains: full_path)
@@ -83,16 +88,18 @@ import on: 'respondTo:' do: {:name me __load: name. }.
 import on: 'respondTo:and:' do: {:mods:*names
   var loaded is mods split: ':', fmap: \:mod import __load: mod.
   ^names imap: {:i:names
-    var mod is import __realloc: loaded @ i.
-    ^Reflect isObject: names linkedTo: Array,
-      either: {
-        ^names fmap: {:name var p is mod at: name. import export: p as: name. ^p.}.
-      }
-      or: {
-        var p is mod at: names.
-        import export: p as: names.
-        ^p.
-      }.
-  }, foldl: (\:acc:x acc + (Reflect isObject: x linkedTo: Array, either: x or: [x])) accumulator: Array new.
+    var modv is import __realloc: loaded @ i.
+    names is [] + names or: [names].
+    names is names fmap: \:name name isA: CodeBlock, either: (\:_ (Map cnew: name) kvlist: \:kv kv, head) or: \:_ [name, name].
+    ^names fmap: {:name
+      var p is modv at: name head.
+      import export: p as: name last.
+      ^p.
+    }.
+  }, foldl: (\:acc:x acc + ([] + x or: [x])) accumulator: Array new.
 }.
-['respondTo:and:and:', 'respondTo:and:and:and:', 'respondTo:and:and:and:and:', 'respondTo:and:and:and:and:and:'] fmap: \:msg import learn: msg means: 'respondTo:and:'.
+['respondTo:and:and:',
+ 'respondTo:and:and:and:',
+ 'respondTo:and:and:and:and:',
+ 'respondTo:and:and:and:and:and:'
+] fmap: \:msg import learn: msg means: 'respondTo:and:'.

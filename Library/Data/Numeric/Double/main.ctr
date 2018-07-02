@@ -1,0 +1,6 @@
+var defaultEpsilon is 2 pow: -53.
+var precision is 64.
+var Double is Number new. #natively supported.
+Double on: 'epsilon' do: {\ defaultEpsilon }.
+Double on: 'fromNumber:' do: {:num ^const Double + num.}.
+Double on: 'type' do: {\ 'Double' }.

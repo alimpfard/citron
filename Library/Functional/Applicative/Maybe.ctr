@@ -1,0 +1,11 @@
+import
+  Library/Functional/Monad/Maybe
+  Library/Functional/TypeClass/Applicative.
+
+Maybe on: '*' do: {\:self:a
+  (self isJust & a isJust) either: {
+    ^Just $ (self unwrap applyTo: a unwrap).
+  } or: Nothing.
+}.
+
+Maybe inheritFrom: Applicative.

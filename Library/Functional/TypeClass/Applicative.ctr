@@ -1,0 +1,9 @@
+import Library/Control/Error/NotImplementedError.
+
+var Applicative is Object new.
+
+Applicative on: '*' do: {\:f:a
+  thisBlock error: NotImplementedError $ 'Applicative#*'.
+}.
+
+import export: Applicative as: 'Applicative'.

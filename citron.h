@@ -61,6 +61,7 @@ extern "C" {
 #define CTR_TOKEN_PASSIGNMENT 20
 #define CTR_TOKEN_SYMBOL 21
 #define CTR_TOKEN_LITERAL_ESC 22
+#define CTR_TOKEN_INV 23
 #define CTR_TOKEN_FIN 99
 //
 //

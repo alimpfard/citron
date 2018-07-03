@@ -1,11 +1,11 @@
 import Library/Control/Error/ArgumentError.
 
 Object on: ':' do: {:self:meth
-  ^$!$({:*args ^$`(self) message: $`(meth) arguments: args.}).
+  ^\:*args self message: meth arguments: args.
 }.
 Object on: ':::' do: {:meth
   var resp is Reflect getResponder: meth ofObject: me.
-  ^$!$({:obj:*args ^Reflect run: $`(resp) forObject: obj arguments: args.}).
+  ^{:obj:*args ^Reflect run: const resp forObject: obj arguments: args.}.
 }.
 Object on: ':::apply:' do: {:self:meth:aargs
   (aargs type) !=: (Array type), ifTrue: {thisBlock error: ArgumentError $ (':::apply: argument#1 takes %s, but some %s was passed.' % [(Array type), (aargs type)]).}.

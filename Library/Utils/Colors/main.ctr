@@ -97,7 +97,7 @@ Colors on: 'wrap:' do: {\:ansi_codes
 
 
 Colors on: 'rgb' do: {:red:green:blue:background
-  thisBlock error: NotImplementedError $ 'Colors#rgb'.
+  # thisBlock error: NotImplementedError $ 'Colors#rgb'.
   var background is Reflect objectExists: 'background', either: { ^background. } or: False.
   ^'%d%s' % (my mode
        case:   8 do: {

@@ -30,6 +30,12 @@ var Monad is Object new
     ^me > next.
   }.
 
+var >>= is \:a:b a bind: b.
+var >> is \:a:b a bind: \:_ b.
+var join is \:a a join.
+var lift is \:ctx:fn ctx lift: fn.
+var unit is \:ctx:val ctx unit: val.
+
 import export: Monad as: 'Monad'.
 import export: identity as: 'identity'.
 import export: pure as: 'pure'.

@@ -1062,6 +1062,9 @@ ctr_cparse_expr (int mode)
   t2 = ctr_clex_tok ();
   ctr_clex_putback ();
 
+  if (mode == -1)
+    return r;
+
   /* user tries to put colon directly after recipient */
   if (t2 == CTR_TOKEN_COLON)
     {
@@ -1114,10 +1117,53 @@ ctr_cparse_expr (int mode)
       e = ctr_cparse_create_node (CTR_AST_NODE);
       e->type = CTR_AST_NODE_EXPRMESSAGE;
       nodes = ctr_cparse_messages (r, mode == CTR_AST_NODE_IMMUTABLE ? 0 : mode);
+      int tv = ctr_clex_tok();
+      int vtv = 0;
+      while (tv == CTR_TOKEN_INV)
+    {
+      vtv = 1;
+      //arg0 `callee` arg1
+      //^    ^tv
+      //`- receiver
+      ctr_clex_tok();
+      ctr_tnode* receiver = ctr_cparse_create_node(CTR_AST_NODE);
+      receiver->type = CTR_AST_NODE_REFERENCE;
+      receiver->vlen = ctr_clex_tok_value_length()-1;
+      receiver->value = ctr_heap_allocate_tracked(receiver->vlen);
+      memcpy(receiver->value, ctr_clex_tok_value(), receiver->vlen);
+      char* msg = ctr_heap_allocate_tracked(sizeof(char)*9);
+      memcpy(msg, "applyAll:", 9);
+      int length = 9;
+      ctr_tlistitem* li = ctr_heap_allocate_tracked(sizeof(*li));
+      li->node = ctr_heap_allocate_tracked(sizeof(*(li->node)));
+      li->node->type = CTR_AST_NODE_IMMUTABLE;
+      li->node->nodes = ctr_heap_allocate_tracked(sizeof(*li));
+      ctr_tlistitem* ll = li->node->nodes;
+      ll->node = ctr_heap_allocate_tracked(sizeof(*ll->node));
+      ll->node->nodes = ctr_heap_allocate_tracked(sizeof(*ll));
+      ll = ll->node->nodes;
+      ll->node = r;
+      ll->next = ctr_heap_allocate_tracked(sizeof(*ll));
+      ll->next->node = ctr_cparse_expr(receiver->vlen == 1?0:-1); //get next argument
+      //arguments in li
+      ctr_tlistitem* rli = ctr_heap_allocate_tracked(sizeof(*rli));
+      rli->node = ctr_cparse_create_node(CTR_AST_NODE);
+      rli->node->type = CTR_AST_NODE_KWMESSAGE;
+      rli->node->value = msg;
+      rli->node->vlen = length;
+      rli->node->nodes = li;
+      r = ctr_cparse_create_node(CTR_AST_NODE);
+      r->type = CTR_AST_NODE_EXPRMESSAGE;
+      r->nodes = ctr_heap_allocate_tracked(sizeof(*rli));
+      r->nodes->node = receiver;
+      r->nodes->next = rli;
+      tv = ctr_clex_tok();
+    }
+      ctr_clex_putback();
+      if (vtv)
+        return r;
       if (nodes == NULL)
 	{
-	  ctr_clex_tok ();
-	  ctr_clex_putback ();
 	  return r;		/* no messages, then just return receiver (might be in case of argument). */
 	}
       rli = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));

@@ -318,6 +318,11 @@ struct ctr_code_pragma {
 };
 typedef struct ctr_code_pragma ctr_code_pragma;
 
+struct fixity_lookup_rv {
+    int fix;
+    int prec;
+};
+typedef struct fixity_lookup_rv fixity_lookup_rv;
 
 CTR_H_DECLSPEC int CTR_CCOMP_SIMULATION; //in compiler simulation mode
 ctr_object* ctr_ccomp_get_stub(ctr_object*(*nfunc)(ctr_object*,ctr_argument*), ctr_object* receiver, ctr_argument* args); //stub generator lookup table
@@ -593,6 +598,9 @@ ctr_object* ctr_get_stack_trace();
 void ctr_print_stack_trace();
 ctr_object* ctr_get_or_create_symbol_table_entry  (const char* name, ctr_size len);
 ctr_object* ctr_get_or_create_symbol_table_entry_s(const char* name, ctr_size len);
+fixity_lookup_rv ctr_lookup_fix(const char* name, int length);
+void ctr_set_fix(const char* name, int length, int fix, int prec);
+void clear_fixity_map();
 int ctr_str_count_substr(char *str, char *substr, int overlap);
 
 #define CTR_TRACE_IGNORE_VEC_DEPTH 1024

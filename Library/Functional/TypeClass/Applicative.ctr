@@ -2,8 +2,10 @@ import Library/Control/Error/NotImplementedError.
 
 var Applicative is Object new.
 
-Applicative on: '*' do: {\:f:a
+Applicative on: '*' do: {\:a
   thisBlock error: NotImplementedError $ 'Applicative#*'.
 }.
+
+var <*> is \:f:a f * a.
 
 import export: Applicative as: 'Applicative'.

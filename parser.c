@@ -1131,6 +1131,7 @@ ctr_cparse_expr (int mode)
       receiver->vlen = ctr_clex_tok_value_length()-1;
       receiver->value = ctr_heap_allocate_tracked(receiver->vlen);
       memcpy(receiver->value, ctr_clex_tok_value(), receiver->vlen);
+      fixity_lookup_rv fix = ctr_lookup_fix(receiver->value, receiver->vlen);
       char* msg = ctr_heap_allocate_tracked(sizeof(char)*9);
       memcpy(msg, "applyAll:", 9);
       int length = 9;
@@ -1144,7 +1145,7 @@ ctr_cparse_expr (int mode)
       ll = ll->node->nodes;
       ll->node = r;
       ll->next = ctr_heap_allocate_tracked(sizeof(*ll));
-      ll->next->node = ctr_cparse_expr(receiver->vlen == 1?0:-1); //get next argument
+      ll->next->node = ctr_cparse_expr(fix.fix == 0 ? -1 : fix.prec); //get next argument
       //arguments in li
       ctr_tlistitem* rli = ctr_heap_allocate_tracked(sizeof(*rli));
       rli->node = ctr_cparse_create_node(CTR_AST_NODE);
@@ -1207,6 +1208,7 @@ ctr_cparse_fin ()
 {
   callShorthand->value = CTR_TOKEN_TUPOPEN;
   callShorthand->value_e = CTR_TOKEN_TUPCLOSE;
+  clear_fixity_map();
   ctr_tnode *f;
   ctr_clex_tok ();
   f = ctr_cparse_create_node (CTR_AST_NODE);

@@ -489,6 +489,39 @@ ctr_match_toggle_pragma ()
     ctr_clex_oldptr++;
     while(*(ctr_code--) != '\n'); //go back out
   }
+  if (strncmp (ctr_code, ":declare", 8) == 0) {
+    ctr_code += 8;
+    int t0 = ctr_clex_tok();
+    if (t0 != CTR_TOKEN_REF) {
+      err:;
+      ctr_clex_emit_error("Expected either infixr or infixl");
+      return;
+    }
+    char* v = ctr_clex_tok_value();
+    int len = ctr_clex_tok_value_length();
+    int fixity = 0;
+    int prec = 1;
+    if (len != strlen("infixr")) goto err;
+    if (strncmp(v, "infixr", len) == 0)
+      fixity = 0;
+    else if (strncmp(v, "infixl", len) == 0)
+      fixity = 1;
+    else goto err;
+    t0 = ctr_clex_tok();
+    if (t0 == CTR_TOKEN_NUMBER) {
+      prec = atoi(ctr_clex_tok_value());
+      t0 = ctr_clex_tok();
+    }
+    if (t0 != CTR_TOKEN_REF) {
+      ctr_clex_emit_error("Expected some op name");
+      return;
+    }
+    v = ctr_clex_tok_value();
+    len = ctr_clex_tok_value_length();
+    ctr_set_fix(v, len, fixity, prec);
+    ctr_clex_olderptr = ctr_code;
+    ctr_clex_oldptr = ctr_code;
+  }
 }
 
 int

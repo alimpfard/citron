@@ -49,6 +49,7 @@ char *ctr_clex_desc_tok_ret = "^";
 char *ctr_clex_desc_tok_lit_esc = "$";
 char *ctr_clex_desc_tok_ret_unicode = "↑";
 char *ctr_clex_desc_tok_fin = "end of program";
+char *ctr_clex_desc_tok_inv = "`";
 char *ctr_clex_desc_tok_unknown = "(unknown token)";
 
 int ctr_string_interpolation = 0;
@@ -368,6 +369,9 @@ ctr_clex_tok_describe (int token)
       break;
     case CTR_TOKEN_LITERAL_ESC:
       description = ctr_clex_desc_tok_lit_esc;
+      break;
+    case CTR_TOKEN_INV:
+      description = ctr_clex_desc_tok_inv;
       break;
     default:
       description = ctr_clex_desc_tok_unknown;
@@ -803,6 +807,20 @@ ctr_clex_tok ()
       c = *ctr_code;
       return CTR_TOKEN_NUMBER;
     }
+  if (c == '`') {
+    ctr_code++;
+    struct lexer_state st;
+    ctr_clex_dump_state(&st);
+    int t = ctr_clex_tok(), rv=0;
+    if (t == CTR_TOKEN_REF) {
+      if(ctr_clex_buffer[ctr_clex_tokvlen-1] == '`')
+        rv = 1;
+    }
+    ctr_clex_load_state(st);
+    if (rv)
+      return CTR_TOKEN_INV;
+    ctr_code--;
+  }
   if (strncmp (ctr_code, "True", 4) == 0)
     {
       if (ctr_clex_is_delimiter (*(ctr_code + 4)))

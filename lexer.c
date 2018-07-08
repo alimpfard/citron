@@ -485,9 +485,12 @@ ctr_match_toggle_pragma ()
     ctr_code += 14;
     int t0 = ctr_clex_tok(), t1 = ctr_clex_tok();
     ctr_set_pragma(callShorthand, t0, t1);
-    while(isspace(*ctr_clex_oldptr)) ctr_clex_oldptr++; //no chance of it falling off
-    ctr_clex_oldptr++;
-    while(*(ctr_code--) != '\n'); //go back out
+    //while(isspace(*ctr_clex_oldptr)) ctr_clex_oldptr++; //no chance of it falling off
+    //ctr_clex_oldptr++;
+    //while(*(ctr_code--) != '\n'); //go back out
+    ctr_clex_olderptr = ctr_code;
+    ctr_clex_oldptr = ctr_code;
+    ctr_code--; 
   }
   if (strncmp (ctr_code, ":declare", 8) == 0) {
     ctr_code += 8;

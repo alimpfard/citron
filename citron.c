@@ -125,6 +125,39 @@ ctr_cli_read_args (int argc, char *argv[])
   strncpy (ctr_mode_input_file, from_stdin ? "<stdin>" : argv[0], 254);
 }
 
+static const char ME_S[] = CTR_DICT_ME, MY_S[] = CTR_DICT_MY, VAR_S[] = CTR_DICT_VAR, CONST_S[] = CTR_DICT_CONST;
+
+void ctr_initialize_ex() {
+  oneLineExpressions = &oneline_p;
+  flexibleConstructs = &flex_const;
+  regexLineCheck = &regex_lc;
+  callShorthand = &callshorth;
+
+  ctr_gc_mode = 1;		/* default GC mode: activate GC */
+  ctr_gc_memlimit = 8388608;
+  CTR_LIMIT_MEM = 1;		//enfore GC
+  ctr_callstack_index = 0;
+  ctr_source_map_head = NULL;
+  ctr_source_mapping = 0;
+  CtrStdFlow = NULL;
+  ctr_command_security_profile = 0;
+  ctr_command_tick = 0;
+  ctr_source_mapping = 1;
+  ctr_clex_keyword_me = (char*)ME_S;
+  ctr_clex_keyword_my = (char*)MY_S;
+  ctr_clex_keyword_var = (char*)VAR_S;
+  ctr_clex_keyword_const = (char*)CONST_S;
+  ctr_clex_keyword_my_len = strlen (ctr_clex_keyword_my);
+  ctr_clex_keyword_var_len = strlen (ctr_clex_keyword_var);
+  ctr_clex_keyword_const_len = strlen (ctr_clex_keyword_const);
+  ctr_internal_next_return = 0;
+  ctr_clex_quiet = 0;
+  ctr_cparse_quiet = 0;
+  ctr_cparse_calltime_name_id = -1;
+  ctr_initialize_world ();
+
+}
+
 #ifndef CITRON_LIBRARY
 /**
  * Citron Application Main Start
@@ -137,41 +170,11 @@ main (int argc, char *argv[])
   char *prg;
   ctr_tnode *program;
   uint64_t program_text_size = 0;
-
-  //pragma rules
-
-  oneLineExpressions = &oneline_p;
-  flexibleConstructs = &flex_const;
-  regexLineCheck = &regex_lc;
-  callShorthand = &callshorth;
-
-  ctr_gc_mode = 1;		/* default GC mode: activate GC */
   ctr_argc = argc;
   ctr_argv = argv;
-  ctr_gc_memlimit = 8388608;
-  CTR_LIMIT_MEM = 1;		//enfore GC
-  ctr_callstack_index = 0;
-  ctr_source_map_head = NULL;
-  ctr_source_mapping = 0;
-  CtrStdFlow = NULL;
-  ctr_command_security_profile = 0;
-  ctr_command_tick = 0;
   ctr_cli_read_args (argc, argv);
-  ctr_source_mapping = 1;
-  ctr_clex_keyword_me = CTR_DICT_ME;
-  ctr_clex_keyword_my = CTR_DICT_MY;
-  ctr_clex_keyword_var = CTR_DICT_VAR;
-  ctr_clex_keyword_const = CTR_DICT_CONST;
-  ctr_clex_keyword_my_len = strlen (ctr_clex_keyword_my);
-  ctr_clex_keyword_var_len = strlen (ctr_clex_keyword_var);
-  ctr_clex_keyword_const_len = strlen (ctr_clex_keyword_const);
-  ctr_internal_next_return = 0;
-  ctr_clex_quiet = 0;
-  ctr_cparse_quiet = 0;
-  ctr_cparse_calltime_name_id = -1;
+  ctr_initialize_ex();
   openlog (argv[0], LOG_PID | LOG_CONS, LOG_USER);
-  ctr_initialize_world ();
-
 #if (DO_PROFILE)
   ProfilerStart ("citron.log");
 #endif
@@ -238,33 +241,7 @@ main (int argc, char *argv[])
 void
 initialize (int extensions)
 {
-  //pragma rules
-
-  oneLineExpressions = &oneline_p;
-  flexibleConstructs = &flex_const;
-  regexLineCheck = &regex_lc;
-  callShorthand = &callshorth;
-
-  ctr_gc_mode = 1;		/* default GC mode: activate GC */
-  ctr_gc_memlimit = 32 * 1024 * 1024;	// 32 MB
-  CTR_LIMIT_MEM = 1;		//enfore GC
-  ctr_callstack_index = 0;
-  ctr_source_map_head = NULL;
-  ctr_source_mapping = 0;
-  CtrStdFlow = NULL;
-  ctr_command_security_profile = 0;
-  ctr_command_tick = 0;
-  ctr_source_mapping = 1;
-  ctr_clex_keyword_me = CTR_DICT_ME;
-  ctr_clex_keyword_my = CTR_DICT_MY;
-  ctr_clex_keyword_var = CTR_DICT_VAR;
-  ctr_clex_keyword_const = CTR_DICT_CONST;
-  ctr_clex_keyword_my_len = strlen (ctr_clex_keyword_my);
-  ctr_clex_keyword_var_len = strlen (ctr_clex_keyword_var);
-  ctr_clex_keyword_const_len = strlen (ctr_clex_keyword_const);
-  ctr_mode_input_file = ctr_heap_allocate (sizeof (char) * 4);
-  ctr_clex_quiet = 0;
-  ctr_cparse_quiet = 0;
+  ctr_initialize_ex();
   memcpy (ctr_mode_input_file, "lib", 3);
   *(ctr_mode_input_file + 3) = '\0';
   ctr_initialize_world ();

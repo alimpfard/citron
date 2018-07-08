@@ -548,6 +548,7 @@ void ctr_marshal_ast(ctr_tnode* rnode, char** stream, size_t* stream_len, size_t
 ctr_object* ctr_get_last_trace(ctr_object* myself, ctr_argument* argumentList);
 void        ctr_initialize_world();
 void        ctr_initialize_world_minimal();
+void 		ctr_initialize_ex();
 char*       ctr_internal_memmem(char* haystack, long hlen, char* needle, long nlen, int reverse );
 void        ctr_internal_object_add_property(ctr_object* owner, ctr_object* key, ctr_object* value, int m);
 void        ctr_internal_object_add_property_with_hash(ctr_object* owner, ctr_object* key, uint64_t hash, ctr_object* value, int m);

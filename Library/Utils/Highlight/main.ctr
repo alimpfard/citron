@@ -181,7 +181,12 @@ Highlight on: 'highlight:' do: {:code
             }.
           }.
         }.
-          # this_thing is (token @ 1).
+        this_thing @ 0 = '`' either: {
+          this_thing @ (this_thing length - 1) = '`' ifTrue: {
+            color is (Colors bright) + (Colors italic) + (Colors yellow).
+            after_color +=: Colors italic_off.
+          }.
+        } or: {}.
     }, case: 'TUPOPEN' do: {
         this_thing is '['.
     }, case: 'TUPCLOSE' do: {

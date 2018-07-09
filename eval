@@ -55,7 +55,8 @@ Eval on: 'init' do: {
   my allowedColors is ('red blue magenta cyan yellow green resetColor' split: ' ') join: '|'.
   my globalvars is False.
   my history is LRArray new init: 100.
-  my hs_file is File new: '~/.ctrhist'.
+  (var hddir is File new: '~/.citron') exists ifFalse: { hddir mkdir. }.
+  my hs_file is File new: '~/.citron/ctrhist'.
   my hs_file exists ifFalse: { my hs_file write: '[]'. }.
   var history is my history.
   (Json parse: (my hs_file read or: '[]') genericType: Object) each_v: \:x history push: x.
@@ -104,8 +105,13 @@ Eval on: 'handleException:' do: {:self:e
   ^me getFlag: 'equit', either: {thisBlock error: e.} or: {self display/red write: e, resetColor brk. ^e.}.
 }.
 Eval on: 'handleInternalException:' do: {:e
-  File new: '~/citron_eval_bug_track_%s' % [Clock new time], write: '%s\nTime %s\n===========================\n%s' % [e, Clock new, (Reflect lastTrace tail tail tail chunks: 2, fmap: (\:x x join: ' at '), join: '\n')].
+  (var bugtrack is File new: '~/.citron/citron_eval_bug_track') exists ifFalse: {
+    File mkdir: bugtrack path.
+  }.
+  var oldp is Program changeDirectory: bugtrack realPath.
+  File new: 'citron_eval_bug_track_%s' % [Clock new time], write: '%s\nTime %s\n===========================\n%s' % [e, Clock new, (Reflect lastTrace tail tail tail chunks: 2, fmap: (\:x x join: ' at '), join: '\n')].
   errPen writeln: 'Eval bug, $$e'.
+  Program changeDirectory: oldp.
 }.
 Eval on: 'errored?' do: {^my errd.}.
 Eval on: 'lastError' do: {^my last_error.}.

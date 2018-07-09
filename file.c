@@ -52,26 +52,37 @@ ctr_file_new (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_file_special (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object *file = ctr_file_new (myself, argumentList);
+  ctr_object *file;
   ctr_resource *rs = ctr_heap_allocate (sizeof (ctr_resource));
-  file->value.rvalue = rs;
-  if (ctr_internal_object_is_equal (argumentList->object, CTR_FILE_STDIN_STR))
+  if (ctr_internal_object_is_equal (CTR_FILE_STDIN_STR, argumentList->object))
     {
-      file->value.rvalue->ptr = stdin;
-      file->value.rvalue->type = 1;
+      file = ctr_file_new (myself, argumentList);
+      rs->ptr = stdin;
+      rs->type = 1;
     }
-  else if (ctr_internal_object_is_equal (argumentList->object, CTR_FILE_STDOUT_STR))
+  else if (ctr_internal_object_is_equal (CTR_FILE_STDOUT_STR, argumentList->object))
     {
-      file->value.rvalue->ptr = stdout;
-      file->value.rvalue->type = 1;
+      file = ctr_file_new (myself, argumentList);
+      rs->ptr = stdout;
+      rs->type = 1;
     }
-  else if (ctr_internal_object_is_equal (argumentList->object, CTR_FILE_STDERR_STR))
+  else if (ctr_internal_object_is_equal (CTR_FILE_STDERR_STR, argumentList->object))
     {
-      file->value.rvalue->ptr = stderr;
-      file->value.rvalue->type = 1;
+      file = ctr_file_new (myself, argumentList);
+      rs->ptr = stderr;
+      rs->type = 1;
+    }
+  else if (argumentList->object->interfaces->link == CtrStdNumber)
+    {
+      ctr_argument arg;
+      arg.object = ctr_number_to_string(argumentList->object, NULL);
+      file = ctr_file_new (myself, &arg);
+      rs->ptr = fdopen((int)argumentList->object->value.nvalue, argumentList->next->object->value.svalue->value);
+      rs->type = 1;
     }
   else
     return CtrStdNil;
+  file->value.rvalue = rs;
   return file;
 }
 
@@ -1100,8 +1111,8 @@ ctr_file_mkdir (ctr_object * myself, ctr_argument * argumentList)
     }
   char *path = ctr_heap_allocate_cstring (pathobj);
   mode_t mode = 0755;
-  if (argumentList->object)
-    mode = ctr_internal_cast2number (argumentList->object)->value.nvalue;
+  if (argumentList->object && argumentList->object->interfaces->link == CtrStdNumber)
+    mode = argumentList->object->value.nvalue;
   if (mkdir (path, mode) != 0)
     {
       CtrStdFlow = ctr_build_string_from_cstring (strerror (errno));

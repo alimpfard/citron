@@ -2179,6 +2179,7 @@ ctr_initialize_world ()
   /* Map */
   CtrStdMap = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring (CTR_DICT_NEW), &ctr_map_new);
+  ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring (CTR_DICT_NEW_ARG), &ctr_map_new_);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring (CTR_DICT_TYPE), &ctr_map_type);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring (CTR_DICT_PUT_AT), &ctr_map_put);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring ("deleteAt:"), &ctr_map_rm);

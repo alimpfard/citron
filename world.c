@@ -2252,6 +2252,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring (CTR_DICT_TMPFILE), &ctr_file_tmp);
   ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring ("unpack:"), &ctr_file_assign);
   ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring ("special:"), &ctr_file_special);
+  ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring ("fdopen:mode:"), &ctr_file_special);
   ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring (CTR_DICT_TOSTRING), &ctr_file_to_string);
   ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring ("mkdir"), &ctr_file_mkdir);
   ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring ("mkdir:"), &ctr_file_mkdir);

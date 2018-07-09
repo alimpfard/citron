@@ -243,6 +243,7 @@ struct ctr_object {
 		struct ctr_collection* avalue;
 		struct ctr_resource* rvalue;
 		struct ctr_object* (*fvalue) (struct ctr_object* myself, struct ctr_argument* argumentList);
+		struct ctr_object* defvalue;
 	} value;
 	voidptrfn_t* release_hook;
 #if !defined(withBoehmGC)
@@ -890,6 +891,7 @@ ctr_object* ctr_build_immutable(ctr_tnode* node);
  * HashMap Interface
  */
 ctr_object* ctr_map_new(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_map_new_(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_type(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_put(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_rm(ctr_object* myself, ctr_argument* argumentList);

@@ -1980,6 +1980,25 @@ ctr_map_new (ctr_object * myclass, ctr_argument * argumentList)
 {
   ctr_object *s = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
   ctr_set_link_all (s, myclass);
+  s->value.defvalue = CtrStdNil;
+  return s;
+}
+ctr_object *
+ctr_map_new_ (ctr_object* myclass, ctr_argument * argumentList)
+{
+  ctr_object *s = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
+  ctr_set_link_all (s, myclass);
+  ctr_object* defaultv = ctr_build_nil();
+  if (argumentList->object) {
+    switch(argumentList->object->info.type) {
+      case CTR_OBJECT_TYPE_OTBLOCK:
+        defaultv = argumentList->object;
+        break;
+      default:
+        CtrStdFlow = ctr_format_str("EMap::'new:' expects a block, not %s", ctr_send_message(argumentList->object, "type", 4, NULL));
+    }
+  }
+  s->value.defvalue = defaultv;
   return s;
 }
 
@@ -2124,9 +2143,7 @@ ctr_map_get (ctr_object * myself, ctr_argument * argumentList)
 	}
 
       foundObject = ctr_internal_object_find_property (myself, searchKey, 0);
-      if (foundObject == NULL)
-	foundObject = ctr_build_nil ();
-      return foundObject;
+      goto retv;
     }
   else
     {
@@ -2141,8 +2158,13 @@ ctr_map_get (ctr_object * myself, ctr_argument * argumentList)
 	  hashk = searchKeyHasho->value.nvalue;
 	  foundObject = ctr_internal_object_find_property_with_hash (myself, searchKey, *(uint64_t *) & hashk, 0);
 	}
-      if (foundObject == NULL)
-	foundObject = ctr_build_nil ();
+    retv:
+      if (foundObject == NULL) {
+        ctr_object* kvres = myself->value.defvalue;
+        if (kvres == CtrStdNil) foundObject = kvres;
+        else
+          foundObject = ctr_block_run(kvres, argumentList, myself);
+      }
       return foundObject;
     }
 }

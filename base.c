@@ -1467,9 +1467,27 @@ ctr_build_number_from_string (char *str, ctr_size length)
   /* max length is 40 (and that's probably even too long... ) */
   numCStr = (char *) ctr_heap_allocate (41 * sizeof (char));
   memcpy (numCStr, str, stringNumberLength);
-  if (numCStr[0] == '0' && length > 1 && strchr ("xXcCoO", numCStr[1]) != NULL)
+  char* baseptr = NULL, bases[]="xXcCoO";
+  if (numCStr[0] == '0' && length > 1)
     {
-      numberObject->value.nvalue = strtol (numCStr, 0, 0);
+      int base = 10;
+      baseptr = strchr (bases, numCStr[1]);
+      if (baseptr == NULL) {
+        base = 8;
+        baseptr = numCStr+1;
+      }
+      else
+      switch(baseptr-bases) {
+        case 0:
+        case 1:
+          baseptr = numCStr+2;
+          base = 16;
+          break;
+        default:
+          baseptr = numCStr;
+          break;
+      }
+      numberObject->value.nvalue = strtol (baseptr, 0, base);
     }
   else
     {

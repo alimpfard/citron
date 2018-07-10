@@ -1,5 +1,10 @@
+DEBUG_VERSION := 12
+DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 LEXTRACF := ${LEXTRACF} -flto -lstdc++
 fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
+location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+WHERE_ART_THOU := $(location)
+new_makefile_l1 := $(shell perl -ne '/((DEBUG_VERSION := )(\d+))/ && print (sprintf("%s%s", "$$2", "$$3"+1));' $(WHERE_ART_THOU))
 
 ifeq ($(strip ${WITH_ICU}),)
 	CFLAGS = -Wall -Wextra -Wno-unused-parameter -mtune=native\
@@ -27,6 +32,7 @@ endif
 .PHONY: gc_check
 gc_check:
 	@if [ "${fv}x" == "x" ]; then echo "Could not find libgc.so."; echo Failing; exit 1; else echo "Found libgc.so at ${fv}"; fi
+	$(eval LEXTRACF := ${LEXTRACF} ${fv})
 
 -include gc_check
 
@@ -43,10 +49,11 @@ all: CFALGS := $(CFLAGS) -O2
 all: cxx
 all: ctr
 
-debug: CFLAGS := ${CFLAGS} -DDEBUG_BUILD -Og -g3 -ggdb3 -Wno-unused-function
-	   #LEXTRACF := -lefence ${LEXTRACF}
+debug: CFLAGS := ${CFLAGS} -DDEBUG_BUILD -DDEBUG_BUILD_VERSION=${DEBUG_BUILD_VERSION} -Og -g3 -ggdb3 -Wno-unused-function
 debug: cxx
 debug: ctr
+debug:
+	sed -i -e "1s/.*/${new_makefile_l1}/" makefile
 
 install:
 	echo -e "install directly from source not allowed.\nUse citron_autohell instead for installs"
@@ -68,7 +75,7 @@ cxx:
 	echo "blah"
 
 %.o: %.c
-	$(CC) -fopenmp $(CFLAGS) -c $<
+	$(CC) -fopenmp $(CFLAGS) -c $< >/dev/null 2>&1
 
 define SHVAL =
 for f in *.c; do\

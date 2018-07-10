@@ -12,3 +12,11 @@ String on: 'span:' do: {:blk
   me characters each: \:i:x blk[x] ifTrue: { s0 is i. }, not break.
   ^[(me from: 0 length: s0 + 1), (me skip: s0 + 1)].
 }.
+
+var toUnicode is \:i ('\'\\u{%s}\'' % [i]) eval.
+var asciiPrintables is (Array new fill: 0x7e - 0x20 with: \:i toUnicode[i + 0x20], join: '').
+var digits is '0123456789'.
+var hexdigits is '0123456789abcdefABCDEF'.
+var octdigits is '01234567'.
+var asciiLower is 'abcdefghijklmnopqrstuvwxyz'.
+var asciiUpper is asciiLower upper.

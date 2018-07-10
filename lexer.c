@@ -490,7 +490,7 @@ ctr_match_toggle_pragma ()
     //while(*(ctr_code--) != '\n'); //go back out
     ctr_clex_olderptr = ctr_code;
     ctr_clex_oldptr = ctr_code;
-    ctr_code--; 
+    ctr_code--;
   }
   if (strncmp (ctr_code, ":declare", 8) == 0) {
     ctr_code += 8;

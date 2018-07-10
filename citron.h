@@ -25,7 +25,11 @@ extern "C" {
 #include <stdio.h>
 
 #ifdef DEBUG_BUILD
-#define IS_DEBUG_STRING "-debug"
+#define VALUE_TO_STRING(x) #x
+#define VALUE(x) VALUE_TO_STRING(x)
+#define VAR_NAME_VALUE(var) #var "="  VALUE(var)
+#pragma message VAR_NAME_VALUE(DEBUG_BUILD_VERSION)
+#define IS_DEBUG_STRING "-debug" DEBUG_BUILD_VERSION
 #else
 #define IS_DEBUG_STRING ""
 #endif

@@ -962,10 +962,11 @@ ctr_array_pop (ctr_object * myself, ctr_argument * argumentList)
     }
   if (argumentList->object && argumentList->object->info.type == CTR_OBJECT_TYPE_OTNUMBER)
     {
+      ctr_object* val = *(myself->value.avalue->elements + (ctr_size) (argumentList->object->value.nvalue));
       myself->value.avalue->head--;
-      for (int i = (ctr_size) (argumentList->object->value.nvalue); i < myself->value.avalue->head - myself->value.avalue->tail - 1; i++)
-	myself->value.avalue->elements[i] = myself->value.avalue->elements[i + 1];
-      return *(myself->value.avalue->elements + (ctr_size) (argumentList->object->value.nvalue));
+      for (int i = (ctr_size) (argumentList->object->value.nvalue); i < myself->value.avalue->head - myself->value.avalue->tail; i++)
+	  myself->value.avalue->elements[i] = myself->value.avalue->elements[i + 1];
+      return val;
     }
   else
     {

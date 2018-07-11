@@ -945,6 +945,13 @@ Eval on: 'read_eval_print:' do: ({:prompt
                   }, default: {
                     inc +=: cdi.
                   }, switch.
+            },
+            case: '#' do: {
+              inString ifFalse: {
+                cmt is Colors % ['comments are not allowed in eval', \red].
+                done is True.
+                inc is ''.
+              }.
             }, switch).
           inp is inp insert: inc at: cursor.
           cursor +=: inc length.

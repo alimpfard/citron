@@ -22,11 +22,14 @@ var generate_context_menu is {:elems:selected_index
     text +=: ((idx = selected_index) either: {^Colors % [elem toString, 'swap' toSymbol].} or: elem).
     text +=: Colors % ['  ', 'reset' toSymbol].
   }.
-  text +=: '\x1b[%d;%dH' % old_cursor_position.
   Pen write: text.
+  var current_cursor_position is const get_term_cursor_pos run.
+  Pen write: '\x1b[%d;%dH' % old_cursor_position.
+  ^current_cursor_position head - old_cursor_position head. #lines printed
 }.
 
-var clear_next_line is {
+var clear_next_line is {:n
+  n is n or: 1. #num_lines
   var old_cursor_position is const get_term_cursor_pos run.
-  Pen write: '\x1b[%d;%dH\x1b[2K\x1b[%d;%dH' % ([old_cursor_position head + 1, 0] + old_cursor_position).
+  Pen write: ((Array new fill: n with: \:i '\x1b[%d;%dH\x1b[2K' % [old_cursor_position head + 1 + i, 0]) join: '') + '\x1b[%d;%dH' % old_cursor_position.
 }.

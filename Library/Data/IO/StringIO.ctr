@@ -1,4 +1,5 @@
 #Reflect addGlobalVariable: 'StringIO'.
+var _sSplice is \:str:idx:ins (str from: 0 length: idx) + ins + (str skip: idx + ins length).
 var StringIO is Object new.
 StringIO on: 'new' do: {
   ^me cnew: {
@@ -11,12 +12,12 @@ StringIO on: 'new' do: {
 
 StringIO on: 'write:' do: { :s
   s is s toString.
-  my internalBuffer append: s.
+  my internalBuffer is const _sSplice applyTo: my internalBuffer and: my position and: s.
   my position +=: s length.
 }.
 
 StringIO on: 'brk' do: {
-  my internalBuffer append: '\n'.
+  my internalBuffer is const _sSplice applyTo: my internalBuffer and: my position and: '\n'.
   my position +=: 1.
 }.
 
@@ -37,7 +38,8 @@ StringIO on: 'flush' do: {
 }.
 
 StringIO on: 'seek:' do: {:p
-  my position is my internalBuffer length min: p.
+  var len is my internalBuffer length.
+  my position is len min: (p >=: 0, either: p or: len + p).
 }.
 
 StringIO on: 'rewind' do: { my position is 0. }.

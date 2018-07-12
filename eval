@@ -45,6 +45,7 @@ OneGateFlipper on: 'set' do: { my value is True. }.
 OneGateFlipper on: 'get' do: { var v is my value. my value is False. ^v. }.
 Pen is pPen for: (File special: 'stdout').
 var errPen is Pen for: stderr.
+var linesp is 1.
 
 Eval is Object new.
 Eval on: 'init' do: {
@@ -765,7 +766,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
   {^done & (inBlock = 0).} whileFalse: {
     cmt is ''.
     inc = '\t' ifTrue: {#<Tab>
-        clear_next_line run. have_context is False.
+        clear_next_line applyTo: linesp. have_context is False.
         comp_set clear.
         inp containsPattern: ?>^\s*:<?, either: {
           last_was_comp ifTrue: {
@@ -808,7 +809,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
             candidate is candidates @ (last_comp_index is (last_comp_index +=: 1) >=: (candidates count), either: 0 or: last_comp_index).
             var uniq is comp_set addAll: candidates, toArray.
             var uid is uniq indexOf: candidate.
-            generate_context_menu applyTo: uniq and: uid.
+            linesp is generate_context_menu applyTo: uniq and: uid.
             var cc is candidate skip: toc length.
             cmt is (var iis is '[from %s]' % [last_toc]).
             last_comp_rewind is iis length.
@@ -822,7 +823,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
         }.
       }, else: {
         inc case: '\xd' do: {#<Enter>
-          clear_next_line run.
+          clear_next_line applyTo: linesp.
           have_context ifFalse: {
           inp length > 0 ifTrue: {
             (inp containsPattern: ?>^\s*:<?) ifTrue: {done is True.}, else: {
@@ -836,7 +837,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
           }.
           have_context is False.
         }, case: '\x3' do: {#<^C>
-          clear_next_line run. have_context is False.
+          clear_next_line applyTo: linesp. have_context is False.
           inp is ''.
           cursor is 0.
           inBlock is 0.
@@ -846,14 +847,14 @@ Eval on: 'read_eval_print:' do: ({:prompt
         }, case: '\x4' do: {#^D
           Program exit.
         }, case: '\b' do: {#<\b>
-          clear_next_line run. have_context is False.
+          clear_next_line applyTo: linesp. have_context is False.
           cursor > 0 ifTrue: {
             inp is inp removeFrom: (cursor - 1) to: cursor.
             cursor -=: 1.
             Eval display/write: '\b \b'.
           }, else: { Eval display/write: '\a'. }.
         }, case: '\x{7f}' do: {#<\b>
-          clear_next_line run. have_context is False.
+          clear_next_line applyTo: linesp. have_context is False.
           cursor > 0 ifTrue: {
             inp is inp removeFrom: (cursor - 1) to: cursor.
             cursor -=: 1.
@@ -863,7 +864,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
           var toc is (inp trim or: '  ') split: ' ', last.
           var recs is '%:L' % [' ', (Eval allTheNames filter: {:_:n ^n startsWith: toc.})].
           Eval display/cyan write: recs, resetColor.
-          clear_next_line run. have_context is False.
+          clear_next_line applyTo: linesp. have_context is False.
 
         }, case: '\x1b' do: {
           inc is stdin readBytes: 2.
@@ -871,7 +872,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
             hindex > 0 ifTrue: {
               cursor is (inp is Eval getHistory at: (hindex is hindex - 1)) length.
             }.
-            clear_next_line run. have_context is False.
+            clear_next_line applyTo: linesp. have_context is False.
 
           }, case: '\x5b\x42' do: { #Down Arrow
             (hindex > 0) & (Eval getHistory count > 0) ifTrue: {
@@ -887,19 +888,19 @@ Eval on: 'read_eval_print:' do: ({:prompt
               inp is ''.
               cursor is 0.
             }.
-            clear_next_line run. have_context is False.
+            clear_next_line applyTo: linesp. have_context is False.
 
           }, case: '\x5b\x43' do: { #Right Arrow
             (cursor < inp length) ifTrue: {
               cursor +=: 1.
             }, else: {Eval display/write: '\a'.}.
-            clear_next_line run. have_context is False.
+            clear_next_line applyTo: linesp. have_context is False.
 
           }, case: '\x5b\x44' do: { #Left Arrow
             (cursor > 0) ifTrue: {
               cursor -=: 1.
             }, else: {Eval display/write: '\a'.}.
-            clear_next_line run. have_context is False.
+            clear_next_line applyTo: linesp. have_context is False.
 
           }, case: '\x5b\x31' do: { #Supposedly <ctrl>
             inc is stdin readBytes: 3.
@@ -916,15 +917,15 @@ Eval on: 'read_eval_print:' do: ({:prompt
                   cursor is cursor + ct + ((inp length) - (ix length)).
                 }.#, else: { Eval display/red write: inc. }.
               }.
-              clear_next_line run. have_context is False.
+              clear_next_line applyTo: linesp. have_context is False.
           }, case: '\x4f\x51' do: { #F2
-              clear_next_line run. have_context is False.
+              clear_next_line applyTo: linesp. have_context is False.
               Eval togglePasteMode.
           }, default: {
             Pen write: inc toByteArray.
           }, switch.
         }, default: {
-          have_context ifTrue: { clear_next_line run. have_context is False. }.
+          have_context ifTrue: { clear_next_line applyTo: linesp. have_context is False. }.
           (inc
             case: '\'' do: {
                 inString is (inString & lastEscape not) | (inString not).

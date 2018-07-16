@@ -71,7 +71,9 @@ Eval on: 'init' do: {
     put: True at: 'printvs',
     put: True at: 'highlight',
     put: False at: 'equit',
-    put: False at: 'jsonout'.
+    put: False at: 'jsonout',
+    put: True at: 'intty',
+    put: True at: 'processig'.
   me genReader: 'eServer'.
   my errd is False.
   my last_error is Nil.
@@ -542,6 +544,8 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '--no-logo : don\'t display the ascii logo, use normal text instead\n',
           indent: 2 write: '--interactive-print : Use this object instead of `Pen\' to print values\n',
           indent: 2 write: '--highlight-file <file|-> : highlight the file (or stdin) and quit\n',
+          indent: 2 write: '--assume-non-tty : Assume the terminal is not a tty\n',
+          indent: 2 write: '--without-signals : Disable signal processing\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
         P green write: 'default imported modules in eval are:',
           cyan indent: 1 write: ('LRArray ' + (import __loaded_modules keys reverse join: ' ') ~ 's/\\s|^/\\n+ /g').
@@ -640,6 +644,12 @@ Eval on: 'togglePasteMode' do: {
           Pen writeln: (Highlight highlight: (Program input)).
       } or: \:_ Pen writeln: (Highlight highlight: (File new: f, read)).
       Program exit.
+    }, case: '--assume-non-tty' do: {
+      args pop.
+      Eval disableFlag: 'intty'.
+    }, case: '--without-signals' do: {
+      args pop.
+      Eval disableFlag: 'processig'.
     }, default: {
       (opt startsWith: '-') & (opt startsWith: '--', not) ifTrue: {
         args pop.
@@ -648,26 +658,30 @@ Eval on: 'togglePasteMode' do: {
     }, switch. # do not consume any other option.
 }.
 
-import Library/Foreign/C/C_Types: ['c_int', 'c_ptr', 'c_short'].
-import Library/Foreign/C/errno: 'g_strerror'.
-import Library/Foreign/C/Signal: 'Signal'.
+(Eval getFlag: 'intty') ifTrue: {
+  import Library/Foreign/C/C_Types: ['c_int', 'c_ptr', 'c_short'].
+  import Library/Foreign/C/errno: 'g_strerror'.
 
-_ioctl is CTypes loadLibrary: Nil, ioctl.
-_ioctl_ty is CIF new setABI: 0 return: c_int argTypes: [c_int, c_int, c_ptr].
-wsize is NamedStruct new initAs: 'ssssssss' names: ['row', 'col', 'x_pixel', 'y_pixel'].
-wsize struct allocate.
+  _ioctl is CTypes loadLibrary: Nil, ioctl.
+  _ioctl_ty is CIF new setABI: 0 return: c_int argTypes: [c_int, c_int, c_ptr].
+  wsize is NamedStruct new initAs: 'ssssssss' names: ['row', 'col', 'x_pixel', 'y_pixel'].
+  wsize struct allocate.
 
-winsize is {:_
-  var __eval_ret is _ioctl_ty call: _ioctl withArgs: [0, 0x5413, (wsize struct)].
-  (__eval_ret !=: 0) ifTrue: { thisBlock error: g_strerror run. }.
-  TerminalWidth is (wsize memberCol - 10) max: 10.
-  ^[wsize memberRow, wsize memberCol, wsize memberXPixel, wsize memberYPixel].
+  winsize is {:_
+    var __eval_ret is _ioctl_ty call: _ioctl withArgs: [0, 0x5413, (wsize struct)].
+    (__eval_ret !=: 0) ifTrue: { thisBlock error: g_strerror run. }.
+    TerminalWidth is (wsize memberCol - 10) max: 10.
+    ^[wsize memberRow, wsize memberCol, wsize memberXPixel, wsize memberYPixel].
+  }.
+
+  TerminalWidth is 85.
+  Eval display/writeln: 'Terminal: %sx%s - %sx%s' % winsize run.
+
+  (Eval getFlag: 'processig') ifTrue: {
+    import Library/Foreign/C/Signal: 'Signal'.
+    Signal new handle: 'SIGWINCH' with: winsize.
+  }.
 }.
-
-TerminalWidth is 85.
-Eval display/writeln: 'Terminal: %sx%s - %sx%s' % winsize run.
-Signal new handle: 'SIGWINCH' with: winsize.
-
 
 display_logo
   either: {Eval display/writeln: (Colors % [logo, GREEN_COLOR, ITALIC_EFFECT] % ['Project Citron', Reflect version, Reflect compilerInfo]).}

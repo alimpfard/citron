@@ -1,0 +1,18 @@
+var LRArray is Array new.
+LRArray on: 'init:' do: {:max
+  my max is max.
+}.
+LRArray on: 'push:' do: {:thing
+  var self is me.
+  ((me count) = (my max)) ifTrue: {
+    self shift.
+  }.
+  ^me `push: thing. #`
+}.
+LRArray on: 'unshift:' do: {:thing
+  var self is me.
+  ((me count) = (my max)) ifTrue: {
+    self pop.
+  }.
+  ^me `unshift: thing.#`
+}.

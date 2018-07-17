@@ -2,9 +2,8 @@
 #
 Broom autoAlloc: True.
 Reflect ignoreInTrace: (Program argument: 1). #eval or whatever it is
-contextPurity is False. #This is not a pure context, since objects are mutated in-between evaluations. so disallowing purely functional things.
 #Pen write: 'Extensions: ' + (File extensionsPath), brk.
-File new: (File extensionsPath) + '/extensions/fileutils.ctr', include.
+Broom memoryLimit: 1024 * 1024 * 1024 * 4.
 
 var PIDFILE is '~/.ctrpid.pid'.
 var logo is ?>  _____ _ _
@@ -29,7 +28,6 @@ var inBlock is 0.
 var enterRepeat is False.
 var TerminalWidth is 85.
 
-ImportLib LRArray.
 import
   Library/Foreign/C/NamedStruct
   Library/Data/Map
@@ -37,6 +35,8 @@ import
   Library/Utils/Highlight
   Library/Control/MethodResolve
   Library/Data/Json
+  Library/Data/String
+  Library/Data/Array/LRArray: 'LRArray'
   Library/Utils/CLIContextMenu: ['generate_context_menu', 'clear_next_line']
   Library/Data/IO/Pen: 'pPen'.
 
@@ -548,7 +548,7 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '--without-signals : Disable signal processing\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
         P green write: 'default imported modules in eval are:',
-          cyan indent: 1 write: ('LRArray ' + (import __loaded_modules keys reverse join: ' ') ~ 's/\\s|^/\\n+ /g').
+          cyan indent: 1 write: (import __loaded_modules keys reverse join: ' ') ~ 's/\\s|^/\\n+ /g'.
         P resetColor brk.
         Program exit.
     # when passed -p, get the next arg, and set the prompt to that.

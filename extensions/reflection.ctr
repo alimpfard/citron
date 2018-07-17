@@ -1,4 +1,0 @@
-Object on: 'setProperty:to:' do: { :pn :val
-  Reflect addPrivateVariable: pn.
-  Reflect set: pn to: val.
-}.

@@ -12,6 +12,34 @@ String on: 'span:' do: {:blk
   me characters each: \:i:x blk[x] ifTrue: { s0 is i. }, not break.
   ^[(me from: 0 length: s0 + 1), (me skip: s0 + 1)].
 }.
+String on: 'insert:at:' do: {:str:idx
+    ^(me from: 0 to: idx) + str + (me from: idx to: me length).
+}.
+String on: 'removeFrom:to:' do: {:st:en
+    ^(me from: 0 to: st) + (me from: en to: me length).
+}.
+String on: 'removeFrom:length:' do: {:st:ln
+    ^(me from: 0 to: st) + (me from: (st + ln) to: me length).
+}.
+String on: 'matchesPattern:' do: {:r
+  var res is False.
+  (me containsPattern: r) ifTrue: {
+    var s is me findPattern: r do: { ^''. } options: ''.
+    res is ((s trim) = '').
+  }.
+  ^res.
+}.
+
+String on: 'bisectToLength:' do: {:len
+  var arr is Array new.
+  me characters each: len cons: {:i:s arr push: s.}.
+  ^arr.
+}.
+
+String on: 'skipUntil:' do: {:str
+  var index is me indexOf: str.
+  ^me from: (index + (str length)) to: (me length).
+}.
 
 var toUnicode is \:i ('\'\\u{%s}\'' % [i]) eval.
 var asciiPrintables is (Array new fill: 0x7e - 0x20 with: \:i toUnicode[i + 0x20], join: '').

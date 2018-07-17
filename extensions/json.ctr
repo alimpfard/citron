@@ -1,4 +1,0 @@
-var Json is Object new.
-Json on: 'loads:' do: {:str 
-  var parsed is JSON parse: str.
-}.

@@ -1,9 +1,0 @@
-String on: 'insert:at:' do: {:str:idx
-    ^(me from: 0 to: idx) + str + (me from: idx to: me length).
-}.
-String on: 'removeFrom:to:' do: {:st:en
-    ^(me from: 0 to: st) + (me from: en to: me length).
-}.
-String on: 'removeFrom:length:' do: {:st:ln
-    ^(me from: 0 to: st) + (me from: (st + ln) to: me length).
-}.

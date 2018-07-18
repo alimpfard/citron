@@ -1,0 +1,140 @@
+import
+  Library/Data/String
+  Library/Data/Array/Utils/foldr.
+
+# Is this OS unix-like?
+var isPosix is True.
+
+var pathSeparator is '/'.
+var pathSeparators is '/'.
+var isPathSeparator is \:x x = pathSeparator.
+
+var searchPathSeparator is ':'.
+var isSearchPathSeparator is \:x x = searchPathSeparator.
+
+var extSeparator is '.'.
+var isExtSeparator is \:x x = extSeparator.
+
+# Path methods
+var _splitSearchPaths is \:x [(x = '' either: '.' or: x)].
+var splitSearchPath is \:xs xs reSplit: searchPathSeparator, fmap: _splitSearchPaths.
+
+var getSearchPath is \:_ splitSearchPath applyTo: (Program env: 'PATH').
+
+var spanEnd  is \:p:xs :xsr 'xsr' letEqual: xs reverse in: { ^[(xsr dropWhile: p, reverse), (xsr takeWhile: p, reverse)]. }.
+var breakEnd is \:p:xs :xsr 'xsr' letEqual: xs reverse in: { ^[(xsr dropWhile: (\:x p[x] not), reverse), (xsr takeWhile: (\:x p[x] not), reverse)]. }.
+
+var dropWhileEnd is \:p:x x reverse dropWhile: p, reverse.
+
+var splitFileName_ is \:x breakEnd[isPathSeparator, x].
+
+var splitExtension is {\:x :dir:file:nameDot:ext
+  [\dir, \file] is splitFileName_[x].
+  [\nameDot, \ext] is breakEnd[isExtSeparator, file].
+  nameDot = '' either: [x, ''] or: \:_ [dir + nameDot init, extSeparator + ext].
+}.
+
+var takeExtension is \:x splitExtension[x] @ 1.
+var dropExtension is \:x splitExtension[x] head.
+
+var addExtension is \:x:y x + extSeparator + y.
+var <ext> is addExtension.
+
+var replaceExtension is \:x:y (dropExtension[x]) `<ext>` y.
+var -<ext> is replaceExtension.
+
+var takeFileName is \:x splitFileName_ @ 1.
+var hasExtension is \:x takeFileName[x] any: isExtSeparator.
+
+var isSuffixOf is \:x:y y last = x. #TODO: Move to Data/Array
+
+var splitExtensions is {\:x :a:b:c:d
+  [\a, \b] is splitFileName_[x].
+  [\c, \d] is b reSplit: '\.'.
+  [a + c, d].
+}.
+var takeExtensions is \:x splitExtensions @ 1.
+var dropExtensions is \:x splitExtensions[x] head.
+
+var isExtensionOf is \:ext:x ext `isSuffixOf` (takeExtensions[x]).
+
+var replaceExtensions is \:x:y dropExtensions[x] `<ext>` y.
+
+# Filepath methods
+
+var hasTrailingPathSeparator is \:x x = '' either: False or: \:_ x last = pathSeparator.
+var hasLeadingPathSeparator is \:x x = '' either: False or: \:_ x head = pathSeparator.
+
+var addTrailingPathSeparator is \:x hasTrailingPathSeparator[x] either: x or: x + pathSeparator.
+var dropTrailingPathSeparator is \:x hasTrailingPathSeparator[x] not either: x or: \:_ dropWhileEnd[isPathSeparator, x] or: pathSeparator.
+
+var combine is {\:a:b
+  a = ''
+    either: b
+    or: {
+        ^b = ''
+          either: a
+          or: { ^hasTrailingPathSeparator[a] either: a + b or: a + pathSeparator + b. }.
+    }.
+}.
+
+var </> is combine.
+var replaceFileName is {\:x:y :a
+  [\a, \_] is splitFileName_[x].
+  a `</>` y.
+}.
+var dropFileName is \:x splitFileName_[x] head.
+
+var takeDirectory is \:x dropTrailingPathSeparator[dropFileName[x]].
+var replaceDirectory is \:x:dir combine[dir, takeFileName[x]].
+
+var _splitPath is \:self:x
+  x = '' either: [] or: {:a:b:c:d
+    [\a, \b] is x break: isPathSeparator.
+    [\c, \d] is b span: const isPathSeparator.
+    Pen writeln: [c, d].
+    ^[a + c] + self[d].
+  }.
+
+var splitPath is \:x _splitPath[x].
+var splitDirectories is \:x splitPath[x] fmap: dropTrailingPathSeparator.
+
+var joinPath is \:*x x foldr: combine accumulator: ''.
+
+# File name manipulation
+
+var normalize is {\:path File new: path, realPath. }.
+
+var equalFilePath is \:a:b dropTrailingPathSeparator[normalize[a]] = dropTrailingPathSeparator[normalize[b]].
+
+var _makeRelative2 is {\:x :a:b
+  [\a, \b] is (x dropWhile: isPathSeparator) break: isPathSeparator.
+  [(a dropWhile: isPathSeparator), (b dropWhile: isPathSeparator)].
+}.
+var _makeRelative is \:self:x:y x = '' either: (\:_ y dropWhile: isPathSeparator) or: {
+  [\x1, \x2] is _makeRelative2[x].
+  [\y1, \y2] is _makeRelative2[y].
+  ^equalFilePath[x1, y1] either: (\:_ self[x2, y2]) or: path.
+}.
+var dropAbs is \:x hasLeadingPathSeparator[x] either: x tail or: x.
+var takeAbs is \:x hasLeadingPathSeparator[x] either: [pathSeparator] or: \:_ x fmap: \:x2 isPathSeparator[x2] either: pathSeparator or: x2 lower.
+var makeRelative is {\:root:path :count:common:rel_list
+  equalFilePath[root, path] ifTrue: \:_ '.'.
+  takeAbs[root] = takeAbs[path] ifFalse: \:_ path.
+  root  is File new: root, realPath.
+  path  is File new: path, realPath.
+  root  is { ^[x,, (root split: '/'),, x]. } run.
+  path  is { ^[y,, (path  split: '/'),, y]. } run.
+  count is path count.
+  #shared prefix
+  common is 0.
+  root each: {:i:v
+    count <=: i, break.
+    path @ i = v either: { common +=: 1. } or: { True break. }.
+  }.
+  rel_list is ['..'] * (root count - common) + (path from: common length: count - common).
+  rel_list either: (\:_ rel_list join: pathSeparator) or: '.'.
+}.
+
+var isRelative is \:x x startsWith: pathSeparator.
+var isAbsolute is \:x isRelative[x] not.

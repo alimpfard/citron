@@ -1,0 +1,16 @@
+import
+  _Internal: \*
+  Library/System/FilePath:
+    ['<ext>'
+    ,'</>'
+    ,'addTrailingPathSeparator'
+    ,'dropTrailingPathSeparator'
+    ,'hasTrailingPathSeparator'
+    ,'isAbsolute'
+    ,'joinPath'
+    ,'makeRelative'
+    ,'normalize'
+    ,'splitDirectories'
+    ,'takeDirectory'
+    ].
+ # TODO

@@ -4,12 +4,37 @@ String on: 'head' do: {:self
 String on: 'tail' do: {
   ^me skip: 1.
 }.
+String on: 'init' do: {:self
+  ^self from: 0 length: self length - 1.
+}.
+String on: 'last' do: {
+  ^me at: me length - 1.
+}.
+String on: 'break:' do: {:blk
+  var s0 is -1.
+  me each: \:i:x blk[x] ifFalse: { s0 is i. }, break.
+  ^[(me from: 0 length: s0 + 1), (me skip: s0 + 1)].
+}.
+String on: 'each:' do: {:b
+  me characters each: b.
+}.
 String on: 'take:' do: {:len
   ^me from: 0 length: len.
 }.
+
+String on: 'takeWhile:' do: {:p
+  var s is ''.
+  me each: {:_:x p[x] either: {s +=: x.} or: { True break. }.}.
+  ^s.
+}.
+String on: 'dropWhile:' do: {:p
+  var s is 0.
+  me each: {:_:x p[x] either: {s +=: 1.} or: { True break. }.}.
+  ^me skip: s.
+}.
 String on: 'span:' do: {:blk
   var s0 is -1.
-  me characters each: \:i:x blk[x] ifTrue: { s0 is i. }, not break.
+  me each: \:i:x blk[x] ifTrue: { s0 is i. }, not break.
   ^[(me from: 0 length: s0 + 1), (me skip: s0 + 1)].
 }.
 String on: 'insert:at:' do: {:str:idx
@@ -32,7 +57,7 @@ String on: 'matchesPattern:' do: {:r
 
 String on: 'bisectToLength:' do: {:len
   var arr is Array new.
-  me characters each: len cons: {:i:s arr push: s.}.
+  me each: len cons: {:i:s arr push: s.}.
   ^arr.
 }.
 

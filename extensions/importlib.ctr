@@ -92,12 +92,17 @@ import on: 'respondTo:and:' do: {:mods:*names
   var loaded is mods split: ':', fmap: \:mod import __load: mod.
   ^names imap: {:i:names
     var modv is import __realloc: loaded @ i.
-    names is import __unify: names.
-    names is names fmap: \:name name isA: CodeBlock, either: (\:_ (Map cnew: name) kvlist: \:kv kv, head) or: \:_ [name, name].
-    ^names fmap: {:name
-      var p is modv at: name head.
-      import export: p as: name last.
-      ^p.
+    ^names = \* either: {
+      modv each: \:name:value import export: value as: name.
+      ^[].
+    } or: {
+      names is import __unify: names.
+      names is names fmap: \:name name isA: CodeBlock, either: (\:_ (Map cnew: name) kvlist: \:kv kv, head) or: \:_ [name, name].
+      ^names fmap: {:name
+        var p is modv at: name head.
+        import export: p as: name last.
+        ^p.
+      }.
     }.
   }, foldl: (\:acc:x acc + ([] + x or: [x])) accumulator: Array new.
 }.

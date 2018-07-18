@@ -1,0 +1,3 @@
+Array on: 'foldr:accumulator:' do: {:blk:acc # TODO: Provide faster alternative
+  ^me reverse foldl: blk accumulator: acc.
+}.

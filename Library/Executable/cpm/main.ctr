@@ -13,14 +13,31 @@ File on: 'listrec:' do: {:path # tuples of [type, filename]
   var joinf is File new: path.
   File list: path, each_v: {:mp
     ['.', '..'] contains: (mp @ 'file'), continue.
-    (mp at: 'type', = 'folder') either: {
-      arr is arr + ['folder', (joinf joinPath: mp @ 'file', path)] + (File listrec: (joinf joinPath: mp @ 'file', path)).
+    arr is arr + ((mp @ 'type' = 'folder') either: {
+      ^(File listrec: (joinf joinPath: mp @ 'file', path)).
     }
     or: {
-      arr push: [mp @ 'type', (joinf joinPath: mp @ 'file', path)].
-    }.
+      ^[[mp @ 'type', (joinf joinPath: mp @ 'file', path)]].
+    }).
   }.
   ^arr reverse.
+}.
+
+File on: 'path:relativeTo:' do: {:path:start
+  start is File new: start, realPath.
+  path  is File new: path, realPath.
+  start is [x,, (start split: '/'),, x].
+  path  is [y,, (path  split: '/'),, y].
+  var count is path count.
+  #shared prefix
+  var common is 0.
+  start each: {:i:v
+    count <=: i, break.
+    path @ i = v either: { common +=: 1. } or: { True break. }.
+  }.
+  var rel_list is ['..'] * (start count - common) + (path from: common length: count - common).
+  rel_list is rel_list either: (\:_ rel_list join: '/') or: '.'.
+  ^rel_list.
 }.
 
 var Main is {:cliargs
@@ -90,6 +107,7 @@ var Main is {:cliargs
 usage: cpm operation_name operation_args...
 
 operations:
+    + -inslib <libname> <toplevel-dir> : install a library into Library/libname
     + -rmmod <modname> : remove a module
     + -insmod <modname> <so_path> : install a module (will raise error if module exists)
     + -reinsmod <modname> <so_path> : remove an existing module and replace it with the given .so file
@@ -100,7 +118,25 @@ operations:
     Pen writeln: help.
     thisBlock error: 'No operation given'.
   }.
-
+  var inslib_opt is {:cliargs_
+    var libpath is (File new: File extensionsPath, joinPath: 'Library') joinPath: cliargs_ shift.
+    var libname is File new: cliargs_ shift.
+    confirm applyTo: 'Are you sure to install the files under %s(%s) into %s?' % [libname path, libname realPath, libpath realPath], ifTrue: {
+      File listrec: libname realPath, reverse each_v: {:member
+        [type, path] is member.
+        var vfile is libpath joinPath: (File path: path relativeTo: libname path).
+        type = 'folder' either: {
+          { vfile mkdir. } catch: {}, run.
+          # Pen writeln: 'mkdir -p $$path'.
+        } or: {
+          vfile write: (File new: path, read).
+          # Pen writeln: 'cp ' + path + ' ' + (libpath joinPath: (File path: path relativeTo: libname path), path).
+        }.
+      }.
+    }.
+    Pen green writeln: '[Ok]', resetColor.
+    ^cliargs_.
+  }.
   var rmmod_opt is {:cliargs_
     var modname is cliargs_ shift.
       confirm applyTo: 'Are you sure to remove the module $$modname' + '?', ifTrue: {
@@ -167,6 +203,12 @@ operations:
 
 
   (cliargs shift)
+    case: '-inslib' do: {
+      cliargs is inslib_opt applyTo: cliargs.
+    },
+    case: '-insfile' do: {
+      cliargs is insfile_opt applyTo: cliargs.
+    },
     case: '-rmmod' do: {
       cliargs is rmmod_opt applyTo: cliargs.
     },

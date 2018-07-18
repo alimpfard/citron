@@ -26,6 +26,8 @@ args=(
     '--no-logo[do not show ascii logo]'
     '--interactive-print[value display object]'
     '--highlight-file[highlight a file and exit]:path:_files'
+    '--assume-non-tty[Assume the terminal is not a tty]'
+    '--without-signals[Disable signal processing]'
     )
 
 _arguments -C -s -S "$args[@]"

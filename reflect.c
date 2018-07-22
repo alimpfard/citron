@@ -1717,6 +1717,22 @@ ctr_reflect_get_property (ctr_object * myself, ctr_argument * argumentList)
   return CtrStdNil;
 }
 
+/**
+ * [Reflect] setProperty: [p:String] ofObject: [o:Object] toValue: [v:Object]
+ *
+ * sets the property p of object o to value v.
+ *
+ **/
+ctr_object *
+ctr_reflect_set_property (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *name = ctr_internal_cast2string (argumentList->object);
+  ctr_object *ns = argumentList->next->object;
+  ctr_object *val = argumentList->next->next->object;
+  ctr_internal_object_set_property(ns, name, val, 0);
+  return myself;
+}
+
 // #ifdef WITH_INSTRUMENTORS
 
 /**

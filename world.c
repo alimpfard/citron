@@ -2427,6 +2427,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("runHere:forObject:arguments:"), &ctr_reflect_run_for_object_ctx);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("primitiveLinkOf:"), &ctr_reflect_get_primitive);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("getProperty:ofObject:"), &ctr_reflect_get_property);
+  ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("setProperty:ofObject:toValue:"), &ctr_reflect_set_property);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("object:hasOwnResponder:"), &ctr_reflect_has_own_responder);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("disableInstrumentation"), &ctr_reflect_rawmsg);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("enableInstrumentation"), &ctr_reflect_instrmsg);

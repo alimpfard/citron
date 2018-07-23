@@ -229,7 +229,7 @@ MIPSAbstractMachine on: 'runQASession' do: {:self
         var st is (self PC + ((parts @ 1 = '-') either: ((parts @ 2 toNumber) * -1) or: 1)).
         var en is (((parts @ 1 = '-') either: 0 or: ((parts @ 2 toNumber)))) toNumber.
           Pen write: 'from $$st assemble $$en instruction(s)', brk.
-          var ass is self assemble: (program from: st length: en).
+          var ass is self assemble: (program from: st length: en, join: '\n').
           Pen write: '\t' + (ass join: '\n\t'), brk.
       }.
     }.

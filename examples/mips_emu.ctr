@@ -1,5 +1,7 @@
 Broom memoryLimit: 1024 * 1024 * 1024.
 
+import Library/Data/String.
+
 var debug is {:blk DEBUG ifTrue: {blk run.}.}.
 
 var QAHELP is 's/$register>/value :: set register to value
@@ -62,8 +64,8 @@ var noop is {}.
 var jump is {my machine nextJump: my jump.}.
 var add is  {my machine setReg: my destintaion to: ((my machine getReg: my operand0) + (my machine getReg: my operand1)).}.
 var addi is {my machine setReg: my destintaion to: (my immediate toNumber + (my machine getReg: my operand0)).}.
-var xor is  {my machine setReg: my destintaion to: ((my machine getReg: my operand0) integerXor: (my machine getReg: my operand1)).}.
-var ori is  {my machine setReg: my destintaion to: (my immediate toNumber integerOr: (my machine getReg: my operand0)).}.
+var xor is  {my machine setReg: my destintaion to: ((my machine getReg: my operand0) bitXor: (my machine getReg: my operand1)).}.
+var ori is  {my machine setReg: my destintaion to: (my immediate toNumber bitOr: (my machine getReg: my operand0)).}.
 var beq is  {var immediate is my immediate. var machine is my machine. ((my machine getReg: my operand0) = (my machine getReg: my destintaion)) ifTrue: {machine nextJump: immediate.}.}.
 var bgez is {var immediate is my immediate. var machine is my machine. ((my machine getReg: my operand0) >=: (my machine getReg: my destintaion)) ifTrue: {machine nextJump: immediate.}.}.
 var bgezal is {var immediate is my immediate. var machine is my machine. ((my machine getReg: my operand0) = (my machine getReg: my destintaion)) ifTrue: {machine nextJump: immediate. machine setReg: 31 to: (machine PC + 1).}.}.
@@ -74,8 +76,8 @@ var bltzal is {var immediate is my immediate. var machine is my machine. ((my ma
 var bne is {var immediate is my immediate. var machine is my machine. ((my machine getReg: my operand0) !=: (my machine getReg: my destintaion)) ifTrue: {machine nextJump: immediate.}.}.
 var jal is {my machine setReg: 31 to: (me PC + 1). my machine nextJump: my jump.}.
 var jr is {my machine nextPC: (my machine getReg: my destintaion).}.
-var and is  {my machine setReg: my destintaion to: ((my machine getReg: my operand0) integerAnd: (my machine getReg: my operand1)).}.
-var andi is {my machine setReg: my destintaion to: (my immediate toNumber integerAnd: (my machine getReg: my operand0)).}.
+var and is  {my machine setReg: my destintaion to: ((my machine getReg: my operand0) bitAnd: (my machine getReg: my operand1)).}.
+var andi is {my machine setReg: my destintaion to: (my immediate toNumber bitAnd: (my machine getReg: my operand0)).}.
 #--Memory--
 var lbu is {my machine setReg: my destintaion to: (my machine getBytes: 1 base: (my immediate toNumber) offset: (my machine getReg: my operand0)).}.
 var sb is {my machine setBytes: 1 base: (my immediate toNumber) offset: (my machine getReg: my operand0) value: (my machine getReg: my destintaion).}.
@@ -162,7 +164,7 @@ MIPSAbstractMachine on: 'assemble:'          do: {:prg ^MIPSIntructions assemble
 MIPSAbstractMachine on: 'addPDLabel:'        do: {:label my labels put: my ploc at: label. my asmlabels put: my mloc at: label.}.
 MIPSAbstractMachine on: 'addWord:length:'    do: {:name:len my data put: [4, (my memory allocate: (len * 4))] at: name.}.
 MIPSAbstractMachine on: 'getLabel:'          do: {:label var result is my labels @ label. result isNil ifTrue: {result is my data @ label.}. ^result.}. #0 pseudodirect, 1 pc-relative
-MIPSAbstractMachine on: 'getLabelAsm:mode:'  do: {:label:d var result is my asmlabels @ label. result isNil ifTrue: {result is my data @ label @ 1.}. d = 1 ifTrue: {result is (my mloc - result) from: 0 length: 16.}. ^result.}.
+MIPSAbstractMachine on: 'getLabelAsm:mode:'  do: {:label:d var result is my asmlabels @ label. result isNil ifTrue: {result is my data @ label @ 1.}. d = 1 ifTrue: {result is (my mloc - result) toString from: 0 length: 16.}. ^result.}.
 MIPSAbstractMachine on: 'dereference:'       do: {:reg ^my memory at: (me getReg: reg).}.
 MIPSAbstractMachine on: 'step'               do: {
   me incPC.
@@ -305,7 +307,7 @@ MIPSAbstractMachine on: 'execute_current_instr_g' do: {:self
     Pen write: (src paddingRight: 16), write: ''.
     dirtyregs count times: {
       var reg is dirtyregs pop.
-      regs push: ('$' + (reg @ 0) + (': [%d -> %d]' formatObjects: [(reg @ 1), (me getReg: (reg @ 0))])).
+      regs push: ('$' + (reg @ 0) + (': [%d -> %d]' formatObjects: [(reg @ 1), (self getReg: (reg @ 0))])).
     }.
     regs count > 0 ifTrue: {Pen write: '=> ' + (regs join: ', '), brk.}, else: {Pen brk.}.
   }.
@@ -343,6 +345,13 @@ MIPSIntructions on: 'decode:machine:' do: {:self:instrs:machine
 MIPSIntructions on: 'assemble:forMachine:' do: {:self:instrs:machine
   var code is instrs split: '\n'.
   var dec is Array new.
+  code each: {:i:v
+    (v trim = '') continue.
+    v findPattern: '^\\s*(\\w+):' do: {:groups
+      machine setParseLocation: i.
+      machine addPDLabel: groups @ 1.
+    }.
+  }.
   code each: {:i:v
     (v trim = '') continue.
     machine setParseLocation: i.
@@ -393,7 +402,7 @@ IFormat on: 'emitBits:op0:immediate:dst:machine:' do: {:op:o0:oimm:dst:machine
   var opf is MIPSIntructionBits at: op.
   opf isNil ifTrue: {opf is tnoop.}, else: {
     debug applyTo: {Pen write: '--> $$oimm'.}.
-    (oimm toNumber toString = oimm) ifFalse: {oimm is machine getLabelAsm: oimm mode: (op = 'beq' toNumber).}.
+    {oimm toNumber. ^True.} catch: {^False.}, run ifFalse: {oimm is machine getLabelAsm: oimm mode: (op = 'beq') toNumber.}.
     debug applyTo: {Pen write: ' $$oimm', brk.}.
     opf is (opf @ 0) + (o0 toNumber toBits: 5, reverse) + (dst toNumber toBits: 5, reverse) + (oimm toNumber toBits: 16, reverse).
   }.
@@ -404,7 +413,7 @@ JFormat on: 'emitBits:label:machine:' do: {:op:dst:machine
   var opf is MIPSIntructionBits at: op.
   opf isNil ifTrue: {opf is tnoop.}, else: {
     #Pen write: '--> $$dst'.
-    (dst toNumber toString = dst) ifFalse: {dst is machine getLabelAsm: dst mode: 0.}.
+    {dst toNumber. ^True.} catch: {^False.}, run ifFalse: {dst is machine getLabelAsm: dst mode: 0.}.
     dst is (dst toNumber toBits: 32).
     dst is dst from: 4 to: 30.
     opf is (opf @ 0) + (dst reverse).

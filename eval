@@ -839,15 +839,24 @@ Eval on: 'read_eval_print:' do: ({:prompt
         inc case: '\xd' do: {#<Enter>
           clear_next_line applyTo: linesp.
           have_context ifFalse: {
-          inp length > 0 ifTrue: {
-            (inp containsPattern: ?>^\s*:<?) ifTrue: {done is True.}, else: {
-              (inp containsPattern: ?>\.\s*$<?, not) & (inBlock = 0) ifTrue: {
-                inp +=: '.'.
-              }.
-              done is inBlock = 0.
+            inp is inp findPattern: ?>(?:^\s*((?::{)+)|((?::}\s*)+)\s*$)<? do: {:groups
+              var s is groups at: 0, replace: ':' with: ''.
+              var s0 is s at: 0, = '{' either: 1 or: -1.
+              inBlock is inBlock + (s0 * s length) max: 0.
+              cursor -=: (groups at: 0, length).
+              ^''.
             }.
-            inBlock !=: 0, ifTrue: { Eval newBlock. Pen brk. inp +=: ' '. inpbrk is inp length. cursor +=: 1.}.
-          }, else: { Pen brk. done is True. }.
+            inp length > 0 ifTrue: {
+              (inp containsPattern: ?>^\s*:[^{}]<?) ifTrue: {
+                done is True.
+              }, else: {
+                (inp containsPattern: ?>\.\s*$<?, not) & (inBlock = 0) ifTrue: {
+                  inp +=: '.'.
+                }.
+                done is inBlock = 0.
+              }.
+              inBlock !=: 0, ifTrue: { Eval newBlock. Pen brk. inp +=: ' '. inpbrk is inp length. cursor +=: 1.}.
+            }, else: { Pen brk. done is True. }.
           }.
           have_context is False.
         }, case: '\x3' do: {#<^C>
@@ -947,20 +956,20 @@ Eval on: 'read_eval_print:' do: ({:prompt
             case: '\\' do: {
                 lastEscape is True.
             },
-            case: '%' do: {
-              (var cdi is stdin readBytes: 1).
-                cdi
-                  case: '{' do: {
-                    inc is inc from: 0 to: inc length - 1.
-                    inBlock +=: (inString either: 0 or: 1).
-                  },
-                  case: '}' do: {
-                    inc is inc from: 0 to: inc length - 1.
-                    inBlock -=: (inString either: 0 or: 1).
-                  }, default: {
-                    inc +=: cdi.
-                  }, switch.
-            },
+            # case: '%' do: {
+            #   (var cdi is stdin readBytes: 1).
+            #     cdi
+            #       case: '{' do: {
+            #         inc is inc from: 0 to: inc length - 1.
+            #         inBlock +=: (inString either: 0 or: 1).
+            #       },
+            #       case: '}' do: {
+            #         inc is inc from: 0 to: inc length - 1.
+            #         inBlock -=: (inString either: 0 or: 1).
+            #       }, default: {
+            #         inc +=: cdi.
+            #       }, switch.
+            # },
             case: '#' do: {
               inString ifFalse: {
                 cmt is Colors % ['comments are not allowed in eval', \red].

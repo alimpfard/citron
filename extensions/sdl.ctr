@@ -1,0 +1,21 @@
+var SDLEventTypes is (Map new)
+  put: 'noEvent' at: 0,
+  put: 'activeEvent' at: 1,
+  put: 'keyDown' at: 2,
+  put: 'keyUp' at: 3,
+  put: 'mouseMotion' at: 4,
+  put: 'mouseButtonDown' at: 5,
+  put: 'mouseButtonUp' at: 6,
+  put: 'joyAxisMotion' at: 7,
+  put: 'joyBallMotion' at: 8,
+  put: 'joyHatMotion' at: 9,
+  put: 'joyButtonDown' at: 10,
+  put: 'joyButtonUp' at: 11,
+  put: 'quit' at: 12,
+  put: 'syswmEvent' at: 13,
+  put: 'event_reserveda' at: 14,
+  put: 'event_reservedb' at: 15,
+  put: 'videoResize' at: 16,
+  put: 'videoExpose' at: 17.
+
+import export: SDLEventTypes as: 'SDLEventTypes'.

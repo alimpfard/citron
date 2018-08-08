@@ -55,11 +55,6 @@ Eval on: 'init' do: {
   my allowedColors is ('red blue magenta cyan yellow green resetColor' split: ' ') join: '|'.
   my globalvars is False.
   my history is LRArray new init: 100.
-  (var hddir is File new: '~/.citron') exists ifFalse: { hddir mkdir. }.
-  my hs_file is File new: '~/.citron/ctrhist'.
-  my hs_file exists ifFalse: { my hs_file write: '[]'. }.
-  var history is my history.
-  (Json parse: (my hs_file read or: '[]') genericType: Object) each_v: \:x history push: x.
   my commands is Nil.
   my command_comps is Nil.
   my userDefs is Nil.
@@ -72,7 +67,8 @@ Eval on: 'init' do: {
     put: False at: 'equit',
     put: False at: 'jsonout',
     put: True at: 'intty',
-    put: True at: 'processig'.
+    put: True at: 'processig',
+    put: True at: 'history'.
   me genReader: 'eServer'.
   my errd is False.
   my last_error is Nil.
@@ -85,6 +81,13 @@ Eval on: 'init' do: {
     on: 'toString' do: {^'[GlobalEvalContext]'.}.
   my displayObject is Pen. #override from commandline, maybe?
   ^me.
+}.
+Eval on: 'initHistory' do: {
+  (var hddir is File new: '~/.citron') exists ifFalse: { hddir mkdir. }.
+  my hs_file is File new: '~/.citron/ctrhist'.
+  my hs_file exists ifFalse: { my hs_file write: '[]'. }.
+  var history is my history.
+  (Json parse: (my hs_file read or: '[]') genericType: Object) each_v: \:x history push: x.
 }.
 Eval on: 'display' do: {
   ^my displayObject.
@@ -122,9 +125,11 @@ Eval on: 'end' do: {
   my end is True.
   my debug ifFalse: {
     me stopEvalServer.
-    my hs_file write: (
-      {:json Json parse: json. ^json.} catch: {:e ^'[]'.}, applyTo: (Json serialize: my history, ~ ?>s/\\/\\\\/g<?)
-    ).
+    getFlag: 'history', ifTrue: {
+      my hs_file write: (
+        {:json Json parse: json. ^json.} catch: {:e ^'[]'.}, applyTo: (Json serialize: my history, ~ ?>s/\\/\\\\/g<?)
+      ).
+    }.
   }.
 }.
 Eval on: 'break' do: { my end ifTrue: {Broom sweep.}. ^my end. }.
@@ -545,6 +550,7 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '--highlight-file <file|-> : highlight the file (or stdin) and quit\n',
           indent: 2 write: '--assume-non-tty : Assume the terminal is not a tty\n',
           indent: 2 write: '--without-signals : Disable signal processing\n',
+          indent: 2 write: '--without-history : Disable recording of history\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
         P green write: 'default imported modules in eval are:',
           cyan indent: 1 write: (import __loaded_modules keys reverse join: ' ') ~ 's/\\s|^/\\n+ /g'.
@@ -649,6 +655,9 @@ Eval on: 'togglePasteMode' do: {
     }, case: '--without-signals' do: {
       args pop.
       Eval disableFlag: 'processig'.
+    }, case: '--without-history' do: {
+      args pop.
+      Eval disableFlag: 'history'.
     }, default: {
       (opt startsWith: '-') & (opt startsWith: '--', not) ifTrue: {
         args pop.
@@ -684,6 +693,8 @@ Eval on: 'togglePasteMode' do: {
     Signal new handle: 'SIGWINCH' with: winsize.
   }.
 }.
+
+Eval getFlag: 'history', ifTrue: { Eval initHistory. }.
 
 display_logo
   either: {Eval display/writeln: (Colors % [logo, GREEN_COLOR, ITALIC_EFFECT] % ['Project Citron', Reflect version, Reflect compilerInfo]).}

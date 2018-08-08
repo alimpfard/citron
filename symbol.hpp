@@ -1,10 +1,10 @@
 #pragma once
 
 #include "citron.h"
-#include <google/dense_hash_map>
+//#include <google/dense_hash_map>
 #include <functional>
 
-using google::dense_hash_map;
+//using google::dense_hash_map;
 using std::hash;
 
 extern "C" ctr_object *ctr_get_or_create_symbol_table_entry (const char *name, ctr_size length);

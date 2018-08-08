@@ -147,21 +147,21 @@ coroutine_resume (struct schedule *S, int id)
   switch (status)
     {
     case COROUTINE_READY:
-      getcontext (&C->ctx);
+      //getcontext (&C->ctx);
       C->ctx.uc_stack.ss_sp = S->stack;
       C->ctx.uc_stack.ss_size = STACK_SIZE;
       C->ctx.uc_link = &S->main;
       S->running = id;
       C->status = COROUTINE_RUNNING;
       uintptr_t ptr = (uintptr_t) S;
-      makecontext (&C->ctx, (void (*)(void)) mainfunc, 2, (uint32_t) ptr, (uint32_t) (ptr >> 32));
-      swapcontext (&S->main, &C->ctx);
+      //makecontext (&C->ctx, (void (*)(void)) mainfunc, 2, (uint32_t) ptr, (uint32_t) (ptr >> 32));
+    //  swapcontext (&S->main, &C->ctx);
       break;
     case COROUTINE_SUSPEND:
       memcpy (S->stack + STACK_SIZE - C->size, C->stack, C->size);
       S->running = id;
       C->status = COROUTINE_RUNNING;
-      swapcontext (&S->main, &C->ctx);
+  //    swapcontext (&S->main, &C->ctx);
       break;
     default:
       assert (0);
@@ -193,7 +193,7 @@ coroutine_yield (struct schedule *S)
   _save_stack (C, S->stack + STACK_SIZE);
   C->status = COROUTINE_SUSPEND;
   S->running = -1;
-  swapcontext (&C->ctx, &S->main);
+//  swapcontext (&C->ctx, &S->main);
 }
 
 int

@@ -6,7 +6,6 @@
 #include <math.h>
 #include <stdint.h>
 #include <sys/mman.h>
-#include <execinfo.h>
 #include "citron.h"
 #include <gc/gc.h>
 #include <gc/gc_typed.h>
@@ -49,7 +48,7 @@ void sttrace_print(void *ptr)
 	if (likely(ptr))
 		return;
 	printf("MEMORY ALLOC %p\n", ptr);
-	void *array[99999];
+	/*void *array[99999];
 	size_t size;
 	char **strings;
 	size_t i;
@@ -61,7 +60,8 @@ void sttrace_print(void *ptr)
 		printf("%s\n", strings[i]);
 
 	free(strings);
-}
+	*/
+	}
 
 /**
  * Heap allocate raw memory

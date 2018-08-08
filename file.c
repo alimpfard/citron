@@ -20,6 +20,10 @@
 #include "siphash.h"
 #include <wordexp.h>
 
+#ifndef WORDEXP_READY
+#define WORDEXP_READY 1
+#endif
+
 #include <termios.h>
 static struct termios oldTermios, newTermios;
 
@@ -185,7 +189,7 @@ ctr_file_rpath (ctr_object * myself, ctr_argument * argumentList)
   char *ret = realpath (cpath, rpath);
   if (!ret)
     {
-      if (1)
+      if (WORDEXP_READY)
 	{
 	  wordexp_t exp_result;
 	  int st = wordexp (cpath, &exp_result, 0);
@@ -227,8 +231,9 @@ ctr_file_rpath (ctr_object * myself, ctr_argument * argumentList)
       else
 	{
 	  ctr_heap_free (cpath);
-	  CtrStdFlow = ctr_build_string_from_cstring (strerror (errno));
-	  return CtrStdNil;
+	  //CtrStdFlow = ctr_build_string_from_cstring (strerror (errno));
+	  //return CtrStdNil;
+	  return path;
 	}
     }
   path = ctr_build_string_from_cstring (rpath);
@@ -487,11 +492,15 @@ ctr_file_exists (ctr_object * myself, ctr_argument * argumentList)
   if (myself->value.rvalue && myself->value.rvalue->ptr)
     return ctr_build_bool (1);
   ctr_object *path = ctr_file_rpath (myself, NULL);
+  if (CtrStdFlow) {
+    CtrStdFlow = NULL;
+    return ctr_build_bool(0);
+  }
   ctr_size vlen;
   char *pathString;
   FILE *f;
   int exists;
-  if (path == NULL)
+  if (path == NULL || path->value.svalue == NULL)
     return ctr_build_bool (0);
   vlen = path->value.svalue->vlen;
   pathString = ctr_heap_allocate (vlen + 1);

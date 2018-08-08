@@ -404,6 +404,8 @@ ctr_ast_tystr (ctr_tnode * ast)
       return "RAW";
     case CTR_AST_NODE_EMBED:
       return "EMBED";
+    case CTR_AST_NODE_LISTCOMP:
+      return "LISTCOMP";
     default:
       return "UNKNOWN";
     }
@@ -468,6 +470,8 @@ ctr_ast_tyfstr (char *type)
     return CTR_AST_NODE_PROGRAM;
   if (strcasecmp ("SYMBOL", type) == 0)
     return CTR_AST_NODE_SYMBOL;
+  if (strcasecmp ("LISTCOMP", type) == 0)
+    return CTR_AST_NODE_LISTCOMP;
   if (strcasecmp ("RAW", type) == 0)
     return CTR_AST_NODE_RAW;
   if (strcasecmp ("EMBED", type) == 0)
@@ -728,10 +732,12 @@ ctr_ast_pure_stringify (ctr_tnode * node)
 	  ctr_tlistitem *partnodes = node->nodes;
 	  char **parts = str_split (rm, ':', &msgpartc);
 	  int x = 0;
+    char* xbuf = buf;
 	  for (int i = 0; i < msgpartc - 1; i++)
 	    {
 	      char *rr = ctr_ast_pure_stringify (partnodes->node);
-	      x = sprintf (buf + x, "%s: %s ", parts[i], rr);
+	      x = sprintf (xbuf, "%s: %s ", parts[i], rr);
+        xbuf += x;
 	      ctr_heap_free (rr);
 	      partnodes = partnodes->next;
 	    }
@@ -884,6 +890,15 @@ ctr_ast_pure_stringify (ctr_tnode * node)
 	  ctr_heap_free (rv);
 	  break;
 	}
+      case CTR_AST_NODE_LISTCOMP:
+      case CTR_AST_NODE_RAW:
+      case CTR_AST_NODE_EMBED:
+  {
+    CtrStdFlow = ctr_build_string_from_cstring("compiler intrinsics cannot be unparsed");
+    ret=ctr_heap_allocate(1);
+    *ret=0;
+    break;
+  }
       case CTR_AST_NODE_LTRBOOLFALSE:
       case CTR_AST_NODE_LTRNIL:
       case CTR_AST_NODE_LTRBOOLTRUE:

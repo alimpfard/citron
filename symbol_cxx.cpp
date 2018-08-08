@@ -10,7 +10,7 @@ struct eqstr
   }
 };
 
-static google::dense_hash_map<std::string, ctr_object, std::hash<std::string>, eqstr> symbols;
+static std::map<std::string, ctr_object> symbols;
 static int initialized = 0;
 
 static std::map<std::string, fixity_ind> fixity_map;
@@ -34,7 +34,7 @@ inline ctr_object* get_or_create(const char* name, ctr_size length) {
 extern "C"
 ctr_object* ctr_get_or_create_symbol_table_entry_s (const char* name, ctr_size length) {
     if(!initialized) {
-        symbols.set_empty_key("");
+//        symbols.set_empty_key("");
         initialized = 1;
     }
     ctr_object* s = get_or_create(name, length);
@@ -44,7 +44,6 @@ ctr_object* ctr_get_or_create_symbol_table_entry_s (const char* name, ctr_size l
 extern "C"
 ctr_object *ctr_get_or_create_symbol_table_entry (const char *name, ctr_size length) {
     if(!initialized) {
-        symbols.set_empty_key("");
         initialized = 1;
     }
     ctr_object* s = get_or_create(name, length);

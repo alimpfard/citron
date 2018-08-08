@@ -93,7 +93,7 @@ initFibers ()
 void
 fiberYield ()
 {
-  // If we are in a fiber, switch to the main process
+/*  // If we are in a fiber, switch to the main process
   if (inFiber)
     {
       // Switch to the main context
@@ -136,7 +136,8 @@ fiberYield ()
 
     }
   return;
-}
+*/
+  }
 
  // Records when the fiber has started and when it is done
  // so that we know when to free its resources. It is called in the fiber's
@@ -155,7 +156,8 @@ fiberStart (ctr_object * block)
 int
 spawnFiber (ctr_object * block)
 {
-  if (numFibers == MAX_FIBERS)
+ /*
+	if (numFibers == MAX_FIBERS)
     return LF_MAXFIBERS;
 
   // Add the new function to the end of the fiber list
@@ -177,9 +179,9 @@ spawnFiber (ctr_object * block)
   // Create the context. The context calls fiberStart( func ).
   makecontext (&fiberList[numFibers].context, (void (*)(void)) &fiberStart, 1, block);
   ++numFibers;
-
+*/
   return LF_NOERROR;
-}
+  }
 
 int
 waitForAllFibers ()

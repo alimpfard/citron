@@ -42,7 +42,8 @@ ctr_tnode *ctr_cparse_string ();
 ctr_tnode *ctr_cparse_symbol ();
 ctr_tnode *ctr_cparse_true ();
 ctr_tnode *ctr_cparse_tuple (int);
-
+ctr_tnode *ctr_cparse_create_generator_node_step (ctr_tnode*,ctr_tnode*,ctr_tnode*);
+ctr_tnode *ctr_cparse_create_generator_node_simple (ctr_tnode*,ctr_tnode*);
 
 int
 ctr_paramlist_has_name (char *namenode, size_t len)
@@ -895,9 +896,94 @@ ctr_cparse_string ()
 }
 
 /**
+ * CTRParserCreateSimpleRangeGenerator
+ *
+ * Generates a node to represent a simple range
+ */
+ctr_tnode*
+ctr_cparse_create_generator_node_simple(ctr_tnode* from, ctr_tnode* to)
+{
+  ctr_tnode
+    *root = ctr_cparse_create_node(CTR_AST_NODE),
+    *ref = ctr_cparse_create_node(CTR_AST_NODE),
+    *msg = ctr_cparse_create_node(CTR_AST_NODE);
+  ctr_tlistitem
+    *li = ctr_heap_allocate(sizeof(*li)), *li2,
+    *li3 = ctr_heap_allocate(sizeof(*li3)),
+    *msgli0 = ctr_heap_allocate(sizeof(*li3)),
+    *msgli1 = ctr_heap_allocate(sizeof(*li3));
+  msgli0->node = from;
+  msgli0->next = msgli1;
+  msgli1->node = to;
+  msgli1->next = NULL;
+  li->node = ref;
+  li2 = li->next = ctr_heap_allocate(sizeof(*li));
+  li2->node = msg;
+  msg->nodes = li3;
+  static char const *msgname = "from:to:", *refname = "Generator";
+  msg->vlen  = strlen(msgname);
+  msg->value = ctr_heap_allocate(msg->vlen);
+  memcpy(msg->value, msgname, msg->vlen);
+  msg->nodes = msgli0;
+  msg->type = CTR_AST_NODE_KWMESSAGE;
+
+  ref->vlen  = strlen(refname);
+  ref->value = ctr_heap_allocate(ref->vlen);
+  memcpy(ref->value, refname, ref->vlen);
+  ref->type = CTR_AST_NODE_REFERENCE;
+
+  root->type = CTR_AST_NODE_EXPRMESSAGE;
+  root->nodes = li;
+  return root;
+}
+
+/**
+ * CTRParserCreateStepRangeGenerator
+ *
+ * Generates a node to represent a range with a step
+ */
+ctr_tnode*
+ctr_cparse_create_generator_node_step(ctr_tnode* from, ctr_tnode* step, ctr_tnode* to)
+{
+  ctr_tnode
+    *root = ctr_cparse_create_node(CTR_AST_NODE),
+    *ref = ctr_cparse_create_node(CTR_AST_NODE),
+    *msg = ctr_cparse_create_node(CTR_AST_NODE);
+  ctr_tlistitem
+    *li = ctr_heap_allocate(sizeof(*li)), *li2,
+    *li3 = ctr_heap_allocate(sizeof(*li3)),
+    *msgli0 = ctr_heap_allocate(sizeof(*li3)),
+    *msgli1 = ctr_heap_allocate(sizeof(*li3)),
+    *msgli2 = ctr_heap_allocate(sizeof(*li3));
+  msgli0->node = from;
+  msgli0->next = msgli1;
+  msgli1->node = to;
+  msgli1->next = msgli2;
+  msgli2->node = step;
+  msgli2->next = NULL;
+  li->node = ref;
+  li2 = li->next = ctr_heap_allocate(sizeof(*li));
+  li2->node = msg;
+  msg->nodes = li3;
+  static char const *msgname = "from:to:step:", *refname = "Generator";
+  msg->vlen  =strlen(msgname);
+  msg->value = ctr_heap_allocate(msg->vlen);
+  memcpy(msg->value, msgname, msg->vlen);
+  msg->nodes = msgli0;
+  msg->type = CTR_AST_NODE_KWMESSAGE;
+  ref->vlen  = strlen(refname);
+  ref->value = ctr_heap_allocate(ref->vlen);
+  memcpy(ref->value, refname, ref->vlen);
+  ref->type = CTR_AST_NODE_REFERENCE;
+  root->type = CTR_AST_NODE_EXPRMESSAGE;
+  root->nodes = li;
+  return root;
+}
+
+/**
  * CTRParserNumber
  *
- * Generates a node to represent a number.
+ * Generates a node to represent a number, or if NUMBER DOT DOT DOT NUMBER | NUMBER DOT DOT NUMBER DOT DOT NUMBER creates a generator
  */
 void ctr_internal_debug_tree (ctr_tnode * ti, int indent);
 ctr_tnode *
@@ -914,6 +1000,54 @@ ctr_cparse_number ()
   r->value = ctr_heap_allocate_tracked (sizeof (char) * l);
   memcpy (r->value, n, l);
   r->vlen = l;
+  int t = ctr_clex_tok();
+  if (t == CTR_TOKEN_DOT) {
+    t = ctr_clex_tok();
+    if (t == CTR_TOKEN_DOT) {
+      t = ctr_clex_tok();
+      if (t == CTR_TOKEN_NUMBER) { //it's a range
+        char *ne;
+        ctr_tnode *re = ctr_cparse_create_node(CTR_AST_NODE);
+        long le;
+        ne = ctr_clex_tok_value();
+        le = ctr_clex_tok_value_length();
+        re->value = ctr_heap_allocate_tracked (sizeof (char) * le);
+        re->type = CTR_AST_NODE_LTRNUM;
+        memcpy (re->value, ne, le);
+        re->vlen = le;
+        t = ctr_clex_tok();
+        if (t == CTR_TOKEN_DOT) {
+          t = ctr_clex_tok();
+          if (t == CTR_TOKEN_DOT) {
+            t = ctr_clex_tok();
+            if (t == CTR_TOKEN_NUMBER) { //it's a range with a specific step
+              ctr_tnode *rs = re;
+              ne = ctr_clex_tok_value();
+              le = ctr_clex_tok_value_length();
+              re = ctr_cparse_create_node(CTR_AST_NODE);
+              re->value = ctr_heap_allocate_tracked (sizeof (char) * le);
+              re->type = CTR_AST_NODE_LTRNUM;
+              memcpy (re->value, ne, le);
+              re->vlen = le;
+
+              ctr_tnode *rv = ctr_cparse_create_generator_node_step(
+                /* from = */ r,
+                /* step = */ rs,
+                /* to   = */ re
+              );
+              return rv;
+            } else if (t != CTR_TOKEN_FIN) ctr_clex_putback();
+          } else if (t != CTR_TOKEN_FIN) ctr_clex_putback();
+        } else if (t != CTR_TOKEN_FIN) ctr_clex_putback();
+        ctr_tnode *rv = ctr_cparse_create_generator_node_simple(
+          /* from = */ r,
+          /* to   = */ re
+        );
+        return rv;
+      } else if (t != CTR_TOKEN_FIN) ctr_clex_putback();
+    } else if (t != CTR_TOKEN_FIN) ctr_clex_putback();
+  }
+  ctr_clex_putback();
   return r;
 }
 

@@ -813,8 +813,9 @@ Eval on: 'read_eval_print:' do: ({:prompt
           var flipper is OneGateFlipper new.
           last_toc is (inp trim or: 'Nil') split: ' ', filter: {:_:v (v endsWith: ':') ifTrue: {flipper set. ^False.}. ^((v endsWith: ':') | (flipper get)) not | (v containsPattern: ?>(-?(0[xXcC])?[\d]+(\.[\d]+)?)|($\')<?). }.
           last_toc is (last_toc count) >=: 2, either: {^last_toc init last.} or: 'Nil'.
-          last_toc containsPattern: ?>(-?(0[xXcC])?[\d]+(\.[\d]+)?)<?, ifTrue: { last_toc is 'Number'. }.
-          last_toc containsPattern: ?>^\'<?, ifTrue: { last_toc is 'String'. }.
+          last_toc containsPattern: ?>^(-?(0[xXcC])?[\d]+(\.[\d]+)?)$<?, ifTrue: { last_toc is 'Number'. }.
+          last_toc containsPattern: ?>^(\'|\?>)<?, ifTrue: { last_toc is 'String'. }.
+          last_toc containsPattern: ?>\]\s*$<?, ifTrue: { last_toc is 'Array'. }.
           var candidates is Eval allTheNames: ({^Reflect getObject: (['my', 'var'] contains: last_toc, either: Nil or: last_toc).} catch: {^Nil.}, run).
           var skipthis is candidates @ 0.
           candidates is (candidates @ 1) filter: {:_:i ^i startsWith: toc.}.

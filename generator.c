@@ -260,11 +260,11 @@ ctr_generator_internal_next (ctr_generator * genny, int gtype)
 	genny->seq_index++;
 	ctr_step_generator *sg = genny->sequence;
 	ctr_object *num = ctr_build_number_from_float (sg->current);
-	sg->current += sg->step;
-	if (sg->end <= sg->current)
+	if (sg->end < sg->current)
 	  {
 	    genny->finished = 1;
 	  }
+    sg->current += sg->step;
 	return num;
       }
     case CTR_REPEAT_GENNY:

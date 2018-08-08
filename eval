@@ -29,7 +29,6 @@ var enterRepeat is False.
 var TerminalWidth is 85.
 
 import
-  Library/Foreign/C/NamedStruct
   Library/Data/Map
   Library/Data/Set
   Library/Utils/Highlight
@@ -659,6 +658,9 @@ Eval on: 'togglePasteMode' do: {
 }.
 
 (Eval getFlag: 'intty') ifTrue: {
+  import
+    Library/Foreign/C/NamedStruct
+    .
   import Library/Foreign/C/C_Types: ['c_int', 'c_ptr', 'c_short'].
   import Library/Foreign/C/errno: 'g_strerror'.
 

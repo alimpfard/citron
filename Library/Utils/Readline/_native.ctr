@@ -1,0 +1,30 @@
+import
+  Library/Data/Map
+  Library/Foreign/C/PackedArray
+  Library/Foreign/C/C_Types: {
+    c_sint => 'int'.
+    c_ptr => 'pointer'.
+    c_ptr_null => 'NULL'.
+  }.
+var rl is CTypes loadLibrary: 'libreadline.so'.
+rl get = 0 ifTrue: {
+  thisBlock error: 'Could not locate the readline library'.
+}.
+
+var readline is rl readline.
+var rl_attempted_completion_function is rl rl_attempted_completion_function.
+var rl_attemped_completion_over_p is rl rl_attemped_completion_over getAddress.
+var rl_completion_matches is rl rl_completion_matches.
+var rl_completer_quote_characters_p is rl rl_completer_quote_characters getAddress.
+
+# strdup begin
+var strdup_s is CTypes loadLibrary: Nil, strdup.
+var strdup_c is CIF new setABI: 0 return: pointer argTypes: [pointer].
+var strdup is \:s strdup_c call: strdup_s withArgs: [s].
+# strdup end
+
+var generator_fn_cif is CIF new setABI: 0 return: pointer argTypes: [pointer, int].
+var attempted_completion_function_fn_cif is CIF new setABI: 0 return: pointer argTypes: [pointer, int, int].
+var bind_key_fn_cif is CIF new setABI: 0 return: int argTypes: [int, int].
+var readline_cif is CIF new setABI: 0 return: pointer argTypes: [pointer].
+var completion_matches_cif is CIF new setABI: 0 return: pointer argTypes: [pointer, pointer].

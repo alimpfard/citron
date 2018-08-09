@@ -15,6 +15,7 @@ var readline is rl readline.
 var rl_attempted_completion_function is rl rl_attempted_completion_function.
 var rl_attemped_completion_over_p is rl rl_attemped_completion_over getAddress.
 var rl_completion_matches is rl rl_completion_matches.
+var rl_completer_quote_characters_p is rl rl_completer_quote_characters getAddress.
 
 # strdup begin
 var strdup_s is CTypes loadLibrary: Nil, strdup.

@@ -548,7 +548,7 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '--no-logo : don\'t display the ascii logo, use normal text instead\n',
           indent: 2 write: '--interactive-print : Use this object instead of `Pen\' to print values\n',
           indent: 2 write: '--highlight-file <file|-> : highlight the file (or stdin) and quit\n',
-          indent: 2 write: '--assume-non-tty : Assume the terminal is not a tty\n'
+          indent: 2 write: '--assume-non-tty : Assume the terminal is not a tty\n',
           indent: 2 write: '--terminal-width <int> : Set the perceived terminal width (this will be automatically determined unless --assume-non-tty is passed)\n',
           indent: 2 write: '--without-signals : Disable signal processing\n',
           indent: 2 write: '--without-history : Disable recording of history\n',

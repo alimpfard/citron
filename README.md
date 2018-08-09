@@ -10,7 +10,7 @@ minimum required libraries:
 
 ```sh
 # clone this branch
-$ git clone -m android --single-branch https://github.com/alimpfard/citron
+$ git clone -b android --single-branch https://github.com/alimpfard/citron
 $ cd citron
 # compile everything
 $ make all

@@ -1,22 +1,31 @@
 ## Citron :: A Programming Language for the crazy and people that like functions [![Build Status](https://travis-ci.com/alimpfard/citron.svg?branch=master)](https://travis-ci.com/alimpfard/citron)
 
 ### Release
-A binary release (x86_64 ELF) is available (see [Default Module Resolution](#default-module-resolution) for dynamic modules)
+No binary release is available for android.
 
 ### Build guide
 minimum required libraries:
-* `libdl`   -- for dynamic loading of modules
-* `libbsd`  -- for utility functions (compile without forLinux defined to get rid of this dependency)
 * `libpcre` -- for regular expressions
-* `libpthread` -- for threading support
 * `libgc` -- for Garbage Collection
 
+```sh
+# clone this branch
+$ git clone -m android --single-branch https://github.com/alimpfard/citron
+$ cd citron
+# compile everything
+$ make all
+# put a helper script for the eval in usr/bin
+$ bash create_eval_link.sh
+```
+
 building for debug:
+`make debug`
 
-+ with boehm gc: `WITH_BOEHMGC=1 make debug`
-+ without: `make debug`
+building without debug info:
+`make all`
 
-Since this is an alpha version, `install` is not allowed.
+to create a link to the evaluator in the system binaries:
+`bash create_eval_link.sh`
 
 ### Basic language syntax:
 All operations are done through sending and receiving messages between objects.

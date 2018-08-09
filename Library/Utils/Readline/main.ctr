@@ -1,0 +1,49 @@
+import
+  Library/Data/Map
+  _native: \*.
+
+
+var Readline is Object cnew: {
+  initialized => False.
+  rlcif => readline_cif.
+  readline_sym => readline.
+  rl_attemped_completion_over_p => rl_attemped_completion_over_p.
+  rl_attempted_completion_function => rl_attempted_completion_function.
+  rl_completion_matches => rl_completion_matches.
+  rl_completer_quote_characters_p => rl_completer_quote_characters_p.
+  generator_fn_cif => generator_fn_cif.
+  attempted_completion_function_fn_cif => attempted_completion_function_fn_cif.
+  completion_matches_cif => completion_matches_cif.
+  value_1 => CTypes sint set: 1.
+  strdup => strdup.
+}.
+Readline on: 'new' do: {}.
+Readline on: 'cnew:' do: {}. #disallow instantiation
+
+Readline on: 'init' do: {
+  my initialized ifFalse: {
+    #TODO do init
+  }.
+}.
+
+Readline on: 'readline:' do: {:prompt
+  ^CTypes string set: (
+    my rlcif call: my readline_sym withArgs: [prompt]
+  ), get.
+}.
+
+Readline on: 'completionGenerator:' do: {:generator
+  var generator_f is CTypes closureOf: {\:ch:state :s
+    s is generator applyTo: (CTypes string set: ch, get) and: state get.
+    ^s isNil either: NULL or: \:_ strdup[s].
+  } withCIF: my generator_fn_cif.
+  var rlfunc is CTypes closureOf: {:txt:s:e
+    const rl_attemped_completion_over_p derefSet: const value_1.
+    ^const completion_matches_cif call: const rl_completion_matches withArgs: [txt, const generator_f].
+  } withCIF: my attempted_completion_function_fn_cif.
+  my rl_attempted_completion_function derefSet: rlfunc getAddress.
+}.
+
+Readline on: 'setQuoteCharacters:' do: {:str
+  my rl_completer_quote_characters_p derefSet: (CTypes fromString: str).
+}.

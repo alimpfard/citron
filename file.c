@@ -18,7 +18,7 @@
 #include <dirent.h>
 #include "citron.h"
 #include "siphash.h"
-#include <wordexp.h>
+#include "wordexp.h"
 
 #ifndef WORDEXP_READY
 #define WORDEXP_READY 1

@@ -7,7 +7,7 @@ compile:
 	cc ${EXTRAS} -c _struct.c -Wall -fPIC -g3 -Wno-unused-function -Wno-format -o _struct.o
 	cc ${EXTRAS} -c structmember.c -Wall -fPIC -g3 -Wno-unused-function -Wno-format -o structmember.o
 link:
-	cc -shared -o libctrctypes.so -l:libffi.so.7 ctypes.o structmember.o _struct.o
+	cc -shared -o libctrctypes.so -l:libffi.so.6 -lm ctypes.o structmember.o _struct.o
 
 copy:
 	mkdir -p ../../mods/ctypes

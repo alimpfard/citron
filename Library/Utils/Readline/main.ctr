@@ -10,6 +10,7 @@ var Readline is Object cnew: {
   rl_attemped_completion_over_p => rl_attemped_completion_over_p.
   rl_attempted_completion_function => rl_attempted_completion_function.
   rl_completion_matches => rl_completion_matches.
+  rl_completer_quote_characters_p => rl_completer_quote_characters_p.
   generator_fn_cif => generator_fn_cif.
   attempted_completion_function_fn_cif => attempted_completion_function_fn_cif.
   completion_matches_cif => completion_matches_cif.
@@ -41,4 +42,8 @@ Readline on: 'completionGenerator:' do: {:generator
     ^const completion_matches_cif call: const rl_completion_matches withArgs: [txt, const generator_f].
   } withCIF: my attempted_completion_function_fn_cif.
   my rl_attempted_completion_function derefSet: rlfunc getAddress.
+}.
+
+Readline on: 'setQuoteCharacters:' do: {:str
+  my rl_completer_quote_characters_p derefSet: (CTypes fromString: str).
 }.

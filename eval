@@ -68,6 +68,7 @@ Eval on: 'init' do: {
     put: False at: 'jsonout',
     put: True at: 'intty',
     put: True at: 'processig',
+    put: False at: 'clear_errors',
     put: True at: 'history'.
   me genReader: 'eServer'.
   my errd is False.
@@ -104,10 +105,34 @@ Eval on: 'display:' do: {:x
      ^my displayObject message: const v arguments: args.
    }.
 }.
+Eval on: 'disambiguateError:' do: {:e
+  getFlag: 'clear_errors', ifFalse: { ^[e, '']. }.
+  e isA: String, ifFalse: { ^e. }.
+  e is e + ''.
+  e startsWith: 'Key not found: "', ifTrue: {
+    ^[e, 'Try \'%s\' to create a string' % [(e skip: 16, ~ 's/"$//')]].
+  }.
+  e startsWith: 'Key not found: ', ifTrue: {
+    var key is e skip: 15, trim lower.
+    var names is Eval allTheNames.
+    names is names filter: \:_:v v lower = key.
+    ^names count > 0 either: {
+      ^[e, (names count = 1 either: 'Did you mean %L?' or: 'Did you mean one of (%L)?') % [names]].
+    } or: [e, ''].
+  }.
+  e = 'Invalid bind' ifTrue: {
+    ^[e, 'Check your assignment target (typevar/pattern)'].
+  }.
+  ^[e, ''].
+}.
 Eval on: 'handleException:' do: {:self:e
   my errd is True.
   my last_error is e.
-  ^me getFlag: 'equit', either: {thisBlock error: e.} or: {self display/red write: e, resetColor brk. ^e.}.
+  ^me getFlag: 'equit', either: {thisBlock error: e.} or: {
+    var dis is self disambiguateError: e.
+    self display/red write: (dis last either: ('%s\n\t' + Colors reset + 'Tip: ' + Colors magenta + '%s') or: '%s%s', % dis), resetColor brk.
+    ^e.
+  }.
 }.
 Eval on: 'handleInternalException:' do: {:e
   (var bugtrack is File new: '~/.citron/citron_eval_bug_track') exists ifFalse: {
@@ -496,7 +521,7 @@ Eval on: 'tryDebug' do: {:self
 }.
 
 Eval on: 'allTheNames' do: {
-  ^(Eval Commands keys fmap: {:i ^':' + i.}) + ['var', 'my', 'is'] + (Eval flatten: my evaluationContext keys) + (Eval flatten: Reflect getContext).
+  ^(Eval Commands keys fmap: {:i ^':' + i.}) + ['var', 'my', 'is'] + (Eval flatten: my evaluationContext keys) + (HashSet new addAll: (Eval flatten: Reflect getContext), toArray).
 }.
 
 Eval on: 'allTheNames:' do: {:obj
@@ -552,6 +577,7 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '--terminal-width <int> : Set the perceived terminal width (this will be automatically determined unless --assume-non-tty is passed)\n',
           indent: 2 write: '--without-signals : Disable signal processing\n',
           indent: 2 write: '--without-history : Disable recording of history\n',
+          indent: 2 write: '--clear-errors : show tips for some common errors\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
         P green write: 'default imported modules in eval are:',
           cyan indent: 1 write: (import __loaded_modules keys reverse join: ' ') ~ 's/\\s|^/\\n+ /g'.
@@ -667,6 +693,9 @@ Eval on: 'togglePasteMode' do: {
     }, case: '--without-history' do: {
       args pop.
       Eval disableFlag: 'history'.
+    }, case: '--clear-errors' do: {
+      args pop.
+      Eval enableFlag: 'clear_errors'.
     }, default: {
       (opt startsWith: '-') & (opt startsWith: '--', not) ifTrue: {
         args pop.

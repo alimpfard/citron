@@ -18,7 +18,8 @@ var TYPEMAP is Map new
   put: 15 at: 'slong',
   put: 16 at: 'float',
   put: 17 at: 'double',
-  put: 18 at: 'longdouble'.
+  put: 18 at: 'longdouble',
+  put: 19 at: 'pointer'.
 var REVERSETYPEMAP is TYPEMAP flip.
 
 var PackedArray is Object cnew: {

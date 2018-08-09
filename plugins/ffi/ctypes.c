@@ -559,6 +559,7 @@ ctr_object* ctr_ctypes_make_packed(ctr_object* myself, ctr_argument* argumentLis
     case 16 : size = sizeof(float); type_ = &ffi_type_float; break;
     case 17 : size = sizeof(double); type_ = &ffi_type_double; break;
     case 18 : size = sizeof(long double); type_ = &ffi_type_longdouble; break;
+    case 19 : size = sizeof(void*); type_ = &ffi_type_pointer; break;
     default : size = 0; type_ = 0;
   }
   if(!type_) {
@@ -571,6 +572,24 @@ ctr_object* ctr_ctypes_make_packed(ctr_object* myself, ctr_argument* argumentLis
   arr->count = count;
   arr->esize = size;
   arr->etype = type_;
+  ctr_object* obj = ctr_ctypes_make_cont_pointer(myself, NULL);
+  obj->value.rvalue->ptr = arr;
+  return obj;
+}
+ctr_object* ctr_ctypes_packed_from(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_ctypes_cont_array_t* ptr = myself->value.rvalue->ptr;
+  if(!ptr) {
+    CtrStdFlow = ctr_build_string_from_cstring("Inavlid packed array");
+    return ctr_build_nil();
+  }
+  size_t size = ptr->esize;
+  size_t count = ptr->count;
+  void* storage = ctr_heap_allocate(size*count);
+  ctr_ctypes_cont_array_t* arr = ctr_heap_allocate(sizeof(*arr));
+  arr->etype = ptr->etype;
+  arr->esize = size;
+  arr->count = count;
+  arr->storage = storage;
   ctr_object* obj = ctr_ctypes_make_cont_pointer(myself, NULL);
   obj->value.rvalue->ptr = arr;
   return obj;
@@ -1427,7 +1446,7 @@ CTR_CT_FFI_BIND(ll) {
 
 CTR_CT_FFI_BIND(malloc) {
   int size = ctr_internal_cast2number(argumentList->object)->value.nvalue;
-  void* resource = ctr_heap_allocate(size);
+  void* resource = malloc(size);
   ctr_object* object = ctr_ctypes_make_pointer(NULL,NULL);
   object->value.rvalue->ptr = resource;
   return object;
@@ -1466,7 +1485,7 @@ CTR_CT_FFI_BIND(buf_from_str) {
 }
 CTR_CT_FFI_BIND(free) {
   if ((argumentList->object->info.type) != CTR_OBJECT_TYPE_OTEX) {CtrStdFlow = ctr_build_string_from_cstring("Can only free resources."); return CtrStdNil;}
-  ctr_heap_free(argumentList->object->value.rvalue->ptr);
+  free(argumentList->object->value.rvalue->ptr);
   argumentList->object->value.rvalue->ptr = NULL;
   return myself;
 }
@@ -1763,6 +1782,7 @@ void begin() {
   ctr_internal_create_func(CtrStdCType_cont_pointer, ctr_build_string_from_cstring("count"), &ctr_ctypes_packed_count);
   ctr_internal_create_func(CtrStdCType_cont_pointer, ctr_build_string_from_cstring("_type"), &ctr_ctypes_packed_type);
   ctr_internal_create_func(CtrStdCType_cont_pointer, ctr_build_string_from_cstring("getSize"), &ctr_ctypes_packed_size);
+  ctr_internal_create_func(CtrStdCType_cont_pointer, ctr_build_string_from_cstring("new"), &ctr_ctypes_packed_from);
 
   ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring("allocateBytes:"), &ctr_ctype_ffi_malloc);
   ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring("copyTo:from:numBytes:"), &ctr_ctype_ffi_memcpy);

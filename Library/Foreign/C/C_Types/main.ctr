@@ -25,6 +25,8 @@ var c_char is c_schar.
 var c_long is c_slong.
 var c_short is c_sshort.
 
+var c_ptr_null is CTypes pointer. # do NOT set this
+
 var CTLibcache is Object cnew: {
   my cache is Map new put: (CTypes loadLibrary: Nil) at: 'thisexec'.
 },

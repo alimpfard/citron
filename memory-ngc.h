@@ -183,9 +183,9 @@ void *ctr_heap_allocate_shared(size_t size)
 	/* Perform allocation and check result */
 	slice_of_memory = create_shared_memory(size);
 
-	if (slice_of_memory == NULL) {
+	if (slice_of_memory == MAP_FAILED) {
 		printf
-		    ("Out of memory. Failed to allocate %lu bytes (malloc failed). \n",
+		    ("Out of memory. Failed to allocate %lu bytes (mmap failed). \n",
 		     size);
 		 abort();
 		exit(1);

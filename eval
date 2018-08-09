@@ -549,6 +549,7 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '--interactive-print : Use this object instead of `Pen\' to print values\n',
           indent: 2 write: '--highlight-file <file|-> : highlight the file (or stdin) and quit\n',
           indent: 2 write: '--assume-non-tty : Assume the terminal is not a tty\n',
+          indent: 2 write: '--terminal-width <int> : Set the perceived terminal width (this will be automatically determined unless --assume-non-tty is passed)\n',
           indent: 2 write: '--without-signals : Disable signal processing\n',
           indent: 2 write: '--without-history : Disable recording of history\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
@@ -652,6 +653,14 @@ Eval on: 'togglePasteMode' do: {
     }, case: '--assume-non-tty' do: {
       args pop.
       Eval disableFlag: 'intty'.
+    }, case: '--terminal-width' do: {
+      args pop.
+      var w is Eval shiftArgs.
+      {
+        w is w toNumber.
+        (w <=: 0) ifTrue: { thisBlock error: 0. }.
+      } catch: { thisBlock error: '--terminal-width requires an integer > 0, not $$w'. }, run.
+      TerminalWidth is w.
     }, case: '--without-signals' do: {
       args pop.
       Eval disableFlag: 'processig'.

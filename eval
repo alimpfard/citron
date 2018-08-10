@@ -273,7 +273,7 @@ Eval on: 'Commands' do: {
       + !enable <b[reak]> -- enable option
       + h -- show this help
       - ! <cmd> -- execute shell command
-      - %{ stmt* %} -- block expression (\'%{\' and \'%}\' will not be echoed)'
+      - :{\\n stmt* \\n:}\\n -- block expression'
       + '\nDebug Mode commands (Currently Experimental):
       + !return <value> -- return value for this message
       + !step -- single step through messages

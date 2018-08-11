@@ -1,0 +1,85 @@
+var CONSTANTS is Map cnew: {
+  NOTHING => \:x ''.
+  TRUE_COLOR => 0xFFFFFF.
+  ANSI_COLORS => Map new
+    put: (\:x 'color:black;' + x) at: \black,
+    put: (\:x 'color:red;' + x) at: \red,
+    put: (\:x 'color:green;' + x) at: \green,
+    put: (\:x 'color:darkgoldenrod;' + x) at: \yellow,
+    put: (\:x 'color:blue;' + x) at: \blue,
+    put: (\:x 'color:magenta;' + x) at: \magenta,
+    put: (\:x 'color:cyan;' + x) at: \cyan,
+    put: (\:x 'color:gray;' + x) at: \white,
+    put: (\:x '' + x) at: \default.
+  ANSI_COLORS_FOREGROUND => Map new
+    put: (\:x 'color:black;' + x) at: \black,
+    put: (\:x 'color:red;' + x) at: \red,
+    put: (\:x 'color:green;' + x) at: \green,
+    put: (\:x 'color:darkgoldenrod;' + x) at: \yellow,
+    put: (\:x 'color:blue;' + x) at: \blue,
+    put: (\:x 'color:magenta;' + x) at: \magenta,
+    put: (\:x 'color:cyan;' + x) at: \cyan,
+    put: (\:x 'color:gray;' + x) at: \white,
+    put: (\:x '' + x) at: \default.
+  ANSI_COLORS_BACKGROUND => Map new
+    put: (\:x 'background:black;' + x) at: \black,
+    put: (\:x 'background:red;' + x) at: \red,
+    put: (\:x 'background:green;' + x) at: \green,
+    put: (\:x 'background:darkgoldenrod;' + x) at: \yellow,
+    put: (\:x 'background:blue;' + x) at: \blue,
+    put: (\:x 'background:magenta;' + x) at: \magenta,
+    put: (\:x 'background:cyan;' + x) at: \cyan,
+    put: (\:x 'background:gray;' + x) at: \white,
+    put: (\:x '' + x) at: \default.
+  var bold is  \:x '<b>' + x + '</b>'.
+  var reset is \:x ''.
+  ANSI_EFFECTS => Map new
+    put:  reset at: \reset,  put: reset at: \nothing,
+    put:  bold at: \bright,       put: bold at: \bold,
+    put:  reset at: \faint,
+    put:  reset at: \italic,
+    put:  reset at: \underline,
+    put:  reset at: \blink,        put: reset at: \show_blink,
+    put:  reset at: \rapid_blink,
+    put:  reset at: \inverse,      put: reset at: \swap,
+    put:  reset at: \conceal,      put: reset at: \hide,
+    put: reset at: \default_font,
+    put: reset at: \font0, put: reset at: \font1, put: reset at: \font2, put: reset at: \font3, put: reset at: \font4,
+    put: reset at: \font5, put: reset at: \font6, put: reset at: \font7, put: reset at: \font8, put: reset at: \font9,
+    put: reset at: \fraktur,
+    put: reset at: \bright_off, put: reset at: \bold_off, put: reset at: \double_underline,
+    put: reset at: \clean,
+    put: reset at: \italic_off, put: reset at: \fraktur_off,
+    put: reset at: \underline_off,
+    put: reset at: \blink_off,
+    put: reset at: \inverse_off, put: reset at: \positive,
+    put: reset at: \conceal_off, put: reset at: \show, put: reset at: \reveal,
+    put: reset at: \crossed_off, put: reset at: \crossed_out_off,
+    put: reset at: \frame,
+    put: reset at: \encircle,
+    put: reset at: \overline,
+    put: reset at: \frame_off, put: reset at: \encircle_off,
+    put: reset at: \overline_off.
+  RGB_COLORS_ANSI => Map new
+    put: \black at: [  0,   0,   0],
+    put: \red at: [205,   0,   0],
+    put: \green at: [  0, 205,   0],
+    put: \yellow at: [205, 205,   0],
+    put: \blue at: [  0,   0, 238],
+    put: \magenta at: [205,   0, 205],
+    put: \cyan at: [  0, 205, 205],
+    put: \white at: [229, 229, 229].
+  RGB_COLORS_ANSI_BRIGHT => Map new
+    put: \black at: [127, 127, 127],
+    put: \red at: [255,   0,   0],
+    put: \green at: [  0, 255,   0],
+    put: \yellow at: [255, 255,   0],
+    put: \blue at: [ 92,  92, 255],
+    put: \magenta at: [255,   0, 255],
+    put: \cyan at: [  0, 255, 255],
+    put: \white at: [255, 255, 255].
+}.
+
+CONSTANTS each: {:k:v
+  import export: v as: k.
+}.

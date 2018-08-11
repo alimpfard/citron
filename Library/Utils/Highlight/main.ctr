@@ -1,7 +1,8 @@
 import Library/Utils/Colors.
 
 var Highlight is Object new.
-Highlight on: 'highlight:' do: {:code
+Highlight on: 'highlight:' do: {:code:html
+  var space is html either: '&nbsp;' or: ' '.
   var returned is ''.
   var Tokens is AST feedLexer: code.
   var token is AST token.
@@ -210,7 +211,7 @@ Highlight on: 'highlight:' do: {:code
         this_thing is token @ 1.
     }, switch.
     # Pen writeln: [token, this_thing, rlen].
-    returned +=: ' ' * ((token @ 2) - rlen - (this_thing length)).
+    returned +=: space * ((token @ 2) - rlen - (this_thing length)).
     returned +=: color + this_thing + (Colors default) + (after_color).
     last_toc is last_toc_override or: token @ 0.
     skip continue.
@@ -221,4 +222,5 @@ Highlight on: 'highlight:' do: {:code
   ^returned.
 }.
 
+Highlight on: 'highlight:html:' do: {:h:b ^me message: 'highlight:' arguments: [h,b]. }.
 import export: Highlight as: 'Highlight'.

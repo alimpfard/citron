@@ -69,7 +69,8 @@ Eval on: 'init' do: {
     put: True at: 'intty',
     put: True at: 'processig',
     put: False at: 'clear_errors',
-    put: True at: 'history'.
+    put: True at: 'history',
+    put: False at: 'html_colors'.
   me genReader: 'eServer'.
   my errd is False.
   my last_error is Nil.
@@ -578,6 +579,7 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '--without-signals : Disable signal processing\n',
           indent: 2 write: '--without-history : Disable recording of history\n',
           indent: 2 write: '--clear-errors : show tips for some common errors\n',
+          indent: 2 write: '--html-colors : output html for syntax highlighting\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
         P green write: 'default imported modules in eval are:',
           cyan indent: 1 write: (import __loaded_modules keys reverse join: ' ') ~ 's/\\s|^/\\n+ /g'.
@@ -672,9 +674,21 @@ Eval on: 'togglePasteMode' do: {
       }.
     }, case: '--highlight-file' do: {
       var files is Eval shiftArgs or: '-', reSplit: '(\\s+)'.
+      var ishtml is Eval getFlag: 'html_colors'.
+      var fix_html is {:s
+        ishtml ifFalse: { ^s. }.
+        ^'<pre>%s</pre>' % [s ~ 's:\\n:<br/>:g'].
+      }.
+      ishtml ifTrue: {
+        Pen write: '<style>a{margin-right:2px;}</style>'.
+      }.
       files each_v: \:f f = '-' either: {
-          Pen writeln: (Highlight highlight: (Program input)).
-      } or: \:_ Pen writeln: (Highlight highlight: (File new: f, read)).
+          var s is (Highlight highlight: (Program input) html: ishtml).
+          Pen writeln: (ishtml either: { ^fix_html[s]. } or: s).
+      } or: {
+        var s is (Highlight highlight: (File new: f, read) html: ishtml).
+        Pen writeln: (ishtml either: { ^fix_html[s]. } or: s).
+      }.
       Program exit.
     }, case: '--assume-non-tty' do: {
       args pop.
@@ -696,6 +710,10 @@ Eval on: 'togglePasteMode' do: {
     }, case: '--clear-errors' do: {
       args pop.
       Eval enableFlag: 'clear_errors'.
+    }, case: '--html-colors' do: {
+      args pop.
+      Eval enableFlag: 'html_colors'.
+      import Library/Utils/Colors/HTML.
     }, default: {
       (opt startsWith: '-') & (opt startsWith: '--', not) ifTrue: {
         args pop.

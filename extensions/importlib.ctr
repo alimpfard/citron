@@ -1,3 +1,8 @@
+import on: '__map2Array:' do: {\:map :arr
+  arr is Array new.
+  map each: {:k:v arr push: [k, v].}.
+  arr.
+}.
 import genAccessors: 'return'.
 import return: (Map new).
 
@@ -97,12 +102,14 @@ import on: 'respondTo:and:' do: {:mods:*names
       ^[].
     } or: {
       names is import __unify: names.
-      names is names fmap: \:name name isA: CodeBlock, either: (\:_ (Map cnew: name) kvlist: \:kv kv, head) or: \:_ [name, name].
-      ^names fmap: {:name
-        var p is modv at: name head.
-        import export: p as: name last.
-        ^p.
-      }.
+      ^names
+        fmap:
+          (\:name name isA: CodeBlock, either: (\:_ import __map2Array: (Map cnew: name)) or: \:_ [[name, name]]),
+        fmap: \:x (x fmap: {:name
+          var p is modv at: name head.
+          import export: p as: name last.
+          ^p.
+        }), sum.
     }.
   }, foldl: (\:acc:x acc + ([] + x or: [x])) accumulator: Array new.
 }.

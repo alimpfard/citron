@@ -2,6 +2,7 @@
 #define CTR_DICT_ME              "me"
 #define CTR_DICT_MY              "my"
 #define CTR_DICT_CONST           "const"
+#define CTR_DICT_STATIC          "frozen"
 #define CTR_DICT_NEW             "new"
 #define CTR_DICT_CTOR_NEW        "cnew:"
 #define CTR_DICT_GENACC          "genAccessors:"

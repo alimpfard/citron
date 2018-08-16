@@ -35,12 +35,12 @@ extern "C" {
 #endif
 
 #ifdef withBoehmGC
-#define CTR_VERSION "0.0.8.5-boehm-gc" IS_DEBUG_STRING
+#define CTR_VERSION "0.0.8.6-boehm-gc" IS_DEBUG_STRING
 #else
-#define CTR_VERSION "0.0.8.5" IS_DEBUG_STRING
+#define CTR_VERSION "0.0.8.6" IS_DEBUG_STRING
 #endif
 
-#define CTR_LOG_WARNINGS 0//2 to enable
+#define CTR_LOG_WARNINGS 2//2 to enable
 /**
  * Define the Citron tokens
  */
@@ -483,11 +483,13 @@ CTR_H_DECLSPEC int     ctr_clex_quiet;
 CTR_H_DECLSPEC char*   ctr_clex_keyword_var;
 CTR_H_DECLSPEC char*   ctr_clex_keyword_me;
 CTR_H_DECLSPEC char*   ctr_clex_keyword_my;
-CTR_H_DECLSPEC char*   ctr_clex_keyword_const; //maybe to `force`?
+CTR_H_DECLSPEC char*   ctr_clex_keyword_const;
+CTR_H_DECLSPEC char*   ctr_clex_keyword_static;
 
 CTR_H_DECLSPEC ctr_size ctr_clex_keyword_const_len;
 CTR_H_DECLSPEC ctr_size ctr_clex_keyword_my_len;
 CTR_H_DECLSPEC ctr_size ctr_clex_keyword_var_len;
+CTR_H_DECLSPEC ctr_size ctr_clex_keyword_static_len;
 
 /**
  * Lexer properties
@@ -585,6 +587,7 @@ ctr_object* ctr_assign_value(ctr_object* key, ctr_object* val);
 ctr_object* ctr_assign_value_to_my(ctr_object* key, ctr_object* val);
 ctr_object* ctr_assign_value_to_local(ctr_object* key, ctr_object* val);
 ctr_object* ctr_assign_value_to_local_by_ref(ctr_object* key, ctr_object* val);
+ctr_object* ctr_hand_value_to_global(ctr_object* key, ctr_object* val);
 ctr_object* ctr_const_assign_value(ctr_object* key, ctr_object* o, ctr_object* context);
 char*       ctr_internal_readf(char* file_name, uint64_t* size_allocated);
 char*       ctr_internal_readfp(FILE* fp, uint64_t* size_allocated);
@@ -897,6 +900,9 @@ ctr_object* ctr_build_immutable(ctr_tnode* node);
 ctr_object* ctr_map_new(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_new_(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_type(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_map_merge(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_map_keys(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_map_values(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_put(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_rm(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_get(ctr_object* myself, ctr_argument* argumentList);

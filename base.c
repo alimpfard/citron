@@ -5000,10 +5000,11 @@ ctr_expr_to_block (ctr_tnode * node)
   return blknode;
 }
 
+static ctr_object free_ref_marker;
 ctr_object *
 ctr_scan_free_refs (ctr_tnode * node)
 {
-  ctr_object *ret = ctr_array_new (CtrStdArray, NULL);
+  ctr_object *ret = ctr_map_new(CtrStdMap, NULL);
   ctr_argument *argm = ctr_heap_allocate (sizeof (ctr_argument));
   ctr_tlistitem *li;
   ctr_tnode *t;
@@ -5020,36 +5021,35 @@ ctr_scan_free_refs (ctr_tnode * node)
       {
 	ctr_object *key = ctr_build_string (t->value, t->vlen);
 	ctr_object *value = ctr_find_ (key, 1);
-	argm->object = key;
 	if (!value)
-	  ret = ctr_array_push (ret, argm);
+	  ctr_internal_object_set_property (ret, key, &free_ref_marker, 0);
 	break;
       }
     case CTR_AST_NODE_CODEBLOCK:
       if (!t->lexical)
 	{
 	  argm->object = ctr_scan_free_refs (t->nodes->next->node);	//instrlist
-	  ret = ctr_array_add (ret, argm);
+	  ret = ctr_map_merge (ret, argm);
 	}
       break;
     case CTR_AST_NODE_EXPRASSIGNMENT:
       argm->object = ctr_scan_free_refs (t->nodes->next->node);	//expr
-      ret = ctr_array_add (ret, argm);
+      ret = ctr_map_merge (ret, argm);
       break;
     case CTR_AST_NODE_EXPRMESSAGE:
       argm->object = ctr_scan_free_refs (t->nodes->node);	//Receiver
-      ret = ctr_array_add (ret, argm);
+      ret = ctr_map_merge (ret, argm);
       ctr_tlistitem *tli = t->nodes->next;
       while (tli)
 	{
 	  argm->object = ctr_scan_free_refs (tli->node);	//argument
-	  ret = ctr_array_add (ret, argm);
+	  ret = ctr_map_merge (ret, argm);
 	  tli = tli->next;
 	}
       break;
     case CTR_AST_NODE_BINMESSAGE:
       argm->object = ctr_scan_free_refs (t->nodes->node);	//argument
-      ret = ctr_array_add (ret, argm);
+      ret = ctr_map_merge (ret, argm);
       break;
     case CTR_AST_NODE_IMMUTABLE:
       {
@@ -5057,7 +5057,7 @@ ctr_scan_free_refs (ctr_tnode * node)
 	while (tli)
 	  {
 	    argm->object = ctr_scan_free_refs (tli->node);	//argument
-	    ret = ctr_array_add (ret, argm);
+	    ret = ctr_map_merge (ret, argm);
 	    tli = tli->next;
 	  }
 	break;
@@ -5068,14 +5068,14 @@ ctr_scan_free_refs (ctr_tnode * node)
 	while (tli)
 	  {
 	    argm->object = ctr_scan_free_refs (tli->node);	//argument
-	    ret = ctr_array_add (ret, argm);
+	    ret = ctr_map_merge (ret, argm);
 	    tli = tli->next;
 	  }
 	break;
       }
     case CTR_AST_NODE_NESTED:
       argm->object = ctr_scan_free_refs (t->nodes->node);	//inner
-      ret = ctr_array_add (ret, argm);
+      ret = ctr_map_merge (ret, argm);
       break;
     case CTR_AST_NODE_LTRNUM:
     case CTR_AST_NODE_PARAMLIST:
@@ -5160,9 +5160,9 @@ ctr_build_listcomp (ctr_tnode * node)
 {
   ctr_tnode *main_expr = node->nodes->node, *generators = node->nodes->next->node, *preds = node->nodes->next->next->node;
 
-  ctr_object *free_refs = ctr_scan_free_refs (main_expr), *mainexprb = ctr_build_block (ctr_expr_to_block (main_expr));
+  ctr_object *free_refs = ctr_map_keys(ctr_scan_free_refs (main_expr), NULL), *mainexprb = ctr_build_block (ctr_expr_to_block (main_expr));
 
-  ctr_object *bindings = ctr_array_new (CtrStdArray, NULL);
+  ctr_object *bindings = ctr_array_new(CtrStdArray, NULL);
   ctr_object *predicates = ctr_array_new (CtrStdArray, NULL);
   ctr_argument *argm = ctr_heap_allocate (sizeof (*argm));
   char dummy;
@@ -5179,7 +5179,7 @@ ctr_build_listcomp (ctr_tnode * node)
 	}
     }
   size_t ps, fs;
-  if ((ps = ctr_array_count (bindings, NULL)->value.nvalue) < (fs = ctr_array_count (free_refs, NULL)->value.nvalue))
+  if ((ps = ctr_array_count (bindings, NULL)->value.nvalue) < (fs = ctr_map_count (free_refs, NULL)->value.nvalue))
     {
       CtrStdFlow = ctr_format_str ("-Number of bindings do not match the number of symbols (%d vs %d)", ps, fs);
       return CtrStdNil;

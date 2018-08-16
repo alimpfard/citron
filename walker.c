@@ -181,6 +181,16 @@ ctr_cwlk_message (ctr_tnode * paramNode)
   return result;
 }
 
+/* make sure to allocate enough; size is 16 */
+void ctr_mksrands(char* buf) {
+  static const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVXYZ1234567890____:;";
+  const static int size = 16;
+  for (size_t n = 0; n < size; n++) {
+    int key = rand() % (int) (sizeof charset - 1);
+    buf[n] = charset[key];
+  }
+}
+
 /**
  * CTRWalkerAssignment
  *
@@ -221,6 +231,26 @@ ctr_cwlk_assignment (ctr_tnode * node)
 	{
 	  result = ctr_assign_value (ctr_build_string (assignee->value, assignee->vlen), x);	//Handle lexical scoping
 	}
+      else if (assignee->modifier == 4)
+  {
+    char* name_s = ctr_heap_allocate(17 * sizeof(char));
+    name_s[0] = ':'; //make it inaccessable from the system
+    ctr_mksrands(name_s+1);
+
+    ctr_tnode* repl = ctr_heap_allocate(sizeof(*repl));
+    *repl = *assignee;
+    assignee->modifier = /* var */2; /* modify for subsequent evaluation */
+    repl->value = name_s; /* lookup from global */
+    repl->vlen = 17;
+
+    repl->modifier = /* var */2;
+    valueListItem->node = repl; /* modify for subsequent evaluation */
+    ctr_heap_free(value);
+    ctr_object* lname = ctr_build_string (assignee->value, assignee->vlen);
+    ctr_object* name = ctr_build_string(repl->value, repl->vlen);
+    ctr_assign_value_to_local (lname, x); // for this run only
+    result = ctr_hand_value_to_global (name, x);
+  }
       else
 	{
 	  result = ctr_assign_value (ctr_build_string (assignee->value, assignee->vlen), x);

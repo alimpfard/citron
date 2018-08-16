@@ -422,6 +422,8 @@ ctr_ast_modifier_str (char modifier)
       return "Var";
     case 3:
       return "Const";
+    case 4:
+      return "Frozen";
     default:
       return "None";
     }
@@ -488,6 +490,8 @@ ctr_ast_modifier_fstr (char *mod)
     return 2;
   if (strcasecmp ("Const", mod) == 0)
     return 3;
+  if (strcasecmp ("Frozen", mod) == 0)
+    return 4;
   return 0;
 }
 
@@ -764,22 +768,28 @@ ctr_ast_pure_stringify (ctr_tnode * node)
 	    {
 	    case 1:
 	      {
-		ret = ctr_heap_allocate (sizeof (char) * (5 + node->vlen));
-		sprintf (ret, "my %.*s", (int) (node->vlen), node->value);
+		ret = ctr_heap_allocate (sizeof (char) * (strlen(CTR_DICT_MY) + 2 + node->vlen));
+		sprintf (ret, CTR_DICT_MY " %.*s", (int) (node->vlen), node->value);
 		break;
 	      }
 	    case 2:
 	      {
-		ret = ctr_heap_allocate (sizeof (char) * (4 + node->vlen));
-		sprintf (ret, "var %.*s", (int) (node->vlen), node->value);
+		ret = ctr_heap_allocate (sizeof (char) * (strlen(CTR_DICT_VAR) + 2 + node->vlen));
+		sprintf (ret, CTR_DICT_VAR " %.*s", (int) (node->vlen), node->value);
 		break;
 	      }
 	    case 3:
 	      {
-		ret = ctr_heap_allocate (sizeof (char) * (7 + node->vlen));
-		sprintf (ret, "const %.*s", (int) (node->vlen), node->value);
+		ret = ctr_heap_allocate (sizeof (char) * (strlen(CTR_DICT_CONST) + 2 + node->vlen));
+		sprintf (ret, CTR_DICT_CONST " %.*s", (int) (node->vlen), node->value);
 		break;
 	      }
+      case 4:
+        {
+    ret = ctr_heap_allocate(sizeof(char) * (strlen(CTR_DICT_STATIC) + 2 + node->vlen));
+    sprintf (ret, CTR_DICT_STATIC " %.*s", (int) (node->vlen), node->value);
+    break;
+        }
 	    default:
 	      {
 		ret = ctr_heap_allocate (sizeof (char) * (1 + node->vlen));

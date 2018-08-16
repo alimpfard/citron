@@ -1,21 +1,18 @@
-DEBUG_VERSION := 43
+DEBUG_VERSION := 65
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 LEXTRACF := ${LEXTRACF} -flto -lstdc++
 fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
-ifeq (${fv},)
-	fv := '/data/data/com.termux/files/usr/lib/libgc.so'
-endif
 location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 WHERE_ART_THOU := $(location)
 new_makefile_l1 := $(shell perl -ne '/((DEBUG_VERSION := )(\d+))/ && print (sprintf("%s%s", "$$2", "$$3"+1));' $(WHERE_ART_THOU))
 
 ifeq ($(strip ${WITH_ICU}),)
-	CFLAGS = -Wall -Wextra -Wno-unused-parameter\
-               -D withTermios \
+	CFLAGS = -Wall -Wextra -Wno-unused-parameter -mtune=native\
+              -march=native -D withTermios -D forLinux\
               -D CTR_STD_EXTENSION_PATH=\"`pwd`\"
 else
-	CFLAGS = -Wall -Wextra -Wno-unused-parameter \
-			  -D withTermios \
+	CFLAGS = -Wall -Wextra -Wno-unused-parameter -mtune=native\
+			 -march=native -D withTermios -D forLinux\
 			 -D CTR_STD_EXTENSION_PATH=\"`pwd`\" -D withICU
 	LEXTRACF := ${LEXTRACF} -L/usr/lib -licui18n -licuuc -licudata
 endif
@@ -31,7 +28,6 @@ else
 	CFLAGS := ${CFLAGS} "-D withBoehmGC_P"
 endif
 
-CFLAGS := ${CFLAGS} "-pthread" "-fsigned-char"
 
 .PHONY: gc_check
 gc_check:
@@ -63,7 +59,7 @@ install:
 	echo -e "install directly from source not allowed.\nUse citron_autohell instead for installs"
 	exit 1;
 ctr:	$(OBJS)
-	$(CC) -fopenmp $(OBJS) -rdynamic -lm -ldl -llog -lpcre -lpthread ${LEXTRACF} -o ctr
+	$(CC) -fopenmp $(OBJS) -rdynamic -lm -ldl -lbsd -lpcre -lpthread ${LEXTRACF} -o ctr
 
 libctr: CFLAGS := $(CFLAGS) -fPIC -DCITRON_LIBRARY
 libctr: symbol_cxx
@@ -111,4 +107,3 @@ love:
 
 war:
 	echo "Not love?"
-

@@ -24,6 +24,10 @@
 #define WORDEXP_READY 1
 #endif
 
+#ifndef WORDEXP_READY
+#define WORDEXP_READY 1
+#endif
+
 #include <termios.h>
 static struct termios oldTermios, newTermios;
 

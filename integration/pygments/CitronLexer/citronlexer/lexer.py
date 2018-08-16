@@ -13,7 +13,7 @@ class CitronLexer(RegexLexer):
 
     tokens = {
         'root' : [
-            (u'\\b(var|my|const)\\b', bygroups(Keyword.Pseudo), 'main__1'),
+            (u'\\b(var|my|const|frozen)\\b', bygroups(Keyword.Pseudo), 'main__1'),
             (u'(\\$[!,\'`](?!=\\s))', bygroups(String.Escape)),
             (u'(\\$(?=\\())', bygroups(String.Escape)),
             (u'([\\[\\]\\(\\)\\^\\}])', bygroups(Name)),

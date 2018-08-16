@@ -3001,6 +3001,20 @@ ctr_assign_value_to_local_by_ref (ctr_object * key, ctr_object * o)
   return object;
 }
 
+ctr_object*
+ctr_hand_value_to_global (ctr_object * key, ctr_object * o)
+{
+  ctr_object *object = NULL;
+  ctr_object *context;
+  if (CtrStdFlow)
+    return CtrStdNil;
+  context = ctr_contexts[0];
+  key->info.sticky = 0;
+  object = o;
+  ctr_internal_object_set_property (context, key, object, 0);
+  return object;
+}
+
 static void
 ctr_linkstr ()
 {

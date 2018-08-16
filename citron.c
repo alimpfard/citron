@@ -125,7 +125,7 @@ ctr_cli_read_args (int argc, char *argv[])
   strncpy (ctr_mode_input_file, from_stdin ? "<stdin>" : argv[0], 254);
 }
 
-static const char ME_S[] = CTR_DICT_ME, MY_S[] = CTR_DICT_MY, VAR_S[] = CTR_DICT_VAR, CONST_S[] = CTR_DICT_CONST;
+static const char ME_S[] = CTR_DICT_ME, MY_S[] = CTR_DICT_MY, VAR_S[] = CTR_DICT_VAR, CONST_S[] = CTR_DICT_CONST, STATIC_S[] = CTR_DICT_STATIC;
 
 void ctr_initialize_ex() {
   oneLineExpressions = &oneline_p;
@@ -147,9 +147,11 @@ void ctr_initialize_ex() {
   ctr_clex_keyword_my = (char*)MY_S;
   ctr_clex_keyword_var = (char*)VAR_S;
   ctr_clex_keyword_const = (char*)CONST_S;
-  ctr_clex_keyword_my_len = strlen (ctr_clex_keyword_my);
-  ctr_clex_keyword_var_len = strlen (ctr_clex_keyword_var);
-  ctr_clex_keyword_const_len = strlen (ctr_clex_keyword_const);
+  ctr_clex_keyword_static = (char*)STATIC_S;
+  ctr_clex_keyword_my_len = strlen (MY_S);
+  ctr_clex_keyword_var_len = strlen (VAR_S);
+  ctr_clex_keyword_const_len = strlen (CONST_S);
+  ctr_clex_keyword_static_len = strlen (STATIC_S);
   ctr_internal_next_return = 0;
   ctr_clex_quiet = 0;
   ctr_cparse_quiet = 0;

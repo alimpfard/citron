@@ -2230,7 +2230,57 @@ ctr_map_each (ctr_object * myself, ctr_argument * argumentList)
   block->info.sticky = 0;
   return myself;
 }
+void ctr_internal_object_set_property_with_hash (ctr_object * owner, ctr_object * key, uint64_t hashKey, ctr_object * value, int is_method);
 
+//TODO: register this {
+ctr_object *
+ctr_map_merge (ctr_object * myself, ctr_argument * argumentList)
+{
+  if(!argumentList) goto error_invalid_input;
+  ctr_object* smap = argumentList->object;
+  if (!smap) goto error_invalid_input;
+  if (ctr_reflect_get_primitive_link(smap) != CtrStdMap) goto error_invalid_input;
+  ctr_mapitem *s = smap->properties->head;
+  ctr_size sl = smap->properties->size;
+  for(;sl--;) {
+    ctr_internal_object_set_property_with_hash(myself, s->key, s->hashKey, s->value, 0);
+    s = s->next;
+  }
+  return myself;
+  error_invalid_input:
+  CtrStdFlow = ctr_build_string_from_cstring("Expected an argument of type Map");
+  return CtrStdNil;
+}
+
+ctr_object *
+ctr_map_keys (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object* keys = ctr_array_new(CtrStdArray, NULL);
+  ctr_mapitem *s = myself->properties->head;
+  ctr_size sl = myself->properties->size;
+  ctr_argument arg = {NULL, NULL};
+  for(;sl--;) {
+    arg.object = s->key;
+    ctr_array_push(keys, &arg);
+    s = s->next;
+  }
+  return keys;
+}
+
+ctr_object *
+ctr_map_values (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object* values = ctr_array_new(CtrStdArray, NULL);
+  ctr_mapitem *s = myself->properties->head;
+  ctr_size sl = myself->properties->size;
+  ctr_argument arg = {NULL, NULL};
+  for(;sl--;) {
+    arg.object = s->value;
+    ctr_array_push(values, &arg);
+    s = s->next;
+  }
+  return values;
+}
 /**
  * [Map] fmap: [Block<key,value>]
  *

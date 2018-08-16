@@ -202,7 +202,7 @@ struct npdt_t get_pentry(ffi_type* type) {
 
 int npdispatch(char* p, ctr_object* o, ffi_type* type) {
   if (type == &ffi_type_pointer && o->info.type == CTR_OBJECT_TYPE_OTSTRING) {
-    char* buf = ctr_heap_allocate_cstring_shared(o);
+    char* buf = ctr_heap_allocate_cstring(o);
     strncpy(p, &buf, sizeof(void*));
     return 0;
   }

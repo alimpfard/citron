@@ -55,6 +55,7 @@ Eval on: 'init' do: {
   my allowedColors is ('red blue magenta cyan yellow green resetColor' split: ' ') join: '|'.
   my globalvars is False.
   my history is LRArray new init: 100.
+  my hs_file is Nil.
   my commands is Nil.
   my command_comps is Nil.
   my userDefs is Nil.
@@ -151,7 +152,7 @@ Eval on: 'end' do: {
   my end is True.
   my debug ifFalse: {
     me stopEvalServer.
-    getFlag: 'history', ifTrue: {
+    getFlag: 'history', & my hs_file isNil not ifTrue: {
       my hs_file write: (
         {:json Json parse: json. ^json.} catch: {:e ^'[]'.}, applyTo: (Json serialize: my history, ~ ?>s/\\/\\\\/g<?)
       ).
@@ -539,7 +540,7 @@ Eval on: 'togglePasteMode' do: {
     var opt is Eval shiftArgs.
     args push: opt.
     # when passed -h, show help, then exit.
-    opt case: '-h' do: {
+    (frozen select_arg_q is case: '-h' do: {
         args pop. #consume option.
         Eval display/green write: 'Citron Evaluator.\n', resetColor.
         var P is Eval display.
@@ -719,8 +720,10 @@ Eval on: 'togglePasteMode' do: {
         args pop.
         opt skip: 1, reverse characters each_v: \:c args push: '-' + c.
       }.
-    }, switch. # do not consume any other option.
+    }) switch: opt. # do not consume any other option.
 }.
+
+Eval break ifTrue: { Program exit. }.
 
 (Eval getFlag: 'intty') ifTrue: {
   import
@@ -906,7 +909,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
           skipthis ifTrue: {last_toc is candidate.}.
         }.
       }, else: {
-        inc case: '\xd' do: {#<Enter>
+        (frozen select_toplevel_inc is Object case: '\xd' do: {#<Enter>
           clear_next_line applyTo: linesp.
           have_context ifFalse: {
             inp is inp findPattern: ?>(?:^\s*((?::{)+)|((?::}\s*)+)\s*$)<? do: {:groups
@@ -961,12 +964,11 @@ Eval on: 'read_eval_print:' do: ({:prompt
 
         }, case: '\x1b' do: {
           inc is stdin readBytes: 2.
-          inc case: '\x5b\x41' do: { #Up Arrow
+          (frozen select_inlevel_q is case: '\x5b\x41' do: { #Up Arrow
             hindex > 0 ifTrue: {
               cursor is (inp is Eval getHistory at: (hindex is hindex - 1)) length.
             }.
             clear_next_line applyTo: linesp. have_context is False.
-
           }, case: '\x5b\x42' do: { #Down Arrow
             (hindex > 0) & (Eval getHistory count > 0) ifTrue: {
               hindex +=: 1.
@@ -982,19 +984,16 @@ Eval on: 'read_eval_print:' do: ({:prompt
               cursor is 0.
             }.
             clear_next_line applyTo: linesp. have_context is False.
-
           }, case: '\x5b\x43' do: { #Right Arrow
             (cursor < inp length) ifTrue: {
               cursor +=: 1.
             }, else: {Eval display/write: '\a'.}.
             clear_next_line applyTo: linesp. have_context is False.
-
           }, case: '\x5b\x44' do: { #Left Arrow
             (cursor > 0) ifTrue: {
               cursor -=: 1.
             }, else: {Eval display/write: '\a'.}.
             clear_next_line applyTo: linesp. have_context is False.
-
           }, case: '\x5b\x31' do: { #Supposedly <ctrl>
             inc is stdin readBytes: 3.
               (inc = '\x3b\x35\x44') & (cursor > 0) ifTrue: { #^Left Arrow
@@ -1016,7 +1015,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
               Eval togglePasteMode.
           }, default: {
             Pen write: inc toByteArray.
-          }, switch.
+          }) switch: inc.
         }, default: {
           have_context ifTrue: { clear_next_line applyTo: linesp. have_context is False. }.
           (inc
@@ -1050,7 +1049,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
           inp is inp insert: inc at: cursor.
           cursor +=: inc length.
           # Eval redraw: inp at: cursor comment: ''.
-        }, switch.
+        }) switch: inc.
         last_was_comp is False.
       }.
     Eval redraw: inp at: cursor - 1 comment: (inBlock either: '%s%d' % ['%{', inBlock] or: cmt).

@@ -850,7 +850,7 @@ ctr_cparse_ref ()
       int t = ctr_clex_tok ();
       if (t != CTR_TOKEN_REF)
 	{
-	  ctr_cparse_emit_error_unexpected (t, "Keyword 'var' should always be followed by property name!\n");
+	  ctr_cparse_emit_error_unexpected (t, "'var' should always be followed by a property name!\n");
 	}
       tmp = ctr_clex_tok_value ();
       r->modifier = 2;
@@ -867,6 +867,26 @@ ctr_cparse_ref ()
       r->modifier = 3;
       r->vlen = ctr_clex_tok_value_length ();
     }
+  if (strncmp (ctr_clex_keyword_static, tmp, ctr_clex_keyword_static_len) == 0 && r->vlen == ctr_clex_keyword_static_len)
+    {
+      int t = ctr_clex_tok ();
+      if (t != CTR_TOKEN_REF)
+	{
+	  ctr_cparse_emit_error_unexpected (t, "'static' must always be followed by a single property name\n");
+	}
+      tmp = ctr_clex_tok_value ();
+      r->modifier = 4;
+      r->vlen = ctr_clex_tok_value_length ();
+      /* check precondition just in case */
+      t = ctr_clex_tok();
+      ctr_clex_putback();
+      if (t != CTR_TOKEN_ASSIGNMENT)
+    {
+      ctr_cparse_emit_error_unexpected (t, "'static' variable must be in an assignment");
+    }
+
+    }
+
   r->value = ctr_heap_allocate_tracked (r->vlen);
   memcpy (r->value, tmp, r->vlen);
   return r;

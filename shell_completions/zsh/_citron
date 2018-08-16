@@ -21,13 +21,15 @@ args=(
     '--meta[execute metacommand]'
     '-e[evaluate expression]'
     '-v[version information]'
-    '-s[start a server on port]:port'
-    '--pid[set the pidfile path]:path:_files'
+    '-s[start a server on port]:port:->number'
+    '--pid[set the pidfile path]:path:->_files'
     '--no-logo[do not show ascii logo]'
     '--interactive-print[value display object]'
     '--highlight-file[highlight a file and exit]:path:_files'
     '--assume-non-tty[Assume the terminal is not a tty]'
     '--without-signals[Disable signal processing]'
+    '--terminal-width[Set terminal width]:number:->number'
+    '--without-history[Disable load/save of history]'
     )
 
 _arguments -C -s -S "$args[@]"

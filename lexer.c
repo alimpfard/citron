@@ -464,7 +464,7 @@ void ctr_set_pragma(ctr_code_pragma* pragma, int val, int val2) {
  *
  */
 __attribute__((always_inline))
-void handle_extension()
+static void handle_extension()
 {
   char* ext = ctr_clex_buffer;
   int len = ctr_clex_tokvlen;

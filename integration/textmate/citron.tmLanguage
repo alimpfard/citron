@@ -213,19 +213,61 @@
           </dict>
         </dict>
         <dict>
-          <key>match</key>
-          <string>(?:(\#:)(.*)$)</string>
-          <key>captures</key>
+          <key>begin</key>
+          <string>(?:(\#:))</string>
+          <key>beginCaptures</key>
           <dict>
             <key>1</key>
             <dict>
               <key>name</key>
               <string>comment.Citron</string>
             </dict>
-            <key>2</key>
+          </dict>
+          <key>contentName</key>
+          <string>invalid.illegal.Citron</string>
+          <key>end</key>
+          <string>(?:(?:(declare)(\s+)(infixr|infixl)(\s*)(.*))|(?:(language)(\s+)(.*))$)</string>
+          <key>endCaptures</key>
+          <dict>
+            <key>1</key>
             <dict>
               <key>name</key>
               <string>markup.deleted.Citron</string>
+            </dict>
+            <key>2</key>
+            <dict>
+              <key>name</key>
+              <string>entity.name.Citron</string>
+            </dict>
+            <key>3</key>
+            <dict>
+              <key>name</key>
+              <string>string.regexp.Citron</string>
+            </dict>
+            <key>4</key>
+            <dict>
+              <key>name</key>
+              <string>entity.name.Citron</string>
+            </dict>
+            <key>5</key>
+            <dict>
+              <key>name</key>
+              <string>entity.name.function.Citron</string>
+            </dict>
+            <key>6</key>
+            <dict>
+              <key>name</key>
+              <string>markup.deleted.Citron</string>
+            </dict>
+            <key>7</key>
+            <dict>
+              <key>name</key>
+              <string>entity.name.Citron</string>
+            </dict>
+            <key>8</key>
+            <dict>
+              <key>name</key>
+              <string>string.regexp.Citron</string>
             </dict>
           </dict>
         </dict>
@@ -359,6 +401,12 @@
        </array>
     </dict>
     <key>main__1</key>
+    <dict>
+      <key>patterns</key>
+      <array>
+       </array>
+    </dict>
+    <key>main__10</key>
     <dict>
       <key>patterns</key>
       <array>

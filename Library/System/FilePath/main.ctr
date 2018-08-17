@@ -1,0 +1,28 @@
+import Posix: \*.
+import Library/Data/Object/derive.
+
+var Path is Object cnew: {
+  path => String.
+}, derive: [
+  ['=']
+].
+
+Path on: 'new:' do: {:path ^cnew: { path => path. }. }.
+Path on: 'getSearchPaths' do: {\
+  getSearchPath[] fmap: \:x x head.
+}.
+Path on: 'addExtension:' do: {\:ext
+  path => my path `<ext>` ext.
+  me.
+}.
+Path on: 'join:' do: {\:path
+  path => joinPath[my path, path].
+  me.
+}.
+Path on: 'takeExtension' do: {\
+  takeExtension[my path].
+}.
+Path on: 'dropExtension' do: {\
+  path => dropExtension[my path].
+  me.
+}.

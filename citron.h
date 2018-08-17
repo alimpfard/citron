@@ -515,6 +515,9 @@ CTR_H_DECLSPEC ctr_code_pragma* oneLineExpressions;
 CTR_H_DECLSPEC ctr_code_pragma* flexibleConstructs;
 CTR_H_DECLSPEC ctr_code_pragma* regexLineCheck;
 CTR_H_DECLSPEC ctr_code_pragma* callShorthand;
+CTR_H_DECLSPEC ctr_code_pragma* extensionsPra;
+
+#define CTR_EXT_FROZEN_K 1
 
 /**
  * UTF-8 functions

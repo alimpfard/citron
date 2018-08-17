@@ -1,0 +1,20 @@
+import Library/Utils/Readline: 'Readline'.
+var int_state is 0.
+var names is [
+  'Test',
+  'Whatever',
+  'READLINE!',
+  'bitch'
+].
+Readline completionGenerator: \:txt:state state = 0 either: {
+  var ps is Nil.
+  names each_v: {:name
+    name startsWith: txt, ifTrue: {
+      ps is name.
+      True break.
+    }.
+  }.
+  ^ps.
+} or: Nil.
+Readline setQuoteCharacters: '"\''.
+Pen writeln: (Readline readline: 'reverse> ').

@@ -869,6 +869,10 @@ ctr_cparse_ref ()
     }
   if (strncmp (ctr_clex_keyword_static, tmp, ctr_clex_keyword_static_len) == 0 && r->vlen == ctr_clex_keyword_static_len)
     {
+      // if ((extensionsPra->value & CTR_EXT_FROZEN_K) != CTR_EXT_FROZEN_K) {
+      //   ctr_cparse_emit_error_unexpected(CTR_TOKEN_REF, "XFrozen extensions is required");
+      //   return NULL;
+      // }
       int t = ctr_clex_tok ();
       if (t != CTR_TOKEN_REF)
 	{
@@ -1362,6 +1366,7 @@ ctr_cparse_fin ()
 {
   callShorthand->value = CTR_TOKEN_TUPOPEN;
   callShorthand->value_e = CTR_TOKEN_TUPCLOSE;
+  extensionsPra->value = 0;
   clear_fixity_map();
   ctr_tnode *f;
   ctr_clex_tok ();

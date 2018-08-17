@@ -23,18 +23,22 @@ class CitronLexer(RegexLexer):
             (u'(\')', bygroups(String), 'main__3'),
             (u'(?:(\\\\)((?:\\:[^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*\\s*)+))', bygroups(Keyword.Reserved, Keyword.Pseudo), 'main__4'),
             (u'(?:(\\{)((?:\\:(?:[^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*))*))', bygroups(Name, Keyword.Pseudo), 'main__5'),
-            (u'(?:(\\#:)(.*)$)', bygroups(Comment, Generic.Deleted)),
+            (u'(?:(\\#:))', bygroups(Comment), 'main__6'),
             (u'(\\#.*$)', bygroups(Comment)),
-            (u'((?:[^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*)\\:)', bygroups(Name.Decorator), 'main__6'),
-            (u'(\\\\)', bygroups(String.Escape), 'main__7'),
-            (u'(?:(\\s+)([^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r])(\\s+))', bygroups(Name, Name.Decorator, Name), 'main__8'),
-            (u'(?:(\\`?)([^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*)(\\1))', bygroups(String.Escape, Generic, String.Escape), 'main__9'),
+            (u'((?:[^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*)\\:)', bygroups(Name.Decorator), 'main__7'),
+            (u'(\\\\)', bygroups(String.Escape), 'main__8'),
+            (u'(?:(\\s+)([^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r])(\\s+))', bygroups(Name, Name.Decorator, Name), 'main__9'),
+            (u'(?:(\\`?)([^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*)(\\1))', bygroups(String.Escape, Generic, String.Escape), 'main__10'),
             ('(\n|\r|\r\n)', String),
             ('.', String),
         ],
         'main__1' : [
             ('(\n|\r|\r\n)', String),
             ('.', Name.Variable),
+        ],
+        'main__10' : [
+            ('(\n|\r|\r\n)', String),
+            ('.', Name),
         ],
         'main__2' : [
             (u'(.)', bygroups(String.Regex)),
@@ -58,15 +62,15 @@ class CitronLexer(RegexLexer):
         ],
         'main__6' : [
             ('(\n|\r|\r\n)', String),
-            ('.', Name),
+            ('.', Generic.Error),
         ],
         'main__7' : [
             ('(\n|\r|\r\n)', String),
-            ('.', Keyword.Reserved),
+            ('.', Name),
         ],
         'main__8' : [
             ('(\n|\r|\r\n)', String),
-            ('.', Name),
+            ('.', Keyword.Reserved),
         ],
         'main__9' : [
             ('(\n|\r|\r\n)', String),

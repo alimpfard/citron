@@ -463,6 +463,23 @@ void ctr_set_pragma(ctr_code_pragma* pragma, int val, int val2) {
  * Reads the token after '#:' and toggles a pragma.
  *
  */
+__attribute__((always_inline))
+void handle_extension()
+{
+  char* ext = ctr_clex_buffer;
+  int len = ctr_clex_tokvlen;
+#ifdef DEBUG_BUILD
+  printf("+ext %.*s\n", len, ext);
+#endif
+  if (len == 7 && strncmp(ext, "XFrozen", 7) == 0) {
+    extensionsPra->value |= CTR_EXT_FROZEN_K;
+  }
+  else {
+    static char errbuf[1024];
+    sprintf(errbuf, "Unknown extension '%.*s'", len, ext);
+    ctr_clex_emit_error(errbuf);
+  }
+}
 void
 ctr_match_toggle_pragma ()
 {
@@ -470,16 +487,19 @@ ctr_match_toggle_pragma ()
     {
       ctr_activate_pragma (oneLineExpressions);
       ctr_code += 18;
+      return;
     }
   if (strncmp (ctr_code, ":regexLineCheck", 15) == 0)
     {
       ctr_activate_pragma (regexLineCheck);
       ctr_code += 14;
+      return;
     }
   if (strncmp (ctr_code, ":flexibleConstructs", 19) == 0)
     {
       ctr_activate_pragma (flexibleConstructs);
       ctr_code += 18;
+      return;
     }
   if (strncmp (ctr_code, ":callShorthand", 14) == 0) {
     ctr_code += 14;
@@ -491,6 +511,7 @@ ctr_match_toggle_pragma ()
     ctr_clex_olderptr = ctr_code;
     ctr_clex_oldptr = ctr_code;
     ctr_code--;
+    return;
   }
   if (strncmp (ctr_code, ":declare", 8) == 0) {
     ctr_code += 8;
@@ -524,6 +545,31 @@ ctr_match_toggle_pragma ()
     ctr_set_fix(v, len, fixity, prec);
     ctr_clex_olderptr = ctr_code;
     ctr_clex_oldptr = ctr_code;
+    return;
+  }
+  if (strncmp (ctr_code, ":language", 9) == 0) {
+    // #:language ext,ext,ext
+    int lineno = ctr_clex_line_number;
+    ctr_code += 9;
+    int t0 = ctr_clex_tok();
+    if (t0 != CTR_TOKEN_REF || lineno != ctr_clex_line_number) {
+      err_v:;
+      ctr_clex_emit_error("Expected an extension name");
+      return;
+    }
+    handle_extension();
+    // printf("+ %.*s\n", ctr_clex_tokvlen, ctr_clex_buffer);
+    while (ctr_clex_tok() == CTR_TOKEN_CHAIN) {
+      if (lineno != ctr_clex_line_number) break;
+      t0 = ctr_clex_tok();
+      if (t0 != CTR_TOKEN_REF) goto err_v;
+      // printf("+ %.*s\n", ctr_clex_tokvlen, ctr_clex_buffer);
+      handle_extension();
+    }
+    ctr_clex_putback();
+    ctr_clex_olderptr = ctr_code;
+    ctr_clex_oldptr = ctr_code;
+    return;
   }
 }
 

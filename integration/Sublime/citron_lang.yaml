@@ -99,10 +99,24 @@ contexts:
         - match: '(.)'
           captures:
             0: entity.name.Citron
-    - match: '(?:(\#:)(.*)$)'
+    - match: '(?:(\#:))'
       captures:
         0: comment.Citron
-        1: markup.deleted.Citron
+      push:
+        - match: '(?:(?:(declare)(\s+)(infixr|infixl)(\s*)(.*))|(?:(language)(\s+)(.*))$)'
+          pop: true
+          captures:
+            0: markup.deleted.Citron
+            1: entity.name.Citron
+            2: string.regexp.Citron
+            3: entity.name.Citron
+            4: entity.name.function.Citron
+            5: markup.deleted.Citron
+            6: entity.name.Citron
+            7: string.regexp.Citron
+        - match: '(.)'
+          captures:
+            0: invalid.illegal.Citron
     - match: '(\#.*$)'
       captures:
         0: comment.Citron

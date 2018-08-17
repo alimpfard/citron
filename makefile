@@ -1,18 +1,18 @@
-DEBUG_VERSION := 65
+DEBUG_VERSION := 67
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 LEXTRACF := ${LEXTRACF} -flto -lstdc++
 fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
+fv := '/data/data/com.termux/files/usr/lib/libgc.so'
 location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 WHERE_ART_THOU := $(location)
 new_makefile_l1 := $(shell perl -ne '/((DEBUG_VERSION := )(\d+))/ && print (sprintf("%s%s", "$$2", "$$3"+1));' $(WHERE_ART_THOU))
 
 ifeq ($(strip ${WITH_ICU}),)
-	CFLAGS = -Wall -Wextra -Wno-unused-parameter -mtune=native\
-              -march=native -D withTermios -D forLinux\
+	CFLAGS = -Wall -Wextra -Wno-unused-parameter -D withTermios \
               -D CTR_STD_EXTENSION_PATH=\"`pwd`\"
 else
-	CFLAGS = -Wall -Wextra -Wno-unused-parameter -mtune=native\
-			 -march=native -D withTermios -D forLinux\
+	CFLAGS = -Wall -Wextra -Wno-unused-parameter \
+			  -D withTermios \
 			 -D CTR_STD_EXTENSION_PATH=\"`pwd`\" -D withICU
 	LEXTRACF := ${LEXTRACF} -L/usr/lib -licui18n -licuuc -licudata
 endif
@@ -28,6 +28,7 @@ else
 	CFLAGS := ${CFLAGS} "-D withBoehmGC_P"
 endif
 
+CFLAGS := ${CFLAGS} -pthread -fsigned-char
 
 .PHONY: gc_check
 gc_check:
@@ -59,17 +60,17 @@ install:
 	echo -e "install directly from source not allowed.\nUse citron_autohell instead for installs"
 	exit 1;
 ctr:	$(OBJS)
-	$(CC) -fopenmp $(OBJS) -rdynamic -lm -ldl -lbsd -lpcre -lpthread ${LEXTRACF} -o ctr
+	$(CC) -fopenmp $(OBJS) -rdynamic -lm -ldl -llog -lpcre -lpthread ${LEXTRACF} -o ctr
 
 libctr: CFLAGS := $(CFLAGS) -fPIC -DCITRON_LIBRARY
 libctr: symbol_cxx
 libctr: $(OBJS)
-	$(CC) $(OBJS) -shared -export-dynamic -ldl -lbsd -lpcre -lpthread -o libctr.so
+	$(CC) $(OBJS) -shared -export-dynamic -ldl -llog -lpcre -lpthread -o libctr.so
 
 compiler: CFLAGS := $(CFLAGS) -D comp=1
 compiler: cxx
 compiler: $(COBJS)
-	$(CC) $(COBJS) -rdynamic -lm -ldl -lbsd -lpcre -lprofiler -lpthread ${LEXTRACF} -o ctrc
+	$(CC) $(COBJS) -rdynamic -lm -ldl -llog -lpcre -lprofiler -lpthread ${LEXTRACF} -o ctrc
 
 cxx:
 	echo "blah"

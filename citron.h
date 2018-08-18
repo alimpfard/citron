@@ -523,7 +523,7 @@ CTR_H_DECLSPEC ctr_code_pragma* extensionsPra;
 // force enables XFrozen
 #define CTR_EXT_PURE_FS  (1|2)
 
-
+extern int ctr_did_side_effect;
 void ctr_mksrands(char* buf);
 
 /**

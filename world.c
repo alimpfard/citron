@@ -652,6 +652,7 @@ ctr_internal_object_find_property_with_hash (ctr_object * owner, ctr_object * ke
 void
 ctr_internal_object_delete_property (ctr_object * owner, ctr_object * key, int is_method)
 {
+  ctr_did_side_effect = 1;
   uint64_t hashKey = ctr_internal_index_hash (key);
 //      uint64_t ahashKey = ctr_internal_alt_hash(key);
   ctr_mapitem *head;
@@ -743,6 +744,7 @@ ctr_internal_object_delete_property (ctr_object * owner, ctr_object * key, int i
 void
 ctr_internal_object_delete_property_with_hash (ctr_object * owner, ctr_object * key, uint64_t hashKey, int is_method)
 {
+  ctr_did_side_effect = 1;
   ctr_mapitem *head;
   if (is_method)
     {
@@ -832,6 +834,7 @@ ctr_internal_object_delete_property_with_hash (ctr_object * owner, ctr_object * 
 void
 ctr_internal_object_add_property (ctr_object * owner, ctr_object * key, ctr_object * value, int m)
 {
+  ctr_did_side_effect = 1;
   if (value->lexical_name == NULL &&
       strncmp (key->value.svalue->value, "me", key->value.svalue->vlen) != 0 &&
       strncmp (key->value.svalue->value, "thisBlock", key->value.svalue->vlen) != 0)
@@ -890,6 +893,7 @@ ctr_internal_object_add_property (ctr_object * owner, ctr_object * key, ctr_obje
 void
 ctr_internal_object_add_property_with_hash (ctr_object * owner, ctr_object * key, uint64_t hashKey, ctr_object * value, int m)
 {
+  ctr_did_side_effect = 1;
   ctr_mapitem *new_item = ctr_heap_allocate (sizeof (ctr_mapitem));
   ctr_mapitem *current_head = NULL;
   new_item->key = key;

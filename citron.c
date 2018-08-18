@@ -20,6 +20,8 @@
 #include <gperftools/profiler.h>
 #endif
 
+int ctr_did_side_effect = 0;
+
 static int compile_and_quit = 0;
 static int debug = 0;
 static int from_stdin = 0;

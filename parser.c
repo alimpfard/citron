@@ -799,7 +799,6 @@ ctr_cparse_block_ (int autocap)
 	    break;
 	  ctr_clex_putback ();
 	  codeListItem = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
-	  codeNode = ctr_cparse_create_node (CTR_AST_NODE);
 	  if (t == CTR_TOKEN_RET)
 	    {
 	      codeNode = ctr_cparse_ret ();

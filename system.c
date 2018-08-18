@@ -754,6 +754,7 @@ ctr_object *
 ctr_shell_call (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_check_permission (CTR_SECPRO_NO_SHELL);
+  ctr_did_side_effect = 1;
   FILE *stream;
   char *outputBuffer;
   ctr_argument *newArgumentList;
@@ -996,6 +997,7 @@ ctr_program_assign (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_command_exit (ctr_object * myself, ctr_argument * argumentList)
 {
+  ctr_did_side_effect = 1;
   CtrStdFlow = CtrStdExit;
   return CtrStdNil;
 }
@@ -1042,6 +1044,7 @@ ctr_command_set_env (ctr_object * myself, ctr_argument * argumentList)
   char *envVarNameStr;
   char *envValStr;
   ctr_check_permission (CTR_SECPRO_NO_FILE_WRITE);
+  ctr_did_side_effect = 1;
   envVarNameObj = ctr_internal_cast2string (argumentList->object);
   envValObj = ctr_internal_cast2string (argumentList->next->object);
   envVarNameStr = ctr_heap_allocate_cstring (envVarNameObj);
@@ -1060,6 +1063,7 @@ ctr_command_set_env (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_command_chdir (ctr_object * myself, ctr_argument * argumentList)
 {
+  ctr_did_side_effect = 1;
   CTR_ENSURE_TYPE_STRING (argumentList->object);
   char *path = ctr_heap_allocate_cstring (argumentList->object);
   char *curpath = realpath (".", NULL);
@@ -1101,6 +1105,7 @@ ctr_object *
 ctr_command_waitforinput (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_check_permission (CTR_SECPRO_COUNTDOWN);
+  ctr_did_side_effect = 1;
   /*int c;
      ctr_size bytes = 0;
      char* buff;
@@ -1137,6 +1142,7 @@ ctr_object *
 ctr_command_getc (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_check_permission (CTR_SECPRO_COUNTDOWN);
+  ctr_did_side_effect = 1;
   // char c;
   char c;
 #ifdef withTermios
@@ -1164,6 +1170,7 @@ ctr_command_getc (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_command_input (ctr_object * myself, ctr_argument * argumentList)
 {
+  ctr_did_side_effect = 1;
   ctr_size page = 64;
   char buffer[page];
   ctr_size content_size = 1;
@@ -1183,6 +1190,7 @@ ctr_command_input (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_command_set_INT_handler (ctr_object * myself, ctr_argument * argumentList)
 {
+  ctr_did_side_effect = 1;
   if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTBLOCK)
     {
       printf ("Expected a block to handle interrupts with.\n");
@@ -1367,6 +1375,7 @@ ctr_command_countdown (ctr_object * myself, ctr_argument * argumentList)
       printf ("Message quota cannot change.\n");
       exit (1);
     }
+    ctr_did_side_effect = 1;
   ctr_command_security_profile |= CTR_SECPRO_COUNTDOWN;
   ctr_command_maxtick = (uint64_t) ctr_internal_cast2number (argumentList->object)->value.nvalue;
   return myself;
@@ -1381,6 +1390,7 @@ ctr_object *
 ctr_command_flush (ctr_object * myself, ctr_argument * ctr_argumentList)
 {
   fflush (stdout);
+  ctr_did_side_effect = 1;
   return myself;
 }
 
@@ -1419,6 +1429,7 @@ ctr_command_fork (ctr_object * myself, ctr_argument * argumentList)
   ctr_resource *rs;
   ctr_check_permission (CTR_SECPRO_COUNTDOWN);
   ctr_check_permission (CTR_SECPRO_FORK);
+  ctr_did_side_effect = 1;
   newArgumentList = ctr_heap_allocate (sizeof (ctr_argument));
   child = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
   ctr_set_link_all (child, myself);
@@ -1495,6 +1506,7 @@ ctr_command_message (ctr_object * myself, ctr_argument * argumentList)
   ctr_resource *rs;
   int q;
   FILE *fd;
+  ctr_did_side_effect = 1;
   string = ctr_internal_cast2string (argumentList->object);
   str = ctr_heap_allocate_cstring (string);
   n = string->value.svalue->vlen;
@@ -1529,6 +1541,7 @@ ctr_command_listen (ctr_object * myself, ctr_argument * argumentList)
   char *blob;
   q = 0;
   r = myself->value.rvalue;
+  ctr_did_side_effect = 1;
   if (r == NULL)
     {
       CtrStdFlow = ctr_build_string_from_cstring ("The main program is not allowed to wait for messages.");
@@ -1586,6 +1599,7 @@ ctr_command_join (ctr_object * myself, ctr_argument * argumentList)
   ctr_resource *rs = myself->value.rvalue;
   if (rs == NULL)
     return CtrStdNil;
+    ctr_did_side_effect = 1;
   if (rs->type == 3)
     {
       CtrStdFlow = ctr_build_string_from_cstring ("a child process can not join.");
@@ -1636,6 +1650,7 @@ ctr_command_sig (ctr_object * myself, ctr_argument * argumentList)
       return CtrStdNil;
     }
   int pid = pid_o->value.nvalue;
+  ctr_did_side_effect = 1;
   if (kill (pid, sig) != 0)
     {
       CtrStdFlow = ctr_build_string_from_cstring (strerror (errno));
@@ -1655,6 +1670,7 @@ ctr_command_log_generic (ctr_object * myself, ctr_argument * argumentList, int l
 {
   char *message;
   ctr_check_permission (CTR_SECPRO_COUNTDOWN);
+  ctr_did_side_effect = 1;
   message = ctr_heap_allocate_cstring (ctr_internal_cast2string (argumentList->object));
   syslog (level, "%s", message);
   ctr_heap_free (message);
@@ -1695,6 +1711,7 @@ ctr_object *
 ctr_command_remote (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_check_permission (CTR_SECPRO_COUNTDOWN);
+  ctr_did_side_effect = 1;
   ctr_object *remoteObj = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
   ctr_set_link_all (remoteObj, CtrStdObject);
   remoteObj->info.remote = 1;
@@ -1724,6 +1741,7 @@ ctr_object *
 ctr_command_default_port (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_default_port = (uint16_t) ctr_internal_cast2number (argumentList->object)->value.nvalue;
+  ctr_did_side_effect = 1;
   return myself;
 }
 
@@ -1737,6 +1755,7 @@ ctr_object *
 ctr_command_accept_number (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_accept_n_connections = (uint8_t) ctr_internal_cast2number (argumentList->object)->value.nvalue;
+  ctr_did_side_effect = 1;
   return myself;
 }
 
@@ -1762,6 +1781,7 @@ ctr_command_accept (ctr_object * myself, ctr_argument * argumentList)
   uint8_t x;
   ctr_check_permission (CTR_SECPRO_COUNTDOWN);
   ctr_check_permission (CTR_SECPRO_FORK);
+  ctr_did_side_effect = 1;
   responder = argumentList->object;
   listenfd = socket (AF_INET6, SOCK_STREAM, 0);
   bzero ((char *) &serv_addr, sizeof (serv_addr));
@@ -1846,6 +1866,7 @@ ctr_command_accepti4 (ctr_object * myself, ctr_argument * argumentList)
   uint8_t x;
   ctr_check_permission (CTR_SECPRO_COUNTDOWN);
   ctr_check_permission (CTR_SECPRO_FORK);
+  ctr_did_side_effect = 1;
   responder = argumentList->object;
   listenfd = socket (AF_INET, SOCK_STREAM, 0);
   bzero ((char *) &serv_addr, sizeof (serv_addr));
@@ -1917,6 +1938,7 @@ ctr_command_accepti4 (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_dice_sides (ctr_object * myself, ctr_argument * argumentList)
 {
+  ctr_did_side_effect = 1;
   ctr_object *arg = ctr_internal_cast2number (argumentList->object);
   return ctr_build_number_from_float ((ctr_number) arc4random_uniform ((uint32_t) (ceil (arg->value.nvalue))));
 }
@@ -1929,6 +1951,7 @@ ctr_dice_sides (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_dice_throw (ctr_object * myself, ctr_argument * argumentList)
 {
+  ctr_did_side_effect = 1;
   return ctr_build_number_from_float ((ctr_number) 1 + arc4random_uniform ((uint32_t) 6));
 }
 
@@ -1940,6 +1963,7 @@ ctr_dice_throw (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_dice_rand (ctr_object * myself, ctr_argument * argumentList)
 {
+  ctr_did_side_effect = 1;
   return ctr_build_number_from_float ((ctr_number) (arc4random ()));
 }
 
@@ -1961,6 +1985,7 @@ ctr_object *
 ctr_clock_wait (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_check_permission (CTR_SECPRO_COUNTDOWN);
+  ctr_did_side_effect = 1;
   ctr_object *arg = ctr_internal_cast2number (argumentList->object);
   int n = (int) arg->value.nvalue;
   ctr_object *qual = ctr_internal_object_find_property (argumentList->object,
@@ -2051,6 +2076,7 @@ ctr_clock_get_time (ctr_object * myself, ctr_argument * argumentList, char part)
   setenv ("TZ", zone, 1);
   date = localtime (&timeStamp);
   setenv ("TZ", "UTC", 1);
+  ctr_did_side_effect = 1;
   switch (part)
     {
     case 'Y':
@@ -2093,6 +2119,7 @@ ctr_clock_set_time (ctr_object * myself, ctr_argument * argumentList, char part)
 			       (ctr_internal_object_find_property
 				(myself, ctr_build_string_from_cstring (CTR_DICT_ZONE), CTR_CATEGORY_PRIVATE_PROPERTY)));
   setenv ("TZ", zone, 1);
+  ctr_did_side_effect = 1;
   date = localtime (&timeStamp);
   switch (part)
     {
@@ -2620,6 +2647,7 @@ ctr_clock_time_exec (ctr_object * myself, ctr_argument * argumentList)
   ctr_block_runIt (argumentList->object, args);
   long int end = clock ();
   ctr_heap_free (args);
+  ctr_did_side_effect = 1;
   return ctr_build_number_from_float ((end - init));
 }
 
@@ -2636,6 +2664,7 @@ ctr_clock_time_exec_s (ctr_object * myself, ctr_argument * argumentList)
   ctr_block_runIt (argumentList->object, args);
   long int end = clock ();
   ctr_heap_free (args);
+  ctr_did_side_effect = 1;
   return ctr_build_number_from_float ((((double) (end - init)) / (double) CLOCKS_PER_SEC));
 }
 
@@ -2652,6 +2681,7 @@ ctr_console_write (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *argument1 = argumentList->object;
   ctr_object *strObject = ctr_internal_cast2string (argument1);
   fwrite (strObject->value.svalue->value, strObject->value.svalue->vlen, 1, stdout);
+  ctr_did_side_effect = 1;
   return myself;
 }
 
@@ -2667,6 +2697,7 @@ ctr_console_writeln (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *strObject = ctr_internal_cast2string (argument1);
   fwrite (strObject->value.svalue->value, strObject->value.svalue->vlen, 1, stdout);
   fwrite ("\n", 1, 1, stdout);
+  ctr_did_side_effect = 1;
   return myself;
 }
 
@@ -2679,6 +2710,7 @@ ctr_object *
 ctr_console_brk (ctr_object * myself, ctr_argument * argumentList)
 {
   fwrite ("\n", sizeof (char), 1, stdout);
+  ctr_did_side_effect = 1;
   return myself;
 }
 
@@ -2686,6 +2718,7 @@ ctr_object *
 ctr_console_red (ctr_object * myself, ctr_argument * argumentList)
 {
   fwrite (CTR_ANSI_COLOR_RED, sizeof (char), strlen (CTR_ANSI_COLOR_RED), stdout);
+  ctr_did_side_effect = 1;
   return myself;
 }
 
@@ -2693,6 +2726,7 @@ ctr_object *
 ctr_console_green (ctr_object * myself, ctr_argument * argumentList)
 {
   fwrite (CTR_ANSI_COLOR_GREEN, sizeof (char), strlen (CTR_ANSI_COLOR_GREEN), stdout);
+  ctr_did_side_effect = 1;
   return myself;
 }
 
@@ -2700,6 +2734,7 @@ ctr_object *
 ctr_console_yellow (ctr_object * myself, ctr_argument * argumentList)
 {
   fwrite (CTR_ANSI_COLOR_YELLOW, sizeof (char), strlen (CTR_ANSI_COLOR_YELLOW), stdout);
+  ctr_did_side_effect = 1;
   return myself;
 }
 
@@ -2707,6 +2742,7 @@ ctr_object *
 ctr_console_blue (ctr_object * myself, ctr_argument * argumentList)
 {
   fwrite (CTR_ANSI_COLOR_BLUE, sizeof (char), strlen (CTR_ANSI_COLOR_BLUE), stdout);
+  ctr_did_side_effect = 1;
   return myself;
 }
 
@@ -2714,6 +2750,7 @@ ctr_object *
 ctr_console_magenta (ctr_object * myself, ctr_argument * argumentList)
 {
   fwrite (CTR_ANSI_COLOR_MAGENTA, sizeof (char), strlen (CTR_ANSI_COLOR_MAGENTA), stdout);
+  ctr_did_side_effect = 1;
   return myself;
 }
 
@@ -2721,6 +2758,7 @@ ctr_object *
 ctr_console_cyan (ctr_object * myself, ctr_argument * argumentList)
 {
   fwrite (CTR_ANSI_COLOR_CYAN, sizeof (char), strlen (CTR_ANSI_COLOR_CYAN), stdout);
+  ctr_did_side_effect = 1;
   return myself;
 }
 
@@ -2728,6 +2766,7 @@ ctr_object *
 ctr_console_reset (ctr_object * myself, ctr_argument * argumentList)
 {
   fwrite (CTR_ANSI_COLOR_RESET, sizeof (char), strlen (CTR_ANSI_COLOR_RESET), stdout);
+  ctr_did_side_effect = 1;
   return myself;
 }
 
@@ -2735,6 +2774,7 @@ ctr_object *
 ctr_console_tab (ctr_object * myself, ctr_argument * argumentList)
 {
   fwrite ("\t", sizeof (char), strlen ("\t"), stdout);
+  ctr_did_side_effect = 1;
   return myself;
 }
 
@@ -2743,6 +2783,7 @@ ctr_console_line (ctr_object * myself, ctr_argument * argumentList)
 {
   char *line = "---------------------------------------\n";
   fwrite (line, sizeof (char), strlen (line), stdout);
+  ctr_did_side_effect = 1;
   return myself;
 }
 
@@ -2752,6 +2793,7 @@ ctr_console_clear (ctr_object * myself, ctr_argument * argumentList)
 {
   char *line = "\033[H\033[J";
   fwrite (line, sizeof (char), strlen (line), stdout);
+  ctr_did_side_effect = 1;
   return myself;
 }
 
@@ -2760,6 +2802,7 @@ ctr_console_clear_line (ctr_object * myself, ctr_argument * argumentList)
 {
   char *line = "\033[2K\r";
   fwrite (line, sizeof (char), 0, stdout);
+  ctr_did_side_effect = 1;
   return myself;
 }
 #else
@@ -2768,6 +2811,7 @@ ctr_console_clear (ctr_object * myself, ctr_argument * argumentList)
 {
   char *line = "";
   fwrite (line, sizeof (char), strlen (line), stdout);
+  ctr_did_side_effect = 1;
   return myself;
 }
 
@@ -2776,6 +2820,7 @@ ctr_console_clear_line (ctr_object * myself, ctr_argument * argumentList)
 {
   char *line = "";
   fwrite (line, sizeof (char), 0, stdout);
+  ctr_did_side_effect = 1;
   return myself;
 }
 #endif
@@ -2800,6 +2845,7 @@ static pthread_mutex_t GLOBAL_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 void *
 ctr_run_thread_func (ctr_thread_t * threadt)
 {
+  ctr_did_side_effect = 1;
   sigset_t set;
   sigfillset (&set);
   sigset_t oset;
@@ -2829,6 +2875,7 @@ ctr_run_thread_func (ctr_thread_t * threadt)
 void *
 ctr_thread_free_res (void *res)
 {
+  ctr_did_side_effect = 1;
   if (likely (res))
     {
       ctr_thread_t *tres = res;
@@ -2864,6 +2911,7 @@ ctr_thread_make (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_thread_set_target (ctr_object * myself, ctr_argument * argumentList)
 {
+  ctr_did_side_effect = 1;
   pthread_t *thread;
   int err;
   if (!myself->value.rvalue->ptr)
@@ -2905,6 +2953,7 @@ ctr_thread_set_target (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_thread_set_args (ctr_object * myself, ctr_argument * argumentList)
 {
+  ctr_did_side_effect = 1;
   pthread_t *thread;
   int err;
   if (!myself->value.rvalue->ptr)
@@ -2946,6 +2995,7 @@ ctr_thread_set_args (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_thread_make_set_target (ctr_object * myself, ctr_argument * argumentList)
 {
+  ctr_did_side_effect = 1;
   ctr_object *inst = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
   ctr_set_link_all (inst, CtrStdThread);
   inst->value.rvalue = ctr_heap_allocate (sizeof (ctr_resource));
@@ -2990,6 +3040,7 @@ ctr_thread_make_set_target (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_thread_run (ctr_object * myself, ctr_argument * argumentList)
 {
+  ctr_did_side_effect = 1;
   if (!myself->value.rvalue->ptr)
     {
       CtrStdFlow = ctr_build_string_from_cstring ("Attempt to run a thread without a target");
@@ -3011,6 +3062,7 @@ ctr_thread_run (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_thread_join (ctr_object * myself, ctr_argument * argumentList)
 {
+  ctr_did_side_effect = 1;
   ctr_thread_return_t *retval;
   // pthread_mutex_lock(((ctr_thread_t*)myself->value.rvalue->ptr)->mutex);//get the mutex
   if (pthread_join (*(((ctr_thread_t *) myself->value.rvalue->ptr)->thread), (void **) &retval) != 0)
@@ -3056,6 +3108,7 @@ ctr_thread_id (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_thread_name (ctr_object * myself, ctr_argument * argumentList)
 {
+  ctr_did_side_effect = 1;
   pthread_t *threadt;
   if (myself->value.rvalue)
     threadt = ((ctr_thread_t *) myself->value.rvalue->ptr)->thread;
@@ -3079,6 +3132,7 @@ ctr_thread_name (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_thread_names (ctr_object * myself, ctr_argument * argumentList)
 {
+  ctr_did_side_effect = 1;
   pthread_t *threadt;
   if (myself->value.rvalue)
     threadt = ((ctr_thread_t *) myself->value.rvalue->ptr)->thread;

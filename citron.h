@@ -517,7 +517,14 @@ CTR_H_DECLSPEC ctr_code_pragma* regexLineCheck;
 CTR_H_DECLSPEC ctr_code_pragma* callShorthand;
 CTR_H_DECLSPEC ctr_code_pragma* extensionsPra;
 
+// XFrozen
 #define CTR_EXT_FROZEN_K 1
+// XPureLambda
+// force enables XFrozen
+#define CTR_EXT_PURE_FS  (1|2)
+
+
+void ctr_mksrands(char* buf);
 
 /**
  * UTF-8 functions

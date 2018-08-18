@@ -474,6 +474,9 @@ static void handle_extension()
   if (len == 7 && strncmp(ext, "XFrozen", 7) == 0) {
     extensionsPra->value |= CTR_EXT_FROZEN_K;
   }
+  else if (len == 11 && strncmp(ext, "XPureLambda", 11) == 0) {
+    extensionsPra->value |= CTR_EXT_PURE_FS;
+  }
   else {
     static char errbuf[1024];
     sprintf(errbuf, "Unknown extension '%.*s'", len, ext);

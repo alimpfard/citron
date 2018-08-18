@@ -251,6 +251,24 @@ ctr_cwlk_assignment (ctr_tnode * node)
     ctr_assign_value_to_local (lname, x); // for this run only
     result = ctr_hand_value_to_global (name, x);
   }
+      else if (assignee->modifier == 5)
+  {
+    char* name_s = ctr_heap_allocate(17 * sizeof(char));
+    name_s[0] = ':'; //make it inaccessable from the system
+    ctr_mksrands(name_s+1);
+
+    node->type = CTR_AST_NODE_REFERENCE;
+    node->value = name_s; /* lookup from global */
+    node->vlen = 17;
+    node->modifier = /* var */2;
+
+    ctr_heap_free(value);
+    ctr_heap_free(assignee);
+    ctr_heap_free(valueListItem);
+
+    ctr_object* name = ctr_build_string(name_s, 17);
+    result = ctr_hand_value_to_global (name, x);
+  }
       else
 	{
 	  result = ctr_assign_value (ctr_build_string (assignee->value, assignee->vlen), x);

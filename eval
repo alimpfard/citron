@@ -1,5 +1,5 @@
 #!/usr/bin/env ctr
-#:language XFrozen
+#:language XFrozen, XPureLambda
 
 Broom autoAlloc: True.
 Reflect ignoreInTrace: (Program argument: 1). #eval or whatever it is

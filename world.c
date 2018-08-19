@@ -1246,9 +1246,15 @@ ctr_internal_cast2number (ctr_object * o)
   a->object = CtrStdNil;
   ctr_object *numObject = ctr_send_message_blocking (o, "toNumber", 8, a);
   ctr_heap_free (a);
-  if (numObject->info.type != CTR_OBJECT_TYPE_OTNUMBER)
+  if (CtrStdFlow) {
+    ctr_object* err = CtrStdFlow;
+    CtrStdFlow = NULL;
+    CtrStdFlow = ctr_format_str ("ECast of type %$ to type Number failed: %$", ctr_send_message_blocking (o, "type", 4, NULL), err);
+    return ctr_build_number_from_float ((ctr_number) 0);
+  }
+  else if (numObject->info.type != CTR_OBJECT_TYPE_OTNUMBER)
     {
-      CtrStdFlow = ctr_build_string_from_cstring ("toNumber must return a number.");
+      CtrStdFlow = ctr_format_str ("ENo implicit cast arises from the use of type %$ to type Number", ctr_send_message_blocking (numObject, "type", 4, NULL));
       return ctr_build_number_from_float ((ctr_number) 0);
     }
   return numObject;

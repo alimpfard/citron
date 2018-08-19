@@ -1,0 +1,5 @@
+{
+  BigInteger.
+} catch: {
+  thisBlock error: 'Native BigInteger module does not exist'.
+}, run.

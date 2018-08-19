@@ -38,13 +38,23 @@ ctr_object* ctr_gmp_is_perfect_square(ctr_object* myself, ctr_argument* argument
 
 ctr_object* ctr_gmp_make(ctr_object* myself, ctr_argument* argumentList) {
   mpz_t* num = ctr_heap_allocate(sizeof(mpz_t));
-  int number;
-  if (argumentList != NULL && argumentList->object != NULL)
+  int number, is_str=argumentList&&argumentList->object->info.type == CTR_OBJECT_TYPE_OTSTRING;
+  if (argumentList != NULL && argumentList->object != NULL && !is_str)
     number = ctr_internal_cast2number(argumentList->object)->value.nvalue;
   else
-  number = 0;
+    number = 0;
   mpz_init(*num);
-  mpz_set_ui(*num, number);
+  if (is_str) {
+    char* s = ctr_heap_allocate_cstring(argumentList->object);
+    int valid = mpz_set_str(*num, s, 0);
+    ctr_heap_free(s);
+    if (valid!=0) {
+      ctr_heap_free(num);
+      CtrStdFlow = ctr_build_string_from_cstring("Invalid value in string for conversion to biginteger");
+      return CtrStdNil;
+    }
+  } else
+    mpz_set_ui(*num, number);
   ctr_object* numobj = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
   ctr_set_link_all(numobj, CtrStdBigInt);
   numobj->value.rvalue = ctr_heap_allocate_tracked(sizeof(ctr_resource));
@@ -297,6 +307,7 @@ void begin() {
   CtrStdBigInt = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
   ctr_set_link_all(CtrStdBigInt, CtrStdObject);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("new"), &ctr_gmp_make);
+  ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("new:"), &ctr_gmp_make);
   ctr_internal_create_func(CtrStdNumber, ctr_build_string_from_cstring("toBigInt"), &ctr_gmp_to_gmp);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("+=:"), &ctr_gmp_add);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("-=:"), &ctr_gmp_sub);

@@ -12,6 +12,8 @@
 #include <stdio.h>
 #endif
 
+#warning Reminder to implement bit-fiddling stuff
+
 ctr_object* CtrStdBigInt;
 
 ctr_object* ctr_gmp_make(ctr_object* myself, ctr_argument* argumentList);
@@ -26,6 +28,13 @@ ctr_object* ctr_gmp_lt(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gmp_gt(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gmp_eq(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gmp_pow_self(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_gmp_root(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_gmp_rootrem(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_gmp_sqrt(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_gmp_sqrtrem(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_gmp_is_perfect_power(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_gmp_is_perfect_square(ctr_object* myself, ctr_argument* argumentList);
+
 
 ctr_object* ctr_gmp_make(ctr_object* myself, ctr_argument* argumentList) {
   mpz_t* num = ctr_heap_allocate(sizeof(mpz_t));
@@ -248,11 +257,46 @@ ctr_object* ctr_gmp_times(ctr_object* myself, ctr_argument* argumentList) {
   return myself;
 }
 
+ctr_object* ctr_gmp_root(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* rop_ = ctr_gmp_make(NULL, NULL);
+  mpz_t *rop=rop_->value.rvalue->ptr, *op = myself->value.rvalue->ptr;
+  unsigned long n = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  int perfect = mpz_root(rop, op, n); // XXX `perfect' ignored
+  return rop_;
+}
+ctr_object* ctr_gmp_rootrem(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* rop_ = ctr_gmp_make(NULL, NULL), *rem_ = argumentList->next->object;
+  mpz_t *root = rop_->value.rvalue->ptr, *u = myself->value.rvalue->ptr, *rem = rem_->value.rvalue->ptr;
+  unsigned long n = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  mpz_rootrem(root, rem, u, n);
+  return rop_;
+}
+ctr_object* ctr_gmp_sqrt(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* rop_ = ctr_gmp_make(NULL, NULL);
+  mpz_t *rop=rop_->value.rvalue->ptr, *op = myself->value.rvalue->ptr;
+  mpz_sqrt(rop, op);
+  return rop_;
+}
+ctr_object* ctr_gmp_sqrtrem(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* rop_ = ctr_gmp_make(NULL, NULL), *rem_ = argumentList->object;
+  mpz_t *root = rop_->value.rvalue->ptr, *u = myself->value.rvalue->ptr, *rem = rem_->value.rvalue->ptr;
+  mpz_sqrtrem(root, rem, u);
+  return rop_;
+}
+ctr_object* ctr_gmp_is_perfect_power(ctr_object* myself, ctr_argument* argumentList) {
+  mpz_t *u = myself->value.rvalue->ptr;
+  return ctr_build_bool(mpz_perfect_power_p(u));
+}
+ctr_object* ctr_gmp_is_perfect_square(ctr_object* myself, ctr_argument* argumentList) {
+  mpz_t *u = myself->value.rvalue->ptr;
+  return ctr_build_bool(mpz_perfect_square_p(u));
+}
 
 void begin() {
   //mp_set_memory_functions(&ctr_heap_allocate, &ctr_heap_reallocate, &ctr_heap_free);
   CtrStdBigInt = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
   ctr_set_link_all(CtrStdBigInt, CtrStdObject);
+  ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("new"), &ctr_gmp_make);
   ctr_internal_create_func(CtrStdNumber, ctr_build_string_from_cstring("toBigInt"), &ctr_gmp_to_gmp);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("+=:"), &ctr_gmp_add);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("-=:"), &ctr_gmp_sub);
@@ -275,5 +319,13 @@ void begin() {
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("<=:"), &ctr_gmp_lte);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("times:"), &ctr_gmp_times);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("toString"), &ctr_gmp_to_string);
+
+  ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("root:"), &ctr_gmp_root);
+  ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("root:withRemainderIn:"), &ctr_gmp_rootrem);
+  ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("sqrt"), &ctr_gmp_sqrt);
+  ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("sqrtWithRemainderIn:"), &ctr_gmp_sqrtrem);
+  ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("isPerfectPower"), &ctr_gmp_is_perfect_power);
+  ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("isPerfectSquare"), &ctr_gmp_is_perfect_square);
+
   ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("BigInteger"), CtrStdBigInt, 0);
 }

@@ -25,7 +25,7 @@ ctr_object* ctr_gmp_mod(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gmp_lt(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gmp_gt(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gmp_eq(ctr_object* myself, ctr_argument* argumentList);
-//ctr_object* ctr_gmp_(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_gmp_pow_self(ctr_object* myself, ctr_argument* argumentList);
 
 ctr_object* ctr_gmp_make(ctr_object* myself, ctr_argument* argumentList) {
   mpz_t* num = ctr_heap_allocate(sizeof(mpz_t));
@@ -183,9 +183,28 @@ int ctr_gmp__compare(ctr_object* one, ctr_object* other) {
   return 0; //dud
 }
 
-// ctr_object* ctr_gmp_pow(ctr_object* myself, ctr_argument* argumentList) {
-//
-// }
+ctr_object* ctr_gmp_pow(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* other = argumentList->object;
+  if (other->info.type == CTR_OBJECT_TYPE_OTEX) {
+    CtrStdFlow = ctr_build_string_from_cstring("[BigInt] pow: [BigInt] not allowed");
+    return CtrStdNil;
+  } else {
+    ctr_object* rop = ctr_gmp_make(NULL, NULL);
+    mpz_pow_ui(*(mpz_t*)(rop->value.rvalue->ptr), *(mpz_t*)(myself->value.rvalue->ptr), other->value.nvalue);
+    return rop;
+  }
+}
+
+ctr_object* ctr_gmp_pow_self(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object* other = argumentList->object;
+  if (other->info.type == CTR_OBJECT_TYPE_OTEX) {
+    CtrStdFlow = ctr_build_string_from_cstring("[BigInt] **=: [BigInt] not allowed");
+    return CtrStdNil;
+  } else {
+    mpz_pow_ui(*(mpz_t*)(myself->value.rvalue->ptr), *(mpz_t*)(myself->value.rvalue->ptr), other->value.nvalue);
+    return myself;
+  }
+}
 
 ctr_object* ctr_gmp_lt(ctr_object* myself, ctr_argument* argumentList) {
   return ctr_build_bool(ctr_gmp__compare(myself, ctr_internal_cast2number(argumentList->object))<0?1:0);
@@ -242,6 +261,9 @@ void begin() {
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("+"), &ctr_gmp_nadd);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("-"), &ctr_gmp_nsub);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("*"), &ctr_gmp_nmul);
+  ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("**:"), &ctr_gmp_pow);
+  ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("pow:"), &ctr_gmp_pow);
+  ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("**=:"), &ctr_gmp_pow_self);
 
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("div:"), &ctr_gmp_div);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("mod:"), &ctr_gmp_mod);

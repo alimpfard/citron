@@ -2352,6 +2352,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdClock, ctr_build_string_from_cstring (CTR_DICT_TOSTRING), &ctr_clock_to_string);
   ctr_internal_create_func (CtrStdClock, ctr_build_string_from_cstring (CTR_DICT_ADD_SET), &ctr_clock_add);
   ctr_internal_create_func (CtrStdClock, ctr_build_string_from_cstring (CTR_DICT_SUBTRACT_SET), &ctr_clock_subtract);
+  ctr_internal_create_func (CtrStdClock, ctr_build_string_from_cstring ("isDaylightSaving"), &ctr_clock_isdst);
   ctr_internal_create_func (CtrStdClock, ctr_build_string_from_cstring ("processorClock"), &ctr_clock_processor_time);
   ctr_internal_create_func (CtrStdClock, ctr_build_string_from_cstring ("ticksPerSecond"), &ctr_clock_processor_ticks_ps);
   ctr_internal_create_func (CtrStdClock, ctr_build_string_from_cstring ("timeExecutionOf:"), &ctr_clock_time_exec);

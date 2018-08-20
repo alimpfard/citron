@@ -27,6 +27,8 @@ static int debug = 0;
 static int from_stdin = 0;
 int with_stdlib = 1;
 
+char* SystemTZ;
+
 ctr_code_pragma oneline_p  = {.type = 't',.value = 0},
                 flex_const = {.type = 'o',.value = 0},
                 regex_lc   = {.type = 't',.value = 0},
@@ -136,6 +138,8 @@ void ctr_initialize_ex() {
   regexLineCheck = &regex_lc;
   callShorthand = &callshorth;
   extensionsPra = &extpragmas;
+
+  SystemTZ = getenv("TZ") ?: "UTC";
 
   ctr_gc_mode = 1;		/* default GC mode: activate GC */
   ctr_gc_memlimit = 8388608;

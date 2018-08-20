@@ -16,6 +16,7 @@ pkginclude_HEADERS = citron.h citron_conv.h citron_ensure.h coroutine.h dictiona
 			  siphash.h generator.h symbol.hpp symbol.h config.h
 
 lib_LTLIBRARIES = libcitron.la
+libcitron_la_LDFLAGS = -DLIBRARY_BUILD 
 libcitron_la_SOURCES = citron.c base.c world.c importlib.c fiber.c reflect.c\
                		   walker.c parser.c lexer.c lexer_plug.c system.c file.c\
                		   collections.c util.c memory.c utf8.c symbol.c siphash.c\

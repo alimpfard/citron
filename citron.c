@@ -168,6 +168,7 @@ void ctr_initialize_ex() {
 
 }
 
+#ifndef LIBRARY_BUILD
 #ifndef CITRON_LIBRARY
 /**
  * Citron Application Main Start
@@ -297,3 +298,4 @@ execute_string_len (char *prg, int length)
   char *msg = ctr_internal_cast2string (str)->value.svalue->value;
   return msg;
 }
+#endif //LIBRARY_BUILD

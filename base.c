@@ -763,7 +763,7 @@ ctr_object_on_do (ctr_object * myself, ctr_argument * argumentList)
     }
   nextArgument = argumentList->next;
   methodBlock = nextArgument->object;
-  if (methodBlock->info.type != CTR_OBJECT_TYPE_OTBLOCK)
+  if (methodBlock->info.type != CTR_OBJECT_TYPE_OTBLOCK && methodBlock->info.type != CTR_OBJECT_TYPE_OTNATFUNC)
     {
       CtrStdFlow = ctr_build_string_from_cstring ("Expected argument do: to be of type block.");
       CtrStdFlow->info.sticky = 1;
@@ -1767,7 +1767,7 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
   ctr_argument *arguments;
   int t;
   int i;
-  if (block->info.type != CTR_OBJECT_TYPE_OTBLOCK)
+  if (block->info.type != CTR_OBJECT_TYPE_OTBLOCK && block->info.type != CTR_OBJECT_TYPE_OTNATFUNC)
     {
       CtrStdFlow = ctr_build_string_from_cstring ("Expected a code block.");
       return myself;
@@ -2100,7 +2100,7 @@ ctr_number_to_step_do (ctr_object * myself, ctr_argument * argumentList)
   if (startValue == endValue)
     return myself;
   forward = (startValue < endValue);
-  if (codeBlock->info.type != CTR_OBJECT_TYPE_OTBLOCK)
+  if (codeBlock->info.type != CTR_OBJECT_TYPE_OTBLOCK && codeBlock->info.type != CTR_OBJECT_TYPE_OTNATFUNC)
     {
       CtrStdFlow = ctr_build_string_from_cstring ("Expected block.");
       return myself;
@@ -4675,6 +4675,12 @@ ctr_string_html_escape (ctr_object * myself, ctr_argument * argumentList)
   ctr_heap_free (tstr);
   return newString;
 }
+
+// ctr_object *
+// ctr_string_literal_escape (ctr_object * myself, ctr_argument * argumentList)
+// {
+//
+// }
 
 /**
  * <b>[String] hashWithKey: [String]</b>

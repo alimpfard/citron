@@ -1,6 +1,5 @@
-import
-  Library/Data/Map
-  _native: \*.
+import Library/Data/Map.
+import _native: \*.
 
 
 var Readline is Object cnew: {

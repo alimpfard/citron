@@ -53,10 +53,10 @@ ctr_generator_make (ctr_object * myself, ctr_argument * argumentList)
     case CTR_OBJECT_TYPE_OTNUMBER:
       {
 	ctr_object *end, *step;
-	if ((end = argumentList->next->object))
+	if (argumentList->next && (end = argumentList->next->object))
 	  {			//from_to_
 	    res->type = CTR_STEP_GENNY;
-	    if ((step = argumentList->next->next->object))
+	    if (argumentList->next->next && (step = argumentList->next->next->object))
 	      {			//from_to_step
 		ctr_generator *gen = ctr_heap_allocate (sizeof (*gen));
 		gen->seq_index = 0;

@@ -1,6 +1,6 @@
 extensiondir = $(datadir)/@PACKAGE@/extensions
 extension_DATA = *.ctr
-bin_SCRIPTS = citron
+bin_SCRIPTS = citron ctrc
 install-data-local:
 	rm -rf $(datadir)/@PACKAGE@/Library
 	rm -rf $(datadir)/@PACKAGE@/mods

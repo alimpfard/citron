@@ -2437,7 +2437,7 @@ ctr_clock_format (ctr_object * myself, ctr_argument * argumentList)
   description = ctr_heap_allocate (41);
   setenv ("TZ", zone, 1);
   strftime (description, 40, format, localtime (&timeStamp));
-  setenv ("TZ", "UTC", 1);
+  setenv ("TZ", SystemTZ, 1);
   answer = ctr_build_string_from_cstring (description);
   ctr_heap_free (description);
   ctr_heap_free (format);
@@ -2463,6 +2463,14 @@ ctr_clock_to_string (ctr_object * myself, ctr_argument * argumentList)
   return answer;
 }
 
+ctr_object *
+ctr_clock_isdst (ctr_object * myself, ctr_argument * argumentList)
+{
+  time_t timestamp;
+  time(&timestamp);
+  struct tm *timeinfo = localtime(&timestamp);
+  return ctr_build_bool(timeinfo->tm_isdst);
+}
 /**
  * @internal
  */
@@ -2470,7 +2478,7 @@ void
 ctr_clock_init (ctr_object * clock)
 {
   ctr_internal_object_add_property (clock, ctr_build_string_from_cstring (CTR_DICT_TIME), ctr_build_number_from_float ((double_t) time (NULL)), 0);
-  ctr_internal_object_add_property (clock, ctr_build_string_from_cstring (CTR_DICT_ZONE), ctr_build_string_from_cstring ("UTC"), 0);
+  ctr_internal_object_add_property (clock, ctr_build_string_from_cstring (CTR_DICT_ZONE), ctr_build_string_from_cstring (SystemTZ), 0);
 }
 
 /**

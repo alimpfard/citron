@@ -3,7 +3,7 @@
 Broom memoryLimit: 1024 * 1024 * 512.
 
 (Program argCount = 2) ifTrue: {
-  Pen writeln: 'Usage: compile <infile> [<outfile> (defaults to a.out)] [--keep-intermediates]'.
+  Pen writeln: 'Usage: compile <infile> [<outfile> (defaults to a.out)] [--keep-intermediates] [--import-intrinsic] [-- <compiler options>]'.
   Program exit.
 }.
 
@@ -22,6 +22,7 @@ var errPen is pPen for: (File special: 'stderr').
 Array on: 'toBoolean' do: { ^me count > 0. }.
 
 var import_intrinsic is False.
+var optimize is False.
 
 var var_id is 0.
 var gvar_id is 0.
@@ -274,16 +275,19 @@ var compile is {:ast
       var_id +=: 1.
       var vname is 'ctr_tuple_$$var_id'.
       var props is Map new
-        put: '1' at: '->value.avalue->immutable',
-        put: '1' at: '->value.avalue->length',
-        put: '0' at: '->value.avalue->head',
-        put: '0' at: '->value.avalue->tail',
-        put: 'ctr_heap_allocate(sizeof (ctr_object *) * 1)' at: '->value.avalue->elements',
+        put: 'ctr_internal_create_object(CTR_OBJECT_TYPE_OTARRAY)' at: '', # initialize
         put: 'ctr_heap_allocate(sizeof (ctr_collection))' at: '->value.avalue',
-        put: 'ctr_internal_create_object(CTR_OBJECT_TYPE_OTARRAY)' at: ''. # initialize
-      variables push: ['ctr_object*', vname, props].
-      var s is (Array new fill: count with: \:x compile[elements @ x], foldl: (\:acc:x 'ctr_array_push_imm(%s, %s)' % [acc, single_argn_t[x]]) accumulator: vname).
-      variables push: ['', vname, s].
+        put: 'ctr_heap_allocate(sizeof (ctr_object *) * %d)' % [count] at: '->value.avalue->elements',
+        put: count at: '->value.avalue->head',
+        put: 0 at: '->value.avalue->tail',
+        put: count at: '->value.avalue->length',
+        put: 1 at: '->value.avalue->immutable'.
+      var mp is Map new.
+      Array new fill: count with: \:x compile[elements @ x], each: {:i:x
+        props put: x at: '->value.avalue->elements[%d]' % [i].
+      }.
+      props each: {:k:v mp put: v at: k.}.
+      variables push: ['ctr_object*', vname, mp].
       ^vname.
     },
     default: { errPen red writeln: '$$ast is not compilable at the moment', resetColor. }) switch: ast type.
@@ -360,7 +364,7 @@ var compile_complete is {:ast
   # + generate_inits['  ']
   + s + ';\n'
   + '  if (CtrStdFlow) {\n'
-  + '    ctr_object* err = CtrStdFlow; CtrStdFlow = NULL;'
+  + '    ctr_object* err = CtrStdFlow; CtrStdFlow = NULL;\n'
   + '    ctr_send_message_variadic(CtrStdConsole, "writeln:", 8, 1, err);\n'
   + '    exit(1);\n}\n'
   + '  return 0;\n}'.
@@ -369,24 +373,32 @@ var compile_complete is {:ast
 var filename is prgargs shift.
 
 filename = '-h' ifTrue: {
-  Pen green writeln: 'Citron down-compiler', resetColor.
-  Pen tab yellow writeln: '[Warning] incomplete software', resetColor.
-  Pen writeln: 'Usage: compile <infile> [<outfile> (defaults to a.out)] [--keep-intermediates] [--import-intrinsic]'.
+  Pen green writeln: 'Citron down-compiler'.
+  Pen tab yellow writeln: '[WARNING] Incomplete software'.
+  Pen resetColor writeln: 'Usage: compile <infile> [<outfile> (defaults to a.out)] [--keep-intermediates] [--import-intrinsic] [-- <compiler options>]'.
+
   Program exit.
 }.
 
 var ofilename is prgargs shiftArg or: 'a.out'.
-errPen write: 'Compiling file $$filename into $$ofilename ...\n'.
-
 var src is File new: filename, read.
 var tgt is File new: ofilename + '.c'.
 
 import_intrinsic is prgargs contains: '--import-intrinsic'.
+optimize is prgargs contains: '-O'.
 
 import_intrinsic ifTrue: { errPen magenta writeln: '--import-intrinsic is unstable and will probably not work correctly', resetColor. }.
 
+errPen write: 'Compiling file $$filename into $$ofilename ...\n'.
+
+var idx is prgargs indexOf: '--'.
+var comp_opts is optimize either: ['-Ofast', '-ftree-vectorize', '-fomit-frame-pointer'] or: [].
+idx > -1 ifTrue: {
+  comp_opts is prgargs from: idx - 1 lengthMax: prgargs count.
+  errPen green writeln: 'Will pass %:L to the compiler' % [' ', comp_opts], resetColor.
+}.
 
 tgt write: compile_complete[(AST parse: src)].
-Shell gcc: '%s -ggdb3 -lcitron -o %s' % [tgt path, ofilename].
+Shell gcc: '%s %:L -ggdb3 -lcitron -o %s' % [tgt path, '\x20', comp_opts, ofilename].
 prgargs contains: '--keep-intermediates', ifTrue: { Program exit. }.
 tgt delete.

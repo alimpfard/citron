@@ -16,6 +16,7 @@ import Library/Data/Map.
 import Library/AST/ast2ctrcode: 'ast2ctrcode'.
 
 var errPen is pPen for: (File special: 'stderr').
+var flags is Shell ctrconfig: '--ldflags --cflags', trim.
 
 #:language XFrozen
 
@@ -399,6 +400,6 @@ idx > -1 ifTrue: {
 }.
 
 tgt write: compile_complete[(AST parse: src)].
-Shell gcc: '%s %:L -ggdb3 -lcitron -o %s' % [tgt path, '\x20', comp_opts, ofilename].
+Shell gcc: '%s %:L -ggdb3 %s -o %s' % [tgt path, '\x20', comp_opts, flags, ofilename].
 prgargs contains: '--keep-intermediates', ifTrue: { Program exit. }.
 tgt delete.

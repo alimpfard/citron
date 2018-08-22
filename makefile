@@ -48,7 +48,10 @@ COBJS = ${OBJS} compiler.o
 
 all: CFALGS := $(CFLAGS) -O2
 all: cxx
-all: ctr
+all: ctr ctrconfig
+
+ctrconfig:
+	$(CC) ctrconfig.c -o ctrconfig
 
 debug: CFLAGS := ${CFLAGS} -DDEBUG_BUILD -DDEBUG_BUILD_VERSION=${DEBUG_BUILD_VERSION} -Og -g3 -ggdb3 -Wno-unused-function
 debug: cxx

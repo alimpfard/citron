@@ -10,7 +10,7 @@ install:
   - ./configure --prefix=$BUILD_DIR_INT && make
   - cd .. && bash ./makeplugs.sh
   - cd autohell
-  - make install
+  - sudo make install
   - cd ..
 
 script:

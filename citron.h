@@ -1219,6 +1219,22 @@ CTR_H_DECLSPEC ctr_object* CtrStdImportLib;
 CTR_H_DECLSPEC ctr_object* CtrStdImportLib_SearchPaths;
 ctr_object* ctr_importlib_begin(ctr_object* myself, ctr_argument* argumentList);
 
+/** Inject **/
+CTR_H_DECLSPEC ctr_object* CtrStdInject;
+voidptrfn_t ctr_inject_compiled_state_release_hook;
+ctr_object* ctr_inject_make(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_inject_compile(ctr_object* myself, ctr_argument* argumentList);
+ctr_object *ctr_inject_get_symbol(ctr_object *myself, ctr_argument *argumentList);
+ctr_object *ctr_inject_run(ctr_object *myself, ctr_argument *argumentList);
+ctr_object *ctr_inject_add_inclp(ctr_object* myself, ctr_argument* argumentList);
+ctr_object *ctr_inject_export_f(ctr_object *myself, ctr_argument *argumentList);
+ctr_object *ctr_inject_add_lib(ctr_object* myself, ctr_argument* argumentList);
+ctr_object *ctr_inject_set_error_handler(ctr_object* myself, ctr_argument* argumentList);
+
+/** FFI **/
+#include "ffi/ctypes.h"
+void ctr_ffi_begin();
+
 /**
  * Global Garbage Collector variables
  */

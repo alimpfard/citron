@@ -4,7 +4,7 @@
 #include <limits.h>
 #include <float.h>
 #include <stdio.h>
-#include "../citron.h"
+#include "citron.h"
 #include "ctypes.h"
 #include "reverse_sizes.h"
 

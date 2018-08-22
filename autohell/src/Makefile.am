@@ -1,5 +1,5 @@
 AM_CFLAGS = --pedantic -O2 -Wall -D withTermios -D forLinux -DCTR_STD_EXTENSION_PATH=\"$(pkgdatadir)\" -DWITH_AUTOMAKE=\"$(pkgdatadir)\"
-AM_LDFLAGS = -rdynamic -lm -ldl -lbsd -lpcre -lpthread tcc/libtcc.a -o ctr
+AM_LDFLAGS = -rdynamic -lm -ldl -lbsd -lpcre -lpthread -lffi tcc/libtcc.a -o ctr
 AM_CXXFLAGS = $(CXXFLAGS) -std=c++0x
 
 SUBDIRS = tcc

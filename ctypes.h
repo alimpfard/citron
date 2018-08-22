@@ -23,7 +23,7 @@ ctr_internal_object_add_property(CtrStdCType, ctr_build_string_from_cstring("typ
 #include <Citron/citron.h>
 #else
 #warning "We don't have Citron installed"
-#include "../citron.h"
+#include "citron.h"
 #endif
 #include "_struct.h"
 #include "structmember.h"

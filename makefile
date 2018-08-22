@@ -39,7 +39,7 @@ gc_check:
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o\
 		world.o lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o\
 		importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o\
-		promise.o symbol_cxx.o ffi/_struct.o ffi/ctypes.o ffi/structmember.o\
+		promise.o symbol_cxx.o _struct.o ctypes.o structmember.o\
 		inject.o tcc/libtcc1.a tcc/libtcc.a
 
 COBJS = ${OBJS} compiler.o
@@ -78,7 +78,7 @@ cxx:
 tcc/%.a:
 	cd tcc && ./configure --prefix=$(realpath build) && $(MAKE) $<
 
-# ffi/%.o: %.c
+# %.o: %.c
 # 	echo "$<"
 # 	$(CC) $(CFLAHS) -c $< -o $@ >/dev/null 2>&1
 

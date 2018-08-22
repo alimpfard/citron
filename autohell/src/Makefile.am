@@ -3,7 +3,7 @@ AM_LDFLAGS = -rdynamic -lm -ldl -lbsd -lpcre -lpthread -lffi -ltcc -o ctr
 
 SUBDIRS = tcc
 
-AM_CXXFLAGS = -std=c++14
+AM_CXXFLAGS = -std=c++11
 
 bin_PROGRAMS = ctr ctrconfig
 ctrconfig_SOURCES = ctrconfig.c

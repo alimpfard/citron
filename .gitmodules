@@ -10,6 +10,3 @@
 [submodule "libbsd"]
     path = libbsd
     url = https://github.com/LuaDist/libbsd.git
-[submodule "tcc"]
-	path = tcc
-	url = ./tcc

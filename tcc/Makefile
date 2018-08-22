@@ -5,8 +5,8 @@
 TOP ?= .
 include $(TOP)/config.mak
 
-CFLAGS+=-g -Wall
-CFLAGS_P=$(CFLAGS) -pg -static -DCONFIG_TCC_STATIC
+CFLAGS+=-g -Wall -shared -rdynamic -fPIC
+CFLAGS_P=$(CFLAGS) -pg
 LIBS_P=
 
 ifneq ($(GCC_MAJOR),2)
@@ -111,7 +111,7 @@ ifdef CONFIG_CROSS
 PROGS+=$(PROGS_CROSS)
 endif
 
-all: $(PROGS) $(LIBTCC1) $(BCHECK_O) libtcc.a tcc-doc.html tcc.1 libtcc_test$(EXESUF)
+all: $(PROGS) $(LIBTCC1) $(BCHECK_O) libtcc.a libtcc.so tcc-doc.html tcc.1 libtcc_test$(EXESUF)
 
 # Host Tiny C Compiler
 tcc$(EXESUF): $(NATIVE_FILES)
@@ -148,6 +148,9 @@ libtcc.o: $(NATIVE_FILES)
 
 libtcc.a: libtcc.o
 	$(AR) rcs $@ $^
+
+libtcc.so: libtcc.o
+	$(CC) -shared -o $@ $^ 
 
 libtcc_test$(EXESUF): tests/libtcc_test.c libtcc.a
 	$(CC) -o $@ $^ -I. $(CFLAGS) $(LIBS)
@@ -264,9 +267,9 @@ test clean :
 # clean
 clean: local_clean
 local_clean:
-	rm -vf $(PROGS) tcc_p$(EXESUF) tcc.pod *~ *.o *.a *.out libtcc_test$(EXESUF)
+	rm -rf $(PROGS) tcc_p$(EXESUF) tcc.pod *~ *.o *.a *.out libtcc_test$(EXESUF)
 
 distclean: clean
-	rm -vf config.h config.mak config.texi tcc.1 tcc-doc.html
+	rm -rf config.h config.mak config.texi tcc.1 tcc-doc.html
 
 endif # ifeq ($(TOP),.)

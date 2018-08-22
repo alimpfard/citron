@@ -3,6 +3,8 @@ AM_LDFLAGS = -rdynamic -lm -ldl -lbsd -lpcre -lpthread -lffi -ltcc -o ctr
 
 SUBDIRS = tcc
 
+AM_CXXFLAGS = -std=c++14
+
 bin_PROGRAMS = ctr ctrconfig
 ctrconfig_SOURCES = ctrconfig.c
 ctr_SOURCES = citron.c base.c world.c importlib.c fiber.c reflect.c\

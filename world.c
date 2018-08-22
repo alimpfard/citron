@@ -2497,6 +2497,18 @@ ctr_initialize_world ()
   ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring ("%ctor"), CtrStdReflect_cons, 0);
   CtrStdReflect_cons->info.sticky = 1;
 
+  CtrStdInject = CtrStdObject;
+  CtrStdInject = ctr_inject_make(NULL, NULL);
+  ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Inject"), CtrStdInject, 0);  
+  ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("newWithDebugSymbols:"), &ctr_inject_make);
+  ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("new"), &ctr_inject_make);
+  ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("compile:"), &ctr_inject_compile);
+  ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("run:arguments:"), &ctr_inject_run);
+  ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("symbol:"), &ctr_inject_get_symbol);
+  ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("addIncludePath:"), &ctr_inject_add_inclp);
+  ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("linkInLibrary:"), &ctr_inject_add_lib);
+  ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("errorHandler:"), &ctr_inject_set_error_handler);
+
   static ctr_object ctr_dummy_import;
   static ctr_interfaces ifs;
   if (!with_stdlib)
@@ -2511,6 +2523,8 @@ ctr_initialize_world ()
   ctr_fiber_begin_init ();
   initiailize_base_extensions ();
   promise_begin ();
+  // FFI
+  ctr_ffi_begin();
 
   /* Other objects */
   CtrStdBreak = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);

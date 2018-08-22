@@ -1,4 +1,4 @@
-DEBUG_VERSION := 120
+DEBUG_VERSION := 144
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 LEXTRACF := ${LEXTRACF} -flto -lstdc++
 fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
@@ -37,9 +37,10 @@ gc_check:
 -include gc_check
 
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o\
-		   world.o lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o\
-			 importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o\
-			 promise.o symbol_cxx.o
+		world.o lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o\
+		importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o\
+		promise.o symbol_cxx.o ffi/_struct.o ffi/ctypes.o ffi/structmember.o\
+		inject.o tcc/libtcc1.a tcc/libtcc.a
 
 COBJS = ${OBJS} compiler.o
 
@@ -59,23 +60,30 @@ install:
 	echo -e "install directly from source not allowed.\nUse citron_autohell instead for installs"
 	exit 1;
 ctr:	$(OBJS)
-	$(CC) -fopenmp $(OBJS) -rdynamic -lm -ldl -lbsd -lpcre -lpthread ${LEXTRACF} -o ctr
+	$(CC) -fopenmp $(OBJS) -rdynamic -lm -ldl -lbsd -lpcre -l:libffi.so.7 -lpthread ${LEXTRACF} -o ctr
 
 libctr: CFLAGS := $(CFLAGS) -fPIC -DCITRON_LIBRARY
 libctr: symbol_cxx
 libctr: $(OBJS)
-	$(CC) $(OBJS) -shared -export-dynamic -ldl -lbsd -lpcre -lpthread -o libctr.so
+	$(CC) $(OBJS) -shared -export-dynamic -ldl -lbsd -lpcre -l:libffi.so.7 -lpthread -o libctr.so
 
 compiler: CFLAGS := $(CFLAGS) -D comp=1
 compiler: cxx
 compiler: $(COBJS)
-	$(CC) $(COBJS) -rdynamic -lm -ldl -lbsd -lpcre -lprofiler -lpthread ${LEXTRACF} -o ctrc
+	$(CC) $(COBJS) -rdynamic -lm -ldl -lbsd -lpcre -l:libffi.so.7 -lprofiler -lpthread ${LEXTRACF} -o ctrc
 
 cxx:
 	echo "blah"
 
+tcc/%.a:
+	cd tcc && ./configure --prefix=$(realpath build) && $(MAKE) $<
+
+# ffi/%.o: %.c
+# 	echo "$<"
+# 	$(CC) $(CFLAHS) -c $< -o $@ >/dev/null 2>&1
+
 %.o: %.c
-	$(CC) -fopenmp $(CFLAGS) -c $< >/dev/null 2>&1
+	$(CC) -fopenmp $(CFLAGS) -c $< -o $@ >/dev/null 2>&1
 
 define SHVAL =
 for f in *.c; do\

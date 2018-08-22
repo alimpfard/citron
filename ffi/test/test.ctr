@@ -1,0 +1,8 @@
+ra is CTypes structWithFormat: 'sip'.
+str is CTypes fromString: 'test'.
+ra pack: [1, str].
+Pen writeln: (ra unpack).
+rc is CIF new setABI: 0 return: Nil argTypes: [ra].
+rb is CTypes loadLibrary: './a.out'.
+rd is rb test.
+rc call: rd withArgs: [ra].

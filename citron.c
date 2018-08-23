@@ -140,7 +140,7 @@ void ctr_initialize_ex() {
   extensionsPra = &extpragmas;
 
   SystemTZ = getenv("TZ") ?: "UTC";
-
+  
   ctr_gc_mode = 1;		/* default GC mode: activate GC */
   ctr_gc_memlimit = 8388608;
   CTR_LIMIT_MEM = 1;		//enfore GC

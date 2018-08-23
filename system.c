@@ -12,14 +12,17 @@
 #include <sys/ioctl.h>
 #include <syslog.h>
 #include <signal.h>
-#ifdef withBoehmGC
-#include <gc/gc.h>
-#endif
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <pthread.h>
 #include "compcompat_pthread.h"
+
+
+#ifdef withBoehmGC
+#include <gc/gc.h>
+#define pthread_create GC_pthread_create
+#endif
 
 #ifdef withTermios
 #include <termios.h>
@@ -3087,12 +3090,14 @@ ctr_thread_join (ctr_object * myself, ctr_argument * argumentList)
     {
       if (retval->stdFlow)
 	{
-	  ctr_heap_free (retval);
 	  CtrStdFlow = retval->stdFlow;
+	  ctr_heap_free (retval);
 	  return CtrStdNil;
 	}
+      ctr_object* rvt = retval->retval;
       ctr_heap_free (retval);
-      return retval->retval;
+      if (rvt == NULL) return CtrStdNil; 
+      return rvt;
     }
 }
 

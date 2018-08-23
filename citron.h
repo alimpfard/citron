@@ -12,9 +12,11 @@ extern "C" {
 
 #else //__cplusplus
 
-#define CTR_H_DECLSPEC
+#define CTR_H_DECLSPEC 
 
 #endif
+
+#define CTR_GLOBAL_SPEC extern
 
 #define CTR_LOAD_BASE_MODS //undef for no base mods
 
@@ -337,6 +339,11 @@ extern int with_stdlib;
 /**
  * Core Objects
  */
+
+#ifdef CTR_INJECT
+#define __thread 
+#endif
+
 CTR_H_DECLSPEC ctr_object* CtrStdWorld;          //!< Standard Object : Global Namespace
 CTR_H_DECLSPEC ctr_object* CtrStdObject;         //!< Standard Object : Base Object
 CTR_H_DECLSPEC ctr_object* CtrStdBlock;          //!< Standard Object : Code Block
@@ -356,7 +363,11 @@ CTR_H_DECLSPEC ctr_object* CtrStdCommand;        //!< Standard Object : Program
 CTR_H_DECLSPEC ctr_object* CtrStdSlurp;          //!< Standard Object : Slurp
 CTR_H_DECLSPEC ctr_object* CtrStdShell;          //!< Standard Object : Shell
 CTR_H_DECLSPEC ctr_object* CtrStdClock;          //!< Standard Object : Clock
-CTR_H_DECLSPEC ctr_object* CtrStdFlow;           //!< Internal Flow namespace : contains errors and flow control
+#ifndef CTR_GLOBALS_DEFINE
+extern __thread ctr_object* CtrStdFlow; 
+#else
+__thread ctr_object* CtrStdFlow = NULL;           //!< Internal Flow namespace : contains errors and flow control
+#endif
 CTR_H_DECLSPEC ctr_object* CtrExceptionType;     //!< contains error/exception types
 CTR_H_DECLSPEC ctr_object* CtrStdBreak;          //!< Internal Flow representation for break : stop the current iteration
 CTR_H_DECLSPEC ctr_object* CtrStdContinue;       //!< Internal Flow representation for continue : skip the current iteration
@@ -375,44 +386,42 @@ CTR_H_DECLSPEC ctr_object* CTR_FILE_STDIN_STR;   //!< Special Object : Standard 
 CTR_H_DECLSPEC ctr_object* CTR_FILE_STDOUT_STR;  //!< Special Object : Standard Output in-world name
 CTR_H_DECLSPEC ctr_object* CTR_FILE_STDERR_STR;  //!< Special Object : Standard Error in-world name
 
-#ifdef __cplusplus
-ctr_object* get_CtrStdWorld();
-ctr_object* get_CtrStdObject();
-ctr_object* get_CtrStdBlock();
-ctr_object* get_CtrStdString();
-ctr_object* get_CtrStdNumber();
-ctr_object* get_CtrStdBool();
-ctr_object* get_CtrStdConsole();
-ctr_object* get_CtrStdNil();
-ctr_object* get_CtrStdGC();
-ctr_object* get_CtrStdMap();
-ctr_object* get_CtrStdArray();
-ctr_object* get_CtrStdIter();
-ctr_object* get_CtrStdFile();
-ctr_object* get_CtrStdSystem();
-ctr_object* get_CtrStdDice();
-ctr_object* get_CtrStdCommand();
-ctr_object* get_CtrStdSlurp();
-ctr_object* get_CtrStdShell();
-ctr_object* get_CtrStdClock();
-ctr_object* get_CtrStdFlow();
-ctr_object* get_CtrExceptionType();
-ctr_object* get_CtrStdBreak();
-ctr_object* get_CtrStdContinue();
-ctr_object* get_CtrStdExit();
-ctr_object* get_CtrStdReflect();
-ctr_object* get_CtrStdReflect_cons();
-ctr_object* get_CtrStdFiber();
-ctr_object* get_CtrStdThread();
-ctr_object* get_CtrStdSymbol();
-ctr_object* get_ctr_first_object();
-ctr_object* get_CTR_FILE_STDIN();
-ctr_object* get_CTR_FILE_STDOUT();
-ctr_object* get_CTR_FILE_STDERR();
-ctr_object* get_CTR_FILE_STDIN_STR();
-ctr_object* get_CTR_FILE_STDOUT_STR();
-ctr_object* get_CTR_FILE_STDERR_STR();
-#endif
+ctr_object** get_CtrStdWorld();
+ctr_object** get_CtrStdObject();
+ctr_object** get_CtrStdBlock();
+ctr_object** get_CtrStdString();
+ctr_object** get_CtrStdNumber();
+ctr_object** get_CtrStdBool();
+ctr_object** get_CtrStdConsole();
+ctr_object** get_CtrStdNil();
+ctr_object** get_CtrStdGC();
+ctr_object** get_CtrStdMap();
+ctr_object** get_CtrStdArray();
+ctr_object** get_CtrStdIter();
+ctr_object** get_CtrStdFile();
+ctr_object** get_CtrStdSystem();
+ctr_object** get_CtrStdDice();
+ctr_object** get_CtrStdCommand();
+ctr_object** get_CtrStdSlurp();
+ctr_object** get_CtrStdShell();
+ctr_object** get_CtrStdClock();
+ctr_object** get_CtrStdFlow();
+ctr_object** get_CtrExceptionType();
+ctr_object** get_CtrStdBreak();
+ctr_object** get_CtrStdContinue();
+ctr_object** get_CtrStdExit();
+ctr_object** get_CtrStdReflect();
+ctr_object** get_CtrStdReflect_cons();
+ctr_object** get_CtrStdFiber();
+ctr_object** get_CtrStdThread();
+ctr_object** get_CtrStdSymbol();
+ctr_object** get_ctr_first_object();
+ctr_object** get_CTR_FILE_STDIN();
+ctr_object** get_CTR_FILE_STDOUT();
+ctr_object** get_CTR_FILE_STDERR();
+ctr_object** get_CTR_FILE_STDIN_STR();
+ctr_object** get_CTR_FILE_STDOUT_STR();
+ctr_object** get_CTR_FILE_STDERR_STR();
 /**
 * @internal
  * standard instrumentor, do not override.

@@ -1,4 +1,4 @@
-DEBUG_VERSION := 145
+DEBUG_VERSION := 180
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 LEXTRACF := ${LEXTRACF} -flto -lstdc++
 fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
@@ -37,10 +37,10 @@ gc_check:
 -include gc_check
 
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o\
-		world.o lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o\
+		lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o\
 		importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o\
 		promise.o symbol_cxx.o _struct.o ctypes.o structmember.o\
-		inject.o tcc/libtcc1.a tcc/libtcc.a
+		inject.o world.o tcc/libtcc1.a tcc/libtcc.a 
 
 COBJS = ${OBJS} compiler.o
 

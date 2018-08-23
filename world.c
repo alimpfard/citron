@@ -10,9 +10,11 @@
 #include <stdint.h>
 #include <time.h>
 
+#define CTR_GLOBALS_DEFINE
 #include "citron.h"
+#undef CTR_GLOBALS_DEFINE
+
 #include "siphash.h"
-// #include "murmur3.h"
 
 #ifdef withBoehmGC
 #include <gc/gc.h>
@@ -31,7 +33,6 @@ static int ctr_world_initialized = 0;
 #include <pthread.h>
 static pthread_mutex_t ctr_message_mutex = { {PTHREAD_MUTEX_RECURSIVE} };
 
-#define CTR_THREAD_LOCK() pthread_mutex_lock(&ctr_message_mutex)
 #define CTR_THREAD_UNLOCK() pthread_mutex_unlock(&ctr_message_mutex)
 #else
 #define CTR_THREAD_LOCK()
@@ -3061,218 +3062,218 @@ ctr_set_link_all (ctr_object * what, ctr_object * to)
 }
 
 
-ctr_object *
+ctr_object **
 get_CtrStdWorld ()
 {
-  return CtrStdWorld;
+  return &CtrStdWorld;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdObject ()
 {
-  return CtrStdObject;
+  return &CtrStdObject;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdBlock ()
 {
-  return CtrStdBlock;
+  return &CtrStdBlock;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdString ()
 {
-  return CtrStdString;
+  return &CtrStdString;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdNumber ()
 {
-  return CtrStdNumber;
+  return &CtrStdNumber;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdBool ()
 {
-  return CtrStdBool;
+  return &CtrStdBool;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdConsole ()
 {
-  return CtrStdConsole;
+  return &CtrStdConsole;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdNil ()
 {
-  return CtrStdNil;
+  return &CtrStdNil;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdGC ()
 {
-  return CtrStdGC;
+  return &CtrStdGC;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdMap ()
 {
-  return CtrStdMap;
+  return &CtrStdMap;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdArray ()
 {
-  return CtrStdArray;
+  return &CtrStdArray;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdIter ()
 {
-  return CtrStdIter;
+  return &CtrStdIter;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdFile ()
 {
-  return CtrStdFile;
+  return &CtrStdFile;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdSystem ()
 {
-  return CtrStdSystem;
+  return &CtrStdSystem;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdDice ()
 {
-  return CtrStdDice;
+  return &CtrStdDice;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdCommand ()
 {
-  return CtrStdCommand;
+  return &CtrStdCommand;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdSlurp ()
 {
-  return CtrStdSlurp;
+  return &CtrStdSlurp;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdShell ()
 {
-  return CtrStdShell;
+  return &CtrStdShell;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdClock ()
 {
-  return CtrStdClock;
+  return &CtrStdClock;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdFlow ()
 {
-  return CtrStdFlow;
+  return &CtrStdFlow;
 }
 
-ctr_object *
+ctr_object **
 get_CtrExceptionType ()
 {
-  return CtrExceptionType;
+  return &CtrExceptionType;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdBreak ()
 {
-  return CtrStdBreak;
+  return &CtrStdBreak;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdContinue ()
 {
-  return CtrStdContinue;
+  return &CtrStdContinue;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdExit ()
 {
-  return CtrStdExit;
+  return &CtrStdExit;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdReflect ()
 {
-  return CtrStdReflect;
+  return &CtrStdReflect;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdReflect_cons ()
 {
-  return CtrStdReflect_cons;
+  return &CtrStdReflect_cons;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdFiber ()
 {
-  return CtrStdFiber;
+  return &CtrStdFiber;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdThread ()
 {
-  return CtrStdThread;
+  return &CtrStdThread;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdSymbol ()
 {
-  return CtrStdSymbol;
+  return &CtrStdSymbol;
 }
 
-ctr_object *
+ctr_object **
 get_ctr_first_object ()
 {
-  return ctr_first_object;
+  return &ctr_first_object;
 }
 
-ctr_object *
+ctr_object **
 get_CTR_FILE_STDIN ()
 {
-  return CTR_FILE_STDIN;
+  return &CTR_FILE_STDIN;
 }
 
-ctr_object *
+ctr_object **
 get_CTR_FILE_STDOUT ()
 {
-  return CTR_FILE_STDOUT;
+  return &CTR_FILE_STDOUT;
 }
 
-ctr_object *
+ctr_object **
 get_CTR_FILE_STDERR ()
 {
-  return CTR_FILE_STDERR;
+  return &CTR_FILE_STDERR;
 }
 
-ctr_object *
+ctr_object **
 get_CTR_FILE_STDIN_STR ()
 {
-  return CTR_FILE_STDIN_STR;
+  return &CTR_FILE_STDIN_STR;
 }
 
-ctr_object *
+ctr_object **
 get_CTR_FILE_STDOUT_STR ()
 {
-  return CTR_FILE_STDOUT_STR;
+  return &CTR_FILE_STDOUT_STR;
 }
 
-ctr_object *
+ctr_object **
 get_CTR_FILE_STDERR_STR ()
 {
-  return CTR_FILE_STDERR_STR;
+  return &CTR_FILE_STDERR_STR;
 }

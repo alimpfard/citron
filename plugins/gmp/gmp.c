@@ -50,7 +50,7 @@ ctr_object* ctr_gmp_make(ctr_object* myself, ctr_argument* argumentList) {
     ctr_heap_free(s);
     if (valid!=0) {
       ctr_heap_free(num);
-      CtrStdFlow = ctr_build_string_from_cstring("Invalid value in string for conversion to biginteger");
+      (*get_CtrStdFlow()) = ctr_build_string_from_cstring("Invalid value in string for conversion to biginteger");
       return CtrStdNil;
     }
   } else
@@ -205,7 +205,7 @@ int ctr_gmp__compare(ctr_object* one, ctr_object* other) {
 ctr_object* ctr_gmp_pow(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* other = argumentList->object;
   if (other->info.type == CTR_OBJECT_TYPE_OTEX) {
-    CtrStdFlow = ctr_build_string_from_cstring("[BigInt] pow: [BigInt] not allowed");
+    (*get_CtrStdFlow()) = ctr_build_string_from_cstring("[BigInt] pow: [BigInt] not allowed");
     return CtrStdNil;
   } else {
     ctr_object* rop = ctr_gmp_make(NULL, NULL);
@@ -217,7 +217,7 @@ ctr_object* ctr_gmp_pow(ctr_object* myself, ctr_argument* argumentList) {
 ctr_object* ctr_gmp_pow_self(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* other = argumentList->object;
   if (other->info.type == CTR_OBJECT_TYPE_OTEX) {
-    CtrStdFlow = ctr_build_string_from_cstring("[BigInt] **=: [BigInt] not allowed");
+    (*get_CtrStdFlow()) = ctr_build_string_from_cstring("[BigInt] **=: [BigInt] not allowed");
     return CtrStdNil;
   } else {
     mpz_pow_ui(*(mpz_t*)(myself->value.rvalue->ptr), *(mpz_t*)(myself->value.rvalue->ptr), other->value.nvalue);
@@ -244,7 +244,7 @@ ctr_object* ctr_gmp_gte(ctr_object* myself, ctr_argument* argumentList) {
 ctr_object* ctr_gmp_times(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* blk = argumentList->object;
   if (blk == NULL || blk->info.type != CTR_OBJECT_TYPE_OTBLOCK) {
-    CtrStdFlow = ctr_build_string_from_cstring("Expected code block.");
+    (*get_CtrStdFlow()) = ctr_build_string_from_cstring("Expected code block.");
     return myself;
   }
   ctr_object* indexNumber = ctr_gmp_make(NULL,NULL);
@@ -257,11 +257,11 @@ ctr_object* ctr_gmp_times(ctr_object* myself, ctr_argument* argumentList) {
     ctr_gmp_sub(indexNumber, arguments);
     arguments->object = indexNumber;
     ctr_block_run(blk, arguments, NULL);
-    if (CtrStdFlow == CtrStdContinue) {CtrStdFlow = NULL; arguments->object=ctr_build_number_from_float(1); ctr_gmp_sub(indexNumber, arguments); continue;}
-    if (CtrStdFlow) break;
+    if ((*get_CtrStdFlow()) == CtrStdContinue) {(*get_CtrStdFlow()) = NULL; arguments->object=ctr_build_number_from_float(1); ctr_gmp_sub(indexNumber, arguments); continue;}
+    if ((*get_CtrStdFlow())) break;
   }
   ctr_heap_free( arguments );
-  if (CtrStdFlow == CtrStdBreak) CtrStdFlow = NULL; /* consume break */
+  if ((*get_CtrStdFlow()) == CtrStdBreak) (*get_CtrStdFlow()) = NULL; /* consume break */
   blk->info.mark = 0;
   blk->info.sticky = 0;
   return myself;

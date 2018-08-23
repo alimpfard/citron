@@ -10,7 +10,7 @@ int ldflags = 0;
 #else 
 #define BSD_L "-lbsd"
 #endif
-#define LDFLAGS "-lcitron -ltcc -lpcre -ldl -lm -pthread " BSD_L
+#define LDFLAGS "-lcitron -ltcc -lpcre -ldl -lm -pthread -lffi " BSD_L
 
 
 int main(int argc, char* argv[]) {

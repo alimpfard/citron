@@ -61,7 +61,7 @@ ctr_object* ctr_json_create_object(json_t* root, ctr_object* gt) {
           return ctr_build_nil();
         }
         default: {
-          CtrStdFlow = ctr_build_string_from_cstring("Unrecognized JSON type");
+          (*get_CtrStdFlow()) = ctr_build_string_from_cstring("Unrecognized JSON type");
           return CtrStdNil;
         }
     }
@@ -77,7 +77,7 @@ json_t *load_json(const char *text, const char* fp) {
     } else {
         char err[2048];
         sprintf(err, "json error on line %d: %s", error.line, error.text);
-        CtrStdFlow = ctr_build_string_from_cstring(err);
+        (*get_CtrStdFlow()) = ctr_build_string_from_cstring(err);
         return (json_t *)0;
     }
 }
@@ -187,7 +187,7 @@ ctr_object* ctr_json_serialize_(ctr_object* object) {
       if(ctr_internal_has_responder(object, ctr_build_string_from_cstring("toJSON")))
         obj = ctr_internal_cast2string(ctr_send_message(object, "toJSON", 6, NULL));
       else {
-        CtrStdFlow = ctr_build_string_from_cstring("Cannot serialize this object, implement the message toJSON"); //TODO:get a decent message.
+        (*get_CtrStdFlow()) = ctr_build_string_from_cstring("Cannot serialize this object, implement the message toJSON"); //TODO:get a decent message.
         return CtrStdNil;
       }
       break;

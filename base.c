@@ -1305,13 +1305,13 @@ ctr_bool_either_or (ctr_object * myself, ctr_argument * argumentList)
   int b = ctr_internal_cast2bool (myself)->value.bvalue;
   if (b)
     {
-      if (argumentList->object->info.type == CTR_OBJECT_TYPE_OTBLOCK)
+      if (argumentList->object->info.type == CTR_OBJECT_TYPE_OTNATFUNC || argumentList->object->info.type == CTR_OBJECT_TYPE_OTBLOCK)
 	return ctr_block_runIt (argumentList->object, NULL);
       return argumentList->object;
     }
   else
     {
-      if (argumentList->next->object->info.type == CTR_OBJECT_TYPE_OTBLOCK)
+      if (argumentList->next->object->info.type == CTR_OBJECT_TYPE_OTNATFUNC || argumentList->next->object->info.type == CTR_OBJECT_TYPE_OTBLOCK)
 	return ctr_block_runIt (argumentList->next->object, NULL);
       return argumentList->next->object;
     }

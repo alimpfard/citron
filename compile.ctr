@@ -451,6 +451,10 @@ var parseByteDecl is {:decl
     ^num.
 }.
 
+
+var heapsize is -1.
+var heapmax is -1.
+
 prgargs each: {:_:v
     (v = '--') break.
     v startsWith: '--heap-size=', ifTrue: {
@@ -481,8 +485,6 @@ import_intrinsic ifTrue: { errPen magenta writeln: '--import-intrinsic is unstab
 
 errPen write: 'Compiling file $$filename into $$ofilename ...\n'.
 
-var heapsize is -1.
-var heapmax is -1.
 var idx is prgargs indexOf: '--'.
 var comp_opts is optimize either: ['-Ofast', '-ftree-vectorize', '-fomit-frame-pointer'] or: [].
 idx > -1 ifTrue: {

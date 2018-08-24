@@ -3,7 +3,7 @@
 Broom memoryLimit: 1024 * 1024 * 512.
 
 (Program argCount = 2) ifTrue: {
-  Pen writeln: 'Usage: compile <infile> [<outfile> (defaults to a.out)] [--keep-intermediates] [--import-intrinsic] [-- <compiler options>]'.
+  Pen writeln: 'Usage: compile <infile> [<outfile> (defaults to a.out)] [OPTIONS] [-- <compiler options>]'.
   Program exit.
 }.
 
@@ -24,6 +24,7 @@ Array on: 'toBoolean' do: { ^me count > 0. }.
 
 var import_intrinsic is False.
 var optimize is False.
+var exceptions is True.
 
 var var_id is 0.
 var gvar_id is 0.
@@ -33,7 +34,7 @@ var variables is Array new.
 var global_variables is Array new.
 
 Array on: 'has_variable:' do: {:v
-  ^any: \:x v = x @ 1.
+  ^any: \:x v = (x @ 1).
 }.
 
 # name -> code
@@ -48,10 +49,10 @@ var generate_single_argn_t is {:*args
 
 var c_addrof is \:x '&$$x'.
 
-var generate_args is {:count:args
+var generate_args is {:count:args:receiver
   ^Array new fill: count with: {:x
     var_id +=: 1.
-    var argv is generate_single_arg_t[compile[(args at: x)]].
+    var argv is generate_single_arg_t[compile[(args at: x), receiver]].
     variables push: argv.
     ^argv @ 1.
   }, reverse foldl: {:acc:x
@@ -72,7 +73,7 @@ String on: 'literalEscape' do: {
 
 var make_or_get_str is {:s
   s is s literalEscape.
-  s length = 0 ifTrue: { errPen yellow writeln: 'NULL creation requested in context $$current_context (after %s)' % [last_context], resetColor. ^'ctr_build_string("", 1)'. }.
+  s length = 0 ifTrue: { errPen yellow writeln: 'NULL creation requested in context %s (after %s)' % [contexts last, contexts init last], resetColor. ^'ctr_build_string("", 1)'. }.
   ^strmap at: s, or: {
     gvar_id +=: 1.
     var name is 'ctr_str_$$gvar_id'.
@@ -83,18 +84,25 @@ var make_or_get_str is {:s
   }.
 }.
 
-var generate_func_param_load is {:ps
+var generate_func_param_load is {:ps:_self
   var params is Array new fill: ps count with: {:i ^ps at: i, value. }.
   var x is make_or_get_str['me'].
-  var s is 'if(!ctr_find_(%s, 1)) ctr_assign_value_to_local_by_ref(%s, a_);\n' % [x, x].
+  var s is 'ctr_object* self = ctr_find_(%s, 1);\nif (!self) ctr_assign_value_to_local_by_ref(%s, a_);\n' % [x, x].
+  # _self isNil ifFalse: {
+  #   s +=: 'self = ' + _self + ';\n'.
+  # }.
   params each_v: {:param
-    s +=: 'ctr_assign_value_to_local_by_ref(%s, b__->object);\nb__ = b__->next;\n' % [make_or_get_str[param]].
+    s +=: '/* param "%s" */\n' % [param].
+    param = 'self' either: {
+      s +=: 'ctr_assign_value_to_local_by_ref(%s, self);\n' % [make_or_get_str[param]].
+    } or: {
+      s +=: 'ctr_assign_value_to_local_by_ref(%s, b__->object);\nb__ = b__->next;\n' % [make_or_get_str[param]].
+    }.
   }.
   ^s.
 }.
 
-var current_context is Nil.
-var last_context is Nil.
+var contexts is Array new.
 
 var imported_files is Array new.
 
@@ -106,16 +114,13 @@ var compile_subprogram is {:*subs
      '__resolve_request:internally:', 'return:', 'return', '__realloc:', '__load:',
      '__unify:', 'respondTo:', 'respondTo:and:'
     ] contains: xv, continue.
-    errPen red writeln: 'named imports are not supported yet(%s), No symbols will be imported' % [xv], resetColor.
+    errPen red writeln: 'named imports are not supported yet(%s), All symbols will be imported as they are named' % [xv], resetColor.
     var vals is xv split: ':'.
     ^vals fmap: \:a ($(import something) @ 1) value: a.
   }), foldl: (\:acc:x x isA: Array, either: {^acc + (x fmap: \:x [True, x]).} or: acc + [[False, x]]) accumulator: [].
-  var last_context_c is last_context.
-  last_context is current_context.
-  current_context is $(import).
   var curdir is File new: '.', realPath.
   var parts is Array new.
-  var paths is subs fmap: ({:sub
+  subs each_v: ({:sub
     var x is sub head either: {
       sub is sub last value.
       var res is import __resolve_request: sub internally: True.
@@ -130,6 +135,7 @@ var compile_subprogram is {:*subs
       ^[sub, res].
     }.
     var f is x @ 1 @ 0.
+    contexts push: 'import <%s>' % [f].
     imported_files contains: f, continue.
     imported_files push: f.
     var resv is x @ 1.
@@ -148,19 +154,17 @@ var compile_subprogram is {:*subs
     variables is oldvs.
     var_id is oldvarid.
 
+    contexts pop.
     parts push: s.
   }).
   Program changeDirectory: curdir.
 
-  current_context is last_context.
-  last_context is last_context_c.
-  ^parts fmap: \:x '{ $$x }', join: '\n'.
+  ^parts join: '\n'. #fmap: \:x '{ $$x }', join: '\n'.
 }.
 
-var compile is {:ast
-  last_context is current_context.
-  current_context is ast.
-  ^(frozen __ is
+var compile is {:ast:receiver
+  contexts push: ast.
+    var ret is (frozen __ is
     case: 'LTRNUM' do: {
       ^'ctr_build_number_from_float(%d)' % [ast evaluate].
     },
@@ -191,10 +195,13 @@ var compile is {:ast
         }.
         ^'ctr_string_eval(%s, NULL)' % [make_or_get_str[ast2ctrcode[ast]]].
       }.
-      var all is Array new fill: ast count with: {:i ^compile[(ast at: i)]. }.
-      var obj is all head.
-      var msgs is all tail.
-      ^msgs foldl: (\:acc:x 'ctr_send_message(%s, %s)' % [acc, x]) accumulator: obj.
+      var obj is compile[ast @ 0].
+      var_id +=: 1.
+      var objname is 'ctr_receiver_$$var_id'.
+      global_variables has_variable: objname, ifFalse: { global_variables push: ['ctr_object*', objname, 'NULL']. }.
+      variables push: ['', objname, obj].
+      var msgs is Array new fill: ast count - 1 with: {:i ^compile[(ast at: i + 1), objname]. }.
+      ^msgs foldl: (\:acc:x 'ctr_send_message(%s, %s)' % [acc, x]) accumulator: objname.
     },
     case: 'UNAMESSAGE' do: {
       var value is ast value.
@@ -206,7 +213,12 @@ var compile is {:ast
     },
     case: 'KWMESSAGE' do: {
       var value is ast value.
-      ^'"%s", %d, %s' % [value, value length, generate_args[ast count, ast]].
+      var req is value = 'on:do:' either: {
+        ^[value, value length, generate_args[ast count, ast, receiver]].
+      } or: {
+        ^[value, value length, generate_args[ast count, ast]].
+      }.
+      ^'"%s", %d, %s' % req.
     },
     case: 'EXPRASSIGNMENT' do: {
       var ref is ast at: 0.
@@ -252,7 +264,10 @@ var compile is {:ast
       variables is Array new.
       var_id is 0.
       var funcode is '  ctr_object* result = (%:L);\n' % [', ', ((Array new fill: instrs count with: {:x ^compile[instrs @ x].}) or: ['NULL'])].
-      funcode is generate_func_param_load[ast @ 0] + '\n' + generate_inits['  '] + funcode + 'return result;\n'.
+      # ast modifier = 'My', ifTrue: {
+        funcode is funcode + '  if (result == NULL) result = self;\n'.
+      # }.
+      funcode is generate_func_param_load[ast @ 0, receiver] + '\n' + generate_inits['  '] + funcode + 'return result;\n'.
       variables is oldvs.
       var_id is oldvarid.
       functions put: funcode at: funname.
@@ -261,10 +276,14 @@ var compile is {:ast
     case: 'PROGRAM' do: {
       var instrs is ast.
       var res is Array new fill: instrs count with: {:x
+        var old_vars is variables.
         variables is Array new.
-        var s is compile[instrs @ x].
-        var i_s is generate_inits['  '].
-        ^i_s + s + ';\n'.
+        var instr is instrs @ x.
+        var s is compile[instr].
+        var i is generate_inits[' '].
+        variables is old_vars.
+        var instr_u is ast2ctrcode[instr] replace: '\n' with: '<NL>'.
+        ^'{/* $$instr_u */\n' + i + s + ';\n' + '}\n'.
       }.
       ^res join: ''.
     },
@@ -292,6 +311,8 @@ var compile is {:ast
       ^vname.
     },
     default: { errPen red writeln: '$$ast is not compilable at the moment', resetColor. }) switch: ast type.
+    contexts pop.
+    ^ret.
 }.
 
 var single_argn_t is {:value
@@ -348,10 +369,31 @@ var generate_globals is {
   ^[decl, sv].
 }.
 
+var generate_defines is {
+  var s is ''.
+  exceptions ifTrue: {
+    # s +=: 'static int msg_level = 0;'.
+    s +=: 'ctr_object* ctr_send_message_check_exception(ctr_object* r, char* s, int l, ctr_argument* a){\n'.
+    # s +=: '  for(int i=0; i<msg_level; i++) printf("-");'.
+    # s +=: '  printf("> Sending message %.*s to object %p\\n", l, s, r);\n'.
+    # s +=: '  msg_level++;\n'.
+    s +=: '  ctr_object *rt = ctr_send_message(r,s,l,a);\n'.
+    # s +=: '  msg_level--;printf("<");\n'.
+    # s +=: '  for(int i=0; i<msg_level; i++) printf("-");'.
+    # s +=: '  printf(" Received result %p (%s)\\n", rt, ctr_heap_allocate_cstring(ctr_internal_cast2string(rt)));\n'.
+    s +=: '  if (CtrStdFlow) { CtrStdFlow = ctr_internal_cast2string(CtrStdFlow); printf("Panic: Uncaught exception\\n%.*s\\n", CtrStdFlow->value.svalue->vlen, CtrStdFlow->value.svalue->value); exit(1); }\n'.
+    s +=: '  return rt;\n}\n'.
+    s +=: '#define ctr_send_message ctr_send_message_check_exception\n'.
+  }.
+  ^s.
+}.
+
 var compile_complete is {:ast
   var s is compile[ast].
   var gl is generate_globals[].
   ^ '#include <Citron/citron.h>\n'
+  + '#include <gc/gc.h>\n'
+  + generate_defines[]
   + 'ctr_object* internal_ctr_create_block__(ctr_object*(fn(ctr_object*,ctr_argument*))) {\n'
   + '  ctr_object* obj = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNATFUNC);\n'
   + '  obj->value.fvalue = fn;\n'
@@ -361,8 +403,9 @@ var compile_complete is {:ast
   + generate_funcs[]
   + 'int main() {\n'
   + '  ctr_initialize_ex();\n'
+  + generate_options[]
   + (gl @ 1)
-  # + generate_inits['  ']
+  + '/* Main program */\n'
   + s + ';\n'
   + '  if (CtrStdFlow) {\n'
   + '    ctr_object* err = CtrStdFlow; CtrStdFlow = NULL;\n'
@@ -376,8 +419,15 @@ var filename is prgargs shift.
 filename = '-h' ifTrue: {
   Pen green writeln: 'Citron down-compiler'.
   Pen tab yellow writeln: '[WARNING] Incomplete software'.
-  Pen resetColor writeln: 'Usage: compile <infile> [<outfile> (defaults to a.out)] [--keep-intermediates] [--import-intrinsic] [-- <compiler options>]'.
-
+  Pen resetColor writeln: 'Usage: compile <infile> [<outfile> (defaults to a.out)] [OPTIONS] [-- <compiler options>]'.
+  Pen cyan writeln: 'OPTIONS'.
+  Pen tab writeln: '--keep-intermediates \tKeep intermediate files',
+      tab writeln: '-O\t\t\tEnable optimizations (also disables exceptions)',
+      tab writeln: '--no-exceptions \tDisable exception checks',
+      tab writeln: '--import-intrinsic \tTreat import statements as compiler intrinsics',
+      tab writeln: '--heap-size=SIZE \tSpecify starting heap size (SIZE format: number B|K|M|G)',
+      tab writeln: '--heap-max=SIZE \tSpecify the maximum allowed heap size (program will abort if too small)',
+  resetColor.
   Program exit.
 }.
 
@@ -385,18 +435,70 @@ var ofilename is prgargs shiftArg or: 'a.out'.
 var src is File new: filename, read.
 var tgt is File new: ofilename + '.c'.
 
-import_intrinsic is prgargs contains: '--import-intrinsic'.
-optimize is prgargs contains: '-O'.
+var byteDecls is Map new
+    put: 1 at: 'b',
+    put: 1024 at: 'k',
+    put: 1024 * 1024 at: 'm',
+    put: 1024 * 1024 * 1024 at: 'g'.
+byteDecls on: 'applyAll:' do: {:args ^me at: args head lower. }.
+
+var parseByteDecl is {:decl
+    var num is -1.
+    decl findPattern: ?>^(\d+)(b|B|k|K|m|M|g|G)<? do: {:grs
+        num is (grs @ 1) toNumber * byteDecls[grs @ 2].
+    }.
+    num = -1 ifTrue: { thisBlock error: 'Invalid size spec $$decl'. }.
+    ^num.
+}.
+
+prgargs each: {:_:v
+    (v = '--') break.
+    v startsWith: '--heap-size=', ifTrue: {
+        heapsize is parseByteDecl[(v skip: 12)].
+        True continue.
+    }.
+    v startsWith: '--heap-max=', ifTrue: {
+        heapmax is parseByteDecl[(v skip: 11)].
+        True continue.
+    }.
+    v = '--no-exceptions' ifTrue: {
+      exceptions is False.
+      True continue.
+    }.
+    v = '--import-intrinsic' ifTrue: {
+      import_intrinsic is True.
+      True continue.
+    }.
+    v = '-O' ifTrue: {
+      optimize is True.
+      exceptions is False.
+      True continue.
+    }.
+}.
+
 
 import_intrinsic ifTrue: { errPen magenta writeln: '--import-intrinsic is unstable and will probably not work correctly', resetColor. }.
 
 errPen write: 'Compiling file $$filename into $$ofilename ...\n'.
 
+var heapsize is -1.
+var heapmax is -1.
 var idx is prgargs indexOf: '--'.
 var comp_opts is optimize either: ['-Ofast', '-ftree-vectorize', '-fomit-frame-pointer'] or: [].
 idx > -1 ifTrue: {
   comp_opts is prgargs from: idx - 1 lengthMax: prgargs count.
   errPen green writeln: 'Will pass %:L to the compiler' % [' ', comp_opts], resetColor.
+}.
+
+var generate_options is {
+    var s is ''.
+    heapmax > 0 ifTrue: {
+        s +=: '  ctr_gc_memlimit = %d;\n' % [heapmax].
+    }.
+    heapsize > 0 ifTrue: {
+        s +=: '  GC_expand_hp(%s);\n' % [heapsize].
+    }.
+    ^s.
 }.
 
 tgt write: compile_complete[(AST parse: src)].

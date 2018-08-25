@@ -14,7 +14,7 @@ install:
   - cd ..
 
 script:
-  - echo "bash ./runtests.sh autohell/build/bin"
+  - bash ./runtests.sh autohell/build/bin
   - export VERSION=$(git rev-parse --short HEAD)
 
 after_success:

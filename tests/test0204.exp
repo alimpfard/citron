@@ -3,13 +3,4 @@
 2
 3
 1
-Uncaught error has occurred.
 Index out of bounds.
-#2 @ (tests/test0204.ctr: 10)
-#1 write: (tests/test0204.ctr: 10)
-------------------------------------
-The probable cause of the exception: 
-8 | 
-9 | Pen write: a count, brk.
-10 | Pen write: a @ 1, brk.X¿ÿè~j
-~~~~~~~~~~~~~~~~~^

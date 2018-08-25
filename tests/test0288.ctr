@@ -1,10 +1,11 @@
 # Test the Inject object
 
 import
+    Library/Data/Set/HashSet: 'HashSet'
     Library/Foreign/C/PackedArray: 'PackedArray'
     .
 
-var here is Program changeDirectory: 'inject_test_suite/C/tests/simple-exec'.
+var here is Program changeDirectory: 'tests/inject_test_suite/C/tests/simple-exec'.
 
 Inject on: 'init' do: {
     errorHandler: {:e 
@@ -12,27 +13,23 @@ Inject on: 'init' do: {
         True continue.
     }.
 }.
-var failed is Array new.
+var failed is HashSet new.
 File list: '.', each_v: {:spec
     spec at: 'type', !=: 'file', continue.
     spec at: 'file', endsWith: '.c', ifTrue: {
         var fname is spec at: 'file'.
         var code is File new: fname, read.
         var t is Program new: {\:_ :main_res
-            Pen writeln: 'Running test suite $$fname'.
             var main_res is Inject new init run: code arguments: ['a.out', 'test', 'this'].
             main_res !=: 0, ifTrue: {
-                Pen red writeln: '$$fname failed with result $$res', resetColor.    
             }.
             _ message: 'done'.
         }.
         {
             t listen: {
-                Pen green writeln: '$$fname passed', resetColor.
             } timeout: 1 second.
         } catch: { 
-            failed push: fname.
-            Pen red writeln: '$$fname failed', resetColor.
+            failed add: fname.
         }, run.
     }.
 }.
@@ -40,5 +37,5 @@ File list: '.', each_v: {:spec
 
 Program changeDirectory: here.
 failed count > 0 ifTrue: {
-    thisBlock error: (failed join: ', ') + ' failed the tests'.
+    Pen red writeln: failed count + ' tests failed', resetColor.
 }.

@@ -1,9 +1,3 @@
 Uncaught error has occurred.
-Dynamic message expects array.
-#1 message:arguments: (tests/test0206.ctr: 3)
-------------------------------------
-The probable cause of the exception: 
-1 | 
-2 | str is 'write:'.
-3 | Pen message: 'write:' arguments: 0.
-~~~~~~~~~~~~~^
+Parser error, unexpected end of program ( tests/test0206.ctr: 4)
+-> Expected a dot (.).

@@ -1,1 +1,3 @@
-helloworldtreasure9
+Uncaught error has occurred.
+Parser error, unexpected end of program ( tests/test0237.ctr: 14)
+-> Expected a dot (.).

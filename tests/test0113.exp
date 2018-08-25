@@ -41,8 +41,26 @@ iteration #0
 iteration #3
 |||iteration #4
 |||
-Test Array each-loop: 0, ... ,2
-iteration #0
-iteration #2
-Test Map each-loop: c only
-iterationcthird
+Uncaught error has occurred.
+#16 continue (tests/test0113.ctr: 43)
+#15 run (tests/test0113.ctr: 43)
+#14 times: (tests/test0113.ctr: 34)
+#13 whileFalse: (tests/test0113.ctr: 24)
+#12 continue (tests/test0113.ctr: 17)
+#11 continue (tests/test0113.ctr: 17)
+#10 continue (tests/test0113.ctr: 17)
+#9 continue (tests/test0113.ctr: 17)
+#8 continue (tests/test0113.ctr: 17)
+#7 whileTrue: (tests/test0113.ctr: 14)
+#6 continue (tests/test0113.ctr: 5)
+#5 continue (tests/test0113.ctr: 5)
+#4 continue (tests/test0113.ctr: 5)
+#3 continue (tests/test0113.ctr: 5)
+#2 continue (tests/test0113.ctr: 5)
+#1 to:step:do: (tests/test0113.ctr: 3)
+------------------------------------
+The probable cause of the exception: 
+41 | 
+42 | #nothing should happen, no error
+43 | { True continue. Pen write: 'dont write this!', brk. } run.
+~~~~~~~~~~~~~~~~~~^

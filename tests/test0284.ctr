@@ -45,14 +45,14 @@ rept times:{:i
 
 Broom sweep.
 
-Pen write: 'Python statistics:
-    ran command: len( "    " * ($$rept - i) ),
-    total time: %d,
-    best time: %d,
-    average over $$rept : %d
-Citron statistics:
-    ran command: (\'    \' * ($$rept - i)) length,
-    total time: %d,
-    best time: %d,
-    average over $$rept : %d
-' % [ptime, pbest, (ptime / rept), rtime, rbest, (rtime / rept)], brk.
+#Pen write: 'Python statistics:
+#    ran command: len( "    " * ($$rept - i) ),
+#    total time: %d,
+#    best time: %d,
+#    average over $$rept : %d
+#Citron statistics:
+#    ran command: (\'    \' * ($$rept - i)) length,
+#    total time: %d,
+#    best time: %d,
+#    average over $$rept : %d
+#' % [ptime, pbest, (ptime / rept), rtime, rbest, (rtime / rept)], brk.

@@ -1,0 +1,44 @@
+# Test the Inject object
+
+import
+    Library/Foreign/C/PackedArray: 'PackedArray'
+    .
+
+var here is Program changeDirectory: 'inject_test_suite/C/tests/simple-exec'.
+
+Inject on: 'init' do: {
+    errorHandler: {:e 
+        Pen red writeln: e, resetColor.
+        True continue.
+    }.
+}.
+var failed is Array new.
+File list: '.', each_v: {:spec
+    spec at: 'type', !=: 'file', continue.
+    spec at: 'file', endsWith: '.c', ifTrue: {
+        var fname is spec at: 'file'.
+        var code is File new: fname, read.
+        var t is Program new: {\:_ :main_res
+            Pen writeln: 'Running test suite $$fname'.
+            var main_res is Inject new init run: code arguments: ['a.out', 'test', 'this'].
+            main_res !=: 0, ifTrue: {
+                Pen red writeln: '$$fname failed with result $$res', resetColor.    
+            }.
+            _ message: 'done'.
+        }.
+        {
+            t listen: {
+                Pen green writeln: '$$fname passed', resetColor.
+            } timeout: 1 second.
+        } catch: { 
+            failed push: fname.
+            Pen red writeln: '$$fname failed', resetColor.
+        }, run.
+    }.
+}.
+
+
+Program changeDirectory: here.
+failed count > 0 ifTrue: {
+    thisBlock error: (failed join: ', ') + ' failed the tests'.
+}.

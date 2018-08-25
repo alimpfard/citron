@@ -1526,11 +1526,15 @@ ctr_command_message (ctr_object * myself, ctr_argument * argumentList)
 
 /**
  * [Program] listen: [Block].
+ * [Program] listen: [Block] timeout: [Number {qualification:timespec}]
  *
  * Stops the current flow of the program and starts listening for
  * messages from other programs that are running at the same time.
  * Upon receiving a message, the specified block will be invocated
  * and passed the message that has been received.
+
+ * If a timeout is set, and it expires without getting a message,
+ * this message will throw.
  */
 ctr_object *
 ctr_command_listen (ctr_object * myself, ctr_argument * argumentList)
@@ -1557,7 +1561,33 @@ ctr_command_listen (ctr_object * myself, ctr_argument * argumentList)
   ctr_size *szptr = &sz;
   ssize_t szcp = sizeof (ctr_size);
   ssize_t readp;
-  while ((readp = read (fileno (fd), szptr, szcp)) < szcp)
+  int timeout = -1;
+  _Bool dotime = 0;
+  if (argumentList->next && argumentList->next->object) {
+    dotime = 1;
+    ctr_object* tobj = ctr_internal_cast2number(argumentList->next->object);
+    timeout = tobj->value.nvalue;
+    ctr_object *qual = ctr_internal_object_find_property (tobj,
+  							ctr_build_string_from_cstring (CTR_DICT_QUALIFICATION),
+  							CTR_CATEGORY_PRIVATE_PROPERTY);
+    if (qual)
+      {
+        char *qualf = ctr_heap_allocate_cstring (qual);
+        if (strncasecmp (qualf, "ns", 2) == 0)
+  	  timeout /= 1000000000;
+        else if (strncasecmp (qualf, "us", 2) == 0)
+  	  timeout /= 1000000;
+        else if (strncasecmp (qualf, "ms", 2) == 0)
+  	  timeout /= 1000;
+        else if (strncasecmp (qualf, "mi", 2) == 0)
+  	  timeout *= 60;
+        else if (strncasecmp (qualf, "ho", 2) == 0)
+  	  timeout *= 60*60;
+      }
+  }
+  time_t t0 = time(NULL);
+  while ((readp = read (fileno (fd), szptr, szcp)) < szcp && (!dotime || (dotime&&time(NULL)-t0<timeout)))
+    //timeout listening if nothing was given
     {
       if (readp == -1)
 	{
@@ -1567,6 +1597,10 @@ ctr_command_listen (ctr_object * myself, ctr_argument * argumentList)
       szcp -= readp;
       szptr += readp;
     }
+  if (dotime && time(NULL) - t0 >= timeout) {
+    CtrStdFlow = ctr_build_string_from_cstring("Timeout expired");
+    return myself;
+  }
   blob = ctr_heap_allocate (sz);
   char *blobptr = blob;
   szcp = sz;
@@ -3096,7 +3130,7 @@ ctr_thread_join (ctr_object * myself, ctr_argument * argumentList)
 	}
       ctr_object* rvt = retval->retval;
       ctr_heap_free (retval);
-      if (rvt == NULL) return CtrStdNil; 
+      if (rvt == NULL) return CtrStdNil;
       return rvt;
     }
 }

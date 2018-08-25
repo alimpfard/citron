@@ -22,7 +22,7 @@ typedef struct ctr_inject_data_t ctr_inject_data_t;
 /**
  * [Inject] newWithDebugSyms: [Boolean]
  * [Inject] new (no debug syms)
- * 
+ *
  * Generate a new context to compile C programs into
  */
 ctr_object *ctr_inject_make(ctr_object *myself, ctr_argument *argumentList)
@@ -58,9 +58,9 @@ ctr_object *ctr_inject_make(ctr_object *myself, ctr_argument *argumentList)
 
 /**
  * [Inject] addIncludePath: [String]
- * 
+ *
  */
-ctr_object *ctr_inject_add_inclp(ctr_object* myself, ctr_argument* argumentList) 
+ctr_object *ctr_inject_add_inclp(ctr_object* myself, ctr_argument* argumentList)
 {
     ctr_resource *r = myself->value.rvalue;
     ctr_inject_data_t *ds;
@@ -97,7 +97,7 @@ ctr_object *ctr_inject_compile(ctr_object *myself, ctr_argument *argumentList)
     TCCState *s = ds->state;
     int status = tcc_compile_string(s, program);
     ctr_heap_free(program);
-    if (status == -1) 
+    if (status == -1)
         CtrStdFlow = ctr_build_string_from_cstring("Compilation failed");
     return myself;
 }
@@ -122,7 +122,7 @@ ctr_object *ctr_inject_run(ctr_object *myself, ctr_argument *argumentList)
     TCCState *s = ds->state;
     int status = tcc_compile_string(s, program);
     ctr_heap_free(program);
-    
+    if (CtrStdFlow) return CtrStdNil; // stop exec in case of any errors in the handler
     ctr_object* argl = argumentList->next->object;
     CTR_ENSURE_TYPE_ARRAY(argl);
     int length = ctr_array_count(argl, NULL)->value.nvalue;
@@ -140,7 +140,7 @@ ctr_object *ctr_inject_run(ctr_object *myself, ctr_argument *argumentList)
 
 /**
  * [Inject] symbol: [String|Symbol]
- * 
+ *
  */
 ctr_object *ctr_inject_get_symbol(ctr_object *myself, ctr_argument *argumentList)
 {
@@ -178,9 +178,9 @@ ctr_object *ctr_inject_get_symbol(ctr_object *myself, ctr_argument *argumentList
 
 /**
  * [Inject] linkInLibrary: [String]
- * 
+ *
  */
-ctr_object *ctr_inject_add_lib(ctr_object* myself, ctr_argument* argumentList) 
+ctr_object *ctr_inject_add_lib(ctr_object* myself, ctr_argument* argumentList)
 {
     ctr_resource *r = myself->value.rvalue;
     ctr_inject_data_t *ds;
@@ -213,9 +213,9 @@ void ctr_inject_error_handler(void* _blk, char* msg)
 
 /**
  * [Inject] errorHandler: [Block<String>]
- * 
+ *
  */
-ctr_object *ctr_inject_set_error_handler(ctr_object* myself, ctr_argument* argumentList) 
+ctr_object *ctr_inject_set_error_handler(ctr_object* myself, ctr_argument* argumentList)
 {
     ctr_resource *r = myself->value.rvalue;
     ctr_inject_data_t *ds;

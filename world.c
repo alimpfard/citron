@@ -2310,6 +2310,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdCommand, ctr_build_string_from_cstring (CTR_DICT_NEW_SET), &ctr_command_fork);
   ctr_internal_create_func (CtrStdCommand, ctr_build_string_from_cstring (CTR_DICT_MESSAGE), &ctr_command_message);
   ctr_internal_create_func (CtrStdCommand, ctr_build_string_from_cstring (CTR_DICT_LISTEN), &ctr_command_listen);
+  ctr_internal_create_func (CtrStdCommand, ctr_build_string_from_cstring (CTR_DICT_LISTEN "timeout:"), &ctr_command_listen);
   ctr_internal_create_func (CtrStdCommand, ctr_build_string_from_cstring (CTR_DICT_JOIN_PROCESS), &ctr_command_join);
   ctr_internal_create_func (CtrStdCommand, ctr_build_string_from_cstring (CTR_DICT_LOG_SET), &ctr_command_log);
   ctr_internal_create_func (CtrStdCommand, ctr_build_string_from_cstring (CTR_DICT_WARNING), &ctr_command_warn);

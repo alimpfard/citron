@@ -2090,10 +2090,10 @@ ctr_number_factorial (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_number_to_step_do (ctr_object * myself, ctr_argument * argumentList)
 {
-  double startValue = myself->value.nvalue;
-  double endValue = ctr_internal_cast2number (argumentList->object)->value.nvalue;
-  double incValue = ctr_internal_cast2number (argumentList->next->object)->value.nvalue;
-  double curValue = startValue;
+  ctr_number startValue = myself->value.nvalue;
+  ctr_number endValue = ctr_internal_cast2number (argumentList->object)->value.nvalue;
+  ctr_number incValue = ctr_internal_cast2number (argumentList->next->object)->value.nvalue;
+  ctr_number curValue = startValue;
   ctr_object *codeBlock = argumentList->next->next->object;
   ctr_argument *arguments;
   int forward = 0;

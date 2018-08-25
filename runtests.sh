@@ -3,18 +3,31 @@
 # set -v
 # set -x
 
-OS=`uname -s`
 dir=$(pwd)
-cd $1
+pre_c='.'
+if [ "x$1" != "x" ]; then
+    pre_c=$1
+fi
 failing=()
 j=1
 useless_input="test
 ";
-for i in $(find $dir/tests -maxdepth 1 -name 'test*.ctr'); do
-	fitem=$i
-	echo -n "$fitem interpret";
+cd $dir
+for i in $(find tests -maxdepth 1 -name 'test*.ctr' | sort --version-sort); do
 	fexpect="${i%%.ctr}.exp"
-	result=`echo "$useless_input" | timeout 15 ./ctr ${fitem}`
+    if [ ! -f $fexpect ]; then
+        echo "No expect file, skipping $i"
+        continue
+    fi
+    fitem=$i
+	echo -n "$fitem interpret";
+	result=`echo "$useless_input" | timeout 15 ${pre_c}/ctr ${fitem}`
+    rv=$?
+    if [ $rv -ne 0 ] && [ $rv -ne 1 ]; then
+        echo " [Failed with result $rv]"
+        failing+=($fitem)
+        continue
+    fi
 	expected=`cat $fexpect`
 	if [ "$result" = "$expected" ]; then
 		echo " [$j]"
@@ -26,10 +39,15 @@ for i in $(find $dir/tests -maxdepth 1 -name 'test*.ctr'); do
 		echo ""
 		echo "BUT GOT:"
 		echo $result
-		failing=($failing "$fitem");
-	fi
+        failing+=("$fitem");
+	    # sleep 0.5 && echo ""
+    fi
 	headline=$(head -n 1 $fitem)
+    # sleep 0.2 && clear
 done
 echo ""
-echo Tests failing: $failing
+if [ ${#failing[@]} -gt 10 ]; then
+    echo Tests failing: ${failing[@]}
+    exit 1
+fi
 exit 0

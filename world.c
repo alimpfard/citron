@@ -2087,6 +2087,7 @@ ctr_initialize_world ()
   /* Array */
   CtrStdArray = ctr_array_new (CtrStdObject, NULL);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_NEW), &ctr_array_new);
+  ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_NEW_ARG), &ctr_array_new);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_NEW_ARRAY_AND_PUSH), &ctr_array_new_and_push);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_NEW_ARRAY_AND_PUSH_SYMBOL), &ctr_array_new_and_push);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_TYPE), &ctr_array_type);
@@ -2500,7 +2501,7 @@ ctr_initialize_world ()
 
   CtrStdInject = CtrStdObject;
   CtrStdInject = ctr_inject_make(NULL, NULL);
-  ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Inject"), CtrStdInject, 0);  
+  ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Inject"), CtrStdInject, 0);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("newWithDebugSymbols:"), &ctr_inject_make);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("new"), &ctr_inject_make);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("compile:"), &ctr_inject_compile);

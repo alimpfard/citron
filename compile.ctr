@@ -196,12 +196,9 @@ var compile is {:ast:receiver
         ^'ctr_string_eval(%s, NULL)' % [make_or_get_str[ast2ctrcode[ast]]].
       }.
       var obj is compile[ast @ 0].
-      var_id +=: 1.
-      var objname is 'ctr_receiver_$$var_id'.
-      global_variables has_variable: objname, ifFalse: { global_variables push: ['ctr_object*', objname, 'NULL']. }.
-      variables push: ['', objname, obj].
-      var msgs is Array new fill: ast count - 1 with: {:i ^compile[(ast at: i + 1), objname]. }.
-      ^msgs foldl: (\:acc:x 'ctr_send_message(%s, %s)' % [acc, x]) accumulator: objname.
+      # BUG: This _might_ evaluate an expression several times
+      var msgs is Array new fill: ast count - 1 with: {:i ^compile[(ast at: i + 1), obj]. }.
+      ^msgs foldl: (\:acc:x 'ctr_send_message(%s, %s)' % [acc, x]) accumulator: obj.
     },
     case: 'UNAMESSAGE' do: {
       var value is ast value.
@@ -450,7 +447,6 @@ var parseByteDecl is {:decl
     num = -1 ifTrue: { thisBlock error: 'Invalid size spec $$decl'. }.
     ^num.
 }.
-
 
 var heapsize is -1.
 var heapmax is -1.

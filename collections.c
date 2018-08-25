@@ -15,7 +15,7 @@
 
 /**
  * [Array] new
- *
+ * [Array] new: [Number:space]
  * Creates a new Array.
  *
  * Usage:
@@ -36,10 +36,16 @@ ctr_array_new (ctr_object * myclass, ctr_argument * argumentList)
 {
   ctr_object *s = ctr_internal_create_object (CTR_OBJECT_TYPE_OTARRAY);
   ctr_set_link_all (s, myclass);
+  int initial_length = 2;
+  if (argumentList && argumentList->object) {
+    int len = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+    if (len > 1)
+      initial_length = len;
+  }
   s->value.avalue = (ctr_collection *) ctr_heap_allocate (sizeof (ctr_collection));
   s->value.avalue->immutable = 0;
-  s->value.avalue->length = 2;
-  s->value.avalue->elements = (ctr_object **) ctr_heap_allocate (sizeof (ctr_object *) * 2);
+  s->value.avalue->length = initial_length;
+  s->value.avalue->elements = (ctr_object **) ctr_heap_allocate (sizeof (ctr_object *) * initial_length);
   s->value.avalue->head = 0;
   s->value.avalue->tail = 0;
   return s;
@@ -1899,8 +1905,16 @@ ctr_array_fill (ctr_object * myself, ctr_argument * argumentList)
   ctr_size i;
   ctr_argument *newArgumentList;
   n = ctr_internal_cast2number (argumentList->object)->value.nvalue;
+  ctr_collection* coll = myself->value.avalue;
+  ctr_size empty = (coll->head - coll->tail);
+  if (empty < n)
+  {
+    coll->elements = ctr_heap_reallocate(coll->elements, (coll->length+n-empty)*sizeof(ctr_object*));
+    coll->length = n;
+  }
   newArgumentList = ctr_heap_allocate (sizeof (ctr_argument));
   ctr_object *memb = argumentList->next->object;
+  ctr_object *res = NULL;
   if (memb->info.type == CTR_OBJECT_TYPE_OTBLOCK)
     {
       ctr_object *_i = ctr_internal_create_standalone_object (CTR_OBJECT_TYPE_OTNUMBER);
@@ -1910,17 +1924,16 @@ ctr_array_fill (ctr_object * myself, ctr_argument * argumentList)
 	{
 	  _i->value.nvalue = i;
 	  newArgumentList->object = _i;
-	  newArgumentList->object = ctr_block_run_here (memb, newArgumentList, memb);
-	  ctr_array_push (myself, newArgumentList);
+	  res = ctr_block_run_here (memb, newArgumentList, memb);
+	  coll->elements[coll->tail++] = res;
 	}
       ctr_close_context ();
     }
   else
     {
-      newArgumentList->object = memb;
       for (i = 0; i < n; i++)
 	{
-	  ctr_array_push (myself, newArgumentList);
+	  coll->elements[coll->tail++] = memb;
 	}
     }
   ctr_heap_free (newArgumentList);

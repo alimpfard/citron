@@ -1088,7 +1088,7 @@ ctr_cparse_number ()
         );
         return rv;
       } else if (t != CTR_TOKEN_FIN) ctr_clex_putback();
-    } else if (t != CTR_TOKEN_FIN) ctr_clex_putback();
+    } else ctr_clex_putback();
   }
   ctr_clex_putback();
   return r;

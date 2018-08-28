@@ -1045,10 +1045,13 @@ ctr_cparse_number ()
   r->vlen = l;
   int t = ctr_clex_tok();
   if (t == CTR_TOKEN_DOT) {
+    // NUMBER DOT
     t = ctr_clex_tok();
     if (t == CTR_TOKEN_DOT) {
+      // NUMBER DOT DOT
       t = ctr_clex_tok();
       if (t == CTR_TOKEN_NUMBER) { //it's a range
+        // NUMBER DOT DOT NUMBER
         char *ne;
         ctr_tnode *re = ctr_cparse_create_node(CTR_AST_NODE);
         long le;
@@ -1088,7 +1091,7 @@ ctr_cparse_number ()
         );
         return rv;
       } else if (t != CTR_TOKEN_FIN) ctr_clex_putback();
-    } else ctr_clex_putback();
+    } else if (t != CTR_TOKEN_FIN) ctr_clex_putback();
   }
   ctr_clex_putback();
   return r;
@@ -1289,16 +1292,15 @@ ctr_cparse_expr (int mode)
          e->nodes->next->node->nodes->next = ctr_heap_allocate(sizeof(ctr_tlistitem));
          e->nodes->next->node->nodes->next->node = r->nodes->next->node; */
     }
-  else if (t2 != CTR_TOKEN_DOT && t2 != CTR_TOKEN_PARCLOSE && (t2 != CTR_TOKEN_CHAIN && mode != CTR_AST_NODE_IMMUTABLE))
+  else if (t2 != CTR_TOKEN_DOT && t2 != CTR_TOKEN_PARCLOSE && t2 != CTR_TOKEN_CHAIN)
     {
       e = ctr_cparse_create_node (CTR_AST_NODE);
       e->type = CTR_AST_NODE_EXPRMESSAGE;
-      nodes = ctr_cparse_messages (r, mode == CTR_AST_NODE_IMMUTABLE ? 0 : mode);
+      nodes = ctr_cparse_messages (r, mode);
       int tv = ctr_clex_tok();
       int vtv = 0;
       while (tv == CTR_TOKEN_INV)
     {
-      vtv = 1;
       //arg0 `callee` arg1
       //^    ^tv
       //`- receiver
@@ -1322,7 +1324,7 @@ ctr_cparse_expr (int mode)
       ll = ll->node->nodes;
       ll->node = r;
       ll->next = ctr_heap_allocate_tracked(sizeof(*ll));
-      ll->next->node = ctr_cparse_expr(fix.fix == 0 ? -1 : fix.prec); //get next argument
+      ll->next->node = ctr_cparse_expr(fix.fix*2); //get next argument
       //arguments in li
       ctr_tlistitem* rli = ctr_heap_allocate_tracked(sizeof(*rli));
       rli->node = ctr_cparse_create_node(CTR_AST_NODE);
@@ -1386,7 +1388,7 @@ ctr_cparse_fin ()
   callShorthand->value = CTR_TOKEN_TUPOPEN;
   callShorthand->value_e = CTR_TOKEN_TUPCLOSE;
   extensionsPra->value = 0;
-  clear_fixity_map();
+  //clear_fixity_map();
   ctr_tnode *f;
   ctr_clex_tok ();
   f = ctr_cparse_create_node (CTR_AST_NODE);

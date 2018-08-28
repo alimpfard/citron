@@ -15,7 +15,7 @@ static int initialized = 0;
 
 static std::map<std::string, fixity_ind> fixity_map;
 
-static fixity_lookup_rv basic_fixity = {1, 1};
+static fixity_lookup_rv basic_fixity = {1, 2};
 
 inline ctr_object* get_or_create(const char* name, ctr_size length) {
     std::string s (name, length);

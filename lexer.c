@@ -457,6 +457,7 @@ void ctr_set_pragma(ctr_code_pragma* pragma, int val, int val2) {
   pragma->value = val;
   pragma->value_e = val2;
 }
+extern ctr_tnode* ctr_cparse_block_(int);
 /**
  * CTRLexPragmaToken
  *
@@ -527,7 +528,7 @@ ctr_match_toggle_pragma ()
     char* v = ctr_clex_tok_value();
     int len = ctr_clex_tok_value_length();
     int fixity = 0;
-    int prec = 1;
+    int prec = 0;
     if (len != strlen("infixr")) goto err;
     if (strncmp(v, "infixr", len) == 0)
       fixity = 0;
@@ -889,7 +890,6 @@ ctr_clex_tok ()
 	  ctr_code++;
 	  c = toupper (*ctr_code);
 	}
-      c = *ctr_code;
       return CTR_TOKEN_NUMBER;
     }
   if (c == '`') {

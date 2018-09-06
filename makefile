@@ -1,31 +1,33 @@
-DEBUG_VERSION := 323
+DEBUG_VERSION := 335
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 LEXTRACF := ${LEXTRACF} -flto -lstdc++
 fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
 location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 WHERE_ART_THOU := $(location)
 new_makefile_l1 := $(shell perl -ne '/((DEBUG_VERSION := )(\d+))/ && print (sprintf("%s%s", "$$2", "$$3"+1));' $(WHERE_ART_THOU))
+shell_cflags := ${CFLAGS}
+shell_ldflags := ${LDFLAGS}
 
 ifeq ($(strip ${WITH_ICU}),)
-	CFLAGS = -Wall -Wextra -Wno-unused-parameter -mtune=native\
+CFLAGS = -Wall -Wextra -Wno-unused-parameter -mtune=native\
               -march=native -D withTermios -D forLinux\
               -D CTR_STD_EXTENSION_PATH=\"`pwd`\"
 else
-	CFLAGS = -Wall -Wextra -Wno-unused-parameter -mtune=native\
+CFLAGS = -Wall -Wextra -Wno-unused-parameter -mtune=native\
 			 -march=native -D withTermios -D forLinux\
 			 -D CTR_STD_EXTENSION_PATH=\"`pwd`\" -D withICU
-	LEXTRACF := ${LEXTRACF} -L/usr/lib -licui18n -licuuc -licudata
+LEXTRACF := ${LEXTRACF} -L/usr/lib -licui18n -licuuc -licudata
 endif
 
 ifeq ($(strip ${WITHOUT_BOEHM_GC}),)
-	CFLAGS := ${CFLAGS} "-D withBoehmGC"
-	LEXTRACF := ${LEXTRACF} ${fv}
+CFLAGS := ${CFLAGS} "-D withBoehmGC"
+LEXTRACF := ${LEXTRACF} ${fv}
 else
 endif
 
 ifeq ($(strip ${WITH_TYPED_GC}),)
 else
-	CFLAGS := ${CFLAGS} "-D withBoehmGC_P"
+CFLAGS := ${CFLAGS} "-D withBoehmGC_P"
 endif
 
 
@@ -33,14 +35,24 @@ endif
 gc_check:
 	@if [ "${fv}x" == "x" ]; then echo "Could not find libgc.so."; echo Failing; exit 1; else echo "Found libgc.so at ${fv}"; fi
 	$(eval LEXTRACF := ${LEXTRACF} ${fv})
+	echo CFLAGS = ${CFLAGS}
+
+CFLAGS += ${shell_cflags}
+LDFLAGS += ${shell_ldflags}
 
 -include gc_check
 
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o\
 		lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o\
 		importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o\
-		promise.o symbol_cxx.o _struct.o ctypes.o structmember.o\
-		inject.o world.o tcc/libtcc1.a tcc/libtcc.a 
+		promise.o symbol_cxx.o world.o
+
+ifneq ($(findstring withCTypesNative=1,${CFLAGS}),)
+OBJS := ${OBJS} _struct.o ctypes.o structmember.o
+endif
+ifneq ($(findstring withInjectNative=1,${CFLAGS}),)
+OBJS := ${OBJS} inject.o tcc/libtcc1.a tcc/libtcc.a
+endif
 
 COBJS = ${OBJS} compiler.o
 

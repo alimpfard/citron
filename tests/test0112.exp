@@ -1,1 +1,11 @@
 Block 1.
+Uncaught error has occurred.
+#2 break (tests/test0112.ctr: 4)
+#1 run (tests/test0112.ctr: 8)
+------------------------------------
+The probable cause of the exception: 
+2 | 
+3 | 	Pen write: 'Block 1.\n'.
+4 | 	True break.
+~~~~~~~~~~~~~^
+5 | 	Pen write: 'No'.

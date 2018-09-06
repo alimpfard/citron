@@ -10,9 +10,11 @@
 #include <stdint.h>
 #include <time.h>
 
+#define CTR_GLOBALS_DEFINE
 #include "citron.h"
+#undef CTR_GLOBALS_DEFINE
+
 #include "siphash.h"
-// #include "murmur3.h"
 
 #ifdef withBoehmGC
 #include <gc/gc.h>
@@ -31,7 +33,6 @@ static int ctr_world_initialized = 0;
 #include <pthread.h>
 static pthread_mutex_t ctr_message_mutex = { {PTHREAD_MUTEX_RECURSIVE} };
 
-#define CTR_THREAD_LOCK() pthread_mutex_lock(&ctr_message_mutex)
 #define CTR_THREAD_UNLOCK() pthread_mutex_unlock(&ctr_message_mutex)
 #else
 #define CTR_THREAD_LOCK()
@@ -652,6 +653,7 @@ ctr_internal_object_find_property_with_hash (ctr_object * owner, ctr_object * ke
 void
 ctr_internal_object_delete_property (ctr_object * owner, ctr_object * key, int is_method)
 {
+  ctr_did_side_effect = 1;
   uint64_t hashKey = ctr_internal_index_hash (key);
 //      uint64_t ahashKey = ctr_internal_alt_hash(key);
   ctr_mapitem *head;
@@ -743,6 +745,7 @@ ctr_internal_object_delete_property (ctr_object * owner, ctr_object * key, int i
 void
 ctr_internal_object_delete_property_with_hash (ctr_object * owner, ctr_object * key, uint64_t hashKey, int is_method)
 {
+  ctr_did_side_effect = 1;
   ctr_mapitem *head;
   if (is_method)
     {
@@ -832,6 +835,7 @@ ctr_internal_object_delete_property_with_hash (ctr_object * owner, ctr_object * 
 void
 ctr_internal_object_add_property (ctr_object * owner, ctr_object * key, ctr_object * value, int m)
 {
+  ctr_did_side_effect = 1;
   if (value->lexical_name == NULL &&
       strncmp (key->value.svalue->value, "me", key->value.svalue->vlen) != 0 &&
       strncmp (key->value.svalue->value, "thisBlock", key->value.svalue->vlen) != 0)
@@ -890,6 +894,7 @@ ctr_internal_object_add_property (ctr_object * owner, ctr_object * key, ctr_obje
 void
 ctr_internal_object_add_property_with_hash (ctr_object * owner, ctr_object * key, uint64_t hashKey, ctr_object * value, int m)
 {
+  ctr_did_side_effect = 1;
   ctr_mapitem *new_item = ctr_heap_allocate (sizeof (ctr_mapitem));
   ctr_mapitem *current_head = NULL;
   new_item->key = key;
@@ -1242,9 +1247,15 @@ ctr_internal_cast2number (ctr_object * o)
   a->object = CtrStdNil;
   ctr_object *numObject = ctr_send_message_blocking (o, "toNumber", 8, a);
   ctr_heap_free (a);
-  if (numObject->info.type != CTR_OBJECT_TYPE_OTNUMBER)
+  if (CtrStdFlow) {
+    ctr_object* err = CtrStdFlow;
+    CtrStdFlow = NULL;
+    CtrStdFlow = ctr_format_str ("ECast of type %$ to type Number failed: %$", ctr_send_message_blocking (o, "type", 4, NULL), err);
+    return ctr_build_number_from_float ((ctr_number) 0);
+  }
+  else if (numObject->info.type != CTR_OBJECT_TYPE_OTNUMBER)
     {
-      CtrStdFlow = ctr_build_string_from_cstring ("toNumber must return a number.");
+      CtrStdFlow = ctr_format_str ("ENo implicit cast arises from the use of type %$ to type Number", ctr_send_message_blocking (numObject, "type", 4, NULL));
       return ctr_build_number_from_float ((ctr_number) 0);
     }
   return numObject;
@@ -2076,6 +2087,7 @@ ctr_initialize_world ()
   /* Array */
   CtrStdArray = ctr_array_new (CtrStdObject, NULL);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_NEW), &ctr_array_new);
+  ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_NEW_ARG), &ctr_array_new);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_NEW_ARRAY_AND_PUSH), &ctr_array_new_and_push);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_NEW_ARRAY_AND_PUSH_SYMBOL), &ctr_array_new_and_push);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_TYPE), &ctr_array_type);
@@ -2298,6 +2310,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdCommand, ctr_build_string_from_cstring (CTR_DICT_NEW_SET), &ctr_command_fork);
   ctr_internal_create_func (CtrStdCommand, ctr_build_string_from_cstring (CTR_DICT_MESSAGE), &ctr_command_message);
   ctr_internal_create_func (CtrStdCommand, ctr_build_string_from_cstring (CTR_DICT_LISTEN), &ctr_command_listen);
+  ctr_internal_create_func (CtrStdCommand, ctr_build_string_from_cstring (CTR_DICT_LISTEN "timeout:"), &ctr_command_listen);
   ctr_internal_create_func (CtrStdCommand, ctr_build_string_from_cstring (CTR_DICT_JOIN_PROCESS), &ctr_command_join);
   ctr_internal_create_func (CtrStdCommand, ctr_build_string_from_cstring (CTR_DICT_LOG_SET), &ctr_command_log);
   ctr_internal_create_func (CtrStdCommand, ctr_build_string_from_cstring (CTR_DICT_WARNING), &ctr_command_warn);
@@ -2342,6 +2355,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdClock, ctr_build_string_from_cstring (CTR_DICT_TOSTRING), &ctr_clock_to_string);
   ctr_internal_create_func (CtrStdClock, ctr_build_string_from_cstring (CTR_DICT_ADD_SET), &ctr_clock_add);
   ctr_internal_create_func (CtrStdClock, ctr_build_string_from_cstring (CTR_DICT_SUBTRACT_SET), &ctr_clock_subtract);
+  ctr_internal_create_func (CtrStdClock, ctr_build_string_from_cstring ("isDaylightSaving"), &ctr_clock_isdst);
   ctr_internal_create_func (CtrStdClock, ctr_build_string_from_cstring ("processorClock"), &ctr_clock_processor_time);
   ctr_internal_create_func (CtrStdClock, ctr_build_string_from_cstring ("ticksPerSecond"), &ctr_clock_processor_ticks_ps);
   ctr_internal_create_func (CtrStdClock, ctr_build_string_from_cstring ("timeExecutionOf:"), &ctr_clock_time_exec);
@@ -2486,6 +2500,20 @@ ctr_initialize_world ()
   ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring ("%ctor"), CtrStdReflect_cons, 0);
   CtrStdReflect_cons->info.sticky = 1;
 
+#if withInjectNative
+  CtrStdInject = CtrStdObject;
+  CtrStdInject = ctr_inject_make(NULL, NULL);
+  ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Inject"), CtrStdInject, 0);
+  ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("newWithDebugSymbols:"), &ctr_inject_make);
+  ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("new"), &ctr_inject_make);
+  ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("compile:"), &ctr_inject_compile);
+  ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("run:arguments:"), &ctr_inject_run);
+  ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("symbol:"), &ctr_inject_get_symbol);
+  ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("addIncludePath:"), &ctr_inject_add_inclp);
+  ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("linkInLibrary:"), &ctr_inject_add_lib);
+  ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("errorHandler:"), &ctr_inject_set_error_handler);
+#endif // withInjectNative
+
   static ctr_object ctr_dummy_import;
   static ctr_interfaces ifs;
   if (!with_stdlib)
@@ -2500,6 +2528,11 @@ ctr_initialize_world ()
   ctr_fiber_begin_init ();
   initiailize_base_extensions ();
   promise_begin ();
+
+#if withCTypesNative
+  // FFI
+  ctr_ffi_begin();
+#endif
 
   /* Other objects */
   CtrStdBreak = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
@@ -3036,218 +3069,218 @@ ctr_set_link_all (ctr_object * what, ctr_object * to)
 }
 
 
-ctr_object *
+ctr_object **
 get_CtrStdWorld ()
 {
-  return CtrStdWorld;
+  return &CtrStdWorld;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdObject ()
 {
-  return CtrStdObject;
+  return &CtrStdObject;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdBlock ()
 {
-  return CtrStdBlock;
+  return &CtrStdBlock;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdString ()
 {
-  return CtrStdString;
+  return &CtrStdString;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdNumber ()
 {
-  return CtrStdNumber;
+  return &CtrStdNumber;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdBool ()
 {
-  return CtrStdBool;
+  return &CtrStdBool;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdConsole ()
 {
-  return CtrStdConsole;
+  return &CtrStdConsole;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdNil ()
 {
-  return CtrStdNil;
+  return &CtrStdNil;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdGC ()
 {
-  return CtrStdGC;
+  return &CtrStdGC;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdMap ()
 {
-  return CtrStdMap;
+  return &CtrStdMap;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdArray ()
 {
-  return CtrStdArray;
+  return &CtrStdArray;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdIter ()
 {
-  return CtrStdIter;
+  return &CtrStdIter;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdFile ()
 {
-  return CtrStdFile;
+  return &CtrStdFile;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdSystem ()
 {
-  return CtrStdSystem;
+  return &CtrStdSystem;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdDice ()
 {
-  return CtrStdDice;
+  return &CtrStdDice;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdCommand ()
 {
-  return CtrStdCommand;
+  return &CtrStdCommand;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdSlurp ()
 {
-  return CtrStdSlurp;
+  return &CtrStdSlurp;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdShell ()
 {
-  return CtrStdShell;
+  return &CtrStdShell;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdClock ()
 {
-  return CtrStdClock;
+  return &CtrStdClock;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdFlow ()
 {
-  return CtrStdFlow;
+  return &CtrStdFlow;
 }
 
-ctr_object *
+ctr_object **
 get_CtrExceptionType ()
 {
-  return CtrExceptionType;
+  return &CtrExceptionType;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdBreak ()
 {
-  return CtrStdBreak;
+  return &CtrStdBreak;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdContinue ()
 {
-  return CtrStdContinue;
+  return &CtrStdContinue;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdExit ()
 {
-  return CtrStdExit;
+  return &CtrStdExit;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdReflect ()
 {
-  return CtrStdReflect;
+  return &CtrStdReflect;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdReflect_cons ()
 {
-  return CtrStdReflect_cons;
+  return &CtrStdReflect_cons;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdFiber ()
 {
-  return CtrStdFiber;
+  return &CtrStdFiber;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdThread ()
 {
-  return CtrStdThread;
+  return &CtrStdThread;
 }
 
-ctr_object *
+ctr_object **
 get_CtrStdSymbol ()
 {
-  return CtrStdSymbol;
+  return &CtrStdSymbol;
 }
 
-ctr_object *
+ctr_object **
 get_ctr_first_object ()
 {
-  return ctr_first_object;
+  return &ctr_first_object;
 }
 
-ctr_object *
+ctr_object **
 get_CTR_FILE_STDIN ()
 {
-  return CTR_FILE_STDIN;
+  return &CTR_FILE_STDIN;
 }
 
-ctr_object *
+ctr_object **
 get_CTR_FILE_STDOUT ()
 {
-  return CTR_FILE_STDOUT;
+  return &CTR_FILE_STDOUT;
 }
 
-ctr_object *
+ctr_object **
 get_CTR_FILE_STDERR ()
 {
-  return CTR_FILE_STDERR;
+  return &CTR_FILE_STDERR;
 }
 
-ctr_object *
+ctr_object **
 get_CTR_FILE_STDIN_STR ()
 {
-  return CTR_FILE_STDIN_STR;
+  return &CTR_FILE_STDIN_STR;
 }
 
-ctr_object *
+ctr_object **
 get_CTR_FILE_STDOUT_STR ()
 {
-  return CTR_FILE_STDOUT_STR;
+  return &CTR_FILE_STDOUT_STR;
 }
 
-ctr_object *
+ctr_object **
 get_CTR_FILE_STDERR_STR ()
 {
-  return CTR_FILE_STDERR_STR;
+  return &CTR_FILE_STDERR_STR;
 }

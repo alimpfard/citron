@@ -198,6 +198,8 @@ LTLIBOBJS = @LTLIBOBJS@
 LT_SYS_LIBRARY_PATH = @LT_SYS_LIBRARY_PATH@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
+MAYBE_FFI_L = @MAYBE_FFI_L@
+MAYBE_TCC_L = @MAYBE_TCC_L@
 MKDIR_P = @MKDIR_P@
 NM = @NM@
 NMEDIT = @NMEDIT@
@@ -276,7 +278,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 extensiondir = $(datadir)/@PACKAGE@/extensions
 extension_DATA = *.ctr
-bin_SCRIPTS = citron
+bin_SCRIPTS = citron ctrc
 all: all-am
 
 .SUFFIXES:
@@ -533,9 +535,11 @@ install-data-local:
 	rm -rf $(datadir)/@PACKAGE@/Library
 	rm -rf $(datadir)/@PACKAGE@/mods
 	rm -rf $(datadir)/@PACKAGE@/basemods
+	rm -rf $(datadir)/@PACKAGE@/tcc
 	cp -Lrf mods $(datadir)/@PACKAGE@/
 	cp -Lrf Library $(datadir)/@PACKAGE@/
-	cp -Lrf basemods $(datadir)/@PACKAGE@/
+	cp -Lrf basemods $(datadir)/@PACKAGE@/ || true
+	cp -Lrf tcc $(datadir)/@PACKAGE@/
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

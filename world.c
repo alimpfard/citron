@@ -2500,6 +2500,7 @@ ctr_initialize_world ()
   ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring ("%ctor"), CtrStdReflect_cons, 0);
   CtrStdReflect_cons->info.sticky = 1;
 
+#if withInjectNative
   CtrStdInject = CtrStdObject;
   CtrStdInject = ctr_inject_make(NULL, NULL);
   ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Inject"), CtrStdInject, 0);
@@ -2511,6 +2512,7 @@ ctr_initialize_world ()
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("addIncludePath:"), &ctr_inject_add_inclp);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("linkInLibrary:"), &ctr_inject_add_lib);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("errorHandler:"), &ctr_inject_set_error_handler);
+#endif // withInjectNative
 
   static ctr_object ctr_dummy_import;
   static ctr_interfaces ifs;
@@ -2526,8 +2528,11 @@ ctr_initialize_world ()
   ctr_fiber_begin_init ();
   initiailize_base_extensions ();
   promise_begin ();
+
+#if withCTypesNative
   // FFI
   ctr_ffi_begin();
+#endif
 
   /* Other objects */
   CtrStdBreak = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);

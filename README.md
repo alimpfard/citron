@@ -11,12 +11,25 @@ minimum required libraries:
 * `libpthread` -- for threading support
 * `libgc` -- for Garbage Collection
 
-building for debug:
+Basic steps to build and install:
 
-+ with boehm gc: `WITH_BOEHMGC=1 make debug`
-+ without: `make debug`
+clone this repository
 
-Since this is an alpha version, `install` is not allowed.
+```sh
+$ cd citron/autohell
+$ autoreconf
+$ ./configure --with-ffi
+$ make
+$ make install
+```
+The normal configure options apply.
+
+##### Note
+If the binary is built without ffi, to launch the repl, you must pass these flags to it:
++ `--assume-non-tty --without-signals`
+
+i.e. the invocation would be `citron --assume-non-tty --without-signals`
+
 
 ### Basic language syntax:
 All operations are done through sending and receiving messages between objects.
@@ -27,7 +40,6 @@ All operations are done through sending and receiving messages between objects.
 
 there are some examples in the `examples` directory.
 
-running the interpreter is quite simple: `ctr eval` in the directory that the file `eval` is.
 
 ### Default Module Resolution
 A default module resolution path is assigned at build-time, which normally points to the data directory of the install;

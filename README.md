@@ -1,4 +1,4 @@
-## Citron :: A Programming Language for the crazy and people that like functions [![Build Status](https://travis-ci.com/alimpfard/citron.svg?branch=master)](https://travis-ci.com/alimpfard/citron)
+## Citron :: A Programming Language for the crazy and people that like functions [![Build Status](https://travis-ci.com/alimpfard/citron.svg?branch=master)](https://travis-ci.com/alimpfard/citron) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/d55fb1e699e14d50b9882af24cde137d)](https://www.codacy.com/app/Citron/citron?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=alimpfard/citron&amp;utm_campaign=Badge_Grade)
 
 ### Release
 No binary release is available for android.
@@ -36,7 +36,6 @@ All operations are done through sending and receiving messages between objects.
 
 there are some examples in the `examples` directory.
 
-running the interpreter is quite simple: `ctr eval` in the directory that the file `eval` is.
 
 ### Default Module Resolution
 A default module resolution path is assigned at build-time, which normally points to the data directory of the install;

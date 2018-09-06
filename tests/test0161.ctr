@@ -41,7 +41,7 @@ usedMemory3 is Broom keptAlloc.
 
 #memory counters need to be equal!
 ( (usedMemory1 = usedMemory2) & (usedMemory1 = usedMemory3) & (usedMemory2 = usedMemory3) ) ifTrue: {
-	Pen write: 'No memory leaks here'.
+	'No memory leaks here'.
 }, ifFalse: {
-	Pen write: 'Leaking memory...'.
+	'Leaking memory...'.
 }.

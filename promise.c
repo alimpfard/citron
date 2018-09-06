@@ -1,12 +1,16 @@
 #include "promise.h"
 #include <pthread.h>
 
-static ctr_object *ctr_promise_native_respond = NULL;
+#define pthread_create GC_pthread_create
 
+static ctr_object *ctr_promise_native_respond = NULL;
 void *
 ctr_promise_thread_sf (void *data)
 {
   struct ctr_promise_entry *entry = data, *c_ent = entry;
+# ifdef DEBUG_BUILD
+    printf("[CTR] Created thread %p\n", entry->thread);
+# endif
   ctr_object *result = CtrStdNil, *target, *receiver;
   ctr_argument *args = ctr_heap_allocate (sizeof (*args));
   struct ctr_context_t octx;
@@ -43,6 +47,9 @@ again:
       c_ent = c_ent->next;
       goto again;
     }
+# ifdef DEBUG_BUILD
+    printf("[CTR] exiting thread %p\n", entry->thread);
+# endif
   return result;
 }
 

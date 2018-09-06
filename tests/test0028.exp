@@ -1,1 +1,3 @@
-yesa1x3.5yTruezFalseNil2
+Uncaught error has occurred.
+Parser error, unexpected end of program ( tests/test0028.ctr: 8)
+-> Expected a dot (.).

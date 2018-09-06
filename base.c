@@ -763,7 +763,7 @@ ctr_object_on_do (ctr_object * myself, ctr_argument * argumentList)
     }
   nextArgument = argumentList->next;
   methodBlock = nextArgument->object;
-  if (methodBlock->info.type != CTR_OBJECT_TYPE_OTBLOCK)
+  if (methodBlock->info.type != CTR_OBJECT_TYPE_OTBLOCK && methodBlock->info.type != CTR_OBJECT_TYPE_OTNATFUNC)
     {
       CtrStdFlow = ctr_build_string_from_cstring ("Expected argument do: to be of type block.");
       CtrStdFlow->info.sticky = 1;
@@ -1305,13 +1305,13 @@ ctr_bool_either_or (ctr_object * myself, ctr_argument * argumentList)
   int b = ctr_internal_cast2bool (myself)->value.bvalue;
   if (b)
     {
-      if (argumentList->object->info.type == CTR_OBJECT_TYPE_OTBLOCK)
+      if (argumentList->object->info.type == CTR_OBJECT_TYPE_OTNATFUNC || argumentList->object->info.type == CTR_OBJECT_TYPE_OTBLOCK)
 	return ctr_block_runIt (argumentList->object, NULL);
       return argumentList->object;
     }
   else
     {
-      if (argumentList->next->object->info.type == CTR_OBJECT_TYPE_OTBLOCK)
+      if (argumentList->next->object->info.type == CTR_OBJECT_TYPE_OTNATFUNC || argumentList->next->object->info.type == CTR_OBJECT_TYPE_OTBLOCK)
 	return ctr_block_runIt (argumentList->next->object, NULL);
       return argumentList->next->object;
     }
@@ -1767,7 +1767,7 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
   ctr_argument *arguments;
   int t;
   int i;
-  if (block->info.type != CTR_OBJECT_TYPE_OTBLOCK)
+  if (block->info.type != CTR_OBJECT_TYPE_OTBLOCK && block->info.type != CTR_OBJECT_TYPE_OTNATFUNC)
     {
       CtrStdFlow = ctr_build_string_from_cstring ("Expected a code block.");
       return myself;
@@ -1778,12 +1778,12 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
 
   if (block->info.type == CTR_OBJECT_TYPE_OTNATFUNC)
   {
+    ctr_object* idx = arguments->object = ctr_internal_create_standalone_object(CTR_OBJECT_TYPE_OTNUMBER);
     for (i = 0; i < t; i++) {
-      ctr_object* idx = arguments->object = ctr_internal_create_standalone_object(CTR_OBJECT_TYPE_OTNUMBER);
       arguments->object->value.nvalue = i;
       block->value.fvalue (block, arguments);
-      ctr_internal_delete_standalone_object(idx);
     }
+    ctr_internal_delete_standalone_object(idx);
     ctr_heap_free(arguments);
     ctr_close_context();
     return myself;
@@ -1812,11 +1812,10 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *argument_name = parameterList && parameterList->node ? ctr_build_string (parameterList->node->value, parameterList->node->vlen) : NULL;
   ctr_assign_value_to_local_by_ref (&CTR_CLEX_KW_ME, block);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
   ctr_assign_value_to_local (&CTR_CLEX_KW_THIS, block);	/* otherwise running block may get gc'ed. */
+  indexNumber = ctr_internal_create_standalone_object (CTR_OBJECT_TYPE_OTNUMBER);
   for (i = 0; i < t; i++)
     {
-      indexNumber = ctr_internal_create_standalone_object (CTR_OBJECT_TYPE_OTNUMBER);
       indexNumber->value.nvalue = (ctr_number) i;
-      ctr_transfer_object_ownership (block, indexNumber);
       if (parameterList && parameterList->node)
 	ctr_assign_value_to_local (argument_name, indexNumber);
       ctr_cwlk_run (codeBlockPart2);
@@ -1848,6 +1847,7 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
 	break;
     }
   // ctr_object* ctx = ctr_contexts[ctr_context_id];
+  ctr_internal_delete_standalone_object(indexNumber);
   ctr_close_context ();
   // arguments->object = ctx;
   // ctr_gc_sweep_this(CtrStdGC, arguments);
@@ -2090,17 +2090,17 @@ ctr_number_factorial (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_number_to_step_do (ctr_object * myself, ctr_argument * argumentList)
 {
-  double startValue = myself->value.nvalue;
-  double endValue = ctr_internal_cast2number (argumentList->object)->value.nvalue;
-  double incValue = ctr_internal_cast2number (argumentList->next->object)->value.nvalue;
-  double curValue = startValue;
+  ctr_number startValue = myself->value.nvalue;
+  ctr_number endValue = ctr_internal_cast2number (argumentList->object)->value.nvalue;
+  ctr_number incValue = ctr_internal_cast2number (argumentList->next->object)->value.nvalue;
+  ctr_number curValue = startValue;
   ctr_object *codeBlock = argumentList->next->next->object;
   ctr_argument *arguments;
   int forward = 0;
   if (startValue == endValue)
     return myself;
   forward = (startValue < endValue);
-  if (codeBlock->info.type != CTR_OBJECT_TYPE_OTBLOCK)
+  if (codeBlock->info.type != CTR_OBJECT_TYPE_OTBLOCK && codeBlock->info.type != CTR_OBJECT_TYPE_OTNATFUNC)
     {
       CtrStdFlow = ctr_build_string_from_cstring ("Expected block.");
       return myself;
@@ -2108,14 +2108,12 @@ ctr_number_to_step_do (ctr_object * myself, ctr_argument * argumentList)
   if (!codeBlock->value.block->lexical)
     ctr_open_context ();
   arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
-  while (((forward && curValue <= endValue) || (!forward && curValue >= endValue)) && !CtrStdFlow)
+  ctr_object *arg = ctr_internal_create_standalone_object (CTR_OBJECT_TYPE_OTNUMBER);
+  while ((forward ? curValue <= endValue : curValue >= endValue) && !CtrStdFlow)
     {
-      ctr_object *arg = ctr_internal_create_standalone_object (CTR_OBJECT_TYPE_OTNUMBER);
       arg->value.nvalue = (ctr_number) curValue;
       arguments->object = arg;
-      ctr_transfer_object_ownership (codeBlock, arg);
       ctr_block_run_here (codeBlock, arguments, codeBlock);
-      // ctr_internal_delete_standalone_object(arg);
       if (CtrStdFlow == CtrStdContinue)
 	CtrStdFlow = NULL;	/* consume continue and go on */
       curValue += incValue;
@@ -4675,6 +4673,12 @@ ctr_string_html_escape (ctr_object * myself, ctr_argument * argumentList)
   ctr_heap_free (tstr);
   return newString;
 }
+
+// ctr_object *
+// ctr_string_literal_escape (ctr_object * myself, ctr_argument * argumentList)
+// {
+//
+// }
 
 /**
  * <b>[String] hashWithKey: [String]</b>

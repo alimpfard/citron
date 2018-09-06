@@ -32,13 +32,28 @@ Json on: '_internal_parse_toplevel:toType:' do: {:self:json:type
         ^ self _internal_parse_string: json toType: type.
     },
     default: {
-        var res is self _internal_parse_numeric: json toType: type.
-        res last = json ifTrue: {
-          thisBlock error: 'Invalid character: <%s>' % [json head].
-        }.
-        ^res.
+        ^{
+            var res is self _internal_parse_numeric: json toType: type.
+            res last = json ifTrue: {
+                thisBlock error: 'Invalid character: <%s>' % [json head].
+            }.
+            ^res.
+        } catch: {
+            ^ self _internal_parse_word: json toType: type.
+        }, run.
     },
     switch.
+}.
+
+Json on: '_internal_parse_word:toType:' do: {:json
+    var res is Nil.
+    json findPattern: ?>^(null|true|false)\b(.*)<? do: {:groups
+        var qv is groups @ 1.
+        qv is qv = 'null' either: Nil or: qv = 'true'.
+        res is [qv, groups @ 2].
+    }.
+    res isNil ifTrue: { thisBlock error: 'Expected null|true|false but got ' + json head. }.
+    ^res.
 }.
 
 Json on: '_internal_skip_comma:optional:' do: {:json:op
@@ -71,7 +86,8 @@ Json on: '_internal_parse_object:toType:' do: {:self:json:type
       [value, json_] is self _internal_parse_toplevel: json_ toType: type.
       { json_ is self _internal_skip_comma: json_ optional: False. } catch: {
         json_ is json_ leftTrim.
-        json_ head = '}' ifFalse: { thisBlock error: 'Expected a <}> but found a <%s>' % [json_ head]. }.
+        json_ head = '}' ifFalse: { thisBlock error: 'Expected a <}> but found <%s...>' % [(json_ take: 5)]. }.
+        json is json_ tail.
         result put: value at: key.
         True break.
       }, run.
@@ -79,7 +95,7 @@ Json on: '_internal_parse_object:toType:' do: {:self:json:type
       json head isNil break.
   }.
   Reflect link: result to: type.
-  ^[result, json tail].
+  ^[result, json].
 }.
 Json on: '_internal_parse_array:toType:' do: {:self:json:type
   var result is Array new.
@@ -92,7 +108,7 @@ Json on: '_internal_parse_array:toType:' do: {:self:json:type
     result push: value.
     { json_ is self _internal_skip_comma: json_ optional: False. } catch: {
       json_ is json_ leftTrim.
-      json_ head = ']' ifFalse: { thisBlock error: 'Expected a <]> but found a <%s>' % [json_ head]. }.
+      json_ head = ']' ifFalse: { thisBlock error: 'Expected a <]> but found <%s...>' % [(json_ take: 5)]. }.
       # json is json_.
       True break.
     }, run.
@@ -128,7 +144,7 @@ Json on: '_internal_parse_numeric:toType:' do: {:self:json
     result is [(self _internal_read_number: groups @ 1), groups @ 2].
   }.
   result isNil ifTrue: {
-    thisBlock error: 'Expected a number but found a ' + json head.
+    thisBlock error: 'Expected a number but found some ' + json head.
   }.
   ^result.
 }.

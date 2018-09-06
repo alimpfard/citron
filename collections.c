@@ -1925,7 +1925,7 @@ ctr_array_fill (ctr_object * myself, ctr_argument * argumentList)
 	  _i->value.nvalue = i;
 	  newArgumentList->object = _i;
 	  res = ctr_block_run_here (memb, newArgumentList, memb);
-	  coll->elements[coll->tail++] = res;
+	  coll->elements[coll->head++] = res;
 	}
       ctr_close_context ();
     }
@@ -1933,7 +1933,7 @@ ctr_array_fill (ctr_object * myself, ctr_argument * argumentList)
     {
       for (i = 0; i < n; i++)
 	{
-	  coll->elements[coll->tail++] = memb;
+	  coll->elements[coll->head++] = memb;
 	}
     }
   ctr_heap_free (newArgumentList);

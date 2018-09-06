@@ -7,7 +7,7 @@ install:
   - cd autohell && aclocal && libtoolize && autoconf && automake --add-missing
   - mkdir -p build && mkdir -p basemods && export BUILD_DIR_INT=$(realpath build)
   - cd src/tcc && ./configure && make && sudo make install && cd ../..
-  - ./configure --prefix=$BUILD_DIR_INT && make
+  - ./configure --prefix=$BUILD_DIR_INT --with-ffi --with-inject && make
   - cd .. && bash ./makeplugs.sh
   - cd autohell
   - sudo make install

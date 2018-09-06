@@ -7,7 +7,7 @@ int ldflags = 0;
 #define CFLAGS "-rdynamic"
 #ifndef forLinux
 #define BSD_L ""
-#else 
+#else
 #define BSD_L "-lbsd"
 #endif
 #ifdef withBoehmGC
@@ -15,7 +15,17 @@ int ldflags = 0;
 #else
 #define GC_L ""
 #endif
-#define LDFLAGS "-lcitron -ltcc -lpcre -ldl -lm -pthread -lffi " BSD_L GC_L
+#if withInjectNative
+#define TCC_L " -ltcc "
+#else
+#define TCC_L ""
+#endif
+#ifdef withCTypesNative
+#define FFI_L " -lffi "
+#else
+#define FFI_L ""
+#endif
+#define LDFLAGS "-lcitron " TCC_L " -lpcre -ldl -lm -pthread " FFI_L BSD_L GC_L
 
 
 int main(int argc, char* argv[]) {

@@ -1,5 +1,5 @@
 #!/usr/bin/env ctr
-#:language XFrozen, XPureLambda
+#:language XFrozen
 
 Broom autoAlloc: True.
 Reflect ignoreInTrace: (Program argument: 1). #eval or whatever it is
@@ -171,7 +171,7 @@ Eval on: 'setColor:' do: { :c
 }.
 Eval on: 'setPrompt:' do: { :p my prompt is p. }.
 Eval on: 'setContinuation:' do: { :p my continuation is p. }.
-Eval on: 'setArgs:' do: { :a my args := a. }.
+Eval on: 'setArgs:' do: { :a my args is a. }.
 Eval on: 'args' do: { ^my args. }.
 Eval on: 'color' do: { ^my color. }.
 Eval on: 'prompt' do: { ^(me preprompt) + my prompt + (me proprompt). }.
@@ -203,7 +203,9 @@ Eval on: 'modifyFlags:' do: {:flag
   }.
 }.
 Eval on: 'argCount' do: { ^(my args count). }.
-Eval on: 'onlyRelevantArgs' do: { my args do shift shift done. }. #get rid of ./ctr eval
+Eval on: 'onlyRelevantArgs' do: { 
+    my args do shift shift done. 
+}. #get rid of ./ctr eval
 
 Eval on: 'startEvalServer' do: {
   var port is 5000 + (Dice rollWithSides: 1000).

@@ -1,4 +1,4 @@
-DEBUG_VERSION := 67
+DEBUG_VERSION := 335
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 LEXTRACF := ${LEXTRACF} -flto -lstdc++
 fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
@@ -6,6 +6,8 @@ fv := '/data/data/com.termux/files/usr/lib/libgc.so'
 location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 WHERE_ART_THOU := $(location)
 new_makefile_l1 := $(shell perl -ne '/((DEBUG_VERSION := )(\d+))/ && print (sprintf("%s%s", "$$2", "$$3"+1));' $(WHERE_ART_THOU))
+shell_cflags := ${CFLAGS}
+shell_ldflags := ${LDFLAGS}
 
 ifeq ($(strip ${WITH_ICU}),)
 	CFLAGS = -Wall -Wextra -Wno-unused-parameter -D withTermios \
@@ -14,18 +16,18 @@ else
 	CFLAGS = -Wall -Wextra -Wno-unused-parameter \
 			  -D withTermios \
 			 -D CTR_STD_EXTENSION_PATH=\"`pwd`\" -D withICU
-	LEXTRACF := ${LEXTRACF} -L/usr/lib -licui18n -licuuc -licudata
+LEXTRACF := ${LEXTRACF} -L/usr/lib -licui18n -licuuc -licudata
 endif
 
 ifeq ($(strip ${WITHOUT_BOEHM_GC}),)
-	CFLAGS := ${CFLAGS} "-D withBoehmGC"
-	LEXTRACF := ${LEXTRACF} ${fv}
+CFLAGS := ${CFLAGS} "-D withBoehmGC"
+LEXTRACF := ${LEXTRACF} ${fv}
 else
 endif
 
 ifeq ($(strip ${WITH_TYPED_GC}),)
 else
-	CFLAGS := ${CFLAGS} "-D withBoehmGC_P"
+CFLAGS := ${CFLAGS} "-D withBoehmGC_P"
 endif
 
 CFLAGS := ${CFLAGS} -pthread -fsigned-char
@@ -34,13 +36,24 @@ CFLAGS := ${CFLAGS} -pthread -fsigned-char
 gc_check:
 	@if [ "${fv}x" == "x" ]; then echo "Could not find libgc.so."; echo Failing; exit 1; else echo "Found libgc.so at ${fv}"; fi
 	$(eval LEXTRACF := ${LEXTRACF} ${fv})
+	echo CFLAGS = ${CFLAGS}
+
+CFLAGS += ${shell_cflags}
+LDFLAGS += ${shell_ldflags}
 
 -include gc_check
 
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o\
-		   world.o lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o\
-			 importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o\
-			 promise.o symbol_cxx.o
+		lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o\
+		importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o\
+		promise.o symbol_cxx.o world.o
+
+ifneq ($(findstring withCTypesNative=1,${CFLAGS}),)
+OBJS := ${OBJS} _struct.o ctypes.o structmember.o
+endif
+ifneq ($(findstring withInjectNative=1,${CFLAGS}),)
+OBJS := ${OBJS} inject.o tcc/libtcc1.a tcc/libtcc.a
+endif
 
 COBJS = ${OBJS} compiler.o
 
@@ -48,7 +61,10 @@ COBJS = ${OBJS} compiler.o
 
 all: CFALGS := $(CFLAGS) -O2
 all: cxx
-all: ctr
+all: ctr ctrconfig
+
+ctrconfig:
+	$(CC) ctrconfig.c -o ctrconfig
 
 debug: CFLAGS := ${CFLAGS} -DDEBUG_BUILD -DDEBUG_BUILD_VERSION=${DEBUG_BUILD_VERSION} -Og -g3 -ggdb3 -Wno-unused-function
 debug: cxx
@@ -71,12 +87,18 @@ compiler: CFLAGS := $(CFLAGS) -D comp=1
 compiler: cxx
 compiler: $(COBJS)
 	$(CC) $(COBJS) -rdynamic -lm -ldl -llog -lpcre -lprofiler -lpthread ${LEXTRACF} -o ctrc
-
 cxx:
 	echo "blah"
 
+tcc/%.a:
+	cd tcc && ./configure --prefix=$(realpath build) && $(MAKE) $<
+
+# %.o: %.c
+# 	echo "$<"
+# 	$(CC) $(CFLAHS) -c $< -o $@ >/dev/null 2>&1
+
 %.o: %.c
-	$(CC) -fopenmp $(CFLAGS) -c $< >/dev/null 2>&1
+	$(CC) -fopenmp $(CFLAGS) -c $< -o $@ >/dev/null 2>&1
 
 define SHVAL =
 for f in *.c; do\

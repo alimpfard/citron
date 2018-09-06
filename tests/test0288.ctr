@@ -1,0 +1,41 @@
+# Test the Inject object
+
+import
+    Library/Data/Set/HashSet: 'HashSet'
+    Library/Foreign/C/PackedArray: 'PackedArray'
+    .
+
+var here is Program changeDirectory: 'tests/inject_test_suite/C/tests/simple-exec'.
+
+Inject on: 'init' do: {
+    errorHandler: {:e 
+        Pen red writeln: e, resetColor.
+        True continue.
+    }.
+}.
+var failed is HashSet new.
+File list: '.', each_v: {:spec
+    spec at: 'type', !=: 'file', continue.
+    spec at: 'file', endsWith: '.c', ifTrue: {
+        var fname is spec at: 'file'.
+        var code is File new: fname, read.
+        var t is Program new: {\:_ :main_res
+            var main_res is Inject new init run: code arguments: ['a.out', 'test', 'this'].
+            main_res !=: 0, ifTrue: {
+            }.
+            _ message: 'done'.
+        }.
+        {
+            t listen: {
+            } timeout: 1 second.
+        } catch: { 
+            failed add: fname.
+        }, run.
+    }.
+}.
+
+
+Program changeDirectory: here.
+failed count > 0 ifTrue: {
+    Pen red writeln: failed count + ' tests failed', resetColor.
+}.

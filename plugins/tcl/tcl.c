@@ -12,7 +12,7 @@
 -I/software/tcl-7.4/include -I/software/tk-4.0/include -I/software/x11r5_dev/Include -L/software/tcl-7.4/lib -L/software/tk-4.0/lib -L/software/x11r5_dev/lib -ltk -ltcl -lX11
 */
 
-#define ctrraise(STR, myself) {CtrStdFlow = ctr_build_string_from_cstring(STR); return myself;}
+#define ctrraise(STR, myself) {(*get_CtrStdFlow()) = ctr_build_string_from_cstring(STR); return myself;}
 
 static ctr_object* ctrtcl_interpobj;
 static ctr_object* CSTR_INTERP = NULL;
@@ -126,8 +126,8 @@ int ctr_tcl_run_blk(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj
   ctr_object* sym = ctr_get_or_create_symbol_table_entry(name, namelen);
   ctr_object* blk = ctr_internal_object_find_property(ctr_bound_fn_map, sym, 0);
   if(!blk) {
-    CtrStdFlow = ctr_build_string_from_cstring("No such bound function");
-    Tcl_SetObjResult(interp, ctr_tcl_as_obj(CtrStdFlow));
+    (*get_CtrStdFlow()) = ctr_build_string_from_cstring("No such bound function");
+    Tcl_SetObjResult(interp, ctr_tcl_as_obj((*get_CtrStdFlow())));
     return TCL_ERROR;
   }
   int len;
@@ -140,14 +140,14 @@ int ctr_tcl_run_blk(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj
 
   ctr_object* res = ctr_block_run(blk, argumentList, blk);
   ctr_free_argumentList(argumentList);
-  if(CtrStdFlow == CtrStdBreak) {
-    CtrStdFlow = NULL;
+  if((*get_CtrStdFlow()) == CtrStdBreak) {
+    (*get_CtrStdFlow()) = NULL;
     return TCL_BREAK;
-  } else if (CtrStdFlow == CtrStdContinue) {
-    CtrStdFlow = NULL;
+  } else if ((*get_CtrStdFlow()) == CtrStdContinue) {
+    (*get_CtrStdFlow()) = NULL;
     return TCL_CONTINUE;
-  } else if (CtrStdFlow != NULL) {
-    Tcl_SetObjResult(interp, ctr_tcl_as_obj(CtrStdFlow));
+  } else if ((*get_CtrStdFlow()) != NULL) {
+    Tcl_SetObjResult(interp, ctr_tcl_as_obj((*get_CtrStdFlow())));
     return TCL_ERROR;
   }
   if(res != blk) Tcl_SetObjResult(interp, ctr_tcl_as_obj(res));

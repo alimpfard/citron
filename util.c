@@ -293,6 +293,16 @@ ctr_format_str (const char *str_format, ...)
 		len += slen;
 		break;
 	      }
+      case '$':
+        {
+    ctr_object *ctrs = ctr_internal_cast2string(va_arg (ap, ctr_object *));
+    int slen = ctrs->value.svalue->vlen;
+    if (reserved - len < 32 + slen)
+      ps = ctr_heap_reallocate (ps, reserved *= 2);
+    strncpy (ps + len, ctrs->value.svalue->value, ctrs->value.svalue->vlen);
+    len += slen;
+    break;
+        }
 	    default:
 	      break;
 	    }

@@ -10,3 +10,6 @@
 [submodule "libbsd"]
     path = libbsd
     url = https://github.com/LuaDist/libbsd.git
+[submodule "tests/inject_test_suite/C"]
+	path = tests/inject_test_suite/C
+	url = https://github.com/c-testsuite/c-testsuite.git

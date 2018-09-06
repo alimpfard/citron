@@ -2,8 +2,9 @@
 #to demonstrate why there should be no early return in open_context()
 #as proposed in GH80/84
 
-Broom mode: 4.
-Broom autoAlloc: True.
+#Broom mode 4 is now deprecated
+#Broom mode: 4.
+Broom memoryLimit: 1024 * 1024 * 1024 * 3.
 j is 1.
 
 func is {

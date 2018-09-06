@@ -20,10 +20,14 @@
 #include <gperftools/profiler.h>
 #endif
 
+int ctr_did_side_effect = 0;
+
 static int compile_and_quit = 0;
 static int debug = 0;
 static int from_stdin = 0;
 int with_stdlib = 1;
+
+char* SystemTZ;
 
 ctr_code_pragma oneline_p  = {.type = 't',.value = 0},
                 flex_const = {.type = 'o',.value = 0},
@@ -135,6 +139,8 @@ void ctr_initialize_ex() {
   callShorthand = &callshorth;
   extensionsPra = &extpragmas;
 
+  SystemTZ = getenv("TZ") ?: "UTC";
+  
   ctr_gc_mode = 1;		/* default GC mode: activate GC */
   ctr_gc_memlimit = 8388608;
   CTR_LIMIT_MEM = 1;		//enfore GC
@@ -162,6 +168,7 @@ void ctr_initialize_ex() {
 
 }
 
+#ifndef LIBRARY_BUILD
 #ifndef CITRON_LIBRARY
 /**
  * Citron Application Main Start
@@ -291,3 +298,4 @@ execute_string_len (char *prg, int length)
   char *msg = ctr_internal_cast2string (str)->value.svalue->value;
   return msg;
 }
+#endif //LIBRARY_BUILD

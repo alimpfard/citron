@@ -1,3 +1,4 @@
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/a0936c9822f547f8aa048c7355215321)](https://app.codacy.com/app/Citron/citron?utm_source=github.com&utm_medium=referral&utm_content=alimpfard/citron&utm_campaign=Badge_Grade_Settings)
 ## Citron :: A Programming Language for the crazy and people that like functions [![Build Status](https://travis-ci.com/alimpfard/citron.svg?branch=master)](https://travis-ci.com/alimpfard/citron)
 
 ### Release

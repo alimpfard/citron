@@ -64,12 +64,6 @@
 /* Define to 1 if you have the `isascii' function. */
 #undef HAVE_ISASCII
 
-/* Define to 1 if you have the `ccgi' library (-lccgi). */
-#undef HAVE_LIBCCGI
-
-/* Define to 1 if you have the `crypto' library (-lcrypto). */
-#undef HAVE_LIBCRYPTO
-
 /* Define to 1 if you have the `gc' library (-lgc). */
 #undef HAVE_LIBGC
 

@@ -12,7 +12,7 @@ extern "C" {
 
 #else //__cplusplus
 
-#define CTR_H_DECLSPEC 
+#define CTR_H_DECLSPEC
 
 #endif
 
@@ -34,6 +34,17 @@ extern "C" {
 #define IS_DEBUG_STRING "-debug" DEBUG_BUILD_VERSION
 #else
 #define IS_DEBUG_STRING ""
+#endif
+
+// whether to use tcc as inject core
+// if undefined, Inject will not be available
+#ifndef withInjectNative
+#define withInjectNative 0
+#endif
+
+// whether to include CTypes / ffi
+#ifndef withCTypesNative
+#define withCTypesNative 0
 #endif
 
 #ifdef withBoehmGC
@@ -341,7 +352,7 @@ extern int with_stdlib;
  */
 
 #ifdef CTR_INJECT
-#define __thread 
+#define __thread
 #endif
 
 CTR_H_DECLSPEC ctr_object* CtrStdWorld;          //!< Standard Object : Global Namespace
@@ -364,7 +375,7 @@ CTR_H_DECLSPEC ctr_object* CtrStdSlurp;          //!< Standard Object : Slurp
 CTR_H_DECLSPEC ctr_object* CtrStdShell;          //!< Standard Object : Shell
 CTR_H_DECLSPEC ctr_object* CtrStdClock;          //!< Standard Object : Clock
 #ifndef CTR_GLOBALS_DEFINE
-extern __thread ctr_object* CtrStdFlow; 
+extern __thread ctr_object* CtrStdFlow;
 #else
 __thread ctr_object* CtrStdFlow = NULL;           //!< Internal Flow namespace : contains errors and flow control
 #endif

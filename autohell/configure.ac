@@ -52,15 +52,52 @@ AC_FUNC_STRNLEN
 AC_FUNC_STRTOD
 AC_CHECK_FUNCS([atexit bzero dup2 floor getdelim gethostbyname gettimeofday isascii mblen memchr memmove memset pow putenv realpath regcomp rpmatch select setenv socket sqrt stpcpy strcasecmp strchr strcspn strdup strerror strncasecmp strndup strpbrk strrchr strspn strstr strtol strtoul strtoull strtoumax])
 
-AC_ARG_ENABLE([boehm-gc],
-              AS_HELP_STRING([--disable-boehm-gc], [Build without libgc present]))
-AC_ARG_ENABLE([forlinux],
-              AS_HELP_STRING([--forlinux], [Build for linux OSs]))
-AS_IF([test "x$enable-boehm-gc" != "xno"], [
+
+AC_ARG_WITH([boehm-gc],
+              AS_HELP_STRING([--with-boehm-gc], [Build without libgc present]),
+              [],
+              [enable_boehm_gc=yes])
+AC_ARG_WITH([inject],
+              AS_HELP_STRING([--with-inject], [Build with the Inject object]),
+              [want_inject=yes],
+              [])
+AC_ARG_WITH([ffi],
+              AS_HELP_STRING([--with-ffi], [Build with the CTypes object]),
+              [want_ffi=yes],
+              [])
+
+AS_IF([test "x$enable_boehm_gc" = "xyes"], [
        CFLAGS+=" -DwithBoehmGC"
        AC_CHECK_LIB([gc], [GC_free])
 ])
-AS_IF([test "x$enable-forlinux" != "xno"], [
+
+AC_MSG_CHECKING(inject)
+AS_IF([test "x$want_inject" = "xyes"], [
+       CFLAGS+=" -DwithInjectNative=1"
+       MAYBE_TCC=tcc
+       MAYBE_TCC_L=-ltcc
+       CTR_MAYBE_INJECT="inject.c"
+    ])
+AC_MSG_RESULT($want_inject)
+AC_MSG_CHECKING(ffi)
+AS_IF([test "x$want_ffi" = "xyes"], [
+       CFLAGS+=" -DwithCTypesNative=1"
+       MAYBE_FFI=ffi
+       MAYBE_FFI_L=-lffi
+       CTR_MAYBE_FFI="ctypes.c reverse_sizes.h _struct.h structmember.h ctypes.h _struct.c structmember.c"
+       ])
+AC_MSG_RESULT($want_ffi)
+AC_SUBST([MAYBE_TCC_L])
+AC_SUBST([MAYBE_FFI_L])
+AM_CONDITIONAL([WITH_INJECT], [test "x$want_inject" = "xyes"])
+AM_CONDITIONAL([WITH_FFI], [test "x$want_ffi" = "xyes"])
+
+AC_ARG_WITH([linux],
+              AS_HELP_STRING([--for-linux], [Build for linux OSs]),
+              [enable_forlinux=yes],
+              [enable_forlinux=no]
+              )
+AS_IF([test "x$enable_forlinux" != "xno"], [
        CFLAGS+=" -D forLinux"
 ])
 AC_OUTPUT

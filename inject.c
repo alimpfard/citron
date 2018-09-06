@@ -1,4 +1,6 @@
 #include "citron.h"
+#if withInjectNative
+
 #include "tcc/tcc.h"
 
 void *ctr_inject_compiled_state_release_hook(void *state)
@@ -229,3 +231,4 @@ ctr_object *ctr_inject_set_error_handler(ctr_object* myself, ctr_argument* argum
     tcc_set_error_func(s, l, ctr_inject_error_handler);
     return myself;
 }
+#endif // withInjectNative

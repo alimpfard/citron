@@ -1,9 +1,0 @@
-import Library/Data/SwitchCase.
-
-a is 'value'.
-
-a case: 'value' do: {
-  var value is my value.
-  Pen write: 'Single select switch-case: $$value ', brk.
-  },
-   case: 'lol' do: { Pen write: 'what?', brk. }, switch.

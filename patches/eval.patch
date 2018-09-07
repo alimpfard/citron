@@ -1,0 +1,18 @@
+diff --git a/eval b/eval
+index 31367ff..c9f7729 100644
+--- a/eval
++++ b/eval
+@@ -68,10 +68,10 @@ Eval on: 'init' do: {
+     put: True at: 'highlight',
+     put: False at: 'equit',
+     put: False at: 'jsonout',
+-    put: True at: 'intty',
+-    put: True at: 'processig',
++    put: False at: 'intty',
++    put: False at: 'processig',
+     put: False at: 'clear_errors',
+-    put: True at: 'history',
++    put: False at: 'history',
+     put: False at: 'html_colors'.
+   me genReader: 'eServer'.
+   my errd is False.

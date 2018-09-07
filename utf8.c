@@ -1,16 +1,13 @@
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdarg.h>
 #include <math.h>
 #include <unistd.h>
 #include <stdint.h>
-#include <time.h>
 
 #include "citron.h"
 
-#include "grapheme_break.c"
 /**
 * UTF8Size
 *
@@ -82,6 +79,7 @@ ctr_getutf8clustercount (char *strval, ctr_size max)
 }
 
 #else
+#include "grapheme_break.c"
 
 #include <unicode/uchar.h>
 #include <unicode/ustring.h>

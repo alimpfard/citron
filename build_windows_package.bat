@@ -10,9 +10,9 @@ echo MSYS2 system: %MSYSTEM%
 if %COMPILER%==msys2 (
     @echo on
     SET "PATH=C:\%MSYS2_DIR%\%MSYSTEM%\bin;C:\%MSYS2_DIR%\usr\bin;%PATH%"
-    bash -lc "pacman -S --needed --noconfirm pacman-mirrors"
-    bash -lc "pacman -S --needed --noconfirm git"
-    bash -lc "pacman -Syu --noconfirm"
-    bash -lc "pacman -S --needed --noconfirm mingw-w64-i686-toolchain make patch perl"
-    dir
+    pacman -S --needed --noconfirm pacman-mirrors
+    pacman -S --needed --noconfirm git
+    pacman -Syu --noconfirm
+    pacman -S --needed --noconfirm mingw-w64-i686-toolchain make patch perl
+    make distribute
 )

@@ -63,7 +63,7 @@ build_script:
   - C:\msys64\msys2.exe "make distribute"
 
 # to disable automatic builds
-build: off
+build: on
 
 
 #---------------------------------#

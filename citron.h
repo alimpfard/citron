@@ -1256,8 +1256,10 @@ ctr_object *ctr_inject_add_lib(ctr_object* myself, ctr_argument* argumentList);
 ctr_object *ctr_inject_set_error_handler(ctr_object* myself, ctr_argument* argumentList);
 
 /** FFI **/
+#if 0
 #include "ctypes.h"
 void ctr_ffi_begin();
+#endif
 
 /**
  * Global Garbage Collector variables

@@ -1,8 +1,6 @@
-DEBUG_VERSION := 68
+DEBUG_VERSION := 79
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
-LEXTRACF := ${LEXTRACF} -flto -lstdc++
-fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
-fv := '/data/data/com.termux/files/usr/lib/libgc.so'
+LEXTRACF := ${LEXTRACF} -flto -lstdc++ -static-libgcc -static-libstdc++
 location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 WHERE_ART_THOU := $(location)
 new_makefile_l1 := $(shell perl -ne '/((DEBUG_VERSION := )(\d+))/ && print (sprintf("%s%s", "$$2", "$$3"+1));' $(WHERE_ART_THOU))
@@ -19,9 +17,10 @@ else
 LEXTRACF := ${LEXTRACF} -L/usr/lib -licui18n -licuuc -licudata
 endif
 
+CFALGS := ${CFLAGS}
+
 ifeq ($(strip ${WITHOUT_BOEHM_GC}),)
-CFLAGS := ${CFLAGS} "-D withBoehmGC"
-LEXTRACF := ${LEXTRACF} ${fv}
+CFLAGS := ${CFLAGS} -D withBoehmGC
 else
 endif
 
@@ -32,16 +31,8 @@ endif
 
 CFLAGS := ${CFLAGS} -pthread -fsigned-char
 
-.PHONY: gc_check
-gc_check:
-	@if [ "${fv}x" == "x" ]; then echo "Could not find libgc.so."; echo Failing; exit 1; else echo "Found libgc.so at ${fv}"; fi
-	$(eval LEXTRACF := ${LEXTRACF} ${fv})
-	echo CFLAGS = ${CFLAGS}
-
 CFLAGS += ${shell_cflags}
 LDFLAGS += ${shell_ldflags}
-
--include gc_check
 
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o\
 		lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o\
@@ -59,14 +50,23 @@ COBJS = ${OBJS} compiler.o
 
 # .SUFFIXES:	.o .c
 
+-include patch_for_android_windows
+
+deps:
+	# This is just a hacky way of getting bdwgc "libgc" from MSYS2, 
+	# Do not expect it to work anywhere else
+	# TODO: Find a better solution
+	pacman --noconfirm -S libgc-devel libgc && cp /usr/bin/msys-gc-1.dll .
+
 all: CFALGS := $(CFLAGS) -O2
-all: cxx
+all: deps cxx
 all: ctr ctrconfig
 
 ctrconfig:
 	$(CC) ctrconfig.c -o ctrconfig
 
 debug: CFLAGS := ${CFLAGS} -DDEBUG_BUILD -DDEBUG_BUILD_VERSION=${DEBUG_BUILD_VERSION} -Og -g3 -ggdb3 -Wno-unused-function
+debug: deps 
 debug: cxx
 debug: ctr
 debug:
@@ -75,18 +75,20 @@ debug:
 install:
 	echo -e "install directly from source not allowed.\nUse citron_autohell instead for installs"
 	exit 1;
-ctr:	$(OBJS)
-	$(CC) -fopenmp $(OBJS) -rdynamic -lm -ldl -llog -lpcre -lpthread ${LEXTRACF} -o ctr
+ctr: $(OBJS)
+	$(CC) -fopenmp $(OBJS) -static -lm -ldl -lpcre -lpthread /usr/lib/libgc.dll.a ${LEXTRACF} -o ctr
 
 libctr: CFLAGS := $(CFLAGS) -fPIC -DCITRON_LIBRARY
+libctr: deps
 libctr: symbol_cxx
 libctr: $(OBJS)
-	$(CC) $(OBJS) -shared -export-dynamic -ldl -llog -lpcre -lpthread -o libctr.so
+	$(CC) $(OBJS) -shared -export-dynamic -ldl -lpcre -lpthread /usr/lib/libgc.dll.a -o libctr.so
 
 compiler: CFLAGS := $(CFLAGS) -D comp=1
+compiler: deps
 compiler: cxx
 compiler: $(COBJS)
-	$(CC) $(COBJS) -rdynamic -lm -ldl -llog -lpcre -lprofiler -lpthread ${LEXTRACF} -o ctrc
+	$(CC) $(COBJS) -rdynamic -lm -ldl -lpcre -lprofiler -lpthread /usr/lib/libgc.dll.a ${LEXTRACF} -o ctrc
 cxx:
 	echo "blah"
 
@@ -98,7 +100,12 @@ tcc/%.a:
 # 	$(CC) $(CFLAHS) -c $< -o $@ >/dev/null 2>&1
 
 %.o: %.c
-	$(CC) -fopenmp $(CFLAGS) -c $< -o $@ >/dev/null 2>&1
+	$(CC) -fopenmp $(CFLAGS) -static -c $< -o $@
+
+
+patch_for_android_windows:
+	# This patches `eval` to assume ffi is not present
+	git apply patches/eval.patch
 
 define SHVAL =
 for f in *.c; do\

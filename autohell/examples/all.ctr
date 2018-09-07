@@ -1,3 +1,0 @@
-var objs is Reflect getContext @ 0 @ 0 fmap: {:name ^name + ' :: ' + (Reflect getMethodsOf: (Reflect getObject: name), reverse join: '\n').}.
-
-Pen write: (objs reverse join: '\n\n'), brk.

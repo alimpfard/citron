@@ -68,8 +68,7 @@ configuration: Release
 
 # to run your custom scripts instead of automatic MSBuild
 build_script:
-  - SET "PATH=C:\%MSYS2_DIR%\%MSYSTEM%\bin;C:\%MSYS2_DIR%\usr\bin;%PATH%"
-  - cd c:\projects\citron && bash -lc "make distribute"
+  - '%APPVEYOR_BUILD_FOLDER%\build_windows_package.bat'
 
 # to disable automatic builds
 build: on

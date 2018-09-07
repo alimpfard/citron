@@ -137,3 +137,18 @@ love:
 
 war:
 	echo "Not love?"
+
+mods:
+	cd plugins/gmp && make
+
+package:
+	# create a package for windows people
+	# really, how lazy can y'all get?
+	mkdir -p package/basemods
+	cp -r examples docs extensions Library mods msys-gc-1.dll ctr.exe eval compile.ctr package
+	cp dist_windows package/citron.bat
+	tar cf citron-release.tar package 
+	rm -rf package
+
+
+distribute: all mods package

@@ -1,4 +1,4 @@
-DEBUG_VERSION := 67
+DEBUG_VERSION := 68
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 LEXTRACF := ${LEXTRACF} -flto -lstdc++
 fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
@@ -87,7 +87,6 @@ compiler: CFLAGS := $(CFLAGS) -D comp=1
 compiler: cxx
 compiler: $(COBJS)
 	$(CC) $(COBJS) -rdynamic -lm -ldl -llog -lpcre -lprofiler -lpthread ${LEXTRACF} -o ctrc
-
 cxx:
 	echo "blah"
 

@@ -322,18 +322,18 @@ ctr_object* ctr_sdl_init(ctr_object* myself, ctr_argument* argumentList) {
   )->value.nvalue;
   if(!sdl_inited) {
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
-      CtrStdFlow = sdl_error("Unable to initialize SDL: ", SDL_GetError());
+      (*get_CtrStdFlow()) = sdl_error("Unable to initialize SDL: ", SDL_GetError());
       ctr_heap_free(caption);
-      return CtrStdFlow;
+      return (*get_CtrStdFlow());
     }
     sdl_inited = 1;
   }
   SDL_WM_SetCaption (caption, caption);
   SDL_Surface* window = SDL_SetVideoMode(w, h, 0, 0);
   if (window == NULL) {
-    CtrStdFlow = sdl_error("Unable to set Video Mode: ", SDL_GetError());
+    (*get_CtrStdFlow()) = sdl_error("Unable to set Video Mode: ", SDL_GetError());
     ctr_heap_free(caption);
-    return CtrStdFlow;
+    return (*get_CtrStdFlow());
   }
 
   if(!img_inited) {
@@ -341,16 +341,16 @@ ctr_object* ctr_sdl_init(ctr_object* myself, ctr_argument* argumentList) {
     int flags=IMG_INIT_JPG|IMG_INIT_PNG;
     int initted=IMG_Init(flags);
     if((initted&flags) != flags) {
-      CtrStdFlow = sdl_error("IMG failed to initialize: ", IMG_GetError());
-      return CtrStdFlow;
+      (*get_CtrStdFlow()) = sdl_error("IMG failed to initialize: ", IMG_GetError());
+      return (*get_CtrStdFlow());
     }
     img_inited = 1;
   }
   if(!TTF_WasInit()) {
     int initted=TTF_Init();
     if(initted < 0) {
-      CtrStdFlow = sdl_error("TTF failed to initialize: ", TTF_GetError());
-      return CtrStdFlow;
+      (*get_CtrStdFlow()) = sdl_error("TTF failed to initialize: ", TTF_GetError());
+      return (*get_CtrStdFlow());
     }
     ttf_inited = 1;
   }
@@ -474,10 +474,10 @@ ctr_object* ctr_sdl_rect_to_s(ctr_object* myself, ctr_argument* argumentList) {
    return ctr_invoke_variadic(myself, &ctr_sdl_color_make, 4, r,g,b,a);
 
    err_not_arr:
-   CtrStdFlow = ctr_build_string_from_cstring("Expected an array of RGBA values");
+   (*get_CtrStdFlow()) = ctr_build_string_from_cstring("Expected an array of RGBA values");
    return myself;
    err_not_enough:
-   CtrStdFlow = ctr_build_string_from_cstring("Expected an array of 4 values for RGBA");
+   (*get_CtrStdFlow()) = ctr_build_string_from_cstring("Expected an array of 4 values for RGBA");
    return myself;
  }
  ctr_object* ctr_sdl_color_set_rgb(ctr_object* myself, ctr_argument* argumentList) {
@@ -498,18 +498,18 @@ ctr_object* ctr_sdl_rect_to_s(ctr_object* myself, ctr_argument* argumentList) {
    return ctr_invoke_variadic(myself, &ctr_sdl_color_make, 4, r,g,b,ctr_build_number_from_float(255));
 
    err_not_arr:
-   CtrStdFlow = ctr_build_string_from_cstring("Expected an array of RGB values");
+   (*get_CtrStdFlow()) = ctr_build_string_from_cstring("Expected an array of RGB values");
    return myself;
    err_not_enough:
-   CtrStdFlow = ctr_build_string_from_cstring("Expected an array of 3 values for RGB");
+   (*get_CtrStdFlow()) = ctr_build_string_from_cstring("Expected an array of 3 values for RGB");
    return myself;
  }
 
  ctr_object* ctr_sdl_color_set(ctr_object* myself, ctr_argument* argumentList) {
    ctr_object *prop = ctr_internal_cast2string(argumentList->object), *val = ctr_internal_cast2number(argumentList->next->object);
    if (prop==NULL||val==NULL) {
-     CtrStdFlow = prop==NULL?ctr_build_string_from_cstring("Propery name cannot be Nil."):ctr_build_string_from_cstring("Value must be a number.");
-     return CtrStdFlow;
+     (*get_CtrStdFlow()) = prop==NULL?ctr_build_string_from_cstring("Propery name cannot be Nil."):ctr_build_string_from_cstring("Value must be a number.");
+     return (*get_CtrStdFlow());
    }
    ctr_internal_object_set_property(myself, prop, val, CTR_CATEGORY_PRIVATE_PROPERTY);
    return myself;
@@ -542,7 +542,7 @@ ctr_object* ctr_sdl_surface_loadImage(ctr_object* myself, ctr_argument* argument
   ctr_set_link_all(instance, CtrStdSdl_surface);
   char* loc = ctr_heap_allocate_cstring (argumentList->object);
   if(access(loc, F_OK) == -1) {
-    CtrStdFlow = ctr_build_string_from_cstring("specified file does not exist or cannot be accessed.");
+    (*get_CtrStdFlow()) = ctr_build_string_from_cstring("specified file does not exist or cannot be accessed.");
     ctr_heap_free(loc);
     return CtrStdExit;
   }
@@ -574,7 +574,7 @@ ctr_object* ctr_sdl_surface_blit(ctr_object* myself, ctr_argument* argumentList)
   SDL_Surface* what = get_sdl_surface_ptr(argumentList->object);
   // printf("blit\n");
   if(SDL_BlitSurface(what, NULL, on, NULL) < 0) {
-    CtrStdFlow = sdl_error("Blit failed: ", SDL_GetError());
+    (*get_CtrStdFlow()) = sdl_error("Blit failed: ", SDL_GetError());
     return myself;
   }
   return myself;
@@ -602,7 +602,7 @@ ctr_object* ctr_sdl_surface_fill(ctr_object* myself, ctr_argument* argumentList)
   uint32_t color = SDL_MapRGB(surface->format, r, g, b);
   //uint32_t color = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
   if(SDL_FillRect(surface, rect, color) != 0) {
-    CtrStdFlow = sdl_error("Fill rect failed: ", SDL_GetError());
+    (*get_CtrStdFlow()) = sdl_error("Fill rect failed: ", SDL_GetError());
     return CtrStdNil;
   }
   return myself;
@@ -653,7 +653,7 @@ ctr_object* ctr_sdl_surface_set_color_key(ctr_object* myself, ctr_argument* argu
   }
   // uint32_t color = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
   if(SDL_SetColorKey(surface, flag, color) < 0) {
-    CtrStdFlow = sdl_error("setColorKey failed: ", SDL_GetError());
+    (*get_CtrStdFlow()) = sdl_error("setColorKey failed: ", SDL_GetError());
   }
   return myself;
 }
@@ -670,7 +670,7 @@ ctr_object* ctr_sdl_surface_new(ctr_object* myself, ctr_argument* argumentList) 
   SDL_Surface* surf = get_sdl_surface_ptr(myself);
   SDL_Surface* sf2 = SDL_CreateRGBSurface(0, surf->w, surf->h, surf->format->BitsPerPixel, surf->format->Rmask, surf->format->Gmask, surf->format->Bmask, surf->format->Amask);
   if(!sf2){
-    CtrStdFlow = sdl_error("CreateRGBSurface failed: ", SDL_GetError());
+    (*get_CtrStdFlow()) = sdl_error("CreateRGBSurface failed: ", SDL_GetError());
     return CtrStdNil;
   }
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
@@ -685,7 +685,7 @@ ctr_object* ctr_sdl_surface_new_wh(ctr_object* myself, ctr_argument* argumentLis
   h = ctr_internal_cast2number(argumentList->next->object)->value.nvalue;
   SDL_Surface* sf2 = SDL_CreateRGBSurface(0, w, h, surf->format->BitsPerPixel, surf->format->Rmask, surf->format->Gmask, surf->format->Bmask, surf->format->Amask);
   if(!sf2){
-    CtrStdFlow = sdl_error("CreateRGBSurface failed: ", SDL_GetError());
+    (*get_CtrStdFlow()) = sdl_error("CreateRGBSurface failed: ", SDL_GetError());
     return CtrStdNil;
   }
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
@@ -955,8 +955,8 @@ ctr_object* ctr_sdl_event_type_compare(ctr_object* myself, ctr_argument* argumen
    if(!TTF_WasInit()) {
      int initted=TTF_Init();
      if(initted < 0) {
-       CtrStdFlow = sdl_error("TTF failed to initialize: ", TTF_GetError());
-       return CtrStdFlow;
+       (*get_CtrStdFlow()) = sdl_error("TTF failed to initialize: ", TTF_GetError());
+       return (*get_CtrStdFlow());
      }
    }
    char* fname = ctr_heap_allocate_cstring(ctr_internal_cast2string(argumentList->object));
@@ -968,7 +968,7 @@ ctr_object* ctr_sdl_event_type_compare(ctr_object* myself, ctr_argument* argumen
    TTF_Font* font = TTF_OpenFont(fname, size);
    ctr_heap_free(fname);
    if(!font) {
-     CtrStdFlow = sdl_error("OpenFont error: ", TTF_GetError());
+     (*get_CtrStdFlow()) = sdl_error("OpenFont error: ", TTF_GetError());
      return CtrStdNil;
    }
    container->value.rvalue->ptr = font;
@@ -993,7 +993,7 @@ ctr_object* ctr_sdl_ttf_render_solid(ctr_object* myself, ctr_argument* argumentL
   }
   ctr_heap_free(text);
   if(!srf) {
-    CtrStdFlow = sdl_error("Couldn't render text: ", TTF_GetError());
+    (*get_CtrStdFlow()) = sdl_error("Couldn't render text: ", TTF_GetError());
     return CtrStdNil;
   }
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
@@ -1016,7 +1016,7 @@ ctr_object* ctr_sdl_ttf_renderu_solid(ctr_object* myself, ctr_argument* argument
     srf = TTF_RenderUTF8_Solid(font, text, color);
   ctr_heap_free(text);
   if(!srf) {
-    CtrStdFlow = sdl_error("Couldn't render text: ", TTF_GetError());
+    (*get_CtrStdFlow()) = sdl_error("Couldn't render text: ", TTF_GetError());
     return CtrStdNil;
   }
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
@@ -1042,7 +1042,7 @@ ctr_object* ctr_sdl_ttf_render_blended(ctr_object* myself, ctr_argument* argumen
   }
   ctr_heap_free(text);
   if(!srf) {
-    CtrStdFlow = sdl_error("Couldn't render text: ", TTF_GetError());
+    (*get_CtrStdFlow()) = sdl_error("Couldn't render text: ", TTF_GetError());
     return CtrStdNil;
   }
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
@@ -1065,7 +1065,7 @@ ctr_object* ctr_sdl_ttf_renderu_blended(ctr_object* myself, ctr_argument* argume
     srf = TTF_RenderUTF8_Blended(font, text, color);
   ctr_heap_free(text);
   if(!srf) {
-    CtrStdFlow = sdl_error("Couldn't render text: ", TTF_GetError());
+    (*get_CtrStdFlow()) = sdl_error("Couldn't render text: ", TTF_GetError());
     return CtrStdNil;
   }
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
@@ -1097,7 +1097,7 @@ ctr_object* ctr_sdl_ttf_render_shaded(ctr_object* myself, ctr_argument* argument
   }
   ctr_heap_free(text);
   if(!srf) {
-    CtrStdFlow = sdl_error("Couldn't render text: ", TTF_GetError());
+    (*get_CtrStdFlow()) = sdl_error("Couldn't render text: ", TTF_GetError());
     return CtrStdNil;
   }
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);
@@ -1126,7 +1126,7 @@ ctr_object* ctr_sdl_ttf_renderu_shaded(ctr_object* myself, ctr_argument* argumen
   srf = TTF_RenderUTF8_Shaded(font, text, fcolor, bcolor);
   ctr_heap_free(text);
   if(!srf) {
-    CtrStdFlow = sdl_error("Couldn't render text: ", TTF_GetError());
+    (*get_CtrStdFlow()) = sdl_error("Couldn't render text: ", TTF_GetError());
     return CtrStdNil;
   }
   ctr_object* instance = ctr_sdl_create_container_of_type(CTR_SDL_TYPE_SURFACE);

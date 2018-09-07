@@ -59,7 +59,7 @@ static inline ctr_object* ctr_can_cast_to_bool(ctr_object* object) {
 #define CTR_ENSURE_TYPE_ARRAY(object)    do { CTR_ENSURE_NON_NULL(object); if ( object->info.type != CTR_OBJECT_TYPE_OTARRAY ) CTR_TYPE_ERR(object, Array); } while (0)
 #define CTR_ENSURE_TYPE_STRING(object)    do { CTR_ENSURE_NON_NULL(object); if ( object->info.type != CTR_OBJECT_TYPE_OTSTRING && ctr_can_cast_to_string(object) == NULL) CTR_TYPE_ERR(object, String); } while (0)
 #define CTR_ENSURE_TYPE_BOOL(object)    do { CTR_ENSURE_NON_NULL(object); if ( object->info.type != CTR_OBJECT_TYPE_OTBOOL && ctr_can_cast_to_bool(object) == NULL && ctr_can_cast_to_number(object) != NULL) CTR_TYPE_ERR(object, Boolean); } while (0)
-#define CTR_ENSURE_TYPE_BLOCK(object)    do { CTR_ENSURE_NON_NULL(object); if ( object->info.type != CTR_OBJECT_TYPE_OTBLOCK ) CTR_TYPE_ERR(object, CodeBlock); } while (0)
+#define CTR_ENSURE_TYPE_BLOCK(object)    do { CTR_ENSURE_NON_NULL(object); if ( object->info.type != CTR_OBJECT_TYPE_OTBLOCK && object->info.type != CTR_OBJECT_TYPE_OTNATFUNC ) CTR_TYPE_ERR(object, CodeBlock); } while (0)
 #define CTR_ENSURE_TYPE_NATFUNC(object)    do { CTR_ENSURE_NON_NULL(object); if ( object->info.type != CTR_OBJECT_TYPE_OTNATFUNC ) CTR_TYPE_ERR(object, NativeFunction); } while (0)
 #define CTR_ENSURE_TYPE_EXTERN(object)    do { CTR_ENSURE_NON_NULL(object); if ( object->info.type != CTR_OBJECT_TYPE_OTEX ) CTR_TYPE_ERR(object, ExternalResource); } while (0)
 #define CTR_ENSURE_TYPE_OBJECT(object)    do { CTR_ENSURE_NON_NULL(object); if ( object->info.type != CTR_OBJECT_TYPE_OTOBJECT ) CTR_TYPE_ERR(object, Object); } while (0)

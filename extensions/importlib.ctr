@@ -23,19 +23,7 @@ import on: 'require-parent' do: {
 import on: 'dir:' do: {:dname
   me message: dname arguments: [].
 }.
-import on: 'return:' do: {:obj
-  var path is (File new: '.', realPath).
-  var spath is my searchPaths filter: {:i:v ^path contains: v.}.
-  var import_name is path skip: (spath at: 0, length + 1).
-  my return put: obj at: import_name.
-}.
-import on: 'return' do: {}.
-import on: '__realloc:' do: {:map
-  var m is Map new.
-  map each: {:i:v m put: v at: i.}.
-  ^m.
-}.
-import on: '__load:' do: {:self:name
+import on: '__resolve_request:internally:' do: {:name:itn
   var file is Nil.
   var path is Nil.
   var is_dir is False.
@@ -64,7 +52,7 @@ import on: '__load:' do: {:self:name
       }.
     }.
   }.
-  file isNil ifTrue: {
+  file isNil & itn not ifTrue: {
     ^name = 'name' either: Nil or: {
       thisBlock error: (
         'Could not find neither a package, nor a standalone file representing $$name in the search paths: \n%s'
@@ -72,6 +60,26 @@ import on: '__load:' do: {:self:name
         [(self searchPaths fmap: {:p ^p + ' aka (' + (File new: p, realPath) + ')'.}, join: '\n')]).
       }.
   }.
+  ^[full_path, path, file].
+}.
+import on: 'return:' do: {:obj
+  var path is (File new: '.', realPath).
+  var spath is my searchPaths filter: {:i:v ^path contains: v.}.
+  var import_name is path skip: (spath at: 0, length + 1).
+  my return put: obj at: import_name.
+}.
+import on: 'return' do: {}.
+import on: '__realloc:' do: {:map
+  var m is Map new.
+  map each: {:i:v m put: v at: i.}.
+  ^m.
+}.
+import on: '__load:' do: {:self:name
+  var paths is __resolve_request: name internally: False.
+  paths = Nil ifTrue: { ^self. }.
+  var full_path is paths @ 0.
+  var path is paths @ 1.
+  var file is paths @ 2.
   var _lm is my __loaded_modules.
   ^(_lm contains: full_path)
     either: {

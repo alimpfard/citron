@@ -90,7 +90,17 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-bin_PROGRAMS = ctr$(EXEEXT)
+bin_PROGRAMS = ctr$(EXEEXT) ctrconfig$(EXEEXT)
+@WITH_FFI_TRUE@am__append_1 = ctypes.c reverse_sizes.h\
+@WITH_FFI_TRUE@                         _struct.h structmember.h ctypes.h\
+@WITH_FFI_TRUE@                         _struct.c structmember.c
+
+@WITH_FFI_TRUE@am__append_2 = ctypes.c reverse_sizes.h\
+@WITH_FFI_TRUE@                         _struct.h structmember.h ctypes.h\
+@WITH_FFI_TRUE@                         _struct.c structmember.c
+
+@WITH_INJECT_TRUE@am__append_3 = inject.c
+@WITH_INJECT_TRUE@am__append_4 = inject.c
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -133,17 +143,50 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
 	"$(DESTDIR)$(pkgincludedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libcitron_la_LIBADD =
-am_libcitron_la_OBJECTS = citron.lo base.lo world.lo importlib.lo \
-	fiber.lo reflect.lo walker.lo parser.lo lexer.lo lexer_plug.lo \
-	system.lo file.lo collections.lo util.lo memory.lo utf8.lo \
-	symbol.lo siphash.lo coroutine.lo generator.lo \
-	base_extensions.lo marshal.lo promise.lo symbol_cxx.lo
+am__libcitron_la_SOURCES_DIST = citron.c base.c world.c importlib.c \
+	fiber.c reflect.c walker.c parser.c lexer.c lexer_plug.c \
+	system.c file.c collections.c util.c memory.c utf8.c symbol.c \
+	siphash.c coroutine.c generator.c base_extensions.c \
+	dictionary.h siphash.h marshal.c promise.c symbol_cxx.cpp \
+	symbol.hpp promise.h ctypes.c reverse_sizes.h _struct.h \
+	structmember.h ctypes.h _struct.c structmember.c inject.c
+@WITH_FFI_TRUE@am__objects_1 = libcitron_la-ctypes.lo \
+@WITH_FFI_TRUE@	libcitron_la-_struct.lo \
+@WITH_FFI_TRUE@	libcitron_la-structmember.lo
+@WITH_INJECT_TRUE@am__objects_2 = libcitron_la-inject.lo
+am_libcitron_la_OBJECTS = libcitron_la-citron.lo libcitron_la-base.lo \
+	libcitron_la-world.lo libcitron_la-importlib.lo \
+	libcitron_la-fiber.lo libcitron_la-reflect.lo \
+	libcitron_la-walker.lo libcitron_la-parser.lo \
+	libcitron_la-lexer.lo libcitron_la-lexer_plug.lo \
+	libcitron_la-system.lo libcitron_la-file.lo \
+	libcitron_la-collections.lo libcitron_la-util.lo \
+	libcitron_la-memory.lo libcitron_la-utf8.lo \
+	libcitron_la-symbol.lo libcitron_la-siphash.lo \
+	libcitron_la-coroutine.lo libcitron_la-generator.lo \
+	libcitron_la-base_extensions.lo libcitron_la-marshal.lo \
+	libcitron_la-promise.lo symbol_cxx.lo $(am__objects_1) \
+	$(am__objects_2)
 libcitron_la_OBJECTS = $(am_libcitron_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+libcitron_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
+	$(CXXFLAGS) $(libcitron_la_LDFLAGS) $(LDFLAGS) -o $@
 PROGRAMS = $(bin_PROGRAMS)
+am__ctr_SOURCES_DIST = citron.c base.c world.c importlib.c fiber.c \
+	reflect.c walker.c parser.c lexer.c lexer_plug.c system.c \
+	file.c collections.c util.c memory.c utf8.c symbol.c siphash.c \
+	coroutine.c generator.c base_extensions.c dictionary.h \
+	siphash.h marshal.c promise.c symbol_cxx.cpp symbol.hpp \
+	promise.h ctypes.c reverse_sizes.h _struct.h structmember.h \
+	ctypes.h _struct.c structmember.c inject.c
+@WITH_FFI_TRUE@am__objects_3 = ctr-ctypes.$(OBJEXT) \
+@WITH_FFI_TRUE@	ctr-_struct.$(OBJEXT) \
+@WITH_FFI_TRUE@	ctr-structmember.$(OBJEXT)
+@WITH_INJECT_TRUE@am__objects_4 = ctr-inject.$(OBJEXT)
 am_ctr_OBJECTS = ctr-citron.$(OBJEXT) ctr-base.$(OBJEXT) \
 	ctr-world.$(OBJEXT) ctr-importlib.$(OBJEXT) \
 	ctr-fiber.$(OBJEXT) ctr-reflect.$(OBJEXT) ctr-walker.$(OBJEXT) \
@@ -154,12 +197,19 @@ am_ctr_OBJECTS = ctr-citron.$(OBJEXT) ctr-base.$(OBJEXT) \
 	ctr-symbol.$(OBJEXT) ctr-siphash.$(OBJEXT) \
 	ctr-coroutine.$(OBJEXT) ctr-generator.$(OBJEXT) \
 	ctr-base_extensions.$(OBJEXT) ctr-marshal.$(OBJEXT) \
-	ctr-promise.$(OBJEXT) ctr-symbol_cxx.$(OBJEXT)
+	ctr-promise.$(OBJEXT) ctr-symbol_cxx.$(OBJEXT) \
+	$(am__objects_3) $(am__objects_4)
 ctr_OBJECTS = $(am_ctr_OBJECTS)
 ctr_LDADD = $(LDADD)
 ctr_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(ctr_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_ctrconfig_OBJECTS = ctrconfig-ctrconfig.$(OBJEXT)
+ctrconfig_OBJECTS = $(am_ctrconfig_OBJECTS)
+ctrconfig_LDADD = $(LDADD)
+ctrconfig_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(ctrconfig_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -212,14 +262,33 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
-SOURCES = $(libcitron_la_SOURCES) $(ctr_SOURCES)
-DIST_SOURCES = $(libcitron_la_SOURCES) $(ctr_SOURCES)
+SOURCES = $(libcitron_la_SOURCES) $(EXTRA_libcitron_la_SOURCES) \
+	$(ctr_SOURCES) $(EXTRA_ctr_SOURCES) $(ctrconfig_SOURCES)
+DIST_SOURCES = $(am__libcitron_la_SOURCES_DIST) \
+	$(EXTRA_libcitron_la_SOURCES) $(am__ctr_SOURCES_DIST) \
+	$(EXTRA_ctr_SOURCES) $(ctrconfig_SOURCES)
+RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
+	ctags-recursive dvi-recursive html-recursive info-recursive \
+	install-data-recursive install-dvi-recursive \
+	install-exec-recursive install-html-recursive \
+	install-info-recursive install-pdf-recursive \
+	install-ps-recursive install-recursive installcheck-recursive \
+	installdirs-recursive pdf-recursive ps-recursive \
+	tags-recursive uninstall-recursive
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
 HEADERS = $(pkginclude_HEADERS)
+RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
+  distclean-recursive maintainer-clean-recursive
+am__recursive_targets = \
+  $(RECURSIVE_TARGETS) \
+  $(RECURSIVE_CLEAN_TARGETS) \
+  $(am__extra_recursive_targets)
+AM_RECURSIVE_TARGETS = $(am__recursive_targets:-recursive=) TAGS CTAGS \
+	distdir
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 # Read a list of newline-separated strings from the standard input,
 # and print each of them once, without duplicates.  Input order is
@@ -239,8 +308,34 @@ am__define_uniq_tagged_files = \
   done | $(am__uniquify_input)`
 ETAGS = etags
 CTAGS = ctags
+DIST_SUBDIRS = $(SUBDIRS)
 am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+am__relativize = \
+  dir0=`pwd`; \
+  sed_first='s,^\([^/]*\)/.*$$,\1,'; \
+  sed_rest='s,^[^/]*/*,,'; \
+  sed_last='s,^.*/\([^/]*\)$$,\1,'; \
+  sed_butlast='s,/*[^/]*$$,,'; \
+  while test -n "$$dir1"; do \
+    first=`echo "$$dir1" | sed -e "$$sed_first"`; \
+    if test "$$first" != "."; then \
+      if test "$$first" = ".."; then \
+        dir2=`echo "$$dir0" | sed -e "$$sed_last"`/"$$dir2"; \
+        dir0=`echo "$$dir0" | sed -e "$$sed_butlast"`; \
+      else \
+        first2=`echo "$$dir2" | sed -e "$$sed_first"`; \
+        if test "$$first2" = "$$first"; then \
+          dir2=`echo "$$dir2" | sed -e "$$sed_rest"`; \
+        else \
+          dir2="../$$dir2"; \
+        fi; \
+        dir0="$$dir0"/"$$first"; \
+      fi; \
+    fi; \
+    dir1=`echo "$$dir1" | sed -e "$$sed_rest"`; \
+  done; \
+  reldir="$$dir2"
 ACLOCAL = @ACLOCAL@
 ALLOCA = @ALLOCA@
 AMTAR = @AMTAR@
@@ -288,6 +383,8 @@ LTLIBOBJS = @LTLIBOBJS@
 LT_SYS_LIBRARY_PATH = @LT_SYS_LIBRARY_PATH@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
+MAYBE_FFI_L = @MAYBE_FFI_L@
+MAYBE_TCC_L = @MAYBE_TCC_L@
 MKDIR_P = @MKDIR_P@
 NM = @NM@
 NMEDIT = @NMEDIT@
@@ -364,30 +461,39 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CFLAGS = --pedantic -O2 -Wall -D withTermios -D forLinux -DCTR_STD_EXTENSION_PATH=\"$(pkgdatadir)\" -DWITH_AUTOMAKE=\"$(pkgdatadir)\"
-AM_LDFLAGS = -rdynamic -lm -ldl -lbsd -lpcre -lpthread -o ctr
-AM_CXXFLAGS = $(CXXFLAGS) -std=c++0x
-ctr_SOURCES = citron.c base.c world.c importlib.c fiber.c reflect.c\
-			  walker.c parser.c lexer.c lexer_plug.c system.c file.c\
-			  collections.c util.c memory.c utf8.c symbol.c siphash.c\
-			  coroutine.c generator.c base_extensions.c dictionary.h\
-			  siphash.h marshal.c promise.c symbol_cxx.cpp symbol.hpp\
-			  promise.h
+AM_CFLAGS = --pedantic -ggdb3 -Wall -fPIC -mtune=native -D withTermios -D forLinux -DCTR_STD_EXTENSION_PATH=\"$(pkgdatadir)\" -D WITH_AUTOMAKE=\"$(pkgdatadir)\"
+AM_LDFLAGS = -rdynamic -lm -ldl -lbsd -lpcre -lpthread $(MAYBE_FFI_L) $(MAYBE_TCC_L) -o ctr
+SUBDIRS = $(MAYBE_TCC)
+AM_CXXFLAGS = -std=c++11
+ctrconfig_SOURCES = ctrconfig.c
+ctr_SOURCES = citron.c base.c world.c importlib.c fiber.c reflect.c \
+	walker.c parser.c lexer.c lexer_plug.c system.c file.c \
+	collections.c util.c memory.c utf8.c symbol.c siphash.c \
+	coroutine.c generator.c base_extensions.c dictionary.h \
+	siphash.h marshal.c promise.c symbol_cxx.cpp symbol.hpp \
+	promise.h $(am__append_2) $(am__append_4)
+EXTRA_ctr_SOURCES = inject.c ctypes.c reverse_sizes.h\
+			  _struct.h structmember.h ctypes.h _struct.c\
+			  structmember.c 
 
+ctrconfig_CFLAGS = $(AM_CFLAGS)
 ctr_CFLAGS = $(AM_CFLAGS)
 ctr_CXXFLAGS = $(AM_CXXFLAGS)
-pkginclude_HEADERS = citron.h citron_conv.h citron_ensure.h coroutine.h dictionary.h\
-			  siphash.h generator.h symbol.hpp symbol.h config.h
-
+pkginclude_HEADERS = *.h
 lib_LTLIBRARIES = libcitron.la
-libcitron_la_SOURCES = citron.c base.c world.c importlib.c fiber.c reflect.c\
-               		   walker.c parser.c lexer.c lexer_plug.c system.c file.c\
-               		   collections.c util.c memory.c utf8.c symbol.c siphash.c\
-                       coroutine.c generator.c base_extensions.c dictionary.h\
-					   siphash.h marshal.c promise.c symbol_cxx.cpp symbol.hpp\
-					   promise.h
+libcitron_la_CFLAGS = -DLIBRARY_BUILD $(AM_CFLAGS)
+libcitron_la_LDFLAGS = -rdynamic
+libcitron_la_SOURCES = citron.c base.c world.c importlib.c fiber.c \
+	reflect.c walker.c parser.c lexer.c lexer_plug.c system.c \
+	file.c collections.c util.c memory.c utf8.c symbol.c siphash.c \
+	coroutine.c generator.c base_extensions.c dictionary.h \
+	siphash.h marshal.c promise.c symbol_cxx.cpp symbol.hpp \
+	promise.h $(am__append_1) $(am__append_3)
+EXTRA_libcitron_la_SOURCES = inject.c ctypes.c reverse_sizes.h\
+					   _struct.h structmember.h ctypes.h\
+					   _struct.c structmember.c 
 
-all: all-am
+all: all-recursive
 
 .SUFFIXES:
 .SUFFIXES: .c .cpp .lo .o .obj
@@ -457,7 +563,7 @@ clean-libLTLIBRARIES:
 	}
 
 libcitron.la: $(libcitron_la_OBJECTS) $(libcitron_la_DEPENDENCIES) $(EXTRA_libcitron_la_DEPENDENCIES) 
-	$(AM_V_CXXLD)$(CXXLINK) -rpath $(libdir) $(libcitron_la_OBJECTS) $(libcitron_la_LIBADD) $(LIBS)
+	$(AM_V_CXXLD)$(libcitron_la_LINK) -rpath $(libdir) $(libcitron_la_OBJECTS) $(libcitron_la_LIBADD) $(LIBS)
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
@@ -512,26 +618,28 @@ ctr$(EXEEXT): $(ctr_OBJECTS) $(ctr_DEPENDENCIES) $(EXTRA_ctr_DEPENDENCIES)
 	@rm -f ctr$(EXEEXT)
 	$(AM_V_CXXLD)$(ctr_LINK) $(ctr_OBJECTS) $(ctr_LDADD) $(LIBS)
 
+ctrconfig$(EXEEXT): $(ctrconfig_OBJECTS) $(ctrconfig_DEPENDENCIES) $(EXTRA_ctrconfig_DEPENDENCIES) 
+	@rm -f ctrconfig$(EXEEXT)
+	$(AM_V_CCLD)$(ctrconfig_LINK) $(ctrconfig_OBJECTS) $(ctrconfig_LDADD) $(LIBS)
+
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/base.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/base_extensions.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/citron.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/collections.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/coroutine.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-_struct.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-base.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-base_extensions.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-citron.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-collections.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-coroutine.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-ctypes.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-fiber.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-file.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-generator.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-importlib.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-inject.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-lexer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-lexer_plug.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-marshal.Po@am__quote@
@@ -540,6 +648,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-promise.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-reflect.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-siphash.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-structmember.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-symbol.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-symbol_cxx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-system.Po@am__quote@
@@ -547,25 +656,35 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-util.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-walker.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctr-world.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fiber.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/file.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/generator.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/importlib.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lexer.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lexer_plug.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/marshal.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memory.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parser.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/promise.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reflect.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/siphash.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/symbol.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctrconfig-ctrconfig.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-_struct.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-base.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-base_extensions.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-citron.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-collections.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-coroutine.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-ctypes.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-fiber.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-file.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-generator.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-importlib.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-inject.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-lexer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-lexer_plug.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-marshal.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-memory.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-parser.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-promise.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-reflect.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-siphash.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-structmember.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-symbol.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-system.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-utf8.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-util.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-walker.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcitron_la-world.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/symbol_cxx.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/system.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utf8.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/util.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/walker.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/world.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -587,6 +706,195 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
+
+libcitron_la-citron.lo: citron.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-citron.lo -MD -MP -MF $(DEPDIR)/libcitron_la-citron.Tpo -c -o libcitron_la-citron.lo `test -f 'citron.c' || echo '$(srcdir)/'`citron.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-citron.Tpo $(DEPDIR)/libcitron_la-citron.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='citron.c' object='libcitron_la-citron.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-citron.lo `test -f 'citron.c' || echo '$(srcdir)/'`citron.c
+
+libcitron_la-base.lo: base.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-base.lo -MD -MP -MF $(DEPDIR)/libcitron_la-base.Tpo -c -o libcitron_la-base.lo `test -f 'base.c' || echo '$(srcdir)/'`base.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-base.Tpo $(DEPDIR)/libcitron_la-base.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='base.c' object='libcitron_la-base.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-base.lo `test -f 'base.c' || echo '$(srcdir)/'`base.c
+
+libcitron_la-world.lo: world.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-world.lo -MD -MP -MF $(DEPDIR)/libcitron_la-world.Tpo -c -o libcitron_la-world.lo `test -f 'world.c' || echo '$(srcdir)/'`world.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-world.Tpo $(DEPDIR)/libcitron_la-world.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='world.c' object='libcitron_la-world.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-world.lo `test -f 'world.c' || echo '$(srcdir)/'`world.c
+
+libcitron_la-importlib.lo: importlib.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-importlib.lo -MD -MP -MF $(DEPDIR)/libcitron_la-importlib.Tpo -c -o libcitron_la-importlib.lo `test -f 'importlib.c' || echo '$(srcdir)/'`importlib.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-importlib.Tpo $(DEPDIR)/libcitron_la-importlib.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='importlib.c' object='libcitron_la-importlib.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-importlib.lo `test -f 'importlib.c' || echo '$(srcdir)/'`importlib.c
+
+libcitron_la-fiber.lo: fiber.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-fiber.lo -MD -MP -MF $(DEPDIR)/libcitron_la-fiber.Tpo -c -o libcitron_la-fiber.lo `test -f 'fiber.c' || echo '$(srcdir)/'`fiber.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-fiber.Tpo $(DEPDIR)/libcitron_la-fiber.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fiber.c' object='libcitron_la-fiber.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-fiber.lo `test -f 'fiber.c' || echo '$(srcdir)/'`fiber.c
+
+libcitron_la-reflect.lo: reflect.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-reflect.lo -MD -MP -MF $(DEPDIR)/libcitron_la-reflect.Tpo -c -o libcitron_la-reflect.lo `test -f 'reflect.c' || echo '$(srcdir)/'`reflect.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-reflect.Tpo $(DEPDIR)/libcitron_la-reflect.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='reflect.c' object='libcitron_la-reflect.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-reflect.lo `test -f 'reflect.c' || echo '$(srcdir)/'`reflect.c
+
+libcitron_la-walker.lo: walker.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-walker.lo -MD -MP -MF $(DEPDIR)/libcitron_la-walker.Tpo -c -o libcitron_la-walker.lo `test -f 'walker.c' || echo '$(srcdir)/'`walker.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-walker.Tpo $(DEPDIR)/libcitron_la-walker.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='walker.c' object='libcitron_la-walker.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-walker.lo `test -f 'walker.c' || echo '$(srcdir)/'`walker.c
+
+libcitron_la-parser.lo: parser.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-parser.lo -MD -MP -MF $(DEPDIR)/libcitron_la-parser.Tpo -c -o libcitron_la-parser.lo `test -f 'parser.c' || echo '$(srcdir)/'`parser.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-parser.Tpo $(DEPDIR)/libcitron_la-parser.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='parser.c' object='libcitron_la-parser.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-parser.lo `test -f 'parser.c' || echo '$(srcdir)/'`parser.c
+
+libcitron_la-lexer.lo: lexer.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-lexer.lo -MD -MP -MF $(DEPDIR)/libcitron_la-lexer.Tpo -c -o libcitron_la-lexer.lo `test -f 'lexer.c' || echo '$(srcdir)/'`lexer.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-lexer.Tpo $(DEPDIR)/libcitron_la-lexer.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='lexer.c' object='libcitron_la-lexer.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-lexer.lo `test -f 'lexer.c' || echo '$(srcdir)/'`lexer.c
+
+libcitron_la-lexer_plug.lo: lexer_plug.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-lexer_plug.lo -MD -MP -MF $(DEPDIR)/libcitron_la-lexer_plug.Tpo -c -o libcitron_la-lexer_plug.lo `test -f 'lexer_plug.c' || echo '$(srcdir)/'`lexer_plug.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-lexer_plug.Tpo $(DEPDIR)/libcitron_la-lexer_plug.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='lexer_plug.c' object='libcitron_la-lexer_plug.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-lexer_plug.lo `test -f 'lexer_plug.c' || echo '$(srcdir)/'`lexer_plug.c
+
+libcitron_la-system.lo: system.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-system.lo -MD -MP -MF $(DEPDIR)/libcitron_la-system.Tpo -c -o libcitron_la-system.lo `test -f 'system.c' || echo '$(srcdir)/'`system.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-system.Tpo $(DEPDIR)/libcitron_la-system.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='system.c' object='libcitron_la-system.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-system.lo `test -f 'system.c' || echo '$(srcdir)/'`system.c
+
+libcitron_la-file.lo: file.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-file.lo -MD -MP -MF $(DEPDIR)/libcitron_la-file.Tpo -c -o libcitron_la-file.lo `test -f 'file.c' || echo '$(srcdir)/'`file.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-file.Tpo $(DEPDIR)/libcitron_la-file.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='file.c' object='libcitron_la-file.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-file.lo `test -f 'file.c' || echo '$(srcdir)/'`file.c
+
+libcitron_la-collections.lo: collections.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-collections.lo -MD -MP -MF $(DEPDIR)/libcitron_la-collections.Tpo -c -o libcitron_la-collections.lo `test -f 'collections.c' || echo '$(srcdir)/'`collections.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-collections.Tpo $(DEPDIR)/libcitron_la-collections.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='collections.c' object='libcitron_la-collections.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-collections.lo `test -f 'collections.c' || echo '$(srcdir)/'`collections.c
+
+libcitron_la-util.lo: util.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-util.lo -MD -MP -MF $(DEPDIR)/libcitron_la-util.Tpo -c -o libcitron_la-util.lo `test -f 'util.c' || echo '$(srcdir)/'`util.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-util.Tpo $(DEPDIR)/libcitron_la-util.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='util.c' object='libcitron_la-util.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-util.lo `test -f 'util.c' || echo '$(srcdir)/'`util.c
+
+libcitron_la-memory.lo: memory.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-memory.lo -MD -MP -MF $(DEPDIR)/libcitron_la-memory.Tpo -c -o libcitron_la-memory.lo `test -f 'memory.c' || echo '$(srcdir)/'`memory.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-memory.Tpo $(DEPDIR)/libcitron_la-memory.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='memory.c' object='libcitron_la-memory.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-memory.lo `test -f 'memory.c' || echo '$(srcdir)/'`memory.c
+
+libcitron_la-utf8.lo: utf8.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-utf8.lo -MD -MP -MF $(DEPDIR)/libcitron_la-utf8.Tpo -c -o libcitron_la-utf8.lo `test -f 'utf8.c' || echo '$(srcdir)/'`utf8.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-utf8.Tpo $(DEPDIR)/libcitron_la-utf8.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='utf8.c' object='libcitron_la-utf8.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-utf8.lo `test -f 'utf8.c' || echo '$(srcdir)/'`utf8.c
+
+libcitron_la-symbol.lo: symbol.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-symbol.lo -MD -MP -MF $(DEPDIR)/libcitron_la-symbol.Tpo -c -o libcitron_la-symbol.lo `test -f 'symbol.c' || echo '$(srcdir)/'`symbol.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-symbol.Tpo $(DEPDIR)/libcitron_la-symbol.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='symbol.c' object='libcitron_la-symbol.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-symbol.lo `test -f 'symbol.c' || echo '$(srcdir)/'`symbol.c
+
+libcitron_la-siphash.lo: siphash.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-siphash.lo -MD -MP -MF $(DEPDIR)/libcitron_la-siphash.Tpo -c -o libcitron_la-siphash.lo `test -f 'siphash.c' || echo '$(srcdir)/'`siphash.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-siphash.Tpo $(DEPDIR)/libcitron_la-siphash.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='siphash.c' object='libcitron_la-siphash.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-siphash.lo `test -f 'siphash.c' || echo '$(srcdir)/'`siphash.c
+
+libcitron_la-coroutine.lo: coroutine.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-coroutine.lo -MD -MP -MF $(DEPDIR)/libcitron_la-coroutine.Tpo -c -o libcitron_la-coroutine.lo `test -f 'coroutine.c' || echo '$(srcdir)/'`coroutine.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-coroutine.Tpo $(DEPDIR)/libcitron_la-coroutine.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='coroutine.c' object='libcitron_la-coroutine.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-coroutine.lo `test -f 'coroutine.c' || echo '$(srcdir)/'`coroutine.c
+
+libcitron_la-generator.lo: generator.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-generator.lo -MD -MP -MF $(DEPDIR)/libcitron_la-generator.Tpo -c -o libcitron_la-generator.lo `test -f 'generator.c' || echo '$(srcdir)/'`generator.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-generator.Tpo $(DEPDIR)/libcitron_la-generator.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='generator.c' object='libcitron_la-generator.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-generator.lo `test -f 'generator.c' || echo '$(srcdir)/'`generator.c
+
+libcitron_la-base_extensions.lo: base_extensions.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-base_extensions.lo -MD -MP -MF $(DEPDIR)/libcitron_la-base_extensions.Tpo -c -o libcitron_la-base_extensions.lo `test -f 'base_extensions.c' || echo '$(srcdir)/'`base_extensions.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-base_extensions.Tpo $(DEPDIR)/libcitron_la-base_extensions.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='base_extensions.c' object='libcitron_la-base_extensions.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-base_extensions.lo `test -f 'base_extensions.c' || echo '$(srcdir)/'`base_extensions.c
+
+libcitron_la-marshal.lo: marshal.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-marshal.lo -MD -MP -MF $(DEPDIR)/libcitron_la-marshal.Tpo -c -o libcitron_la-marshal.lo `test -f 'marshal.c' || echo '$(srcdir)/'`marshal.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-marshal.Tpo $(DEPDIR)/libcitron_la-marshal.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='marshal.c' object='libcitron_la-marshal.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-marshal.lo `test -f 'marshal.c' || echo '$(srcdir)/'`marshal.c
+
+libcitron_la-promise.lo: promise.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-promise.lo -MD -MP -MF $(DEPDIR)/libcitron_la-promise.Tpo -c -o libcitron_la-promise.lo `test -f 'promise.c' || echo '$(srcdir)/'`promise.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-promise.Tpo $(DEPDIR)/libcitron_la-promise.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='promise.c' object='libcitron_la-promise.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-promise.lo `test -f 'promise.c' || echo '$(srcdir)/'`promise.c
+
+libcitron_la-ctypes.lo: ctypes.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-ctypes.lo -MD -MP -MF $(DEPDIR)/libcitron_la-ctypes.Tpo -c -o libcitron_la-ctypes.lo `test -f 'ctypes.c' || echo '$(srcdir)/'`ctypes.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-ctypes.Tpo $(DEPDIR)/libcitron_la-ctypes.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ctypes.c' object='libcitron_la-ctypes.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-ctypes.lo `test -f 'ctypes.c' || echo '$(srcdir)/'`ctypes.c
+
+libcitron_la-_struct.lo: _struct.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-_struct.lo -MD -MP -MF $(DEPDIR)/libcitron_la-_struct.Tpo -c -o libcitron_la-_struct.lo `test -f '_struct.c' || echo '$(srcdir)/'`_struct.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-_struct.Tpo $(DEPDIR)/libcitron_la-_struct.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='_struct.c' object='libcitron_la-_struct.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-_struct.lo `test -f '_struct.c' || echo '$(srcdir)/'`_struct.c
+
+libcitron_la-structmember.lo: structmember.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-structmember.lo -MD -MP -MF $(DEPDIR)/libcitron_la-structmember.Tpo -c -o libcitron_la-structmember.lo `test -f 'structmember.c' || echo '$(srcdir)/'`structmember.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-structmember.Tpo $(DEPDIR)/libcitron_la-structmember.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='structmember.c' object='libcitron_la-structmember.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-structmember.lo `test -f 'structmember.c' || echo '$(srcdir)/'`structmember.c
+
+libcitron_la-inject.lo: inject.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -MT libcitron_la-inject.lo -MD -MP -MF $(DEPDIR)/libcitron_la-inject.Tpo -c -o libcitron_la-inject.lo `test -f 'inject.c' || echo '$(srcdir)/'`inject.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcitron_la-inject.Tpo $(DEPDIR)/libcitron_la-inject.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='inject.c' object='libcitron_la-inject.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcitron_la_CFLAGS) $(CFLAGS) -c -o libcitron_la-inject.lo `test -f 'inject.c' || echo '$(srcdir)/'`inject.c
 
 ctr-citron.o: citron.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -MT ctr-citron.o -MD -MP -MF $(DEPDIR)/ctr-citron.Tpo -c -o ctr-citron.o `test -f 'citron.c' || echo '$(srcdir)/'`citron.c
@@ -910,6 +1218,76 @@ ctr-promise.obj: promise.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -c -o ctr-promise.obj `if test -f 'promise.c'; then $(CYGPATH_W) 'promise.c'; else $(CYGPATH_W) '$(srcdir)/promise.c'; fi`
 
+ctr-ctypes.o: ctypes.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -MT ctr-ctypes.o -MD -MP -MF $(DEPDIR)/ctr-ctypes.Tpo -c -o ctr-ctypes.o `test -f 'ctypes.c' || echo '$(srcdir)/'`ctypes.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ctr-ctypes.Tpo $(DEPDIR)/ctr-ctypes.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ctypes.c' object='ctr-ctypes.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -c -o ctr-ctypes.o `test -f 'ctypes.c' || echo '$(srcdir)/'`ctypes.c
+
+ctr-ctypes.obj: ctypes.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -MT ctr-ctypes.obj -MD -MP -MF $(DEPDIR)/ctr-ctypes.Tpo -c -o ctr-ctypes.obj `if test -f 'ctypes.c'; then $(CYGPATH_W) 'ctypes.c'; else $(CYGPATH_W) '$(srcdir)/ctypes.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ctr-ctypes.Tpo $(DEPDIR)/ctr-ctypes.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ctypes.c' object='ctr-ctypes.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -c -o ctr-ctypes.obj `if test -f 'ctypes.c'; then $(CYGPATH_W) 'ctypes.c'; else $(CYGPATH_W) '$(srcdir)/ctypes.c'; fi`
+
+ctr-_struct.o: _struct.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -MT ctr-_struct.o -MD -MP -MF $(DEPDIR)/ctr-_struct.Tpo -c -o ctr-_struct.o `test -f '_struct.c' || echo '$(srcdir)/'`_struct.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ctr-_struct.Tpo $(DEPDIR)/ctr-_struct.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='_struct.c' object='ctr-_struct.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -c -o ctr-_struct.o `test -f '_struct.c' || echo '$(srcdir)/'`_struct.c
+
+ctr-_struct.obj: _struct.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -MT ctr-_struct.obj -MD -MP -MF $(DEPDIR)/ctr-_struct.Tpo -c -o ctr-_struct.obj `if test -f '_struct.c'; then $(CYGPATH_W) '_struct.c'; else $(CYGPATH_W) '$(srcdir)/_struct.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ctr-_struct.Tpo $(DEPDIR)/ctr-_struct.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='_struct.c' object='ctr-_struct.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -c -o ctr-_struct.obj `if test -f '_struct.c'; then $(CYGPATH_W) '_struct.c'; else $(CYGPATH_W) '$(srcdir)/_struct.c'; fi`
+
+ctr-structmember.o: structmember.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -MT ctr-structmember.o -MD -MP -MF $(DEPDIR)/ctr-structmember.Tpo -c -o ctr-structmember.o `test -f 'structmember.c' || echo '$(srcdir)/'`structmember.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ctr-structmember.Tpo $(DEPDIR)/ctr-structmember.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='structmember.c' object='ctr-structmember.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -c -o ctr-structmember.o `test -f 'structmember.c' || echo '$(srcdir)/'`structmember.c
+
+ctr-structmember.obj: structmember.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -MT ctr-structmember.obj -MD -MP -MF $(DEPDIR)/ctr-structmember.Tpo -c -o ctr-structmember.obj `if test -f 'structmember.c'; then $(CYGPATH_W) 'structmember.c'; else $(CYGPATH_W) '$(srcdir)/structmember.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ctr-structmember.Tpo $(DEPDIR)/ctr-structmember.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='structmember.c' object='ctr-structmember.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -c -o ctr-structmember.obj `if test -f 'structmember.c'; then $(CYGPATH_W) 'structmember.c'; else $(CYGPATH_W) '$(srcdir)/structmember.c'; fi`
+
+ctr-inject.o: inject.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -MT ctr-inject.o -MD -MP -MF $(DEPDIR)/ctr-inject.Tpo -c -o ctr-inject.o `test -f 'inject.c' || echo '$(srcdir)/'`inject.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ctr-inject.Tpo $(DEPDIR)/ctr-inject.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='inject.c' object='ctr-inject.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -c -o ctr-inject.o `test -f 'inject.c' || echo '$(srcdir)/'`inject.c
+
+ctr-inject.obj: inject.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -MT ctr-inject.obj -MD -MP -MF $(DEPDIR)/ctr-inject.Tpo -c -o ctr-inject.obj `if test -f 'inject.c'; then $(CYGPATH_W) 'inject.c'; else $(CYGPATH_W) '$(srcdir)/inject.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ctr-inject.Tpo $(DEPDIR)/ctr-inject.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='inject.c' object='ctr-inject.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctr_CFLAGS) $(CFLAGS) -c -o ctr-inject.obj `if test -f 'inject.c'; then $(CYGPATH_W) 'inject.c'; else $(CYGPATH_W) '$(srcdir)/inject.c'; fi`
+
+ctrconfig-ctrconfig.o: ctrconfig.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctrconfig_CFLAGS) $(CFLAGS) -MT ctrconfig-ctrconfig.o -MD -MP -MF $(DEPDIR)/ctrconfig-ctrconfig.Tpo -c -o ctrconfig-ctrconfig.o `test -f 'ctrconfig.c' || echo '$(srcdir)/'`ctrconfig.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ctrconfig-ctrconfig.Tpo $(DEPDIR)/ctrconfig-ctrconfig.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ctrconfig.c' object='ctrconfig-ctrconfig.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctrconfig_CFLAGS) $(CFLAGS) -c -o ctrconfig-ctrconfig.o `test -f 'ctrconfig.c' || echo '$(srcdir)/'`ctrconfig.c
+
+ctrconfig-ctrconfig.obj: ctrconfig.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctrconfig_CFLAGS) $(CFLAGS) -MT ctrconfig-ctrconfig.obj -MD -MP -MF $(DEPDIR)/ctrconfig-ctrconfig.Tpo -c -o ctrconfig-ctrconfig.obj `if test -f 'ctrconfig.c'; then $(CYGPATH_W) 'ctrconfig.c'; else $(CYGPATH_W) '$(srcdir)/ctrconfig.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ctrconfig-ctrconfig.Tpo $(DEPDIR)/ctrconfig-ctrconfig.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ctrconfig.c' object='ctrconfig-ctrconfig.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ctrconfig_CFLAGS) $(CFLAGS) -c -o ctrconfig-ctrconfig.obj `if test -f 'ctrconfig.c'; then $(CYGPATH_W) 'ctrconfig.c'; else $(CYGPATH_W) '$(srcdir)/ctrconfig.c'; fi`
+
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
@@ -972,14 +1350,61 @@ uninstall-pkgincludeHEADERS:
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(pkgincludedir)'; $(am__uninstall_files_from_dir)
 
+# This directory's subdirectories are mostly independent; you can cd
+# into them and run 'make' without going through this Makefile.
+# To change the values of 'make' variables: instead of editing Makefiles,
+# (1) if the variable is set in 'config.status', edit 'config.status'
+#     (which will cause the Makefiles to be regenerated when you run 'make');
+# (2) otherwise, pass the desired values on the 'make' command line.
+$(am__recursive_targets):
+	@fail=; \
+	if $(am__make_keepgoing); then \
+	  failcom='fail=yes'; \
+	else \
+	  failcom='exit 1'; \
+	fi; \
+	dot_seen=no; \
+	target=`echo $@ | sed s/-recursive//`; \
+	case "$@" in \
+	  distclean-* | maintainer-clean-*) list='$(DIST_SUBDIRS)' ;; \
+	  *) list='$(SUBDIRS)' ;; \
+	esac; \
+	for subdir in $$list; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    dot_seen=yes; \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  ($(am__cd) $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	  || eval $$failcom; \
+	done; \
+	if test "$$dot_seen" = "no"; then \
+	  $(MAKE) $(AM_MAKEFLAGS) "$$target-am" || exit 1; \
+	fi; test -z "$$fail"
+
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
-tags: tags-am
+tags: tags-recursive
 TAGS: tags
 
 tags-am: $(TAGS_DEPENDENCIES) $(am__tagged_files)
 	set x; \
 	here=`pwd`; \
+	if ($(ETAGS) --etags-include --version) >/dev/null 2>&1; then \
+	  include_option=--etags-include; \
+	  empty_fix=.; \
+	else \
+	  include_option=--include; \
+	  empty_fix=; \
+	fi; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  if test "$$subdir" = .; then :; else \
+	    test ! -f $$subdir/TAGS || \
+	      set "$$@" "$$include_option=$$here/$$subdir/TAGS"; \
+	  fi; \
+	done; \
 	$(am__define_uniq_tagged_files); \
 	shift; \
 	if test -z "$(ETAGS_ARGS)$$*$$unique"; then :; else \
@@ -992,7 +1417,7 @@ tags-am: $(TAGS_DEPENDENCIES) $(am__tagged_files)
 	      $$unique; \
 	  fi; \
 	fi
-ctags: ctags-am
+ctags: ctags-recursive
 
 CTAGS: ctags
 ctags-am: $(TAGS_DEPENDENCIES) $(am__tagged_files)
@@ -1005,7 +1430,7 @@ GTAGS:
 	here=`$(am__cd) $(top_builddir) && pwd` \
 	  && $(am__cd) $(top_srcdir) \
 	  && gtags -i $(GTAGS_ARGS) "$$here"
-cscopelist: cscopelist-am
+cscopelist: cscopelist-recursive
 
 cscopelist-am: $(am__tagged_files)
 	list='$(am__tagged_files)'; \
@@ -1054,24 +1479,50 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	@list='$(DIST_SUBDIRS)'; for subdir in $$list; do \
+	  if test "$$subdir" = .; then :; else \
+	    $(am__make_dryrun) \
+	      || test -d "$(distdir)/$$subdir" \
+	      || $(MKDIR_P) "$(distdir)/$$subdir" \
+	      || exit 1; \
+	    dir1=$$subdir; dir2="$(distdir)/$$subdir"; \
+	    $(am__relativize); \
+	    new_distdir=$$reldir; \
+	    dir1=$$subdir; dir2="$(top_distdir)"; \
+	    $(am__relativize); \
+	    new_top_distdir=$$reldir; \
+	    echo " (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) top_distdir="$$new_top_distdir" distdir="$$new_distdir" \\"; \
+	    echo "     am__remove_distdir=: am__skip_length_check=: am__skip_mode_fix=: distdir)"; \
+	    ($(am__cd) $$subdir && \
+	      $(MAKE) $(AM_MAKEFLAGS) \
+	        top_distdir="$$new_top_distdir" \
+	        distdir="$$new_distdir" \
+		am__remove_distdir=: \
+		am__skip_length_check=: \
+		am__skip_mode_fix=: \
+	        distdir) \
+	      || exit 1; \
+	  fi; \
+	done
 check-am: all-am
-check: check-am
+check: check-recursive
 all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(HEADERS)
 install-binPROGRAMS: install-libLTLIBRARIES
 
-installdirs:
+installdirs: installdirs-recursive
+installdirs-am:
 	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgincludedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
-install: install-am
-install-exec: install-exec-am
-install-data: install-data-am
-uninstall: uninstall-am
+install: install-recursive
+install-exec: install-exec-recursive
+install-data: install-data-recursive
+uninstall: uninstall-recursive
 
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 
-installcheck: installcheck-am
+installcheck: installcheck-recursive
 install-strip:
 	if test -z '$(STRIP)'; then \
 	  $(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
@@ -1093,92 +1544,93 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-clean: clean-am
+clean: clean-recursive
 
 clean-am: clean-binPROGRAMS clean-generic clean-libLTLIBRARIES \
 	clean-libtool mostlyclean-am
 
-distclean: distclean-am
+distclean: distclean-recursive
 	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
 
-dvi: dvi-am
+dvi: dvi-recursive
 
 dvi-am:
 
-html: html-am
+html: html-recursive
 
 html-am:
 
-info: info-am
+info: info-recursive
 
 info-am:
 
 install-data-am: install-pkgincludeHEADERS
 
-install-dvi: install-dvi-am
+install-dvi: install-dvi-recursive
 
 install-dvi-am:
 
 install-exec-am: install-binPROGRAMS install-libLTLIBRARIES
 
-install-html: install-html-am
+install-html: install-html-recursive
 
 install-html-am:
 
-install-info: install-info-am
+install-info: install-info-recursive
 
 install-info-am:
 
 install-man:
 
-install-pdf: install-pdf-am
+install-pdf: install-pdf-recursive
 
 install-pdf-am:
 
-install-ps: install-ps-am
+install-ps: install-ps-recursive
 
 install-ps-am:
 
 installcheck-am:
 
-maintainer-clean: maintainer-clean-am
+maintainer-clean: maintainer-clean-recursive
 	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
-mostlyclean: mostlyclean-am
+mostlyclean: mostlyclean-recursive
 
 mostlyclean-am: mostlyclean-compile mostlyclean-generic \
 	mostlyclean-libtool
 
-pdf: pdf-am
+pdf: pdf-recursive
 
 pdf-am:
 
-ps: ps-am
+ps: ps-recursive
 
 ps-am:
 
 uninstall-am: uninstall-binPROGRAMS uninstall-libLTLIBRARIES \
 	uninstall-pkgincludeHEADERS
 
-.MAKE: install-am install-strip
+.MAKE: $(am__recursive_targets) install-am install-strip
 
-.PHONY: CTAGS GTAGS TAGS all all-am check check-am clean \
-	clean-binPROGRAMS clean-generic clean-libLTLIBRARIES \
-	clean-libtool cscopelist-am ctags ctags-am distclean \
-	distclean-compile distclean-generic distclean-libtool \
-	distclean-tags distdir dvi dvi-am html html-am info info-am \
-	install install-am install-binPROGRAMS install-data \
-	install-data-am install-dvi install-dvi-am install-exec \
-	install-exec-am install-html install-html-am install-info \
-	install-info-am install-libLTLIBRARIES install-man install-pdf \
-	install-pdf-am install-pkgincludeHEADERS install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
+.PHONY: $(am__recursive_targets) CTAGS GTAGS TAGS all all-am check \
+	check-am clean clean-binPROGRAMS clean-generic \
+	clean-libLTLIBRARIES clean-libtool cscopelist-am ctags \
+	ctags-am distclean distclean-compile distclean-generic \
+	distclean-libtool distclean-tags distdir dvi dvi-am html \
+	html-am info info-am install install-am install-binPROGRAMS \
+	install-data install-data-am install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-info install-info-am install-libLTLIBRARIES \
+	install-man install-pdf install-pdf-am \
+	install-pkgincludeHEADERS install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am maintainer-clean maintainer-clean-generic \
 	mostlyclean mostlyclean-compile mostlyclean-generic \
 	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-am uninstall \
 	uninstall-am uninstall-binPROGRAMS uninstall-libLTLIBRARIES \

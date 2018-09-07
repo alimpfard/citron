@@ -171,7 +171,7 @@ Eval on: 'setColor:' do: { :c
 }.
 Eval on: 'setPrompt:' do: { :p my prompt is p. }.
 Eval on: 'setContinuation:' do: { :p my continuation is p. }.
-Eval on: 'setArgs:' do: { :a my args := a. }.
+Eval on: 'setArgs:' do: { :a my args is a. }.
 Eval on: 'args' do: { ^my args. }.
 Eval on: 'color' do: { ^my color. }.
 Eval on: 'prompt' do: { ^(me preprompt) + my prompt + (me proprompt). }.
@@ -203,7 +203,9 @@ Eval on: 'modifyFlags:' do: {:flag
   }.
 }.
 Eval on: 'argCount' do: { ^(my args count). }.
-Eval on: 'onlyRelevantArgs' do: { my args do shift shift done. }. #get rid of ./ctr eval
+Eval on: 'onlyRelevantArgs' do: { 
+    my args do shift shift done. 
+}. #get rid of ./ctr eval
 
 Eval on: 'startEvalServer' do: {
   var port is 5000 + (Dice rollWithSides: 1000).
@@ -260,6 +262,7 @@ Eval on: 'Commands' do: {
       put: {:args Eval modifyFlags: args ~ ?>s/^-/no-/g<? ~ ?>s/^\+//g<?. ^''.} at: 'set',
       put: {:args ^Reflect strTypeOf: (Eval evaluate: args).} at: 't',
       put: {:args ^(args trim = '') either: {^Eval startEvalServer.} or: {^Eval startEvalServerOnPort: (Eval evaluate: args).}.} at: 'server',
+      put: {:args ('#:declare %s %d %s\n\n0' % (args reSplit: '\\s+')) eval. ^''.} at: '!fix',
       put: {:args ^'Interpreter metacommands help:
       + q -- Quit
       + t <expression> -- type of expression
@@ -289,6 +292,7 @@ Eval on: 'Commands' do: {
       put: {:args Eval display/writeln: (Eval evaluate: args). ^''.} at: 'p',
       put: {:args Eval display/clear. (var h is Eval getHistory) count times: { h pop. }. ^''.} at: 'c',
       put: {:args ^Reflect getMethodsOf: (Eval evaluate: args).} at: '!m',
+      put: {:args AST pragma: args trim. ^''.} at: '!pragmaOnce',
       put: {:args
         var msgs is args reSplit: '\\s+'.
         var obj is Eval evaluate: msgs head.
@@ -925,7 +929,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
                 done is True.
               }, else: {
                 (inp containsPattern: ?>\.\s*$<?, not) & (inBlock = 0) ifTrue: {
-                  inp +=: '.'.
+                  # nothing?
                 }.
                 done is inBlock = 0.
               }.
@@ -1069,7 +1073,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
   Eval getFlag: 'printvs', ifTrue: { Eval display/brk. }.
   # if it ends in a dot, get rid of it.
   inp is inp trim.
-  (inp at: (inp length - 1), = '.') ifTrue: {
+  inp endsWith: '.', ifTrue: {
     inp is inp from: 0 length: (inp length - 1).
   }.
   Eval statsb: 0, statsa: 0, exectime: 0.

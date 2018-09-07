@@ -1,23 +1,125 @@
+GC : 876496 bytes
+GC : 876496 bytes
+GC : 843776 bytes
+GC : 843776 bytes
 Can we count to 10 using a whileTrue loop ?
+GC : 843752 bytes
+GC : 843752 bytes
+GC : 843728 bytes
+GC : 843728 bytes
 1
+GC : 847848 bytes
+GC : 847848 bytes
+GC : 843728 bytes
+GC : 843728 bytes
 2
+GC : 847848 bytes
+GC : 847848 bytes
+GC : 843728 bytes
+GC : 843728 bytes
 3
+GC : 847848 bytes
+GC : 847848 bytes
+GC : 843728 bytes
+GC : 843728 bytes
 4
+GC : 847848 bytes
+GC : 847848 bytes
+GC : 843728 bytes
+GC : 843728 bytes
 5
+GC : 847848 bytes
+GC : 847848 bytes
+GC : 843728 bytes
+GC : 843728 bytes
 6
+GC : 847848 bytes
+GC : 847848 bytes
+GC : 843728 bytes
+GC : 843728 bytes
 7
+GC : 847848 bytes
+GC : 847848 bytes
+GC : 843728 bytes
+GC : 843728 bytes
 8
+GC : 847848 bytes
+GC : 847848 bytes
+GC : 843728 bytes
+GC : 843728 bytes
 9
+GC : 847848 bytes
+GC : 847848 bytes
+GC : 843728 bytes
+GC : 843728 bytes
 10
+GC : 847848 bytes
+GC : 847848 bytes
+GC : 843728 bytes
+GC : 843728 bytes
+GC : 843680 bytes
+GC : 843680 bytes
 Can we count back from 10 to 0 using a whileFalse loop ?
+GC : 843752 bytes
+GC : 843752 bytes
+GC : 843728 bytes
+GC : 843728 bytes
 10
+GC : 847848 bytes
+GC : 847848 bytes
+GC : 843728 bytes
+GC : 843728 bytes
 9
+GC : 847848 bytes
+GC : 847848 bytes
+GC : 843728 bytes
+GC : 843728 bytes
 8
+GC : 847848 bytes
+GC : 847848 bytes
+GC : 843728 bytes
+GC : 843728 bytes
 7
+GC : 847848 bytes
+GC : 847848 bytes
+GC : 843728 bytes
+GC : 843728 bytes
 6
+GC : 847848 bytes
+GC : 847848 bytes
+GC : 843728 bytes
+GC : 843728 bytes
 5
+GC : 847848 bytes
+GC : 847848 bytes
+GC : 843728 bytes
+GC : 843728 bytes
 4
+GC : 847848 bytes
+GC : 847848 bytes
+GC : 843728 bytes
+GC : 843728 bytes
 3
+GC : 847848 bytes
+GC : 847848 bytes
+GC : 843728 bytes
+GC : 843728 bytes
 2
+GC : 847848 bytes
+GC : 847848 bytes
+GC : 847824 bytes
+GC : 847824 bytes
 1
+GC : 847848 bytes
+GC : 847848 bytes
+GC : 847824 bytes
+GC : 847824 bytes
 0
+GC : 847848 bytes
+GC : 847848 bytes
+GC : 847824 bytes
+GC : 847824 bytes
+GC : 847776 bytes
+GC : 847776 bytes
+GC : 847776 bytes
+GC : 847776 bytes

@@ -14,7 +14,7 @@ int all_plains_private = 0;
 extern int ctr_cwlk_replace_refs;
 extern char *ctr_code;
 static int ctr_transform_template_expr;	/* flag: indicates whether the parser is supposed to parse a templated expr */
-
+static int uses_paramlist_item = 0; /* flag: indicates whether a lambda is using any parameters from its param list */
 
 ctr_tnode *ctr_cparse_assignment ();
 ctr_tnode *ctr_cparse_block ();
@@ -65,8 +65,10 @@ ctr_paramlist_has_name (char *namenode, size_t len)
 	    int vararg = name->node->value[0] == '*';
 	    if (unlikely (name->node->vlen == len || vararg))
 	      {
-		if (strncmp (name->node->value + vararg, namenode, len - vararg) == 0)
+		if (strncmp (name->node->value + vararg, namenode, len - vararg) == 0) {
+      uses_paramlist_item = 1;
 		  return 1;
+    }
 	      }
 	    name = name->next;
 	  }
@@ -755,11 +757,29 @@ ctr_cparse_block_ (int autocap)
     {
       ctr_transform_lambda_shorthand = 0;
       ctr_tlistitem *codeListItem;
-      ctr_tnode *codeNode;
+      ctr_tnode *codeNode, *innerNode;
       ctr_clex_putback ();
       codeListItem = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
-      codeNode = ctr_cparse_create_node (CTR_AST_NODE);
-      codeNode = ctr_cparse_expr (0);	//parse a single expression
+      uses_paramlist_item = 0;
+      innerNode = ctr_cparse_expr (0);	//parse a single expression
+      if (
+        (extensionsPra->value & CTR_EXT_PURE_FS) == CTR_EXT_PURE_FS &&
+        !uses_paramlist_item
+      ) {
+        codeNode = ctr_cparse_create_node(CTR_AST_NODE);
+        codeNode->type = CTR_AST_NODE_EXPRASSIGNMENT;
+        codeNode->nodes = ctr_heap_allocate(sizeof (ctr_tlistitem));
+        ctr_tnode* frozen_ref = ctr_heap_allocate(sizeof(ctr_tnode));
+        frozen_ref->value = NULL;
+        frozen_ref->vlen = 0;
+        frozen_ref->type = CTR_AST_NODE_REFERENCE;
+        frozen_ref->modifier = 5; /* static, ignore assignment, only evaluate result */
+        codeNode->nodes->node = frozen_ref;
+        codeNode->nodes->next = ctr_heap_allocate(sizeof(ctr_tlistitem));
+        codeNode->nodes->next->node = innerNode;
+      } else {
+        codeNode = innerNode;
+      }
       codeListItem->node = codeNode;
       codeList->nodes = codeListItem;
       previousCodeListItem = codeListItem;
@@ -779,7 +799,6 @@ ctr_cparse_block_ (int autocap)
 	    break;
 	  ctr_clex_putback ();
 	  codeListItem = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
-	  codeNode = ctr_cparse_create_node (CTR_AST_NODE);
 	  if (t == CTR_TOKEN_RET)
 	    {
 	      codeNode = ctr_cparse_ret ();
@@ -869,14 +888,14 @@ ctr_cparse_ref ()
     }
   if (strncmp (ctr_clex_keyword_static, tmp, ctr_clex_keyword_static_len) == 0 && r->vlen == ctr_clex_keyword_static_len)
     {
-      // if ((extensionsPra->value & CTR_EXT_FROZEN_K) != CTR_EXT_FROZEN_K) {
-      //   ctr_cparse_emit_error_unexpected(CTR_TOKEN_REF, "XFrozen extensions is required");
-      //   return NULL;
-      // }
+      if ((extensionsPra->value & CTR_EXT_FROZEN_K) != CTR_EXT_FROZEN_K) {
+        ctr_cparse_emit_error_unexpected(CTR_TOKEN_REF, "XFrozen extension is required to use the `" CTR_DICT_STATIC "' modifier");
+        return NULL;
+      }
       int t = ctr_clex_tok ();
       if (t != CTR_TOKEN_REF)
 	{
-	  ctr_cparse_emit_error_unexpected (t, "'static' must always be followed by a single property name\n");
+	  ctr_cparse_emit_error_unexpected (t, "'" CTR_DICT_STATIC "' must always be followed by a single property name\n");
 	}
       tmp = ctr_clex_tok_value ();
       r->modifier = 4;
@@ -886,7 +905,7 @@ ctr_cparse_ref ()
       ctr_clex_putback();
       if (t != CTR_TOKEN_ASSIGNMENT)
     {
-      ctr_cparse_emit_error_unexpected (t, "'static' variable must be in an assignment");
+      ctr_cparse_emit_error_unexpected (t, "'" CTR_DICT_STATIC "' variable must be in an assignment");
     }
 
     }
@@ -1026,10 +1045,13 @@ ctr_cparse_number ()
   r->vlen = l;
   int t = ctr_clex_tok();
   if (t == CTR_TOKEN_DOT) {
+    // NUMBER DOT
     t = ctr_clex_tok();
     if (t == CTR_TOKEN_DOT) {
+      // NUMBER DOT DOT
       t = ctr_clex_tok();
       if (t == CTR_TOKEN_NUMBER) { //it's a range
+        // NUMBER DOT DOT NUMBER
         char *ne;
         ctr_tnode *re = ctr_cparse_create_node(CTR_AST_NODE);
         long le;
@@ -1270,16 +1292,15 @@ ctr_cparse_expr (int mode)
          e->nodes->next->node->nodes->next = ctr_heap_allocate(sizeof(ctr_tlistitem));
          e->nodes->next->node->nodes->next->node = r->nodes->next->node; */
     }
-  else if (t2 != CTR_TOKEN_DOT && t2 != CTR_TOKEN_PARCLOSE && (t2 != CTR_TOKEN_CHAIN && mode != CTR_AST_NODE_IMMUTABLE))
+  else if (t2 != CTR_TOKEN_DOT && t2 != CTR_TOKEN_PARCLOSE && t2 != CTR_TOKEN_CHAIN)
     {
       e = ctr_cparse_create_node (CTR_AST_NODE);
       e->type = CTR_AST_NODE_EXPRMESSAGE;
-      nodes = ctr_cparse_messages (r, mode == CTR_AST_NODE_IMMUTABLE ? 0 : mode);
+      nodes = ctr_cparse_messages (r, mode);
       int tv = ctr_clex_tok();
       int vtv = 0;
       while (tv == CTR_TOKEN_INV)
     {
-      vtv = 1;
       //arg0 `callee` arg1
       //^    ^tv
       //`- receiver
@@ -1303,7 +1324,7 @@ ctr_cparse_expr (int mode)
       ll = ll->node->nodes;
       ll->node = r;
       ll->next = ctr_heap_allocate_tracked(sizeof(*ll));
-      ll->next->node = ctr_cparse_expr(fix.fix == 0 ? -1 : fix.prec); //get next argument
+      ll->next->node = ctr_cparse_expr(fix.fix*2); //get next argument
       //arguments in li
       ctr_tlistitem* rli = ctr_heap_allocate_tracked(sizeof(*rli));
       rli->node = ctr_cparse_create_node(CTR_AST_NODE);
@@ -1367,7 +1388,7 @@ ctr_cparse_fin ()
   callShorthand->value = CTR_TOKEN_TUPOPEN;
   callShorthand->value_e = CTR_TOKEN_TUPCLOSE;
   extensionsPra->value = 0;
-  clear_fixity_map();
+  //clear_fixity_map();
   ctr_tnode *f;
   ctr_clex_tok ();
   f = ctr_cparse_create_node (CTR_AST_NODE);

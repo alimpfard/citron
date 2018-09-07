@@ -1,10 +1,3 @@
 Uncaught error has occurred.
-Division by zero.
-#2 / (tests/test0195.ctr: 4)
-#1 a (tests/test0195.ctr: 4)
-------------------------------------
-The probable cause of the exception: 
-2 | 
-3 | line 3 '.
-4 | a is 1 / 0. #line 4, not 3.mrespondTo:and:mrespondTo:and:and:and:and:and:mrespondTo:and:and:and:and:mrespondTo:and:and:and:mrespondTo:and:and:m:mrespondTo:and:mrespondTo:m was already loadedm[ctr]::module m
-~~~~~~~~~~^
+Parser error, unexpected end of program ( tests/test0195.ctr: 4)
+-> Expected a dot (.).

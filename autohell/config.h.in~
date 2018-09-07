@@ -31,6 +31,9 @@
    don't. */
 #undef HAVE_DECL_STRERROR_R
 
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
+
 /* Define to 1 if you have the `dup2' function. */
 #undef HAVE_DUP2
 
@@ -60,12 +63,6 @@
 
 /* Define to 1 if you have the `isascii' function. */
 #undef HAVE_ISASCII
-
-/* Define to 1 if you have the `ccgi' library (-lccgi). */
-#undef HAVE_LIBCCGI
-
-/* Define to 1 if you have the `crypto' library (-lcrypto). */
-#undef HAVE_LIBCRYPTO
 
 /* Define to 1 if you have the `gc' library (-lgc). */
 #undef HAVE_LIBGC
@@ -237,6 +234,9 @@
 
 /* Define to 1 if `vfork' works. */
 #undef HAVE_WORKING_VFORK
+
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
+#undef LT_OBJDIR
 
 /* Name of package */
 #undef PACKAGE

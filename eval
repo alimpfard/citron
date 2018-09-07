@@ -292,6 +292,7 @@ Eval on: 'Commands' do: {
       put: {:args Eval display/writeln: (Eval evaluate: args). ^''.} at: 'p',
       put: {:args Eval display/clear. (var h is Eval getHistory) count times: { h pop. }. ^''.} at: 'c',
       put: {:args ^Reflect getMethodsOf: (Eval evaluate: args).} at: '!m',
+      put: {:args AST pragma: args trim. ^''.} at: '!pragmaOnce',
       put: {:args
         var msgs is args reSplit: '\\s+'.
         var obj is Eval evaluate: msgs head.

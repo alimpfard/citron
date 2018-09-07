@@ -843,3 +843,16 @@ ctr_lex_readstr ()
   ctr_lex_verbatim_mode_insert_quote = 0;	/* erase verbatim mode pointer overlay for fake quote */
   return beginbuff;
 }
+
+void 
+ctr_lex_parse_pragma (const char* descr) 
+{
+    struct lexer_state s, n;
+    ctr_clex_dump_state(&s);
+    n = s;
+    n.ctr_eofcode = descr + strlen(descr) + 1;
+    n.ctr_clex_oldptr = n.ctr_clex_olderptr = n.ctr_code = descr;
+    ctr_clex_load_state(n);
+    ctr_match_toggle_pragma();
+    ctr_clex_load_state(s);
+}

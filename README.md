@@ -4,40 +4,21 @@
 No binary release is available for android.
 
 ### Build guide
+this is to be built on Msys2 (mingw)
+
 minimum required libraries:
 * `libpcre` -- for regular expressions
 * `libgc` -- for Garbage Collection
 
 ```sh
 # clone this branch
-$ git clone -b android --single-branch https://github.com/alimpfard/citron
+$ git clone -b windows --single-branch https://github.com/alimpfard/citron
 $ cd citron
-# compile everything
-$ make all
-# put a helper script for the eval in usr/bin
-$ bash create_eval_link.sh
+# compile everything and make a neat dist package
+$ make distribute
 ```
 
-building for debug:
-`make debug`
-
-building without debug info:
-`make all`
-
-to create a link to the evaluator in the system binaries:
-`bash create_eval_link.sh`
-Basic steps to build and install:
-
-clone this repository
-
-```sh
-$ cd citron/autohell
-$ autoreconf
-$ ./configure --with-ffi
-$ make
-$ make install
-```
-The normal configure options apply.
+the package is `citron-release.tar`.
 
 ##### Note
 If the binary is built without ffi, to launch the repl, you must pass these flags to it:

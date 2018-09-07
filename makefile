@@ -87,7 +87,10 @@ compiler: CFLAGS := $(CFLAGS) -D comp=1
 compiler: cxx
 compiler: $(COBJS)
 	$(CC) $(COBJS) -rdynamic -lm -ldl -llog -lpcre -lprofiler -lpthread ${LEXTRACF} -o ctrc
+<<<<<<< HEAD
 
+=======
+>>>>>>> 6728c5af1143f8550ba183884c49d21ecd1ea5d6
 cxx:
 	echo "blah"
 

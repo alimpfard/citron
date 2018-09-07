@@ -8,7 +8,6 @@ minimum required libraries:
 * `libpcre` -- for regular expressions
 * `libgc` -- for Garbage Collection
 
-<<<<<<< HEAD
 ```sh
 # clone this branch
 $ git clone -b android --single-branch https://github.com/alimpfard/citron
@@ -27,7 +26,6 @@ building without debug info:
 
 to create a link to the evaluator in the system binaries:
 `bash create_eval_link.sh`
-=======
 Basic steps to build and install:
 
 clone this repository
@@ -46,8 +44,6 @@ If the binary is built without ffi, to launch the repl, you must pass these flag
 + `--assume-non-tty --without-signals`
 
 i.e. the invocation would be `citron --assume-non-tty --without-signals`
-
->>>>>>> master
 
 ### Basic language syntax:
 All operations are done through sending and receiving messages between objects.

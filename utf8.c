@@ -1,11 +1,3 @@
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdarg.h>
-#include <math.h>
-#include <unistd.h>
-#include <stdint.h>
-
 #include "citron.h"
 
 /**

@@ -20,9 +20,16 @@ iteration #2
 iteration #3
 iteration #4
 Break block, dont print line.
-Break block, dont fire catch...
-Test Array each-loop: 0,1
-iteration #0
-iteration #1
-Test Map each-loop: c only
-iterationthirdc
+Uncaught error has occurred.
+#6 break (tests/test0107.ctr: 37)
+#5 run (tests/test0107.ctr: 37)
+#4 times: (tests/test0107.ctr: 30)
+#3 whileFalse: (tests/test0107.ctr: 22)
+#2 whileTrue: (tests/test0107.ctr: 14)
+#1 to:step:do: (tests/test0107.ctr: 4)
+------------------------------------
+The probable cause of the exception: 
+35 | 
+36 | Pen write: 'Break block, dont print line.', brk.
+37 | { True break. Pen write: 'dont write this!', brk. } run.
+~~~~~~~~~~~~~~~^

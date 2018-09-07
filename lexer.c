@@ -457,6 +457,7 @@ void ctr_set_pragma(ctr_code_pragma* pragma, int val, int val2) {
   pragma->value = val;
   pragma->value_e = val2;
 }
+extern ctr_tnode* ctr_cparse_block_(int);
 /**
  * CTRLexPragmaToken
  *
@@ -464,7 +465,7 @@ void ctr_set_pragma(ctr_code_pragma* pragma, int val, int val2) {
  *
  */
 __attribute__((always_inline))
-void handle_extension()
+static void handle_extension()
 {
   char* ext = ctr_clex_buffer;
   int len = ctr_clex_tokvlen;
@@ -473,6 +474,9 @@ void handle_extension()
 #endif
   if (len == 7 && strncmp(ext, "XFrozen", 7) == 0) {
     extensionsPra->value |= CTR_EXT_FROZEN_K;
+  }
+  else if (len == 11 && strncmp(ext, "XPureLambda", 11) == 0) {
+    extensionsPra->value |= CTR_EXT_PURE_FS;
   }
   else {
     static char errbuf[1024];
@@ -524,7 +528,7 @@ ctr_match_toggle_pragma ()
     char* v = ctr_clex_tok_value();
     int len = ctr_clex_tok_value_length();
     int fixity = 0;
-    int prec = 1;
+    int prec = 0;
     if (len != strlen("infixr")) goto err;
     if (strncmp(v, "infixr", len) == 0)
       fixity = 0;
@@ -886,7 +890,6 @@ ctr_clex_tok ()
 	  ctr_code++;
 	  c = toupper (*ctr_code);
 	}
-      c = *ctr_code;
       return CTR_TOKEN_NUMBER;
     }
   if (c == '`') {

@@ -1,0 +1,76 @@
+#:language XFrozen
+
+var ast2ctrcode is {:ast
+  ^(frozen __ is
+    case: 'LTRNUM' do: {
+      ^ast value.
+    },
+    case: 'LTRSTRING' do: {
+      var value is ast value.
+      ^'\'%s\'' % [value ~ 's/(?!\\\\)\'/\\\'/g'].
+    },
+    case: 'LTRNIL' do: {
+      ^'Nil'.
+    },
+    case: 'LTRBOOLTRUE' do: {
+      ^'True'.
+    },
+    case: 'LTRBOOLFALSE' do: {
+      ^'False'.
+    },
+    case: 'REFERENCE' do: {
+      var value is ast value.
+      ^(frozen __ is
+        case: 1 do: {\ 'my %s' },
+        case: 2 do: {\ 'var %s' },
+        case: 3 do: {\ 'const %s' },
+        case: 4 do: {\ 'frozen %s' },
+        default: {\ '%s' }) switch: ast modifier, % [value].
+    },
+    case: 'EXPRMESSAGE' do: {
+      var rec is ast2ctrcode[ast @ 0].
+      var ct is ast count.
+      ct - 1 times: {:i
+        var s is ast @ (i + 1).
+        rec +=: ' ' + ast2ctrcode[s].
+        i !=: ct - 2, & (s type = 'KWMESSAGE') ifTrue: { rec +=: ','. }.
+      }.
+      ^rec.
+    },
+    case: 'UNAMESSAGE' do: {
+      ^ast value.
+    },
+    case: 'BINMESSAGE' do: {
+      ^ast value + ' ' + ast2ctrcode[ast @ 0].
+    },
+    case: 'KWMESSAGE' do: {
+      var value is ast value split: ':'.
+      ^value imap: \:i:x '%s: %s' % [x, ast2ctrcode[ast @ i]], join: ' '.
+    },
+    case: 'EXPRASSIGNMENT' do: {
+      var ref is ast2ctrcode[(ast at: 0)].
+      var _value is ast2ctrcode[(ast at: 1)].
+      ^_value length > 0 either: { ^'%s is %s' % [ref, value]. } or: ref.
+    },
+    case: 'SYMBOL' do: {
+      ^'\\' + ast value.
+    },
+    case: 'NESTED' do: {
+      ^'(' + ast2ctrcode[(ast at: 0)] + ')'.
+    },
+    case: 'CODEBLOCK' do: {
+      var ps is ast at: 0.
+      var ins is ast at: 1.
+      var fmt is ast modifier = 'My' either: '{\\%:L %:L}' or: '{%:L %:L}'.
+      ^fmt % ['', (Array new fill: ps count with: \:x ':' + (ps @ x) value), ' ', (Array new fill: ins count with: \:x ast2ctrcode[ins @ x] + '.')].
+    },
+    case: 'PROGRAM' do: {
+      ^(Array new fill: ast count with: \:x ast2ctrcode[ast @ x] + '.') join: '\n'.
+    },
+    case: 'ENDOFPROGRAM' do: { ^''. },
+    case: 'RETURNFROMBLOCK' do: { ^'^' + ast2ctrcode[ast @ 0]. },
+    case: 'IMMUTABLE' do: {
+      ^'[]'.
+    },
+    default: { errPen red writeln: '$$ast is not unparsable at the moment', resetColor. }) switch: ast type.
+}.

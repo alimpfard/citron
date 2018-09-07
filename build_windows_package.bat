@@ -13,6 +13,6 @@ if %COMPILER%==msys2 (
     pacman -S --needed --noconfirm pacman-mirrors
     pacman -S --needed --noconfirm git
     pacman -Syu --noconfirm
-    pacman -S --needed --noconfirm mingw-w64-i686-toolchain make patch perl
+    pacman -S --needed --noconfirm msys2-runtime-devel mingw-w64-i686-toolchain make patch perl
     make distribute
 )

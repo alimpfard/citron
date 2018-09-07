@@ -1,5 +1,6 @@
 DEBUG_VERSION := 79
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
+CFLAGS := ${CFLAGS} -I/usr/include
 LEXTRACF := ${LEXTRACF} -flto -lstdc++ -static-libgcc -static-libstdc++
 location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 WHERE_ART_THOU := $(location)

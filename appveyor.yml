@@ -31,6 +31,14 @@ max_jobs: 1
 # Build worker image (VM template)
 image: Visual Studio 2015
 
+environment:
+  matrix:
+    - COMPILER: msys2
+      PLATFORM: x86
+      MSYS2_ARCH: x86
+      MSYS2_DIR: msys64
+      MSYSTEM: MINGW32
+
 # scripts that are called at very beginning, before repo cloning
 init:
   - git config --global core.autocrlf input
@@ -60,7 +68,8 @@ configuration: Release
 
 # to run your custom scripts instead of automatic MSBuild
 build_script:
-  - C:\msys64\msys2.exe "make distribute"
+  - SET "PATH=C:\%MSYS2_DIR%\%MSYSTEM%\bin;C:\%MSYS2_DIR%\usr\bin;%PATH%"
+  - cd c:\projects\citron && bash -lc "make distribute"
 
 # to disable automatic builds
 build: on

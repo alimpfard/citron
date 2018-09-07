@@ -1,6 +1,7 @@
 #ifndef CTR_PROMISE_H
 #define CTR_PROMISE_H
 #include "citron.h"
+#include <gc/gc.h>
 
 #define CTR_PROMISE_CALL 0
 #define CTR_PROMISE_MESSAGE 1

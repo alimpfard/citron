@@ -1,2 +1,3 @@
-----
-Message quota cannot change.
+Uncaught error has occurred.
+Parser error, unexpected end of program ( tests/test0261.ctr: 4)
+-> Expected a dot (.).

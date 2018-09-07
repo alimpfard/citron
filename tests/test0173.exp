@@ -1,6 +1,6 @@
 sum: helloworldTrueNil6661
 Uncaught error has occurred.
-toNumber must return a number.
+Cast of type Nil to type Number failed: Cast of type Boolean to type Number failed: Cast of type String to type Number failed: Cast of type String to type Number failed: cannot build number, extra characters in string
 #3 min (tests/test0173.ctr: 13)
 #2 + (tests/test0173.ctr: 13)
 #1 write: (tests/test0173.ctr: 13)

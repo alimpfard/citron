@@ -5,7 +5,7 @@ False
 Array ← 'hello' ; 'world' ; True ; Nil ; 666 ; 1
 (Map new) put:Nil at:Nil
 helloworldTrueNil6661
-Error noted: toNumber must return a number.
-Error noted: toNumber must return a number.
-Error noted: toNumber must return a number.
-Error noted: toNumber must return a number.
+Error noted: No implicit cast arises from the use of type Nil to type Number
+Error noted: No implicit cast arises from the use of type Boolean to type Number
+Error noted: No implicit cast arises from the use of type String to type Number
+Error noted: No implicit cast arises from the use of type Object to type Number

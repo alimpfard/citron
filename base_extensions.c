@@ -496,6 +496,15 @@ ctr_ast_modifier_fstr (char *mod)
 }
 
 ctr_object *
+ctr_ast_set_pragma (ctr_object * myself, ctr_argument * argumentList)
+{
+    char* pragma_d = ctr_heap_allocate_cstring(ctr_internal_cast2string(argumentList->object));
+    ctr_lex_parse_pragma(pragma_d);
+    ctr_heap_free(pragma_d);
+    return myself;
+}
+
+ctr_object *
 ctr_ast_tostring (ctr_object * myself, ctr_argument * argumentList)
 {
   char buf[1024];
@@ -1360,6 +1369,7 @@ initiailize_base_extensions ()
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("each:"), &ctr_ast_each);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("each_v:"), &ctr_ast_eachv);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("toString"), &ctr_ast_tostring);
+  ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("pragma:"), &ctr_ast_set_pragma);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("value"), &ctr_ast_get_value);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("type"), &ctr_ast_get_type);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("modifier"), &ctr_ast_get_mod);
@@ -1425,6 +1435,7 @@ initiailize_base_extensions ()
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("finished"), &ctr_generator_isfin);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("toString"), &ctr_generator_tostr);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("toArray"), &ctr_generator_toarray);
+  ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("foldl:accumulator:"), &ctr_generator_foldl);
   ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring ("Generator"), ctr_std_generator, 0);
 }
 

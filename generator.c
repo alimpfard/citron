@@ -53,10 +53,10 @@ ctr_generator_make (ctr_object * myself, ctr_argument * argumentList)
     case CTR_OBJECT_TYPE_OTNUMBER:
       {
 	ctr_object *end, *step;
-	if ((end = argumentList->next->object))
+	if (argumentList->next && (end = argumentList->next->object))
 	  {			//from_to_
 	    res->type = CTR_STEP_GENNY;
-	    if ((step = argumentList->next->next->object))
+	    if (argumentList->next->next && (step = argumentList->next->next->object))
 	      {			//from_to_step
 		ctr_generator *gen = ctr_heap_allocate (sizeof (*gen));
 		gen->seq_index = 0;
@@ -824,4 +824,55 @@ ctr_generator_free (void *res_)
       }
     }
   return res_;
+}
+
+
+ctr_object*
+ctr_generator_foldl(ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_resource *res = myself->value.rvalue;
+  ctr_generator *genny = res->ptr;
+  int gtype = res->type;
+  ctr_object *folder = argumentList->object;
+  if (!argumentList->next) {
+    CtrStdFlow = ctr_build_string_from_cstring("Expected two arguments to Generator::'foldl:accumulator:'");
+    return CtrStdNil;
+  }
+  ctr_object *result = argumentList->next->object;
+  if (!genny)
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("::'next' on uninitialized generator");
+      return CtrStdNil;
+    }
+  ctr_argument argm, argm2;
+  argm.next = &argm2;
+
+  while (1)
+    {
+      ctr_object *next = ctr_generator_internal_next (genny, gtype);
+      if (genny->finished)
+	break;
+      if (next == generator_end_marker)
+	continue;
+      argm.object = result;
+      argm.next->object = next;
+      result = ctr_block_run(folder, &argm, folder);
+      if (CtrStdFlow)
+	{
+	  if (CtrStdFlow == CtrStdContinue)
+	    {
+	      CtrStdFlow = NULL;
+	      continue;
+	    }
+	  if (CtrStdFlow == CtrStdBreak)
+	    {
+	      CtrStdFlow = NULL;
+	      genny->finished = 1;
+	    }
+	  break;
+	}
+    }
+  if (CtrStdFlow == CtrStdBreak)
+    CtrStdFlow = NULL;
+  return result;
 }

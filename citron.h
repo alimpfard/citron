@@ -16,6 +16,8 @@ extern "C" {
 
 #endif
 
+#define CTR_GLOBAL_SPEC extern
+
 #define CTR_LOAD_BASE_MODS //undef for no base mods
 
 #include "dictionary.h"
@@ -32,6 +34,17 @@ extern "C" {
 #define IS_DEBUG_STRING "-debug" DEBUG_BUILD_VERSION
 #else
 #define IS_DEBUG_STRING ""
+#endif
+
+// whether to use tcc as inject core
+// if undefined, Inject will not be available
+#ifndef withInjectNative
+#define withInjectNative 0
+#endif
+
+// whether to include CTypes / ffi
+#ifndef withCTypesNative
+#define withCTypesNative 0
 #endif
 
 #ifdef withBoehmGC
@@ -337,6 +350,11 @@ extern int with_stdlib;
 /**
  * Core Objects
  */
+
+#ifdef CTR_INJECT
+#define __thread
+#endif
+
 CTR_H_DECLSPEC ctr_object* CtrStdWorld;          //!< Standard Object : Global Namespace
 CTR_H_DECLSPEC ctr_object* CtrStdObject;         //!< Standard Object : Base Object
 CTR_H_DECLSPEC ctr_object* CtrStdBlock;          //!< Standard Object : Code Block
@@ -356,7 +374,11 @@ CTR_H_DECLSPEC ctr_object* CtrStdCommand;        //!< Standard Object : Program
 CTR_H_DECLSPEC ctr_object* CtrStdSlurp;          //!< Standard Object : Slurp
 CTR_H_DECLSPEC ctr_object* CtrStdShell;          //!< Standard Object : Shell
 CTR_H_DECLSPEC ctr_object* CtrStdClock;          //!< Standard Object : Clock
-CTR_H_DECLSPEC ctr_object* CtrStdFlow;           //!< Internal Flow namespace : contains errors and flow control
+#ifndef CTR_GLOBALS_DEFINE
+extern __thread ctr_object* CtrStdFlow;
+#else
+__thread ctr_object* CtrStdFlow = NULL;           //!< Internal Flow namespace : contains errors and flow control
+#endif
 CTR_H_DECLSPEC ctr_object* CtrExceptionType;     //!< contains error/exception types
 CTR_H_DECLSPEC ctr_object* CtrStdBreak;          //!< Internal Flow representation for break : stop the current iteration
 CTR_H_DECLSPEC ctr_object* CtrStdContinue;       //!< Internal Flow representation for continue : skip the current iteration
@@ -375,44 +397,42 @@ CTR_H_DECLSPEC ctr_object* CTR_FILE_STDIN_STR;   //!< Special Object : Standard 
 CTR_H_DECLSPEC ctr_object* CTR_FILE_STDOUT_STR;  //!< Special Object : Standard Output in-world name
 CTR_H_DECLSPEC ctr_object* CTR_FILE_STDERR_STR;  //!< Special Object : Standard Error in-world name
 
-#ifdef __cplusplus
-ctr_object* get_CtrStdWorld();
-ctr_object* get_CtrStdObject();
-ctr_object* get_CtrStdBlock();
-ctr_object* get_CtrStdString();
-ctr_object* get_CtrStdNumber();
-ctr_object* get_CtrStdBool();
-ctr_object* get_CtrStdConsole();
-ctr_object* get_CtrStdNil();
-ctr_object* get_CtrStdGC();
-ctr_object* get_CtrStdMap();
-ctr_object* get_CtrStdArray();
-ctr_object* get_CtrStdIter();
-ctr_object* get_CtrStdFile();
-ctr_object* get_CtrStdSystem();
-ctr_object* get_CtrStdDice();
-ctr_object* get_CtrStdCommand();
-ctr_object* get_CtrStdSlurp();
-ctr_object* get_CtrStdShell();
-ctr_object* get_CtrStdClock();
-ctr_object* get_CtrStdFlow();
-ctr_object* get_CtrExceptionType();
-ctr_object* get_CtrStdBreak();
-ctr_object* get_CtrStdContinue();
-ctr_object* get_CtrStdExit();
-ctr_object* get_CtrStdReflect();
-ctr_object* get_CtrStdReflect_cons();
-ctr_object* get_CtrStdFiber();
-ctr_object* get_CtrStdThread();
-ctr_object* get_CtrStdSymbol();
-ctr_object* get_ctr_first_object();
-ctr_object* get_CTR_FILE_STDIN();
-ctr_object* get_CTR_FILE_STDOUT();
-ctr_object* get_CTR_FILE_STDERR();
-ctr_object* get_CTR_FILE_STDIN_STR();
-ctr_object* get_CTR_FILE_STDOUT_STR();
-ctr_object* get_CTR_FILE_STDERR_STR();
-#endif
+ctr_object** get_CtrStdWorld();
+ctr_object** get_CtrStdObject();
+ctr_object** get_CtrStdBlock();
+ctr_object** get_CtrStdString();
+ctr_object** get_CtrStdNumber();
+ctr_object** get_CtrStdBool();
+ctr_object** get_CtrStdConsole();
+ctr_object** get_CtrStdNil();
+ctr_object** get_CtrStdGC();
+ctr_object** get_CtrStdMap();
+ctr_object** get_CtrStdArray();
+ctr_object** get_CtrStdIter();
+ctr_object** get_CtrStdFile();
+ctr_object** get_CtrStdSystem();
+ctr_object** get_CtrStdDice();
+ctr_object** get_CtrStdCommand();
+ctr_object** get_CtrStdSlurp();
+ctr_object** get_CtrStdShell();
+ctr_object** get_CtrStdClock();
+ctr_object** get_CtrStdFlow();
+ctr_object** get_CtrExceptionType();
+ctr_object** get_CtrStdBreak();
+ctr_object** get_CtrStdContinue();
+ctr_object** get_CtrStdExit();
+ctr_object** get_CtrStdReflect();
+ctr_object** get_CtrStdReflect_cons();
+ctr_object** get_CtrStdFiber();
+ctr_object** get_CtrStdThread();
+ctr_object** get_CtrStdSymbol();
+ctr_object** get_ctr_first_object();
+ctr_object** get_CTR_FILE_STDIN();
+ctr_object** get_CTR_FILE_STDOUT();
+ctr_object** get_CTR_FILE_STDERR();
+ctr_object** get_CTR_FILE_STDIN_STR();
+ctr_object** get_CTR_FILE_STDOUT_STR();
+ctr_object** get_CTR_FILE_STDERR_STR();
 /**
 * @internal
  * standard instrumentor, do not override.
@@ -475,6 +495,8 @@ int     ctr_clex_dump_state(struct lexer_state*);
 int     ctr_clex_restore_state( int id );
 int     ctr_clex_load_state(struct lexer_state);
 int     ctr_clex_inject_token( int token, const char* value, const int vlen );
+void    ctr_match_toggle_pragma();
+void    ctr_lex_parse_pragma();
 CTR_H_DECLSPEC char*   ctr_clex_code_init;
 CTR_H_DECLSPEC char*   ctr_clex_code_end;
 CTR_H_DECLSPEC char*   ctr_clex_oldptr;
@@ -485,6 +507,8 @@ CTR_H_DECLSPEC char*   ctr_clex_keyword_me;
 CTR_H_DECLSPEC char*   ctr_clex_keyword_my;
 CTR_H_DECLSPEC char*   ctr_clex_keyword_const;
 CTR_H_DECLSPEC char*   ctr_clex_keyword_static;
+CTR_H_DECLSPEC int     ctr_clex_line_number;
+CTR_H_DECLSPEC int     ctr_clex_old_line_number;
 
 CTR_H_DECLSPEC ctr_size ctr_clex_keyword_const_len;
 CTR_H_DECLSPEC ctr_size ctr_clex_keyword_my_len;
@@ -517,7 +541,14 @@ CTR_H_DECLSPEC ctr_code_pragma* regexLineCheck;
 CTR_H_DECLSPEC ctr_code_pragma* callShorthand;
 CTR_H_DECLSPEC ctr_code_pragma* extensionsPra;
 
+// XFrozen
 #define CTR_EXT_FROZEN_K 1
+// XPureLambda
+// force enables XFrozen
+#define CTR_EXT_PURE_FS  (1|2)
+
+extern int ctr_did_side_effect;
+void ctr_mksrands(char* buf);
 
 /**
  * UTF-8 functions
@@ -571,9 +602,9 @@ ctr_object* ctr_internal_object_find_property_ignore(ctr_object* owner, ctr_obje
 uint64_t    ctr_internal_index_hash(ctr_object* key);
 uint64_t    ctr_internal_alt_hash(ctr_object* key);
 void        ctr_internal_object_add_property(ctr_object* owner, ctr_object* key, ctr_object* value, int m);
-inline ctr_object* ctr_internal_cast2bool( ctr_object* o );
-inline ctr_object* ctr_internal_cast2number(ctr_object* o);
-inline ctr_object* ctr_internal_cast2string( ctr_object* o );
+ctr_object* ctr_internal_cast2bool( ctr_object* o );
+ctr_object* ctr_internal_cast2number(ctr_object* o);
+ctr_object* ctr_internal_cast2string( ctr_object* o );
 ctr_object* ctr_internal_create_object(int type);
 ctr_object* ctr_internal_create_mapped_object(int type, int shared);
 ctr_object *ctr_internal_create_standalone_object (int type);
@@ -619,6 +650,7 @@ int ctr_str_count_substr(char *str, char *substr, int overlap);
 #define CTR_TRACE_IGNORE_LENGTH 2048
 CTR_H_DECLSPEC char ignore_in_trace[CTR_TRACE_IGNORE_LENGTH][CTR_TRACE_IGNORE_VEC_DEPTH]; //ignore named files.
 int trace_ignore_count;
+extern char* SystemTZ;
 /**
  * Scoping functions
  */
@@ -775,6 +807,7 @@ ctr_object* ctr_string_rtrim(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_padding_left(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_padding_right(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_html_escape(ctr_object* myself, ctr_argument* argumentList);
+// ctr_object* ctr_string_literal_escape(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_count_of(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_slice(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_at(ctr_object* myself, ctr_argument* argumentList);
@@ -1072,6 +1105,7 @@ ctr_object* ctr_clock_set_time( ctr_object* myself, ctr_argument* argumentList, 
 ctr_object* ctr_clock_set_zone( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_clock_get_zone( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_clock_to_string( ctr_object* myself, ctr_argument* argumentList );
+ctr_object* ctr_clock_isdst( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_clock_format( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_clock_add( ctr_object* myself, ctr_argument* argumentList );
 ctr_object* ctr_clock_subtract( ctr_object* myself, ctr_argument* argumentList );
@@ -1208,6 +1242,22 @@ ctr_object* ctr_thread_to_string(ctr_object* myself, ctr_argument* argumentList)
 CTR_H_DECLSPEC ctr_object* CtrStdImportLib;
 CTR_H_DECLSPEC ctr_object* CtrStdImportLib_SearchPaths;
 ctr_object* ctr_importlib_begin(ctr_object* myself, ctr_argument* argumentList);
+
+/** Inject **/
+CTR_H_DECLSPEC ctr_object* CtrStdInject;
+voidptrfn_t ctr_inject_compiled_state_release_hook;
+ctr_object* ctr_inject_make(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_inject_compile(ctr_object* myself, ctr_argument* argumentList);
+ctr_object *ctr_inject_get_symbol(ctr_object *myself, ctr_argument *argumentList);
+ctr_object *ctr_inject_run(ctr_object *myself, ctr_argument *argumentList);
+ctr_object *ctr_inject_add_inclp(ctr_object* myself, ctr_argument* argumentList);
+ctr_object *ctr_inject_export_f(ctr_object *myself, ctr_argument *argumentList);
+ctr_object *ctr_inject_add_lib(ctr_object* myself, ctr_argument* argumentList);
+ctr_object *ctr_inject_set_error_handler(ctr_object* myself, ctr_argument* argumentList);
+
+/** FFI **/
+#include "ctypes.h"
+void ctr_ffi_begin();
 
 /**
  * Global Garbage Collector variables

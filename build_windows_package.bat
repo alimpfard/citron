@@ -14,5 +14,5 @@ if %COMPILER%==msys2 (
     bash -lc "pacman -S --needed --noconfirm git"
     bash -lc "pacman -Syu --noconfirm"
     bash -lc "pacman -S --needed --noconfirm mingw-w64-i686-toolchain make patch perl"
-    bash -lc "make --debug distribute"
+    bash -lc "make --debug all"
 )

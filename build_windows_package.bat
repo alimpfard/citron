@@ -10,9 +10,6 @@ echo MSYS2 system: %MSYSTEM%
 if %COMPILER%==msys2 (
     @echo on
     SET "PATH=C:\%MSYS2_DIR%\%MSYSTEM%\bin;C:\%MSYS2_DIR%\usr\bin;%PATH%"
-    pacman -S --needed --noconfirm pacman-mirrors
-    pacman -S --needed --noconfirm git
-    pacman -Syu --noconfirm
-    pacman -S --needed --noconfirm msys2-runtime-devel mingw-w64-i686-toolchain make patch perl
+    SET "CC=gcc"
     make distribute
 )

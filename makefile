@@ -44,7 +44,7 @@ ifneq ($(findstring withCTypesNative=1,${CFLAGS}),)
 OBJS := ${OBJS} _struct.o ctypes.o structmember.o
 endif
 ifneq ($(findstring withInjectNative=1,${CFLAGS}),)
-OBJS := ${OBJS} inject.o tcc/libtcc1.a tcc/libtcc.a
+OBJS := ${OBJS} tcc/libtcc1.a tcc/libtcc.a inject.o
 endif
 
 COBJS = ${OBJS} compiler.o
@@ -98,7 +98,7 @@ cxx:
 	echo "blah"
 
 tcc/%.a:
-	cd tcc && ./configure --prefix=$(realpath build) && $(MAKE) $<
+	cd tcc && ./configure --prefix=`realpath build` && $(MAKE) $<
 
 # %.o: %.c
 # 	echo "$<"
@@ -146,11 +146,13 @@ war:
 package:
 	# create a package for windows people
 	# really, how lazy can y'all get?
-	mkdir -p package/basemods
-	cp -r examples docs extensions Library *.dll ctr.exe eval compile.ctr package
-	cp dist_windows package/citron.bat
-	tar cf citron-release.tar package 
-	rm -rf package
-
+	mkdir -p package/prepared/basemods
+	cp misc/citron_windows.bat package/prepared/citron.bat
+	cp -r image examples docs extensions Library *.dll ctr.exe eval compile.ctr package/prepared
+	cp dist_windows package/prepared/ctr.bat
+	cp misc/prepare_install.ctr package/prepare_install.ctr
+	cp misc/install.bat install.bat
+	tar cf citron-release.tar package install.bat 
+	rm -rf package install.bat
 
 distribute: all package

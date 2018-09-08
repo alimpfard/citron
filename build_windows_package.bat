@@ -12,6 +12,5 @@ if %COMPILER%==msys2 (
     SET "PATH=C:\%MSYS2_DIR%\usr\bin;%PATH%"
     pacman -S --noconfirm gcc pcre pcre-devel
     SET "CC=gcc.exe"
-    gcc -v
     make distribute
 )

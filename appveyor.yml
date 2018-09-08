@@ -96,6 +96,7 @@ deploy:
       secure: yFpDwb0WUOt3DSroBeI3vHzs+leUiIZPxCn80XUSVzdK22RgzqwQFQbADIvyTSNJ
     draft: false
     prerelease: false
+    tag: $(APPVEYOR_REPO_TAG_NAME)
     on:
       appveyor_repo_tag: true       # deploy on tag push only
 

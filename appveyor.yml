@@ -13,7 +13,15 @@ branches:
   # whitelist
   only:
     - windows
+  except:
+    - /^(?i:continuous)$/
 
+matrix:
+      allow_failures:
+        - prepare_mode: YES
+
+# Do not build on tags (GitHub and BitBucket)
+skip_tags: true
 
 # Including commits with particular message or from specific user
 only_commits:
@@ -30,8 +38,12 @@ max_jobs: 1
 image: Visual Studio 2015
 
 environment:
+  auth_token:
+    secure: yFpDwb0WUOt3DSroBeI3vHzs+leUiIZPxCn80XUSVzdK22RgzqwQFQbADIvyTSNJ
   matrix:
-    - COMPILER: msys2
+    - prepare_mode: YES
+    - prepare_mode: NO
+      COMPILER: msys2
       PLATFORM: x86
       MSYS2_ARCH: x86
       MSYS2_DIR: msys64
@@ -49,8 +61,10 @@ clone_depth: 5                      # clone entire repository history if not def
 
 # scripts that run after cloning repository
 install:
-  # by default, all script lines are interpreted as batch
-  - echo Starting build here
+  - md c:\ciuploadtool
+  - cd c:\ciuploadtool
+  - curl -fsSL https://github.com/d1vanov/ciuploadtool/releases/download/continuous-master/ciuploadtool_windows_x86.zip -o ciuploadtool_windows_x86.zip
+  - 7z x ciuploadtool_windows_x86.zip
 
 #---------------------------------#
 #       build configuration       #
@@ -66,40 +80,15 @@ configuration: Release
 
 # to run your custom scripts instead of automatic MSBuild
 build_script:
+  - if %prepare_mode%==YES c:\ciuploadtool\ciuploadtool.exe -preponly -suffix="%APPVEYPR_REPO_BRANCH%"
+  - ps: if ($env:prepare_mode -eq "YES") { throw "Failing in order to stop the current build matrix job early" }
   - '%APPVEYOR_BUILD_FOLDER%\build_windows_package.bat'
+
+on_finish:
+  - c:\ciuploadtool\ciuploadtool.exe -suffix="%APPVEYPR_REPO_BRANCH%" citron-release.tar
 
 # to disable automatic builds
 build: on
-
-
-#---------------------------------#
-#      artifacts configuration    #
-#---------------------------------#
-
-artifacts:
-
-  # pushing a single file
-  - path: citron-release.tar
-
-
-#---------------------------------#
-#     deployment configuration    #
-#---------------------------------#
-
-# providers: Local, FTP, WebDeploy, AzureCS, AzureBlob, S3, NuGet, Environment
-# provider names are case-sensitive!
-deploy:
-    # Deploy to GitHub Releases
-  - provider: GitHub
-    artifact: /\.tar/           # upload all NuGet packages to release assets
-    auth_token:
-      secure: yFpDwb0WUOt3DSroBeI3vHzs+leUiIZPxCn80XUSVzdK22RgzqwQFQbADIvyTSNJ
-    draft: false
-    prerelease: false
-    tag: $(APPVEYOR_REPO_TAG_NAME)
-    on:
-      appveyor_repo_tag: true       # deploy on tag push only
-
 
 #---------------------------------#
 #         notifications           #

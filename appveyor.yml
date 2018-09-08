@@ -94,6 +94,8 @@ deploy:
     # Deploy to GitHub Releases
   - provider: GitHub
     artifact: /\.tar/           # upload all NuGet packages to release assets
+    auth_token:
+      secure: yFpDwb0WUOt3DSroBeI3vHzs+leUiIZPxCn80XUSVzdK22RgzqwQFQbADIvyTSNJ
     draft: false
     prerelease: false
     on:

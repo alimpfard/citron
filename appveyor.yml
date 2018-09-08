@@ -14,8 +14,6 @@ branches:
   only:
     - windows
 
-# Do not build on tags (GitHub and BitBucket)
-skip_tags: true
 
 # Including commits with particular message or from specific user
 only_commits:

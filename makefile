@@ -57,7 +57,11 @@ deps:
 	# This is just a hacky way of getting bdwgc "libgc" from MSYS2, 
 	# Do not expect it to work anywhere else
 	# TODO: Find a better solution
-	pacman --noconfirm -S libgc-devel libgc && cp /usr/bin/msys-gc-1.dll .
+	pacman --noconfirm -S libgc-devel libgc
+	# These guys are dynamically linked
+	cp /usr/bin/msys-gc-1.dll .
+	cp /usr/bin/msys-2.0.dll .
+	cp /usr/bin/msys-gcc_s-seh-1.dll .
 
 all: CFALGS := $(CFLAGS) -O2
 all: deps cxx

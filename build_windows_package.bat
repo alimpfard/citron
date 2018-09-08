@@ -10,7 +10,8 @@ echo MSYS2 system: %MSYSTEM%
 if %COMPILER%==msys2 (
     @echo on
     SET "PATH=C:\%MSYS2_DIR%\%MSYSTEM%\bin;C:\%MSYS2_DIR%\usr\bin;%PATH%"
-    SET "CC=gcc"
+    pacman -S gcc
+    SET "CC=gcc.exe"
     gcc -v
     make distribute
 )

@@ -11,5 +11,6 @@ if %COMPILER%==msys2 (
     @echo on
     SET "PATH=C:\%MSYS2_DIR%\%MSYSTEM%\bin;C:\%MSYS2_DIR%\usr\bin;%PATH%"
     SET "CC=gcc"
+    gcc -v
     make distribute
 )

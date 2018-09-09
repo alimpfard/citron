@@ -1,4 +1,3 @@
-CITRON_EXT_PATH = (nil)(())
 coffeeUncaught error has occurred.
 Object property not found: tealeaves
 #3 tealeaves (tests/test0144.ctr: 16)

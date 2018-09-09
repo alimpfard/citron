@@ -10,14 +10,14 @@ ctr_object* ctr_ctypes_packed_size(ctr_object* myself, ctr_argument* argumentLis
 //Common
 #define CTR_CREATE_CTOBJECT(name) ctr_object* name = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX)
 
-/*@I_OBJ_DEF CTypes*/
+/**@I_OBJ_DEF CTypes*/
 /**
  * CTypes
  *
  * An interface to the native "foreign" functions (AKA C-style functions)
  * Also a collection of C types
  */
-/*@I_OBJ_DEF CIF*/
+/**@I_OBJ_DEF CIF*/
 /**
  * CIF
  *

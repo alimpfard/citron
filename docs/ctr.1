@@ -1,4 +1,4 @@
-.TH "Citron v0.0.7.4-boehm-gc" 1 "30 March 2018" "The Citron programming language Manual"
+.TH "Citron v0.0.8.8-boehm-gc" 1 "09 September 2018" "The Citron programming language Manual"
 .SH NAME
 ctr \- run a Citron program
 .PP
@@ -75,6 +75,8 @@ The following messages are part of the Core API of the Citron Programming Langua
 .PP
 .SS
 
+.BR
+../base.c
 .SH
  Nil
 .B _OBJ_DEF Nil
@@ -95,7 +97,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b> [Nil] isNil </b>
+.B [Nil] isNil
 
  @see ctr_object_is_nil
 
@@ -104,7 +106,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b> [Nil] toString </b>
+.B [Nil] toString
 
  @see ctr_object_to_string
 
@@ -113,7 +115,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b> [Nil] toNumber </b>
+.B [Nil] toNumber
 
  @see ctr_object_to_number
 
@@ -122,7 +124,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b> [Nil] toBoolean </b>
+.B [Nil] toBoolean
 
  @see ctr_object_to_boolean
 
@@ -131,7 +133,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b> [Nil] unpack: [Ref:string] </b>
+.B [Nil] unpack: [Ref:string]
 
  Assigns Nil into Ref
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
@@ -152,7 +154,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b> Object cnew: [Block] </b>
+.B Object cnew: [Block]
 
  Object constructor with some initial parameters.
  Object is passed to the block as me/my
@@ -160,7 +162,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b> Object genAccessors: [String] </b>
+.B Object genAccessors: [String]
 
  generate reader/writer methods for property.
  creates the property is it doesn't exist
@@ -168,7 +170,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b> Object genReader: [String] </b>
+.B Object genReader: [String]
 
  generate reader method for property.
  creates the property is it doesn't exist
@@ -176,7 +178,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b> Object genWriter: [String] </b>
+.B Object genWriter: [String]
 
  generate writer method for property.
  does not create the property is it doesn't exist
@@ -184,7 +186,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b> [Object] unpack: [Object:{Ref*}] </b>
+.B [Object] unpack: [Object:{Ref*}]
 
  Element-wise object assign
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
@@ -192,7 +194,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Object] iHash</b>
+.B [Object] iHash
 
  fallback hashing
  returns the hash of the object's string form.
@@ -200,22 +202,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B * <b>[Object] aHash</b>
-  *
-  * fallback alternate hashing
-  * returns the hash of the object's string form.
-.BR
-
-.PP
-.SS
-.B <b>[Object] new hiding:</b>
-
- Creates a new Object hiding some parameters.
-.BR
-
-.PP
-.SS
-.B <b>[Object] swapRefs: [Object]</b>
+.B [Object] swapRefs: [Object]
 
  swap two objects with each other.
  Effectively 'xchg %ra, %rb'
@@ -223,14 +210,14 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Object] type</b>
+.B [Object] type
 
  Returns a string representation of the type of object.
 .BR
 
 .PP
 .SS
-.B <b>[Object] toString</b>
+.B [Object] toString
 
  Returns a string representation of a generic object.
  This string representation will be:
@@ -240,7 +227,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Object] toNumber</b>
+.B [Object] toNumber
 
  Errors out. Objects cannot be represented by numbers.
  (default behavior)
@@ -248,7 +235,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Object] toBoolean</b>
+.B [Object] toBoolean
 
  Returns a boolean representation of the object. This basic behavior, part
  of any object will just return True. Other objects typically override this
@@ -257,7 +244,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Object] equals: [other]</b>
+.B [Object] equals: [other]
 
  Tests whether the current instance is the same as
  the argument.
@@ -270,21 +257,21 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Object] id</b>
+.B [Object] id
 
  returns a unique identifier for the object
 .BR
 
 .PP
 .SS
-.B <b>[Object] myself</b>
+.B [Object] myself
 
  Returns the object itself.
 .BR
 
 .PP
 .SS
-.B <b>[Object] learn: [String] means: [String].</b>
+.B [Object] learn: [String] means: [String].
 
  Teaches any object to repsond to the first specified message just like
  it would upon receiving the second. This allows you to map existing
@@ -308,7 +295,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Object] do</b>
+.B [Object] do
 
  Activates 'chain mode'. If chain mode is active, all messages will
  return the recipient object regardless of their return signature.
@@ -330,14 +317,14 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Object] done</b>
+.B [Object] done
 
  Deactivates 'chain mode'.
 .BR
 
 .PP
 .SS
-.B <b>[Object] message: [String] arguments: [Array]</b>
+.B [Object] message: [String] arguments: [Array]
 
  Sends a custom or 'dynamic' message to an object. This takes a string containing
  the message to be send to the object and an array listing the arguments at the
@@ -356,7 +343,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Object] on: [String] do: [Block]</b>
+.B [Object] on: [String] do: [Block]
 
  Makes the object respond to a new kind of message.
  Use the semicolons to indicate the positions of the arguments to be
@@ -370,7 +357,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Object] respondTo: [String]</b>
+.B [Object] respondTo: [String]
 
  Variations:
 
@@ -382,7 +369,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Object] isNil</b>
+.B [Object] isNil
 
  Default isNil implementation.
 
@@ -408,14 +395,14 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Boolean] unpack: [String:Ref]</b>
+.B [Boolean] unpack: [String:Ref]
  Assign ref to boolean
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
 
 .PP
 .SS
-.B <b>[Boolean] = [other]</b>
+.B [Boolean] = [other]
 
  Tests whether the other object (as a boolean) has the
  same value (boolean state True or False) as the current one.
@@ -427,7 +414,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Boolean] != [other]</b>
+.B [Boolean] != [other]
 
  Tests whether the other object (as a boolean) has the
  same value (boolean state True or False) as the current one.
@@ -439,14 +426,14 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Boolean] toString</b>
+.B [Boolean] toString
 
  Simple cast function.
 .BR
 
 .PP
 .SS
-.B <b>[Boolean] break</b>
+.B [Boolean] break
 
  Breaks out of the current block and bubbles up to the parent block if
  the value of the receiver equals boolean True.
@@ -458,7 +445,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Boolean] continue</b>
+.B [Boolean] continue
 
  Skips the remainder of the current block in a loop, continues to the next
  iteration.
@@ -470,7 +457,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Boolean] ifTrue: [block]</b>
+.B [Boolean] ifTrue: [block]
 
  Executes a block of code if the value of the boolean
  object is True.
@@ -484,7 +471,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Boolean] ifFalse: [block]</b>
+.B [Boolean] ifFalse: [block]
 
  Executes a block of code if the value of the boolean
  object is True.
@@ -498,14 +485,14 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[b:Object] or: [Block|Object]</b>
+.B [b:Object] or: [Block|Object]
 
  Evaluates and returns the block if b evaluates to false, else returns b
 .BR
 
 .PP
 .SS
-.B <b>[Boolean] not</b>
+.B [Boolean] not
 
  Returns the opposite of the current value.
 
@@ -515,7 +502,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Boolean] flip</b>
+.B [Boolean] flip
 
  'Flips a coin'. Returns a random boolean value True or False.
 
@@ -525,7 +512,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Boolean] either: [this] or: [that]</b>
+.B [Boolean] either: [this] or: [that]
 
  Returns argument #1 if boolean value is True and argument #2 otherwise.
 
@@ -539,7 +526,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Boolean] & [other]</b>
+.B [Boolean] & [other]
 
  Returns True if both the object value is True and the
  argument is True as well.
@@ -551,7 +538,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Boolean] ! [other]</b>
+.B [Boolean] ! [other]
 
  Returns True if the object value is False and the
  argument is False as well.
@@ -563,7 +550,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Boolean] | [other]</b>
+.B [Boolean] | [other]
 
  Returns True if either the object value is True or the
  argument is True or both are True.
@@ -575,7 +562,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Boolean] ? [other]</b>
+.B [Boolean] ? [other]
 
  Returns True if either the object value is True or the
  argument is True but not both.
@@ -587,7 +574,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Boolean] toNumber</b>
+.B [Boolean] toNumber
 
  Returns 0 if boolean is False and 1 otherwise.
 .BR
@@ -615,56 +602,56 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Number] unpack: [String:Ref]</b>
+.B [Number] unpack: [String:Ref]
  Assign ref to number
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
 
 .PP
 .SS
-.B <b>[Number] > [other]</b>
+.B [Number] > [other]
 
  Returns True if the number is higher than other number.
 .BR
 
 .PP
 .SS
-.B <b>[Number] >=: [other]</b>
+.B [Number] >=: [other]
 
  Returns True if the number is higher than or equal to other number.
 .BR
 
 .PP
 .SS
-.B <b>[Number] < [other]</b>
+.B [Number] < [other]
 
  Returns True if the number is less than other number.
 .BR
 
 .PP
 .SS
-.B <b>[Number] <=: [other]</b>
+.B [Number] <=: [other]
 
  Returns True if the number is less than or equal to other number.
 .BR
 
 .PP
 .SS
-.B <b>[Number] = [other]</b>
+.B [Number] = [other]
 
  Returns True if the number equals the other number.
 .BR
 
 .PP
 .SS
-.B <b>[Number] !=: [other]</b>
+.B [Number] !=: [other]
 
  Returns True if the number does not equal the other number.
 .BR
 
 .PP
 .SS
-.B <b>[Number] between: [low] and: [high]</b>
+.B [Number] between: [low] and: [high]
 
  Returns True if the number instance has a value between the two
  specified values.
@@ -676,21 +663,21 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Number] odd</b>
+.B [Number] odd
 
  Returns True if the number is odd and False otherwise.
 .BR
 
 .PP
 .SS
-.B <b>[Number] even</b>
+.B [Number] even
 
  Returns True if the number is even and False otherwise.
 .BR
 
 .PP
 .SS
-.B <b>[Number] + [Number]</b>
+.B [Number] + [Number]
 
  Adds the other number to the current one. Returns a new
  number object.
@@ -698,7 +685,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Number] +=: [Number]</b>
+.B [Number] +=: [Number]
 
  Increases the number ITSELF by the specified amount, this message will change the
  value of the number object itself instead of returning a new number.
@@ -706,7 +693,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Number] - [Number]</b>
+.B [Number] - [Number]
 
  Subtracts the other number from the current one. Returns a new
  number object.
@@ -714,7 +701,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Number] -=: [number]</b>
+.B [Number] -=: [number]
 
  Decreases the number ITSELF by the specified amount, this message will change the
  value of the number object itself instead of returning a new number.
@@ -722,7 +709,14 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Number] * [Number or Block]</b>
+.B [Number] negate
+
+ Negates the value of the number object
+.BR
+
+.PP
+.SS
+.B [Number] * [Number or Block]
 
  Multiplies the number by the specified multiplier. Returns a new
  number object.
@@ -730,7 +724,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Number] times: [Block]</b>
+.B [Number] times: [Block]
 
  Runs the block of code a 'Number' of times.
  This is the most basic form of a loop.
@@ -745,7 +739,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Number] *=: [Number]</b>
+.B [Number] *=: [Number]
 
  Multiplies the number ITSELF by multiplier, this message will change the
  value of the number object itself instead of returning a new number.
@@ -761,7 +755,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Number] / [Number]</b>
+.B [Number] / [Number]
 
  Divides the number by the specified divider. Returns a new
  number object.
@@ -769,7 +763,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Number] /=: [Number]</b>
+.B [Number] /=: [Number]
 
  Divides the number ITSELF by divider, this message will change the
  value of the number object itself instead of returning a new number.
@@ -785,7 +779,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Number] mod: [modulo]</b>
+.B [Number] mod: [modulo]
 
  Returns the modulo of the number. This message will return a new
  object representing the modulo of the recipient.
@@ -800,7 +794,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Number] pow: [power]</b>
+.B [Number] pow: [power]
 
  Returns a new object representing the
  number to the specified power.
@@ -815,7 +809,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Number] pos</b>
+.B [Number] pos
 
  Returns a boolean indicating wether the number is positive.
  This message will return a boolean object 'True' if the recipient is
@@ -831,7 +825,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Number] neg</b>
+.B [Number] neg
 
  Returns a boolean indicating wether the number is negative.
  This message will return a boolean object 'True' if the recipient is
@@ -849,7 +843,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Number] max: [other]</b>
+.B [Number] max: [other]
 
  Returns the biggest number of the two.
 
@@ -861,7 +855,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Number] min: [other]</b>
+.B [Number] min: [other]
 
  Returns a the smallest number.
 
@@ -873,14 +867,14 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Number] factorial</b>
+.B [Number] factorial
 
  Calculates the factorial of a number.
 .BR
 
 .PP
 .SS
-.B <b>[Number] to: [number] step: [step] do: [block]</b>
+.B [Number] to: [number] step: [step] do: [block]
 
  Runs the specified block for each step it takes to go from
  the start value to the target value using the specified step size.
@@ -893,12 +887,12 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Number] to: [number] step: [step]</b>
+.B [Number] to: [number] step: [step]
 .BR
 
 .PP
 .SS
-.B <b>[Number] floor</b>
+.B [Number] floor
 
  Gives the largest integer less than the recipient.
 
@@ -913,7 +907,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Number] ceil</b>
+.B [Number] ceil
 
  Rounds up the recipient number and returns the next higher integer number
  as a result.
@@ -929,14 +923,14 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Number] round</b>
+.B [Number] round
 
  Returns the rounded number.
 .BR
 
 .PP
 .SS
-.B <b>[Number] abs</b>
+.B [Number] abs
 
  Returns the absolute (unsigned, positive) value of the number.
 
@@ -951,7 +945,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Number] sqrt</b>
+.B [Number] sqrt
 
  Returns the square root of the recipient.
 
@@ -966,88 +960,88 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Number] exp</b>
+.B [Number] exp
 
  Returns the exponent of the number.
 .BR
 
 .PP
 .SS
-.B <b>[Number] sin</b>
+.B [Number] sin
 
  Returns the sine of the number.
 .BR
 
 .PP
 .SS
-.B <b>[Number] cos</b>
+.B [Number] cos
 
  Returns the cosine of the number.
 .BR
 
 .PP
 .SS
-.B <b>[Number] tan</b>
+.B [Number] tan
 
  Caculates the tangent of a number.
 .BR
 
 .PP
 .SS
-.B <b>[Number] atan</b>
+.B [Number] atan
 
  Caculates the arctangent of a number.
 .BR
 
 .PP
 .SS
-.B <b>[Number] log</b>
+.B [Number] log
 
  Calculates the logarithm of a number.
 .BR
 
 .PP
 .SS
-.B <b>[Number] shiftRight: [Number]</b>
+.B [Number] shiftRight: [Number]
 .BR
 
 .PP
 .SS
-.B <b>[Number] shiftLeft: [Number]</b>
+.B [Number] shiftLeft: [Number]
 .BR
 
 .PP
 .SS
-.B <b>[Number] bitOr: [Number]</b>
+.B [Number] bitOr: [Number]
 .BR
 
 .PP
 .SS
-.B <b>[Number] bitAnd: [Number]</b>
+.B [Number] bitAnd: [Number]
 .BR
 
 .PP
 .SS
-.B <b>[Number] bitXor: [Number]</b>
+.B [Number] bitXor: [Number]
 .BR
 
 .PP
 .SS
-.B <b>[Number] toByte</b>
+.B [Number] toByte
 
  Converts a number to a single byte.
 .BR
 
 .PP
 .SS
-.B <b>[Number] toString</b>
+.B [Number] toString
 
  Wrapper for cast function.
 .BR
 
 .PP
 .SS
-.B <b>[Number] toBoolean</b>
+.B [Number] toBoolean
 
  Casts a number to a boolean object.
 .BR
@@ -1074,21 +1068,21 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] isConstructible: [Object]</b>
+.B [String] isConstructible: [Object]
 
  returns whether object is constructible from string
 .BR
 
 .PP
 .SS
-.B <b>[String] unpack: [String:Ref]</b>
+.B [String] unpack: [String:Ref]
  Assign ref to string
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
 
 .PP
 .SS
-.B <b>[String] bytes</b>
+.B [String] bytes
 
  Returns the number of bytes in a string, as opposed to
  length which returns the number of UTF-8 code points (symbols or characters).
@@ -1096,21 +1090,21 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] = [other]</b>
+.B [String] = [other]
 
  Returns True if the other string is the same (in bytes).
 .BR
 
 .PP
 .SS
-.B <b>[String] != [other]</b>
+.B [String] != [other]
 
  Returns True if the other string is not the same (in bytes).
 .BR
 
 .PP
 .SS
-.B <b>[String] length</b>
+.B [String] length
 
  Returns the length of the string in symbols.
  This message is UTF-8 unicode aware. A 4 byte character will be counted as ONE.
@@ -1118,7 +1112,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] + [other]</b>
+.B [String] + [other]
 
  Appends other string to self and returns the resulting
  string as a new object.
@@ -1126,7 +1120,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] append: [String].</b>
+.B [String] append: [String].
 
  Appends the specified string to itself. This is different from the '+'
  message, the '+' message adds the specified string while creating a new string.
@@ -1146,7 +1140,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] multiply: [Number].</b>
+.B [String] multiply: [Number].
 
  Appends the specified string to itself as many times as [Number]
  alias: *
@@ -1154,7 +1148,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] formatObjects: [Array].</b>
+.B [String] formatObjects: [Array].
 
  Creates a string with the template format and the specified objects
 
@@ -1182,7 +1176,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] formatMap: [Map]</b>
+.B [String] formatMap: [Map]
 
  format a format string based off a map
 
@@ -1194,7 +1188,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] from: [position] to: [destination]</b>
+.B [String] from: [position] to: [destination]
 
  Returns a portion of a string defined by from-to values.
  This message is UTF-8 unicode aware.
@@ -1206,7 +1200,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] from: [start] length: [length]</b>
+.B [String] from: [start] length: [length]
 
  Returns a portion of a string defined by from
  and length values.
@@ -1219,21 +1213,21 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] skip: [number]</b>
+.B [String] skip: [number]
 
  Returns a string without the first X characters.
 .BR
 
 .PP
 .SS
-.B <b>[String] sliceFrom: [number] length: [number]</b>
+.B [String] sliceFrom: [number] length: [number]
 
  slice a string from,length and return the sliced. modifies string
 .BR
 
 .PP
 .SS
-.B <b>[String] at: [position]</b>
+.B [String] at: [position]
 
  Returns the character at the specified position (UTF8 aware).
  You may also use the alias '@'.
@@ -1246,7 +1240,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] byteAt: [position]</b>
+.B [String] byteAt: [position]
 
  Returns the byte at the specified position (in bytes).
  Note that you cannot use the '@' message here because that will
@@ -1258,7 +1252,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] indexOf: [subject]</b>
+.B [String] indexOf: [subject]
 
  Returns the index (character number, not the byte!) of the
  needle in the haystack.
@@ -1270,7 +1264,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] reLastIndexOf: [subject]</b>
+.B [String] reLastIndexOf: [subject]
 
  Returns the index (character number, not the byte!) of the
  last occurance of needle in the haystack, by regex
@@ -1282,34 +1276,33 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B * <b>[String] reIndexOf: [subject]</b>
-*
-* Returns the index (character number, not the byte!) of the
-* needle in the haystack, by regex
-*
-* Usage:
-*
-* 'find the needle' indexOf: 'n.{2}dle'. #9
-*
+.B [String] reIndexOf: [subject]
+
+ Returns the index (character number, not the byte!) of the
+ needle in the haystack (last matched character), by regex
+
+ Usage:
+
+ 'find the needle' reIndexOf: 't.'. #6
 .BR
 
 .PP
 .SS
-.B <b>[String] startsWith: [String]</b>
+.B [String] startsWith: [String]
 
  Returns whether the string starts with the arg
 .BR
 
 .PP
 .SS
-.B <b>[String] endsWith: [String]</b>
+.B [String] endsWith: [String]
 
  Returns whether the string ends with the arg
 .BR
 
 .PP
 .SS
-.B <b>[String] upper</b>
+.B [String] upper
 
  Returns a new uppercased version of the string.
  Note that this is just basic ASCII case functionality, this should only
@@ -1319,7 +1312,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] lower</b>
+.B [String] lower
 
  Returns a new lowercased version of the string.
  Note that this is just basic ASCII case functionality, this should only
@@ -1329,7 +1322,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] lower1st</b>
+.B [String] lower1st
 
  Converts the first character of the recipient to lowercase and
  returns the resulting string object.
@@ -1337,7 +1330,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] upper1st</b>
+.B [String] upper1st
 
  Converts the first character of the recipient to uppercase and
  returns the resulting string object.
@@ -1345,7 +1338,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] lastIndexOf: [subject]</b>
+.B [String] lastIndexOf: [subject]
 
  Returns the index (character number, not the byte!) of the
  needle in the haystack.
@@ -1357,7 +1350,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] replace: [string] with: [other]</b>
+.B [String] replace: [string] with: [other]
 
  Replaces needle with replacement in original string and returns
  the result as a new string object.
@@ -1369,7 +1362,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] findPattern: [String] do: [Block] options: [String].</b>
+.B [String] findPattern: [String] do: [Block] options: [String].
 
  Matches the POSIX or PCRE (depending on the #defines) regular expression in the first argument against
  the string and executes the specified block on every match passing
@@ -1393,7 +1386,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] findPattern: [String] do: [Block].</b>
+.B [String] findPattern: [String] do: [Block].
 
  Same as findPattern:do:options: but without the options, no flags will
  be send to the regex engine.
@@ -1401,14 +1394,14 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] contains: [String]</b>
+.B [String] contains: [String]
 
  Returns True if the other string is a substring.
 .BR
 
 .PP
 .SS
-.B <b>[String] containsPattern: [String].</b>
+.B [String] containsPattern: [String].
 
  Tests the pattern against the string and returns True if there is a match
  and False otherwise.
@@ -1421,7 +1414,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] trim</b>
+.B [String] trim
 
  Trims a string. Removes surrounding white space characters
  from string and returns the result as a new string object.
@@ -1437,7 +1430,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] leftTrim</b>
+.B [String] leftTrim
 
  Removes all the whitespace at the left side of the string.
 
@@ -1452,7 +1445,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] rightTrim</b>
+.B [String] rightTrim
 
  Removes all the whitespace at the right side of the string.
 
@@ -1467,21 +1460,21 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] toNumber</b>
+.B [String] toNumber
 
  Converts string to a number.
 .BR
 
 .PP
 .SS
-.B <b>[String] toBoolean</b>
+.B [String] toBoolean
 
  Converts string to boolean
 .BR
 
 .PP
 .SS
-.B <b>[String] split: [String]</b>
+.B [String] split: [String]
 
  Converts a string to an array by splitting the string using
  the specified delimiter (also a string).
@@ -1489,7 +1482,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] reSplit: [String]</b>
+.B [String] reSplit: [String]
 
  Converts a string to an array by splitting the string using
  the specified regex (also a string).
@@ -1498,7 +1491,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] characters.</b>
+.B [String] characters.
 
  Splits the string in UTF-8 characters and returns
  those as an array.
@@ -1511,63 +1504,63 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] toByteArray</b>
+.B [String] toByteArray
 
  Returns an array of bytes representing the string.
 .BR
 
 .PP
 .SS
-.B <b>[String] fmap: [Block]</b>
+.B [String] fmap: [Block]
 
  maps a function over the string and returns a string
 .BR
 
 .PP
 .SS
-.B <b>[String] imap: [Block]</b>
+.B [String] imap: [Block]
 
  maps a function over the string with indices and returns a string
 .BR
 
 .PP
 .SS
-.B <b>[String] filter: [Block]</b>
+.B [String] filter: [Block]
 
  filters a string based on a predicate. returns a string
 .BR
 
 .PP
 .SS
-.B <b>[String] appendByte: [Number].</b>
+.B [String] appendByte: [Number].
 
  Appends a raw byte to a string.
 .BR
 
 .PP
 .SS
-.B <b>[String(length=1)] charSub: [Number | String(length=1)]</b>
+.B [String(length=1)] charSub: [Number | String(length=1)]
 
  works on the underlaying character.
 .BR
 
 .PP
 .SS
-.B <b>[String(length=1)] charAdd: [Number | String(length=1)]</b>
+.B [String(length=1)] charAdd: [Number | String(length=1)]
 
  works on the underlaying character.
 .BR
 
 .PP
 .SS
-.B <b>[String] htmlEscape</b>
+.B [String] htmlEscape
 
  Escapes HTML chars.
 .BR
 
 .PP
 .SS
-.B <b>[String] hashWithKey: [String]</b>
+.B [String] hashWithKey: [String]
 
  Returns the hash of the recipient String using the specified key.
  The default hash in Citron is the SipHash which is also used internally.
@@ -1576,7 +1569,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] eval</b>
+.B [String] eval
 
  Evaluates the contents of the string as code.
 
@@ -1588,7 +1581,15 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] escapeQuotes.</b>
+.B [String] exec
+
+ Executes the contents of the string as code.
+ Does <i>not</i> return a value unless the code itself does.
+.BR
+
+.PP
+.SS
+.B [String] escapeQuotes.
 
  Escapes all single quotes in a string. Sending this message to a
  string will cause all single quotes (') to be replaced with (\').
@@ -1596,7 +1597,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] randomizeBytesWithLength: [Number].</b>
+.B [String] randomizeBytesWithLength: [Number].
 
  Returns a randomized string with the specified length using the pool of
  bytes contained in the String object.
@@ -1604,7 +1605,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[String] reverse</b>
+.B [String] reverse
 
  reverse the string
 .BR
@@ -1661,14 +1662,14 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Block] unpack: [String:Ref]</b>
+.B [Block] unpack: [String:Ref]
  Assign ref to block
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
 
 .PP
 .SS
-.B <b>[Block] applyTo: [object]</b>
+.B [Block] applyTo: [object]
 
  Runs a block of code using the specified object as a parameter.
  If you run a block using the messages 'run' or 'applyTo:', me/my will
@@ -1680,7 +1681,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Block] whileTrue: [block]</b>
+.B [Block] whileTrue: [block]
 
  Runs a block of code, depending on the outcome runs the other block
  as long as the result of the first one equals boolean True.
@@ -1698,7 +1699,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Block] whileFalse: [block]</b>
+.B [Block] whileFalse: [block]
 
  Runs a block of code, depending on the outcome runs the other block
  as long as the result of the first one equals to False.
@@ -1716,7 +1717,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Block] run</b>
+.B [Block] run
 
  Sending the unary message 'run' to a block will cause it to execute.
  The run message takes no arguments, if you want to use the block as a function
@@ -1733,7 +1734,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Block] set: [name] value: [object]</b>
+.B [Block] set: [name] value: [object]
 
  Sets a variable in a block of code. This how you can get closure-like
  functionality.
@@ -1763,7 +1764,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Block] error: [object].</b>
+.B [Block] error: [object].
 
  Sets error flag on a block of code.
  This will throw an error / exception.
@@ -1781,7 +1782,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Block] catch: [otherBlock]</b>
+.B [Block] catch: [otherBlock]
 
  Associates an error clause to a block.
  If an error (exception) occurs within the block this block will be
@@ -1799,7 +1800,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Block] catch: [otherBlock] type: [Object]</b>
+.B [Block] catch: [otherBlock] type: [Object]
 
  Associates an error clause to a block.
  If the specified exception occurs within the block this block will be
@@ -1817,7 +1818,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B <b>[Block] toString</b>
+.B [Block] toString
 
  Returns a string representation of the Block. This basic behavior, part
  of any object will just return [Block]. Other objects typically override this
@@ -1826,6 +1827,8 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
+.BR
+../collections.c
 .SH
  Array
 .B _OBJ_DEF Array
@@ -1834,7 +1837,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 .PP
 .SS
 .B [Array] new
-
+ [Array] new: [Number:space]
  Creates a new Array.
 
  Usage:
@@ -2155,7 +2158,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B [Array] pop
+.B [Array] pop [: [idx]]
 
  Pops off the last element of the array.
 .BR
@@ -2191,13 +2194,12 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B * [Array] zip
-*
-* zip array.
-* Works on the inner elements of the array.
-* If the element is an array, it is expanded exactly once.
-* And if the element is not an array, it is used as-is
-*
+.B [Array] zip
+
+ zip array.
+ Works on the inner elements of the array.
+ If the element is an array, it is expanded exactly once.
+ And if the element is not an array, it is used as-is
 .BR
 
 .PP
@@ -2488,17 +2490,17 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B * [Map] serialize
-*
-* Alias for [Map] toString.
-* A toString message, sometimes implicitly send by other messages like
-* 'Pen write:' will give you a serialized version of the Map or Array.
-* This is far more useful than a 'dumb' textual description of the object like
-* 'array' or 'object'. However, when working with very large Maps or Arrays
-* accidentally dumping the entire contents can be annoying, in this case you can
-* override the toString behaviour but you don't have to remap the original, you
-* can just use this alias. Also, this alias can be used if you want to make
-* the serialization more explicit.
+.B [Map] serialize
+
+ Alias for [Map] toString.
+ A toString message, sometimes implicitly send by other messages like
+ 'Pen write:' will give you a serialized version of the Map or Array.
+ This is far more useful than a 'dumb' textual description of the object like
+ 'array' or 'object'. However, when working with very large Maps or Arrays
+ accidentally dumping the entire contents can be annoying, in this case you can
+ override the toString behaviour but you don't have to remap the original, you
+ can just use this alias. Also, this alias can be used if you want to make
+ the serialization more explicit.
 .BR
 
 .PP
@@ -2521,150 +2523,8 @@ e.g. (Map new put: 'Hello' at: 'test0', put: 'World' at: 'test1') unpack: (Map c
 
 .PP
 .SS
-.SH
- Iterator
-.B _OBJ_DEF Iterator
 .BR
-
-.PP
-.SS
-.B Iterator
-
- Iterator (range), an object that supports next and current,
- and steps through some values before (optionally) reaching an end
-.BR
-
-.PP
-.SS
-.B [Iterator] setFunc: [f:Block]
-
- sets the iterator step function.
-.BR
-
-.PP
-.SS
-.B [Iterator] repeat: [Object]
-
- An iterator that keeps repeating the same value.
-.BR
-
-.PP
-.SS
-.B [Iterator] rangeFrom: [f:Number] to: [t:Number] step: [s:Number]
-
- makes a range iterator in range [f,t] with steps of s
-.BR
-
-.PP
-.SS
-.B [Iterator] rangeFrom: [f:(supports +)] step: [s:(supports +)]
-
- makes a range iterator in range [f,inf) with steps of s
- works on all objects that support the message '+'
-.BR
-
-.PP
-.SS
-.B [Iterator] next
-
- gives the next value or breaks (to signal the end of the iterator)
-.BR
-
-.PP
-.SS
-.B [Iterator] each: [Block<nil,value,iterator>]
-
- Runs the block for each value in the iterator while stepping through it
- Sends Nil for the index.
-.BR
-
-.PP
-.SS
-.B [Iterator] each_v: [Block<value>]
-
- Runs the block for each value in the iterator while stepping through it
-.BR
-
-.PP
-.SS
-.B [Iterator] fmap: [b:Block<value>]
- Equivalent to [Array] fmap: [Block<value>]
-
- transforms the iterator with the block to another iterator
-This function does not evaluate anything from the iterator
-.BR
-
-.PP
-.SS
-.B [Iterator] filter: [b:Block<nil,value>]
-
- XXX XXX XXX :: Unimplemented
- Equivalent to [Array] filter: [Block<index,value>]
-
- filters the iterator with the block's return value as the predicate to an array
- this function does not evaluate anything from the iterator.
-.BR
-
-.PP
-.SS
-.B [Iterator] foldl: [Block] accumulator: [Object]
-
- reduces an iterator according to a block (which takes an accumulator and the value, and returns the next acc) from the left (index 0)
-.BR
-
-.PP
-.SS
-.B [Iterator] count
-
- Steps through the iterator until it ends and returns the count.
- resets the state of the iterator
-.BR
-
-.PP
-.SS
-.B [Iterator] take: [t:Number]
-
- takes at most <t> number of elements from the Iterator
-.BR
-
-.PP
-.SS
-.B [Iterator] takeWhile: [predicate:Block]
-
- takes values as long as predicate returns true.
-.BR
-
-.PP
-.SS
-.B [Iterator] endBlock
-
- returns a block that throws an IteratorEndException.
-.BR
-
-.PP
-.SS
-.B [Iterator] endIf: [clause:Block]
-
- ends the Iterator if clause returns True
-.BR
-
-.PP
-.SS
-.B [Iterator] toArray
-
- Collects all of the iterator values into an array
-.BR
-
-.PP
-.SS
-.B [Iterator] skip: [n:Number]
-
- skips n iterations and returns the nth value
- does not reset the evaluation. (iterator will advance to index n)
-.BR
-
-.PP
-.SS
+../file.c
 .SH
  File
 .B _OBJ_DEF File
@@ -2717,6 +2577,13 @@ This function does not evaluate anything from the iterator
  Returns the real path of a file. The file object will respond to this
  message by returning a string object describing the absolute path to the
  recipient.
+.BR
+
+.PP
+.SS
+.B [File] expand: [String: path]
+
+ Expands a given path by user paths
 .BR
 
 .PP
@@ -2913,6 +2780,358 @@ This function does not evaluate anything from the iterator
 
 .PP
 .SS
+.B File mkdir [: [Number:permissions]]
+
+ makes a directory
+.BR
+
+.PP
+.SS
+.BR
+../generator.c
+.SH
+ Generator
+.B _OBJ_DEF Generator
+.BR
+
+.PP
+.SS
+.B [Generator] from: [Number] to: [Number] [step: [Number]]
+
+ Creates a numeric step generator
+.BR
+
+.PP
+.SS
+.B [Generator] elementsOf: [Array|Map|String]
+
+ Creates a generator that steps through the elements of a collection
+.BR
+
+.PP
+.SS
+.B [Generator] repeat: [Object]
+
+ Creates a generator that simply repeats an object forever
+.BR
+
+.PP
+.SS
+.B [Generator] imap: [Block]
+
+ Creates a generator that maps the elements of this generator through the given
+ block.
+.BR
+
+.PP
+.SS
+.B [Generator] fmap: [Block]
+
+ Creates a generator that maps the elements of this generator through the given
+ block.
+.BR
+
+.PP
+.SS
+.B [Generator] ifmap: [Block]
+
+ Creates a generator that maps the elements of this generator through the given
+ block; should the block yield a generator, it will be depleted, and its elements
+ unpacked recursively
+.BR
+
+.PP
+.SS
+.B [Generator] next
+
+ Gets the next element of this generator
+.BR
+
+.PP
+.SS
+.B [Generator] inext
+
+ Gets the next element of this generator; should it be a generator, it will
+ first be recursively used, and itself ignored
+.BR
+
+.PP
+.SS
+.B [Generator] finished
+
+ Returns whether this generator is done producing items
+.BR
+
+.PP
+.SS
+.B [Generator] each: [Block]
+
+ Runs the block for each element in the generator
+.BR
+
+.PP
+.SS
+.B [Generator] ieach: [Block]
+
+ Runs the block for each element in the generator;
+ should the generator yield another generator, it will be depleted, and its elements
+ unpacked recursively
+.BR
+
+.PP
+.SS
+.B [Generator] toString
+
+ Returns a string representation of this generator
+.BR
+
+.PP
+.SS
+.B [Generator] toArray
+
+ Unpacks the contents of this generator to an array
+.BR
+
+.PP
+.SS
+.B [Generator] copy
+
+ Copies this generator to create another unique one
+ The state of this generator _will_ be preserved
+.BR
+
+.PP
+.SS
+.B [Generator] foldl: [Block] accumulator: [Object]
+
+ Folds this generator from the left (see Array::'foldl::accumulator:' for details)
+.BR
+
+.PP
+.SS
+.BR
+../base_extensions.c
+.B [Array|String] letEqual: [Array|Object] in: [Block]
+
+ Assigns local values to the block, and runs it as a closure
+.BR
+
+.PP
+.SS
+.B [AST] parse: [String]
+
+ parse string into citron ast
+.BR
+
+.PP
+.SS
+.B [AST] count
+
+ Gives the count of available direct nodes under this AST node
+.BR
+
+.PP
+.SS
+.B [AST] at: [n:Number]
+
+ Gets the nth child of this AST node
+.BR
+
+.PP
+.SS
+.B [AST] insert: [AST] at: [Number]
+
+ Inserts (emplace) the given AST node at the given index
+.BR
+
+.PP
+.SS
+.B [AST] put: [AST] at: [Number]
+
+ Sets the child node at index to the given node
+.BR
+
+.PP
+.SS
+.B [AST] each: [Block]
+
+ Runs the given block for each direct child of the AST node
+.BR
+
+.PP
+.SS
+.B [AST] each_v: [Block]
+
+ Runs the given block for each direct child of the AST node
+.BR
+
+.PP
+.SS
+.B [AST] toString
+
+ Gives the string representation of this ast node
+.BR
+
+.PP
+.SS
+.B [AST] value
+
+ gets the value of this AST node (if any)
+.BR
+
+.PP
+.SS
+.B [AST] type
+
+ gets the type of this AST node
+.BR
+
+.PP
+.SS
+.B [AST] modifier
+
+ gets the modifier of this AST node
+.BR
+
+.PP
+.SS
+.B [AST] value: [String]
+
+ sets the value of this AST node
+.BR
+
+.PP
+.SS
+.B [AST] withValue: [String]
+
+ copies and sets the value of that AST node
+.BR
+
+.PP
+.SS
+.B [AST] type: [String]
+
+ sets the type of this AST node
+.BR
+
+.PP
+.SS
+.B [AST] modifier: [String]
+
+ sets the modifier of this AST node
+.BR
+
+.PP
+.SS
+.B [AST] evaluate
+
+ Evaluates this ast node
+.BR
+
+.PP
+.SS
+.B [AST] unparse
+
+ generates Citron code matching this AST node
+.BR
+
+.PP
+.SS
+.B [AST] feedLexer: [String]
+
+ Feeds the internal lexer with the given string
+.BR
+
+.PP
+.SS
+.B [AST] token
+
+ reads a token off the internal token stream
+.BR
+
+.PP
+.SS
+.B [AST] lexline
+
+ gets the current line of the internal lexer
+.BR
+
+.PP
+.SS
+.B [AST] lexstring
+
+ reads a string token from the stream
+.BR
+
+.PP
+.SS
+.B [AST] getlexbuf
+
+ gets the current buffer of the internal lexer
+.BR
+
+.PP
+.SS
+.B [AST] lexpos
+
+ gets the current position of the internal lexer
+.BR
+
+.PP
+.SS
+.B [AST] lexPutBack
+
+ undo's the lexer state by one (at most, a history of two is kept)
+.BR
+
+.PP
+.SS
+.B [AST] marshal
+
+ Marshals this AST node
+.BR
+
+.PP
+.SS
+.B [AST] lexSkip: [Number]
+
+ skips the given number of tokens
+.BR
+
+.PP
+.SS
+.B [Coroutine] new
+
+ Makes a new coroutine scheduler
+.BR
+
+.PP
+.SS
+.B [Coroutine] from: [Block] [arguments: [Array]]
+
+ Makes a new coroutine object from the provided block, passing it the provided
+ arguments
+.BR
+
+.PP
+.SS
+.B [Coroutine#co] await
+
+ resumes the coroutine block and returns the yielded value (or the coroutine
+ object if nothing was yielded)
+.BR
+
+.PP
+.SS
+.B [Coroutine#co] yield[: [Object]]
+
+ Yields the processor and optionally passes a value along
+.BR
+
+.PP
+.SS
+.BR
+../system.c
 .SH
  Broom
 .B _OBJ_DEF Broom
@@ -3289,11 +3508,15 @@ This function does not evaluate anything from the iterator
 .PP
 .SS
 .B [Program] listen: [Block].
+ [Program] listen: [Block] timeout: [Number {qualification:timespec}]
 
  Stops the current flow of the program and starts listening for
  messages from other programs that are running at the same time.
  Upon receiving a message, the specified block will be invocated
  and passed the message that has been received.
+
+ If a timeout is set, and it expires without getting a message,
+ this message will throw.
 .BR
 
 .PP
@@ -3724,6 +3947,8 @@ This function does not evaluate anything from the iterator
 
 .PP
 .SS
+.BR
+../reflect.c
 .SH
  Reflect
 .B _OBJ_DEF Reflect
@@ -3780,6 +4005,13 @@ This function does not evaluate anything from the iterator
 
 .PP
 .SS
+.B Reflect mapPropertiesOf: [Object]
+
+ returns all the property names and values of object
+.BR
+
+.PP
+.SS
 .B [Reflect] getObject: [s:String]
 
  looks for the object `s` in the current context or any of the contexts beneath
@@ -3808,9 +4040,10 @@ This function does not evaluate anything from the iterator
 
 .PP
 .SS
-.B [Reflect] newSharedObject
+.B [Reflect] newSharedObject[: [Type]]
 
  makes a memmapped object. (Automatic destructor exists)
+ Type defaults to Object
 .BR
 
 .PP
@@ -3899,6 +4132,11 @@ This function does not evaluate anything from the iterator
 
 .PP
 .SS
+.B [Reflect] run: [Block] inContextAsWorld: [Map] arguments: [Array]
+.BR
+
+.PP
+.SS
 .B [Reflect] runHere: [Block] forObject: [o:Object] arguments: [Array]
 
  runs a block with its 'me'/'my' set to object, without switching contexts
@@ -3925,6 +4163,27 @@ This function does not evaluate anything from the iterator
 
 .PP
 .SS
+.B [Reflect] setProperty: [p:String] ofObject: [o:Object] toValue: [v:Object]
+
+ sets the property p of object o to value v.
+.BR
+
+.PP
+.SS
+.B [Reflect] globalInstrument: [Block<obj, msg, arg>:result]
+
+ Set a global instrumentor (overrides all instrumentors)
+.BR
+
+.PP
+.SS
+.B [Reflect] disableGlobalInstrument
+
+ unset the global instrumentor
+.BR
+
+.PP
+.SS
 .B [Reflect] disableInstrumentation
  Sends a message to an object with some arguments bypassing the instrumentor
 .BR
@@ -3937,7 +4196,7 @@ This function does not evaluate anything from the iterator
 
 .PP
 .SS
-.B [Reflect] registerInstrumentor: [Block<object, message, arguments>:<object, message, arguments>] forObject: [Object]
+.B [Reflect] registerInstrumentor: [Block<object, message, arguments>:<result>] forObject: [Object]
 
  register to an event that fires every time a message is sent for an specific object.
  This instrumentor will have to handle all message sending operations
@@ -3992,6 +4251,15 @@ This function does not evaluate anything from the iterator
 
 .PP
 .SS
+.B [Reflect] ignoreInTrace: [String]
+
+ Set the file to be ignored in stack traces
+.BR
+
+.PP
+.SS
+.BR
+../fiber.c
 .SH
  Fiber
 .B _OBJ_DEF Fiber

@@ -1079,15 +1079,15 @@ ctr_array_skip (ctr_object * myself, ctr_argument * argumentList)
   return newArray;
 }
 
- /**
-  * [Array] zip
-  *
-  * zip array.
-  * Works on the inner elements of the array.
-  * If the element is an array, it is expanded exactly once.
-  * And if the element is not an array, it is used as-is
-  *
-  */
+/**
+ * [Array] zip
+ *
+ * zip array.
+ * Works on the inner elements of the array.
+ * If the element is an array, it is expanded exactly once.
+ * And if the element is not an array, it is used as-is
+ *
+ */
 ctr_object *
 ctr_array_zip (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -2527,19 +2527,19 @@ ctr_map_flip (ctr_object * myself, ctr_argument * argumentList)
  *
  * You can also use the alias 'serialize'.
  */
- /**
-  * [Map] serialize
-  *
-  * Alias for [Map] toString.
-  * A toString message, sometimes implicitly send by other messages like
-  * 'Pen write:' will give you a serialized version of the Map or Array.
-  * This is far more useful than a 'dumb' textual description of the object like
-  * 'array' or 'object'. However, when working with very large Maps or Arrays
-  * accidentally dumping the entire contents can be annoying, in this case you can
-  * override the toString behaviour but you don't have to remap the original, you
-  * can just use this alias. Also, this alias can be used if you want to make
-  * the serialization more explicit.
-  */
+/**
+ * [Map] serialize
+ *
+ * Alias for [Map] toString.
+ * A toString message, sometimes implicitly send by other messages like
+ * 'Pen write:' will give you a serialized version of the Map or Array.
+ * This is far more useful than a 'dumb' textual description of the object like
+ * 'array' or 'object'. However, when working with very large Maps or Arrays
+ * accidentally dumping the entire contents can be annoying, in this case you can
+ * override the toString behaviour but you don't have to remap the original, you
+ * can just use this alias. Also, this alias can be used if you want to make
+ * the serialization more explicit.
+ */
 ctr_object *
 ctr_map_to_string (ctr_object * myself, ctr_argument * argumentList)
 {

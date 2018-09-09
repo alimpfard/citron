@@ -125,6 +125,11 @@ ctr_ast_splice (ctr_object * obj)	//assume it _is_ a splice
   return ctr_cwlk_expr (obj->value.rvalue->ptr, &ret);
 }
 
+/**
+ * [AST] count
+ *
+ * Gives the count of available direct nodes under this AST node
+ */
 ctr_object *
 ctr_ast_instrcount (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -145,6 +150,11 @@ ctr_ast_instrcount (ctr_object * myself, ctr_argument * argumentList)
   return ctr_build_number_from_float (count);
 }
 
+/**
+ * [AST] at: [n:Number]
+ *
+ * Gets the nth child of this AST node
+ */
 ctr_object *
 ctr_ast_nth (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -183,6 +193,11 @@ ctr_ast_nth (ctr_object * myself, ctr_argument * argumentList)
     }
 }
 
+/**
+ * [AST] insert: [AST] at: [Number]
+ *
+ * Inserts (emplace) the given AST node at the given index
+ */
 ctr_object *
 ctr_ast_insert_nth (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -235,6 +250,11 @@ ctr_ast_insert_nth (ctr_object * myself, ctr_argument * argumentList)
   return myself;
 }
 
+/**
+ * [AST] put: [AST] at: [Number]
+ *
+ * Sets the child node at index to the given node
+ */
 ctr_object *
 ctr_ast_set_nth (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -274,6 +294,11 @@ ctr_ast_set_nth (ctr_object * myself, ctr_argument * argumentList)
   return myself;
 }
 
+/**
+ * [AST] each: [Block]
+ *
+ * Runs the given block for each direct child of the AST node
+ */
 ctr_object *
 ctr_ast_each (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -315,6 +340,11 @@ ctr_ast_each (ctr_object * myself, ctr_argument * argumentList)
   return myself;
 }
 
+/**
+ * [AST] each_v: [Block]
+ *
+ * Runs the given block for each direct child of the AST node
+ */
 ctr_object *
 ctr_ast_eachv (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -504,6 +534,11 @@ ctr_ast_set_pragma (ctr_object * myself, ctr_argument * argumentList)
     return myself;
 }
 
+/**
+ * [AST] toString
+ *
+ * Gives the string representation of this ast node
+ */
 ctr_object *
 ctr_ast_tostring (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -513,6 +548,11 @@ ctr_ast_tostring (ctr_object * myself, ctr_argument * argumentList)
   return ctr_build_string_from_cstring (buf);
 }
 
+/**
+ * [AST] value
+ *
+ * gets the value of this AST node (if any)
+ */
 ctr_object *
 ctr_ast_get_value (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -529,6 +569,11 @@ ctr_ast_get_value (ctr_object * myself, ctr_argument * argumentList)
   return ctr_build_string (node->value, node->vlen);
 }
 
+/**
+ * [AST] type
+ *
+ * gets the type of this AST node
+ */
 ctr_object *
 ctr_ast_get_type (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -543,6 +588,11 @@ ctr_ast_get_type (ctr_object * myself, ctr_argument * argumentList)
   return ctr_build_string_from_cstring ((char *) ctr_ast_tystr (node));
 }
 
+/**
+ * [AST] modifier
+ *
+ * gets the modifier of this AST node
+ */
 ctr_object *
 ctr_ast_get_mod (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -557,6 +607,11 @@ ctr_ast_get_mod (ctr_object * myself, ctr_argument * argumentList)
   return ctr_build_string_from_cstring ((char *) ctr_ast_modifier_str (node->modifier));
 }
 
+/**
+ * [AST] value: [String]
+ *
+ * sets the value of this AST node
+ */
 ctr_object *
 ctr_ast_set_value (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -578,6 +633,11 @@ ctr_ast_set_value (ctr_object * myself, ctr_argument * argumentList)
   return myself;
 }
 
+/**
+ * [AST] withValue: [String]
+ *
+ * copies and sets the value of that AST node
+ */
 ctr_object *
 ctr_ast_with_value (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -592,6 +652,12 @@ ctr_ast_with_value (ctr_object * myself, ctr_argument * argumentList)
   ast->value.rvalue->type = CTR_AST_TYPE;
   return ast;
 }
+
+/**
+ * [AST] type: [String]
+ *
+ * sets the type of this AST node
+ */
 
 ctr_object *
 ctr_ast_set_type (ctr_object * myself, ctr_argument * argumentList)
@@ -611,6 +677,12 @@ ctr_ast_set_type (ctr_object * myself, ctr_argument * argumentList)
   return myself;
 }
 
+/**
+ * [AST] modifier: [String]
+ *
+ * sets the modifier of this AST node
+ */
+
 ctr_object *
 ctr_ast_set_mod (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -628,6 +700,12 @@ ctr_ast_set_mod (ctr_object * myself, ctr_argument * argumentList)
   node->modifier = mod;
   return myself;
 }
+
+/**
+ * [AST] evaluate
+ *
+ * Evaluates this ast node
+ */
 
 ctr_object *
 ctr_ast_evaluate (ctr_object * myself, ctr_argument * argumentList)
@@ -953,6 +1031,11 @@ ctr_ast_pure_stringify (ctr_tnode * node)
   return ret;
 }
 
+/**
+ * [AST] unparse
+ *
+ * generates Citron code matching this AST node
+ */
 ctr_object *
 ctr_ast_stringify (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -979,6 +1062,11 @@ ctr_coroutine_close (struct schedule *S)
   return NULL;
 }
 
+/**
+ * [AST] feedLexer: [String]
+ *
+ * Feeds the internal lexer with the given string
+ */
 ctr_object *
 ctr_ast_flex (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -1040,6 +1128,11 @@ ctr_lex_token_lookup (int tok)
     }
 }
 
+/**
+ * [AST] token
+ *
+ * reads a token off the internal token stream
+ */
 ctr_object *
 ctr_ast_lextoken (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -1065,12 +1158,22 @@ ctr_ast_lextoken (ctr_object * myself, ctr_argument * argumentList)
   return obj;
 }
 
+/**
+ * [AST] lexline
+ *
+ * gets the current line of the internal lexer
+ */
 ctr_object *
 ctr_ast_lexline (ctr_object * myself, ctr_argument * argumentList)
 {
     return ctr_build_number_from_float(ctr_lex_line_number);
 }
 
+/**
+ * [AST] lexstring
+ *
+ * reads a string token from the stream
+ */
 ctr_object *
 ctr_ast_lexstring (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -1093,6 +1196,11 @@ ctr_ast_lexstring (ctr_object * myself, ctr_argument * argumentList)
   return obj;
 }
 
+/**
+ * [AST] getlexbuf
+ *
+ * gets the current buffer of the internal lexer
+ */
 ctr_object *
 ctr_ast_lexbuf (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -1100,6 +1208,11 @@ ctr_ast_lexbuf (ctr_object * myself, ctr_argument * argumentList)
   return obj;
 }
 
+/**
+ * [AST] lexpos
+ *
+ * gets the current position of the internal lexer
+ */
 ctr_object *
 ctr_ast_lexpos (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -1108,6 +1221,11 @@ ctr_ast_lexpos (ctr_object * myself, ctr_argument * argumentList)
   return obj;
 }
 
+/**
+ * [AST] lexPutBack
+ *
+ * undo's the lexer state by one (at most, a history of two is kept)
+ */
 ctr_object *
 ctr_ast_lexputback (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -1115,6 +1233,11 @@ ctr_ast_lexputback (ctr_object * myself, ctr_argument * argumentList)
   return myself;
 }
 
+/**
+ * [AST] marshal
+ *
+ * Marshals this AST node
+ */
 ctr_object *
 ctr_ast_marshal (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -1134,6 +1257,11 @@ ctr_ast_marshal (ctr_object * myself, ctr_argument * argumentList)
   return str;
 }
 
+/**
+ * [AST] lexSkip: [Number]
+ *
+ * skips the given number of tokens
+ */
 ctr_object *
 ctr_ast_lexskip (ctr_object * myself, ctr_argument * argumentList)
 {

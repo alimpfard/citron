@@ -1,3 +1,4 @@
+CITRON_EXT_PATH = (nil)(())
 Uncaught error has occurred.
 Unknown method Object::'`makeSound' was called
 #1 `makeSound (tests/test0013.ctr: 12)

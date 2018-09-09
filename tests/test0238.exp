@@ -1,3 +1,4 @@
+CITRON_EXT_PATH = (nil)(())
 Array ← 1 ; 2 ; 3
 3
 Array ← 1 ; 2 ; 3

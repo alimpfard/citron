@@ -1,3 +1,4 @@
+CITRON_EXT_PATH = (nil)(())
 Hello I can write to console using fluid API!
 Confirmed. Target file does not exist.
 Confirmed. Source file does not exist.

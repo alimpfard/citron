@@ -1,3 +1,4 @@
+CITRON_EXT_PATH = (nil)(())
 search=table&restaurant=pizzaria&menu=spaghetti&menu=macaroni&course[main]=canneloni&course[dessert]=tiramisu
 Uncaught error has occurred.
 Key not found: Request

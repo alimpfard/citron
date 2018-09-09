@@ -1,1 +1,2 @@
+CITRON_EXT_PATH = (nil)(())
 (Map new) put:'key' at:'test', put:'123' at:123

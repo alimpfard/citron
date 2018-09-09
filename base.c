@@ -2133,7 +2133,8 @@ ctr_number_to_step_do (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_number_to_step (ctr_object * myself, ctr_argument * argumentList)
 {
-  return ctr_invoke_variadic (CtrStdIter, &ctr_iterator_make_range, 3, myself, argumentList->object, argumentList->next->object);
+  ctr_argument args = { .object = myself, .next = argumentList };
+  return ctr_generator_make(ctr_std_generator, &args);
 }
 
 /**

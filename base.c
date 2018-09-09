@@ -3362,17 +3362,17 @@ ctr_string_re_last_index_of (ctr_object * myself, ctr_argument * argumentList)
 #endif
 }
 
- /**
-  *[String] reIndexOf: [subject]
-  *
-  * Returns the index (character number, not the byte!) of the
-  * needle in the haystack, by regex
-  *
-  * Usage:
-  *
-  * 'find the needle' indexOf: 'n.{2}dle'. #9
-  *
-  */
+/**
+ *[String] reIndexOf: [subject]
+ *
+ * Returns the index (character number, not the byte!) of the
+ * needle in the haystack (last matched character), by regex
+ *
+ * Usage:
+ *
+ * 'find the needle' reIndexOf: 't.'. #6
+ *
+ */
 ctr_object *
 ctr_string_re_index_of (ctr_object * myself, ctr_argument * argumentList)
 {

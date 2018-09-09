@@ -2152,42 +2152,6 @@ ctr_initialize_world ()
   ctr_set_link_all (CtrStdArray, CtrStdObject);
   CtrStdArray->info.sticky = 1;
 
-  /* Iterator */
-  ctr_iter_range =
-    ctr_string_eval (ctr_build_string_from_cstring
-		     ("{:seed var step is my step. var end_value is my end_value. me endIf: {^seed = end_value.}. ^(seed + step).}"), NULL);
-  ctr_iter_range->info.sticky = 1;
-  ctr_iter_urange = ctr_string_eval (ctr_build_string_from_cstring ("{:seed ^(seed + my step).}"), NULL);
-  ctr_iter_urange->info.sticky = 1;
-  ctr_iter_repeat = ctr_string_eval (ctr_build_string_from_cstring ("{:seed ^seed.}"), NULL);
-  ctr_iter_repeat->info.sticky = 1;
-  CtrStdIter = ctr_array_new (CtrStdObject, NULL);
-  ctr_internal_create_func (CtrStdIter, ctr_build_string_from_cstring ("new"), &ctr_iterator_make);
-  ctr_internal_create_func (CtrStdIter, ctr_build_string_from_cstring ("setSeed:"), &ctr_iterator_set_seed);
-  ctr_internal_create_func (CtrStdIter, ctr_build_string_from_cstring ("setFunc:"), &ctr_iterator_set_func);
-  ctr_internal_create_func (CtrStdIter, ctr_build_string_from_cstring ("rangeFrom:to:step:"), &ctr_iterator_make_range);
-  ctr_internal_create_func (CtrStdIter, ctr_build_string_from_cstring ("rangeFrom:step:"), &ctr_iterator_make_uncapped_range);
-  ctr_internal_create_func (CtrStdIter, ctr_build_string_from_cstring ("repeat:"), &ctr_iterator_make_repeat);
-  ctr_internal_create_func (CtrStdIter, ctr_build_string_from_cstring ("next"), &ctr_iterator_next);
-  ctr_internal_create_func (CtrStdIter, ctr_build_string_from_cstring ("each:"), &ctr_iterator_each);
-  ctr_internal_create_func (CtrStdIter, ctr_build_string_from_cstring ("each_v:"), &ctr_iterator_each_v);
-  ctr_internal_create_func (CtrStdIter, ctr_build_string_from_cstring ("fmap:"), &ctr_iterator_fmap);
-  ctr_internal_create_func (CtrStdIter, ctr_build_string_from_cstring ("filter:"), &ctr_iterator_filter);
-  ctr_internal_create_func (CtrStdIter, ctr_build_string_from_cstring ("count"), &ctr_iterator_count);
-  ctr_internal_create_func (CtrStdIter, ctr_build_string_from_cstring ("take:"), &ctr_iterator_take);
-  ctr_internal_create_func (CtrStdIter, ctr_build_string_from_cstring ("endBlock"), &ctr_iterator_takewhile);
-  ctr_internal_create_func (CtrStdIter, ctr_build_string_from_cstring ("endIf:"), &ctr_iterator_end_check);
-  ctr_internal_create_func (CtrStdIter, ctr_build_string_from_cstring ("takeWhile:"), &ctr_iterator_takewhile);
-  ctr_internal_create_func (CtrStdIter, ctr_build_string_from_cstring ("toArray"), &ctr_iterator_to_array);
-  ctr_internal_create_func (CtrStdIter, ctr_build_string_from_cstring ("items"), &ctr_iterator_to_array);
-  ctr_internal_create_func (CtrStdIter, ctr_build_string_from_cstring ("skip:"), &ctr_iterator_skip);
-  ctr_internal_create_func (CtrStdIter, ctr_build_string_from_cstring (CTR_DICT_TOSTRING), &ctr_iterator_to_string);
-  ctr_internal_create_func (CtrStdIter, ctr_build_string_from_cstring (CTR_DICT_TYPE), &ctr_iterator_type);
-
-  ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring ("Iterator"), CtrStdIter, 0);
-  ctr_set_link_all (CtrStdIter, CtrStdObject);
-  CtrStdIter->info.sticky = 1;
-
   /* Map */
   CtrStdMap = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring (CTR_DICT_NEW), &ctr_map_new);

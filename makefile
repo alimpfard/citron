@@ -51,8 +51,6 @@ COBJS = ${OBJS} compiler.o
 
 # .SUFFIXES:	.o .c
 
--include patch_for_android_windows
-
 deps:
 	# This is just a hacky way of getting bdwgc "libgc" from MSYS2,
 	# Do not expect it to work anywhere else
@@ -107,10 +105,6 @@ tcc/%.a:
 %.o: %.c
 	$(CC) -fopenmp $(CFLAGS) -static -c $< -o $@
 
-
-patch_for_android_windows:
-	# This patches `eval` to assume ffi is not present
-	git apply patches/eval.patch
 
 define SHVAL =
 for f in *.c; do\

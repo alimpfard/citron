@@ -1,4 +1,4 @@
-DEBUG_VERSION := 344
+DEBUG_VERSION := 345
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 LEXTRACF := ${LEXTRACF} -flto -lstdc++
 fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
@@ -51,7 +51,7 @@ ifneq ($(findstring withCTypesNative=1,${CFLAGS}),)
 OBJS := ${OBJS} _struct.o ctypes.o structmember.o
 endif
 ifneq ($(findstring withInjectNative=1,${CFLAGS}),)
-OBJS := ${OBJS} inject.o tcc/libtcc1.a tcc/libtcc.a
+OBJS := ${OBJS} tcc/libtcc1.a tcc/libtcc.a inject.o
 endif
 
 COBJS = ${OBJS} compiler.o

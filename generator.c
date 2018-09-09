@@ -39,7 +39,7 @@ void ctr_condense_generator (ctr_generator *, int);
 ctr_mapping_generator *ctr_combine_generators (ctr_mapping_generator *, ctr_mapping_generator *);
 ctr_object *ctr_generator_internal_inext (ctr_generator * genny, int gtype, ctr_generator * ogenny, int ogtype);
 
-/*@I_OBJ_DEF Generator*/
+/**@I_OBJ_DEF Generator*/
 /**
  * [Generator] from: [Number] to: [Number] [step: [Number]]
  *

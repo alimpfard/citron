@@ -1,6 +1,6 @@
 #Like test 75 but with continous GC (mode 4) to test for GC regressions.
-
-Broom mode: 4.
+# mode 4 is deprecated
+# Broom mode: 4.
 
 i is 0.
 Pen write: 'Can we count to 10 using a whileTrue loop ?', brk.

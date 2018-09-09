@@ -1,3 +1,4 @@
+CITRON_EXT_PATH = (nil)(())
 I am the Child process
 Child received: hello
 Child received: world
@@ -18,6 +19,7 @@ The probable cause of the exception:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
 16 | 	Pen write: 1, brk.
 
+CITRON_EXT_PATH = (nil)(())
 I am Parent Process
 Parent received: thanks for hello
 Parent received: thanks for world

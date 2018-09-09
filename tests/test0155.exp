@@ -1,3 +1,4 @@
+CITRON_EXT_PATH = (nil)(())
 Uncaught error has occurred.
 Parser error, unexpected ^ ( tests/test0155.ctr: 3)
 -> Expected message.

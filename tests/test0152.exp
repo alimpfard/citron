@@ -1,3 +1,4 @@
+CITRON_EXT_PATH = (nil)(())
 Uncaught error has occurred.
 Key not found: is
 #1 is (tests/test0152.ctr: 3)

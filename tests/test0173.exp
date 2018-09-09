@@ -1,3 +1,4 @@
+CITRON_EXT_PATH = (nil)(())
 sum: helloworldTrueNil6661
 Uncaught error has occurred.
 Cast of type Nil to type Number failed: Cast of type Boolean to type Number failed: Cast of type String to type Number failed: Cast of type String to type Number failed: cannot build number, extra characters in string

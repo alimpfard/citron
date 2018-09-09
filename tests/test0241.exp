@@ -1,3 +1,4 @@
+CITRON_EXT_PATH = (nil)(())
 Array ← 'Quotes \' are evil?' ; 1
 Quotes ' are evil?
 (Map new) put:'\'' at:'\'quote\''

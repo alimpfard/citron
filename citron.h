@@ -48,9 +48,9 @@ extern "C" {
 #endif
 
 #ifdef withBoehmGC
-#define CTR_VERSION "0.0.8.6-boehm-gc" IS_DEBUG_STRING
+#define CTR_VERSION "0.0.8.8-boehm-gc" IS_DEBUG_STRING
 #else
-#define CTR_VERSION "0.0.8.6" IS_DEBUG_STRING
+#define CTR_VERSION "0.0.8.8" IS_DEBUG_STRING
 #endif
 
 #define CTR_LOG_WARNINGS 2//2 to enable
@@ -952,31 +952,6 @@ ctr_object* ctr_map_flip(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_assign(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_to_string(ctr_object* myself, ctr_argument* argumentList);
 
-CTR_H_DECLSPEC ctr_object* ctr_iter_range;
-CTR_H_DECLSPEC ctr_object* ctr_iter_urange;
-CTR_H_DECLSPEC ctr_object* ctr_iter_repeat;
-
-ctr_object* ctr_iterator_make(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_iterator_set_seed(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_iterator_set_func(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_iterator_make_range(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_iterator_make_uncapped_range(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_iterator_make_repeat(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_iterator_next(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_iterator_each(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_iterator_each_v(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_iterator_fmap(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_iterator_filter(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_iterator_foldl(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_iterator_count(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_iterator_take(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_iterator_takewhile(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_iterator_end(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_iterator_end_check(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_iterator_to_array(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_iterator_skip(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_iterator_type(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_iterator_to_string(ctr_object* myself, ctr_argument* argumentList);
 /**
  * Console Interface
  */

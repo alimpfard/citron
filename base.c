@@ -51,7 +51,7 @@ ctr_build_nil ()
 }
 
 /**
- * <b> [Nil] isNil </b>
+ *[Nil] isNil
  *
  * @see ctr_object_is_nil
  *
@@ -64,7 +64,7 @@ ctr_nil_is_nil (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b> [Nil] toString </b>
+ *[Nil] toString
  *
  * @see ctr_object_to_string
  *
@@ -77,7 +77,7 @@ ctr_nil_to_string (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b> [Nil] toNumber </b>
+ *[Nil] toNumber
  *
  * @see ctr_object_to_number
  *
@@ -90,7 +90,7 @@ ctr_nil_to_number (ctr_object * myself, ctr_argument * ctr_argumentList)
 }
 
 /**
- * <b> [Nil] toBoolean </b>
+ *[Nil] toBoolean
  *
  * @see ctr_object_to_boolean
  *
@@ -103,7 +103,7 @@ ctr_nil_to_boolean (ctr_object * myself, ctr_argument * ctr_argumentList)
 }
 
 /**
- * <b> [Nil] unpack: [Ref:string] </b>
+ *[Nil] unpack: [Ref:string]
  *
  * Assigns Nil into Ref
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
@@ -149,7 +149,7 @@ ctr_object_make (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b> Object cnew: [Block] </b>
+ *Object cnew: [Block]
  *
  * Object constructor with some initial parameters.
  * Object is passed to the block as me/my
@@ -168,7 +168,7 @@ ctr_object_ctor (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b> Object genAccessors: [String] </b>
+ *Object genAccessors: [String]
  *
  * generate reader/writer methods for property.
  * creates the property is it doesn't exist
@@ -218,7 +218,7 @@ ctr_object_attr_accessor (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b> Object genReader: [String] </b>
+ *Object genReader: [String]
  *
  * generate reader method for property.
  * creates the property is it doesn't exist
@@ -263,7 +263,7 @@ ctr_object_attr_reader (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b> Object genWriter: [String] </b>
+ *Object genWriter: [String]
  *
  * generate writer method for property.
  * does not create the property is it doesn't exist
@@ -304,7 +304,7 @@ ctr_object_attr_writer (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b> [Object] unpack: [Object:{Ref*}] </b>
+ *[Object] unpack: [Object:{Ref*}]
  *
  * Element-wise object assign
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
@@ -334,7 +334,7 @@ ctr_object_assign (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Object] iHash</b>
+ *[Object] iHash
  *
  * fallback hashing
  * returns the hash of the object's string form.
@@ -347,24 +347,8 @@ ctr_object_hash (ctr_object * myself, ctr_argument * argumentList)
   return hash;
 }
 
-// /**
-//  * <b>[Object] aHash</b>
-//  *
-//  * fallback alternate hashing
-//  * returns the hash of the object's string form.
-//  */
-// ctr_object *ctr_object_ahash(ctr_object * myself, ctr_argument * argumentList)
-// {
-//      uint64_t hh = ctr_internal_alt_hash(myself);
-//      ctr_object *hash = ctr_build_number_from_float(hh);
-//      return hash;
-// }
 
-/**
- * <b>[Object] new hiding:</b>
- *
- * Creates a new Object hiding some parameters.
- */
+
 ctr_object *
 ctr_object_make_hiding (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -386,7 +370,7 @@ ctr_object_make_hiding (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Object] swapRefs: [Object]</b>
+ *[Object] swapRefs: [Object]
  *
  * swap two objects with each other.
  * Effectively 'xchg %ra, %rb'
@@ -455,7 +439,7 @@ ctr_object_swap (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Object] type</b>
+ *[Object] type
  *
  * Returns a string representation of the type of object.
  */
@@ -481,7 +465,7 @@ ctr_object_type (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Object] toString</b>
+ *[Object] toString
  *
  * Returns a string representation of a generic object.
  * This string representation will be:
@@ -509,7 +493,7 @@ ctr_object_to_string (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Object] toNumber</b>
+ *[Object] toNumber
  *
  * Errors out. Objects cannot be represented by numbers.
  * (default behavior)
@@ -523,7 +507,7 @@ ctr_object_to_number (ctr_object * myself, ctr_argument * ctr_argumentList)
 }
 
 /**
- * <b>[Object] toBoolean</b>
+ *[Object] toBoolean
  *
  * Returns a boolean representation of the object. This basic behavior, part
  * of any object will just return True. Other objects typically override this
@@ -536,7 +520,7 @@ ctr_object_to_boolean (ctr_object * myself, ctr_argument * ctr_argumentList)
 }
 
 /**
- * <b>[Object] equals: [other]</b>
+ *[Object] equals: [other]
  *
  * Tests whether the current instance is the same as
  * the argument.
@@ -554,7 +538,7 @@ ctr_object_equals (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Object] id</b>
+ *[Object] id
  *
  * returns a unique identifier for the object
  */
@@ -565,7 +549,7 @@ ctr_object_id (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Object] myself</b>
+ *[Object] myself
  *
  * Returns the object itself.
  */
@@ -576,7 +560,7 @@ ctr_object_myself (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Object] learn: [String] means: [String].</b>
+ *[Object] learn: [String] means: [String].
  *
  * Teaches any object to repsond to the first specified message just like
  * it would upon receiving the second. This allows you to map existing
@@ -633,7 +617,7 @@ ctr_object_learn_meaning (ctr_object * myself, ctr_argument * ctr_argumentList)
 }
 
 /**
- * <b>[Object] do</b>
+ *[Object] do
  *
  * Activates 'chain mode'. If chain mode is active, all messages will
  * return the recipient object regardless of their return signature.
@@ -660,7 +644,7 @@ ctr_object_do (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Object] done</b>
+ *[Object] done
  *
  * Deactivates 'chain mode'.
  */
@@ -672,7 +656,7 @@ ctr_object_done (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Object] message: [String] arguments: [Array]</b>
+ *[Object] message: [String] arguments: [Array]
  *
  * Sends a custom or 'dynamic' message to an object. This takes a string containing
  * the message to be send to the object and an array listing the arguments at the
@@ -737,7 +721,7 @@ ctr_object_message (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Object] on: [String] do: [Block]</b>
+ *[Object] on: [String] do: [Block]
  *
  * Makes the object respond to a new kind of message.
  * Use the semicolons to indicate the positions of the arguments to be
@@ -893,7 +877,7 @@ ctr_object_send2remote (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Object] respondTo: [String]</b>
+ *[Object] respondTo: [String]
  *
  * Variations:
  *
@@ -1002,7 +986,7 @@ ctr_object_respond_and_and (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Object] isNil</b>
+ *[Object] isNil
  *
  * Default isNil implementation.
  *
@@ -1037,7 +1021,7 @@ ctr_build_bool (int truth)
 }
 
 /**
- * <b>[Boolean] unpack: [String:Ref]</b>
+ *[Boolean] unpack: [String:Ref]
  * Assign ref to boolean
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */
@@ -1067,7 +1051,7 @@ ctr_bool_assign (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Boolean] = [other]</b>
+ *[Boolean] = [other]
  *
  * Tests whether the other object (as a boolean) has the
  * same value (boolean state True or False) as the current one.
@@ -1083,7 +1067,7 @@ ctr_bool_eq (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Boolean] != [other]</b>
+ *[Boolean] != [other]
  *
  * Tests whether the other object (as a boolean) has the
  * same value (boolean state True or False) as the current one.
@@ -1099,7 +1083,7 @@ ctr_bool_neq (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Boolean] toString</b>
+ *[Boolean] toString
  *
  * Simple cast function.
  */
@@ -1117,7 +1101,7 @@ ctr_bool_to_string (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Boolean] break</b>
+ *[Boolean] break
  *
  * Breaks out of the current block and bubbles up to the parent block if
  * the value of the receiver equals boolean True.
@@ -1137,7 +1121,7 @@ ctr_bool_break (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Boolean] continue</b>
+ *[Boolean] continue
  *
  * Skips the remainder of the current block in a loop, continues to the next
  * iteration.
@@ -1157,7 +1141,7 @@ ctr_bool_continue (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Boolean] ifTrue: [block]</b>
+ *[Boolean] ifTrue: [block]
  *
  * Executes a block of code if the value of the boolean
  * object is True.
@@ -1192,7 +1176,7 @@ ctr_bool_if_true (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Boolean] ifFalse: [block]</b>
+ *[Boolean] ifFalse: [block]
  *
  * Executes a block of code if the value of the boolean
  * object is True.
@@ -1227,7 +1211,7 @@ ctr_bool_if_false (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[b:Object] or: [Block|Object]</b>
+ *[b:Object] or: [Block|Object]
  *
  * Evaluates and returns the block if b evaluates to false, else returns b
  */
@@ -1259,7 +1243,7 @@ ctr_object_if_true (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Boolean] not</b>
+ *[Boolean] not
  *
  * Returns the opposite of the current value.
  *
@@ -1274,7 +1258,7 @@ ctr_bool_not (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Boolean] flip</b>
+ *[Boolean] flip
  *
  * 'Flips a coin'. Returns a random boolean value True or False.
  *
@@ -1288,7 +1272,7 @@ ctr_bool_flip (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Boolean] either: [this] or: [that]</b>
+ *[Boolean] either: [this] or: [that]
  *
  * Returns argument #1 if boolean value is True and argument #2 otherwise.
  *
@@ -1318,7 +1302,7 @@ ctr_bool_either_or (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Boolean] & [other]</b>
+ *[Boolean] & [other]
  *
  * Returns True if both the object value is True and the
  * argument is True as well.
@@ -1336,7 +1320,7 @@ ctr_bool_and (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Boolean] ! [other]</b>
+ *[Boolean] ! [other]
  *
  * Returns True if the object value is False and the
  * argument is False as well.
@@ -1354,7 +1338,7 @@ ctr_bool_nor (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Boolean] | [other]</b>
+ *[Boolean] | [other]
  *
  * Returns True if either the object value is True or the
  * argument is True or both are True.
@@ -1371,7 +1355,7 @@ ctr_bool_or (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Boolean] ? [other]</b>
+ *[Boolean] ? [other]
  *
  * Returns True if either the object value is True or the
  * argument is True but not both.
@@ -1388,7 +1372,7 @@ ctr_bool_xor (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Boolean] toNumber</b>
+ *[Boolean] toNumber
  *
  * Returns 0 if boolean is False and 1 otherwise.
  */
@@ -1424,7 +1408,7 @@ ctr_build_number (char *n)
 }
 
 /**
- * <b>[Number] unpack: [String:Ref]</b>
+ *[Number] unpack: [String:Ref]
  * Assign ref to number
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */
@@ -1522,7 +1506,7 @@ ctr_build_number_from_float (ctr_number f)
 }
 
 /**
- * <b>[Number] > [other]</b>
+ *[Number] > [other]
  *
  * Returns True if the number is higher than other number.
  */
@@ -1535,7 +1519,7 @@ ctr_number_higherThan (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] >=: [other]</b>
+ *[Number] >=: [other]
  *
  * Returns True if the number is higher than or equal to other number.
  */
@@ -1548,7 +1532,7 @@ ctr_number_higherEqThan (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] < [other]</b>
+ *[Number] < [other]
  *
  * Returns True if the number is less than other number.
  */
@@ -1561,7 +1545,7 @@ ctr_number_lowerThan (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] <=: [other]</b>
+ *[Number] <=: [other]
  *
  * Returns True if the number is less than or equal to other number.
  */
@@ -1574,7 +1558,7 @@ ctr_number_lowerEqThan (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] = [other]</b>
+ *[Number] = [other]
  *
  * Returns True if the number equals the other number.
  */
@@ -1587,7 +1571,7 @@ ctr_number_eq (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] !=: [other]</b>
+ *[Number] !=: [other]
  *
  * Returns True if the number does not equal the other number.
  */
@@ -1600,7 +1584,7 @@ ctr_number_neq (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] between: [low] and: [high]</b>
+ *[Number] between: [low] and: [high]
  *
  * Returns True if the number instance has a value between the two
  * specified values.
@@ -1619,7 +1603,7 @@ ctr_number_between (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] odd</b>
+ *[Number] odd
  *
  * Returns True if the number is odd and False otherwise.
  */
@@ -1630,7 +1614,7 @@ ctr_number_odd (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] even</b>
+ *[Number] even
  *
  * Returns True if the number is even and False otherwise.
  */
@@ -1641,7 +1625,7 @@ ctr_number_even (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] + [Number]</b>
+ *[Number] + [Number]
  *
  * Adds the other number to the current one. Returns a new
  * number object.
@@ -1674,7 +1658,7 @@ ctr_number_add (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] +=: [Number]</b>
+ *[Number] +=: [Number]
  *
  * Increases the number ITSELF by the specified amount, this message will change the
  * value of the number object itself instead of returning a new number.
@@ -1688,7 +1672,7 @@ ctr_number_inc (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] - [Number]</b>
+ *[Number] - [Number]
  *
  * Subtracts the other number from the current one. Returns a new
  * number object.
@@ -1703,7 +1687,7 @@ ctr_number_minus (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] -=: [number]</b>
+ *[Number] -=: [number]
  *
  * Decreases the number ITSELF by the specified amount, this message will change the
  * value of the number object itself instead of returning a new number.
@@ -1717,7 +1701,7 @@ ctr_number_dec (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] negate</b>
+ *[Number] negate
  *
  * Negates the value of the number object
  */
@@ -1729,7 +1713,7 @@ ctr_number_negate (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] * [Number or Block]</b>
+ *[Number] * [Number or Block]
  *
  * Multiplies the number by the specified multiplier. Returns a new
  * number object.
@@ -1747,7 +1731,7 @@ ctr_number_multiply (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] times: [Block]</b>
+ *[Number] times: [Block]
  *
  * Runs the block of code a 'Number' of times.
  * This is the most basic form of a loop.
@@ -1860,7 +1844,7 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] *=: [Number]</b>
+ *[Number] *=: [Number]
  *
  * Multiplies the number ITSELF by multiplier, this message will change the
  * value of the number object itself instead of returning a new number.
@@ -1882,7 +1866,7 @@ ctr_number_mul (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] / [Number]</b>
+ *[Number] / [Number]
  *
  * Divides the number by the specified divider. Returns a new
  * number object.
@@ -1903,7 +1887,7 @@ ctr_number_divide (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] /=: [Number]</b>
+ *[Number] /=: [Number]
  *
  * Divides the number ITSELF by divider, this message will change the
  * value of the number object itself instead of returning a new number.
@@ -1930,7 +1914,7 @@ ctr_number_div (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] mod: [modulo]</b>
+ *[Number] mod: [modulo]
  *
  * Returns the modulo of the number. This message will return a new
  * object representing the modulo of the recipient.
@@ -1957,7 +1941,7 @@ ctr_number_modulo (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] pow: [power]</b>
+ *[Number] pow: [power]
  *
  * Returns a new object representing the
  * number to the specified power.
@@ -1979,7 +1963,7 @@ ctr_number_pow (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] pos</b>
+ *[Number] pos
  *
  * Returns a boolean indicating wether the number is positive.
  * This message will return a boolean object 'True' if the recipient is
@@ -1999,7 +1983,7 @@ ctr_number_positive (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] neg</b>
+ *[Number] neg
  *
  * Returns a boolean indicating wether the number is negative.
  * This message will return a boolean object 'True' if the recipient is
@@ -2021,7 +2005,7 @@ ctr_number_negative (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] max: [other]</b>
+ *[Number] max: [other]
  *
  * Returns the biggest number of the two.
  *
@@ -2040,7 +2024,7 @@ ctr_number_max (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] min: [other]</b>
+ *[Number] min: [other]
  *
  * Returns a the smallest number.
  *
@@ -2059,7 +2043,7 @@ ctr_number_min (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] factorial</b>
+ *[Number] factorial
  *
  * Calculates the factorial of a number.
  */
@@ -2077,7 +2061,7 @@ ctr_number_factorial (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] to: [number] step: [step] do: [block]</b>
+ *[Number] to: [number] step: [step] do: [block]
  *
  * Runs the specified block for each step it takes to go from
  * the start value to the target value using the specified step size.
@@ -2127,17 +2111,18 @@ ctr_number_to_step_do (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] to: [number] step: [step]</b>
+ *[Number] to: [number] step: [step]
  *
  */
 ctr_object *
 ctr_number_to_step (ctr_object * myself, ctr_argument * argumentList)
 {
-  return ctr_invoke_variadic (CtrStdIter, &ctr_iterator_make_range, 3, myself, argumentList->object, argumentList->next->object);
+  ctr_argument args = { .object = myself, .next = argumentList };
+  return ctr_generator_make(ctr_std_generator, &args);
 }
 
 /**
- * <b>[Number] floor</b>
+ *[Number] floor
  *
  * Gives the largest integer less than the recipient.
  *
@@ -2171,7 +2156,7 @@ ctr_number_respond_to (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] ceil</b>
+ *[Number] ceil
  *
  * Rounds up the recipient number and returns the next higher integer number
  * as a result.
@@ -2191,7 +2176,7 @@ ctr_number_ceil (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] round</b>
+ *[Number] round
  *
  * Returns the rounded number.
  */
@@ -2202,7 +2187,7 @@ ctr_number_round (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] abs</b>
+ *[Number] abs
  *
  * Returns the absolute (unsigned, positive) value of the number.
  *
@@ -2221,7 +2206,7 @@ ctr_number_abs (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] sqrt</b>
+ *[Number] sqrt
  *
  * Returns the square root of the recipient.
  *
@@ -2240,7 +2225,7 @@ ctr_number_sqrt (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] exp</b>
+ *[Number] exp
  *
  * Returns the exponent of the number.
  */
@@ -2251,7 +2236,7 @@ ctr_number_exp (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] sin</b>
+ *[Number] sin
  *
  * Returns the sine of the number.
  */
@@ -2263,7 +2248,7 @@ ctr_number_sin (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] cos</b>
+ *[Number] cos
  *
  * Returns the cosine of the number.
  */
@@ -2274,7 +2259,7 @@ ctr_number_cos (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] tan</b>
+ *[Number] tan
  *
  * Caculates the tangent of a number.
  */
@@ -2285,7 +2270,7 @@ ctr_number_tan (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] atan</b>
+ *[Number] atan
  *
  * Caculates the arctangent of a number.
  */
@@ -2296,7 +2281,7 @@ ctr_number_atan (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] log</b>
+ *[Number] log
  *
  * Calculates the logarithm of a number.
  */
@@ -2307,7 +2292,7 @@ ctr_number_log (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] shiftRight: [Number]</b>
+ *[Number] shiftRight: [Number]
  */
 ctr_object *
 ctr_number_shr (ctr_object * myself, ctr_argument * argumentList)
@@ -2318,7 +2303,7 @@ ctr_number_shr (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] shiftLeft: [Number]</b>
+ *[Number] shiftLeft: [Number]
  *
  */
 ctr_object *
@@ -2330,7 +2315,7 @@ ctr_number_shl (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] bitOr: [Number]</b>
+ *[Number] bitOr: [Number]
  *
  */
 ctr_object *
@@ -2342,7 +2327,7 @@ ctr_number_or (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] bitAnd: [Number]</b>
+ *[Number] bitAnd: [Number]
  *
  */
 ctr_object *
@@ -2354,7 +2339,7 @@ ctr_number_and (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] bitXor: [Number]</b>
+ *[Number] bitXor: [Number]
  *
  */
 ctr_object *
@@ -2366,7 +2351,7 @@ ctr_number_xor (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] toByte</b>
+ *[Number] toByte
  *
  * Converts a number to a single byte.
  */
@@ -2402,7 +2387,7 @@ ctr_number_uint_binrep (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] toString</b>
+ *[Number] toString
  *
  * Wrapper for cast function.
  */
@@ -2434,7 +2419,7 @@ ctr_number_to_string (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Number] toBoolean</b>
+ *[Number] toBoolean
  *
  * Casts a number to a boolean object.
  */
@@ -2488,7 +2473,7 @@ ctr_build_string_from_cformat (char *format, int count, ...)
 }
 
 /**
- * <b>[String] isConstructible: [Object]</b>
+ *[String] isConstructible: [Object]
  *
  * returns whether object is constructible from string
  */
@@ -2508,7 +2493,7 @@ ctr_string_is_ctor (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] unpack: [String:Ref]</b>
+ *[String] unpack: [String:Ref]
  * Assign ref to string
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */
@@ -2618,7 +2603,7 @@ ctr_build_empty_string ()
 }
 
 /**
- * <b>[String] bytes</b>
+ *[String] bytes
  *
  * Returns the number of bytes in a string, as opposed to
  * length which returns the number of UTF-8 code points (symbols or characters).
@@ -2666,7 +2651,7 @@ ctr_string_put_at (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] = [other]</b>
+ *[String] = [other]
  *
  * Returns True if the other string is the same (in bytes).
  */
@@ -2682,7 +2667,7 @@ ctr_string_eq (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] != [other]</b>
+ *[String] != [other]
  *
  * Returns True if the other string is not the same (in bytes).
  */
@@ -2698,7 +2683,7 @@ ctr_string_neq (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] length</b>
+ *[String] length
  *
  * Returns the length of the string in symbols.
  * This message is UTF-8 unicode aware. A 4 byte character will be counted as ONE.
@@ -2712,7 +2697,7 @@ ctr_string_length (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] + [other]</b>
+ *[String] + [other]
  *
  * Appends other string to self and returns the resulting
  * string as a new object.
@@ -2747,7 +2732,7 @@ ctr_string_concat (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] append: [String].</b>
+ *[String] append: [String].
  *
  * Appends the specified string to itself. This is different from the '+'
  * message, the '+' message adds the specified string while creating a new string.
@@ -2787,7 +2772,7 @@ ctr_string_append (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] multiply: [Number].</b>
+ *[String] multiply: [Number].
  *
  * Appends the specified string to itself as many times as [Number]
  * alias: *
@@ -2813,7 +2798,7 @@ ctr_string_multiply (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] formatObjects: [Array].</b>
+ *[String] formatObjects: [Array].
  *
  * Creates a string with the template format and the specified objects
  *
@@ -3028,7 +3013,7 @@ ctr_string_format (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] formatMap: [Map]</b>
+ *[String] formatMap: [Map]
  *
  * format a format string based off a map
  *
@@ -3110,7 +3095,7 @@ ctr_string_format_map (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] from: [position] to: [destination]</b>
+ *[String] from: [position] to: [destination]
  *
  * Returns a portion of a string defined by from-to values.
  * This message is UTF-8 unicode aware.
@@ -3157,7 +3142,7 @@ ctr_string_fromto (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] from: [start] length: [length]</b>
+ *[String] from: [start] length: [length]
  *
  * Returns a portion of a string defined by from
  * and length values.
@@ -3203,7 +3188,7 @@ ctr_string_from_length (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] skip: [number]</b>
+ *[String] skip: [number]
  *
  * Returns a string without the first X characters.
  */
@@ -3227,7 +3212,7 @@ ctr_string_skip (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] sliceFrom: [number] length: [number]</b>
+ *[String] sliceFrom: [number] length: [number]
  *
  * slice a string from,length and return the sliced. modifies string
  */
@@ -3266,7 +3251,7 @@ ctr_string_slice (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] at: [position]</b>
+ *[String] at: [position]
  *
  * Returns the character at the specified position (UTF8 aware).
  * You may also use the alias '@'.
@@ -3297,7 +3282,7 @@ ctr_string_at (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] byteAt: [position]</b>
+ *[String] byteAt: [position]
  *
  * Returns the byte at the specified position (in bytes).
  * Note that you cannot use the '@' message here because that will
@@ -3322,7 +3307,7 @@ ctr_string_byte_at (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] indexOf: [subject]</b>
+ *[String] indexOf: [subject]
  *
  * Returns the index (character number, not the byte!) of the
  * needle in the haystack.
@@ -3350,7 +3335,7 @@ ctr_string_index_of (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] reLastIndexOf: [subject]</b>
+ *[String] reLastIndexOf: [subject]
  *
  * Returns the index (character number, not the byte!) of the
  * last occurance of needle in the haystack, by regex
@@ -3377,17 +3362,17 @@ ctr_string_re_last_index_of (ctr_object * myself, ctr_argument * argumentList)
 #endif
 }
 
- /**
-  * <b>[String] reIndexOf: [subject]</b>
-  *
-  * Returns the index (character number, not the byte!) of the
-  * needle in the haystack, by regex
-  *
-  * Usage:
-  *
-  * 'find the needle' indexOf: 'n.{2}dle'. #9
-  *
-  */
+/**
+ *[String] reIndexOf: [subject]
+ *
+ * Returns the index (character number, not the byte!) of the
+ * needle in the haystack (last matched character), by regex
+ *
+ * Usage:
+ *
+ * 'find the needle' reIndexOf: 't.'. #6
+ *
+ */
 ctr_object *
 ctr_string_re_index_of (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -3406,7 +3391,7 @@ ctr_string_re_index_of (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] startsWith: [String]</b>
+ *[String] startsWith: [String]
  *
  * Returns whether the string starts with the arg
  *
@@ -3420,7 +3405,7 @@ ctr_string_starts_with (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] endsWith: [String]</b>
+ *[String] endsWith: [String]
  *
  * Returns whether the string ends with the arg
  *
@@ -3436,7 +3421,7 @@ ctr_string_ends_with (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] upper</b>
+ *[String] upper
  *
  * Returns a new uppercased version of the string.
  * Note that this is just basic ASCII case functionality, this should only
@@ -3461,7 +3446,7 @@ ctr_string_to_upper (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] lower</b>
+ *[String] lower
  *
  * Returns a new lowercased version of the string.
  * Note that this is just basic ASCII case functionality, this should only
@@ -3486,7 +3471,7 @@ ctr_string_to_lower (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] lower1st</b>
+ *[String] lower1st
  *
  * Converts the first character of the recipient to lowercase and
  * returns the resulting string object.
@@ -3507,7 +3492,7 @@ ctr_string_to_lower1st (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] upper1st</b>
+ *[String] upper1st
  *
  * Converts the first character of the recipient to uppercase and
  * returns the resulting string object.
@@ -3534,7 +3519,7 @@ ctr_string_to_string (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] lastIndexOf: [subject]</b>
+ *[String] lastIndexOf: [subject]
  *
  * Returns the index (character number, not the byte!) of the
  * needle in the haystack.
@@ -3561,7 +3546,7 @@ ctr_string_last_index_of (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] replace: [string] with: [other]</b>
+ *[String] replace: [string] with: [other]
  *
  * Replaces needle with replacement in original string and returns
  * the result as a new string object.
@@ -3627,7 +3612,7 @@ ctr_string_replace_with (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] findPattern: [String] do: [Block] options: [String].</b>
+ *[String] findPattern: [String] do: [Block] options: [String].
  *
  * Matches the POSIX or PCRE (depending on the #defines) regular expression in the first argument against
  * the string and executes the specified block on every match passing
@@ -3847,7 +3832,7 @@ ctr_string_find_pattern_options_do (ctr_object * myself, ctr_argument * argument
 #endif
 
 /**
- * <b>[String] findPattern: [String] do: [Block].</b>
+ *[String] findPattern: [String] do: [Block].
  *
  * Same as findPattern:do:options: but without the options, no flags will
  * be send to the regex engine.
@@ -3939,7 +3924,7 @@ ctr_string_reg_replace (ctr_object * myself, ctr_argument * argumentList)
 #endif
 
 /**
- * <b>[String] contains: [String]</b>
+ *[String] contains: [String]
  *
  * Returns True if the other string is a substring.
  */
@@ -3950,7 +3935,7 @@ ctr_string_contains (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] containsPattern: [String].</b>
+ *[String] containsPattern: [String].
  *
  * Tests the pattern against the string and returns True if there is a match
  * and False otherwise.
@@ -4073,7 +4058,7 @@ ctr_string_count_of (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] trim</b>
+ *[String] trim
  *
  * Trims a string. Removes surrounding white space characters
  * from string and returns the result as a new string object.
@@ -4109,7 +4094,7 @@ ctr_string_trim (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] leftTrim</b>
+ *[String] leftTrim
  *
  * Removes all the whitespace at the left side of the string.
  *
@@ -4191,7 +4176,7 @@ ctr_string_padding_right (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] rightTrim</b>
+ *[String] rightTrim
  *
  * Removes all the whitespace at the right side of the string.
  *
@@ -4222,7 +4207,7 @@ ctr_string_rtrim (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] toNumber</b>
+ *[String] toNumber
  *
  * Converts string to a number.
  */
@@ -4233,7 +4218,7 @@ ctr_string_to_number (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] toBoolean</b>
+ *[String] toBoolean
  *
  * Converts string to boolean
  */
@@ -4246,7 +4231,7 @@ ctr_string_to_boolean (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] split: [String]</b>
+ *[String] split: [String]
  *
  * Converts a string to an array by splitting the string using
  * the specified delimiter (also a string).
@@ -4304,7 +4289,7 @@ ctr_string_split (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] reSplit: [String]</b>
+ *[String] reSplit: [String]
  *
  * Converts a string to an array by splitting the string using
  * the specified regex (also a string).
@@ -4336,7 +4321,7 @@ ctr_string_split_re (ctr_object * myself, ctr_argument * argumentList)
 #endif
 
 /**
- * <b>[String] characters.</b>
+ *[String] characters.
  *
  * Splits the string in UTF-8 characters and returns
  * those as an array.
@@ -4370,7 +4355,7 @@ ctr_string_characters (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] toByteArray</b>
+ *[String] toByteArray
  *
  * Returns an array of bytes representing the string.
  */
@@ -4394,7 +4379,7 @@ ctr_string_to_byte_array (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] fmap: [Block]</b>
+ *[String] fmap: [Block]
  *
  * maps a function over the string and returns a string
  */
@@ -4424,7 +4409,7 @@ ctr_string_fmap (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] imap: [Block]</b>
+ *[String] imap: [Block]
  *
  * maps a function over the string with indices and returns a string
  */
@@ -4456,7 +4441,7 @@ ctr_string_imap (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] filter: [Block]</b>
+ *[String] filter: [Block]
  *
  * filters a string based on a predicate. returns a string
  */
@@ -4491,7 +4476,7 @@ ctr_string_filter (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] appendByte: [Number].</b>
+ *[String] appendByte: [Number].
  *
  * Appends a raw byte to a string.
  */
@@ -4514,7 +4499,7 @@ ctr_string_append_byte (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String(length=1)] charSub: [Number | String(length=1)]</b>
+ *[String(length=1)] charSub: [Number | String(length=1)]
  *
  * works on the underlaying character.
  */
@@ -4546,7 +4531,7 @@ ctr_string_csub (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String(length=1)] charAdd: [Number | String(length=1)]</b>
+ *[String(length=1)] charAdd: [Number | String(length=1)]
  *
  * works on the underlaying character.
  */
@@ -4578,7 +4563,7 @@ ctr_string_cadd (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] htmlEscape</b>
+ *[String] htmlEscape
  *
  * Escapes HTML chars.
  */
@@ -4681,7 +4666,7 @@ ctr_string_html_escape (ctr_object * myself, ctr_argument * argumentList)
 // }
 
 /**
- * <b>[String] hashWithKey: [String]</b>
+ *[String] hashWithKey: [String]
  *
  * Returns the hash of the recipient String using the specified key.
  * The default hash in Citron is the SipHash which is also used internally.
@@ -4708,7 +4693,7 @@ ctr_string_hash_with_key (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] eval</b>
+ *[String] eval
  *
  * Evaluates the contents of the string as code.
  *
@@ -4758,7 +4743,7 @@ ctr_string_eval (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] exec</b>
+ *[String] exec
  *
  * Executes the contents of the string as code.
  * Does <i>not</i> return a value unless the code itself does.
@@ -4785,7 +4770,7 @@ ctr_string_exec (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] escapeQuotes.</b>
+ *[String] escapeQuotes.
  *
  * Escapes all single quotes in a string. Sending this message to a
  * string will cause all single quotes (') to be replaced with (\').
@@ -4855,7 +4840,7 @@ ctr_string_dquotes_escape (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] randomizeBytesWithLength: [Number].</b>
+ *[String] randomizeBytesWithLength: [Number].
  *
  * Returns a randomized string with the specified length using the pool of
  * bytes contained in the String object.
@@ -4888,7 +4873,7 @@ ctr_string_randomize_bytes (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[String] reverse</b>
+ *[String] reverse
  *
  * reverse the string
  */
@@ -5343,7 +5328,7 @@ ctr_capture_refs_ (ctr_tnode * ti, ctr_object * block, ctr_object * parent, int 
 }
 
 /**
- * <b>[Block] unpack: [String:Ref]</b>
+ *[Block] unpack: [String:Ref]
  * Assign ref to block
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */
@@ -5373,7 +5358,7 @@ ctr_block_assign (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Block] applyTo: [object]</b>
+ *[Block] applyTo: [object]
  *
  * Runs a block of code using the specified object as a parameter.
  * If you run a block using the messages 'run' or 'applyTo:', me/my will
@@ -5857,7 +5842,7 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
 }
 
 /**
- * <b>[Block] whileTrue: [block]</b>
+ *[Block] whileTrue: [block]
  *
  * Runs a block of code, depending on the outcome runs the other block
  * as long as the result of the first one equals boolean True.
@@ -5968,7 +5953,7 @@ ctr_block_while_true (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Block] whileFalse: [block]</b>
+ *[Block] whileFalse: [block]
  *
  * Runs a block of code, depending on the outcome runs the other block
  * as long as the result of the first one equals to False.
@@ -6120,7 +6105,7 @@ ctr_block_forever (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Block] run</b>
+ *[Block] run
  *
  * Sending the unary message 'run' to a block will cause it to execute.
  * The run message takes no arguments, if you want to use the block as a function
@@ -6311,7 +6296,7 @@ ctr_free_argumentList (ctr_argument * argumentList)
 }
 
 /**
- * <b>[Block] set: [name] value: [object]</b>
+ *[Block] set: [name] value: [object]
  *
  * Sets a variable in a block of code. This how you can get closure-like
  * functionality.
@@ -6348,7 +6333,7 @@ ctr_block_set (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Block] error: [object].</b>
+ *[Block] error: [object].
  *
  * Sets error flag on a block of code.
  * This will throw an error / exception.
@@ -6372,7 +6357,7 @@ ctr_block_error (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Block] catch: [otherBlock]</b>
+ *[Block] catch: [otherBlock]
  *
  * Associates an error clause to a block.
  * If an error (exception) occurs within the block this block will be
@@ -6397,7 +6382,7 @@ ctr_block_catch (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Block] catch: [otherBlock] type: [Object]</b>
+ *[Block] catch: [otherBlock] type: [Object]
  *
  * Associates an error clause to a block.
  * If the specified exception occurs within the block this block will be
@@ -6423,7 +6408,7 @@ ctr_block_catch_type (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * <b>[Block] toString</b>
+ *[Block] toString
  *
  * Returns a string representation of the Block. This basic behavior, part
  * of any object will just return [Block]. Other objects typically override this

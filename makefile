@@ -1,4 +1,4 @@
-DEBUG_VERSION := 79
+DEBUG_VERSION := 345
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 CFLAGS := ${CFLAGS} -I/usr/include
 LEXTRACF := ${LEXTRACF} -flto -lstdc++ -static-libgcc -static-libstdc++
@@ -54,7 +54,7 @@ COBJS = ${OBJS} compiler.o
 -include patch_for_android_windows
 
 deps:
-	# This is just a hacky way of getting bdwgc "libgc" from MSYS2, 
+	# This is just a hacky way of getting bdwgc "libgc" from MSYS2,
 	# Do not expect it to work anywhere else
 	# TODO: Find a better solution
 	pacman --noconfirm -S libgc-devel libgc
@@ -71,7 +71,7 @@ ctrconfig:
 	$(CC) ctrconfig.c -o ctrconfig
 
 debug: CFLAGS := ${CFLAGS} -DDEBUG_BUILD -DDEBUG_BUILD_VERSION=${DEBUG_BUILD_VERSION} -Og -g3 -ggdb3 -Wno-unused-function
-debug: deps 
+debug: deps
 debug: cxx
 debug: ctr
 debug:
@@ -142,7 +142,7 @@ love:
 
 war:
 	echo "Not love?"
-	
+
 package:
 	# create a package for windows people
 	# really, how lazy can y'all get?
@@ -152,7 +152,7 @@ package:
 	cp dist_windows package/prepared/ctr.bat
 	cp misc/prepare_install.ctr package/prepare_install.ctr
 	cp misc/install.bat install.bat
-	tar cf citron-release.tar package install.bat 
+	tar cf citron-release.tar package install.bat
 	rm -rf package install.bat
 
 distribute: all package

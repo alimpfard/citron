@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.22.3 -->
-<!-- CreationDate: Sun Feb  4 13:41:51 2018 -->
+<!-- CreationDate: Sun Sep  9 22:27:54 2018 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -13,13 +13,21 @@
        table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
        h1      { text-align: center }
 </style>
-<title>Citron v0.0.6.8.0a</title>
+<title>Citron v0.0.8.8-boehm-gc</title>
 
 </head>
 <body>
 
-<h1 align="center">Citron v0.0.6.8.0a</h1>
+<h1 align="center">Citron v0.0.8.8-boehm-gc</h1>
 
+<a href="#NAME">NAME</a><br>
+<a href="#SYNOPSIS">SYNOPSIS</a><br>
+<a href="#DESCRIPTION">DESCRIPTION</a><br>
+<a href="#REFERENCE MANUAL">REFERENCE MANUAL</a><br>
+<a href="#BASIC INSTRUCTIONS">BASIC INSTRUCTIONS</a><br>
+<a href="#ASSIGNMENT">ASSIGNMENT</a><br>
+<a href="#CORE MESSAGES">CORE MESSAGES</a><br>
+<a href="#Nil">Nil</a><br>
 <a href="#Object">Object</a><br>
 <a href="#Boolean">Boolean</a><br>
 <a href="#Number">Number</a><br>
@@ -28,8 +36,8 @@
 <a href="#CodeBlock">CodeBlock</a><br>
 <a href="#Array">Array</a><br>
 <a href="#Map">Map</a><br>
-<a href="#Iterator">Iterator</a><br>
 <a href="#File">File</a><br>
+<a href="#Generator">Generator</a><br>
 <a href="#Broom">Broom</a><br>
 <a href="#Shell">Shell</a><br>
 <a href="#Slurp">Slurp</a><br>
@@ -40,16 +48,221 @@
 <a href="#Thread">Thread</a><br>
 <a href="#Reflect">Reflect</a><br>
 <a href="#Fiber">Fiber</a><br>
+<a href="#BUGS">BUGS</a><br>
+<a href="#AUTHOR">AUTHOR</a><br>
 
 <hr>
 
 
-<p>Expected closing quote on line: 117. <br>
-Nil <b>_OBJ_DEF Nil</b></p>
+<h2>NAME
+<a name="NAME"></a>
+</h2>
 
-<p style="margin-left:11%; margin-top: 1em"><b>Nil</b> <br>
-Nil represents &rsquo;nothing&rsquo; or NULL in other
-languages. <br>
+
+<p style="margin-left:11%; margin-top: 1em">ctr &minus; run
+a Citron program</p>
+
+<p style="margin-left:11%; margin-top: 1em">citron &minus;
+interface to citron eval</p>
+
+<h2>SYNOPSIS
+<a name="SYNOPSIS"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">ctr
+[PROGRAM]</p>
+
+<p style="margin-left:11%; margin-top: 1em">citron
+[arguments]</p>
+
+<h2>DESCRIPTION
+<a name="DESCRIPTION"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Citron is a
+general purpose programming language for UNIX&minus;like
+operating systems.</p>
+
+<h2>REFERENCE MANUAL
+<a name="REFERENCE MANUAL"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Citron has 5
+literals:</p>
+
+<p style="margin-left:17%;">- Nil <br>
+- Booleans (True, False) <br>
+- Numbers (1, -2, 3.5) <br>
+- Strings &rsquo;All Strings are UTF8!&rsquo; <br>
+- Code Blocks { parameters code }</p>
+
+<h2>BASIC INSTRUCTIONS
+<a name="BASIC INSTRUCTIONS"></a>
+</h2>
+
+
+<h2>ASSIGNMENT
+<a name="ASSIGNMENT"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Assignment in
+Citron has a few forms, a simple binding (variable is
+expression) or (variable := expression) a strictly private
+binding (variable =&gt; expression) [Which can be used in
+constructor messages] and a decomposition binding whose
+explanation follows:</p>
+
+<p style="margin-left:11%; margin-top: 1em">Every object
+that implements the &rsquo;unpack:&rsquo; method, hereon
+called &rsquo;decomposable&rsquo; and
+&rsquo;algebraic&rsquo;, is mostly a wrapper around smaller
+parts, for instance, an array is a container that only
+conatins some Objects. It does not change the objects, nor
+does it have any other property that can cause us to be
+unable to recreate those objects given said array. hence, we
+can deconstruct the array into its creating objects.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Consider an
+object. an object can be called a mapping from its property
+names as keys, to their values as, well, values. much like a
+Map. However, since the object&lsquo;s methods require a
+reference to it, they cannot be safely deconstructed.</p>
+
+<p style="margin-left:11%; margin-top: 1em">this concept
+(algebraic decomposition) is done by creating a wireframe of
+sorts, and telling the object to deconstruct itself based
+off that wireframe. E.g.</p>
+
+<p style="margin-left:11%; margin-top: 1em">var
+<b>testMap</b> is Map cnew: {</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="7%">
+</td>
+<td width="8%">
+</td>
+<td width="77%">
+
+
+<p><b>test</b> =&gt; [1,2,3,4,5].</p></td></tr>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="7%">
+</td>
+<td width="8%">
+</td>
+<td width="77%">
+
+
+<p><b>key1</b> =&gt; Map new put: <b>me</b> at:
+&rsquo;test&rsquo;.</p> </td></tr>
+</table>
+
+<p style="margin-left:11%;">}. <br>
+(Map cnew: {</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="7%">
+</td>
+<td width="8%">
+</td>
+<td width="77%">
+
+
+<p><i>#Take the third element from the right, and bind it
+to &rsquo;a&rsquo;</i></p></td></tr>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="7%">
+</td>
+<td width="8%">
+</td>
+<td width="77%">
+
+
+<p><b>test</b> =&gt; [&rsquo;*_&rsquo;, &rsquo;a&rsquo;,
+&rsquo;_&rsquo;, &rsquo;_&rsquo;].</p></td></tr>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="7%">
+</td>
+<td width="8%">
+</td>
+<td width="77%">
+
+
+<p><i>#Take the value at &rsquo;key1&rsquo;,</i></p></td></tr>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="7%">
+</td>
+<td width="8%">
+</td>
+<td width="77%">
+
+
+<p><i>#take its&rsquo; value at &rsquo;test&rsquo;,</i></p></td></tr>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="7%">
+</td>
+<td width="8%">
+</td>
+<td width="77%">
+
+
+<p><i>#take its&rsquo; value at &rsquo;test&rsquo; and bind
+it to &rsquo;b&rsquo;.</i></p></td></tr>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="7%">
+</td>
+<td width="8%">
+</td>
+<td width="77%">
+
+
+<p><b>key1</b> =&gt; Map cnew: {<b>test</b> =&gt; (Map
+cnew: {<b>test</b> =&gt; &rsquo;b&rsquo;.}).}</p></td></tr>
+</table>
+
+<p style="margin-left:11%;">}) is <b>testMap</b>.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Returning
+algebraic object types from functions, is often used to
+return several values from said function. :: TODO : Finish
+this section.</p>
+
+<h2>CORE MESSAGES
+<a name="CORE MESSAGES"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">The following
+messages are part of the Core API of the Citron Programming
+Language:</p>
+
+<h2>Nil
+<a name="Nil"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
+Nil</b></p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Nil
+represents &rsquo;nothing&rsquo; or NULL in other
+languages.</b> <br>
 Any object property that has not been assigned a value <br>
 will contain Nil. Unlike some other programming languages
 <br>
@@ -63,21 +276,32 @@ same as &rsquo;undefined&rsquo; or not set.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Nil]
 isNil</b> <br>
-Nil always answers this message with a boolean object
+@see ctr_object_is_nil</p>
+
+<p style="margin-left:11%; margin-top: 1em">Nil always
+answers this message with a boolean object
 &rsquo;True&rsquo;.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Nil]
 toString</b> <br>
-Returns the string representation of Nil:
-&rsquo;Nil&rsquo;.</p>
+@see ctr_object_to_string</p>
+
+<p style="margin-left:11%; margin-top: 1em">Returns the
+string representation of Nil: &rsquo;Nil&rsquo;.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Nil]
 toNumber</b> <br>
-Returns the numerical representation of Nil: 0.</p>
+@see ctr_object_to_number</p>
+
+<p style="margin-left:11%; margin-top: 1em">Returns the
+numerical representation of Nil: 0.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Nil]
 toBoolean</b> <br>
-Returns the boolean representation of Nil: False.</p>
+@see ctr_object_to_boolean</p>
+
+<p style="margin-left:11%; margin-top: 1em">Returns the
+boolean representation of Nil: False.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Nil]
 unpack: [Ref:string]</b> <br>
@@ -93,10 +317,8 @@ look at section &rsquo;Assignment&rsquo;)</p>
 <p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
 Object</b></p>
 
-<p style="margin-left:11%; margin-top: 1em"><b>Object</b>
-<br>
-This is the base object, the parent of all other objects.
-<br>
+<p style="margin-left:11%; margin-top: 1em"><b>This is the
+base object, the parent of all other objects.</b> <br>
 It contains essential object oriented programming
 features.</p>
 
@@ -131,11 +353,7 @@ iHash</b> <br>
 fallback hashing <br>
 returns the hash of the object&rsquo;s string form.</p>
 
-<p style="margin-left:11%; margin-top: 1em"><b>[Object] new
-hiding:</b> <br>
-Creates a new Object hiding some parameters.</p>
-
-<p style="margin-left:11%; margin-top: 1em"><b>Object
+<p style="margin-left:11%; margin-top: 1em"><b>[Object]
 swapRefs: [Object]</b> <br>
 swap two objects with each other. <br>
 Effectively &rsquo;xchg %ra, %rb&rsquo;</p>
@@ -153,11 +371,8 @@ This string representation will be:</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Object]
 toNumber</b> <br>
-Returns a numerical representation of the object. This basic
-behavior, part <br>
-of any object will just return 1. Other objects typically
-override this <br>
-behavior with more useful implementations.</p>
+Errors out. Objects cannot be represented by numbers. <br>
+(default behavior)</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Object]
 toBoolean</b> <br>
@@ -574,6 +789,10 @@ message will change the <br>
 value of the number object itself instead of returning a new
 number.</p>
 
+<p style="margin-left:11%; margin-top: 1em"><b>[Number]
+negate</b> <br>
+Negates the value of the number object</p>
+
 <p style="margin-left:11%; margin-top: 1em"><b>[Number] *
 [Number or Block]</b> <br>
 Multiplies the number by the specified multiplier. Returns a
@@ -651,14 +870,14 @@ message to apply the operation of division to the <br>
 object itself instead of generating a new one.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Number]
-toPowerOf: [power]</b> <br>
+pow: [power]</b> <br>
 Returns a new object representing the <br>
 number to the specified power.</p>
 
 <p style="margin-left:11%; margin-top: 1em">Usage:</p>
 
-<p style="margin-left:11%; margin-top: 1em">x is 2
-toPowerOf: 8. #x will be 256</p>
+<p style="margin-left:11%; margin-top: 1em">x is 2 pow: 8.
+#x will be 256</p>
 
 <p style="margin-left:11%; margin-top: 1em">The example
 above will raise 2 to the power of 8 resulting in <br>
@@ -831,20 +1050,19 @@ log</b> <br>
 Calculates the logarithm of a number.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Number]
-shiftRight: [Number]</b> <br>
-Only with integers</p>
+shiftRight: [Number]</b></p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Number]
 shiftLeft: [Number]</b></p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Number]
-integerOr: [Number]</b></p>
+bitOr: [Number]</b></p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Number]
-integerAnd: [Number]</b></p>
+bitAnd: [Number]</b></p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Number]
-integerXor: [Number]</b></p>
+bitXor: [Number]</b></p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Number]
 toByte</b> <br>
@@ -1057,6 +1275,29 @@ needle in the haystack.</p>
 needle&rsquo; indexOf: &rsquo;needle&rsquo;. #9</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[String]
+reLastIndexOf: [subject]</b> <br>
+Returns the index (character number, not the byte!) of the
+<br>
+last occurance of needle in the haystack, by regex</p>
+
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
+
+<p style="margin-left:11%; margin-top: 1em">&rsquo;find the
+needle&rsquo; reLastIndexOf: &rsquo;n.{2}dle&rsquo;. #9</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+reIndexOf: [subject]</b> <br>
+Returns the index (character number, not the byte!) of the
+<br>
+needle in the haystack (last matched character), by
+regex</p>
+
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
+
+<p style="margin-left:11%; margin-top: 1em">&rsquo;find the
+needle&rsquo; reIndexOf: &rsquo;t.&rsquo;. #6</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
 startsWith: [String]</b> <br>
 Returns whether the string starts with the arg</p>
 
@@ -1238,6 +1479,13 @@ Converts a string to an array by splitting the string using
 the specified delimiter (also a string).</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[String]
+reSplit: [String]</b> <br>
+Converts a string to an array by splitting the string using
+<br>
+the specified regex (also a string). <br>
+ONLY WITH PCRE</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
 characters.</b> <br>
 Splits the string in UTF-8 characters and returns <br>
 those as an array.</p>
@@ -1251,6 +1499,19 @@ a count. #3</p>
 <p style="margin-left:11%; margin-top: 1em"><b>[String]
 toByteArray</b> <br>
 Returns an array of bytes representing the string.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+fmap: [Block]</b> <br>
+maps a function over the string and returns a string</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+imap: [Block]</b> <br>
+maps a function over the string with indices and returns a
+string</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+filter: [Block]</b> <br>
+filters a string based on a predicate. returns a string</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[String]
 appendByte: [Number].</b> <br>
@@ -1287,6 +1548,12 @@ Evaluates the contents of the string as code.</p>
 <p style="margin-left:11%; margin-top: 1em">a is
 &rsquo;Array &lt; 1 ; 2 ; 3&rsquo; eval. <br>
 x is a @ 2. #3</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+exec</b> <br>
+Executes the contents of the string as code. <br>
+Does &lt;i&gt;not&lt;/i&gt; return a value unless the code
+itself does.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[String]
 escapeQuotes.</b> <br>
@@ -1501,7 +1768,8 @@ catch: [otherBlock]</b> <br>
 Associates an error clause to a block. <br>
 If an error (exception) occurs within the block this block
 will be <br>
-executed.</p>
+executed, and its return substituted for the result of the
+expression</p>
 
 <p style="margin-left:11%; margin-top: 1em">Example:</p>
 
@@ -1512,6 +1780,24 @@ var z is 4 / 0. <br>
 } catch: { :errorMessage <br>
 Pen write: e, brk. <br>
 }, run.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Block]
+catch: [otherBlock] type: [Object]</b> <br>
+Associates an error clause to a block. <br>
+If the specified exception occurs within the block this
+block will be <br>
+executed, and its return substituted for the result of the
+expression</p>
+
+<p style="margin-left:11%; margin-top: 1em">Example:</p>
+
+<p style="margin-left:11%; margin-top: 1em">#Raise error on
+division by zero. <br>
+{ <br>
+var z is 4 / 0. <br>
+} catch: { :errorMessage <br>
+Pen write: e, brk. <br>
+} type: String, run.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Block]
 toString</b> <br>
@@ -1531,6 +1817,7 @@ Array</b></p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Array]
 new</b> <br>
+[Array] new: [Number:space] <br>
 Creates a new Array.</p>
 
 <p style="margin-left:11%; margin-top: 1em">Usage:</p>
@@ -1577,6 +1864,28 @@ Returns the minimum value from an array.</p>
 <p style="margin-left:11%; margin-top: 1em">a is Array
 &acirc; 8 ; 4 ; 2 ; 16. <br>
 m is a min. #2</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array] all
+[: [Block]]</b> <br>
+Returns whether all the objects inside the array are
+truth-y.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
+
+<p style="margin-left:11%; margin-top: 1em">a is Array
+&acirc; True ; False ; False. <br>
+m is a all. #False</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array] any
+[: [Block]]</b> <br>
+Returns whether any of the objects inside the array are
+truth-y.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
+
+<p style="margin-left:11%; margin-top: 1em">a is Array
+&acirc; True ; False ; False. <br>
+m is a any. #True</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Array]
 max</b> <br>
@@ -1795,8 +2104,8 @@ immutable</p>
 new. <br>
 fruits put: &rsquo;apples&rsquo; at: 5.</p>
 
-<p style="margin-left:11%; margin-top: 1em"><b>[Array]
-pop</b> <br>
+<p style="margin-left:11%; margin-top: 1em"><b>[Array] pop
+[: [idx]]</b> <br>
 Pops off the last element of the array.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Array]
@@ -1816,11 +2125,13 @@ returns a new array consisting of a copy of this region.</p>
 skip: [n:Number]</b> <br>
 Skips the first n elements of the array</p>
 
-<p style="margin-left:11%; margin-top: 1em"><b>* [Array]
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
 zip</b> <br>
-* * zip array. * Works on the inner elements of the array. *
-If the element is an array, it is expanded exactly once. *
-And if the element is not an array, it is used as-is *</p>
+zip array. <br>
+Works on the inner elements of the array. <br>
+If the element is an array, it is expanded exactly once.
+<br>
+And if the element is not an array, it is used as-is</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Array]
 zipWith: [Block]</b> <br>
@@ -1896,6 +2207,11 @@ to ([1,2,3,4]) sum.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Array]
 filter: [Block&lt;i,v&gt;]</b> <br>
+Include the element iff block returns True for the
+element</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array]
+filter_v: [Block&lt;v&gt;]</b> <br>
 Include the element iff block returns True for the
 element</p>
 
@@ -2013,9 +2329,9 @@ Note that within an each/map block, &rsquo;me&rsquo; and
 &rsquo;my&rsquo; refer to the collection.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Map] fmap:
-[Block&lt;value&gt;]</b> <br>
-Iterates over the map, passing the value to the function,
-and replacing it with the result <br>
+[Block&lt;key,value&gt;]</b> <br>
+Iterates over the map, passing the key and the value to the
+function, and replacing the value with the result <br>
 (Or itself if a value is not returned)</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Map] kvmap:
@@ -2066,20 +2382,24 @@ new). #prints Map new.</p>
 <p style="margin-left:11%; margin-top: 1em">You can also
 use the alias &rsquo;serialize&rsquo;.</p>
 
-<p style="margin-left:11%; margin-top: 1em"><b>* [Map]
+<p style="margin-left:11%; margin-top: 1em"><b>[Map]
 serialize</b> <br>
-* * Alias for [Map] toString. * A toString message,
-sometimes implicitly send by other messages like *
+Alias for [Map] toString. <br>
+A toString message, sometimes implicitly send by other
+messages like <br>
 &rsquo;Pen write:&rsquo; will give you a serialized version
-of the Map or Array. * This is far more useful than a
-&rsquo;dumb&rsquo; textual description of the object like *
+of the Map or Array. <br>
+This is far more useful than a &rsquo;dumb&rsquo; textual
+description of the object like <br>
 &rsquo;array&rsquo; or &rsquo;object&rsquo;. However, when
-working with very large Maps or Arrays * accidentally
-dumping the entire contents can be annoying, in this case
-you can * override the toString behaviour but you
-don&rsquo;t have to remap the original, you * can just use
-this alias. Also, this alias can be used if you want to make
-* the serialization more explicit.</p>
+working with very large Maps or Arrays <br>
+accidentally dumping the entire contents can be annoying, in
+this case you can <br>
+override the toString behaviour but you don&rsquo;t have to
+remap the original, you <br>
+can just use this alias. Also, this alias can be used if you
+want to make <br>
+the serialization more explicit.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Map]
 unpack: [Map:{Ref:AlternativeName}]</b> <br>
@@ -2096,114 +2416,9 @@ cnew: {my test0 is &rsquo;a&rsquo;. my test1 is
 using algebraic deconstruction assignments: look at section
 &rsquo;Assignment&rsquo;)</p>
 
-<h2>Iterator
-<a name="Iterator"></a>
-</h2>
-
-
-<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
-Iterator</b></p>
-
-
-<p style="margin-left:11%; margin-top: 1em"><b>Iterator</b>
-<br>
-Iterator (range), an object that supports next and current,
-<br>
-and steps through some values before (optionally) reaching
-an end</p>
-
-<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
-setFunc: [f:Block]</b> <br>
-sets the iterator step function.</p>
-
-<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
-repeat: [Object]</b> <br>
-An iterator that keeps repeating the same value.</p>
-
-<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
-rangeFrom: [f:Number] to: [t:Number] step: [s:Number]</b>
-<br>
-makes a range iterator in range [f,t] with steps of s</p>
-
-<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
-rangeFrom: [f:(supports +)] step: [s:(supports +)]</b> <br>
-makes a range iterator in range [f,inf) with steps of s <br>
-works on all objects that support the message
-&rsquo;+&rsquo;</p>
-
-<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
-next</b> <br>
-gives the next value or breaks (to signal the end of the
-iterator)</p>
-
-<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
-each: [Block&lt;nil,value,iterator&gt;]</b> <br>
-Runs the block for each value in the iterator while stepping
-through it <br>
-Sends Nil for the index.</p>
-
-<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
-each_v: [Block&lt;value&gt;]</b> <br>
-Runs the block for each value in the iterator while stepping
-through it</p>
-
-<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
-fmap: [b:Block&lt;value&gt;]</b> <br>
-Equivalent to [Array] fmap: [Block&lt;value&gt;]</p>
-
-<p style="margin-left:11%; margin-top: 1em">transforms the
-iterator with the block to another iterator This function
-does not evaluate anything from the iterator</p>
-
-<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
-filter: [b:Block&lt;nil,value&gt;]</b> <br>
-XXX XXX XXX :: Unimplemented <br>
-Equivalent to [Array] filter: [Block&lt;index,value&gt;]</p>
-
-<p style="margin-left:11%; margin-top: 1em">filters the
-iterator with the block&rsquo;s return value as the
-predicate to an array <br>
-this function does not evaluate anything from the
-iterator.</p>
-
-<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
-foldl: [Block] accumulator: [Object]</b> <br>
-reduces an iterator according to a block (which takes an
-accumulator and the value, and returns the next acc) from
-the left (index 0)</p>
-
-<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
-count</b> <br>
-Steps through the iterator until it ends and returns the
-count. <br>
-resets the state of the iterator</p>
-
-<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
-take: [t:Number]</b> <br>
-takes at most &lt;t&gt; number of elements from the
-Iterator</p>
-
-<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
-takeWhile: [predicate:Block]</b> <br>
-takes values as long as predicate returns true.</p>
-
-<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
-endBlock</b> <br>
-returns a block that throws an IteratorEndException.</p>
-
-<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
-endIf: [clause:Block]</b> <br>
-ends the Iterator if clause returns True</p>
-
-<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
-toArray</b> <br>
-Collects all of the iterator values into an array</p>
-
-<p style="margin-left:11%; margin-top: 1em"><b>[Iterator]
-skip: [n:Number]</b> <br>
-skips n iterations and returns the nth value <br>
-does not reset the evaluation. (iterator will advance to
-index n)</p>
+<p style="margin-left:11%; margin-top: 1em"><b>[Map]
+contains: [Object]</b> <br>
+check if map contains key</p>
 
 <h2>File
 <a name="File"></a>
@@ -2256,6 +2471,10 @@ respond to this <br>
 message by returning a string object describing the absolute
 path to the <br>
 recipient.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[File]
+expand: [String: path]</b> <br>
+Expands a given path by user paths</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[File]
 read</b> <br>
@@ -2442,6 +2661,232 @@ the file, <br>
 then putting it back 10 bytes (negative number), and then
 reading 10 <br>
 bytes.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>File mkdir
+[: [Number:permissions]]</b> <br>
+makes a directory</p>
+
+<h2>Generator
+<a name="Generator"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>_OBJ_DEF
+Generator</b></p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Generator]
+from: [Number] to: [Number] [step: [Number]]</b> <br>
+Creates a numeric step generator</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Generator]
+elementsOf: [Array|Map|String]</b> <br>
+Creates a generator that steps through the elements of a
+collection</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Generator]
+repeat: [Object]</b> <br>
+Creates a generator that simply repeats an object
+forever</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Generator]
+imap: [Block]</b> <br>
+Creates a generator that maps the elements of this generator
+through the given <br>
+block.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Generator]
+fmap: [Block]</b> <br>
+Creates a generator that maps the elements of this generator
+through the given <br>
+block.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Generator]
+ifmap: [Block]</b> <br>
+Creates a generator that maps the elements of this generator
+through the given <br>
+block; should the block yield a generator, it will be
+depleted, and its elements <br>
+unpacked recursively</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Generator]
+next</b> <br>
+Gets the next element of this generator</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Generator]
+inext</b> <br>
+Gets the next element of this generator; should it be a
+generator, it will <br>
+first be recursively used, and itself ignored</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Generator]
+finished</b> <br>
+Returns whether this generator is done producing items</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Generator]
+each: [Block]</b> <br>
+Runs the block for each element in the generator</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Generator]
+ieach: [Block]</b> <br>
+Runs the block for each element in the generator; <br>
+should the generator yield another generator, it will be
+depleted, and its elements <br>
+unpacked recursively</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Generator]
+toString</b> <br>
+Returns a string representation of this generator</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Generator]
+toArray</b> <br>
+Unpacks the contents of this generator to an array</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Generator]
+copy</b> <br>
+Copies this generator to create another unique one <br>
+The state of this generator _will_ be preserved</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Generator]
+foldl: [Block] accumulator: [Object]</b> <br>
+Folds this generator from the left (see
+Array::&rsquo;foldl::accumulator:&rsquo; for details)</p>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array|String]
+letEqual: [Array|Object] in: [Block]</b></p>
+
+<p style="margin-left:11%; margin-top: 1em">Assigns local
+values to the block, and runs it as a closure</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST] parse:
+[String]</b> <br>
+parse string into citron ast</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST]
+count</b> <br>
+Gives the count of available direct nodes under this AST
+node</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST] at:
+[n:Number]</b> <br>
+Gets the nth child of this AST node</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST]
+insert: [AST] at: [Number]</b> <br>
+Inserts (emplace) the given AST node at the given index</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST] put:
+[AST] at: [Number]</b> <br>
+Sets the child node at index to the given node</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST] each:
+[Block]</b> <br>
+Runs the given block for each direct child of the AST
+node</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST]
+each_v: [Block]</b> <br>
+Runs the given block for each direct child of the AST
+node</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST]
+toString</b> <br>
+Gives the string representation of this ast node</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST]
+value</b> <br>
+gets the value of this AST node (if any)</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST]
+type</b> <br>
+gets the type of this AST node</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST]
+modifier</b> <br>
+gets the modifier of this AST node</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST] value:
+[String]</b> <br>
+sets the value of this AST node</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST]
+withValue: [String]</b> <br>
+copies and sets the value of that AST node</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST] type:
+[String]</b> <br>
+sets the type of this AST node</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST]
+modifier: [String]</b> <br>
+sets the modifier of this AST node</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST]
+evaluate</b> <br>
+Evaluates this ast node</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST]
+unparse</b> <br>
+generates Citron code matching this AST node</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST]
+feedLexer: [String]</b> <br>
+Feeds the internal lexer with the given string</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST]
+token</b> <br>
+reads a token off the internal token stream</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST]
+lexline</b> <br>
+gets the current line of the internal lexer</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST]
+lexstring</b> <br>
+reads a string token from the stream</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST]
+getlexbuf</b> <br>
+gets the current buffer of the internal lexer</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST]
+lexpos</b> <br>
+gets the current position of the internal lexer</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST]
+lexPutBack</b> <br>
+undo&rsquo;s the lexer state by one (at most, a history of
+two is kept)</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST]
+marshal</b> <br>
+Marshals this AST node</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[AST]
+lexSkip: [Number]</b> <br>
+skips the given number of tokens</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Coroutine]
+new</b> <br>
+Makes a new coroutine scheduler</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Coroutine]
+from: [Block] [arguments: [Array]]</b> <br>
+Makes a new coroutine object from the provided block,
+passing it the provided <br>
+arguments</p>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Coroutine#co]
+await</b> <br>
+resumes the coroutine block and returns the yielded value
+(or the coroutine <br>
+object if nothing was yielded)</p>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Coroutine#co]
+yield[: [Object]]</b> <br>
+Yields the processor and optionally passes a value along</p>
 
 <h2>Broom
 <a name="Broom"></a>
@@ -2801,8 +3246,7 @@ Program new: { :program</p>
        cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
 <td width="8%"></td>
-<td width="7%"></td>
-<td width="85%">
+<td width="92%">
 
 
 <p>Pen write: &rsquo;Child&rsquo;, brk.</p></td></tr>
@@ -2819,13 +3263,20 @@ running at the same time.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Program]
 listen: [Block].</b> <br>
-Stops the current flow of the program and starts listening
-for <br>
+[Program] listen: [Block] timeout: [Number
+{qualification:timespec}]</p>
+
+<p style="margin-left:11%; margin-top: 1em">Stops the
+current flow of the program and starts listening for <br>
 messages from other programs that are running at the same
 time. <br>
 Upon receiving a message, the specified block will be
 invocated <br>
 and passed the message that has been received.</p>
+
+<p style="margin-left:11%; margin-top: 1em">If a timeout is
+set, and it expires without getting a message, <br>
+this message will throw.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Program]
 join</b> <br>
@@ -3167,6 +3618,10 @@ returns all the method names of object</p>
 getPropertiesOf: [Object]</b> <br>
 returns all the property names of object</p>
 
+<p style="margin-left:11%; margin-top: 1em"><b>Reflect
+mapPropertiesOf: [Object]</b> <br>
+returns all the property names and values of object</p>
+
 <p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
 getObject: [s:String]</b> <br>
 looks for the object &lsquo;s&lsquo; in the current context
@@ -3185,8 +3640,9 @@ copyBlock: [b:Block]</b> <br>
 copies block b to a new context</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
-newSharedObject</b> <br>
-makes a memmapped object. (Automatic destructor exists)</p>
+newSharedObject[: [Type]]</b> <br>
+makes a memmapped object. (Automatic destructor exists) <br>
+Type defaults to Object</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
 link: [o:Object] to: [p:Object]</b> <br>
@@ -3219,6 +3675,11 @@ typeOf: [Object]</b> <br>
 returns a type constructor suited for the object</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+isObject: [Object] constructibleBy: [Object]</b> <br>
+checks if the first object can be made from the second
+object (Constructor)</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
 parentOf: [o:Object]</b> <br>
 gets the first immediate parent of o.</p>
 
@@ -3238,6 +3699,10 @@ to object</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
 run: [Block] inContext: [Map] arguments: [Array]</b></p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+run: [Block] inContextAsWorld: [Map] arguments:
+[Array]</b></p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
 runHere: [Block] forObject: [o:Object] arguments:
@@ -3263,6 +3728,20 @@ exist.</p>
 getProperty: &rsquo;end&rsquo; ofObject: Eval</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+setProperty: [p:String] ofObject: [o:Object] toValue:
+[v:Object]</b> <br>
+sets the property p of object o to value v.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+globalInstrument: [Block&lt;obj, msg, arg&gt;:result]</b>
+<br>
+Set a global instrumentor (overrides all instrumentors)</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+disableGlobalInstrument</b> <br>
+unset the global instrumentor</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
 disableInstrumentation</b> <br>
 Sends a message to an object with some arguments bypassing
 the instrumentor</p>
@@ -3274,9 +3753,9 @@ the instrumentor</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
 registerInstrumentor: [Block&lt;object, message,
-arguments&gt;:&lt;object, message, arguments&gt;]</b> <br>
-register to an event that fires every time a message is
-sent. <br>
+arguments&gt;:&lt;result&gt;] forObject: [Object]</b> <br>
+register to an event that fires every time a message is sent
+for an specific object. <br>
 This instrumentor will have to handle all message sending
 operations <br>
 using &lsquo;[Reflect] disableInstrumentation&lsquo; and
@@ -3287,7 +3766,12 @@ In which case, the message is handed down to the object
 raw</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
-currentInstrumentor</b> <br>
+unregisterInstrumetationForObject: [Object]</b> <br>
+Unregister the instrumentation block for the given
+object</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+currentInstrumentorFor: [Object]</b> <br>
 gets the current instrumentor instance, or Nil if none
 exists</p>
 
@@ -3300,8 +3784,20 @@ exists</p>
 global context passing it the arguments</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+runInNewContext: [Block]</b> <br>
+runs a block in a new context and returns that context</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
 thisContext</b> <br>
 returns the current context as a map</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Object]
+setPrivate: [String] value: [Object]</b> <br>
+sets a private property of the object</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+ignoreInTrace: [String]</b> <br>
+Set the file to be ignored in stack traces</p>
 
 <h2>Fiber
 <a name="Fiber"></a>
@@ -3346,6 +3842,29 @@ unpack: [String:Ref]</b> <br>
 Assigns the fiber instance to the reference <br>
 (Always prefer using algebraic deconstruction assignments:
 look at section &rsquo;Assignment&rsquo;)</p>
+
+<h2>BUGS
+<a name="BUGS"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">This is a
+preliminary version (&lt; 1.0) of Citron, there might still
+be very serious bugs. Please refrain from using this version
+in a production environment. This version of Citron is still
+considered &rsquo;alpha&rsquo; stage and cannot be expected
+to be reliable.</p>
+
+<h2>AUTHOR
+<a name="AUTHOR"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">AnotherTest and
+the Citron Community (Nil)</p>
+
+
+<p style="margin-left:11%; margin-top: 1em">devanothertest@gmail.com</p>
 <hr>
 </body>
 </html>

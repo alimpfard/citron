@@ -1,3 +1,4 @@
+CITRON_EXT_PATH = (nil)(())
 hello1
 Uncaught error has occurred.
 a child process can not join.
@@ -11,3 +12,5 @@ The probable cause of the exception:
 4 | 	child join.
 ~~~~~~~~~~~~~^
 5 | 	Pen write: 'hello2\n'.
+
+CITRON_EXT_PATH = (nil)(())

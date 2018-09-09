@@ -1,4 +1,13 @@
-[31m<string>:11: struct/union/enum already defined
-[0m[31m<string>:1: unknown type size
-[0m[31m3 tests failed
-[0m
+CITRON_EXT_PATH = (nil)(())
+Uncaught error has occurred.
+Error occurred while changing directory: No such file or directory
+#4 changeDirectory: (tests/test0288.ctr: 9)
+#3 here (tests/test0288.ctr: 9)
+#2 loaded (/home/ali/Documents/ProjectCitron/citron/extensions/importlib.ctr: 106)
+#1 Library/Data/Set/HashSet:Library/Foreign/C/PackedArray: (tests/test0288.ctr: 4)
+------------------------------------
+The probable cause of the exception: 
+7 | 
+8 | 
+9 | var here is Program changeDirectory: 'tests/inject_test_suite/C/tests/simple-exec'.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^

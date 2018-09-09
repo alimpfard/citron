@@ -1,3 +1,4 @@
+CITRON_EXT_PATH = (nil)(())
 Uncaught error has occurred.
 Unknown method Object::'nonexistantmessage' was called
 #1 nonexistantmessage (tests/test0041.ctr: 2)

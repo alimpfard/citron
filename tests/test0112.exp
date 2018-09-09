@@ -1,3 +1,4 @@
+CITRON_EXT_PATH = (nil)(())
 Block 1.
 Uncaught error has occurred.
 #2 break (tests/test0112.ctr: 4)

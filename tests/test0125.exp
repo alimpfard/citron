@@ -1,3 +1,4 @@
+CITRON_EXT_PATH = (nil)(())
 file contains: hello
 read 2 bytes: "he"
 read 3 more bytes: "llo"

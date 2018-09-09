@@ -1,3 +1,4 @@
+CITRON_EXT_PATH = (nil)(())
 Uncaught error has occurred.
 Unknown method Object::'doesNotUnderstand' was called
 #1 doesNotUnderstand (tests/test0142.ctr: 6)

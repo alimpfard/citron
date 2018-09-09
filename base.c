@@ -347,24 +347,8 @@ ctr_object_hash (ctr_object * myself, ctr_argument * argumentList)
   return hash;
 }
 
-// /**
-//  * <b>[Object] aHash</b>
-//  *
-//  * fallback alternate hashing
-//  * returns the hash of the object's string form.
-//  */
-// ctr_object *ctr_object_ahash(ctr_object * myself, ctr_argument * argumentList)
-// {
-//      uint64_t hh = ctr_internal_alt_hash(myself);
-//      ctr_object *hash = ctr_build_number_from_float(hh);
-//      return hash;
-// }
 
-/**
- * <b>[Object] new hiding:</b>
- *
- * Creates a new Object hiding some parameters.
- */
+
 ctr_object *
 ctr_object_make_hiding (ctr_object * myself, ctr_argument * argumentList)
 {

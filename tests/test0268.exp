@@ -1,3 +1,4 @@
+CITRON_EXT_PATH = (nil)(())
 Uncaught error has occurred.
 Parser error, unexpected end of program ( tests/test0268.ctr: 2)
 -> Expected a dot (.).

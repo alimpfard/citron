@@ -1,3 +1,4 @@
+CITRON_EXT_PATH = (nil)(())
 Uncaught error has occurred.
 Division by zero.
 #2 / (tests/test0184.ctr: 34)

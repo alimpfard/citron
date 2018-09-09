@@ -1,3 +1,4 @@
+CITRON_EXT_PATH = (nil)(())
 + 3
 echo Hello world
 Uncaught error has occurred.

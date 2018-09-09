@@ -89,7 +89,8 @@ The following messages are part of the Core API of the Citron Programming Langua
 .SS
 <?.
 
-['../base.c', '../collections.c', '../file.c', '../system.c', '../reflect.c', '../fiber.c'] fmap: {:v
+['../base.c', '../collections.c', '../file.c', '../generator.c', '../base_extensions.c', '../system.c', '../reflect.c', '../fiber.c'] fmap: {:v
+    Pen writeln: '.BR\n$$v'.
 	var f is File new: v.
 	var str is f read.
 	f close.

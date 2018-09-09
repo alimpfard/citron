@@ -1,2 +1,1 @@
-CITRON_EXT_PATH = (nil)(())
 select * from users where id = 2

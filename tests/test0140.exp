@@ -1,4 +1,3 @@
-CITRON_EXT_PATH = (nil)(())
 Trigger an erroraaaUncaught error has occurred.
 Hi!
 #3 error: (tests/test0140.ctr: 11)

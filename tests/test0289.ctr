@@ -1,0 +1,12 @@
+#:declare lazyev where
+#:declare lazyev in
+var where is \:x:y { y fmap: \:x x evaluate. ^x evaluate. } run.
+var in is \:x:y { x evaluate. ^y evaluate. } run.
+
+Pen writeln: (
+    (a + b) `where` [var a is 123, var b is 321]
+).
+
+Pen writeln: (
+    (a is 321) `in` a + 4
+).

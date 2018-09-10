@@ -57,4 +57,4 @@ there are some examples in the `examples` directory.
 
 ### Default Module Resolution
 A default module resolution path is assigned at build-time, which normally points to the data directory of the install;
-However, this can always be overridden by specifying an environment variable (CITRON_EXT_PATH by default).
+However, this can always be overridden by specifying an environment variable (`CITRON_EXT_PATH` by default).

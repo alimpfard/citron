@@ -39,6 +39,17 @@ void ctr_condense_generator (ctr_generator *, int);
 ctr_mapping_generator *ctr_combine_generators (ctr_mapping_generator *, ctr_mapping_generator *);
 ctr_object *ctr_generator_internal_inext (ctr_generator * genny, int gtype, ctr_generator * ogenny, int ogtype);
 
+/**@I_OBJ_DEF Generator*/
+/**
+ * [Generator] from: [Number] to: [Number] [step: [Number]]
+ *
+ * Creates a numeric step generator
+ */
+/**
+ * [Generator] elementsOf: [Array|Map|String]
+ *
+ * Creates a generator that steps through the elements of a collection
+ */
 ctr_object *
 ctr_generator_make (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -140,6 +151,11 @@ ctr_generator_make (ctr_object * myself, ctr_argument * argumentList)
   return inst;
 }
 
+/**
+ * [Generator] repeat: [Object]
+ *
+ * Creates a generator that simply repeats an object forever
+ */
 ctr_object *
 ctr_generator_make_rept (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -157,6 +173,12 @@ ctr_generator_make_rept (ctr_object * myself, ctr_argument * argumentList)
   return inst;
 }
 
+/**
+ * [Generator] imap: [Block]
+ *
+ * Creates a generator that maps the elements of this generator through the given
+ * block.
+ */
 ctr_object *
 ctr_generator_imap (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -184,6 +206,12 @@ ctr_generator_imap (ctr_object * myself, ctr_argument * argumentList)
   return inst;
 }
 
+/**
+ * [Generator] fmap: [Block]
+ *
+ * Creates a generator that maps the elements of this generator through the given
+ * block.
+ */
 ctr_object *
 ctr_generator_fmap (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -216,6 +244,13 @@ ctr_generator_fmap (ctr_object * myself, ctr_argument * argumentList)
   return inst;
 }
 
+/**
+ * [Generator] ifmap: [Block]
+ *
+ * Creates a generator that maps the elements of this generator through the given
+ * block; should the block yield a generator, it will be depleted, and its elements
+ * unpacked recursively
+ */
 ctr_object *
 ctr_generator_ifmap (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -465,6 +500,11 @@ ctr_generator_internal_inext (ctr_generator * genny, int gtype, ctr_generator * 
   return fail ? generator_end_marker : current;
 }
 
+/**
+ * [Generator] next
+ *
+ * Gets the next element of this generator
+ */
 ctr_object *
 ctr_generator_next (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -485,6 +525,12 @@ ctr_generator_next (ctr_object * myself, ctr_argument * argumentList)
   return next;
 }
 
+/**
+ * [Generator] inext
+ *
+ * Gets the next element of this generator; should it be a generator, it will
+ * first be recursively used, and itself ignored
+ */
 ctr_object *
 ctr_generator_inext (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -504,7 +550,11 @@ ctr_generator_inext (ctr_object * myself, ctr_argument * argumentList)
     }
   return next;
 }
-
+/**
+ * [Generator] finished
+ *
+ * Returns whether this generator is done producing items
+ */
 ctr_object *
 ctr_generator_isfin (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -515,6 +565,11 @@ ctr_generator_isfin (ctr_object * myself, ctr_argument * argumentList)
   return ctr_build_bool (genny->finished);
 }
 
+/**
+ * [Generator] each: [Block]
+ *
+ * Runs the block for each element in the generator
+ */
 ctr_object *
 ctr_generator_each (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -560,6 +615,13 @@ ctr_generator_each (ctr_object * myself, ctr_argument * argumentList)
   return myself;
 }
 
+/**
+ * [Generator] ieach: [Block]
+ *
+ * Runs the block for each element in the generator;
+ * should the generator yield another generator, it will be depleted, and its elements
+ * unpacked recursively
+ */
 ctr_object *
 ctr_generator_ieach (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -639,6 +701,11 @@ ctr_generator_internal_tostr (ctr_generator * gen, int gtype)
     }
 }
 
+/**
+ * [Generator] toString
+ *
+ * Returns a string representation of this generator
+ */
 ctr_object *
 ctr_generator_tostr (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -682,6 +749,11 @@ ctr_internal_generator_copy (ctr_generator * genny, int gtype)
   return gcopy;
 }
 
+/**
+ * [Generator] toArray
+ *
+ * Unpacks the contents of this generator to an array
+ */
 ctr_object *
 ctr_generator_toarray (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -725,6 +797,12 @@ ctr_generator_toarray (ctr_object * myself, ctr_argument * argumentList)
   return array;
 }
 
+/**
+ * [Generator] copy
+ *
+ * Copies this generator to create another unique one
+ * The state of this generator _will_ be preserved
+ */
 ctr_object *
 ctr_generator_copy (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -826,7 +904,11 @@ ctr_generator_free (void *res_)
   return res_;
 }
 
-
+/**
+ * [Generator] foldl: [Block] accumulator: [Object]
+ *
+ * Folds this generator from the left (see Array::'foldl::accumulator:' for details)
+ */
 ctr_object*
 ctr_generator_foldl(ctr_object * myself, ctr_argument * argumentList)
 {

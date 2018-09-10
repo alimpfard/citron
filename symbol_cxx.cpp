@@ -53,7 +53,7 @@ ctr_object *ctr_get_or_create_symbol_table_entry (const char *name, ctr_size len
 extern "C" fixity_lookup_rv ctr_lookup_fix(const char* name, int length) {
     return lookup_fix(std::string(name, length));
 }
-extern "C" void ctr_set_fix(const char* name, int length, int fix, int prec) {
+extern "C" void ctr_set_fix(const char* name, int length, int fix, int prec, int lazy) {
     if (length == 0) return;
     auto s = std::string(name, length);
     eFixity fix_;
@@ -61,7 +61,7 @@ extern "C" void ctr_set_fix(const char* name, int length, int fix, int prec) {
         fix_ = eFixity::LEFT;
     else
         fix_ = eFixity::RIGHT;
-    fixity_ind ind = {fix_, prec};
+    fixity_ind ind = {fix_, prec, lazy};
     fixity_map[s] = ind;
 }
 inline fixity_lookup_rv lookup_fix(std::string s) {
@@ -71,6 +71,7 @@ inline fixity_lookup_rv lookup_fix(std::string s) {
     fixity_lookup_rv rv;
     rv.fix = v.fix == eFixity::RIGHT;
     rv.prec = v.prec;
+    rv.lazy = v.lazy;
     return rv;
 }
 

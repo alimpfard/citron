@@ -62,7 +62,7 @@ class CitronLexer(RegexLexer):
         ],
         'main__6' : [
             ('(\n|\r|\r\n)', String),
-            ('.', Generic.Error),
+            ('.', Generic.Deleted),
         ],
         'main__7' : [
             ('(\n|\r|\r\n)', String),

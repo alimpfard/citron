@@ -5,10 +5,18 @@ import
     Library/Foreign/C/PackedArray: 'PackedArray'
     .
 
-var here is Program changeDirectory: 'tests/inject_test_suite/C/tests/simple-exec'.
+var here is Nil.
+
+{
+  here is Program changeDirectory: 'tests/inject_test_suite/C/tests/simple-exec'.
+  Inject.
+} catch: {
+  Pen writeln: 'Test suit not found or Inject not enabled'.
+  Program exit.
+}, run.
 
 Inject on: 'init' do: {
-    errorHandler: {:e 
+    errorHandler: {:e
         Pen red writeln: e, resetColor.
         True continue.
     }.
@@ -28,7 +36,7 @@ File list: '.', each_v: {:spec
         {
             t listen: {
             } timeout: 1 second.
-        } catch: { 
+        } catch: {
             failed add: fname.
         }, run.
     }.

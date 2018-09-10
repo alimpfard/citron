@@ -1,5 +1,6 @@
 #Like test 11 but with continous GC (mode 4) to test for GC regressions.
-Broom mode: 4.
+# mode 4 deprecated
+# Broom mode: 4.
 
 Animal is Object new.
 Animal on: 'makeSound' do: {

@@ -4,16 +4,24 @@
 
 struct eqstr
 {
-  bool operator()(std::string s1, std::string s2) const
+  bool operator()(const std::string& s1, const std::string& s2) const
   {
     return s1 == s2;
   }
 };
 
+struct lessstr 
+{
+    bool operator()(const std::string& s1, const std::string& s2) const 
+    {
+        return s1 < s2;
+    }
+};
+
 static google::dense_hash_map<std::string, ctr_object, std::hash<std::string>, eqstr> symbols;
 static int initialized = 0;
 
-static std::map<std::string, fixity_ind> fixity_map;
+static std::map<std::string, fixity_ind, lessstr> fixity_map;
 
 static fixity_lookup_rv basic_fixity = {1, 2};
 

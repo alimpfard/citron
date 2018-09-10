@@ -1,12 +1,14 @@
+# Define fun meta functions
 #:declare lazyev where
 #:declare lazyev in
-var where is \:x:y { y fmap: \:x x evaluate. ^x evaluate. } run.
+var where is \:x:y { y is y + [x]. ^y fmap: \:x x evaluate, last. } run.
 var in is \:x:y { x evaluate. ^y evaluate. } run.
+# End Define fun meta functions
 
 Pen writeln: (
     (a + b) `where` [var a is 123, var b is 321]
 ).
 
 Pen writeln: (
-    (a is 321) `in` a + 4
+    (var a is 321) `in` (a + 4)
 ).

@@ -38,3 +38,7 @@ Object on: 'on:pdo:' do: {:msg:ast
   }).
   me on: msg do: blk.
 }.
+
+#:declare lazyev match
+
+var match is \:__arg0:__arg1 __arg0 evaluate match: __arg1.

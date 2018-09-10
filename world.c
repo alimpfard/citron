@@ -1556,6 +1556,7 @@ ctr_find_in_my (ctr_object * key)
   return foundObject;
 }
 
+extern ctr_object* generator_end_marker;
 /**
  * @internal
  *
@@ -1603,7 +1604,10 @@ ctr_set (ctr_object * key, ctr_object * object)
       return;
     }
 assign_anyway:
-  if (strncmp (key->value.svalue->value, "me", key->value.svalue->vlen) != 0)
+  if (
+          key != &generator_end_marker &&
+          strncmp (key->value.svalue->value, "me", key->value.svalue->vlen) != 0
+    )
     object->lexical_name = key;
   ctr_internal_object_set_property (context, key, object, 0);
 }

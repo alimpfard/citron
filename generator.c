@@ -12,7 +12,7 @@
 #define CTR_XFN_OF_GENNY 8
 
 const static ctr_object generator_end_marker_o;
-static ctr_object *generator_end_marker = (ctr_object *) & generator_end_marker_o;
+ctr_object *generator_end_marker = (ctr_object *) & generator_end_marker_o;
 
 typedef struct
 {

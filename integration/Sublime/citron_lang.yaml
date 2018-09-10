@@ -103,7 +103,7 @@ contexts:
       captures:
         0: comment.Citron
       push:
-        - match: '(?:(?:(declare)(\s+)(infixr|infixl)(\s*)(.*))|(?:(language)(\s+)(.*))$)'
+        - match: '(?:(?:(declare)(\s+)(infixr|infixl|lazyev)(\s*)(.*))|(?:(language)(\s+)(.*))$)'
           pop: true
           captures:
             0: markup.deleted.Citron
@@ -116,7 +116,7 @@ contexts:
             7: string.regexp.Citron
         - match: '(.)'
           captures:
-            0: invalid.illegal.Citron
+            0: markup.deleted.Citron
     - match: '(\#.*$)'
       captures:
         0: comment.Citron

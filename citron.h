@@ -339,6 +339,7 @@ typedef struct ctr_code_pragma ctr_code_pragma;
 struct fixity_lookup_rv {
     int fix;
     int prec;
+	int lazy;
 };
 typedef struct fixity_lookup_rv fixity_lookup_rv;
 
@@ -642,7 +643,7 @@ void ctr_print_stack_trace();
 ctr_object* ctr_get_or_create_symbol_table_entry  (const char* name, ctr_size len);
 ctr_object* ctr_get_or_create_symbol_table_entry_s(const char* name, ctr_size len);
 fixity_lookup_rv ctr_lookup_fix(const char* name, int length);
-void ctr_set_fix(const char* name, int length, int fix, int prec);
+void ctr_set_fix(const char* name, int length, int fix, int prec, int lazy);
 void clear_fixity_map();
 int ctr_str_count_substr(char *str, char *substr, int overlap);
 

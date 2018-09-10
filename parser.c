@@ -1325,7 +1325,6 @@ ctr_cparse_expr (int mode)
       ll->node = r;
       char texpr_res = ctr_transform_template_expr;
       if (fix.lazy) {
-        ctr_transform_template_expr = 1;
         ll->node = ctr_cparse_create_node(CTR_AST_NODE);
         ll->node->type = CTR_AST_NODE_RAW;
         ll->node->modifier = 1;
@@ -1333,29 +1332,18 @@ ctr_cparse_expr (int mode)
         ll->node->nodes->node = r;
       }
       ll->next = ctr_heap_allocate_tracked(sizeof(*ll));
-      ll->next->node = ctr_cparse_expr(fix.fix*2); //get next argument
       if (fix.lazy) {
         ctr_tnode* rv = ll->next->node;
-        if (rv->type == CTR_AST_NODE_IMMUTABLE) {
-          ctr_tlistitem *lln = rv->nodes->node->nodes;
-          while (lln) {
-            ctr_tnode* node = lln->node;
-            lln->node = ctr_cparse_create_node(CTR_AST_NODE);
-            lln->node->type = CTR_AST_NODE_RAW;
-            lln->node->modifier = 1;
-            lln->node->nodes = ctr_heap_allocate(sizeof(*ll));
-            lln->node->nodes->node = node;
-            lln = lln->next;
-          }
+        int t = ctr_clex_tok();
+        ctr_clex_putback();
+        if (t == CTR_TOKEN_TUPOPEN) {
+          ctr_transform_template_expr = 2;
         } else {
-          ll->next->node = ctr_cparse_create_node(CTR_AST_NODE);
-          ll->next->node->type = CTR_AST_NODE_RAW;
-          ll->next->node->modifier = 1;
-          ll->next->node->nodes = ctr_heap_allocate(sizeof(*ll));
-          ll->next->node->nodes->node = rv;
+          ctr_transform_template_expr = 1;
         }
-        ctr_transform_template_expr = texpr_res;
       }
+        ll->next->node = ctr_cparse_expr(fix.fix*2); //get next argument
+        ctr_transform_template_expr = texpr_res;
       //arguments in li
       ctr_tlistitem* rli = ctr_heap_allocate_tracked(sizeof(*rli));
       rli->node = ctr_cparse_create_node(CTR_AST_NODE);

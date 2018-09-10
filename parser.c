@@ -1323,8 +1323,26 @@ ctr_cparse_expr (int mode)
       ll->node->nodes = ctr_heap_allocate_tracked(sizeof(*ll));
       ll = ll->node->nodes;
       ll->node = r;
+      char texpr_res = ctr_transform_template_expr;
+      if (fix.lazy) {
+        ctr_transform_template_expr = 1;
+        ll->node = ctr_cparse_create_node(CTR_AST_NODE);
+        ll->node->type = CTR_AST_NODE_RAW;
+        ll->node->modifier = 1;
+        ll->node->nodes = ctr_heap_allocate(sizeof(*ll));
+        ll->node->nodes->node = r;
+      }
       ll->next = ctr_heap_allocate_tracked(sizeof(*ll));
       ll->next->node = ctr_cparse_expr(fix.fix*2); //get next argument
+      if (fix.lazy) {
+        ctr_tnode* rv = ll->next->node;
+        ll->next->node = ctr_cparse_create_node(CTR_AST_NODE);
+        ll->next->node->type = CTR_AST_NODE_RAW;
+        ll->node->modifier = 1;
+        ll->next->node->nodes = ctr_heap_allocate(sizeof(*ll));
+        ll->next->node->nodes->node = rv;
+        ctr_transform_template_expr = texpr_res;
+      }
       //arguments in li
       ctr_tlistitem* rli = ctr_heap_allocate_tracked(sizeof(*rli));
       rli->node = ctr_cparse_create_node(CTR_AST_NODE);

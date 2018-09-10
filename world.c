@@ -26,6 +26,7 @@
 #endif
 
 static int ctr_world_initialized = 0;
+extern ctr_object* generator_end_marker;
 
 // #define withGIL 1 //we all know this is a bad idea...
 
@@ -837,6 +838,7 @@ ctr_internal_object_add_property (ctr_object * owner, ctr_object * key, ctr_obje
 {
   ctr_did_side_effect = 1;
   if (value->lexical_name == NULL &&
+      value != generator_end_marker &&
       strncmp (key->value.svalue->value, "me", key->value.svalue->vlen) != 0 &&
       strncmp (key->value.svalue->value, "thisBlock", key->value.svalue->vlen) != 0)
     value->lexical_name = key;
@@ -1556,7 +1558,6 @@ ctr_find_in_my (ctr_object * key)
   return foundObject;
 }
 
-extern ctr_object* generator_end_marker;
 /**
  * @internal
  *
@@ -1605,7 +1606,7 @@ ctr_set (ctr_object * key, ctr_object * object)
     }
 assign_anyway:
   if (
-          key != &generator_end_marker &&
+          object != generator_end_marker &&
           strncmp (key->value.svalue->value, "me", key->value.svalue->vlen) != 0
     )
     object->lexical_name = key;

@@ -850,7 +850,7 @@ ctr_lex_parse_pragma (const char* descr)
     struct lexer_state s, n;
     ctr_clex_dump_state(&s);
     n = s;
-    n.ctr_eofcode = descr + strlen(descr) + 1;
+    n.ctr_eofcode = descr + strlen(descr);
     n.ctr_clex_oldptr = n.ctr_clex_olderptr = n.ctr_code = descr;
     ctr_clex_load_state(n);
     ctr_match_toggle_pragma();

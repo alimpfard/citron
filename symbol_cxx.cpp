@@ -4,7 +4,7 @@
 
 struct eqstr
 {
-  bool operator()(std::string s1, std::string s2) const
+  bool operator()(const std::string& s1, const std::string& s2) const
   {
     return s1 == s2;
   }

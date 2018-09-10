@@ -20,8 +20,9 @@ struct fixity_ind
 {
     eFixity fix;
     int prec;
+    int lazy;
 };
 
 extern "C" fixity_lookup_rv ctr_lookup_fix(const char* name, int length);
-extern "C" void ctr_set_fix(const char* name, int length, int fix, int prec);
+extern "C" void ctr_set_fix(const char* name, int length, int fix, int prec, int lazy);
 inline fixity_lookup_rv lookup_fix(std::string s);

@@ -522,18 +522,21 @@ ctr_match_toggle_pragma ()
     int t0 = ctr_clex_tok();
     if (t0 != CTR_TOKEN_REF) {
       err:;
-      ctr_clex_emit_error("Expected either infixr or infixl");
+      ctr_clex_emit_error("Expected either infixr or infixl or lazyev");
       return;
     }
     char* v = ctr_clex_tok_value();
     int len = ctr_clex_tok_value_length();
     int fixity = 0;
     int prec = 0;
+    int lazy = 0;
     if (len != strlen("infixr")) goto err;
     if (strncmp(v, "infixr", len) == 0)
       fixity = 0;
     else if (strncmp(v, "infixl", len) == 0)
       fixity = 1;
+    else if (strncmp(v, "lazyev", len) == 0)
+      lazy = 1;
     else goto err;
     t0 = ctr_clex_tok();
     if (t0 == CTR_TOKEN_NUMBER) {
@@ -546,7 +549,7 @@ ctr_match_toggle_pragma ()
     }
     v = ctr_clex_tok_value();
     len = ctr_clex_tok_value_length();
-    ctr_set_fix(v, len, fixity, prec);
+    ctr_set_fix(v, len, fixity, prec, lazy);
     ctr_clex_olderptr = ctr_code;
     ctr_clex_oldptr = ctr_code;
     return;

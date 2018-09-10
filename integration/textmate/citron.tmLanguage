@@ -224,9 +224,9 @@
             </dict>
           </dict>
           <key>contentName</key>
-          <string>invalid.illegal.Citron</string>
+          <string>markup.deleted.Citron</string>
           <key>end</key>
-          <string>(?:(?:(declare)(\s+)(infixr|infixl)(\s*)(.*))|(?:(language)(\s+)(.*))$)</string>
+          <string>(?:(?:(declare)(\s+)(infixr|infixl|lazyev)(\s*)(.*))|(?:(language)(\s+)(.*))$)</string>
           <key>endCaptures</key>
           <dict>
             <key>1</key>

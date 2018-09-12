@@ -156,6 +156,19 @@ contexts:
         - match: '(.)'
           captures:
             0: entity.name.Citron
+    - match: '(?:(\`)([^\s\d\x{003a}.\x{002c}\[\]\(\)\{\}\#][^\s\x{003a}.\x{002c}\[\]\(\)\{\}\#]*)(\1))'
+      captures:
+        0: constant.character.escape.Citron
+        1: entity.name.type.Citron
+        2: constant.character.escape.Citron
+      push:
+        - match: '(\s*?)'
+          pop: true
+          captures:
+            0: entity.name.Citron
+        - match: '(.)'
+          captures:
+            0: entity.name.Citron
     - match: '(?:(\`?)([^\s\d\x{003a}.\x{002c}\[\]\(\)\{\}\#][^\s\x{003a}.\x{002c}\[\]\(\)\{\}\#]*)(\1))'
       captures:
         0: constant.character.escape.Citron

@@ -1452,8 +1452,12 @@ ctr_build_number_from_string (char *str, ctr_size length)
   numCStr = (char *) ctr_heap_allocate (41 * sizeof (char));
   memcpy (numCStr, str, stringNumberLength);
   char* baseptr = NULL, bases[]="xXcCoO";
-  if (numCStr[0] == '0' && length > 1)
+  if (numCStr[0] == '0' && length > 1 && numCStr[1] != '.')
     {
+      if(numCStr[1] == '0') {
+        CtrStdFlow = ctr_format_str("EInvalid number format at ->%s: extra `0'", numCStr+1);
+        return CtrStdNil;
+      }
       int base = 10;
       baseptr = strchr (bases, numCStr[1]);
       if (baseptr == NULL) {

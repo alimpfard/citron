@@ -366,6 +366,40 @@
         </dict>
         <dict>
           <key>begin</key>
+          <string>(?:(\`)([^\s\d\x{003a}.\x{002c}\[\]\(\)\{\}\#][^\s\x{003a}.\x{002c}\[\]\(\)\{\}\#]*)(\1))</string>
+          <key>beginCaptures</key>
+          <dict>
+            <key>1</key>
+            <dict>
+              <key>name</key>
+              <string>constant.character.escape.Citron</string>
+            </dict>
+            <key>2</key>
+            <dict>
+              <key>name</key>
+              <string>entity.name.type.Citron</string>
+            </dict>
+            <key>3</key>
+            <dict>
+              <key>name</key>
+              <string>constant.character.escape.Citron</string>
+            </dict>
+          </dict>
+          <key>contentName</key>
+          <string>entity.name.Citron</string>
+          <key>end</key>
+          <string>(\s*?)</string>
+          <key>endCaptures</key>
+          <dict>
+            <key>1</key>
+            <dict>
+              <key>name</key>
+              <string>entity.name.Citron</string>
+            </dict>
+          </dict>
+        </dict>
+        <dict>
+          <key>begin</key>
           <string>(?:(\`?)([^\s\d\x{003a}.\x{002c}\[\]\(\)\{\}\#][^\s\x{003a}.\x{002c}\[\]\(\)\{\}\#]*)(\1))</string>
           <key>beginCaptures</key>
           <dict>
@@ -407,6 +441,12 @@
        </array>
     </dict>
     <key>main__10</key>
+    <dict>
+      <key>patterns</key>
+      <array>
+       </array>
+    </dict>
+    <key>main__11</key>
     <dict>
       <key>patterns</key>
       <array>

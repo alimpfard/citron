@@ -467,15 +467,15 @@ ctr_cparse_lit_esc ()
       ctr_heap_free (r);	//this node is not needed, we remove the parens in the expression
       r = v;
       break;
-    case -2:
+    case -2: // $[]
       ctr_transform_template_expr = 2;
       r = ctr_cparse_tuple (CTR_TOKEN_TUPCLOSE);
       ctr_transform_template_expr = texpr_res;
       break;
-    case -4:
+    case -4: // $'()
       quote = 1;
       /* Fallthrough */
-    case -3:
+    case -3: // $!
       {
 	int t = ctr_clex_tok ();
 	ctr_clex_putback ();

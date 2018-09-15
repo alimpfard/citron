@@ -393,10 +393,12 @@ ctr_cwlk_expr (ctr_tnode * node, char *wasReturn)
 	  case 0:
 	    {
 	      char ret;
-	      int oldquote = force_quote;
+	      int oldquote = force_quote, refs=ctr_cwlk_replace_refs;
 	      force_quote = quote;
 	      ctr_cwlk_last_msg_level = ctr_cwlk_msg_level;
+        ctr_cwlk_replace_refs = 0;
 	      result = ctr_cwlk_expr (node->nodes->node, &ret);
+        ctr_cwlk_replace_refs = refs;
 	      force_quote = oldquote;	//set back in case we didn't reset
 	      if (ctr_ast_is_splice (result))
 		result = ctr_ast_splice (result);

@@ -1,2 +1,4 @@
-CITRON_EXT_PATH = (nil)(())
-Test suit not found or Inject not enabled
+[31m<string>:11: struct/union/enum already defined
+[0m[31m<string>:1: unknown type size
+[0m[31m3 tests failed
+[0m

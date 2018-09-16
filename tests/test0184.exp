@@ -1,11 +1,1 @@
-Uncaught error has occurred.
-Division by zero.
-#2 / (tests/test0184.ctr: 34)
-#1 a (tests/test0184.ctr: 34)
-------------------------------------
-The probable cause of the exception: 
-32 | 
-33 | a divideBy: 3.    #3
-34 | a is a / 0.1.     #30
-~~~~~~~~~~~^
-35 | a is a - -1.      #31
+282282282

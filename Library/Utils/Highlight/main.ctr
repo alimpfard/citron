@@ -91,38 +91,47 @@ Highlight on: 'highlight:' do: {:code:html
           var in_escape is False.
           var begin is '\''.
           var maybe_in_quot is False.
-          string characters each_v: {:c
+          var delet_this is 0.
+          string characters each: {:i:c
+            var justInEscape is False.
             maybe_in_quot ifTrue: {
               maybe_in_quot is False.
               (c = '?') ifTrue: {
                 this_thing append: c.
                 begin is '?>'.
                 rlen -=: 1.
-                True break.
+                True continue.
               }.
             }.
             (c = '\'') & (in_escape not) ifTrue: { this_thing append: c. True break. }.
             (c = '<') ifTrue: {
               this_thing append: c.
               maybe_in_quot is True.
-              True continue.
+              True break.
             }.
             (c = '\\') ifTrue: {
-              in_escape ifTrue: {
+              in_escape either: {
                 in_escape is False.
                 True continue.
-              }, else: {
+              } or: {
+                justInEscape is True.
                 in_escape is True.
               }.
             }.
-              in_escape ifTrue: {
-                this_thing append: c.
+              justInEscape not & in_escape ifTrue: {
+                this_thing append: (Colors cyan + c + Colors yellow).
+                delet_this +=: (Colors cyan length * 2).
                 in_escape is False.
+                True continue.
+              }.
+              justInEscape ifTrue: {
+                this_thing append: (Colors cyan + c + Colors yellow).
+                delet_this +=: (Colors cyan length * 2).
                 True continue.
               }.
               this_thing append: c.
           }.
-          AST lexSkip: this_thing length.
+          AST lexSkip: this_thing length - delet_this.
           token put: AST lexpos - (begin length - 1) at: 2.
           color is Colors yellow.
           this_thing is begin + this_thing.
@@ -213,12 +222,15 @@ Highlight on: 'highlight:' do: {:code:html
     # Pen writeln: [token, this_thing, rlen].
     returned +=: space * ((token @ 2) - rlen - (this_thing length)).
     returned +=: color + this_thing + (Colors default) + (after_color).
+    #Pen writeln: [token @ 0, last_toc, last_toc_override].
+    (token @ 0 = 'CHAIN') & (last_toc = 'REF') ifTrue: { last_toc_override is 'NOT-CHAIN'. }.
     last_toc is last_toc_override or: token @ 0.
     skip continue.
     var lin is AST lexline.
     token is AST token.
     returned +=: '\n' * (AST lexline - lin).
   }.
+  #Pen line brk.
   ^returned.
 }.
 

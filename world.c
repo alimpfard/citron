@@ -2048,7 +2048,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_STRFMTMAP), &ctr_string_format_map);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("%~:"), &ctr_string_format_map);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("escapeDoubleQuotes"), &ctr_string_dquotes_escape);
-  ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (""), &ctr_string_quotes_escape);
+  ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("escapeQuotes"), &ctr_string_quotes_escape);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_CHARACTERS), &ctr_string_characters);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_TO_BYTE_ARRAY), &ctr_string_to_byte_array);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_APPEND_BYTE), &ctr_string_append_byte);

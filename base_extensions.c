@@ -624,12 +624,21 @@ ctr_ast_set_value (ctr_object * myself, ctr_argument * argumentList)
     }
   char *cval = argumentList->object->value.svalue->value;
   size_t cvlen = argumentList->object->value.svalue->vlen;
-  ctr_tnode *node = myself->value.rvalue->ptr;
-  if (likely (node->vlen < cvlen))
-    node->value = ctr_heap_reallocate (node->value, cvlen + 1);
-  node->vlen = cvlen;
-  memcpy (node->value, cval, cvlen);
-  *(node->value + cvlen) = '\0';
+  if (argumentList->object->interfaces->link == CtrStdSymbol) { //we're setting a symbol
+    ctr_tnode *node = myself->value.rvalue->ptr;
+    if (node->type != CTR_AST_NODE_SYMBOL) {
+      CtrStdFlow = ctr_build_string_from_cstring("Can only set SYMBOL nodes to symbol values");
+      return myself;
+    }
+    node->value = (char*) argumentList->object;
+  } else {
+    ctr_tnode *node = myself->value.rvalue->ptr;
+    if (likely (node->vlen < cvlen))
+      node->value = ctr_heap_reallocate (node->value, cvlen + 1);
+    node->vlen = cvlen;
+    memcpy (node->value, cval, cvlen);
+    *(node->value + cvlen) = '\0';
+  }
   return myself;
 }
 

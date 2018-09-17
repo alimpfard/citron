@@ -1,3 +1,4 @@
+import Library/AST/Utils: 'quoteAllUnbound'.
 Object on: 'match:' do: {:self:ast
   #ast -> $[
   # [pattern, guard*, consequence],
@@ -41,4 +42,30 @@ Object on: 'on:pdo:' do: {:msg:ast
 
 #:declare lazyev match
 
-var match is \:__arg0:__arg1 __arg0 evaluate match: __arg1.
+# This one's a bit of a doozy
+# arg1 is the ast of this expression:
+# {
+#   match => result.
+#   match => result.
+# }
+#
+# which is transformed into this:
+# [
+#   [match, result],
+#   [match, result]
+# ]
+var match is {\:__arg0:__arg1:__obj:__mid_ast
+  __arg0 is __arg0 evaluate.
+  ^__arg1 type = 'CODEBLOCK' either: { # This is a block
+    __arg1 is __arg1 at: 1. # Skip the arguments section
+    __obj is Array new. # Get a new array
+    __arg1 each_v: {:__ast
+      (__ast type = 'EXPRASSIGNMENT') ifFalse: { thisBlock error: 'Syntax error: Expected assignment, but got ' + __ast type. }.
+      __mid_ast is quoteAllUnbound applyTo: (__ast at: 0).
+      __obj push: [(__mid_ast), (__ast at: 1)].
+    }.
+    ^__arg0 match: __obj.
+  } or: { # Just pass it along
+    ^__arg0 match: __arg1.
+  }.
+}.

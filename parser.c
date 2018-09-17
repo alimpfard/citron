@@ -1265,12 +1265,8 @@ ctr_cparse_expr (int mode)
     }
   else if (t2 == CTR_TOKEN_PASSIGNMENT)
     {
-      if (r->type != CTR_AST_NODE_REFERENCE)
-	{
-	  ctr_cparse_emit_error_unexpected (t2, "Invalid left-hand assignment.\n");
-	  exit (1);
-	}
-      r->modifier = 1;		//set private */
+      if (r->type == CTR_AST_NODE_REFERENCE) // it's an alias for my REF is EXPR
+    r->modifier = 1;		//set private */
       e = ctr_cparse_assignment (r);	//go as usual
       /*r->nodes->node->type = CTR_AST_NODE_LTRSTRING;
          e = ctr_cparse_create_node(CTR_AST_NODE);

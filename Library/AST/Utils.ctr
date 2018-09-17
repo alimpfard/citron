@@ -8,7 +8,7 @@ var quoteAllUnbound is {:self:ast
     }.
     ['UNKNOWN', 'RAW', 'PARAMLIST'] contains: ast type, ifFalse: {
     ast each_v: {:inner
-      quoteAllUnbound applyTo: inner.
+      self applyTo: inner.
     }.
   }.
   ^ast.

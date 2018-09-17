@@ -103,7 +103,7 @@ ctr_nil_to_boolean (ctr_object * myself, ctr_argument * ctr_argumentList)
 }
 
 /**
- *[Nil] unpack: [Ref:string]
+ *[Nil] unpack: [Ref:string], [Object:context]
  *
  * Assigns Nil into Ref
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
@@ -129,7 +129,7 @@ ctr_nil_assign (ctr_object * myself, ctr_argument * argumentList)
   if (argumentList->object->value.svalue->vlen == 0
       || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
     return myself;
-  ctr_internal_object_set_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), CtrStdNil, 0);
+  ctr_internal_object_set_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), CtrStdNil, 0);
   return myself;
 }
 
@@ -304,7 +304,7 @@ ctr_object_attr_writer (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- *[Object] unpack: [Object:{Ref*}]
+ *[Object] unpack: [Object:{Ref*}], [Object:Context]
  *
  * Element-wise object assign
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
@@ -318,7 +318,7 @@ ctr_object_assign (ctr_object * myself, ctr_argument * argumentList)
       if (argumentList->object->value.svalue->vlen == 0
 	  || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
 	return myself;
-      ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
+      ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
       return myself;
     }
   if (!ctr_reflect_check_bind_valid (myself, argumentList->object, 0))
@@ -1021,7 +1021,7 @@ ctr_build_bool (int truth)
 }
 
 /**
- *[Boolean] unpack: [String:Ref]
+ *[Boolean] unpack: [String:Ref], [Object:Context]
  * Assign ref to boolean
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */
@@ -1046,7 +1046,7 @@ ctr_bool_assign (ctr_object * myself, ctr_argument * argumentList)
   if (argumentList->object->value.svalue->vlen == 0
       || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
     return myself;
-  ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
+  ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
   return myself;
 }
 
@@ -1408,7 +1408,7 @@ ctr_build_number (char *n)
 }
 
 /**
- *[Number] unpack: [String:Ref]
+ *[Number] unpack: [String:Ref], [Object:context]
  * Assign ref to number
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */
@@ -1433,7 +1433,7 @@ ctr_number_assign (ctr_object * myself, ctr_argument * argumentList)
   if (argumentList->object->value.svalue->vlen == 0
       || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
     return myself;
-  ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
+  ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
   return myself;
 }
 
@@ -2497,7 +2497,7 @@ ctr_string_is_ctor (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- *[String] unpack: [String:Ref]
+ *[String] unpack: [String:Ref],[Object:ctx]
  * Assign ref to string
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */
@@ -2529,7 +2529,7 @@ ctr_string_assign (ctr_object * myself, ctr_argument * argumentList)
 	      if (i + x == coll->head)
 		{
 		  if (cs->value.svalue->vlen != 0 && !(cs->value.svalue->vlen == 1 && *cs->value.svalue->value == '_'))
-		    ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string (cs),
+		    ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (cs),
 						      ctr_build_string (myself->value.svalue->value + idx, len - idx), 0);
 		  return myself;
 		}
@@ -2547,7 +2547,7 @@ ctr_string_assign (ctr_object * myself, ctr_argument * argumentList)
 		  if (r != NULL)
 		    {
 		      if (cs->value.svalue->vlen != 0 && !(cs->value.svalue->vlen == 1 && *cs->value.svalue->value == '_'))
-			ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string (cs),
+			ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (cs),
 							  ctr_build_string (myself->value.svalue->value + idx, r - s), 0);
 		      idx += r - s;
 		      continue;
@@ -2576,7 +2576,7 @@ ctr_string_assign (ctr_object * myself, ctr_argument * argumentList)
   if (argumentList->object->value.svalue->vlen == 0
       || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
     return myself;
-  ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
+  ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
   return myself;
 }
 
@@ -5332,7 +5332,7 @@ ctr_capture_refs_ (ctr_tnode * ti, ctr_object * block, ctr_object * parent, int 
 }
 
 /**
- *[Block] unpack: [String:Ref]
+ *[Block] unpack: [String:Ref], [Object:ctx]
  * Assign ref to block
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */
@@ -5357,7 +5357,7 @@ ctr_block_assign (ctr_object * myself, ctr_argument * argumentList)
   if (argumentList->object->value.svalue->vlen == 0
       || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
     return myself;
-  ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
+  ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
   return myself;
 }
 

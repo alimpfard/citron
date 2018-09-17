@@ -350,7 +350,7 @@ ctr_fiber_yielded (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * [Fiber] unpack: [String:Ref]
+ * [Fiber] unpack: [String:Ref], [Object:ctx]
  * Assigns the fiber instance to the reference
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */

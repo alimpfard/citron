@@ -1279,10 +1279,10 @@ ctr_reflect_bind (ctr_object * myself, ctr_argument * argumentList)
   //if(!ctr_reflect_check_bind_valid(from, to, 0)) {
   //  return CtrStdNil;
   //}
-  ctr_argument *arg2 = ctr_heap_allocate (sizeof (ctr_argument));
-  arg2->object = to;
-  ctr_send_message (from, "unpack:", 7, arg2);
-  ctr_heap_free (arg2);
+  ctr_argument arg2, arg2n = {.object=ctr_contexts[ctr_context_id]};
+  arg2.object = to;
+  arg2.next = &arg2n;
+  ctr_send_message (from, "unpack:", 7, &arg2);
   return myself;
 }
 

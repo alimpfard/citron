@@ -54,6 +54,12 @@ Object on: 'on:pdo:' do: {:msg:ast
 #   [match, result],
 #   [match, result]
 # ]
+#
+# However the unbound names in `match' are
+# transformed to be symbols instead
+#
+# e.g. in a context that `x' is not defined,
+# it is transformed into \x
 var match is {\:__arg0:__arg1:__obj:__mid_ast
   __arg0 is __arg0 evaluate.
   ^__arg1 type = 'CODEBLOCK' either: { # This is a block

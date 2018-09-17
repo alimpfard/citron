@@ -203,8 +203,8 @@ Eval on: 'modifyFlags:' do: {:flag
   }.
 }.
 Eval on: 'argCount' do: { ^(my args count). }.
-Eval on: 'onlyRelevantArgs' do: { 
-    my args do shift shift done. 
+Eval on: 'onlyRelevantArgs' do: {
+    my args do shift shift done.
 }. #get rid of ./ctr eval
 
 Eval on: 'startEvalServer' do: {
@@ -847,6 +847,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
   inBlock is 0.
   Eval endBlock.
   var lastEscape is False.
+  var justInEscape is False.
   var inString is False.
   var inpbrk is 0.
   var last_comp_entry_len is 0.
@@ -1025,32 +1026,28 @@ Eval on: 'read_eval_print:' do: ({:prompt
           have_context ifTrue: { clear_next_line applyTo: linesp. have_context is False. }.
           (inc
             case: '\'' do: {
-                inString is (inString & lastEscape not) | (inString not).
+                inString either: {
+                  lastEscape ifFalse: { inString is False. }.
+                } or: { inString is True. }.
             },
             case: '\\' do: {
-                lastEscape is True.
+                lastEscape is lastEscape not.
+                justInEscape is True.
             },
-            # case: '%' do: {
-            #   (var cdi is stdin readBytes: 1).
-            #     cdi
-            #       case: '{' do: {
-            #         inc is inc from: 0 to: inc length - 1.
-            #         inBlock +=: (inString either: 0 or: 1).
-            #       },
-            #       case: '}' do: {
-            #         inc is inc from: 0 to: inc length - 1.
-            #         inBlock -=: (inString either: 0 or: 1).
-            #       }, default: {
-            #         inc +=: cdi.
-            #       }, switch.
-            # },
             case: '#' do: {
               inString ifFalse: {
                 cmt is Colors % ['comments are not allowed in eval', \red].
                 done is True.
                 inc is ''.
               }.
-            }, switch).
+            },
+            case: '}' do: {
+              (inString not) & (inBlock > 0) ifTrue: {
+                inBlock -=: 1.
+              }.
+            },
+            default: { lastEscape & inString ifTrue: {lastEscape is False.}. }, switch).
+            justInEscape ifFalse: { lastEscape is False. }.
           inp is inp insert: inc at: cursor.
           cursor +=: inc length.
           # Eval redraw: inp at: cursor comment: ''.

@@ -1,0 +1,15 @@
+var quoteAllUnbound is {:self:ast
+    (ast type = 'REFERENCE') ifTrue: {
+      Reflect objectExists: ast value, ifFalse: {
+        ast type: 'SYMBOL'.
+        ast value: (ast value toSymbol).
+      }.
+      ^ast.
+    }.
+    ['UNKNOWN', 'RAW', 'PARAMLIST'] contains: ast type, ifFalse: {
+    ast each_v: {:inner
+      quoteAllUnbound applyTo: inner.
+    }.
+  }.
+  ^ast.
+}.

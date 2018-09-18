@@ -1,5 +1,5 @@
 #include "citron.h"
-
+#if 0
 /*
  * Fiber Impl suited for citron blocks
  */
@@ -359,10 +359,11 @@ ctr_fiber_assign (ctr_object * myself, ctr_argument * argumentList)
 {
   return ctr_object_assign (myself, argumentList);
 }
-
+#endif
 void
 ctr_fiber_begin_init ()
 {
+#if 0
   initFibers ();
 
   CtrStdFiber = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
@@ -382,4 +383,5 @@ ctr_fiber_begin_init ()
   CtrStdFiber->info.sticky = 1;
 
   ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring ("Fiber"), CtrStdFiber, 0);
+#endif
 }

@@ -1,3 +1,4 @@
+#if 0
 #include "coroutine.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -212,3 +213,4 @@ coroutine_running (struct schedule *S)
 {
   return S->running;
 }
+#endif

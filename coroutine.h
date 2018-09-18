@@ -1,4 +1,4 @@
-#ifndef CTR_COROUTINE_H
+#ifdef CTR_COROUTINE_H
 #define CTR_COROUTINE_H
 
 #define COROUTINE_DEAD 0

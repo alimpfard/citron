@@ -1438,7 +1438,7 @@ ctr_command_fork (ctr_object * myself, ctr_argument * argumentList)
   ctr_set_link_all (child, myself);
   ps = ctr_heap_allocate (sizeof (int) * 4);
   pipes = ctr_heap_allocate_tracked (
-#ifndef forLinux
+#ifdef forLinux
 				      216 * 2
 #else
 				      sizeof (FILE) * 2

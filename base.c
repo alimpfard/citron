@@ -5562,6 +5562,8 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
 ctr_object *
 ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 {
+  if (!myself)
+    return CtrStdNil;
   if (myself->info.type == CTR_OBJECT_TYPE_OTNATFUNC)
     {
       ctr_object *result = myself->value.fvalue (my, argList);

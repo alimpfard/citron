@@ -2,7 +2,9 @@ language: c
 compiler: clang
 before_install:
     - sudo apt-get -qq update
-    - sudo apt-get install -y libffi-dev libbsd-dev libpcre3-dev libgc-dev realpath libcurl4-openssl-dev libsparsehash-dev sparsehash
+    - sudo add-apt-repository ppa:jonathonf/curl -y
+    - sudo apt-get update
+    - sudo apt-get install -y libffi-dev libbsd-dev libpcre3-dev libgc-dev realpath curl libcurl4-openssl-dev libsparsehash-dev sparsehash
 install:
   - cd autohell && aclocal && libtoolize && autoconf && automake --add-missing
   - mkdir -p build && mkdir -p basemods && export BUILD_DIR_INT=$(realpath build)

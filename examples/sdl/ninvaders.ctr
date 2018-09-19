@@ -1,0 +1,207 @@
+#:language XFrozen
+#:declare lazyev and
+
+var and is \:x:y x evaluate either: {^y evaluate.} or: False.
+
+Broom memoryLimit: 1024 * 1024 * 1024.
+import Library/Data/SwitchCase.
+
+var allKilledInvaders is 0.
+var w is 640.
+var h is 480.
+var window is SDL new
+    set: 'windowName' to: 'Invaders',
+    set: 'windowWidth' to: w,
+    set: 'windowHeight' to: h,
+    init.
+
+var RenderableEntity is Object new
+  on: 'die' do: {
+    my dead is True.
+  },
+  on: 'render:' do: {:surf
+    my dead ifTrue: {^Nil.}.
+    surf blit: my model fromRect: my modelRect toRect: my ownRect.
+  },
+  on: 'clampPosition' do: {
+    my posX < 0 ifTrue: { my posX is 0. }.
+    my posY < 0 ifTrue: { my posY is 0. }.
+    my posX > w ifTrue: { my posX is w. }.
+    my posY > h ifTrue: { my posY is h. }.
+  }.
+
+var Invader is RenderableEntity cnew: {
+  on: 'initAtX:andY:' do: {:x:y
+    model => invader.
+    modelRect => invader clipRect.
+    ownRect => SDL newRectWithX: x andY: y andW: 0 andH: 0.
+    posX => x.
+    posY => y.
+    headingX => 0.
+    headingY => 0.
+    dead => False.
+    deathline => Dice rollWithSides: 300, + 200.
+  }.
+  on: 'tick' do: {:self
+    my dead ifTrue: {
+      my deathline -=: 1.
+      my deathline = 0 ifTrue: {
+        my deathline is Dice rollWithSides: 300, + 200.
+        my dead is False.
+        my posX is Dice rollWithSides: w.
+        my posY is Dice rollWithSides: h - 20, + 19.
+        my ownRect setX: my posX.
+        my ownRect setY: my posY.
+      }.
+      ^Nil.
+    }.
+    my headingX is Boolean flip either: (Boolean flip either: -1 or: 0) or: (Boolean flip either: 0 or: 1).
+    my headingY is Boolean flip either: (Boolean flip either: -1 or: 0) or: (Boolean flip either: 0 or: 1).
+    my posX +=: my headingX.
+    my posY +=: my headingY.
+    self clampPosition.
+    my ownRect setX: my posX.
+    my ownRect setY: my posY.
+  }.
+  on: 'hitsX:andY:withBB:' do: {:x:y:bb
+    my dead ifTrue: { ^False. }.
+    ^((my posX - x) abs * 2 < (my modelRect getW + bb getW))
+      &
+    ((my posY - y) abs * 2 < (my modelRect getH + bb getH)).
+  }.
+}.
+
+var Missile is RenderableEntity cnew: {
+  on: 'initAtX:andY:' do: {:x:y
+    model => shot.
+    modelRect => invader clipRect.
+    ownRect => SDL newRectWithX: x andY: y andW: 0 andH: 0.
+    posX => x.
+    posY => y.
+    headingX => 0.
+    headingY => -1.
+    dead => False.
+    lifespan => 300.
+  }.
+  on: 'tick' do: {:self
+    my lifespan = 0 ifTrue: {^False.}.
+    my lifespan -=: 1.
+    my dead ifTrue: {^False.}.
+    my posX +=: my headingX.
+    my posY +=: my headingY.
+    self clampPosition.
+    var target is any_invader? [my posX, my posY, my modelRect].
+    target isNil ifTrue: {
+      my ownRect setX: my posX.
+      my ownRect setY: my posY.
+      ^Nil.
+    }.
+    allKilledInvaders +=: 1.
+    target die.
+    self die.
+  }.
+}.
+
+var evt is SDLEvent new.
+var invader is SDL loadImage: 'examples/sdl/razavi.jpg'.
+var shot is SDL loadImage: 'examples/sdl/boop.jpg'.
+var ship is SDL loadImage: 'examples/sdl/lol.bmp'.
+
+var allInvaders is Array new fill: 16 with: {:x ^Invader new initAtX: (Dice rollWithSides: w) andY: (Dice rollWithSides: h - 20, + 19).}.
+
+var any_invader? is {:x:y:bb
+  var res is allInvaders filter: (\:_:invader invader hitsX: x andY: y withBB: bb).
+  res count > 0 ifTrue: { ^res head. }.
+  ^Nil.
+}.
+
+ship scaleToW: w / 8 andH: h / 8.
+invader scaleToW: w / 8 andH: h / 8.
+shot scaleToW: w / 16 andH: h / 16.
+
+var dc is ship pixelAtX: 0 andY: 0.
+ship setColorKey: dc.
+
+var shoot_particle is {:from
+  ^Missile new initAtX: from head andY: from last.
+}.
+
+var Ship is RenderableEntity cnew: {
+  dead => False.
+  model => ship.
+  modelRect => ship clipRect.
+  ownRect => SDL newRectWithX: w / 2 andY: h / 2 + 80 andW: 0 andH: 0.
+  posX => w / 2.
+  posY => h / 2 + 80.
+  headingX => 0.
+  headingY => 0.
+  on: 'tick' do: {:self
+    my posX +=: my headingX.
+    my posY +=: my headingY.
+    self clampPosition.
+    my ownRect setX: my posX.
+    my ownRect setY: my posY.
+  }.
+  on: 'shoot' do: {
+    ^shoot_particle[[my posX, my posY]].
+  }.
+  on: 'moveX:andY:' do: {:x:y
+    my headingX +=: x.
+    my headingY +=: y.
+  }.
+  on: 'stopMoving' do: {
+    my headingX is 0.
+    my headingY is 0.
+  }.
+}.
+
+var entities is Array new.
+
+var evthandler is {:e
+  (frozen _ is
+    Nil case: 'keyDown' do: {
+      (frozen __ is
+        Nil case: 'q' do: {
+            True break.
+        },
+        case: 'space' do: {
+            entities push: Ship shoot.
+        },
+        case: 'a' do: {
+          Ship moveX: -5 andY: 0.
+        },
+        case: 'd' do: {
+          Ship moveX: 5 andY: 0.
+        },
+        case: 's' do: {
+          Ship moveX: 0 andY: 5.
+        },
+        case: 'w' do: {
+          Ship moveX: 0 andY: -5.
+        }) switch: e keysym.
+    },
+    case: 'keyUp' do: {
+      'wasd' contains: e keysym, ifTrue: { Ship stopMoving. }.
+    }) switch: (SDLEventTypes at: e toNumber).
+}.
+
+var white is Color rgb: [256, 256, 256].
+var epop is Array new.
+
+{^True.} whileTrue: {
+  Ship tick.
+  Ship render: window.
+  allInvaders each_v: {:i i tick. i render: window. }.
+  entities each: {:idx:i
+    i tick = False ifTrue: { epop push: idx. ^Nil. }.
+    i render: window.
+  }.
+  window update.
+  evt poll: evthandler.
+  Clock wait: 10 ms.
+  window fillRect: Nil withColor: white.
+  epop each_v: {:i entities pop: i. }.
+  epop is Array new.
+}.
+
+Pen cyan write: 'You killed ', red write: allKilledInvaders, cyan write: ' invaders!', resetColor brk.

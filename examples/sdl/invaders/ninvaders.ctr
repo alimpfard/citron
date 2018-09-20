@@ -8,6 +8,13 @@ import
   Library/Data/SwitchCase
   Library/Data/Set/HashSet: 'HashSet'.
 
+Array on: '>' do: {:o
+  ^((me at: 0) > (o at: 0)) & ((me at: 1) > (o at: 1)).
+}.
+Array on: '<' do: {:o
+  ^((me at: 0) < (o at: 0)) & ((me at: 1) < (o at: 1)).
+}.
+
 var allKilledInvaders is 0.
 var w is 640.
 var h is 480.
@@ -16,6 +23,8 @@ var window is SDL new
     set: 'windowWidth' to: w,
     set: 'windowHeight' to: h,
     init.
+
+var valueInRange is \:v:min:max  v between: min and: max.
 
 var RenderableEntity is Object new
   on: 'die' do: {
@@ -33,7 +42,8 @@ var RenderableEntity is Object new
   },
   on: 'iHash' do: { ^me id. },
   on: 'posX' do: {\ my posX },
-  on: 'posY' do: {\ my posY }.
+  on: 'posY' do: {\ my posY },
+  on: 'boundingBox' do: { ^SDL newRectWithX: my posX andY: my posY andW: my modelRect getW andH: my modelRect getH. }.
 
 var Invader is RenderableEntity cnew: {
   on: 'initAtX:andY:' do: {:x:y
@@ -71,12 +81,12 @@ var Invader is RenderableEntity cnew: {
   }.
   on: 'hitsX:andY:withBB:' do: {:x:y:bb
     my dead ifTrue: { ^False. }.
-    ^((my posX - x) abs * 2 < (my modelRect getW + bb getW))
-      &
-    ((my posY - y) abs * 2 < (my modelRect getH + bb getH)).
+    var xOverlap is valueInRange[my posX, x, x + bb getW] | valueInRange[x, my posX, my posX + my modelRect getW].
+    var yOverlap is valueInRange[my posY, y, y + bb getH] | valueInRange[y, my posY, my posY + my modelRect getH].
+    ^xOverlap & yOverlap.
   }.
   on: 'toString' do: {
-    ^'Invader[%d,%d,%d,%d]' % [my posX, my posY, my modelRect getW, my modelRect getH].
+    ^'Invader(dead:%s)[%d,%d,%d,%d]' % [my dead, my posX, my posY, my modelRect getW, my modelRect getH].
   }.
 }.
 
@@ -94,26 +104,20 @@ var surfaceFromAsciiMap is {:len:*lines
 }.
 
 var Missile is RenderableEntity cnew: {
-  on: 'initAtX:andY:' do: {:x:y
-    model => surfaceFromAsciiMap[9,
-      '    *    ' ,
-      '   ***   ' ,
-      '  *****  ' ,
-      '  *****  ' ,
-      '   ***   ' ,
-      '   ***   '
-    ].
+  on: 'initAtX:andY:headingX:andY:model:' do: {:x:y:hx:hy:model
+    model => model.
     modelRect => my model clipRect.
     ownRect => SDL newRectWithX: x andY: y andW: 0 andH: 0.
     posX => x.
     posY => y.
-    headingX => 0.
-    headingY => -3.
+    headingX => hx.
+    headingY => hy - 3.
     dead => False.
-    lifespan => 100.
+    lifespan => 100 / ((my headingX + 3.1) abs).
   }.
+  on: 'initAtX:andY:headingX:andY:' do: {:x:y:hx:hy ^initAtX: x andY: y headingX: hx andY: hy model: shot. }.
   on: 'tick' do: {:self
-    my lifespan = 0 ifTrue: {^False.}.
+    my lifespan < 0 ifTrue: {^False.}.
     my lifespan -=: 1.
     my dead ifTrue: {^False.}.
     my posX +=: my headingX.
@@ -128,7 +132,7 @@ var Missile is RenderableEntity cnew: {
     allKilledInvaders +=: 1.
     target die.
     self die.
-    ^ParticleSystem new initAtX: target posX andY: target posY.
+    ^ParticleSystem new initAtX: my posX - 15 andY: my posY - 35.
   }.
   on: 'toString' do: {
     ^'Miss[%d]' % [my lifespan].
@@ -137,9 +141,34 @@ var Missile is RenderableEntity cnew: {
 
 var evt is SDLEvent new.
 var invader is SDL loadImage: 'examples/sdl/invaders/invader.jpg'.
-var shot is SDL loadImage: 'examples/sdl/boop.jpg'.
+var shot is surfaceFromAsciiMap[9,
+  '    *    ' ,
+  '   ***   ' ,
+  '  *****  ' ,
+  '  *****  ' ,
+  '   ***   ' ,
+  '   ***   ' ].
+
+var laser is surfaceFromAsciiMap[4,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ].
 var ship is SDL loadImage: 'examples/sdl/invaders/launch.png'.
 var font is SDL loadFont: 'examples/sdl/invaders/Invaders.ttf' size: 20.
+invader scaleToW: 120 andH: 80.
+ship scaleToW: w / 8 andH: h / 8.
 
 var any_invader? is {:x:y:bb
   var res is allInvaders filter: (\:_:invader invader hitsX: x andY: y withBB: bb).
@@ -147,24 +176,14 @@ var any_invader? is {:x:y:bb
   ^Nil.
 }.
 
-ship scaleToW: w / 8 andH: h / 8.
-invader scale: 1 / 2.
-shot scaleToW: w / 16 andH: h / 16.
-
 var allInvaders is Array new fill: 16 with: {:x ^Invader new initAtX: (Dice rollWithSides: w) andY: (Dice rollWithSides: h - 300, + 50).}.
 
-var dc is ship pixelAtX: 0 andY: 0.
-ship setColorKey: dc.
+var shoot_particle is {:from:heading
+  ^Missile new initAtX: from head andY: from last headingX: heading head andY: heading last.
+}.
 
-dc is shot pixelAtX: 0 andY: 0.
-shot setColorKey: dc.
-
-invader scaleToW: 60 andH: 40.
-dc is invader pixelAtX: 0 andY: 0.
-invader setColorKey: dc.
-
-var shoot_particle is {:from
-  ^Missile new initAtX: from head andY: from last.
+var shoot_laser is {:from
+  ^Missile new initAtX: from head andY: from last headingX: 0 andY: -10 model: laser.
 }.
 
 var Ship is RenderableEntity cnew: {
@@ -176,12 +195,19 @@ var Ship is RenderableEntity cnew: {
   posY => h / 2 + 80.
   headingX => 0.
   headingY => 0.
+  shotCooldown0 => 0.
+  shotCooldown1 => 0.
   on: 'tick' do: {:self
+    my shotCooldown0 -=: 1.
+    my shotCooldown1 -=: 1.
     my posX +=: my headingX.
     my posY +=: my headingY.
     self clampPosition.
     var target is any_invader? [my posX, my posY, my modelRect].
     target isNil ifFalse: {
+      # Pen writeln: 'You are at %d,%d and you hit %d,%d (%s)' % [my posX, my posY, target posX, target posY, target].
+      # window fillRect: target boundingBox withColor: (Color rgb: [0, 255, 0]).
+      # window fillRect: me boundingBox withColor: (Color rgb: [0, 0, 255]).
       ^False.
     }.
     my ownRect setX: my posX.
@@ -189,8 +215,19 @@ var Ship is RenderableEntity cnew: {
     ^Nil.
   }.
   on: 'shoot' do: {
+    my shotCooldown0 > 0 ifTrue: {^[].}.
+    my shotCooldown0 is 10.
     var w is my modelRect getW - 5.
-    ^[shoot_particle[[my posX, my posY]], shoot_particle[[my posX + w, my posY]]].
+    ^[
+      shoot_particle[[my posX, my posY],     [0, 0]], #[my headingX, my headingY]],
+      shoot_particle[[my posX + w, my posY], [0, 0]] #[my headingX, my headingY]]
+    ].
+  }.
+  on: 'laser' do: {
+    my shotCooldown1 > 0 ifTrue: {^[].}.
+    my shotCooldown1 is 40.
+    var h is my modelRect getH / 2.
+    ^[shoot_laser[[my posX + h + 6, my posY - 5]]].
   }.
   on: 'moveX:andY:' do: {:x:y
     my headingX +=: x.
@@ -275,7 +312,10 @@ var evthandler is {:e
             True break.
         },
         case: 'space' do: {
-            entities addAll: Ship shoot.
+          entities addAll: Ship shoot.
+        },
+        case: 'l' do: {
+          entities addAll: Ship laser.
         },
         case: 'a' do: {
           Ship moveX: -5 andY: 0.
@@ -299,6 +339,13 @@ var white is Color rgb: [256, 256, 256].
 var actuallyWhite is Color rgb: [255, 255, 255].
 var next_round_e is HashSet new.
 
+var dc is ship pixelAtX: 0 andY: 0.
+ship setColorKey: dc.
+dc is shot pixelAtX: 0 andY: 0.
+shot setColorKey: dc.
+dc is invader pixelAtX: 0 andY: 0.
+invader setColorKey: dc.
+
 var scoreRect is SDL newRectWithX: 0 andY: 0 andW: 0 andH: 0.
 
 var renderScore is {
@@ -307,47 +354,45 @@ var renderScore is {
   ) fromRect: Nil toRect: scoreRect.
 }.
 
+var sTs is SDL ticks.
 {^True.} whileTrue: {
-  Ship tick = False ifTrue: {
-      Pen red writeln: 'Game Over!'.
-      True break.
-  }.
-  Ship render: window.
   allInvaders each_v: {:i i tick. i render: window. }.
   entities each_v: {:i
     (i = window) continue.
     var res is i tick.
     res = False ifTrue: {
-      Pen writeln: 'Removing ' + i.
+      # Pen writeln: 'Removing ' + i.
       entities remove: i.
       ^Nil.
     }.
     i render: window.
     res isA: RenderableEntity, ifTrue: { next_round_e add: res. }.
   }.
+  Ship render: window.
   renderScore[].
   window update.
+  Ship tick = False ifTrue: {
+      Pen red writeln: 'Game Over!'.
+      True break.
+  }.
   evt poll: evthandler.
-  Clock wait: 8 ms.
+  Clock wait: 10 ms.
   window fillRect: Nil withColor: white.
   next_round_e each_v: {:v entities add: v. }.
   next_round_e clear.
+  # var this_tick is (sTs - (sTs is SDL ticks)).
+  # Pen writeln: 'FPS: ' + (1000 / (0 - this_tick)).
 }.
 
 Pen cyan write: 'You killed ', red write: allKilledInvaders, cyan write: ' invaders!', resetColor brk.
-var go is font renderBlendedUnicode: 'Game Over!' color: (Color rgb: [200, 0, 0]).
-var gclip is go clipRect.
-# window
-#   box_x0: w / 2 + 20
-#   y0: h / 2 - 10
-#   x1: w / 2 - (gclip getW)
-#   y1: h / 2 - (gclip getH) - 10
-#   color: actuallyWhite.
-window blit: (
-  go
-) fromRect: Nil toRect: (
-  SDL newRectWithX: w / 2 - gclip getW andY: h / 2 - gclip getH andW: 0 andH: 0
-).
+# var go is font renderBlendedUnicode: 'Game Over!' color: (Color rgb: [200, 0, 0]).
+# var gclip is go clipRect.
+#
+# window blit: (
+#   go
+# ) fromRect: Nil toRect: (
+#   SDL newRectWithX: w / 2 - gclip getW andY: h / 2 - gclip getH andW: 0 andH: 0
+# ).
 window update.
 
 Clock wait: 2 sec.

@@ -167,7 +167,7 @@ var laser is surfaceFromAsciiMap[4,
   ' *** ' ].
 var ship is SDL loadImage: 'examples/sdl/invaders/launch.png'.
 var font is SDL loadFont: 'examples/sdl/invaders/Invaders.ttf' size: 20.
-invader scaleToW: 120 andH: 80.
+invader scaleToW: 90 andH: 60.
 ship scaleToW: w / 8 andH: h / 8.
 
 var any_invader? is {:x:y:bb

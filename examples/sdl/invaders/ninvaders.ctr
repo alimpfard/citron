@@ -80,17 +80,37 @@ var Invader is RenderableEntity cnew: {
   }.
 }.
 
+var surfaceFromAsciiMap is {:len:*lines
+  var color is Color rgb: [255, 0, 0].
+  var surface is window newBufferWithWidth: len andHeight: lines count.
+  lines each: {:j:line
+    line characters each: {:i:x
+      x = '*' ifTrue: {
+        surface setPixelWithX: i andY: j toColor: color.
+      }.
+    }.
+  }.
+  ^surface.
+}.
+
 var Missile is RenderableEntity cnew: {
   on: 'initAtX:andY:' do: {:x:y
-    model => shot.
-    modelRect => invader clipRect.
+    model => surfaceFromAsciiMap[9,
+      '    *    ' ,
+      '   ***   ' ,
+      '  *****  ' ,
+      '  *****  ' ,
+      '   ***   ' ,
+      '   ***   '
+    ].
+    modelRect => my model clipRect.
     ownRect => SDL newRectWithX: x andY: y andW: 0 andH: 0.
     posX => x.
     posY => y.
     headingX => 0.
-    headingY => -1.
+    headingY => -3.
     dead => False.
-    lifespan => 300.
+    lifespan => 100.
   }.
   on: 'tick' do: {:self
     my lifespan = 0 ifTrue: {^False.}.
@@ -116,10 +136,10 @@ var Missile is RenderableEntity cnew: {
 }.
 
 var evt is SDLEvent new.
-var invader is SDL loadImage: 'examples/sdl/razavi.jpg'.
+var invader is SDL loadImage: 'examples/sdl/invaders/invader.jpg'.
 var shot is SDL loadImage: 'examples/sdl/boop.jpg'.
-var ship is SDL loadImage: 'examples/sdl/lol.bmp'.
-var font is SDL loadFont: 'examples/sdl/Invaders.ttf' size: 20.
+var ship is SDL loadImage: 'examples/sdl/invaders/launch.png'.
+var font is SDL loadFont: 'examples/sdl/invaders/Invaders.ttf' size: 20.
 
 var any_invader? is {:x:y:bb
   var res is allInvaders filter: (\:_:invader invader hitsX: x andY: y withBB: bb).
@@ -138,6 +158,10 @@ ship setColorKey: dc.
 
 dc is shot pixelAtX: 0 andY: 0.
 shot setColorKey: dc.
+
+invader scaleToW: 60 andH: 40.
+dc is invader pixelAtX: 0 andY: 0.
+invader setColorKey: dc.
 
 var shoot_particle is {:from
   ^Missile new initAtX: from head andY: from last.
@@ -165,7 +189,8 @@ var Ship is RenderableEntity cnew: {
     ^Nil.
   }.
   on: 'shoot' do: {
-    ^shoot_particle[[my posX, my posY]].
+    var w is my modelRect getW - 5.
+    ^[shoot_particle[[my posX, my posY]], shoot_particle[[my posX + w, my posY]]].
   }.
   on: 'moveX:andY:' do: {:x:y
     my headingX +=: x.
@@ -221,7 +246,7 @@ var ParticleSystem is RenderableEntity cnew: {
     posY => y.
     stateC => 100.
     color => actuallyWhite.
-    states => [(self generateState: 0), (self generateState: 1), (self generateState: 2), (self generateState: 3), (self generateState: 4), (self generateState: 5)].
+    states => [(self generateState: sid),, 0..5].
     modelRect => SDL newRectWithX: 0 andY: 0 andW: 30 andH: 30.
     ownRect => SDL newRectWithX: x andY: y andW: 30 andH: 30.
     dead => False.
@@ -250,7 +275,7 @@ var evthandler is {:e
             True break.
         },
         case: 'space' do: {
-            entities add: Ship shoot.
+            entities addAll: Ship shoot.
         },
         case: 'a' do: {
           Ship moveX: -5 andY: 0.
@@ -277,7 +302,9 @@ var next_round_e is HashSet new.
 var scoreRect is SDL newRectWithX: 0 andY: 0 andW: 0 andH: 0.
 
 var renderScore is {
-  window blit: (font renderBlendedUnicode: 'Score: %d' % [allKilledInvaders] color: actuallyWhite) fromRect: Nil toRect: scoreRect.
+  window blit: (
+    font renderBlendedUnicode: 'Score: %d' % [allKilledInvaders] color: actuallyWhite
+  ) fromRect: Nil toRect: scoreRect.
 }.
 
 {^True.} whileTrue: {
@@ -310,7 +337,12 @@ var renderScore is {
 Pen cyan write: 'You killed ', red write: allKilledInvaders, cyan write: ' invaders!', resetColor brk.
 var go is font renderBlendedUnicode: 'Game Over!' color: (Color rgb: [200, 0, 0]).
 var gclip is go clipRect.
-window box_x0: w / 2 + 20 x1: w / 2 - (gclip getW) y0: h / 2 - 10 y1: h / 2 - (gclip getH) - 10 color: actuallyWhite.
+# window
+#   box_x0: w / 2 + 20
+#   y0: h / 2 - 10
+#   x1: w / 2 - (gclip getW)
+#   y1: h / 2 - (gclip getH) - 10
+#   color: actuallyWhite.
 window blit: (
   go
 ) fromRect: Nil toRect: (

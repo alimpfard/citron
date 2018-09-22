@@ -854,7 +854,9 @@ ctr_internal_object_add_property (ctr_object * owner, ctr_object * key, ctr_obje
     {
       if (!owner->methods || owner->methods->size == 0)
 	{
-	  owner->methods->head = new_item;
+    if (!owner->methods)
+      owner->methods = ctr_heap_allocate(sizeof(typeof(*owner->methods)));
+    owner->methods->head = new_item;
 	}
       else
 	{
@@ -2433,8 +2435,9 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("frameId"), &ctr_get_frame_id);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("isInFrame:"), &ctr_frame_present);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("run:inContext:arguments:"), &ctr_reflect_run_for_object_in_ctx);
-  ctr_internal_create_func (CtrStdReflect,
-			    ctr_build_string_from_cstring ("run:inContextAsWorld:arguments:"), &ctr_reflect_run_for_object_in_ctx_as_world);
+  ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("run:inContextAsWorld:arguments:"), &ctr_reflect_run_for_object_in_ctx_as_world);
+  ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("run:inContextAsMain:arguments:"), &ctr_reflect_run_for_object_in_ctx_as_main);
+  ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("worldSnapshot"), &ctr_reflect_world_snap);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("runInNewContext:"), &ctr_reflect_run_in_new_ctx);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("marshal:"), &ctr_reflect_marshal);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("unmarshal:"), &ctr_reflect_unmarshal);

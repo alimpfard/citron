@@ -1,4 +1,4 @@
 var do is {:obj:blk
-  Reflect run: blk inContext: obj arguments: [].
+  Reflect run: blk forObject: obj arguments: [].
   ^obj.
 }.

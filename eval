@@ -347,7 +347,7 @@ Eval on: 'Commands' do: {
           }, default: {
             ^Reflect frame: (name toNumber), kvlist: \:kv [kv head, (Reflect strTypeOf: kv last), kv last], fmap: \:x '%s (%s) = %s' % x, join: ', '.
           }, switch).
-        } inContextAsWorld: Eval evalContext arguments: [name].
+        } inContextAsMain: Eval evalContext arguments: [name].
       } at: '!frame',
       put: {:args
         [name, fn] is args split: ' ' max: 1.
@@ -441,7 +441,7 @@ Eval on: 'evaluate:' do: { :str
       ({
           ^(str startsWith: 'import') not
             either: ({
-                ^Reflect run: {:str ^str eval.} inContextAsWorld: evalContext arguments: [str].
+                ^Reflect run: {:str ^str eval.} inContextAsMain: evalContext arguments: [str].
                 } catch: {:e Eval handleException: e. ^Nil.}
             ) or: ({
                 ^str eval.
@@ -455,7 +455,7 @@ Eval on: 'addFile:named:' do: {:str:fname
   Reflect run: {:fname:ctx:str ('var %s is {
     Eval statsb: 0, statsa: 0, exectime: 0.
     Reflect run: {:str str eval.} inContext: const ctx arguments: [const str].
-  }' % [fname]) eval. } inContextAsWorld: my evaluationContext arguments: [varname, my evaluationContext, str].
+  }' % [fname]) eval. } inContextAsMain: my evaluationContext arguments: [varname, my evaluationContext, str].
 }.
 Eval on: 'pushHist:' do: {:h
   my history push: h.

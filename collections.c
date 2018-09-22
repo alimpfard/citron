@@ -2552,6 +2552,8 @@ ctr_map_to_string (ctr_object * myself, ctr_argument * argumentList)
   newArgumentList = ctr_heap_allocate (sizeof (ctr_argument));
   while (mapItem)
     {
+      if (!mapItem->value || !mapItem->key)
+        goto next;
       newArgumentList->object = ctr_build_string_from_cstring (CTR_DICT_CODEGEN_MAP_PUT);
       ctr_string_append (string, newArgumentList);
       if (mapItem->value == myself)
@@ -2609,6 +2611,7 @@ ctr_map_to_string (ctr_object * myself, ctr_argument * argumentList)
 	  newArgumentList->object = ctr_build_string_from_cstring (")");
 	  ctr_string_append (string, newArgumentList);
 	}
+  next:
       mapItem = mapItem->next;
       if (mapItem)
 	{

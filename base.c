@@ -6776,7 +6776,6 @@ mapItem = mapItem->next;
   ctr_array_push(data, &arg);
   arg.object = apos;
   ctr_array_push(data, &arg);
-  printf("Now\n");
   return data;
 }
 ctr_object *

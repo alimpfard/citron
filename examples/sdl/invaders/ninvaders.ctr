@@ -1,0 +1,398 @@
+#:language XFrozen
+#:declare lazyev and
+
+var and is \:x:y x evaluate either: {^y evaluate.} or: False.
+
+Broom memoryLimit: 1024 * 1024 * 1024.
+import
+  Library/Data/SwitchCase
+  Library/Data/Set/HashSet: 'HashSet'.
+
+Array on: '>' do: {:o
+  ^((me at: 0) > (o at: 0)) & ((me at: 1) > (o at: 1)).
+}.
+Array on: '<' do: {:o
+  ^((me at: 0) < (o at: 0)) & ((me at: 1) < (o at: 1)).
+}.
+
+var allKilledInvaders is 0.
+var w is 640.
+var h is 480.
+var window is SDL new
+    set: 'windowName' to: 'Invaders',
+    set: 'windowWidth' to: w,
+    set: 'windowHeight' to: h,
+    init.
+
+var valueInRange is \:v:min:max  v between: min and: max.
+
+var RenderableEntity is Object new
+  on: 'die' do: {
+    my dead is True.
+  },
+  on: 'render:' do: {:surf
+    my dead ifTrue: {^Nil.}.
+    surf blit: my model fromRect: my modelRect toRect: my ownRect.
+  },
+  on: 'clampPosition' do: {
+    my posX < 0 ifTrue: { my posX is 0. }.
+    my posY < 0 ifTrue: { my posY is 0. }.
+    my posX > w ifTrue: { my posX is w. }.
+    my posY > h ifTrue: { my posY is h. }.
+  },
+  on: 'iHash' do: { ^me id. },
+  on: 'posX' do: {\ my posX },
+  on: 'posY' do: {\ my posY },
+  on: 'boundingBox' do: { ^SDL newRectWithX: my posX andY: my posY andW: my modelRect getW andH: my modelRect getH. }.
+
+var Invader is RenderableEntity cnew: {
+  on: 'initAtX:andY:' do: {:x:y
+    model => invader.
+    modelRect => invader clipRect.
+    ownRect => SDL newRectWithX: x andY: y andW: 0 andH: 0.
+    posX => x.
+    posY => y.
+    headingX => 0.
+    headingY => 0.
+    dead => False.
+    deathline => Dice rollWithSides: 300, + 200.
+  }.
+  on: 'tick' do: {:self
+    my dead ifTrue: {
+      my deathline -=: 1.
+      my deathline <=: 0, ifTrue: {
+        my deathline is Dice rollWithSides: 300, + 200.
+        my dead is False.
+        my posX is Dice rollWithSides: w.
+        my posY is Dice rollWithSides: h - 300, + 50.
+        my ownRect setX: my posX.
+        my ownRect setY: my posY.
+      }.
+      ^Nil.
+    }.
+    my headingX is Boolean flip either: (Boolean flip either: -1 or: 0) or: (Boolean flip either: 0 or: 1).
+    my headingY is Boolean flip either: (Boolean flip either: -1 or: 0) or: (Boolean flip either: 0 or: 1).
+    my posX +=: my headingX.
+    my posY +=: my headingY.
+    self clampPosition.
+    my ownRect setX: my posX.
+    my ownRect setY: my posY.
+    ^Nil.
+  }.
+  on: 'hitsX:andY:withBB:' do: {:x:y:bb
+    my dead ifTrue: { ^False. }.
+    var xOverlap is valueInRange[my posX, x, x + bb getW] | valueInRange[x, my posX, my posX + my modelRect getW].
+    var yOverlap is valueInRange[my posY, y, y + bb getH] | valueInRange[y, my posY, my posY + my modelRect getH].
+    ^xOverlap & yOverlap.
+  }.
+  on: 'toString' do: {
+    ^'Invader(dead:%s)[%d,%d,%d,%d]' % [my dead, my posX, my posY, my modelRect getW, my modelRect getH].
+  }.
+}.
+
+var surfaceFromAsciiMap is {:len:*lines
+  var color is Color rgb: [255, 0, 0].
+  var surface is window newBufferWithWidth: len andHeight: lines count.
+  lines each: {:j:line
+    line characters each: {:i:x
+      x = '*' ifTrue: {
+        surface setPixelWithX: i andY: j toColor: color.
+      }.
+    }.
+  }.
+  ^surface.
+}.
+
+var Missile is RenderableEntity cnew: {
+  on: 'initAtX:andY:headingX:andY:model:' do: {:x:y:hx:hy:model
+    model => model.
+    modelRect => my model clipRect.
+    ownRect => SDL newRectWithX: x andY: y andW: 0 andH: 0.
+    posX => x.
+    posY => y.
+    headingX => hx.
+    headingY => hy - 3.
+    dead => False.
+    lifespan => 100 / ((my headingX + 3.1) abs).
+  }.
+  on: 'initAtX:andY:headingX:andY:' do: {:x:y:hx:hy ^initAtX: x andY: y headingX: hx andY: hy model: shot. }.
+  on: 'tick' do: {:self
+    my lifespan < 0 ifTrue: {^False.}.
+    my lifespan -=: 1.
+    my dead ifTrue: {^False.}.
+    my posX +=: my headingX.
+    my posY +=: my headingY.
+    self clampPosition.
+    var target is any_invader? [my posX, my posY, my modelRect].
+    target isNil ifTrue: {
+      my ownRect setX: my posX.
+      my ownRect setY: my posY.
+      ^Nil.
+    }.
+    allKilledInvaders +=: 1.
+    target die.
+    self die.
+    ^ParticleSystem new initAtX: my posX - 15 andY: my posY - 35.
+  }.
+  on: 'toString' do: {
+    ^'Miss[%d]' % [my lifespan].
+  }.
+}.
+
+var evt is SDLEvent new.
+var invader is SDL loadImage: 'examples/sdl/invaders/invader.jpg'.
+var shot is surfaceFromAsciiMap[9,
+  '    *    ' ,
+  '   ***   ' ,
+  '  *****  ' ,
+  '  *****  ' ,
+  '   ***   ' ,
+  '   ***   ' ].
+
+var laser is surfaceFromAsciiMap[4,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ,
+  ' *** ' ].
+var ship is SDL loadImage: 'examples/sdl/invaders/launch.png'.
+var font is SDL loadFont: 'examples/sdl/invaders/Invaders.ttf' size: 20.
+invader scaleToW: 90 andH: 60.
+ship scaleToW: w / 8 andH: h / 8.
+
+var any_invader? is {:x:y:bb
+  var res is allInvaders filter: (\:_:invader invader hitsX: x andY: y withBB: bb).
+  res count > 0 ifTrue: { ^res head. }.
+  ^Nil.
+}.
+
+var allInvaders is Array new fill: 16 with: {:x ^Invader new initAtX: (Dice rollWithSides: w) andY: (Dice rollWithSides: h - 300, + 50).}.
+
+var shoot_particle is {:from:heading
+  ^Missile new initAtX: from head andY: from last headingX: heading head andY: heading last.
+}.
+
+var shoot_laser is {:from
+  ^Missile new initAtX: from head andY: from last headingX: 0 andY: -10 model: laser.
+}.
+
+var Ship is RenderableEntity cnew: {
+  dead => False.
+  model => ship.
+  modelRect => ship clipRect.
+  ownRect => SDL newRectWithX: w / 2 andY: h / 2 + 80 andW: 0 andH: 0.
+  posX => w / 2.
+  posY => h / 2 + 80.
+  headingX => 0.
+  headingY => 0.
+  shotCooldown0 => 0.
+  shotCooldown1 => 0.
+  on: 'tick' do: {:self
+    my shotCooldown0 -=: 1.
+    my shotCooldown1 -=: 1.
+    my posX +=: my headingX.
+    my posY +=: my headingY.
+    self clampPosition.
+    var target is any_invader? [my posX, my posY, my modelRect].
+    target isNil ifFalse: {
+      # Pen writeln: 'You are at %d,%d and you hit %d,%d (%s)' % [my posX, my posY, target posX, target posY, target].
+      # window fillRect: target boundingBox withColor: (Color rgb: [0, 255, 0]).
+      # window fillRect: me boundingBox withColor: (Color rgb: [0, 0, 255]).
+      ^False.
+    }.
+    my ownRect setX: my posX.
+    my ownRect setY: my posY.
+    ^Nil.
+  }.
+  on: 'shoot' do: {
+    my shotCooldown0 > 0 ifTrue: {^[].}.
+    my shotCooldown0 is 10.
+    var w is my modelRect getW - 5.
+    ^[
+      shoot_particle[[my posX, my posY],     [0, 0]], #[my headingX, my headingY]],
+      shoot_particle[[my posX + w, my posY], [0, 0]] #[my headingX, my headingY]]
+    ].
+  }.
+  on: 'laser' do: {
+    my shotCooldown1 > 0 ifTrue: {^[].}.
+    my shotCooldown1 is 40.
+    var h is my modelRect getH / 2.
+    ^[shoot_laser[[my posX + h + 6, my posY - 5]]].
+  }.
+  on: 'moveX:andY:' do: {:x:y
+    my headingX +=: x.
+    my headingY +=: y.
+  }.
+  on: 'stopMoving' do: {
+    my headingX is 0.
+    my headingY is 0.
+  }.
+}.
+
+var ParticleSystem is RenderableEntity cnew: {
+  on: 'generateState:' do: {:state
+    var surface is window newBufferWithWidth: 5 andHeight: 5.
+    var color is my color.
+    (frozen _ is
+      case: 0 do: {
+        [] each_v: {:coords
+          surface setPixelWithX: coords head andY: coords last toColor: color.
+        }.
+      },
+      case: 1 do: {
+        [[2, 2]] each_v: {:coords
+          surface setPixelWithX: coords head andY: coords last toColor: color.
+        }.
+      },
+      case: 2 do: {
+        [[2, 2]] each_v: {:coords
+          surface setPixelWithX: coords head andY: coords last toColor: color.
+        }.
+      },
+      case: 3 do: {
+        [[1, 1], [1, 3], [2, 2], [3, 1], [3, 3]] each_v: {:coords
+          surface setPixelWithX: coords head andY: coords last toColor: color.
+        }.
+      },
+      case: 4 do: {
+        [[0, 0], [0, 4],         [4, 0], [4, 4]] each_v: {:coords
+          surface setPixelWithX: coords head andY: coords last toColor: color.
+        }.
+      },
+      case: 5 do: {
+        [[0, 0], [0, 4], [2, 2], [4, 0], [4, 4]] each_v: {:coords
+          surface setPixelWithX: coords head andY: coords last toColor: color.
+        }.
+      }) switch: state.
+      surface scaleToW: 30 andH: 30.
+      surface setColorKey: (surface pixelAtX: 0 andY: 0).
+      ^surface.
+  }.
+  on: 'initAtX:andY:' do: {:self:x:y
+    posX => x.
+    posY => y.
+    stateC => 100.
+    color => actuallyWhite.
+    states => [(self generateState: sid),, 0..5].
+    modelRect => SDL newRectWithX: 0 andY: 0 andW: 30 andH: 30.
+    ownRect => SDL newRectWithX: x andY: y andW: 30 andH: 30.
+    dead => False.
+  }.
+  on: 'render:' do: {:surf
+    model => my states at: (my stateC / 20) floor.
+    ^`render: surf.
+  }.
+  on: 'tick' do: {
+    my stateC -=: 2.
+    my stateC < 0 ifTrue: { my dead is True. ^False. }.
+    ^Nil.
+  }.
+  on: 'toString' do: {
+    ^'PSys[%d]' % [my stateC].
+  }.
+}.
+
+var entities is HashSet new.
+
+var evthandler is {:e
+  (frozen _ is
+    Nil case: 'keyDown' do: {
+      (frozen __ is
+        Nil case: 'q' do: {
+            True break.
+        },
+        case: 'space' do: {
+          entities addAll: Ship shoot.
+        },
+        case: 'l' do: {
+          entities addAll: Ship laser.
+        },
+        case: 'a' do: {
+          Ship moveX: -5 andY: 0.
+        },
+        case: 'd' do: {
+          Ship moveX: 5 andY: 0.
+        },
+        case: 's' do: {
+          Ship moveX: 0 andY: 5.
+        },
+        case: 'w' do: {
+          Ship moveX: 0 andY: -5.
+        }) switch: e keysym.
+    },
+    case: 'keyUp' do: {
+      'wasd' contains: e keysym, ifTrue: { Ship stopMoving. }.
+    }) switch: (SDLEventTypes at: e toNumber).
+}.
+
+var white is Color rgb: [256, 256, 256].
+var actuallyWhite is Color rgb: [255, 255, 255].
+var next_round_e is HashSet new.
+
+var dc is ship pixelAtX: 0 andY: 0.
+ship setColorKey: dc.
+dc is shot pixelAtX: 0 andY: 0.
+shot setColorKey: dc.
+dc is invader pixelAtX: 0 andY: 0.
+invader setColorKey: dc.
+
+var scoreRect is SDL newRectWithX: 0 andY: 0 andW: 0 andH: 0.
+
+var renderScore is {
+  window blit: (
+    font renderBlendedUnicode: 'Score: %d' % [allKilledInvaders] color: actuallyWhite
+  ) fromRect: Nil toRect: scoreRect.
+}.
+
+var sTs is SDL ticks.
+{^True.} whileTrue: {
+  allInvaders each_v: {:i i tick. i render: window. }.
+  entities each_v: {:i
+    (i = window) continue.
+    var res is i tick.
+    res = False ifTrue: {
+      # Pen writeln: 'Removing ' + i.
+      entities remove: i.
+      ^Nil.
+    }.
+    i render: window.
+    res isA: RenderableEntity, ifTrue: { next_round_e add: res. }.
+  }.
+  Ship render: window.
+  renderScore[].
+  window update.
+  Ship tick = False ifTrue: {
+      Pen red writeln: 'Game Over!'.
+      True break.
+  }.
+  evt poll: evthandler.
+  Clock wait: 10 ms.
+  window fillRect: Nil withColor: white.
+  next_round_e each_v: {:v entities add: v. }.
+  next_round_e clear.
+  # var this_tick is (sTs - (sTs is SDL ticks)).
+  # Pen writeln: 'FPS: ' + (1000 / (0 - this_tick)).
+}.
+
+Pen cyan write: 'You killed ', red write: allKilledInvaders, cyan write: ' invaders!', resetColor brk.
+# var go is font renderBlendedUnicode: 'Game Over!' color: (Color rgb: [200, 0, 0]).
+# var gclip is go clipRect.
+#
+# window blit: (
+#   go
+# ) fromRect: Nil toRect: (
+#   SDL newRectWithX: w / 2 - gclip getW andY: h / 2 - gclip getH andW: 0 andH: 0
+# ).
+window update.
+
+Clock wait: 2 sec.

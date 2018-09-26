@@ -27,6 +27,10 @@ Map on: 'copy' do: {
   ^m.
 }.
 
+Map on: 'update:' do: {:self:other
+  other each: {:k:v self put: v at: k. }.
+}.
+
 Map on: 'respondTo:' do: {:self:msg
   ^(msg startsWith: '@') either: { ^self at: (msg skip: 1). } or: { ^self `respondTo: msg. }.
 }.

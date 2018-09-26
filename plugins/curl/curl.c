@@ -113,10 +113,10 @@ ctr_object* ctr_curl_respondto(ctr_object* myself, ctr_argument* argumentList) {
 			val = NULL;
 			break;
 		case CTR_OBJECT_TYPE_OTBOOL:
-			val = &argObj->value.bvalue;
+			val = (void*)argObj->value.bvalue;
 			break;
 		case CTR_OBJECT_TYPE_OTNUMBER:
-			val = &argObj->value.nvalue;
+			val = (void*)(intptr_t)argObj->value.nvalue;
 			break;
 		case CTR_OBJECT_TYPE_OTSTRING:
 			val = ctr_heap_allocate_cstring(argObj);
@@ -163,6 +163,7 @@ ctr_object* ctr_curl_respondto(ctr_object* myself, ctr_argument* argumentList) {
 	else if (strcasecmp(msg, "proxyport") == 0) { opt = CURLOPT_PROXYPORT; }
 	else if (strcasecmp(msg, "proxytype") == 0) { opt = CURLOPT_PROXYTYPE; }
 	else if (strcasecmp(msg, "noproxy") == 0) { opt = CURLOPT_NOPROXY; }
+    else if (strcasecmp(msg, "verbose") == 0) { opt = CURLOPT_VERBOSE; }
 	else if (strcasecmp(msg, "httpproxytunnel") == 0) { opt = CURLOPT_HTTPPROXYTUNNEL; }
 	else if (strcasecmp(msg, "connect_to") == 0) { opt = CURLOPT_CONNECT_TO; }
 	else if (strcasecmp(msg, "socks5_gssapi_service") == 0) { opt = CURLOPT_SOCKS5_GSSAPI_SERVICE; }

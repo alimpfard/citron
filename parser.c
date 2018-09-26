@@ -467,15 +467,15 @@ ctr_cparse_lit_esc ()
       ctr_heap_free (r);	//this node is not needed, we remove the parens in the expression
       r = v;
       break;
-    case -2:
+    case -2: // $[]
       ctr_transform_template_expr = 2;
       r = ctr_cparse_tuple (CTR_TOKEN_TUPCLOSE);
       ctr_transform_template_expr = texpr_res;
       break;
-    case -4:
+    case -4: // $'()
       quote = 1;
       /* Fallthrough */
-    case -3:
+    case -3: // $!
       {
 	int t = ctr_clex_tok ();
 	ctr_clex_putback ();
@@ -1265,12 +1265,8 @@ ctr_cparse_expr (int mode)
     }
   else if (t2 == CTR_TOKEN_PASSIGNMENT)
     {
-      if (r->type != CTR_AST_NODE_REFERENCE)
-	{
-	  ctr_cparse_emit_error_unexpected (t2, "Invalid left-hand assignment.\n");
-	  exit (1);
-	}
-      r->modifier = 1;		//set private */
+      if (r->type == CTR_AST_NODE_REFERENCE) // it's an alias for my REF is EXPR
+    r->modifier = 1;		//set private */
       e = ctr_cparse_assignment (r);	//go as usual
       /*r->nodes->node->type = CTR_AST_NODE_LTRSTRING;
          e = ctr_cparse_create_node(CTR_AST_NODE);
@@ -1333,7 +1329,6 @@ ctr_cparse_expr (int mode)
       }
       ll->next = ctr_heap_allocate_tracked(sizeof(*ll));
       if (fix.lazy) {
-        ctr_tnode* rv = ll->next->node;
         int t = ctr_clex_tok();
         ctr_clex_putback();
         if (t == CTR_TOKEN_TUPOPEN) {
@@ -1342,8 +1337,16 @@ ctr_cparse_expr (int mode)
           ctr_transform_template_expr = 1;
         }
       }
-        ll->next->node = ctr_cparse_expr(fix.fix*2); //get next argument
-        ctr_transform_template_expr = texpr_res;
+      ll->next->node = ctr_cparse_expr(fix.fix + fix.prec); //get next argument
+      if (ctr_transform_template_expr == 1) {
+        ctr_tnode* rv = ll->next->node;
+        ll->next->node = ctr_cparse_create_node(CTR_AST_NODE);
+        ll->next->node->type = CTR_AST_NODE_RAW;
+        ll->next->node->modifier = 1;
+        ll->next->node->nodes = ctr_heap_allocate(sizeof(*rv->nodes));
+        ll->next->node->nodes->node = rv;
+      }
+      ctr_transform_template_expr = texpr_res;
       //arguments in li
       ctr_tlistitem* rli = ctr_heap_allocate_tracked(sizeof(*rli));
       rli->node = ctr_cparse_create_node(CTR_AST_NODE);

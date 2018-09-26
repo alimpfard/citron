@@ -103,7 +103,7 @@ ctr_nil_to_boolean (ctr_object * myself, ctr_argument * ctr_argumentList)
 }
 
 /**
- *[Nil] unpack: [Ref:string]
+ *[Nil] unpack: [Ref:string], [Object:context]
  *
  * Assigns Nil into Ref
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
@@ -129,7 +129,7 @@ ctr_nil_assign (ctr_object * myself, ctr_argument * argumentList)
   if (argumentList->object->value.svalue->vlen == 0
       || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
     return myself;
-  ctr_internal_object_set_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), CtrStdNil, 0);
+  ctr_internal_object_set_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), CtrStdNil, 0);
   return myself;
 }
 
@@ -304,7 +304,7 @@ ctr_object_attr_writer (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- *[Object] unpack: [Object:{Ref*}]
+ *[Object] unpack: [Object:{Ref*}], [Object:Context]
  *
  * Element-wise object assign
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
@@ -318,7 +318,7 @@ ctr_object_assign (ctr_object * myself, ctr_argument * argumentList)
       if (argumentList->object->value.svalue->vlen == 0
 	  || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
 	return myself;
-      ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
+      ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
       return myself;
     }
   if (!ctr_reflect_check_bind_valid (myself, argumentList->object, 0))
@@ -753,7 +753,7 @@ ctr_object_on_do (ctr_object * myself, ctr_argument * argumentList)
       CtrStdFlow->info.sticky = 1;
       return myself;
     }
-  ctr_internal_object_add_property (myself, methodName, methodBlock, 1);
+  ctr_internal_object_set_property (myself, methodName, methodBlock, 1);
   return myself;
 }
 
@@ -1021,7 +1021,7 @@ ctr_build_bool (int truth)
 }
 
 /**
- *[Boolean] unpack: [String:Ref]
+ *[Boolean] unpack: [String:Ref], [Object:Context]
  * Assign ref to boolean
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */
@@ -1046,7 +1046,7 @@ ctr_bool_assign (ctr_object * myself, ctr_argument * argumentList)
   if (argumentList->object->value.svalue->vlen == 0
       || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
     return myself;
-  ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
+  ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
   return myself;
 }
 
@@ -1408,7 +1408,7 @@ ctr_build_number (char *n)
 }
 
 /**
- *[Number] unpack: [String:Ref]
+ *[Number] unpack: [String:Ref], [Object:context]
  * Assign ref to number
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */
@@ -1433,7 +1433,7 @@ ctr_number_assign (ctr_object * myself, ctr_argument * argumentList)
   if (argumentList->object->value.svalue->vlen == 0
       || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
     return myself;
-  ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
+  ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
   return myself;
 }
 
@@ -1452,8 +1452,12 @@ ctr_build_number_from_string (char *str, ctr_size length)
   numCStr = (char *) ctr_heap_allocate (41 * sizeof (char));
   memcpy (numCStr, str, stringNumberLength);
   char* baseptr = NULL, bases[]="xXcCoO";
-  if (numCStr[0] == '0' && length > 1)
+  if (numCStr[0] == '0' && length > 1 && numCStr[1] != '.')
     {
+      if(numCStr[1] == '0') {
+        CtrStdFlow = ctr_format_str("EInvalid number format at ->%s: extra `0'", numCStr+1);
+        return CtrStdNil;
+      }
       int base = 10;
       baseptr = strchr (bases, numCStr[1]);
       if (baseptr == NULL) {
@@ -1813,7 +1817,18 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
 	    {
 	      ctr_object *catch_type = ctr_internal_object_find_property (catchBlock, ctr_build_string_from_cstring ("%catch"), 0);
 	      ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
-	      a->object = CtrStdFlow;
+        ctr_object *exdata = ctr_build_string_from_cstring(":exdata"),
+        *ex = CtrStdFlow,
+        *getexinfo = ctr_build_string_from_cstring("exceptionInfo");
+        ctr_internal_object_set_property(ex, exdata, ctr_internal_ex_data(), 0);
+        ctr_internal_create_func(ex, getexinfo, &ctr_exception_getinfo);
+        int setstr = 0;
+        if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING) {
+          ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
+          setstr = 1;
+          ctr_internal_create_func(ex, ctr_build_string_from_cstring("toString"), &ctr_string_to_string);
+        }
+	      a->object = ex;
 	      a->next = ctr_heap_allocate (sizeof (ctr_argument));
 	      a->next->object = catch_type;
 	      if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
@@ -1821,6 +1836,10 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
 		  CtrStdFlow = NULL;
 		  ctr_block_run_here (catchBlock, a, block);
 		}
+        ctr_internal_object_delete_property(ex, exdata, 0);
+        ctr_internal_object_delete_property(ex, getexinfo, 1);
+        if (setstr)
+          ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
 	      ctr_heap_free (a->next);
 	      ctr_heap_free (a);
 	    }
@@ -2493,7 +2512,7 @@ ctr_string_is_ctor (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- *[String] unpack: [String:Ref]
+ *[String] unpack: [String:Ref],[Object:ctx]
  * Assign ref to string
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */
@@ -2525,7 +2544,7 @@ ctr_string_assign (ctr_object * myself, ctr_argument * argumentList)
 	      if (i + x == coll->head)
 		{
 		  if (cs->value.svalue->vlen != 0 && !(cs->value.svalue->vlen == 1 && *cs->value.svalue->value == '_'))
-		    ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string (cs),
+		    ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (cs),
 						      ctr_build_string (myself->value.svalue->value + idx, len - idx), 0);
 		  return myself;
 		}
@@ -2543,7 +2562,7 @@ ctr_string_assign (ctr_object * myself, ctr_argument * argumentList)
 		  if (r != NULL)
 		    {
 		      if (cs->value.svalue->vlen != 0 && !(cs->value.svalue->vlen == 1 && *cs->value.svalue->value == '_'))
-			ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string (cs),
+			ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (cs),
 							  ctr_build_string (myself->value.svalue->value + idx, r - s), 0);
 		      idx += r - s;
 		      continue;
@@ -2572,7 +2591,7 @@ ctr_string_assign (ctr_object * myself, ctr_argument * argumentList)
   if (argumentList->object->value.svalue->vlen == 0
       || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
     return myself;
-  ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
+  ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
   return myself;
 }
 
@@ -3515,7 +3534,7 @@ ctr_string_to_upper1st (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_string_to_string (ctr_object * myself, ctr_argument * argumentList)
 {
-  return myself;
+  return ctr_build_string(myself->value.svalue->value, myself->value.svalue->vlen);
 }
 
 /**
@@ -5328,7 +5347,7 @@ ctr_capture_refs_ (ctr_tnode * ti, ctr_object * block, ctr_object * parent, int 
 }
 
 /**
- *[Block] unpack: [String:Ref]
+ *[Block] unpack: [String:Ref], [Object:ctx]
  * Assign ref to block
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */
@@ -5353,7 +5372,7 @@ ctr_block_assign (ctr_object * myself, ctr_argument * argumentList)
   if (argumentList->object->value.svalue->vlen == 0
       || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
     return myself;
-  ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
+  ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
   return myself;
 }
 
@@ -5535,7 +5554,18 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
 	{
 	  ctr_object *catch_type = ctr_internal_object_find_property (catchBlock, ctr_build_string_from_cstring ("%catch"), 0);
 	  ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
-	  a->object = CtrStdFlow;
+    ctr_object *exdata = ctr_build_string_from_cstring(":exdata"),
+    *ex = CtrStdFlow,
+    *getexinfo = ctr_build_string_from_cstring("exceptionInfo");
+    ctr_internal_object_set_property(ex, exdata, ctr_internal_ex_data(), 0);
+    ctr_internal_create_func(ex, getexinfo, &ctr_exception_getinfo);
+    int setstr = 0;
+    if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING) {
+      ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
+      setstr = 1;
+      ctr_internal_create_func(ex, ctr_build_string_from_cstring("toString"), &ctr_string_to_string);
+    }
+    a->object = ex;
 	  a->next = ctr_heap_allocate (sizeof (ctr_argument));
 	  a->next->object = catch_type;
 	  if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
@@ -5544,6 +5574,10 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
 	      ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
 	      result = alternative;
 	    }
+      ctr_internal_object_delete_property(ex, exdata, 0);
+      ctr_internal_object_delete_property(ex, getexinfo, 1);
+      if (setstr)
+        ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
 	  ctr_heap_free (a->next);
 	  ctr_heap_free (a);
 	}
@@ -5558,6 +5592,8 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
 ctr_object *
 ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 {
+  if (!myself)
+    return CtrStdNil;
   if (myself->info.type == CTR_OBJECT_TYPE_OTNATFUNC)
     {
       ctr_object *result = myself->value.fvalue (my, argList);
@@ -5700,7 +5736,19 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 	{
 	  ctr_object *catch_type = ctr_internal_object_find_property (catchBlock, ctr_build_string_from_cstring ("%catch"), 0);
 	  ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
-	  a->object = CtrStdFlow;
+    ctr_object *exdata = ctr_build_string_from_cstring(":exdata"),
+    *ex = CtrStdFlow,
+    *getexinfo = ctr_build_string_from_cstring("exceptionInfo"),
+    *exd =  ctr_internal_ex_data();
+    ctr_internal_object_add_property(ex, exdata, exd, 0);
+    ctr_internal_create_func(ex, getexinfo, &ctr_exception_getinfo);
+    int setstr = 0;
+    if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING) {
+      ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
+      setstr = 1;
+      ctr_internal_create_func(ex, ctr_build_string_from_cstring("toString"), &ctr_string_to_string);
+    }
+    a->object = ex;
 	  a->next = ctr_heap_allocate (sizeof (ctr_argument));
 	  a->next->object = catch_type;
 	  if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
@@ -5709,6 +5757,10 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 	      ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
 	      result = alternative;
 	    }
+      ctr_internal_object_delete_property(ex, exdata, 0);
+      ctr_internal_object_delete_property(ex, getexinfo, 1);
+      if (setstr)
+        ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
 	  ctr_heap_free (a->next);
 	  ctr_heap_free (a);
 	}
@@ -5825,7 +5877,18 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
 	{
 	  ctr_object *catch_type = ctr_internal_object_find_property (catchBlock, ctr_build_string_from_cstring ("%catch"), 0);
 	  ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
-	  a->object = CtrStdFlow;
+    ctr_object *exdata = ctr_build_string_from_cstring(":exdata"),
+    *ex = CtrStdFlow,
+    *getexinfo = ctr_build_string_from_cstring("exceptionInfo");
+    ctr_internal_object_set_property(ex, exdata, ctr_internal_ex_data(), 0);
+    ctr_internal_create_func(ex, getexinfo, &ctr_exception_getinfo);
+    int setstr = 0;
+    if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING) {
+      ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
+      setstr = 1;
+      ctr_internal_create_func(ex, ctr_build_string_from_cstring("toString"), &ctr_string_to_string);
+    }
+    a->object = ex;
 	  a->next = ctr_heap_allocate (sizeof (ctr_argument));
 	  a->next->object = catch_type;
 	  if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
@@ -5834,6 +5897,10 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
 	      ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
 	      result = alternative;
 	    }
+      ctr_internal_object_delete_property(ex, exdata, 0);
+      ctr_internal_object_delete_property(ex, getexinfo, 1);
+      if (setstr)
+        ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
 	  ctr_heap_free (a->next);
 	  ctr_heap_free (a);
 	}
@@ -5908,7 +5975,18 @@ ctr_block_while_true (ctr_object * myself, ctr_argument * argumentList)
             {
               ctr_object *catch_type = ctr_internal_object_find_property (catchBlock, ctr_build_string_from_cstring ("%catch"), 0);
               ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
-              a->object = CtrStdFlow;
+              ctr_object *exdata = ctr_build_string_from_cstring(":exdata"),
+              *ex = CtrStdFlow,
+              *getexinfo = ctr_build_string_from_cstring("exceptionInfo");
+              ctr_internal_object_set_property(ex, exdata, ctr_internal_ex_data(), 0);
+              ctr_internal_create_func(ex, getexinfo, &ctr_exception_getinfo);
+              int setstr = 0;
+              if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING) {
+                ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
+                setstr = 1;
+                ctr_internal_create_func(ex, ctr_build_string_from_cstring("toString"), &ctr_string_to_string);
+              }
+              a->object = ex;
               a->next = ctr_heap_allocate (sizeof (ctr_argument));
               a->next->object = catch_type;
               if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
@@ -5917,6 +5995,10 @@ ctr_block_while_true (ctr_object * myself, ctr_argument * argumentList)
                 ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
                 result = alternative;
               }
+              ctr_internal_object_delete_property(ex, exdata, 0);
+              ctr_internal_object_delete_property(ex, getexinfo, 1);
+              if (setstr)
+                ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
               ctr_heap_free (a->next);
               ctr_heap_free (a);
             }
@@ -6019,7 +6101,18 @@ ctr_block_while_false (ctr_object * myself, ctr_argument * argumentList)
             {
               ctr_object *catch_type = ctr_internal_object_find_property (catchBlock, ctr_build_string_from_cstring ("%catch"), 0);
               ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
-              a->object = CtrStdFlow;
+              ctr_object *exdata = ctr_build_string_from_cstring(":exdata"),
+              *ex = CtrStdFlow,
+              *getexinfo = ctr_build_string_from_cstring("exceptionInfo");
+              ctr_internal_object_set_property(ex, exdata, ctr_internal_ex_data(), 0);
+              ctr_internal_create_func(ex, getexinfo, &ctr_exception_getinfo);
+              int setstr = 0;
+              if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING) {
+                ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
+                setstr = 1;
+                ctr_internal_create_func(ex, ctr_build_string_from_cstring("toString"), &ctr_string_to_string);
+              }
+              a->object = ex;
               a->next = ctr_heap_allocate (sizeof (ctr_argument));
               a->next->object = catch_type;
               if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
@@ -6028,6 +6121,10 @@ ctr_block_while_false (ctr_object * myself, ctr_argument * argumentList)
                 ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
                 result = alternative;
               }
+              ctr_internal_object_delete_property(ex, exdata, 0);
+              ctr_internal_object_delete_property(ex, getexinfo, 1);
+              if (setstr)
+                ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
               ctr_heap_free (a->next);
               ctr_heap_free (a);
             }
@@ -6641,6 +6738,46 @@ ctr_print_stack_trace ()
   putchar ('\n');
 }
 
+/** [exception in catch block] exceptionInfo
+ *
+ * Returns line info about an exception
+ */
+ctr_object* ctr_exception_getinfo(ctr_object* myself, ctr_argument* argumentList)
+{
+  return ctr_internal_object_find_property(myself, ctr_build_string_from_cstring(":exdata"), 0);
+}
+
+ctr_object *
+ctr_internal_ex_data()
+{
+  int lineno = -1, pos = -1;
+  ctr_source_map *mapItem;
+  ctr_tnode *stackNode = ctr_callstack[ctr_callstack_index - 1];
+  mapItem = ctr_source_map_head;
+  while (mapItem)
+{
+if (lineno == -1 && mapItem->node == stackNode)
+  {
+    lineno = mapItem->line;
+    pos = mapItem->p_ptr - mapItem->s_ptr - stackNode->vlen;
+    break;
+  }
+mapItem = mapItem->next;
+}
+
+  ctr_object
+    *linenumber = ctr_build_number_from_float(lineno),
+    *apos    = ctr_build_number_from_float(pos);
+
+  ctr_argument arg;
+  arg.object = linenumber; // line
+  arg.next = NULL;
+  ctr_object* data = ctr_array_new(CtrStdArray, NULL);
+  ctr_array_push(data, &arg);
+  arg.object = apos;
+  ctr_array_push(data, &arg);
+  return data;
+}
 ctr_object *
 ctr_get_last_trace (ctr_object * myself, ctr_argument * _)
 {

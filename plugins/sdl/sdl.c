@@ -1425,10 +1425,10 @@ void begin() {
   ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "newBufferWithWidth:andHeight:" ), &ctr_sdl_surface_new_wh );
   ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "hline_x0:x1:y0:color:" ), &ctr_sdl_gfx_hlineColor);
   ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "vline_x0:x1:y0:color:" ), &ctr_sdl_gfx_vlineColor);
-  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "rectangle_x0:x1:y0:y1:color:" ), &ctr_sdl_gfx_rectangleColor);
-  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "box_x0:x1:y0:y1:color:" ), &ctr_sdl_gfx_boxColor);
-  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "line_x0:x1:y0:y1:color:" ), &ctr_sdl_gfx_lineColor);
-  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "aaline_x0:x1:y0:y1:color:" ), &ctr_sdl_gfx_aalineColor);
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "rectangle_x0:y0:x1:y1:color:" ), &ctr_sdl_gfx_rectangleColor);
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "box_x0:y0:x1:y1:color:" ), &ctr_sdl_gfx_boxColor);
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "line_x0:y0:x1:y1:color:" ), &ctr_sdl_gfx_lineColor);
+  ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "aaline_x0:y0:x1:y1:color:" ), &ctr_sdl_gfx_aalineColor);
   ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "circle_x0:y0:r0:color:" ), &ctr_sdl_gfx_circleColor);
   ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "aacircle_x0:y0:r0:color:" ), &ctr_sdl_gfx_aacircleColor);
   ctr_internal_create_func(CtrStdSdl_surface, ctr_build_string_from_cstring( "filledCircle_x0:y0:r0:color:" ), &ctr_sdl_gfx_filledCircleColor);

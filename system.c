@@ -625,7 +625,7 @@ ctr_gc_dust (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * [Broom] unpack: [String:Ref]
+ * [Broom] unpack: [String:Ref], [Object:ctx]
  * assigns the instance to the reference
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */
@@ -788,7 +788,7 @@ ctr_shell_call (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * [Shell] unpack: [String:Ref]
+ * [Shell] unpack: [String:Ref], [Object:ctx]
  * assigns the instance to the reference
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */
@@ -982,7 +982,7 @@ ctr_command_num_of_args (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * [Program] unpack: [String:Ref]
+ * [Program] unpack: [String:Ref], [Object:ctx]
  * assigns the instance to the reference
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */

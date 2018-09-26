@@ -26,6 +26,7 @@
 #endif
 
 static int ctr_world_initialized = 0;
+extern ctr_object* generator_end_marker;
 
 // #define withGIL 1 //we all know this is a bad idea...
 
@@ -837,6 +838,7 @@ ctr_internal_object_add_property (ctr_object * owner, ctr_object * key, ctr_obje
 {
   ctr_did_side_effect = 1;
   if (value->lexical_name == NULL &&
+      value != generator_end_marker &&
       strncmp (key->value.svalue->value, "me", key->value.svalue->vlen) != 0 &&
       strncmp (key->value.svalue->value, "thisBlock", key->value.svalue->vlen) != 0)
     value->lexical_name = key;
@@ -852,7 +854,9 @@ ctr_internal_object_add_property (ctr_object * owner, ctr_object * key, ctr_obje
     {
       if (!owner->methods || owner->methods->size == 0)
 	{
-	  owner->methods->head = new_item;
+    if (!owner->methods)
+      owner->methods = ctr_heap_allocate(sizeof(typeof(*owner->methods)));
+    owner->methods->head = new_item;
 	}
       else
 	{
@@ -1603,7 +1607,10 @@ ctr_set (ctr_object * key, ctr_object * object)
       return;
     }
 assign_anyway:
-  if (strncmp (key->value.svalue->value, "me", key->value.svalue->vlen) != 0)
+  if (
+          object != generator_end_marker &&
+          strncmp (key->value.svalue->value, "me", key->value.svalue->vlen) != 0
+    )
     object->lexical_name = key;
   ctr_internal_object_set_property (context, key, object, 0);
 }
@@ -2043,7 +2050,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_STRFMTMAP), &ctr_string_format_map);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("%~:"), &ctr_string_format_map);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("escapeDoubleQuotes"), &ctr_string_dquotes_escape);
-  ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (""), &ctr_string_quotes_escape);
+  ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("escapeQuotes"), &ctr_string_quotes_escape);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_CHARACTERS), &ctr_string_characters);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_TO_BYTE_ARRAY), &ctr_string_to_byte_array);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_APPEND_BYTE), &ctr_string_append_byte);
@@ -2428,8 +2435,9 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("frameId"), &ctr_get_frame_id);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("isInFrame:"), &ctr_frame_present);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("run:inContext:arguments:"), &ctr_reflect_run_for_object_in_ctx);
-  ctr_internal_create_func (CtrStdReflect,
-			    ctr_build_string_from_cstring ("run:inContextAsWorld:arguments:"), &ctr_reflect_run_for_object_in_ctx_as_world);
+  ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("run:inContextAsWorld:arguments:"), &ctr_reflect_run_for_object_in_ctx_as_world);
+  ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("run:inContextAsMain:arguments:"), &ctr_reflect_run_for_object_in_ctx_as_main);
+  ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("worldSnapshot"), &ctr_reflect_world_snap);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("runInNewContext:"), &ctr_reflect_run_in_new_ctx);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("marshal:"), &ctr_reflect_marshal);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("unmarshal:"), &ctr_reflect_unmarshal);

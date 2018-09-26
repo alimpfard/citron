@@ -1680,7 +1680,7 @@ restart:;
  * list comprehension
  */
 /**
- * [Array] unpack: [Array:{Ref:string}]
+ * [Array] unpack: [Array:{Ref:string}], [Object:ctx]
  * Element-wise assign
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */
@@ -1697,6 +1697,7 @@ ctr_array_assign (ctr_object * myself, ctr_argument * argumentList)
 
   ctr_argument *elnumArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   ctr_argument *accArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+  accArg->next = argumentList->next;
   ctr_size i;
   if (to->info.type == CTR_OBJECT_TYPE_OTARRAY)
     {
@@ -1750,7 +1751,7 @@ ctr_array_assign (ctr_object * myself, ctr_argument * argumentList)
       if (argumentList->object->value.svalue->vlen == 0
 	  || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
 	goto clear;
-      ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string (to), myself, 0);
+      ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (to), myself, 0);
     }
 clear:
   ctr_heap_free (elnumArg);
@@ -2551,6 +2552,8 @@ ctr_map_to_string (ctr_object * myself, ctr_argument * argumentList)
   newArgumentList = ctr_heap_allocate (sizeof (ctr_argument));
   while (mapItem)
     {
+      if (!mapItem->value || !mapItem->key)
+        goto next;
       newArgumentList->object = ctr_build_string_from_cstring (CTR_DICT_CODEGEN_MAP_PUT);
       ctr_string_append (string, newArgumentList);
       if (mapItem->value == myself)
@@ -2608,6 +2611,7 @@ ctr_map_to_string (ctr_object * myself, ctr_argument * argumentList)
 	  newArgumentList->object = ctr_build_string_from_cstring (")");
 	  ctr_string_append (string, newArgumentList);
 	}
+  next:
       mapItem = mapItem->next;
       if (mapItem)
 	{
@@ -2620,7 +2624,7 @@ ctr_map_to_string (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
-* [Map] unpack: [Map:{Ref:AlternativeName}]
+* [Map] unpack: [Map:{Ref:AlternativeName}], [Object:ctx]
 * Key-wise assign
 * Give alternative names as the values of the constructor
 *
@@ -2643,6 +2647,7 @@ ctr_map_assign (ctr_object * myself, ctr_argument * argumentList)
   ctr_argument *newArgumentList;
   mapItem = myself->properties->head;
   newArgumentList = ctr_heap_allocate (sizeof (ctr_argument));
+  newArgumentList->next = argumentList->next;
   while (mapItem)
     {
       if (mapItem->value == myself)

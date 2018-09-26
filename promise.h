@@ -2,6 +2,7 @@
 #define CTR_PROMISE_H
 #include "citron.h"
 #include <gc/gc.h>
+#include <pthread.h>
 
 #define CTR_PROMISE_CALL 0
 #define CTR_PROMISE_MESSAGE 1

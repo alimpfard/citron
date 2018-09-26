@@ -288,10 +288,7 @@ ctr_cwlk_assignment (ctr_tnode * node)
       ctr_cwlk_last_msg_level = ctr_cwlk_msg_level;
       ctr_object *y = ctr_cwlk_expr (assignee, &ret);
       ctr_cwlk_replace_refs = old_replace;	//set back in case we didn't reset
-      result = ctr_send_message_variadic (x, "unpack:", 7, 1, y);
-      ctr_object *old_result = NULL;
-      while (old_result != result && result->info.type == CTR_OBJECT_TYPE_OTBLOCK)
-	result = ctr_block_run_here (result, NULL, (old_result = result));
+      result = ctr_send_message_variadic (x, "unpack:", 7, 2, y, ctr_contexts[ctr_context_id]); // hand the block the context
     }
   if (CtrStdFlow == NULL)
     {
@@ -393,10 +390,12 @@ ctr_cwlk_expr (ctr_tnode * node, char *wasReturn)
 	  case 0:
 	    {
 	      char ret;
-	      int oldquote = force_quote;
+	      int oldquote = force_quote, refs=ctr_cwlk_replace_refs;
 	      force_quote = quote;
 	      ctr_cwlk_last_msg_level = ctr_cwlk_msg_level;
+        ctr_cwlk_replace_refs = 0;
 	      result = ctr_cwlk_expr (node->nodes->node, &ret);
+        ctr_cwlk_replace_refs = refs;
 	      force_quote = oldquote;	//set back in case we didn't reset
 	      if (ctr_ast_is_splice (result))
 		result = ctr_ast_splice (result);

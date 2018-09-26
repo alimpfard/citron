@@ -19,6 +19,6 @@ do
     if [[ -e "./configure" ]]; then
       ./configure
     fi
-    echo $(sudo make "EXTRAS=$makefvar" && echo "Succ $plug" || echo "$plug Failed")
+    echo $(make "EXTRAS=$makefvar" && echo "Succ $plug" || echo "$plug Failed")
     cd $here
 done

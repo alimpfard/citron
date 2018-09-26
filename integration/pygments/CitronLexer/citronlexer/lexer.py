@@ -28,7 +28,8 @@ class CitronLexer(RegexLexer):
             (u'((?:[^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*)\\:)', bygroups(Name.Decorator), 'main__7'),
             (u'(\\\\)', bygroups(String.Escape), 'main__8'),
             (u'(?:(\\s+)([^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r])(\\s+))', bygroups(Name, Name.Decorator, Name), 'main__9'),
-            (u'(?:(\\`?)([^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*)(\\1))', bygroups(String.Escape, Generic, String.Escape), 'main__10'),
+            (u'(?:(\\`)([^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*)(\\1))', bygroups(String.Escape, Name.Function, String.Escape), 'main__10'),
+            (u'(?:(\\`?)([^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*)(\\1))', bygroups(String.Escape, Generic, String.Escape), 'main__11'),
             ('(\n|\r|\r\n)', String),
             ('.', String),
         ],
@@ -37,6 +38,10 @@ class CitronLexer(RegexLexer):
             ('.', Name.Variable),
         ],
         'main__10' : [
+            ('(\n|\r|\r\n)', String),
+            ('.', Name),
+        ],
+        'main__11' : [
             ('(\n|\r|\r\n)', String),
             ('.', Name),
         ],

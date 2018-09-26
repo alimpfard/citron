@@ -12,7 +12,7 @@
 #define CTR_XFN_OF_GENNY 8
 
 const static ctr_object generator_end_marker_o;
-static ctr_object *generator_end_marker = (ctr_object *) & generator_end_marker_o;
+ctr_object *generator_end_marker = (ctr_object *) & generator_end_marker_o;
 
 typedef struct
 {
@@ -474,6 +474,12 @@ ctr_generator_internal_inext (ctr_generator * genny, int gtype, ctr_generator * 
   int fail = 0;
   if ((isnext = !current))
     current = ctr_generator_internal_next (genny, gtype);
+  while (current == generator_end_marker && !genny->finished) {
+    current = ctr_generator_internal_next(genny, gtype);
+  }
+  if (current == generator_end_marker) {
+    return current;
+  }
   if (current->interfaces->link == ctr_std_generator)
     {
       ctr_generator *gen = current->value.rvalue->ptr;
@@ -522,6 +528,10 @@ ctr_generator_next (ctr_object * myself, ctr_argument * argumentList)
       CtrStdFlow = ctr_build_string_from_cstring ("Invalid generator type(probably)");
       return CtrStdNil;
     }
+  if (next == generator_end_marker) {
+    genny->finished = 1;
+    return CtrStdNil;
+  }
   return next;
 }
 
@@ -548,6 +558,10 @@ ctr_generator_inext (ctr_object * myself, ctr_argument * argumentList)
       CtrStdFlow = ctr_build_string_from_cstring ("Invalid generator type(probably)");
       return CtrStdNil;
     }
+  if (next == generator_end_marker) {
+    genny->finished = 1;
+    return CtrStdNil;
+  }
   return next;
 }
 /**

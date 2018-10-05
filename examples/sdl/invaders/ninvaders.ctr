@@ -40,10 +40,25 @@ var RenderableEntity is Object new
     my posX > w ifTrue: { my posX is w. }.
     my posY > h ifTrue: { my posY is h. }.
   },
+  on: 'stepTowardsX:andY:' do: {:x:y
+    Boolean flip ifTrue: {
+      my headingX is (x - my posX) / 1000.
+    }, ifFalse: {
+      my headingY is (y - my posY) / 1000.
+    }.
+  },
   on: 'iHash' do: { ^me id. },
   on: 'posX' do: {\ my posX },
   on: 'posY' do: {\ my posY },
+  on: 'hitsX:andY:withBB:' do: {:x:y:bb
+    my dead ifTrue: { ^False. }.
+    var xOverlap is valueInRange[my posX, x, x + bb getW] | valueInRange[x, my posX, my posX + my modelRect getW].
+    var yOverlap is valueInRange[my posY, y, y + bb getH] | valueInRange[y, my posY, my posY + my modelRect getH].
+    ^xOverlap & yOverlap.
+  },
   on: 'boundingBox' do: { ^SDL newRectWithX: my posX andY: my posY andW: my modelRect getW andH: my modelRect getH. }.
+
+var absDistance is \:x0:y0:x1:y1 (((x1 - x0) pow: 2) + ((y1 - y0) pow: 2)) sqrt.
 
 var Invader is RenderableEntity cnew: {
   on: 'initAtX:andY:' do: {:x:y
@@ -52,10 +67,15 @@ var Invader is RenderableEntity cnew: {
     ownRect => SDL newRectWithX: x andY: y andW: 0 andH: 0.
     posX => x.
     posY => y.
+    midPosX => my modelRect getH.
+    midPosY => my modelRect getW.
     headingX => 0.
     headingY => 0.
     dead => False.
     deathline => Dice rollWithSides: 300, + 200.
+    shotMinDist => 100.
+    shotCooldown => 25.
+    shotCooldown0 => 0.
   }.
   on: 'tick' do: {:self
     my dead ifTrue: {
@@ -70,20 +90,23 @@ var Invader is RenderableEntity cnew: {
       }.
       ^Nil.
     }.
-    my headingX is Boolean flip either: (Boolean flip either: -1 or: 0) or: (Boolean flip either: 0 or: 1).
-    my headingY is Boolean flip either: (Boolean flip either: -1 or: 0) or: (Boolean flip either: 0 or: 1).
+    stepTowardsX: Ship posX andY: Ship posY.
     my posX +=: my headingX.
     my posY +=: my headingY.
     self clampPosition.
     my ownRect setX: my posX.
     my ownRect setY: my posY.
-    ^Nil.
+    ^tryShootShipAtX: Ship posX andY: Ship posY.
   }.
-  on: 'hitsX:andY:withBB:' do: {:x:y:bb
-    my dead ifTrue: { ^False. }.
-    var xOverlap is valueInRange[my posX, x, x + bb getW] | valueInRange[x, my posX, my posX + my modelRect getW].
-    var yOverlap is valueInRange[my posY, y, y + bb getH] | valueInRange[y, my posY, my posY + my modelRect getH].
-    ^xOverlap & yOverlap.
+  on: 'tryShootShipAtX:andY:' do: {:x:y
+    my shotCooldown0 -=: 1.
+    ^my shotCooldown0 <=: 0, ifTrue: {
+      my shotCooldown0 is my shotCooldown.
+      absDistance[my posX, my posY, x, y] < my shotMinDist ifTrue: {
+        # Pen writeln: 'shooting from ' + me.
+        entities add: shoot_particle[[my posX + my midPosX, my posY + my midPosY], [0, y - my posY / 15], Ship].
+      }.
+    }, ifFalse: {^Nil.}.
   }.
   on: 'toString' do: {
     ^'Invader(dead:%s)[%d,%d,%d,%d]' % [my dead, my posX, my posY, my modelRect getW, my modelRect getH].
@@ -104,7 +127,7 @@ var surfaceFromAsciiMap is {:len:*lines
 }.
 
 var Missile is RenderableEntity cnew: {
-  on: 'initAtX:andY:headingX:andY:model:' do: {:x:y:hx:hy:model
+  on: 'initAtX:andY:headingX:andY:model:targeting:' do: {:x:y:hx:hy:model:tgt
     model => model.
     modelRect => my model clipRect.
     ownRect => SDL newRectWithX: x andY: y andW: 0 andH: 0.
@@ -114,8 +137,9 @@ var Missile is RenderableEntity cnew: {
     headingY => hy - 3.
     dead => False.
     lifespan => 100 / ((my headingX + 3.1) abs).
+    target => tgt.
   }.
-  on: 'initAtX:andY:headingX:andY:' do: {:x:y:hx:hy ^initAtX: x andY: y headingX: hx andY: hy model: shot. }.
+  on: 'initAtX:andY:headingX:andY:targeting:' do: {:x:y:hx:hy:tgt ^initAtX: x andY: y headingX: hx andY: hy model: shot targeting: tgt. }.
   on: 'tick' do: {:self
     my lifespan < 0 ifTrue: {^False.}.
     my lifespan -=: 1.
@@ -123,13 +147,15 @@ var Missile is RenderableEntity cnew: {
     my posX +=: my headingX.
     my posY +=: my headingY.
     self clampPosition.
-    var target is any_invader? [my posX, my posY, my modelRect].
+    var target is any? [my target, my posX, my posY, my modelRect].
     target isNil ifTrue: {
       my ownRect setX: my posX.
       my ownRect setY: my posY.
       ^Nil.
     }.
-    allKilledInvaders +=: 1.
+    target isA: Invader, ifTrue: {
+      allKilledInvaders +=: 1.
+    }.
     target die.
     self die.
     ^ParticleSystem new initAtX: my posX - 15 andY: my posY - 35.
@@ -142,11 +168,11 @@ var Missile is RenderableEntity cnew: {
 var evt is SDLEvent new.
 var invader is SDL loadImage: 'examples/sdl/invaders/invader.jpg'.
 var shot is surfaceFromAsciiMap[9,
-  '    *    ' ,
   '   ***   ' ,
-  '  *****  ' ,
-  '  *****  ' ,
-  '   ***   ' ,
+  '   * *   ' ,
+  '  *   *  ' ,
+  '  *   *  ' ,
+  '   * *   ' ,
   '   ***   ' ].
 
 var laser is surfaceFromAsciiMap[4,
@@ -170,20 +196,23 @@ var font is SDL loadFont: 'examples/sdl/invaders/Invaders.ttf' size: 20.
 invader scaleToW: 90 andH: 60.
 ship scaleToW: w / 8 andH: h / 8.
 
-var any_invader? is {:x:y:bb
-  var res is allInvaders filter: (\:_:invader invader hitsX: x andY: y withBB: bb).
-  res count > 0 ifTrue: { ^res head. }.
+var any? is {:ty:x:y:bb
+  ty isNil ifTrue: {
+    var res is allInvaders filter: (\:_:invader invader hitsX: x andY: y withBB: bb).
+    ^res count > 0 either: { ^res head. } or: Nil.
+  }.
+  ty hitsX: x andY: y withBB: bb, ifTrue: { ^ty. }.
   ^Nil.
 }.
 
 var allInvaders is Array new fill: 16 with: {:x ^Invader new initAtX: (Dice rollWithSides: w) andY: (Dice rollWithSides: h - 300, + 50).}.
 
-var shoot_particle is {:from:heading
-  ^Missile new initAtX: from head andY: from last headingX: heading head andY: heading last.
+var shoot_particle is {:from:heading:target
+  ^Missile new initAtX: from head andY: from last headingX: heading head andY: heading last targeting: target.
 }.
 
 var shoot_laser is {:from
-  ^Missile new initAtX: from head andY: from last headingX: 0 andY: -10 model: laser.
+  ^Missile new initAtX: from head andY: from last headingX: 0 andY: -10 model: laser targeting: Nil.
 }.
 
 var Ship is RenderableEntity cnew: {
@@ -198,12 +227,13 @@ var Ship is RenderableEntity cnew: {
   shotCooldown0 => 0.
   shotCooldown1 => 0.
   on: 'tick' do: {:self
+    my dead ifTrue: { ^False. }.
     my shotCooldown0 -=: 1.
     my shotCooldown1 -=: 1.
     my posX +=: my headingX.
     my posY +=: my headingY.
     self clampPosition.
-    var target is any_invader? [my posX, my posY, my modelRect].
+    var target is any? [Nil, my posX, my posY, my modelRect].
     target isNil ifFalse: {
       # Pen writeln: 'You are at %d,%d and you hit %d,%d (%s)' % [my posX, my posY, target posX, target posY, target].
       # window fillRect: target boundingBox withColor: (Color rgb: [0, 255, 0]).
@@ -356,7 +386,10 @@ var renderScore is {
 
 var sTs is SDL ticks.
 {^True.} whileTrue: {
-  allInvaders each_v: {:i i tick. i render: window. }.
+  allInvaders each_v: {:i
+    i tick.
+    i render: window.
+  }.
   entities each_v: {:i
     (i = window) continue.
     var res is i tick.

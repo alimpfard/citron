@@ -73,7 +73,7 @@ var Invader is RenderableEntity cnew: {
     headingY => 0.
     dead => False.
     deathline => Dice rollWithSides: 300, + 200.
-    shotMinDist => 100.
+    shotMinDist => 110.
     shotCooldown => 25.
     shotCooldown0 => 0.
   }.

@@ -234,23 +234,27 @@ ctr_cwlk_assignment (ctr_tnode * node)
 	}
       else if (assignee->modifier == 4)
   {
-    char* name_s = ctr_heap_allocate(17 * sizeof(char));
-    name_s[0] = ':'; //make it inaccessable from the system
-    ctr_mksrands(name_s+1);
+    // char* name_s = ctr_heap_allocate(17 * sizeof(char));
+    // name_s[0] = ':'; //make it inaccessable from the system
+    // ctr_mksrands(name_s+1);
 
-    ctr_tnode* repl = ctr_heap_allocate(sizeof(*repl));
-    *repl = *assignee;
-    assignee->modifier = /* var */2; /* modify for subsequent evaluation */
-    repl->value = name_s; /* lookup from global */
-    repl->vlen = 17;
+    // ctr_tnode* repl = ctr_heap_allocate(sizeof(*repl));
+    // *repl = *assignee;
+    // assignee->modifier = /* var */2; /* modify for subsequent evaluation */
+    // repl->value = name_s; /* lookup from global */
+    // repl->vlen = 17;
 
-    repl->modifier = /* var */2;
-    valueListItem->node = repl; /* modify for subsequent evaluation */
-    ctr_heap_free(value);
+    // repl->modifier = /* var */2;
+    // valueListItem->node = repl; /* modify for subsequent evaluation */
+    // ctr_heap_free(value);
     ctr_object* lname = ctr_build_string (assignee->value, assignee->vlen);
-    ctr_object* name = ctr_build_string(repl->value, repl->vlen);
-    ctr_assign_value_to_local (lname, x); // for this run only
-    result = ctr_hand_value_to_global (name, x);
+    // ctr_object* name = ctr_build_string(repl->value, repl->vlen);
+    result = ctr_assign_value_to_local (lname, x); // for this run only
+    // result = ctr_hand_value_to_global (name, x);
+    node->type = CTR_AST_NODE_EMBED;
+    node->modifier = 1;
+    node->nodes = ctr_heap_allocate(sizeof (ctr_tlistitem));
+    node->nodes->node = (ctr_tnode*) x;
   }
       else if (assignee->modifier == 5)
   {

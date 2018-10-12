@@ -35,6 +35,8 @@ again:
   pthread_mutex_unlock (entry->lock);
   while (pthread_mutex_trylock (entry->return_lock))
     {
+      if (entry->discardable)
+        continue;
       if (c_ent->next)
 	{
 	  c_ent = c_ent->next;
@@ -42,14 +44,15 @@ again:
 	}
     }
   pthread_mutex_unlock (entry->return_lock);
-  if (c_ent->next)
+  if (c_ent->next && !entry->discardable)
     {
       c_ent = c_ent->next;
       goto again;
-    }
+  }
 # ifdef DEBUG_BUILD
     printf("[CTR] exiting thread %p\n", entry->thread);
 # endif
+  entry->discardable |= 2;
   return result;
 }
 
@@ -126,6 +129,7 @@ ctr_promise_then (ctr_object * myself, ctr_object * target)
   sentry.target.respond = target;
   sentry.lock = before->lock;
   sentry.return_lock = before->return_lock;
+  sentry.discardable = 0;
   struct ctr_promise_entry *entry = ctr_heap_allocate (sizeof (*entry));
   *entry = sentry;
   before->next = entry;
@@ -192,9 +196,28 @@ ctr_promise_wait (ctr_object * myself, ctr_argument * argumentList)
 }
 
 ctr_object *
+ctr_promise_q_finished (ctr_object * myself, ctr_argument * argumentList)
+{
+  struct ctr_promise_entry *entry = myself->value.rvalue->ptr;
+  pthread_mutex_unlock (entry->return_lock);
+  ctr_object* s = ctr_build_bool(entry->discardable&2);
+  printf ("Thread %x has ready status %s\n", entry->thread, entry->discardable&2?"finished":"busy");
+  pthread_mutex_lock (entry->return_lock); // can't unlock if it's not locked
+  return s;
+}
+
+ctr_object *
 ctr_promise_make_async (ctr_object * myself, ctr_argument * argumentList)
 {
   myself->info.asyncMode = 1;
+  return myself;
+}
+
+ctr_object *
+ctr_promise_set_disc (ctr_object * myself, ctr_argument * argumentList)
+{
+  struct ctr_promise_entry *entry = myself->value.rvalue->ptr;
+  entry->discardable |= 1;
   return myself;
 }
 
@@ -206,6 +229,8 @@ promise_begin ()
   CtrStdPromise = ctr_internal_create_object (CTR_OBJECT_TYPE_OTMISC);
   ctr_internal_create_func (CtrStdPromise, ctr_build_string_from_cstring ("then:"), ctr_promise_then_);
   ctr_internal_create_func (CtrStdPromise, ctr_build_string_from_cstring ("await"), ctr_promise_wait);
+  ctr_internal_create_func (CtrStdPromise, ctr_build_string_from_cstring ("discard"), ctr_promise_set_disc);
+  ctr_internal_create_func (CtrStdPromise, ctr_build_string_from_cstring ("finished?"), ctr_promise_q_finished);
   ctr_internal_create_func (CtrStdPromise, ctr_build_string_from_cstring ("toString"), ctr_object_to_string);
   ctr_internal_create_func (CtrStdPromise, ctr_build_string_from_cstring ("respondTo:"), ctr_promise_pass_message);
   ctr_internal_create_func (CtrStdPromise, ctr_build_string_from_cstring ("respondTo:and:"), ctr_promise_pass_message);

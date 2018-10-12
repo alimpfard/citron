@@ -18,6 +18,7 @@ struct ctr_promise_entry {
     pthread_mutex_t* lock;
     pthread_mutex_t* return_lock;
     pthread_t thread;
+    int discardable;
     int next_type;
     struct ctr_context_t context;
 };

@@ -1050,6 +1050,7 @@ ctr_object* ctr_command_chdir(ctr_object* myself, ctr_argument* argumentList);
 
 
 void ctr_check_permission( uint8_t operationID );
+int  ctr_check_permission_internal( uint8_t operationID );
 CTR_H_DECLSPEC uint8_t ctr_command_security_profile;
 CTR_H_DECLSPEC uint64_t ctr_command_tick;
 CTR_H_DECLSPEC uint64_t ctr_command_maxtick;
@@ -1236,6 +1237,7 @@ ctr_object *ctr_inject_add_inclp(ctr_object* myself, ctr_argument* argumentList)
 ctr_object *ctr_inject_export_f(ctr_object *myself, ctr_argument *argumentList);
 ctr_object *ctr_inject_add_lib(ctr_object* myself, ctr_argument* argumentList);
 ctr_object *ctr_inject_set_error_handler(ctr_object* myself, ctr_argument* argumentList);
+ctr_object *ctr_inject_generate_output(ctr_object *myself, ctr_argument *argumentList);
 
 /** FFI **/
 #include "ctypes.h"

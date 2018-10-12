@@ -1916,7 +1916,7 @@ ctr_array_fill (ctr_object * myself, ctr_argument * argumentList)
   newArgumentList = ctr_heap_allocate (sizeof (ctr_argument));
   ctr_object *memb = argumentList->next->object;
   ctr_object *res = NULL;
-  if (memb->info.type == CTR_OBJECT_TYPE_OTBLOCK)
+  if (memb->info.type == CTR_OBJECT_TYPE_OTBLOCK || memb->info.type == CTR_OBJECT_TYPE_OTNATFUNC)
     {
       ctr_object *_i = ctr_internal_create_standalone_object (CTR_OBJECT_TYPE_OTNUMBER);
       ctr_set_link_all (_i, CtrStdNumber);

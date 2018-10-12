@@ -2476,7 +2476,7 @@ ctr_initialize_world ()
   CtrStdInject = CtrStdObject;
   CtrStdInject = ctr_inject_make(NULL, NULL);
   ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Inject"), CtrStdInject, 0);
-  ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("newWithDebugSymbols:"), &ctr_inject_make);
+  ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("newWithOutputMode:"), &ctr_inject_make);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("new"), &ctr_inject_make);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("compile:"), &ctr_inject_compile);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("run:arguments:"), &ctr_inject_run);
@@ -2484,6 +2484,7 @@ ctr_initialize_world ()
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("addIncludePath:"), &ctr_inject_add_inclp);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("linkInLibrary:"), &ctr_inject_add_lib);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("errorHandler:"), &ctr_inject_set_error_handler);
+  ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("outputTo:"), &ctr_inject_generate_output);
 #endif // withInjectNative
 
   static ctr_object ctr_dummy_import;
@@ -2672,6 +2673,8 @@ ctr_get_appropriate_catch_all (char *message, long vlen, int argCount)
     }
 }
 
+char* msgName__ = NULL;
+long msgLen__ = 0;
 /**
  * @internal
  *
@@ -2730,6 +2733,8 @@ no_instrum:;
   int argCount;
   if (CtrStdFlow != NULL)
     {
+      msgName__ = message;
+      msgLen__ = vlen;
       CTR_THREAD_UNLOCK ();
       return CtrStdNil;		/* Error mode, ignore subsequent messages until resolved. */
     }
@@ -2757,8 +2762,13 @@ no_instrum:;
       size_t catch_all_v = catch_all_s->value.svalue->vlen;
       if (vlen == catch_all_v && message[9] == ':' && strcmp (message, catch_all) == 0)
 	{
-	  CtrStdFlow = ctr_build_string_from_cstring (CTR_DICT_RESPOND_TO_AND " calls itself");
+    ctr_object* s = CtrStdString;
+    if (receiverObject->lexical_name)
+      s = receiverObject->lexical_name;
+	  CtrStdFlow = ctr_format_str ("E" CTR_DICT_RESPOND_TO_AND " calls itself with initiator ‘%.%s’ for object named ‘%S’", msgLen__, msgName__, s);
 	  CTR_THREAD_UNLOCK ();
+    msgName__ = message;
+    msgLen__ = vlen;
 	  return receiverObject;
 	}
       mesgArgument = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
@@ -2768,6 +2778,8 @@ no_instrum:;
       returnValue = ctr_send_message_blocking (receiverObject, catch_all, catch_all_v, mesgArgument);
       ctr_heap_free (mesgArgument);
       msg->info.sticky = 0;
+      msgName__ = message;
+      msgLen__ = vlen;
       if (receiverObject->info.chainMode == 1)
 	return receiverObject;
       return returnValue;
@@ -2814,6 +2826,8 @@ no_instrum:;
     }
   if (msg)
     msg->info.sticky = 0;
+  msgName__ = message;
+  msgLen__ = vlen;
   if (receiverObject->info.chainMode == 1)
     return receiverObject;
   return result;		//Normally cascade down to native functions, so get the return type

@@ -2112,7 +2112,7 @@ ctr_number_to_step_do (ctr_object * myself, ctr_argument * argumentList)
     ctr_open_context ();
   arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   ctr_object *arg = ctr_internal_create_standalone_object (CTR_OBJECT_TYPE_OTNUMBER);
-  while ((forward ? curValue <= endValue : curValue >= endValue) && !CtrStdFlow)
+  while ((forward ? curValue < endValue : curValue > endValue) && !CtrStdFlow)
     {
       arg->value.nvalue = (ctr_number) curValue;
       arguments->object = arg;

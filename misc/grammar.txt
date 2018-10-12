@@ -1,19 +1,28 @@
-translationUnit ::= program
-program ::= fin
-        | statement program
-statement ::= fin
-          | ret Dot
-          | expr Dot
-fin ::= EOF
-ret ::= RET expr
-expr ::= receiver ':'
-     | receiver 'is' expr
-     | receiver ':=' expr
-     | receiver '=>' expr
-     | receiver messages
-     | receiver
+translationUnit = program;
 
-receiver ::= 'Nil'
+program = fin
+        | statement, program
+        ;
+
+statement = fin
+          | ret, '.'
+          | expr, '.'
+          ;
+
+fin = EOF;
+
+ret = RET, expr;
+
+expr = expr, 'is', expr (* expression deconstruction *)
+     | expr, ':=', expr (* ... *)
+     | expr, '=>', expr (* ... *)
+     | receiver, messages (* message passing *)
+     | kwmessage, [',', messages] (* message passing to the current context *)
+     | receiver (* receiver object without messages *)
+     | ('$' | '$!' | "$'" | '$`'), expr (* meta-expr syntax *)
+     ;
+
+receiver = 'Nil'
          | 'True'
          | 'False'
          | NUMBER
@@ -25,49 +34,66 @@ receiver ::= 'Nil'
          | tuple
          | symbol
          | list_comp
+         ;
 
-ref ::= 'my' REF
-    | 'var' REF
-    | 'const' REF
+ref = 'my', REF
+    | 'var', REF
+    | 'const', REF
+    | 'frozen', REF
     | REF
+    ;
 
-block_arguments ::= ':' REF block_arguments
-                | <empty>
+block_arguments = ':' REF, block_arguments
+                 | ?empty?
+                 ;
 
-instruction_list ::= statement instruction_list
-                 | <empty>
+instruction_list = statement, instruction_list
+                  | ?empty?
+                  ;
 
-lambda_arguments ::= ':' REF lambda_arguments
+lambda_arguments = ':', REF, lambda_arguments;
 
-block ::= '{' block_arguments instruction_list '}'
-      | '{\' block_arguments instruction_list '}'
+block = '{', block_arguments, instruction_list, '}'
+      | '{\', block_arguments, instruction_list, '}'
+      ;
 
-lambda ::= '\' lambda_arguments expr
+lambda = '\', lambda_arguments, expr;
 
-parens ::= '(' expr ')'
+parens = '(', expr, ')';
 
-symbol ::= '\' REF
+symbol = '\', REF;
 
-tuple ::= '[' commasep_vals ']'
+tuple = '[', commasep_vals, ']';
 
-commasep_vals ::= expr ',' commasep_vals
-              | expr
-              | <empty>
+commasep_vals = expr, ',', commasep_vals
+               | expr
+               | ?empty?
+               ;
 
-list_comp ::= '[' expr ',' ',' commasep_vals ',' ',' commasep_vals ']'
-          | '[' expr ',' ',' commasep_vals ']'
-          | '[' expr ',' ',' ']'
+list_comp = '[', expr, ',', ',', commasep_vals, ',', ',', commasep_vals, ']'
+          | '[', expr, ',', ',', commasep_vals, ']'
+          | '[', expr, ',', ',', ']'
+          ;
 
-messages ::= REF{length>1} messages
-         | REF{length=1} expr messages
-         | kwmessage ',' messages
+messages = REF (* length>1 *), messages
+         | REF (* length=1 *), expr, messages
+         | kwmessage, ',', messages
+         ;
 
-kwmessage ::= REF ':' expr kwmessage
-          | REF ':' expr
+kwmessage = REF, ':', expr, kwmessage
+          | REF, ':', expr
+          ;
 
+EOF = ?eof?;
 
-EOF ::= <end-of-file>
-RET ::= '^' | '↑'
-REF ::= [^\d,:'()[]{}\\\s][^,:'()[]{}\s]*
-NUMBER ::= -?('0x' [0-9a-fA-F] | '0c' [0-7] | \d+ | \d+\.\d+)
-STRING ::= '?>' [^(<?)]* '<?' | "'" (\\\'|[^(\')])* "'"
+RET = '^' | '↑';
+
+whitespace = ? tab ? | ? space ? ;
+REF intern0 = - (',' | ':' | '(' | ')' | '[' | ']' | '{' | '}' | whitespace);
+REF intern1 = - (',' | ':' | '(' | ')' | '[' | ']' | '{' | '}' | whitespace | '\' | digit);
+
+REF = REF intern0, {REF intern1};
+
+NUMBER = [ '-' ] ('0x', ident | '0c', {oct_digit} | {digit} | digit {digit} '.' digit {digit} );
+
+STRING = "'" {?(\\\'|[^(\')])?} "'";

@@ -1240,8 +1240,8 @@ ctr_int_handler (int isig)
  *
  * Checks whether the user is allowed to perform this kind of operation.
  */
-void
-ctr_check_permission (uint8_t operationID)
+int
+ctr_check_permission_internal (uint8_t operationID)
 {
   char *reason;
   if ((ctr_command_security_profile & operationID))
@@ -1267,9 +1267,20 @@ ctr_check_permission (uint8_t operationID)
 	{
 	  reason = "This program is not allowed to spawn other processes or serve remote objects.";
 	}
-      printf ("%s\n", reason);
-      exit (1);
+      CtrStdFlow = ctr_format_str ("ESecurityError: %s", reason);
+      return 1;
     }
+    return 0;
+}
+
+void ctr_check_permission(uint8_t operationID)
+{
+  if (ctr_check_permission_internal(operationID))
+  {
+    ctr_argument arg = {CtrStdFlow, NULL};
+    ctr_console_writeln(NULL, &arg);
+    exit(1);
+  }
 }
 
 /**

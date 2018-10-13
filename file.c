@@ -163,7 +163,7 @@ ctr_file_path (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * [File] unpack: [String:Ref]
+ * [File] unpack: [String:Ref], [Object:ctx]
  * Assigns the file instance to the reference
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */

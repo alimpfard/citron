@@ -1,0 +1,4 @@
+var do is {:obj:blk
+  Reflect run: blk forObject: obj arguments: [].
+  ^obj.
+}.

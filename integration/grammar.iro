@@ -1,7 +1,7 @@
 name                             = Citron
 file_extensions []               = ctr;
-textmate_compatible              = false 
-#textmate_compatible              = true
+// textmate_compatible              = false
+textmate_compatible              = true
 ##################################################
 #  Styles                                        #
 ##################################################
@@ -17,7 +17,7 @@ styles[] {
       pygments_scope                  = Name.Variable
    }
    .sl_defn : style {
-      color                           = violet  
+      color                           = violet
       pygments_scope                  = Keyword.Pseudo
       textmate_scope                  = keyword.other.unit
    }
@@ -33,8 +33,15 @@ styles[] {
       highlight_js_scope              = .hljs-comment
       ace_scope                       = comment
    }
+   .sl_pragma : style {
+      color                           = purple
+      textmate_scope                  = markup.deleted
+      pygments_scope                  = Generic.Deleted
+      highlight_js_scope              = .hljs-deletion
+      ace_scope                       = markup.deleted
+   }
    .sl_message : style {
-      color                           = purple   
+      color                           = purple
       pygments_scope                  = Name.Decorator
       textmate_scope                  = entity.name.function
    }
@@ -46,7 +53,7 @@ styles[] {
    .sl_strescape : style {
       color                           = light_blue
       pygments_scope                  = String.Escape
-      textmate_scope                  = string punctuation
+      textmate_scope                  = constant.character.escape
    }
    .sl_rawstring : style {
       color                           = light_green
@@ -63,7 +70,18 @@ styles[] {
       pygments_scope                  = Generic
       textmate_scope                  = text
    }
-   
+   .sl_pragma_invalid : style {
+      textmate_scope                  = invalid.illegal
+      ace_scope                       = invalid.illegal
+      pygments_scope                  = Generic.Error
+   }
+   .sl_backref : style {
+      textmate_scope                  = entity.name.type
+      ace_scope                       = entity.name.type
+      pygments_scope                  = Name.Function
+      italic                          = true
+      color                           = gold
+   }
 }
 
 
@@ -75,31 +93,44 @@ styles[] {
 contexts[] {
    main : context {
       : inline_push {
-         regex      \= \b(var|my|const)\b
+         regex      \= \b(var|my|const|frozen)\b
          styles []   = .sl_defn;
          default_style     = .variable
          : pop {
             regex      \= ([^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*)
             styles []   = .variable;
          }
-         
+
       }
-      
-      : set {
-         regex      \= (\.)
-         styles []   = .punctuation;
-         context []  = main;
-      }
-      // : pop {
+
+      // : set {
       //    regex      \= (\.)
       //    styles []   = .punctuation;
+      //    context []  = main;
       // }
-      
+      : pattern {
+         regex      \= (\$[!,'`](?!=\s))
+         styles []   = .sl_strescape;
+      }
+
+      : pattern {
+
+         regex      \= (\$(?=\())
+
+         styles []   = .sl_strescape;
+
+      }
+
+      : pop {
+         regex      \= (\.)
+         styles []   = .punctuation;
+      }
+
       : pattern {
          regex      \= ([\[\]\(\)\^\}])
          styles []   = .punctuation;
       }
-      
+
       : pattern {
          regex      \= (?:(\s*)(\bis\b|\:\=|\=\>)(\s*))
          styles []   = .text, .sl_assign, .text;
@@ -107,12 +138,12 @@ contexts[] {
       : inline_push {
          regex      \= (?:(\?>))
          styles []   = .sl_rawstring;
-         
+
          : pop {
             regex      \= (<\?)
             styles []   = .sl_rawstring;
          }
-         
+
          : pattern {
             regex      \= (.)
             styles []   = .sl_rawstring;
@@ -125,26 +156,37 @@ contexts[] {
       : inline_push {
          regex      \= (')
          styles []   = .sl_string;
-         
+
          :pop {
             regex      \= ((?!<\\)')
             styles []   = .sl_string;
          }
-         
+
          : pattern {
             regex      \= (\\[^xu])
             styles []   = .sl_strescape;
          }
-         
+
          : pattern {
             regex      \= (?:(\\[xuXU])([{]?)([0-9a-fA-F]+)([}]?))
             styles []   = .sl_strescape, .sl_strescape, .sl_number, .sl_strescape;
          }
-         
+
          : pattern {
             regex      \= (.)
             styles []   = .sl_string;
          }
+      }
+      : inline_push {
+         regex            \= (?:(\\)((?:\:[^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*\s*)+))
+         styles []         = .sl_assign, .sl_defn;
+         default_style     = .text
+
+         : pop {
+            regex      \= (\s*?)
+            styles []   = .punctuation;
+         }
+
       }
       : inline_push {
          regex      \= (?:(\{)((?:\:(?:[^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*))*))
@@ -154,7 +196,16 @@ contexts[] {
             regex            \= (\s*)
             styles []         = .punctuation;
          }
-         
+
+      }
+      : inline_push {
+         regex      \= (?:(\#:))
+         styles []   = .sl_comment;
+         : pop {
+            regex      \= (?:(?:(declare)(\s+)(infixr|infixl|lazyev)(\s*)(.*))|(?:(language)(\s+)(.*))$)
+            styles []   = .sl_pragma, .punctuation, .sl_rawstring, .punctuation, .sl_message, .sl_pragma, .punctuation, .sl_rawstring;
+         }
+         default_style     = .sl_pragma
       }
       : pattern {
          regex      \= (\#.*$)
@@ -187,16 +238,24 @@ contexts[] {
             styles []         = .punctuation;
          }
       }
-      
+
       : inline_push {
-         regex      \= ([^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*)
-         styles []   = .text;
+         regex      \= (?:(\`)([^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*)(\1))
+         styles []   = .sl_strescape, .sl_backref, .sl_strescape;
          default_style     = .punctuation
          : pop {
-            regex      \= (\s*)
+            regex      \= (\s*?)
             styles []   = .punctuation;
          }
       }
-      
+       : inline_push {
+         regex      \= (?:(\`?)([^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*)(\1))
+         styles []   = .sl_strescape, .text, .sl_strescape;
+         default_style     = .punctuation
+         : pop {
+            regex      \= (\s*?)
+            styles []   = .punctuation;
+         }
+      }
    }
 }

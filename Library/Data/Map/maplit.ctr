@@ -1,0 +1,31 @@
+import require-parent.
+import Library/Data/Generator/range: 'range'.
+
+var process-arg is {:elem
+  elem type !=: 'EXPRMESSAGE', ifTrue: {
+    thisBlock error: 'Syntax error'.
+  }.
+  var eref is elem @ 0.
+  (eref type = 'REFERENCE') & (['me', '->'] contains: eref value) ifFalse: {
+    thisBlock error: 'Expected `->`'.
+  }.
+  elem is [elem @ i,, range[1, elem count]].
+  ^elem fmap: {:e
+    ['KWMESSAGE', 'BINMESSAGE'] contains: e type, ifFalse: {
+      thisBlock error: 'Syntax error: Expected `key: value`'.
+    }.
+    var val is e value.
+    val countOf: ':', > 1 ifTrue: {
+      thisBlock error: 'Syntax error: Expected a single keyword'.
+    }.
+    val is val replace: ':' with: ''.
+    ^[val, (e at: 0)].
+  }.
+}.
+
+var ctxeval is \:exp:ctx Reflect run: {^$!(exp).} inContext: ctx arguments: [].
+var maplit-gen is {:mapdesc:ctx
+  ^Map fromArray: (
+    (Array new fill: mapdesc count with: \:x const process-arg[(mapdesc at: x)]) sum fmap: {:kv ^[kv head, const ctxeval[kv last, ctx]]. }
+  ).
+}.

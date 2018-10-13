@@ -1,0 +1,18 @@
+import require-parent.
+import maplit: \*.
+
+#:declare lazyev 2 mapcall
+
+var mapcall is {:fn:mapdesc
+  fn is $!fn.
+  mapdesc is const maplit-gen[(mapdesc at: 1), Reflect thisContext].
+  ^fn applyAll: ({
+    var arglist is Reflect argumentListOf: fn.
+    arglist count > 0 ifTrue: {
+      arglist head = 'self' ifTrue: {
+        arglist shift.
+      }.
+    }.
+    ^arglist.
+  } run fmap: \:x x startsWith: '*', either: { ^mapdesc at: (x skip: 1). } or: mapdesc @ x).
+}.

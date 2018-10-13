@@ -434,6 +434,10 @@ ctr_object** get_CTR_FILE_STDERR();
 ctr_object** get_CTR_FILE_STDIN_STR();
 ctr_object** get_CTR_FILE_STDOUT_STR();
 ctr_object** get_CTR_FILE_STDERR_STR();
+
+ctr_object* ctr_exception_getinfo(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_internal_ex_data();
+
 /**
 * @internal
  * standard instrumentor, do not override.
@@ -1046,6 +1050,7 @@ ctr_object* ctr_command_chdir(ctr_object* myself, ctr_argument* argumentList);
 
 
 void ctr_check_permission( uint8_t operationID );
+int  ctr_check_permission_internal( uint8_t operationID );
 CTR_H_DECLSPEC uint8_t ctr_command_security_profile;
 CTR_H_DECLSPEC uint64_t ctr_command_tick;
 CTR_H_DECLSPEC uint64_t ctr_command_maxtick;
@@ -1177,9 +1182,11 @@ ctr_object* ctr_reflect_unregister_instrumentor(ctr_object* myself, ctr_argument
 ctr_object* ctr_reflect_get_instrumentor(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_ginstr(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_noginstr(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_world_snap(ctr_object*, ctr_argument*);
 ctr_object* ctr_reflect_run_glob(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_for_object_in_ctx (ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_for_object_in_ctx_as_world (ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_run_for_object_in_ctx_as_main (ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_in_new_ctx(ctr_object * myself, ctr_argument * argumentList);
 ctr_object* ctr_reflect_compilerinfo (ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_delegate_set_private_property(ctr_object* itself, ctr_argument* argumentList);
@@ -1230,6 +1237,7 @@ ctr_object *ctr_inject_add_inclp(ctr_object* myself, ctr_argument* argumentList)
 ctr_object *ctr_inject_export_f(ctr_object *myself, ctr_argument *argumentList);
 ctr_object *ctr_inject_add_lib(ctr_object* myself, ctr_argument* argumentList);
 ctr_object *ctr_inject_set_error_handler(ctr_object* myself, ctr_argument* argumentList);
+ctr_object *ctr_inject_generate_output(ctr_object *myself, ctr_argument *argumentList);
 
 /** FFI **/
 #if 0

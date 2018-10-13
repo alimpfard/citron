@@ -8,7 +8,6 @@ Continue for-loop, No - before 6 and up.
 7
 8
 9
-10
 
 Continue while-true, No --> before 5 and up.
 iteration #0
@@ -42,17 +41,16 @@ iteration #3
 |||iteration #4
 |||
 Uncaught error has occurred.
-#16 continue (tests/test0113.ctr: 43)
-#15 run (tests/test0113.ctr: 43)
-#14 times: (tests/test0113.ctr: 34)
-#13 whileFalse: (tests/test0113.ctr: 24)
-#12 continue (tests/test0113.ctr: 17)
+#15 continue (tests/test0113.ctr: 43)
+#14 run (tests/test0113.ctr: 43)
+#13 times: (tests/test0113.ctr: 34)
+#12 whileFalse: (tests/test0113.ctr: 24)
 #11 continue (tests/test0113.ctr: 17)
 #10 continue (tests/test0113.ctr: 17)
 #9 continue (tests/test0113.ctr: 17)
 #8 continue (tests/test0113.ctr: 17)
-#7 whileTrue: (tests/test0113.ctr: 14)
-#6 continue (tests/test0113.ctr: 5)
+#7 continue (tests/test0113.ctr: 17)
+#6 whileTrue: (tests/test0113.ctr: 14)
 #5 continue (tests/test0113.ctr: 5)
 #4 continue (tests/test0113.ctr: 5)
 #3 continue (tests/test0113.ctr: 5)

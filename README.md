@@ -9,6 +9,7 @@ this is to be built on Msys2 (mingw)
 minimum required libraries:
 * `libpcre` -- for regular expressions
 * `libgc` -- for Garbage Collection
+* `libffi` -- for Native CTypes [can be disabled]
 
 ```sh
 # clone this branch

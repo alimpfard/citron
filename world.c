@@ -1608,11 +1608,7 @@ ctr_set (ctr_object * key, ctr_object * object)
     }
 assign_anyway:
   if (
-<<<<<<< HEAD
           key != generator_end_marker &&
-=======
-          object != generator_end_marker &&
->>>>>>> master
           strncmp (key->value.svalue->value, "me", key->value.svalue->vlen) != 0
     )
     object->lexical_name = key;

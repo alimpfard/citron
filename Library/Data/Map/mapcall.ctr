@@ -1,0 +1,10 @@
+import require-parent.
+import maplit: \*.
+
+#:declare lazyev 2 mapcall
+
+var mapcall is {:fn:mapdesc
+  fn is $!fn.
+  mapdesc is const maplit-gen[(mapdesc at: 1), Reflect thisContext].
+  ^fn applyAll: (Reflect argumentListOf: fn, fmap: \:x x startsWith: '*', either: { ^mapdesc at: (x skip: 1). } or: mapdesc @ x).
+}.

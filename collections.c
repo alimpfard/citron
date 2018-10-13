@@ -529,7 +529,7 @@ ctr_array_map_v (ctr_object * myself, ctr_argument * argumentList)
   ctr_argument *pushArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   ctr_argument *elnumArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   ctr_size i;
-  for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
+  for (i = 0; i < myself->value.avalue->head-myself->value.avalue->tail; i++)
     {
       ctr_object *elnum = ctr_build_number_from_float ((ctr_number) i);
       elnumArg->object = elnum;
@@ -1345,7 +1345,7 @@ ctr_array_add (ctr_object * myself, ctr_argument * argumentList)
   ctr_argument *pushArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   ctr_argument *elnumArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   ctr_size i;
-  for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
+  for (i = 0; i < myself->value.avalue->head - myself->value.avalue->tail; i++)
     {
       ctr_object *elnum = ctr_build_number_from_float ((ctr_number) i);
       elnumArg->object = elnum;
@@ -1383,7 +1383,7 @@ ctr_array_fmap (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *newArray = ctr_array_new (CtrStdArray, NULL);
   ctr_argument *arg = ctr_heap_allocate (sizeof (ctr_argument));
   ctr_size i;
-  for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
+  for (i = 0; i < myself->value.avalue->head-myself->value.avalue->tail; i++)
     {
       arg->object = ctr_build_number_from_float ((ctr_number) i);
       arg->object = ctr_array_get (myself, arg);
@@ -1423,7 +1423,7 @@ ctr_array_imap (ctr_object * myself, ctr_argument * argumentList)
   pushArg->next = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   ctr_argument *elnumArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   ctr_size i;
-  for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
+  for (i = 0; i < myself->value.avalue->head-myself->value.avalue->tail; i++)
     {
       ctr_object *elnum = ctr_build_number_from_float ((ctr_number) i);
       elnumArg->object = elnum;
@@ -1457,7 +1457,7 @@ ctr_array_foldl (ctr_object * myself, ctr_argument * argumentList)
   accArg->next = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   accArg->object = accumulator;
   ctr_size i;
-  for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
+  for (i = 0; i < myself->value.avalue->head-myself->value.avalue->tail; i++)
     {
       ctr_object *elnum = ctr_build_number_from_float ((ctr_number) i);
       elnumArg->object = elnum;

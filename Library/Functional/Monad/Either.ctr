@@ -10,11 +10,11 @@ var Either is Monad new
       my value is p.
     }.
   },
-  on: 'unpack:' do: {:self:to
+  on: 'unpack:' do: {:self:to:ctx
     ^((me type) = (to type))
-      either: {^{
-        ^const self unwrap unpack: (const to unwrap).
-      }.}
+      either: {
+        ^self unwrap message: 'unpack:' arguments: [to unwrap, ctx].
+      }
       or: {
           thisBlock error: ('%s cannot be constructed by %s' % [(Reflect strTypeOf: to), (Reflect strTypeOf: const self)]).
       }.

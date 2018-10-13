@@ -133,3 +133,20 @@ Array on: 'intersect:by:' do: {:ys:eq
       ^(xs fmap: \:x (ys any: \:y eq applyTo: x and: y) either: [x] or: []) sum.
     }.
 }.
+
+Array on: 'scanl:init:' do: {:self:f:q
+  ^self count > 0 either: {
+    var x is self head.
+    var xs is self tail.
+    ^[q] + (xs scanl: f init: (f applyTo: q and: x)).
+  } or: [q].
+}.
+
+Array on: 'inits' do: {:self
+  ^(imap: \:i self from: 0 length: i) push: self copy.
+}.
+
+Array on: 'tails' do: {:self
+  var length is self count.
+  ^(imap: \:i self from: i + 1 lengthMax: length) unshift: self copy.
+}.

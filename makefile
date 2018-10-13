@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 DEBUG_VERSION := 68
+=======
+DEBUG_VERSION := 487
+>>>>>>> master
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 LEXTRACF := ${LEXTRACF} -flto -lstdc++
 fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))

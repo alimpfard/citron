@@ -17,6 +17,7 @@
 ctr_object* CtrStdBigInt;
 
 ctr_object* ctr_gmp_make(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_gmp_set(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gmp_to_gmp(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gmp_add(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gmp_sub(ctr_object* myself, ctr_argument* argumentList);
@@ -61,6 +62,17 @@ ctr_object* ctr_gmp_make(ctr_object* myself, ctr_argument* argumentList) {
   numobj->value.rvalue->ptr = (void*)num;
   return numobj;
 }
+
+ctr_object* ctr_gmp_set(ctr_object* myself, ctr_argument* argumentList) {
+  int number;
+  if (argumentList != NULL && argumentList->object != NULL)
+    number = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  else
+    number = 0;
+  mpz_set_ui((*(mpz_t*)(myself->value.rvalue->ptr)), number);
+  return myself;
+}
+
 ctr_object* ctr_gmp_to_gmp(ctr_object* myself, ctr_argument* argumentList) { //Number to BigInt
   ctr_object* gmpobj = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
   unsigned long int number = ctr_internal_cast2number(myself)->value.nvalue;
@@ -308,6 +320,8 @@ void begin() {
   ctr_set_link_all(CtrStdBigInt, CtrStdObject);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("new"), &ctr_gmp_make);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("new:"), &ctr_gmp_make);
+  ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("set:"), &ctr_gmp_set);
+  ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("setZero"), &ctr_gmp_set);
   ctr_internal_create_func(CtrStdNumber, ctr_build_string_from_cstring("toBigInt"), &ctr_gmp_to_gmp);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("+=:"), &ctr_gmp_add);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("-=:"), &ctr_gmp_sub);

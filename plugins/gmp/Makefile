@@ -3,10 +3,10 @@ default: all
 all: compile link copy
 
 compile:
-	cc ${EXTRAS} -c gmp.c -Wall -fPIC -g3 -o gmp.o
+	${CC} ${EXTRAS} -c gmp.c -Wall -fPIC -g3 -o gmp.o
 
 link:
-	cc -shared -o libctrbiginteger.so -lgmp gmp.o
+	${CC} -shared -o libctrbiginteger.so -lgmp gmp.o
 
 copy:
 	mkdir -p ../../mods/biginteger

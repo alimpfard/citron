@@ -529,7 +529,7 @@ ctr_array_map_v (ctr_object * myself, ctr_argument * argumentList)
   ctr_argument *pushArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   ctr_argument *elnumArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   ctr_size i;
-  for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
+  for (i = 0; i < myself->value.avalue->head-myself->value.avalue->tail; i++)
     {
       ctr_object *elnum = ctr_build_number_from_float ((ctr_number) i);
       elnumArg->object = elnum;
@@ -1345,7 +1345,7 @@ ctr_array_add (ctr_object * myself, ctr_argument * argumentList)
   ctr_argument *pushArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   ctr_argument *elnumArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   ctr_size i;
-  for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
+  for (i = 0; i < myself->value.avalue->head - myself->value.avalue->tail; i++)
     {
       ctr_object *elnum = ctr_build_number_from_float ((ctr_number) i);
       elnumArg->object = elnum;
@@ -1383,7 +1383,7 @@ ctr_array_fmap (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *newArray = ctr_array_new (CtrStdArray, NULL);
   ctr_argument *arg = ctr_heap_allocate (sizeof (ctr_argument));
   ctr_size i;
-  for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
+  for (i = 0; i < myself->value.avalue->head-myself->value.avalue->tail; i++)
     {
       arg->object = ctr_build_number_from_float ((ctr_number) i);
       arg->object = ctr_array_get (myself, arg);
@@ -1423,7 +1423,7 @@ ctr_array_imap (ctr_object * myself, ctr_argument * argumentList)
   pushArg->next = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   ctr_argument *elnumArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   ctr_size i;
-  for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
+  for (i = 0; i < myself->value.avalue->head-myself->value.avalue->tail; i++)
     {
       ctr_object *elnum = ctr_build_number_from_float ((ctr_number) i);
       elnumArg->object = elnum;
@@ -1457,7 +1457,7 @@ ctr_array_foldl (ctr_object * myself, ctr_argument * argumentList)
   accArg->next = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   accArg->object = accumulator;
   ctr_size i;
-  for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
+  for (i = 0; i < myself->value.avalue->head-myself->value.avalue->tail; i++)
     {
       ctr_object *elnum = ctr_build_number_from_float ((ctr_number) i);
       elnumArg->object = elnum;
@@ -1680,7 +1680,7 @@ restart:;
  * list comprehension
  */
 /**
- * [Array] unpack: [Array:{Ref:string}]
+ * [Array] unpack: [Array:{Ref:string}], [Object:ctx]
  * Element-wise assign
  * (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
  */
@@ -1697,6 +1697,7 @@ ctr_array_assign (ctr_object * myself, ctr_argument * argumentList)
 
   ctr_argument *elnumArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   ctr_argument *accArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+  accArg->next = argumentList->next;
   ctr_size i;
   if (to->info.type == CTR_OBJECT_TYPE_OTARRAY)
     {
@@ -1750,7 +1751,7 @@ ctr_array_assign (ctr_object * myself, ctr_argument * argumentList)
       if (argumentList->object->value.svalue->vlen == 0
 	  || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
 	goto clear;
-      ctr_internal_object_add_property (ctr_contexts[ctr_context_id], ctr_symbol_as_string (to), myself, 0);
+      ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (to), myself, 0);
     }
 clear:
   ctr_heap_free (elnumArg);
@@ -1915,7 +1916,7 @@ ctr_array_fill (ctr_object * myself, ctr_argument * argumentList)
   newArgumentList = ctr_heap_allocate (sizeof (ctr_argument));
   ctr_object *memb = argumentList->next->object;
   ctr_object *res = NULL;
-  if (memb->info.type == CTR_OBJECT_TYPE_OTBLOCK)
+  if (memb->info.type == CTR_OBJECT_TYPE_OTBLOCK || memb->info.type == CTR_OBJECT_TYPE_OTNATFUNC)
     {
       ctr_object *_i = ctr_internal_create_standalone_object (CTR_OBJECT_TYPE_OTNUMBER);
       ctr_set_link_all (_i, CtrStdNumber);
@@ -2551,6 +2552,8 @@ ctr_map_to_string (ctr_object * myself, ctr_argument * argumentList)
   newArgumentList = ctr_heap_allocate (sizeof (ctr_argument));
   while (mapItem)
     {
+      if (!mapItem->value || !mapItem->key)
+        goto next;
       newArgumentList->object = ctr_build_string_from_cstring (CTR_DICT_CODEGEN_MAP_PUT);
       ctr_string_append (string, newArgumentList);
       if (mapItem->value == myself)
@@ -2608,6 +2611,7 @@ ctr_map_to_string (ctr_object * myself, ctr_argument * argumentList)
 	  newArgumentList->object = ctr_build_string_from_cstring (")");
 	  ctr_string_append (string, newArgumentList);
 	}
+  next:
       mapItem = mapItem->next;
       if (mapItem)
 	{
@@ -2620,7 +2624,7 @@ ctr_map_to_string (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
-* [Map] unpack: [Map:{Ref:AlternativeName}]
+* [Map] unpack: [Map:{Ref:AlternativeName}], [Object:ctx]
 * Key-wise assign
 * Give alternative names as the values of the constructor
 *
@@ -2643,6 +2647,7 @@ ctr_map_assign (ctr_object * myself, ctr_argument * argumentList)
   ctr_argument *newArgumentList;
   mapItem = myself->properties->head;
   newArgumentList = ctr_heap_allocate (sizeof (ctr_argument));
+  newArgumentList->next = argumentList->next;
   while (mapItem)
     {
       if (mapItem->value == myself)

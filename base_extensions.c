@@ -624,12 +624,21 @@ ctr_ast_set_value (ctr_object * myself, ctr_argument * argumentList)
     }
   char *cval = argumentList->object->value.svalue->value;
   size_t cvlen = argumentList->object->value.svalue->vlen;
-  ctr_tnode *node = myself->value.rvalue->ptr;
-  if (likely (node->vlen < cvlen))
-    node->value = ctr_heap_reallocate (node->value, cvlen + 1);
-  node->vlen = cvlen;
-  memcpy (node->value, cval, cvlen);
-  *(node->value + cvlen) = '\0';
+  if (argumentList->object->interfaces->link == CtrStdSymbol) { //we're setting a symbol
+    ctr_tnode *node = myself->value.rvalue->ptr;
+    if (node->type != CTR_AST_NODE_SYMBOL) {
+      CtrStdFlow = ctr_build_string_from_cstring("Can only set SYMBOL nodes to symbol values");
+      return myself;
+    }
+    node->value = (char*) argumentList->object;
+  } else {
+    ctr_tnode *node = myself->value.rvalue->ptr;
+    if (likely (node->vlen < cvlen))
+      node->value = ctr_heap_reallocate (node->value, cvlen + 1);
+    node->vlen = cvlen;
+    memcpy (node->value, cval, cvlen);
+    *(node->value + cvlen) = '\0';
+  }
   return myself;
 }
 
@@ -1480,9 +1489,21 @@ ctr_object_inh_check (ctr_object * myself, ctr_argument * argumentList) {
   return ctr_reflect_is_linked_to(CtrStdReflect, &arg0);
 }
 
+ctr_object *
+ctr_obj_intern_applyall (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *result, *argArray = argumentList->object;
+  ctr_argument *argList = ctr_array_to_argument_list (argArray, NULL);
+
+  result = ctr_block_run_here (myself, argList, myself);
+  ctr_free_argumentList(argList);
+  return result;
+}
+
 void
 initiailize_base_extensions ()
 {
+  ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring("_ApplyAll:"), &ctr_obj_intern_applyall);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("letEqual:in:"), &ctr_block_let);
   ctr_internal_create_func (CtrStdBlock, ctr_build_string_from_cstring ("transferOwnershipOf:to:"), &ctr_reown_obj);
   CtrStdAst = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);

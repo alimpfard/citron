@@ -25,6 +25,8 @@ Array on: 'toBoolean' do: { ^me count > 0. }.
 var import_intrinsic is False.
 var optimize is False.
 var exceptions is True.
+var dexceptions is False.
+var dexceptions_s is ''.
 
 var var_id is 0.
 var gvar_id is 0.
@@ -260,7 +262,12 @@ var compile is {:ast:receiver
       var funname is 'ctr_function_$$fun_id'.
       variables is Array new.
       var_id is 0.
-      var funcode is '  ctr_object* result = (%:L);\n' % [', ', ((Array new fill: instrs count with: {:x ^compile[instrs @ x].}) or: ['NULL'])].
+      var funcode is '  ctr_object* result = (%:L);\n' % [', ', (
+        (Array new fill: instrs count with: {:x
+          ^compile[instrs @ x].
+        })
+          or: ['NULL']
+      )].
       # ast modifier = 'My', ifTrue: {
         funcode is funcode + '  if (result == NULL) result = self;\n'.
       # }.
@@ -280,7 +287,7 @@ var compile is {:ast:receiver
         var i is generate_inits[' '].
         variables is old_vars.
         var instr_u is ast2ctrcode[instr] replace: '\n' with: '<NL>'.
-        ^'{/* $$instr_u */\n' + i + s + ';\n' + '}\n'.
+        ^'{/* $$instr_u */\n' + i + s + ';\n' + '}\n' + (dexceptions either: 'exc_check("%s");\n' % [instr_u escapeDoubleQuotes] or: '').
       }.
       ^res join: ''.
     },
@@ -327,12 +334,15 @@ var generate_inits is {:q
     (v last isA: Map) either: {
       var vn is v @ 1.
       src +=: '%s %s;\n' % [v @ 0, vn].
+      src +=: dexceptions_s.
       var vv is v @ 2.
       vv each: {:k:v
         src +=: '%s%s = %s;\n' % [vn, k, v].
+        src +=: dexceptions_s.
       }.
     } or: {
       src +=: '%s%s %s = %s;\n' % ([q] + v).
+      src +=: dexceptions_s.
     }.
   }.
   ^src.
@@ -382,6 +392,18 @@ var generate_defines is {
     s +=: '  return rt;\n}\n'.
     s +=: '#define ctr_send_message ctr_send_message_check_exception\n'.
   }.
+  dexceptions ifTrue: {
+    s +=:
+    'void exc_check_(char const* file, char const* func, int line, const char* s) {
+        if (CtrStdFlow) {
+            ctr_object* err = CtrStdFlow; CtrStdFlow = NULL;
+            printf("in file %s, function %s (line %d) [program subsection \\"%s\\"] threw: ", file, func, line, s);
+            ctr_send_message_variadic(CtrStdConsole, "writeln:", 8, 1, err);
+            exit(1);
+        }
+    }\n'.
+    s +=: '#define exc_check(x) exc_check_(__FILE__, __func__, __LINE__, x)\n'.
+  }.
   ^s.
 }.
 
@@ -421,6 +443,7 @@ filename = '-h' ifTrue: {
   Pen tab writeln: '--keep-intermediates \tKeep intermediate files',
       tab writeln: '-O\t\t\tEnable optimizations (also disables exceptions)',
       tab writeln: '--no-exceptions \tDisable exception checks',
+      tab writeln: '--detailed-exceptions \tShows detailed runtime exceptions',
       tab writeln: '--import-intrinsic \tTreat import statements as compiler intrinsics',
       tab writeln: '--heap-size=SIZE \tSpecify starting heap size (SIZE format: number B|K|M|G)',
       tab writeln: '--heap-max=SIZE \tSpecify the maximum allowed heap size (program will abort if too small)',
@@ -465,6 +488,11 @@ prgargs each: {:_:v
       exceptions is False.
       True continue.
     }.
+    v = '--detailed-exceptions' ifTrue: {
+      dexceptions is True.
+      dexceptions_s is 'exc_check("");\n'.
+      True continue.
+    }.
     v = '--import-intrinsic' ifTrue: {
       import_intrinsic is True.
       True continue.
@@ -501,5 +529,7 @@ var generate_options is {
 
 tgt write: compile_complete[(AST parse: src)].
 Shell gcc: '%s %:L -ggdb3 %s -o %s' % [tgt path, '\x20', comp_opts, flags, ofilename].
-prgargs contains: '--keep-intermediates', ifTrue: { Program exit. }.
-tgt delete.
+prgargs contains: '--keep-intermediates', ifFalse: {
+  tgt delete.
+}.
+Pen green writeln: 'Success'.

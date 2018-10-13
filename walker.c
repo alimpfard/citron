@@ -234,23 +234,27 @@ ctr_cwlk_assignment (ctr_tnode * node)
 	}
       else if (assignee->modifier == 4)
   {
-    char* name_s = ctr_heap_allocate(17 * sizeof(char));
-    name_s[0] = ':'; //make it inaccessable from the system
-    ctr_mksrands(name_s+1);
+    // char* name_s = ctr_heap_allocate(17 * sizeof(char));
+    // name_s[0] = ':'; //make it inaccessable from the system
+    // ctr_mksrands(name_s+1);
 
-    ctr_tnode* repl = ctr_heap_allocate(sizeof(*repl));
-    *repl = *assignee;
-    assignee->modifier = /* var */2; /* modify for subsequent evaluation */
-    repl->value = name_s; /* lookup from global */
-    repl->vlen = 17;
+    // ctr_tnode* repl = ctr_heap_allocate(sizeof(*repl));
+    // *repl = *assignee;
+    // assignee->modifier = /* var */2; /* modify for subsequent evaluation */
+    // repl->value = name_s; /* lookup from global */
+    // repl->vlen = 17;
 
-    repl->modifier = /* var */2;
-    valueListItem->node = repl; /* modify for subsequent evaluation */
-    ctr_heap_free(value);
+    // repl->modifier = /* var */2;
+    // valueListItem->node = repl; /* modify for subsequent evaluation */
+    // ctr_heap_free(value);
     ctr_object* lname = ctr_build_string (assignee->value, assignee->vlen);
-    ctr_object* name = ctr_build_string(repl->value, repl->vlen);
-    ctr_assign_value_to_local (lname, x); // for this run only
-    result = ctr_hand_value_to_global (name, x);
+    // ctr_object* name = ctr_build_string(repl->value, repl->vlen);
+    result = ctr_assign_value_to_local (lname, x); // for this run only
+    // result = ctr_hand_value_to_global (name, x);
+    node->type = CTR_AST_NODE_EMBED;
+    node->modifier = 1;
+    node->nodes = ctr_heap_allocate(sizeof (ctr_tlistitem));
+    node->nodes->node = (ctr_tnode*) x;
   }
       else if (assignee->modifier == 5)
   {
@@ -288,10 +292,7 @@ ctr_cwlk_assignment (ctr_tnode * node)
       ctr_cwlk_last_msg_level = ctr_cwlk_msg_level;
       ctr_object *y = ctr_cwlk_expr (assignee, &ret);
       ctr_cwlk_replace_refs = old_replace;	//set back in case we didn't reset
-      result = ctr_send_message_variadic (x, "unpack:", 7, 1, y);
-      ctr_object *old_result = NULL;
-      while (old_result != result && result->info.type == CTR_OBJECT_TYPE_OTBLOCK)
-	result = ctr_block_run_here (result, NULL, (old_result = result));
+      result = ctr_send_message_variadic (x, "unpack:", 7, 2, y, ctr_contexts[ctr_context_id]); // hand the block the context
     }
   if (CtrStdFlow == NULL)
     {
@@ -393,10 +394,12 @@ ctr_cwlk_expr (ctr_tnode * node, char *wasReturn)
 	  case 0:
 	    {
 	      char ret;
-	      int oldquote = force_quote;
+	      int oldquote = force_quote, refs=ctr_cwlk_replace_refs;
 	      force_quote = quote;
 	      ctr_cwlk_last_msg_level = ctr_cwlk_msg_level;
+        ctr_cwlk_replace_refs = 0;
 	      result = ctr_cwlk_expr (node->nodes->node, &ret);
+        ctr_cwlk_replace_refs = refs;
 	      force_quote = oldquote;	//set back in case we didn't reset
 	      if (ctr_ast_is_splice (result))
 		result = ctr_ast_splice (result);

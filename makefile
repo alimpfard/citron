@@ -1,4 +1,4 @@
-DEBUG_VERSION := 431
+DEBUG_VERSION := 487
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 CFLAGS := ${CFLAGS} -I/usr/include
 LEXTRACF := ${LEXTRACF} -flto -lstdc++ -static-libgcc -static-libstdc++

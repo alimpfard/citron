@@ -1,3 +1,4 @@
+import Library/AST/Utils: 'quoteAllUnbound'.
 Object on: 'match:' do: {:self:ast
   #ast -> $[
   # [pattern, guard*, consequence],
@@ -10,11 +11,11 @@ Object on: 'match:' do: {:self:ast
   var done is True.
   var ret is Nil.
   var cblk is thisBlock.
-  ast each_v: {:__PMATCH_V0
+  ast each_v: {:__PMATCH_V0:__PMATCH_AV
     __PMATCH_V0 is $!(__PMATCH_V0). #Parse the tuple
     done is True.
     ret is {
-      self unpack: $!(__PMATCH_V0 head).
+      self message: 'unpack:' arguments: [$!(__PMATCH_V0 head), Reflect thisContext].
       $!(__PMATCH_V0 tail init) all: (\:__PMATCH_V1 Reflect runHere: {^$!(__PMATCH_V1).} forObject: self arguments: []), ifFalse: {
         cblk error: 'guard fail'.
       }.
@@ -41,4 +42,36 @@ Object on: 'on:pdo:' do: {:msg:ast
 
 #:declare lazyev match
 
-var match is \:__arg0:__arg1 __arg0 evaluate match: __arg1.
+# This one's a bit of a doozy
+# arg1 is the ast of this expression:
+# {
+#   match => result.
+#   match => result.
+# }
+#
+# which is transformed into this:
+# [
+#   [match, result],
+#   [match, result]
+# ]
+#
+# However the unbound names in `match' are
+# transformed to be symbols instead
+#
+# e.g. in a context that `x' is not defined,
+# it is transformed into \x
+var match is {\:__arg0:__arg1:__obj:__mid_ast
+  __arg0 is __arg0 evaluate.
+  ^__arg1 type = 'CODEBLOCK' either: { # This is a block
+    __arg1 is __arg1 at: 1. # Skip the arguments section
+    __obj is Array new. # Get a new array
+    __arg1 each_v: {:__ast
+      (__ast type = 'EXPRASSIGNMENT') ifFalse: { thisBlock error: 'Syntax error: Expected assignment, but got ' + __ast type. }.
+      __mid_ast is quoteAllUnbound applyTo: (__ast at: 0).
+      __obj push: [(__mid_ast), (__ast at: 1)].
+    }.
+    ^__arg0 match: __obj.
+  } or: { # Just pass it along
+    ^__arg0 match: __arg1.
+  }.
+}.

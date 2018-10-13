@@ -1,0 +1,26 @@
+# test mapcall
+import Library/Data/Map/mapcall: 'mapcall'.
+
+# TODO: allow lazyev specs to stay put
+#:declare lazyev 2 mapcall
+
+# basic test
+var fun0 is {:x:y:z ^x + y - z. }.
+# test recursion and self argument
+var fun1 is {:self:x:y ^x pow: y, < 100 either: [x, y] or: { ^self[x - 1, y]. }. }.
+
+Pen writeln: fun0 `mapcall` { -> x 1 y 2 z 4. }.
+Pen writeln: fun1 `mapcall` { -> x 40 y 5. }.
+
+# test calling mapcall with weird expressions
+Pen writeln: [
+  fun0 `mapcall` { ->
+    y (var test0 is [(Pen writeln: 123), 123] last)
+    z (var test1 is [(Pen writeln: 321), 321] last)
+    x (var test2 is [(Pen writeln: 1024), 1024] last).
+  },
+  # We should not raise an error as these exist
+  # They should also be executed sequentially regardless
+  # of the function's argument order
+  test0, test1, test2
+].

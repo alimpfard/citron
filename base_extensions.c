@@ -1489,9 +1489,21 @@ ctr_object_inh_check (ctr_object * myself, ctr_argument * argumentList) {
   return ctr_reflect_is_linked_to(CtrStdReflect, &arg0);
 }
 
+ctr_object *
+ctr_obj_intern_applyall (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *result, *argArray = argumentList->object;
+  ctr_argument *argList = ctr_array_to_argument_list (argArray, NULL);
+
+  result = ctr_block_run_here (myself, argList, myself);
+  ctr_free_argumentList(argList);
+  return result;
+}
+
 void
 initiailize_base_extensions ()
 {
+  ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring("_ApplyAll:"), &ctr_obj_intern_applyall);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("letEqual:in:"), &ctr_block_let);
   ctr_internal_create_func (CtrStdBlock, ctr_build_string_from_cstring ("transferOwnershipOf:to:"), &ctr_reown_obj);
   CtrStdAst = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);

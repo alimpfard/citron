@@ -1307,9 +1307,11 @@ ctr_cparse_expr (int mode)
       receiver->value = ctr_heap_allocate_tracked(receiver->vlen);
       memcpy(receiver->value, ctr_clex_tok_value(), receiver->vlen);
       fixity_lookup_rv fix = ctr_lookup_fix(receiver->value, receiver->vlen);
-      char* msg = ctr_heap_allocate_tracked(sizeof(char)*9);
-      memcpy(msg, "applyAll:", 9);
-      int length = 9;
+      int mlen = fix.prec == 2 ? 10 : 9;
+      const char* mmsg = fix.prec == 2 ? "_ApplyAll:" : "applyAll:";
+      char* msg = ctr_heap_allocate_tracked(sizeof(char)*mlen);
+      memcpy(msg, mmsg, mlen);
+      int length = mlen;
       ctr_tlistitem* li = ctr_heap_allocate_tracked(sizeof(*li));
       li->node = ctr_heap_allocate_tracked(sizeof(*(li->node)));
       li->node->type = CTR_AST_NODE_IMMUTABLE;

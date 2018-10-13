@@ -22,21 +22,45 @@ struct ctr_inject_data_t
 typedef struct ctr_inject_data_t ctr_inject_data_t;
 
 /**
- * [Inject] newWithDebugSyms: [Boolean]
+ * [Inject] newWithOutputMode: [outmode:String]
  * [Inject] new (no debug syms)
  *
  * Generate a new context to compile C programs into
+ *
+ * outmode: any of
+ *  - 'mem' into mem(default)
+ *  - 'exe' executable
+ *  - 'dyn' dynamic library
+ *  - 'obj' object file
  */
 ctr_object *ctr_inject_make(ctr_object *myself, ctr_argument *argumentList)
 {
-    int debug = argumentList && ctr_internal_cast2bool(argumentList->object)->value.bvalue;
+    int debug = 0;
+    int imode = TCC_OUTPUT_MEMORY;
+    if (argumentList && argumentList->object && argumentList->object->info.type != CTR_OBJECT_TYPE_OTNIL) {
+      const char* mode = ctr_heap_allocate_cstring(ctr_internal_cast2string(argumentList->object));
+      if (strcasecmp(mode, "mem") == 0)
+        imode = TCC_OUTPUT_MEMORY;
+      else if (strcasecmp(mode, "exe") == 0)
+        imode = TCC_OUTPUT_EXE;
+      else if (strcasecmp(mode, "dyn") == 0)
+        imode = TCC_OUTPUT_DLL;
+      else if (strcasecmp(mode, "obj") == 0)
+        imode = TCC_OUTPUT_OBJ;
+      else {
+        CtrStdFlow = ctr_format_str("EInvalid output mode `%s', expecting any of mem, exe, dyn or obj", mode);
+        ctr_heap_free(mode);
+        return myself;
+      }
+      ctr_heap_free(mode);
+    }
     TCCState *s = tcc_new();
     if (!s)
     {
         CtrStdFlow = ctr_build_string_from_cstring("Could not create compiler state");
         return CtrStdNil;
     }
-    tcc_set_output_type(s, TCC_OUTPUT_MEMORY);
+    tcc_set_output_type(s, imode);
     static char buf[10240];
     sprintf(buf, "%s/tcc", ctr_file_stdext_path_raw());
     tcc_set_lib_path(s, buf);
@@ -86,6 +110,8 @@ ctr_object *ctr_inject_add_inclp(ctr_object* myself, ctr_argument* argumentList)
  */
 ctr_object *ctr_inject_compile(ctr_object *myself, ctr_argument *argumentList)
 {
+    if (ctr_check_permission_internal (CTR_SECPRO_NO_SHELL))
+      return myself;
     ctr_resource *r = myself->value.rvalue;
     ctr_inject_data_t *ds;
     if (!r || !(ds = r->ptr))
@@ -104,6 +130,32 @@ ctr_object *ctr_inject_compile(ctr_object *myself, ctr_argument *argumentList)
     return myself;
 }
 
+ctr_object *ctr_inject_generate_output(ctr_object *myself, ctr_argument *argumentList)
+{
+    if (ctr_check_permission_internal (CTR_SECPRO_NO_SHELL))
+      return myself;
+    ctr_resource *r = myself->value.rvalue;
+    ctr_inject_data_t *ds;
+    if (!r || !(ds = r->ptr) || ds->info.relocated)
+    {
+        CtrStdFlow = ctr_build_string_from_cstring("Inject object is in an invalid state (not fit for compilation output)");
+        return CtrStdNil;
+    }
+    TCCState *s = ds->state;
+    char const* filename = "a.out";
+    int alloc = 0;
+    if (argumentList && argumentList->object) {
+      filename = ctr_heap_allocate_cstring(ctr_internal_cast2string(argumentList->object));
+      alloc = 1;
+    }
+    int res = tcc_output_file(s, filename);
+    if (alloc)
+      ctr_heap_free(filename);
+    if (res)
+      CtrStdFlow = ctr_build_string_from_cstring("Failed to generate output");
+    return myself;
+}
+
 /**
  *[Inject] run: [String] arguments: [[String]]
  *
@@ -111,6 +163,8 @@ ctr_object *ctr_inject_compile(ctr_object *myself, ctr_argument *argumentList)
  */
 ctr_object *ctr_inject_run(ctr_object *myself, ctr_argument *argumentList)
 {
+    if (ctr_check_permission_internal (CTR_SECPRO_NO_SHELL))
+      return myself;
     ctr_resource *r = myself->value.rvalue;
     ctr_inject_data_t *ds;
     if (!r || !(ds = r->ptr))
@@ -184,6 +238,8 @@ ctr_object *ctr_inject_get_symbol(ctr_object *myself, ctr_argument *argumentList
  */
 ctr_object *ctr_inject_add_lib(ctr_object* myself, ctr_argument* argumentList)
 {
+    if (ctr_check_permission_internal (CTR_SECPRO_NO_SHELL))
+      return myself;
     ctr_resource *r = myself->value.rvalue;
     ctr_inject_data_t *ds;
     if (!r || !(ds = r->ptr))

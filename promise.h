@@ -2,6 +2,7 @@
 #define CTR_PROMISE_H
 #include "citron.h"
 #include <gc/gc.h>
+#include <pthread.h>
 
 #define CTR_PROMISE_CALL 0
 #define CTR_PROMISE_MESSAGE 1
@@ -17,6 +18,7 @@ struct ctr_promise_entry {
     pthread_mutex_t* lock;
     pthread_mutex_t* return_lock;
     pthread_t thread;
+    int discardable;
     int next_type;
     struct ctr_context_t context;
 };

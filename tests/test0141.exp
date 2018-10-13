@@ -1,9 +1,1 @@
 Test Stack trace over multiple files.
-Trigger an erroraaaUncaught error has occurred.
-Hi!
-#4 error: (/home/ali/Documents/ProjectCitron/citron/tests/test0140.ctr: 11)
-#3 run (/home/ali/Documents/ProjectCitron/citron/tests/test0140.ctr: 12)
-#2 run (/home/ali/Documents/ProjectCitron/citron/tests/test0140.ctr: 15)
-#1 include (tests/test0141.ctr: 4)
-------------------------------------
-The probable cause of the exception: 

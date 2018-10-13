@@ -467,15 +467,15 @@ ctr_cparse_lit_esc ()
       ctr_heap_free (r);	//this node is not needed, we remove the parens in the expression
       r = v;
       break;
-    case -2:
+    case -2: // $[]
       ctr_transform_template_expr = 2;
       r = ctr_cparse_tuple (CTR_TOKEN_TUPCLOSE);
       ctr_transform_template_expr = texpr_res;
       break;
-    case -4:
+    case -4: // $'()
       quote = 1;
       /* Fallthrough */
-    case -3:
+    case -3: // $!
       {
 	int t = ctr_clex_tok ();
 	ctr_clex_putback ();
@@ -1265,12 +1265,8 @@ ctr_cparse_expr (int mode)
     }
   else if (t2 == CTR_TOKEN_PASSIGNMENT)
     {
-      if (r->type != CTR_AST_NODE_REFERENCE)
-	{
-	  ctr_cparse_emit_error_unexpected (t2, "Invalid left-hand assignment.\n");
-	  exit (1);
-	}
-      r->modifier = 1;		//set private */
+      if (r->type == CTR_AST_NODE_REFERENCE) // it's an alias for my REF is EXPR
+    r->modifier = 1;		//set private */
       e = ctr_cparse_assignment (r);	//go as usual
       /*r->nodes->node->type = CTR_AST_NODE_LTRSTRING;
          e = ctr_cparse_create_node(CTR_AST_NODE);

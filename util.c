@@ -239,6 +239,7 @@ ctr_format_str (const char *str_format, ...)
   char psbf[1024];
   char *ps = ctr_heap_allocate (sizeof (char) * 1024);
   int len = 0, reserved = 1024;
+  int inner_s_len = 0;
   va_start (ap, str_format);
   int i = 0, interpret = 0;
   for (char c = str_format[i]; (c = str_format[++i]) != '\0';)
@@ -250,13 +251,17 @@ ctr_format_str (const char *str_format, ...)
 	  interpret = 0;
 	  switch (c)
 	    {
+      case '.': // size spec
+        inner_s_len = va_arg(ap, long);
+        break;
 	    case '%':		//literal percent sign
 	      ps[len++] = '%';
 	      break;
 	    case 's':
 	      {			//c string
 		const char *s = va_arg (ap, const char *);
-		int slen = strlen (s);
+		int slen = inner_s_len ?: strlen (s);
+    inner_s_len = 0;
 		if (reserved - len < 32 + slen)
 		  ps = ctr_heap_reallocate (ps, reserved *= 2);
 		strncpy (ps + len, s, slen);

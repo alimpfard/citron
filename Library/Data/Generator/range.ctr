@@ -1,0 +1,8 @@
+var range is {:from:to:step
+  to isNil ifTrue: {
+    to is from.
+    from is 0.
+  }.
+  step is step or: 1.
+  ^Generator from: from to: to - 1 step: step.
+}.

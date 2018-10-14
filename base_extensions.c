@@ -151,6 +151,22 @@ ctr_ast_instrcount (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
+ * [AST] fromBlock: [Block]
+ *
+ * TODO
+ */
+ctr_object *
+ctr_ast_get_block (ctr_object * myself, ctr_argument* argumentList)
+{
+  ctr_object *ast = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
+  ctr_set_link_all (ast, CtrStdAst);
+  ast->value.rvalue = ctr_heap_allocate (sizeof (ctr_resource));
+  ast->value.rvalue->ptr = argumentList->object->value.block;
+  ast->value.rvalue->type = CTR_AST_TYPE;
+  return ast;
+}
+
+/**
  * [AST] at: [n:Number]
  *
  * Gets the nth child of this AST node
@@ -1529,6 +1545,7 @@ initiailize_base_extensions ()
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("evaluate"), &ctr_ast_evaluate);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("unparse"), &ctr_ast_stringify);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("feedLexer:"), &ctr_ast_flex);
+  ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("fromBlock:"), &ctr_ast_get_block);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("token"), &ctr_ast_lextoken);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("lexstring"), &ctr_ast_lexstring);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("getlexbuf"), &ctr_ast_lexbuf);

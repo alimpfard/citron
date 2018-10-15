@@ -40,7 +40,7 @@ after_success:
   - echo "Categories=Development;" >> appimage/AppDir/usr/share/application/citron.desktop
   - echo "Terminal=true" >> appimage/AppDir/usr/share/application/citron.desktop # Needed for CLI tools
   - ./linuxdeployqt-continuous-x86_64.AppImage appimage/AppDir/usr/share/application/citron.desktop -appimage
-  - cp --force Citron*.AppImage autohell/build/bin/ctr
+  - sudo cp -rf Citron*.AppImage autohell/build/bin/ctr
   - ls -lh autohell/build/*
   - ls -alh autohell/build/share/Citron/mods
   - ls -lh *.AppImage

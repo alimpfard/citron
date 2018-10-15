@@ -1,3 +1,5 @@
+INTO ?= ../../basemods/keyboardmods
+
 default: all
 
 all: compile link copy
@@ -8,5 +10,5 @@ link:
 	cc -shared -o libctrkeyboardmods.so keyboardmods.o
 
 copy:
-	mkdir -p ../../basemods/keyboardmods
-	cp -f libctrkeyboardmods.so ../../basemods/keyboardmods
+	mkdir -p $(INTO)
+	cp -f libctrkeyboardmods.so $(INTO)

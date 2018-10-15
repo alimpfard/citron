@@ -1,3 +1,5 @@
+INTO ?= ../../mods/fiber
+
 all: comp link copy
 
 comp:
@@ -8,7 +10,8 @@ link:
 	cc -shared -o libctrfiber.so ctf.o
 
 copy:
-	cp -f libctrfiber.so ../../mods/fiber
+	mkdir -p $(INTO)
+	cp -f libctrfiber.so $(INTO)
 
 clean:
 	rm libctrfiber.so ctf.o

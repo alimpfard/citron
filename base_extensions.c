@@ -1624,7 +1624,9 @@ ctr_load_required_native_modules ()
   sprintf (dir, "%s/basemods", ctr_file_stdext_path_raw ());
   if ((dfd = opendir (dir)) == NULL)
     {
+      #ifdef DEBUG_BUILD
       perror ("Can't open basemods dir");
+      #endif
       return;
     }
   char filename_qfd[1024];

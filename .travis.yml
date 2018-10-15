@@ -4,15 +4,17 @@ before_install:
     - sudo apt-get -qq update
     - sudo add-apt-repository ppa:jonathonf/curl -y
     - sudo apt-get update
-    - sudo apt-get install -y libffi-dev libbsd-dev libpcre3-dev libgc-dev realpath curl libcurl4-openssl-dev libsparsehash-dev sparsehash
+    - sudo apt-get install -y libffi-dev libbsd-dev libpcre3-dev libgc-dev realpath curl libcurl4-openssl-dev libsparsehash-dev sparsehash tcl tcl-dev
 install:
   - cd autohell && aclocal && libtoolize && autoconf && automake --add-missing
   - mkdir -p build && mkdir -p basemods && export BUILD_DIR_INT=$(realpath build)
   - cd src/tcc && ./configure && make && sudo make install && cd ../..
   - ./configure --prefix=$BUILD_DIR_INT --with-ffi --with-inject && make
-  - cd .. && bash ./makeplugs.sh
+  - cd .. && AUTOMAKEBUILD=yes AUTOMAKEBUILDDIR=$BUILD_DIR_INT/share/Citron/mods bash ./makeplugs.sh
   - cd autohell
   - sudo make install
+  - ls build
+  - ls build/share/Citron
   - cd ..
 
 script:

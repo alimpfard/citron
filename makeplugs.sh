@@ -26,7 +26,7 @@ do
     if [[ -e "./configure" ]]; then
       ./configure
     fi
-    echo $(make "EXTRAS=$makefvar" && echo "Succ $plug" || echo "$plug Failed")
+    echo $(make "EXTRAS=$makefvar $CFLAGS" && echo "Succ $plug" || echo "$plug Failed")
     if [[ "x$AUTOMAKEBUILD" = "xyes" ]]; then
       INTO="$AUTOMAKEBUILDDIR/$plug" make install
     fi

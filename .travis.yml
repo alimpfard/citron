@@ -8,9 +8,12 @@ before_install:
 install:
   - cd autohell && aclocal && libtoolize && autoconf && automake --add-missing
   - mkdir -p build && mkdir -p basemods && export BUILD_DIR_INT=$(realpath build)
+  - export LD_LIBRARY_PATH=/usr/local/lib
   - cd src/tcc && ./configure && make && sudo make install && cd ../..
   - ./configure --prefix=$BUILD_DIR_INT --with-ffi --with-inject && make
-  - cd .. && AUTOMAKEBUILD=yes AUTOMAKEBUILDDIR=$BUILD_DIR_INT/share/Citron/mods bash ./makeplugs.sh
+  - cd .. && CFLAGS="-I/usr/include/tcl8.6 -L/usr/lib/tcl8.6" bash ./makeplugs.sh
+  - chown -R travis mods
+  - echo "Built these" && ls mods
   - cd autohell
   - sudo make install
   - ls build
@@ -39,8 +42,9 @@ after_success:
   - ./linuxdeployqt-continuous-x86_64.AppImage appimage/AppDir/usr/share/application/citron.desktop -appimage
   - cp --force Citron*.AppImage autohell/build/bin/ctr
   - ls -lh autohell/build/*
+  - ls -alh autohell/build/share/Citron/mods
   - ls -lh *.AppImage
-  - tar cjf release.tar.bz2 -C autohell/build .
+  - tar cvjf release.tar.bz2 -C autohell/build .
   - (cd autohell/build && zip -r - .) > release.zip
   - wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
   - bash upload.sh release.tar.bz2 release.zip Citron*.AppImage*

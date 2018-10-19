@@ -6,6 +6,12 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#define WITH_UCONTEXT
+#ifdef WITH_UCONTEXT
+#include <ucontext.h>
+#else
+#include <setjmp.h>
+#endif
 #include <unistd.h>
 
 extern int ctr_lex_line_number;
@@ -1516,6 +1522,115 @@ ctr_obj_intern_applyall (ctr_object * myself, ctr_argument * argumentList)
   return result;
 }
 
+typedef struct {
+  // struct ctr_context_t ctx;
+#ifdef WITH_UCONTEXT
+  ucontext_t ctx;
+  int returned;
+#else
+  jmp_buf jmpbuf;
+#endif
+  ctr_object* result;
+  // more shit?
+} ctr_call_cc_t;
+
+ctr_object *
+ctr_call_cc_continue (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *data = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("data"), 0),
+             *value= argumentList->object;
+  ctr_call_cc_t *callcc = data->value.rvalue->ptr;
+  callcc->result = value;
+#ifdef WITH_UCONTEXT
+  callcc->returned = 1;
+  setcontext(&callcc->ctx);
+#else
+  longjmp(&callcc->jmpbuf, 1);
+#endif
+  return myself;
+}
+
+// TODO: allow call/cc to jump _up_ the stack as well
+// BUG: Jumping back in causes segfault
+ctr_object *
+ctr_call_cc (ctr_object * myself, ctr_argument * argumentList)
+{
+  // call/cc [Block <Block <result>>>]
+  //               ^ save the entire stack arrangement
+  ctr_call_cc_t *callcc = ctr_heap_allocate(sizeof *callcc);
+  // ctr_dump_context (&callcc->ctx);
+  #ifdef WITH_UCONTEXT
+    // printf("before getcontext = %p\n", callcc);
+    getcontext(&callcc->ctx);
+    // callcc->ctx.uc_stack.ss_size = 1024 * 1024 * 8;
+    // callcc->ctx.uc_stack.ss_sp = malloc(1024 * 1024 * 8);
+    // if (!callcc->ctx.uc_stack.ss_sp) {
+    //   perror("malloc");
+    //   exit(1);
+    // }
+    // printf("after getcontext = %p\n", callcc);
+    if (callcc->returned) {
+      callcc->returned = 0;
+      return callcc->result;
+    }
+  #else
+    if (setjmp(&callcc->jmpbuf))
+      return callcc->result;
+  #endif
+  struct ctr_resource *res = ctr_heap_allocate(sizeof *res);
+  res->ptr = callcc;
+  res->type = 0;
+  ctr_object *blk = ctr_string_eval(ctr_build_string_from_cstring("{:val ^val applyTo: my continuation.}"), NULL),
+             *contdata = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+  contdata->value.rvalue = res;
+  ctr_object* cont= ctr_internal_create_object(CTR_OBJECT_TYPE_OTNATFUNC);
+  ctr_set_link_all (cont, CtrStdBlock);
+  cont->value.fvalue = &ctr_call_cc_continue;
+  ctr_internal_object_set_property(blk, ctr_build_string_from_cstring("continuation"), cont, 0);
+  ctr_internal_object_set_property(cont, ctr_build_string_from_cstring("data"), contdata, 0);
+  return ctr_block_run(blk, argumentList, blk);
+}
+
+ctr_object *
+ctr_call_cc_all (ctr_object * myself, ctr_argument * argumentList)
+{
+  // call/cc [Block <Block <result>>>]
+  //               ^ save the entire stack arrangement
+  ctr_call_cc_t *callcc = ctr_heap_allocate(sizeof *callcc);
+  // ctr_dump_context (&callcc->ctx);
+  #ifdef WITH_UCONTEXT
+    // printf("before getcontext = %p\n", callcc);
+    getcontext(&callcc->ctx);
+    // callcc->ctx.uc_stack.ss_size = 1024 * 1024 * 8;
+    // callcc->ctx.uc_stack.ss_sp = malloc(1024 * 1024 * 8);
+    // if (!callcc->ctx.uc_stack.ss_sp) {
+    //   perror("malloc");
+    //   exit(1);
+    // }
+    // printf("after getcontext = %p\n", callcc);
+    if (callcc->returned) {
+      callcc->returned = 0;
+      return callcc->result;
+    }
+  #else
+    if (setjmp(&callcc->jmpbuf))
+      return callcc->result;
+  #endif
+  struct ctr_resource *res = ctr_heap_allocate(sizeof *res);
+  res->ptr = callcc;
+  res->type = 0;
+  ctr_object *blk = ctr_string_eval(ctr_build_string_from_cstring("{:val ^val applyTo: my continuation.}"), NULL),
+             *contdata = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+  contdata->value.rvalue = res;
+  ctr_object* cont= ctr_internal_create_object(CTR_OBJECT_TYPE_OTNATFUNC);
+  ctr_set_link_all (cont, CtrStdBlock);
+  cont->value.fvalue = &ctr_call_cc_continue;
+  ctr_internal_object_set_property(blk, ctr_build_string_from_cstring("continuation"), cont, 0);
+  ctr_internal_object_set_property(cont, ctr_build_string_from_cstring("data"), contdata, 0);
+  argumentList->object = ctr_array_head(argumentList->object, NULL);
+  return ctr_block_run(blk, argumentList, blk);
+}
+
 void
 initiailize_base_extensions ()
 {
@@ -1603,6 +1718,12 @@ initiailize_base_extensions ()
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("toArray"), &ctr_generator_toarray);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("foldl:accumulator:"), &ctr_generator_foldl);
   ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring ("Generator"), ctr_std_generator, 0);
+
+  ctr_object* callcc = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNATFUNC);
+  ctr_set_link_all(callcc, CtrStdBlock);
+  ctr_internal_create_func (callcc, ctr_build_string_from_cstring("applyTo:"), &ctr_call_cc);
+  ctr_internal_create_func (callcc, ctr_build_string_from_cstring("applyAll:"), &ctr_call_cc_all);
+  ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring("call/cc"), callcc, 0);
 }
 
 int

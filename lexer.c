@@ -67,6 +67,7 @@ typedef struct
 {
   int token;
   int vlen;
+  int real_vlen;
   char *value;
 } token_inj_t;
 static token_inj_t injects[MAX_LEXER_INJECT_VECTOR_COUNT];	//tokens to inject
@@ -80,7 +81,7 @@ static token_inj_t injects[MAX_LEXER_INJECT_VECTOR_COUNT];	//tokens to inject
  * vector
  */
 int
-ctr_clex_inject_token (int token, const char *value, const int vlen)
+ctr_clex_inject_token (int token, const char *value, const int vlen, const int real_vlen)
 {
   if (inject_index == MAX_LEXER_INJECT_VECTOR_COUNT)
     return 1;
@@ -88,6 +89,7 @@ ctr_clex_inject_token (int token, const char *value, const int vlen)
   token_inj_t inject = {
     token,
     vlen,
+    real_vlen,
     (char *) value,
   };
   injects[++inject_index] = inject;
@@ -102,7 +104,7 @@ __attribute__ ((always_inline))
       token_inj_t inj = injects[inject_index--];
       if (inj.value)
 	{
-	  strncpy (ctr_clex_buffer, inj.value, inj.vlen);
+	  strncpy (ctr_clex_buffer, inj.value, inj.real_vlen);
 	  ctr_clex_tokvlen = inj.vlen;
 	}
       return inj.token;
@@ -528,7 +530,7 @@ ctr_match_toggle_pragma ()
     char* v = ctr_clex_tok_value();
     int len = ctr_clex_tok_value_length();
     int fixity = 0;
-    int prec = 0;
+    int prec = 2;
     int lazy = 0;
     if (len != strlen("infixr")) goto err;
     if (strncmp(v, "infixr", len) == 0)
@@ -536,7 +538,7 @@ ctr_match_toggle_pragma ()
     else if (strncmp(v, "infixl", len) == 0)
       fixity = 1;
     else if (strncmp(v, "lazyev", len) == 0)
-      lazy = 1;
+      prec = lazy = 1;
     else goto err;
     t0 = ctr_clex_tok();
     if (t0 == CTR_TOKEN_NUMBER) {
@@ -544,12 +546,18 @@ ctr_match_toggle_pragma ()
       t0 = ctr_clex_tok();
     }
     if (t0 != CTR_TOKEN_REF) {
+      if (t0 == CTR_TOKEN_COLON && lazy) {
+        // next call is lazy
+        nextCallLazy->value = prec;
+        goto ending;
+      }
       ctr_clex_emit_error("Expected some op name");
       return;
     }
     v = ctr_clex_tok_value();
     len = ctr_clex_tok_value_length();
     ctr_set_fix(v, len, fixity, prec, lazy);
+    ending:;
     ctr_clex_olderptr = ctr_code;
     ctr_clex_oldptr = ctr_code;
     return;

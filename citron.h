@@ -499,7 +499,7 @@ int     ctr_clex_save_state();
 int     ctr_clex_dump_state(struct lexer_state*);
 int     ctr_clex_restore_state( int id );
 int     ctr_clex_load_state(struct lexer_state);
-int     ctr_clex_inject_token( int token, const char* value, const int vlen );
+int     ctr_clex_inject_token( int token, const char* value, const int vlen, const int real_vlen);
 void    ctr_match_toggle_pragma();
 void    ctr_lex_parse_pragma();
 CTR_H_DECLSPEC char*   ctr_clex_code_init;
@@ -544,6 +544,7 @@ CTR_H_DECLSPEC ctr_code_pragma* oneLineExpressions;
 CTR_H_DECLSPEC ctr_code_pragma* flexibleConstructs;
 CTR_H_DECLSPEC ctr_code_pragma* regexLineCheck;
 CTR_H_DECLSPEC ctr_code_pragma* callShorthand;
+CTR_H_DECLSPEC ctr_code_pragma* nextCallLazy;
 CTR_H_DECLSPEC ctr_code_pragma* extensionsPra;
 
 // XFrozen

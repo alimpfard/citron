@@ -33,7 +33,8 @@ ctr_code_pragma oneline_p  = {.type = 't',.value = 0},
                 flex_const = {.type = 'o',.value = 0},
                 regex_lc   = {.type = 't',.value = 0},
                 callshorth = {.type = 'o',.value = CTR_TOKEN_TUPOPEN,.value_e = CTR_TOKEN_TUPCLOSE},
-                extpragmas = {.type = 'o',.value = 0};
+                extpragmas = {.type = 'o',.value = 0},
+                nextlazy   = {.type = 't',.value = 0};
 
 /**
  * CommandLine Display Welcome Message
@@ -138,9 +139,10 @@ void ctr_initialize_ex() {
   regexLineCheck = &regex_lc;
   callShorthand = &callshorth;
   extensionsPra = &extpragmas;
+  nextCallLazy = &nextlazy;
 
   SystemTZ = getenv("TZ") ?: "UTC";
-  
+
   ctr_gc_mode = 1;		/* default GC mode: activate GC */
   ctr_gc_memlimit = 8388608;
   CTR_LIMIT_MEM = 1;		//enfore GC

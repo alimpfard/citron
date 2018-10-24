@@ -300,7 +300,7 @@ ctr_array_max (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_array_sum (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object *sum;
+  ctr_object *sum = CtrStdNil;
   ctr_object *el;
   ctr_size i = 0;
   for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
@@ -335,7 +335,7 @@ ctr_array_sum (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_array_product (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object *prod;
+  ctr_object *prod = CtrStdNil;
   ctr_object *el;
   ctr_size i = 0;
   for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)

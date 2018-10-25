@@ -305,7 +305,7 @@ ctr_array_sum (ctr_object * myself, ctr_argument * argumentList)
   ctr_size i = 0;
   for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
     {
-      if (!i)
+      if (i == myself->value.avalue->tail)
 	{
 	  sum = *myself->value.avalue->elements;
 	  continue;
@@ -340,7 +340,7 @@ ctr_array_product (ctr_object * myself, ctr_argument * argumentList)
   ctr_size i = 0;
   for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
     {
-      if (!i)
+      if (i == myself->value.avalue->tail)
 	{
 	  prod = *myself->value.avalue->elements;
 	  continue;

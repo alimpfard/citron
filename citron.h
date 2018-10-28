@@ -994,6 +994,7 @@ ctr_object* ctr_file_include(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_include_here(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_open(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_close(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_file_flush(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_read_bytes(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_write_bytes(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_seek(ctr_object* myself, ctr_argument* argumentList);
@@ -1108,6 +1109,7 @@ ctr_object* ctr_slurp_respond_to_and(ctr_object* myself, ctr_argument* argumentL
  * Shell Interface
  */
 ctr_object* ctr_shell_call(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_shell_open(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_shell_respond_to(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_shell_respond_to_and(ctr_object* myself, ctr_argument* argumentList);
 

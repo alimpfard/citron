@@ -713,6 +713,11 @@ ctr_file_close (ctr_object * myself, ctr_argument * argumentList)
 {
   if (myself->value.rvalue == NULL)
     return myself;
+  if (myself->value.rvalue->type == 2) {
+    pclose ((FILE *) myself->value.rvalue->ptr);
+    myself->value.rvalue = NULL;
+    return myself;
+  }
   if (myself->value.rvalue->type != 1)
     return myself;
   if (myself->value.rvalue->ptr)
@@ -721,6 +726,31 @@ ctr_file_close (ctr_object * myself, ctr_argument * argumentList)
     }
   ctr_heap_free (myself->value.rvalue);
   myself->value.rvalue = NULL;
+  return myself;
+}
+
+/**
+ * [File] flush.
+ *
+ * Closes the file represented by the recipient.
+ *
+ * Usage:
+ *
+ * f := File new: '/path/to/file.txt'.
+ * f open: 'r+'.
+ * f close.
+ *
+ * The example above opens and closes a file.
+ */
+ctr_object *
+ctr_file_flush (ctr_object * myself, ctr_argument * argumentList)
+{
+  if (myself->value.rvalue == NULL)
+    return myself;
+  if (myself->value.rvalue->ptr)
+    {
+      fflush ((FILE *) myself->value.rvalue->ptr);
+    }
   return myself;
 }
 

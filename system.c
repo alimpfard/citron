@@ -787,6 +787,42 @@ ctr_shell_call (ctr_object * myself, ctr_argument * argumentList)
   return outputString;
 }
 
+// open for writing only
+/**
+ * [Shell] open: [String] mode: [String: 'r'|'w'|'e']
+ *
+ * Opens a write-or-read only stream to the given command
+ *
+ * -> a File
+ */
+ctr_object *
+ctr_shell_open (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_check_permission (CTR_SECPRO_NO_SHELL);
+  ctr_did_side_effect = 1;
+  FILE *stream;
+  ctr_object* ret = CtrStdNil;
+  char* comstring = ctr_heap_allocate_cstring (ctr_internal_cast2string(argumentList->object));
+  char* modestring = ctr_heap_allocate_cstring (ctr_internal_cast2string(argumentList->next->object));
+  if (!(stream = popen(comstring, modestring)))
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("Unable to execute command");
+      goto _exit;
+    }
+  ctr_object *s = ctr_format_str("-Shell[%s]", comstring);
+  ctr_argument arg = {s, NULL};
+  ctr_object *nv = ctr_file_new(CtrStdFile, &arg);
+  ctr_resource *res = ctr_heap_allocate(sizeof *res);
+  nv->value.rvalue = res;
+  res->ptr = stream;
+  res->type = 2;
+  ret = nv;
+  _exit:;
+  ctr_heap_free(comstring);
+  ctr_heap_free(modestring);
+  return ret;
+}
+
 /**
  * [Shell] unpack: [String:Ref], [Object:ctx]
  * assigns the instance to the reference

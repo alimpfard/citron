@@ -53,7 +53,7 @@ ctr_cli_welcome (char *invoked_by)
   puts ("\t-c | --compile : serialize AST to stdout and exit");
   puts ("\t-fc | --from-compiled : assume file is a serialized AST, execute that");
   puts ("\t-d | enable debug mode");
-  puts ("\t-e | read from stdin");
+  puts ("\t-- | read from stdin");
   puts ("\t--no-std | launch without the stdlib");
   puts ("\t--ext | print ext path and exit");
   printf ("\n");
@@ -108,7 +108,7 @@ ctr_cli_read_args (int argc, char *argv[])
 	compile_and_quit = 2;
       else if (strcmp (argv[0], "-d") == 0)
 	debug = 1;
-      else if (strcmp (argv[0], "-e") == 0)
+      else if (strcmp (argv[0], "--") == 0)
 	from_stdin = 1;
       else if (strcmp (argv[0], "--ext") == 0)
 	{

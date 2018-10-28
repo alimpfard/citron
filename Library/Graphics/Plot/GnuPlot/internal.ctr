@@ -1,0 +1,25 @@
+var GnuPlotInternal is Object cnew: {:self
+  session => Nil.
+  on: 'new' do: {
+    ^const self _new init.
+  }.
+  on: '_new' do: {
+    ^const self cnew: {
+      session => Nil.
+    }.
+  }.
+  on: 'init' do: {
+    my session isNil ifFalse: {
+      # Kill previous instance
+      my session close.
+    }.
+    session => Shell open: 'gnuplot' mode: 'w'.
+  }.
+  on: 'send:' do: {:cmd
+    my session write: cmd + '\n', flush.
+  }.
+  on: 'close' do: {
+    my session close.
+    my session is Nil.
+  }.
+}.

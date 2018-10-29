@@ -37,6 +37,9 @@ var __eval_context is Object cnew: {
           put: 'blue'   at: 'Blue' , put: 'purple'  at: 'Purple',
           put: 'cyan'   at: 'Cyan' , put: 'white'   at: 'White'.
       }, initWithName: 'Base'.
+      on: 'describe' do: {
+        ^'Theme{bg: %s, fg: %s} {palette = (%L)}' % [my bgcolor, my fgcolor, (my palette kvlist: \:kv '%s: %s' % kv)].
+      }.
       on: 'beCurrent' do: {
         Scratchpad currentTheme: me.
         Tcl eval: '.text configure -background "%s" -foreground "%s"' % [my bgcolor, my fgcolor].
@@ -65,10 +68,10 @@ var __eval_context is Object cnew: {
       my palette
         put: '#E6DB74' at: 'yellow', put: '#AE81FF' at: 'purple',
         put: '#F92672' at: 'red',    put: '#66D9EF' at: 'cyan',
-        put: '#A6E22E' at: 'green',
+        put: '#A6E22E' at: 'green',  put: '#005aaa' at: 'blue',
         put: '#E6DB74' at: 'Yellow', put: '#AE81FF' at: 'Purple',
         put: '#F92672' at: 'Red',    put: '#66D9EF' at: 'Cyan',
-        put: '#A6E22E' at: 'Green'.
+        put: '#A6E22E' at: 'Green',  put: '#005aaa' at: 'Blue'.
     }.
     my Scratchpad is Object cnew: {
         currentTheme => const DefaultTheme.
@@ -87,6 +90,7 @@ var evaluate-or-error is {\:code
 
 import Library/Utils/Highlight.
 var highlight is Tcl fnOf: {:txt ^Highlight highlight: txt html: False.}.
+
 Tcl proc: 'colorize' args: [] body: (
    ?>
    set ins [.text index insert]
@@ -106,7 +110,7 @@ Tcl proc: 'ctrExecute' args: [] body: (
     set init [expr "floor($ins)"]
     set range [list $init $ins]
   }
-  set txt [.text get {*}$range]
+  set txt [regsub {\.$} [string trimright [.text get {*}$range]] {}]
   set end [lindex $range 1]
   # Terrible terrible, get the start of next line
   set nextline [expr "floor($end+1)"]
@@ -123,13 +127,41 @@ Tcl proc: 'ctrExecute' args: [] body: (
   })]
 ).
 
+Tcl proc: 'handle_menu' args: ['w'] body: (
+  ?>
+    $w add command -label save -command %s
+    $w add command -label load -command %s
+  <? % [
+    (Tcl fnOf: {
+      Tcl eval: '%s [tk_getSaveFile -defaultextension ctr -title "Save into..."]' % [(Tcl fnOf: {:path
+        path = '' ifTrue: { ^Nil. }.
+        Tcl eval: '%s [.text get 0.0 end]' % [(Tcl fnOf: {:data
+          File new: const path, write: data, close.
+        })].
+      })].
+    }),
+    (Tcl fnOf: {
+      Tcl eval: 'set path [tk_getOpenFile -title "Load from..."]'.
+      Tcl eval: 'if {$path == ""} { return }'.
+      Tcl eval: 'set file [open $path r]'.
+      Tcl eval: 'set data [read $file]'.
+      Tcl eval: 'close $file'.
+      Tcl eval: '.text delete 0.0 end'.
+      Tcl eval: '.text insert 0.0 [$$highlight $data]'.
+    })
+  ]
+).
+
 Tcl eval: ?>
 source ansicolor.tcl
 wm title . "Citron Scratchpad"
+menu .menu -type menubar
+pack .menu -side top -fill both
+handle_menu .menu
 ansicolor::text .text -yscrollcommand ".scroll set" -setgrid true
 bind .text <KeyRelease-F5> "ctrExecute"
 <?
-+ (syn either: 'bind .text <Key> colorize' or: 'bind .text <Return> colorize')
++ (syn either: 'bind .text <KeyRelease> colorize' or: 'bind .text <Return> colorize')
 +
 ?>
 scrollbar .scroll -command ".text yview"

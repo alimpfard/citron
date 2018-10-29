@@ -6,20 +6,21 @@ import Library/Utils/Colors.
 var syn is Program env: 'SCRATCHPAD_ENTHIGHLIGHT', isNil.
 
 var helpString is Colors % [
-                '---------------------------------------------------------\n' +
-                '                      Scratchpad Help                    \n' +
-                '                                                         \n' +
-                '      Select some range and press F5 to execute it       \n' +
-                '      Pressing F5 without selecting anything will        \n' +
-                '      execute from the beginning of the line until       \n' +
-                '      the cursor                                         \n' +
-                '      the scratchpad theme can be modified by sending    \n' +
-                '      ::\'beCurrent\' to the theme object                \n' +
-                '      Tip: `PastelTheme beCurrent`                       \n' +
-                '---------------------------------------------------------\n',
+                '+-------------------------------------------------------+\n' +
+                '|                     Scratchpad Help                   |\n' +
+                '|                                                       |\n' +
+                '|     Select some range and press F5 to execute it      |\n' +
+                '|     Pressing F5 without selecting anything will       |\n' +
+                '|     execute from the beginning of the line until      |\n' +
+                '|     the cursor                                        |\n' +
+                '|     Comments are not going to work, so use strings    |\n' +
+                '|     instead; they do pretty much the same thing here  |\n' +
+                '|                                                       |\n' +
+                '+-------------------------------------------------------+\n',
                 \blue,
                 \bright
                 ].
+var fontCache is Map new.
 var __eval_context is Object cnew: {
     var Themes is my Themes is Map new.
     var Theme is Object cnew: {
@@ -27,6 +28,10 @@ var __eval_context is Object cnew: {
         const Themes put: me at: name.
         bgcolor => 'white'.
         fgcolor => 'red'.
+        cursorcolor => 'black'.
+        selectioncolor => 'lightgray'.
+        font => Nil.
+        fontsize => Nil.
         palette => Map new
           put: 'black'  at: 'black', put: 'red'     at: 'red',
           put: 'green'  at: 'green', put: 'yellow'  at: 'yellow',
@@ -36,15 +41,29 @@ var __eval_context is Object cnew: {
           put: 'green'  at: 'Green', put: 'yellow'  at: 'Yellow',
           put: 'blue'   at: 'Blue' , put: 'purple'  at: 'Purple',
           put: 'cyan'   at: 'Cyan' , put: 'white'   at: 'White'.
+
       }, initWithName: 'Base'.
       on: 'describe' do: {
-        ^'Theme{bg: %s, fg: %s} {palette = (%L)}' % [my bgcolor, my fgcolor, (my palette kvlist: \:kv '%s: %s' % kv)].
+        ^'Theme{bg: %s, fg: %s, cursor: %s, sel: %s} {font: %s(%s) palette: (%L)}'
+          %
+        [my bgcolor, my fgcolor, my cursorcolor, my selectioncolor, my font, my fontsize, (my palette kvlist: \:kv '%s: %s' % kv)].
       }.
       on: 'beCurrent' do: {
         Scratchpad currentTheme: me.
         Tcl eval: '.text configure -background "%s" -foreground "%s"' % [my bgcolor, my fgcolor].
         my palette each: {:name:color
           Tcl eval: '_.text tag configure %s -%s "%s"' % [name, (name lower = name either: 'foreground' or: 'background'), color].
+        }.
+        Tcl eval: '.text configure -selectbackground "%s" -insertbackground "%s"' % [my selectioncolor, my cursorcolor].
+        my font isNil ifFalse: {
+          var font is (var fontCache is const fontCache) at: (var fontName is my font).
+          var size is my fontsize or: 12.
+          font isNil ifTrue: {
+            Tcl eval: 'font create "%s" -family "%s" -size $$size' % [fontName, fontName].
+            fontCache put: fontName at: fontName.
+            font is fontName.
+          }.
+          Tcl eval: '.text configure -font "%s"' % [font].
         }.
       }.
     }.
@@ -65,6 +84,8 @@ var __eval_context is Object cnew: {
 
       bgcolor => '#272822'.
       fgcolor => '#F8F8F2'.
+      cursorcolor => '#F8F8F0'.
+      selectioncolor => '#49483E'.
       my palette
         put: '#E6DB74' at: 'yellow', put: '#AE81FF' at: 'purple',
         put: '#F92672' at: 'red',    put: '#66D9EF' at: 'cyan',
@@ -142,15 +163,19 @@ Tcl proc: 'handle_menu' args: ['w'] body: (
   <? % [
     (Tcl fnOf: {
       Tcl eval: '%s [tk_getSaveFile -defaultextension ctr -title "Save into..."]' % [(Tcl fnOf: {:path
-        path = '' ifTrue: { ^Nil. }.
+        path = '' ifTrue: { ^me. }.
         Tcl eval: '%s [.text get 0.0 end]' % [(Tcl fnOf: {:data
           File new: const path, write: data, close.
         })].
       })].
     }),
     (Tcl fnOf: {
+      var ret is False.
       Tcl eval: 'set path [tk_getOpenFile -title "Load from..."]'.
-      Tcl eval: 'if {$path == ""} { return }'.
+      Tcl eval: 'if {$path == ""} { %s }' % [(Tcl fnOf: { const ret is True. })].
+      ret ifTrue: {
+        ^me.
+      }.
       Tcl eval: 'set file [open $path r]'.
       Tcl eval: 'set data [read $file]'.
       Tcl eval: 'close $file'.

@@ -37,6 +37,7 @@ namespace eval ansicolor {
                 foreach {pos text tags} $args break
                 while {[regexp $re $text -> before esc code]} {
                     _$self insert $pos $before [set ansicolor::$self.tags]
+                    set pos [_$self index insert]
                     set ansicolor::$self.tags [ansicolor::get $code]
                     regsub $re $text "" text
                 }

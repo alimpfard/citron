@@ -2456,11 +2456,11 @@ ctr_map_kvlist (ctr_object * myself, ctr_argument * argumentList)
 
       arguments->object = kvtup;
       arguments->object = ctr_block_run (block, arguments, myself);
-      if (arguments->object->info.type != CTR_OBJECT_TYPE_OTARRAY && arguments->object != block)
+      /* if (arguments->object->info.type != CTR_OBJECT_TYPE_OTARRAY && arguments->object != block)
 	{
 	  CtrStdFlow = ctr_build_string_from_cstring ("kvmap block must only return a 2-tuple or nothing.");
 	  return CtrStdNil;
-	}
+	}*/
       if (arguments->object == block)
 	{
 	  ctr_object *lst = ctr_array_new (CtrStdArray, NULL);

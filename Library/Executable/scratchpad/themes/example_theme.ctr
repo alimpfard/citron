@@ -1,0 +1,12 @@
+var ExampleTheme is (Themes at: 'Base') cnew: {
+  'This name should be unique to the theme'.
+  initWithName: 'Example'.
+
+  'background and foreground of the editor'.
+  bgcolor => 'red'.
+  fgcolor => 'white'.
+
+  'Override the palette here (only 8 colors, background colors are capitalized)'.
+  my palette
+    put: 'white' at: 'green'.
+}.

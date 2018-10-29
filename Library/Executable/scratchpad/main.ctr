@@ -87,6 +87,13 @@ var evaluate-or-error is {\:code
   Reflect run: {:code ^code eval.} inContextAsMain: __eval_context arguments: [code].
 } catch: {:e ^Colors % [e toString, \red].}.
 
+var load-and-apply-theme is Tcl fnOf: {\:code :obj
+  code is code rightTrim ~ 's/\\.$//'.
+  { obj is Reflect run: {:code ^('( $$code ) beCurrent') eval.} inContextAsMain: __eval_context arguments: [code]. } catch: {:e
+    Tcl eval: 'ERROR { $$e }'.
+  }, run.
+  ^obj.
+}.
 
 import Library/Utils/Highlight.
 var highlight is Tcl fnOf: {:txt ^Highlight highlight: txt html: False.}.
@@ -131,6 +138,7 @@ Tcl proc: 'handle_menu' args: ['w'] body: (
   ?>
     $w add command -label save -command %s
     $w add command -label load -command %s
+    $w add command -label "load theme" -command %s
   <? % [
     (Tcl fnOf: {
       Tcl eval: '%s [tk_getSaveFile -defaultextension ctr -title "Save into..."]' % [(Tcl fnOf: {:path
@@ -148,6 +156,14 @@ Tcl proc: 'handle_menu' args: ['w'] body: (
       Tcl eval: 'close $file'.
       Tcl eval: '.text delete 0.0 end'.
       Tcl eval: '.text insert 0.0 [$$highlight $data]'.
+    }),
+    (Tcl fnOf: {
+      Tcl eval: 'set path [tk_getOpenFile -title "Load from..."]'.
+      Tcl eval: 'if {$path == ""} { return }'.
+      Tcl eval: 'set file [open $path r]'.
+      Tcl eval: 'set data [read $file]'.
+      Tcl eval: 'close $file'.
+      Tcl eval: '%s $data' % [load-and-apply-theme].
     })
   ]
 ).

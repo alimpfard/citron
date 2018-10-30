@@ -1,7 +1,10 @@
 DEBUG_VERSION := 543
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
-o_cflags := $(shell pkg-config --cflags tcl)
-o_ldflags := $(shell pkg-config --libs tcl)
+o_cflags := -I/mingw64/include
+#it ain't so easy
+#$(shell pkg-config --cflags tcl)
+o_ldflags := -L/mingw64/lib -ltcl8.6 -ldl -lz -lpthread -lz
+#$(shell pkg-config --libs tcl)
 CFLAGS := ${CFLAGS} ${o_cflags} -I/usr/include
 LEXTRACF := ${LEXTRACF} ${o_ldflags} -flto -lstdc++ -static-libgcc -static-libstdc++
 location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
@@ -144,15 +147,11 @@ modules:
 	pacman -S --noconfirm mingw64/mingw-w64-x86_64-tcl mingw64/mingw-w64-x86_64-tk
 	# fuckin windows shit
 	# create a symlink so ld will be happy
-	ln -s /usr/lib/libtcl8.6.dll.a /usr/lib/libtcl8.6.a
+	ln -s /mingw64/lib/libtcl8.6.dll.a /usr/lib/libtcl8.6.a
 	$(CC) -fopenmp $(CFLAGS) -static -c modules.c -o modules.o
-
-modtcl:
-	# get tcl
-
-	# link against citron, the windows would kill us if we didn't
-	make -C plugins/tcl EXTRAS="-L. -lcitron"
-
+	cp /mingw64/bin/tcl86.dll tcl86.dll
+	cp /mingw64/bin/zlib1.dll zlib1.dll
+	
 package:
 	# create a package for windows people
 	# really, how lazy can y'all get?

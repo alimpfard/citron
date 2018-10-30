@@ -13,6 +13,7 @@
 */
 
 #define ctrraise(STR, myself) {(*get_CtrStdFlow()) = ctr_build_string_from_cstring(STR); return myself;}
+#define ctrfraise(STR, myself, ...) {(*get_CtrStdFlow()) = ctr_format_str(STR, __VA_ARGS__); return myself;}
 
 static ctr_object* ctrtcl_interpobj;
 static ctr_object* CSTR_INTERP = NULL;
@@ -46,7 +47,7 @@ ctr_object* ctr_tcl_init(ctr_object* myself, ctr_argument* _ign) {
 
   if (interp->initialized) ctrraise("Already initialized", myself);
 
-  if(Tcl_Init(interp->interp) != TCL_OK) ctrraise("Failed to initialize", myself);
+  if(Tcl_Init(interp->interp) != TCL_OK) ctrfraise("EFailed to initialize: %s", myself, Tcl_GetStringResult(interp->interp));
 
   interp->initialized = 1;
 

@@ -1732,10 +1732,11 @@ mod_accessible (char const *mname)
   return access (mname, F_OK | X_OK) != -1;
 }
 
+extern void ctr_preload_modules();
 void
 ctr_load_required_native_modules ()
 {
-
+  ctr_preload_modules();
 #ifndef CTR_LOAD_BASE_MODS
   return;
 #endif

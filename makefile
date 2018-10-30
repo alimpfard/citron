@@ -1,7 +1,9 @@
 DEBUG_VERSION := 543
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
-CFLAGS := ${CFLAGS} -I/usr/include
-LEXTRACF := ${LEXTRACF} -flto -lstdc++ -static-libgcc -static-libstdc++
+o_cflags := $(shell pkg-config --cflags tcl)
+o_ldflags := $(shell pkg-config --libs tcl)
+CFLAGS := ${CFLAGS} ${o_cflags} -I/usr/include
+LEXTRACF := ${LEXTRACF} ${o_ldflags} -flto -lstdc++ -static-libgcc -static-libstdc++
 location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 WHERE_ART_THOU := $(location)
 new_makefile_l1 := $(shell perl -ne '/((DEBUG_VERSION := )(\d+))/ && print (sprintf("%s%s", "$$2", "$$3"+1));' $(WHERE_ART_THOU))
@@ -78,8 +80,8 @@ debug:
 install:
 	echo -e "install directly from source not allowed.\nUse citron_autohell instead for installs"
 	exit 1;
-ctr: $(OBJS)
-	$(CC) -fopenmp $(OBJS) -static -lm -ldl -lpcre -lpthread /usr/lib/libgc.dll.a ${LEXTRACF} -o ctr
+ctr: $(OBJS) modules
+	$(CC) -fopenmp ${LDFLAGS} $(OBJS) modules.o -static -lm -ldl -lpcre -lpthread /usr/lib/libgc.dll.a ${LEXTRACF} -o ctr
 
 libctr: CFLAGS := $(CFLAGS) -fPIC -DCITRON_LIBRARY
 libctr: deps
@@ -91,7 +93,7 @@ compiler: CFLAGS := $(CFLAGS) -D comp=1
 compiler: deps
 compiler: cxx
 compiler: $(COBJS)
-	$(CC) $(COBJS) -rdynamic -lm -ldl -lpcre -lprofiler -lpthread /usr/lib/libgc.dll.a ${LEXTRACF} -o ctrc
+	$(CC) $(COBJS) -rdynamic -lm -ldl -lpcre -lpthread /usr/lib/libgc.dll.a ${LEXTRACF} -o ctrc
 cxx:
 	echo "blah"
 
@@ -136,6 +138,20 @@ love:
 
 war:
 	echo "Not love?"
+
+modules:
+	# tcl
+	pacman -S --noconfirm mingw64/mingw-w64-x86_64-tcl mingw64/mingw-w64-x86_64-tk
+	# fuckin windows shit
+	# create a symlink so ld will be happy
+	ln -s /usr/lib/libtcl8.6.dll.a /usr/lib/libtcl8.6.a
+	$(CC) -fopenmp $(CFLAGS) -static -c modules.c -o modules.o
+
+modtcl:
+	# get tcl
+
+	# link against citron, the windows would kill us if we didn't
+	make -C plugins/tcl EXTRAS="-L. -lcitron"
 
 package:
 	# create a package for windows people

@@ -5,8 +5,8 @@ var DarkPastelTheme is (Themes at: 'Base') cnew: {
   fgcolor => '#FFFFFF'.
   selectioncolor => '#237CC4'.
   cursorcolor => '#FFFFFF'.
-  font => 'Ubuntu'.
-  fontsize => 12.
+  font => 'Nimbus Mono PS'.
+  fontsize => 10.
   my palette
     put: '#F92672' at: 'red', put: '#FF6666' at: 'Red',
     put: '#EEEEEE' at: 'white', put: '#EEEEEE' at: 'White',

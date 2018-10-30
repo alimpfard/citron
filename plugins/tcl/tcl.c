@@ -65,11 +65,9 @@ ctr_object* ctr_tcl_eval(ctr_object* myself, ctr_argument* argumentList) {
   return myself;
 }
 
-static Tcl_Obj* ctr_tcl_as_obj(ctr_object* ctrobj) {
-  Tcl_Obj* result;
-
+static Tcl_Obj* ctr_tcl_as_obj(ctr_object* ctrobj, void* interp) {
   switch(ctrobj->info.type) {
-    case CTR_OBJECT_TYPE_OTNIL: return NULL;
+    case CTR_OBJECT_TYPE_OTNIL: return Tcl_NewBooleanObj(0); //emulate false
     case CTR_OBJECT_TYPE_OTNUMBER: {
       double intpart;
       if(modf(ctrobj->value.nvalue, &intpart) == 0) {//int
@@ -98,18 +96,14 @@ static Tcl_Obj* ctr_tcl_as_obj(ctr_object* ctrobj) {
       return Tcl_NewUnicodeObj(inbuf, slen);
     }
     case CTR_OBJECT_TYPE_OTARRAY: {
-      Tcl_Obj **argv;
-      size_t size, i;
-      size = ctr_array_count(ctrobj, NULL)->value.nvalue;
-      if(size == 0) return Tcl_NewListObj(0, NULL);
-      argv = ctr_heap_allocate(sizeof(Tcl_Obj*)*size);
-      for(i=ctrobj->value.avalue->tail;i<ctrobj->value.avalue->head;i++)
-        argv[i-ctrobj->value.avalue->tail] = ctr_tcl_as_obj(ctrobj->value.avalue->elements[i]);
-      result = Tcl_NewListObj(size, argv);
-      ctr_heap_free(argv);
-      return result;
+      Tcl_Obj *argv = Tcl_NewListObj(1, NULL);
+      size_t i;
+      for(i=ctrobj->value.avalue->tail;i<ctrobj->value.avalue->head;i++) {
+        Tcl_ListObjAppendElement(interp, argv, ctr_tcl_as_obj(ctrobj->value.avalue->elements[i], interp));
+      }
+      return argv;
     }
-    default: return ctr_tcl_as_obj(ctr_internal_cast2string(ctrobj));
+    default: return ctr_tcl_as_obj(ctr_internal_cast2string(ctrobj), interp);
   }
 }
 
@@ -127,7 +121,7 @@ int ctr_tcl_run_blk(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj
   ctr_object* blk = ctr_internal_object_find_property(ctr_bound_fn_map, sym, 0);
   if(!blk) {
     (*get_CtrStdFlow()) = ctr_build_string_from_cstring("No such bound function");
-    Tcl_SetObjResult(interp, ctr_tcl_as_obj((*get_CtrStdFlow())));
+    Tcl_SetObjResult(interp, ctr_tcl_as_obj(*get_CtrStdFlow(), interp));
     return TCL_ERROR;
   }
   int len;
@@ -135,6 +129,7 @@ int ctr_tcl_run_blk(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj
     char* str = Tcl_GetStringFromObj(objv[i], &len);
     argm->object = ctr_build_string(str, len);
     argm->next = ctr_heap_allocate(sizeof(*argumentList));
+    argm = argm->next;
   }
   argm->next = NULL;
 
@@ -147,10 +142,10 @@ int ctr_tcl_run_blk(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj
     (*get_CtrStdFlow()) = NULL;
     return TCL_CONTINUE;
   } else if ((*get_CtrStdFlow()) != NULL) {
-    Tcl_SetObjResult(interp, ctr_tcl_as_obj((*get_CtrStdFlow())));
+    Tcl_SetObjResult(interp, ctr_tcl_as_obj(*get_CtrStdFlow(), interp));
     return TCL_ERROR;
   }
-  if(res != blk) Tcl_SetObjResult(interp, ctr_tcl_as_obj(res));
+  if(res != blk) Tcl_SetObjResult(interp, ctr_tcl_as_obj(res, interp));
   return TCL_OK;
 }
 
@@ -165,7 +160,7 @@ ctr_object* ctr_tcl_fnof(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* blk = argumentList->object;
   if(blk->info.type != CTR_OBJECT_TYPE_OTBLOCK) ctrraise("Expected a block", myself);
   argumentList->object = blk;
-  blk = ctr_reflect_fn_copy(CtrStdReflect, argumentList);
+  // blk = ctr_reflect_fn_copy(CtrStdReflect, argumentList);
   ctr_object* interps = ctr_internal_object_find_property(myself, CSTR_INTERP, 0);
   if (interps == NULL) ctrraise("Tcl object not initialized", myself);
   interp = (void*)(intptr_t)interps->value.nvalue;
@@ -178,6 +173,20 @@ ctr_object* ctr_tcl_fnof(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* blk_ren = ctr_build_string_from_cstring(fnname);
   ctr_internal_object_add_property(blk_ren, ctr_build_string_from_cstring(":function"), blk, 0);
   return blk_ren;
+}
+
+ctr_object*
+ctr_tcl_valof (ctr_object* myself, ctr_argument* argumentList) {
+  ctr_tcl_interp* interp;
+  ctr_object* interps = ctr_internal_object_find_property(myself, CSTR_INTERP, 0);
+  if (interps == NULL) ctrraise("Tcl object not initialized", myself);
+  interp = (void*)(intptr_t)interps->value.nvalue;
+  ctr_string* s = ctr_internal_cast2string(argumentList->object)->value.svalue;
+  int rc = Tcl_EvalEx(interp->interp, s->value, s->vlen, 0);
+  ctr_heap_free(s);
+  char* res = (char*)Tcl_GetStringResult(interp->interp);
+  if(rc != TCL_OK) ctrraise(res, myself);
+  return ctr_build_string_from_cstring(res);
 }
 
 ctr_object* ctr_tcl_shutdown(ctr_object* myself, ctr_argument* argumentList) {
@@ -196,5 +205,6 @@ void begin() {
   ctr_internal_create_func(ctrtcl_interpobj, ctr_build_string_from_cstring("eval:"), &ctr_tcl_eval);
   ctr_internal_create_func(ctrtcl_interpobj, ctr_build_string_from_cstring("shutdown"), &ctr_tcl_shutdown);
   ctr_internal_create_func(ctrtcl_interpobj, ctr_build_string_from_cstring("fnOf:"), &ctr_tcl_fnof);
+  ctr_internal_create_func(ctrtcl_interpobj, ctr_build_string_from_cstring("valueOf:"), &ctr_tcl_valof);
   ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Tcl"), ctrtcl_interpobj, 0);
 }

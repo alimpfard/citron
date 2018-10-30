@@ -1,0 +1,17 @@
+my HonokaiTheme is (Themes at: 'Base') cnew: {
+  initWithName: 'Honokai'.
+
+  bgcolor => '#343831'.
+  fgcolor => '#99a19b'.
+  cursorcolor => '#feeae6'.
+  selectioncolor => '#dadfec'.
+  font => 'DejaVu Sans Mono'.
+  fontsize => 12.
+  my palette
+    put: '#d4b700' at: 'yellow', put: '#ae3283' at: 'purple',
+    put: '#e1023b' at: 'red',    put: '#0077a9' at: 'cyan',
+    put: '#009020' at: 'green',  put: '#0087bd' at: 'blue',
+    put: '#b0762f' at: 'Yellow', put: '#644385' at: 'Purple',
+    put: '#701a32' at: 'Red',    put: '#00679d' at: 'Cyan',
+    put: '#254d2a' at: 'Green',  put: '#1a3553' at: 'Blue'.
+}.

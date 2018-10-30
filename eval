@@ -271,6 +271,8 @@ Eval on: 'Commands' do: {
       + !m <expression> -- evaluates and shows the methods of expression.
       + !p <expression> -- evaluates and shows the properties of expression.
       + !f <[no-]flag> -- modifies flag
+      + hist [(<nth>)] <query> -- searches for entry in history, and returns it as a block
+      + !hist [(<nth>)] <query> -- searches and executes (like hist but executes immediately)
       + set <(+|-)flag> -- alternative for !f with easier(?) syntax
       + !def <name> <expression> -- create a metacommand
       + p <expression> -- prints the value of expression
@@ -328,6 +330,49 @@ Eval on: 'Commands' do: {
         }.
         ^''.
       } at: '!step',
+      put: {:argstr
+        var nth is 0.
+        var cmd is 'Nil.'.
+        argstr findPattern: ?>(?:\((\d+|\*)\))?\s*(.+)$<? do: {:groups
+          nth is groups at: 1.
+          nth = '*' ifTrue: { nth is -1. }, ifFalse: { nth is nth toNumber. }.
+          cmd is groups at: 2.
+        }.
+        cmd is Eval getHistory filter: {\:_:x x startsWith: cmd.}.
+        cmd count = 0 ifTrue: {
+          thisBlock error: 'No match found $$argstr'.
+        }.
+        nth is nth min: cmd count - 1.
+        ^nth = -1 either: {
+          Pen red writeln: 'Will execute: ', resetColor.
+          Pen cyan write: '+ ', writeln: (cmd join: '\n+ '), resetColor.
+          ^{\ cmd fmap: \:x x eval. }.
+        } or: {
+          cmd is cmd at: nth.
+          Pen red writeln: 'Will execute: ', resetColor.
+          Pen cyan writeln: cmd, resetColor.
+          ^{\ cmd eval. }.
+        }.
+      } at: 'hist',
+      put: {:argstr
+        var nth is 0.
+        var cmd is 'Nil.'.
+        argstr findPattern: ?>(?:\((\d+|\*)\))?\s*(.+)$<? do: {:groups
+          nth is groups at: 1.
+          nth = '*' ifTrue: { nth is -1. }, ifFalse: { nth is nth toNumber. }.
+          cmd is groups at: 2.
+        }.
+        cmd is Eval getHistory filter: {\:_:x x startsWith: cmd.}.
+        cmd count = 0 ifTrue: {
+          thisBlock error: 'No match found $$argstr'.
+        }.
+        nth is nth min: cmd count - 1.
+        ^nth = -1 either: {
+          ^Reflect run: {:cmd:nth ^cmd fmap: \:x x eval. } inContextAsMain: Eval evalContext arguments: [cmd, nth].
+        } or: {
+          ^Reflect run: {:cmd:nth ^cmd at: nth, eval. } inContextAsMain: Eval evalContext arguments: [cmd, nth].
+        }.
+      } at: '!hist',
       put: {:args
         var name is args reSplit: '\\s+'.
         ^Reflect run: {:name
@@ -948,6 +993,8 @@ Eval on: 'read_eval_print:' do: ({:prompt
           # done is True.
         }, case: '\x4' do: {#^D
           Program exit.
+        }, case: '\xc' do: {#^L -- clear screen
+          Pen clear.
         }, case: '\b' do: {#<\b>
           clear_next_line applyTo: linesp. have_context is False.
           cursor > 0 ifTrue: {

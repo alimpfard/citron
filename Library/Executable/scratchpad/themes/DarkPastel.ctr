@@ -1,0 +1,18 @@
+var DarkPastelTheme is (Themes at: 'Base') cnew: {
+  initWithName: 'DarkPastel'.
+
+  bgcolor => '#2A2A2A'.
+  fgcolor => '#FFFFFF'.
+  selectioncolor => '#237CC4'.
+  cursorcolor => '#FFFFFF'.
+  font => 'Nimbus Mono PS'.
+  fontsize => 10.
+  my palette
+    put: '#F92672' at: 'red', put: '#FF6666' at: 'Red',
+    put: '#EEEEEE' at: 'white', put: '#EEEEEE' at: 'White',
+    put: '#FEF89B' at: 'yellow', put: '#F29C00' at: 'Yellow',
+    put: '#AE81FF' at: 'purple', put: '#AE81FF' at: 'Purple',
+    put: '#66D9EF' at: 'cyan', put: '#66D9EF' at: 'Cyan',
+    put: '#A6E22E' at: 'green', put: '#A6E22E' at: 'Green',
+    put: '#66D9EF' at: 'blue', put: '#66D9EF' at: 'Blue'.
+}.

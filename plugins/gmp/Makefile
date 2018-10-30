@@ -1,3 +1,5 @@
+INTO ?= ../../mods/biginteger
+
 default: all
 
 all: compile link copy
@@ -9,5 +11,5 @@ link:
 	${CC} -shared -o libctrbiginteger.so -lgmp gmp.o
 
 copy:
-	mkdir -p ../../mods/biginteger
-	cp -f libctrbiginteger.so ../../mods/biginteger
+	mkdir -p $(INTO)
+	cp -f libctrbiginteger.so $(INTO)

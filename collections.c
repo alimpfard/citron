@@ -300,12 +300,12 @@ ctr_array_max (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_array_sum (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object *sum;
+  ctr_object *sum = CtrStdNil;
   ctr_object *el;
   ctr_size i = 0;
   for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
     {
-      if (!i)
+      if (i == myself->value.avalue->tail)
 	{
 	  sum = *myself->value.avalue->elements;
 	  continue;
@@ -335,12 +335,12 @@ ctr_array_sum (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_array_product (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object *prod;
+  ctr_object *prod = CtrStdNil;
   ctr_object *el;
   ctr_size i = 0;
   for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
     {
-      if (!i)
+      if (i == myself->value.avalue->tail)
 	{
 	  prod = *myself->value.avalue->elements;
 	  continue;
@@ -2456,11 +2456,11 @@ ctr_map_kvlist (ctr_object * myself, ctr_argument * argumentList)
 
       arguments->object = kvtup;
       arguments->object = ctr_block_run (block, arguments, myself);
-      if (arguments->object->info.type != CTR_OBJECT_TYPE_OTARRAY && arguments->object != block)
+      /* if (arguments->object->info.type != CTR_OBJECT_TYPE_OTARRAY && arguments->object != block)
 	{
 	  CtrStdFlow = ctr_build_string_from_cstring ("kvmap block must only return a 2-tuple or nothing.");
 	  return CtrStdNil;
-	}
+	}*/
       if (arguments->object == block)
 	{
 	  ctr_object *lst = ctr_array_new (CtrStdArray, NULL);

@@ -3074,8 +3074,10 @@ ctr_string_format_map (ctr_object * myself, ctr_argument * argumentList)
 	}
       if (interpolate)
 	{
-	  args->object = ctr_build_string (buf, fmtct);
+	  ctr_object* prop = args->object = ctr_build_string (buf, fmtct);
 	  args->object = ctr_map_get (objects, args);
+    if (args->object == CtrStdNil)
+      args->object = ctr_internal_object_find_property(objects, prop, 0);
 	  args->object = ctr_send_message (args->object, "toString", 8, NULL);
 	  ctr_string_append (buffer, args);
 	  interpolate = 0;
@@ -3098,10 +3100,12 @@ ctr_string_format_map (ctr_object * myself, ctr_argument * argumentList)
     }
   if (fmtct)
     {
-      args->object = ctr_build_string (buf, fmtct);
+      ctr_object* prop = args->object = ctr_build_string (buf, fmtct);
       if (interpolate)
 	{
 	  args->object = ctr_map_get (objects, args);
+    if (args->object == CtrStdNil)
+      args->object = ctr_internal_object_find_property(objects, prop, 0);
 	  args->object = ctr_send_message (args->object, "toString", 8, NULL);
 	  interpolate = 0;
 	}
@@ -6556,6 +6560,12 @@ ctr_is_primitive (ctr_object * object)
     || object == CtrStdReflect || object == CtrStdReflect_cons || object == CtrStdFiber || object == CtrStdThread || object == CtrStdSymbol;
 }
 
+int strchru(char const* restrict str, int length, char c) {
+  int i = 0;
+  for (;i<length&&str[i++]!=c;);
+  return i<length?i-1:i;
+}
+
 //Stack-trace
 ctr_object *
 ctr_get_stack_trace ()
@@ -6759,7 +6769,8 @@ ctr_internal_ex_data()
 if (lineno == -1 && mapItem->node == stackNode)
   {
     lineno = mapItem->line;
-    pos = mapItem->p_ptr - mapItem->s_ptr - stackNode->vlen;
+    int firstsec = strchru(stackNode->value, stackNode->vlen, ':');
+    pos = mapItem->p_ptr - mapItem->s_ptr - firstsec;
     break;
   }
 mapItem = mapItem->next;

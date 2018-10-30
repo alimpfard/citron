@@ -1,0 +1,252 @@
+Broom memoryLimit: 1024 * 1024 * 1024 * 9.
+
+import Library/GUI/TK.
+import Library/Utils/Colors.
+
+var syn is Program env: 'SCRATCHPAD_ENTHIGHLIGHT', isNil.
+
+var helpString is Colors % [
+                '+-------------------------------------------------------+\n' +
+                '|                     Scratchpad Help                   |\n' +
+                '|                                                       |\n' +
+                '|     Select some range and press F5 to execute it      |\n' +
+                '|     Pressing F5 without selecting anything will       |\n' +
+                '|     execute from the beginning of the line until      |\n' +
+                '|     the cursor                                        |\n' +
+                '|     Comments are not going to work, so use strings    |\n' +
+                '|     instead; they do pretty much the same thing here  |\n' +
+                '|                                                       |\n' +
+                '+-------------------------------------------------------+\n',
+                \blue,
+                \bright
+                ].
+var fontCache is Map new.
+var __scratchpad is Nil.
+var __eval_context is Object cnew: {
+    var Themes is my Themes is Map new.
+    var Theme is Object cnew: {
+      genAccessors: [
+        'bgcolor', 'fgcolor',
+        'cursorcolor', 'selectioncolor',
+        'font', 'fontName', 'palette'
+      ].
+      on: 'name' do: {\ my name }.
+      on: 'initWithName:' do: {:name
+        const Themes put: me at: name.
+        name => name.
+        bgcolor => 'white'.
+        fgcolor => 'red'.
+        cursorcolor => 'black'.
+        selectioncolor => 'lightgray'.
+        font => 'DejaVu Sans Mono'.
+        fontsize => Nil.
+        palette => Map new
+          put: 'black'  at: 'black', put: 'red'     at: 'red',
+          put: 'green'  at: 'green', put: 'yellow'  at: 'yellow',
+          put: 'blue'   at: 'blue' , put: 'purple'  at: 'purple',
+          put: 'cyan'   at: 'cyan' , put: 'white'   at: 'white',
+          put: 'black'  at: 'Black', put: 'red'     at: 'Red',
+          put: 'green'  at: 'Green', put: 'yellow'  at: 'Yellow',
+          put: 'blue'   at: 'Blue' , put: 'purple'  at: 'Purple',
+          put: 'cyan'   at: 'Cyan' , put: 'white'   at: 'White'.
+
+      }, initWithName: 'Base'.
+      on: 'serialize' do: {
+        ^
+?>(Themes at: 'Base') cnew: {
+  initWithName: '%{name}'.
+  name => '%{name}'.
+  bgcolor => '%{bgcolor}'.
+  fgcolor => '%{fgcolor}'.
+  cursorcolor => '%{cursorcolor}'.
+  selectioncolor => '%{selectioncolor}'.
+  font => '%{font}'.
+  fontsize => %{fontsize}.
+  palette => %{palette}.
+}<? %~: me.
+      }.
+      on: 'describe' do: {
+        ^'var %sTheme is %s.' % [my name, me serialize].
+      }.
+      on: 'beCurrent' do: {
+        Scratchpad currentTheme: me.
+        Tcl eval: '.text configure -background "%s" -foreground "%s"' % [my bgcolor, my fgcolor].
+        my palette each: {:name:color
+          Tcl eval: '_.text tag configure %s -%s "%s"' % [name, (name lower = name either: 'foreground' or: 'background'), color].
+        }.
+        Tcl eval: '.text configure -selectbackground "%s" -insertbackground "%s"' % [my selectioncolor, my cursorcolor].
+        my font isNil ifFalse: {
+          var size is my fontsize or: 10.
+          var font is (var fontCache is const fontCache) at: (var fontName is my font) + size.
+          font isNil ifTrue: {
+            Tcl eval: 'font create "%s" -family "%s" -size $$size' % [fontName + size, fontName].
+            font is fontName + size.
+            fontCache put: font at: font.
+          }.
+          Tcl eval: '.text configure -font "%s"' % [font].
+        }.
+      }.
+    }.
+    my DefaultTheme is Theme cnew: {
+      initWithName: 'Default'.
+
+      bgcolor => 'white'.
+      fgcolor => 'black'.
+    }.
+    my PastelTheme is Theme cnew: {
+      initWithName: 'Pastel'.
+
+      bgcolor => '#7789cb'.
+      fgcolor => 'black'.
+    }.
+    my MonokaiTheme is Theme cnew: {
+      initWithName: 'Monokai'.
+
+      bgcolor => '#272822'.
+      fgcolor => '#F8F8F2'.
+      cursorcolor => '#F8F8F0'.
+      selectioncolor => '#49483E'.
+      my palette
+        put: '#E6DB74' at: 'yellow', put: '#AE81FF' at: 'purple',
+        put: '#F92672' at: 'red',    put: '#66D9EF' at: 'cyan',
+        put: '#A6E22E' at: 'green',  put: '#005aaa' at: 'blue',
+        put: '#E6DB74' at: 'Yellow', put: '#AE81FF' at: 'Purple',
+        put: '#F92672' at: 'Red',    put: '#66D9EF' at: 'Cyan',
+        put: '#A6E22E' at: 'Green',  put: '#005aaa' at: 'Blue'.
+    }.
+    __scratchpad is my Scratchpad is Object cnew: {:self
+        currentTheme => const DefaultTheme.
+        on: 'help' do: {\ helpString }.
+        genAccessors: ['currentTheme'].
+        on: 'exit' do: {
+            Program exit.
+        }.
+    }.
+}.
+
+var evaluate-or-error is {\:code:start:end
+  [end, (Reflect run: {:code ^code eval.} inContextAsMain: __eval_context arguments: [code])].
+} catch: {:e
+  var ex is e exceptionInfo.
+  var st is start split: '.', fmap: \:x x toNumber.
+  var exc is Tcl valueOf: '.text index {%s + %s chars}' % [start, ex last - 2].
+  ^[exc, Colors % [e toString, \red] + ' =>'].
+}.
+
+var load-and-apply-theme is Tcl fnOf: {\:code :obj
+  code is code rightTrim ~ 's/\\.$//'.
+  { obj is Reflect run: {:code ^('( $$code ) beCurrent') eval.} inContextAsMain: __eval_context arguments: [code]. } catch: {:e
+    Tcl eval: 'ERROR { $$e }'.
+  }, run.
+  ^obj.
+}.
+
+import Library/Utils/Highlight.
+var highlight is Tcl fnOf: {:txt ^Highlight highlight: txt html: False.}.
+
+Tcl proc: 'colorize' args: [] body: (
+   ?>
+   set ins [.text index insert]
+   set init [expr "floor($ins)"]
+   set txt [%s [.text get $init $ins]]
+   .text delete $init $ins
+   .text mark set index $init
+   .text insert $init $txt
+   <? % [highlight]
+ ).
+
+Tcl proc: 'ctrExecute' args: [] body: (
+  ?>
+  set range [.text tag ranges sel]
+  if {[llength $range] == 0} {
+    set ins [.text index insert]
+    set init [expr "floor($ins)"]
+    set range [list $init $ins]
+  }
+  set txt [regsub {\.$} [string trimright [.text get {*}$range]] {}]
+  set end [lindex $range 1]
+  # Terrible terrible, get the start of next line
+  set nextline [expr "floor($end+1)"]
+  # magically execute this thing
+  set _res [%s $txt "[lindex $range 0]" "$nextline"]
+  set result [lindex $_res 1]
+  set insline [lindex $_res 0]
+  .text tag remove sel 0.0 end
+  .text mark set insert $insline
+  if { $nextline == $insline } {
+    .text insert $insline "\n"
+  }
+  .text insert $insline $result
+  set endtag [.text index insert]
+  .text tag add sel $insline $endtag
+  .text mark set insert $endtag
+  <? % [(Tcl fnOf: evaluate-or-error)]
+).
+
+Tcl proc: 'handle_menu' args: ['w'] body: (
+  ?>
+    $w add command -label save -command %s
+    $w add command -label load -command %s
+    $w add command -label "load theme" -command %s
+    $w add command -label "save theme" -command %s
+  <? % [
+    (Tcl fnOf: {
+      var path is Tcl valueOf: 'tk_getSaveFile -defaultextension {.ctr} -title "Save into..."'
+      path = '' ifTrue: { ^Nil. }.
+      var data is Tcl valueOf: '.text get 0.0 end'.
+      File new: path, write: data, close.
+    }),
+    (Tcl fnOf: {
+      var ret is False.
+      Tcl eval: 'set path [tk_getOpenFile -title "Load from..."]'.
+      Tcl eval: 'if {$path == ""} { %s }' % [(Tcl fnOf: { const ret is True. })].
+      ret ifTrue: {
+        ^me.
+      }.
+      Tcl eval: 'set file [open $path r]'.
+      Tcl eval: 'set data [read $file]'.
+      Tcl eval: 'close $file'.
+      Tcl eval: '.text delete 0.0 end'.
+      Tcl eval: '.text insert 0.0 [$$highlight $data]'.
+    }),
+    (Tcl fnOf: {
+      Tcl eval: 'set path [tk_getOpenFile -title "Load from..."]'.
+      Tcl eval: 'if {$path == ""} { return }'.
+      Tcl eval: 'set file [open $path r]'.
+      Tcl eval: 'set data [read $file]'.
+      Tcl eval: 'close $file'.
+      Tcl eval: '%s $data' % [load-and-apply-theme].
+    }),
+    (Tcl fnOf: {
+      var theme is __scratchpad currentTheme.
+      var path is Tcl valueOf: 'tk_getSaveFile -defaultextension {.ctr} -initialfile "%s" -title "Save theme into..."' % [theme name].
+      path = '' ifTrue: { ^Nil. }.
+      File new: path, write: theme describe, close.
+    })
+  ]
+).
+
+Tcl eval: ?>
+source ansicolor.tcl
+wm title . "Citron Scratchpad"
+menu .menu -type menubar
+pack .menu -side top -fill both
+handle_menu .menu
+ansicolor::text .text -yscrollcommand ".scroll set" -setgrid true
+bind .text <KeyRelease-F5> "ctrExecute"
+<?
++ (syn either: 'bind .text <KeyRelease> colorize' or: 'bind .text <Return> colorize')
++
+?>
+scrollbar .scroll -command ".text yview"
+pack .scroll -side right -fill y
+pack .text -expand yes -fill both
+<?.
+
+evaluate-or-error['DefaultTheme beCurrent'].
+
+Tcl eval: '.text insert 0.0 {' + helpString + '}'.
+
+{^True.} whileTrue: {
+  Tcl update.
+}.

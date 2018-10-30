@@ -33,7 +33,8 @@ ctr_code_pragma oneline_p  = {.type = 't',.value = 0},
                 flex_const = {.type = 'o',.value = 0},
                 regex_lc   = {.type = 't',.value = 0},
                 callshorth = {.type = 'o',.value = CTR_TOKEN_TUPOPEN,.value_e = CTR_TOKEN_TUPCLOSE},
-                extpragmas = {.type = 'o',.value = 0};
+                extpragmas = {.type = 'o',.value = 0},
+                nextlazy   = {.type = 't',.value = 0};
 
 /**
  * CommandLine Display Welcome Message
@@ -52,7 +53,7 @@ ctr_cli_welcome (char *invoked_by)
   puts ("\t-c | --compile : serialize AST to stdout and exit");
   puts ("\t-fc | --from-compiled : assume file is a serialized AST, execute that");
   puts ("\t-d | enable debug mode");
-  puts ("\t-e | read from stdin");
+  puts ("\t-- | read from stdin");
   puts ("\t--no-std | launch without the stdlib");
   puts ("\t--ext | print ext path and exit");
   printf ("\n");
@@ -107,7 +108,7 @@ ctr_cli_read_args (int argc, char *argv[])
 	compile_and_quit = 2;
       else if (strcmp (argv[0], "-d") == 0)
 	debug = 1;
-      else if (strcmp (argv[0], "-e") == 0)
+      else if (strcmp (argv[0], "--") == 0)
 	from_stdin = 1;
       else if (strcmp (argv[0], "--ext") == 0)
 	{
@@ -138,9 +139,10 @@ void ctr_initialize_ex() {
   regexLineCheck = &regex_lc;
   callShorthand = &callshorth;
   extensionsPra = &extpragmas;
+  nextCallLazy = &nextlazy;
 
   SystemTZ = getenv("TZ") ?: "UTC";
-  
+
   ctr_gc_mode = 1;		/* default GC mode: activate GC */
   ctr_gc_memlimit = 8388608;
   CTR_LIMIT_MEM = 1;		//enfore GC

@@ -21,6 +21,12 @@ Map on: 'fromArray:' do: {:arr
   ^map.
 }.
 
+Map on: 'toArray' do: {
+  var arr is Array new.
+  each: {:k:v arr push: [k, v]. }.
+  ^arr.
+}.
+
 Map on: 'copy' do: {
   var m is Map new.
   each: {:k:v m put: v at: k.}.

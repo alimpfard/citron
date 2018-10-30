@@ -1,3 +1,5 @@
+INTO ?= ../../mods/sdl
+
 all: clean compile copy
 
 clean:
@@ -7,5 +9,5 @@ compile:
 	${CC} ${EXTRAS} -shared -fPIC -lSDL_gfx -lSDL_ttf -lSDL_image `sdl-config --libs --cflags` sdl.c -o sdl.so
 
 copy:
-	rm -f ../../mods/sdl/libctrsdl.so
-	cp sdl.so ../../mods/sdl/libctrsdl.so
+	rm -f $(INTO)/libctrsdl.so
+	cp sdl.so $(INTO)/libctrsdl.so

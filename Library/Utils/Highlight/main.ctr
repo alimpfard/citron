@@ -90,25 +90,26 @@ Highlight on: 'highlight:' do: {:code:html
           var string is AST getlexbuf.
           var in_escape is False.
           var begin is '\''.
-          var maybe_in_quot is False.
+          # var maybe_in_quot is False.
           var delet_this is 0.
+          # var slen is string length.
           string characters each: {:i:c
             var justInEscape is False.
-            maybe_in_quot ifTrue: {
-              maybe_in_quot is False.
-              (c = '?') ifTrue: {
-                this_thing append: c.
-                begin is '?>'.
-                rlen -=: 1.
-                True continue.
-              }.
-            }.
+            # maybe_in_quot ifTrue: {
+            #   maybe_in_quot is False.
+            #   (c = '?') & (slen - 1 = i) ifTrue: {
+            #     this_thing append: c.
+            #     begin is '?>'.
+            #     rlen -=: 1.
+            #     True break.
+            #   }.
+            # }.
             (c = '\'') & (in_escape not) ifTrue: { this_thing append: c. True break. }.
-            (c = '<') ifTrue: {
-              this_thing append: c.
-              maybe_in_quot is True.
-              True break.
-            }.
+            # (c = '<') & (slen - 2 = i) ifTrue: {
+            #   this_thing append: c.
+            #   maybe_in_quot is True.
+            #   True continue.
+            # }.
             (c = '\\') ifTrue: {
               in_escape either: {
                 in_escape is False.

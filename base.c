@@ -6556,6 +6556,12 @@ ctr_is_primitive (ctr_object * object)
     || object == CtrStdReflect || object == CtrStdReflect_cons || object == CtrStdFiber || object == CtrStdThread || object == CtrStdSymbol;
 }
 
+int strchru(char const* restrict str, int length, char c) {
+  int i = 0;
+  for (;i<length&&str[i++]!=c;);
+  return i<length?i-1:i;
+}
+
 //Stack-trace
 ctr_object *
 ctr_get_stack_trace ()
@@ -6759,7 +6765,8 @@ ctr_internal_ex_data()
 if (lineno == -1 && mapItem->node == stackNode)
   {
     lineno = mapItem->line;
-    pos = mapItem->p_ptr - mapItem->s_ptr - stackNode->vlen;
+    int firstsec = strchru(stackNode->value, stackNode->vlen, ':');
+    pos = mapItem->p_ptr - mapItem->s_ptr - firstsec;
     break;
   }
 mapItem = mapItem->next;

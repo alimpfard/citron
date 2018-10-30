@@ -30,7 +30,7 @@ var __eval_context is Object cnew: {
         fgcolor => 'red'.
         cursorcolor => 'black'.
         selectioncolor => 'lightgray'.
-        font => Nil.
+        font => 'DejaVu Sans Mono'.
         fontsize => Nil.
         palette => Map new
           put: 'black'  at: 'black', put: 'red'     at: 'red',
@@ -44,7 +44,7 @@ var __eval_context is Object cnew: {
 
       }, initWithName: 'Base'.
       on: 'describe' do: {
-        ^'Theme{bg: %s, fg: %s, cursor: %s, sel: %s} {font: %s(%s) palette: (%L)}'
+        ^'Theme{bg: %s, fg: %s, cursor: %s, sel: %s} {font: %s(%s), palette: (%L)}'
           %
         [my bgcolor, my fgcolor, my cursorcolor, my selectioncolor, my font, my fontsize, (my palette kvlist: \:kv '%s: %s' % kv)].
       }.
@@ -56,12 +56,12 @@ var __eval_context is Object cnew: {
         }.
         Tcl eval: '.text configure -selectbackground "%s" -insertbackground "%s"' % [my selectioncolor, my cursorcolor].
         my font isNil ifFalse: {
-          var font is (var fontCache is const fontCache) at: (var fontName is my font).
-          var size is my fontsize or: 12.
+          var size is my fontsize or: 10.
+          var font is (var fontCache is const fontCache) at: (var fontName is my font) + size.
           font isNil ifTrue: {
-            Tcl eval: 'font create "%s" -family "%s" -size $$size' % [fontName, fontName].
-            fontCache put: fontName at: fontName.
-            font is fontName.
+            Tcl eval: 'font create "%s" -family "%s" -size $$size' % [fontName + size, fontName].
+            font is fontName + size.
+            fontCache put: font at: font.
           }.
           Tcl eval: '.text configure -font "%s"' % [font].
         }.

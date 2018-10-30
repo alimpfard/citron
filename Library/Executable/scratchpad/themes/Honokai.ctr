@@ -5,7 +5,7 @@ my HonokaiTheme is (Themes at: 'Base') cnew: {
   fgcolor => '#99a19b'.
   cursorcolor => '#feeae6'.
   selectioncolor => '#dadfec'.
-  font => 'DejaVu Sans Mono'.
+  font => 'Courier New'.
   fontsize => 12.
   my palette
     put: '#d4b700' at: 'yellow', put: '#ae3283' at: 'purple',

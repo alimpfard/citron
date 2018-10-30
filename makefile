@@ -144,17 +144,20 @@ war:
 
 modules:
 	# tcl
-	pacman -S --noconfirm mingw64/mingw-w64-x86_64-tcl mingw64/mingw-w64-x86_64-tk
+	pacman -S --overwrite '*' --noconfirm mingw64/mingw-w64-x86_64-tcl mingw64/mingw-w64-x86_64-tk
 	# fuckin windows shit
 	# create a symlink so ld will be happy
 	mkdir -p /usr/lib/
 	# assumptions are bad, apparently
-	echo ============================================================
-	pacman -Ql mingw-w64-x86_64-tcl | grep 'libtcl86.dll.a' | cut -d' ' -f2
-	echo ============================================================
 	ln -s `pacman -Ql mingw-w64-x86_64-tcl | grep 'libtcl86.dll.a' | cut -d' ' -f2` /usr/lib/libtcl8.6.a
+	#grab lib/tcl86 and tk
+	mkdir -p lib
+	cp -r `pacman -Ql mingw-w64-x86_64-tcl | grep 'lib/tcl8.6/$$' | cut -d' ' -f2` lib
+	cp -r `pacman -Ql mingw-w64-x86_64-tk | grep 'lib/tk8.6/$$' | cut -d' ' -f2` lib
 	$(CC) -fopenmp $(CFLAGS) -static -c modules.c -o modules.o
 	cp /mingw64/bin/tcl86.dll tcl86.dll
+	mkdir bin
+	cp /mingw64/bin/tk86.dll bin/tk86.dll
 	cp /mingw64/bin/zlib1.dll zlib1.dll
 	# TODO: the rest of the modules
 
@@ -163,7 +166,7 @@ package:
 	# really, how lazy can y'all get?
 	mkdir -p package/prepared/basemods
 	cp misc/citron_windows.bat package/prepared/citron.bat
-	cp -r image examples docs extensions Library *.dll ctr.exe eval compile.ctr package/prepared
+	cp -r image examples docs extensions Library lib *.dll ctr.exe eval compile.ctr package/prepared
 	cp dist_windows package/prepared/ctr.bat
 	cp misc/prepare_install.ctr package/prepare_install.ctr
 	cp misc/install.bat install.bat

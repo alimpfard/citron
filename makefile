@@ -148,7 +148,11 @@ modules:
 	# fuckin windows shit
 	# create a symlink so ld will be happy
 	mkdir -p /usr/lib/
-	ln -s /mingw64/lib/libtcl8.6.dll.a /usr/lib/libtcl8.6.a
+	# assumptions are bad, apparently
+	echo ============================================================
+	pacman -Ql mingw-w64-x86_64-tcl | grep 'libtcl86.dll.a' | cut -d' ' -f2
+	echo ============================================================
+	ln -s `pacman -Ql mingw-w64-x86_64-tcl | grep 'libtcl86.dll.a' | cut -d' ' -f2` /usr/lib/libtcl8.6.a
 	$(CC) -fopenmp $(CFLAGS) -static -c modules.c -o modules.o
 	cp /mingw64/bin/tcl86.dll tcl86.dll
 	cp /mingw64/bin/zlib1.dll zlib1.dll

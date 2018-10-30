@@ -147,11 +147,13 @@ modules:
 	pacman -S --noconfirm mingw64/mingw-w64-x86_64-tcl mingw64/mingw-w64-x86_64-tk
 	# fuckin windows shit
 	# create a symlink so ld will be happy
+	mkdir -p /usr/lib/
 	ln -s /mingw64/lib/libtcl8.6.dll.a /usr/lib/libtcl8.6.a
 	$(CC) -fopenmp $(CFLAGS) -static -c modules.c -o modules.o
 	cp /mingw64/bin/tcl86.dll tcl86.dll
 	cp /mingw64/bin/zlib1.dll zlib1.dll
-	
+	# TODO: the rest of the modules
+
 package:
 	# create a package for windows people
 	# really, how lazy can y'all get?

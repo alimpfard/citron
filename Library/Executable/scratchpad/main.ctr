@@ -210,9 +210,9 @@ Tcl proc: 'handle_menu' args: ['w'] body: (
       Tcl eval: '.text insert 0.0 [$$highlight $data]'.
     }),
     (Tcl fnOf: {
-      Tcl eval: 'set path [tk_getOpenFile -title "Load from..."]'.
-      Tcl eval: 'if {$path == ""} { return }'.
-      Tcl eval: 'set file [open $path r]'.
+      var path is Tcl valueOf: 'tk_getOpenFile -title "Load from..."'.
+      path = '' ifTrue: { ^Nil. }.
+      Tcl eval: 'set file [open "%s" r]' % [path escapeDoubleQuotes].
       Tcl eval: 'set data [read $file]'.
       Tcl eval: 'close $file'.
       Tcl eval: '%s $data' % [load-and-apply-theme].
@@ -247,6 +247,6 @@ evaluate-or-error['DefaultTheme beCurrent'].
 
 Tcl eval: '.text insert 0.0 {' + helpString + '}'.
 
-{^True.} whileTrue: {
+{Clock wait: 13 ms. ^True.} whileTrue: {
   Tcl update.
 }.

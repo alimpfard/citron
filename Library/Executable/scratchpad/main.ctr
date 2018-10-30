@@ -21,11 +21,19 @@ var helpString is Colors % [
                 \bright
                 ].
 var fontCache is Map new.
+var __scratchpad is Nil.
 var __eval_context is Object cnew: {
     var Themes is my Themes is Map new.
     var Theme is Object cnew: {
+      genAccessors: [
+        'bgcolor', 'fgcolor',
+        'cursorcolor', 'selectioncolor',
+        'font', 'fontName', 'palette'
+      ].
+      on: 'name' do: {\ my name }.
       on: 'initWithName:' do: {:name
         const Themes put: me at: name.
+        name => name.
         bgcolor => 'white'.
         fgcolor => 'red'.
         cursorcolor => 'black'.
@@ -43,10 +51,22 @@ var __eval_context is Object cnew: {
           put: 'cyan'   at: 'Cyan' , put: 'white'   at: 'White'.
 
       }, initWithName: 'Base'.
+      on: 'serialize' do: {
+        ^
+?>(Themes at: 'Base') cnew: {
+  initWithName: '%{name}'.
+  name => '%{name}'.
+  bgcolor => '%{bgcolor}'.
+  fgcolor => '%{fgcolor}'.
+  cursorcolor => '%{cursorcolor}'.
+  selectioncolor => '%{selectioncolor}'.
+  font => '%{font}'.
+  fontsize => %{fontsize}.
+  palette => %{palette}.
+}<? %~: me.
+      }.
       on: 'describe' do: {
-        ^'Theme{bg: %s, fg: %s, cursor: %s, sel: %s} {font: %s(%s), palette: (%L)}'
-          %
-        [my bgcolor, my fgcolor, my cursorcolor, my selectioncolor, my font, my fontsize, (my palette kvlist: \:kv '%s: %s' % kv)].
+        ^'var %sTheme is %s.' % [my name, me serialize].
       }.
       on: 'beCurrent' do: {
         Scratchpad currentTheme: me.
@@ -94,7 +114,7 @@ var __eval_context is Object cnew: {
         put: '#F92672' at: 'Red',    put: '#66D9EF' at: 'Cyan',
         put: '#A6E22E' at: 'Green',  put: '#005aaa' at: 'Blue'.
     }.
-    my Scratchpad is Object cnew: {:self
+    __scratchpad is my Scratchpad is Object cnew: {:self
         currentTheme => const DefaultTheme.
         on: 'help' do: {\ helpString }.
         genAccessors: ['currentTheme'].
@@ -168,14 +188,13 @@ Tcl proc: 'handle_menu' args: ['w'] body: (
     $w add command -label save -command %s
     $w add command -label load -command %s
     $w add command -label "load theme" -command %s
+    $w add command -label "save theme" -command %s
   <? % [
     (Tcl fnOf: {
-      Tcl eval: '%s [tk_getSaveFile -defaultextension ctr -title "Save into..."]' % [(Tcl fnOf: {:path
-        path = '' ifTrue: { ^me. }.
-        Tcl eval: '%s [.text get 0.0 end]' % [(Tcl fnOf: {:data
-          File new: const path, write: data, close.
-        })].
-      })].
+      var path is Tcl valueOf: 'tk_getSaveFile -defaultextension {.ctr} -title "Save into..."'
+      path = '' ifTrue: { ^Nil. }.
+      var data is Tcl valueOf: '.text get 0.0 end'.
+      File new: path, write: data, close.
     }),
     (Tcl fnOf: {
       var ret is False.
@@ -197,6 +216,12 @@ Tcl proc: 'handle_menu' args: ['w'] body: (
       Tcl eval: 'set data [read $file]'.
       Tcl eval: 'close $file'.
       Tcl eval: '%s $data' % [load-and-apply-theme].
+    }),
+    (Tcl fnOf: {
+      var theme is __scratchpad currentTheme.
+      var path is Tcl valueOf: 'tk_getSaveFile -defaultextension {.ctr} -initialfile "%s" -title "Save theme into..."' % [theme name].
+      path = '' ifTrue: { ^Nil. }.
+      File new: path, write: theme describe, close.
     })
   ]
 ).

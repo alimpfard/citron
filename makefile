@@ -166,7 +166,7 @@ package:
 	# really, how lazy can y'all get?
 	mkdir -p package/prepared/basemods
 	cp misc/citron_windows.bat package/prepared/citron.bat
-	cp -r image examples docs extensions Library lib *.dll ctr.exe eval compile.ctr package/prepared
+	cp -r image examples docs extensions Library lib bin *.dll ctr.exe eval compile.ctr package/prepared
 	cp dist_windows package/prepared/ctr.bat
 	cp misc/prepare_install.ctr package/prepare_install.ctr
 	cp misc/install.bat install.bat

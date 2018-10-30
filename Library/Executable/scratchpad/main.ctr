@@ -94,7 +94,7 @@ var __eval_context is Object cnew: {
         put: '#F92672' at: 'Red',    put: '#66D9EF' at: 'Cyan',
         put: '#A6E22E' at: 'Green',  put: '#005aaa' at: 'Blue'.
     }.
-    my Scratchpad is Object cnew: {
+    my Scratchpad is Object cnew: {:self
         currentTheme => const DefaultTheme.
         on: 'help' do: {\ helpString }.
         genAccessors: ['currentTheme'].
@@ -104,9 +104,14 @@ var __eval_context is Object cnew: {
     }.
 }.
 
-var evaluate-or-error is {\:code
-  Reflect run: {:code ^code eval.} inContextAsMain: __eval_context arguments: [code].
-} catch: {:e ^Colors % [e toString, \red].}.
+var evaluate-or-error is {\:code:start:end
+  [end, (Reflect run: {:code ^code eval.} inContextAsMain: __eval_context arguments: [code])].
+} catch: {:e
+  var ex is e exceptionInfo.
+  var st is start split: '.', fmap: \:x x toNumber.
+  var exc is Tcl valueOf: '.text index {%s + %s chars}' % [start, ex last - 2].
+  ^[exc, Colors % [e toString, \red] + ' =>'].
+}.
 
 var load-and-apply-theme is Tcl fnOf: {\:code :obj
   code is code rightTrim ~ 's/\\.$//'.
@@ -143,16 +148,19 @@ Tcl proc: 'ctrExecute' args: [] body: (
   # Terrible terrible, get the start of next line
   set nextline [expr "floor($end+1)"]
   # magically execute this thing
-  set result "[%s $txt]"
+  set _res [%s $txt "[lindex $range 0]" "$nextline"]
+  set result [lindex $_res 1]
+  set insline [lindex $_res 0]
   .text tag remove sel 0.0 end
-  .text insert $nextline "\n"
-  .text insert $nextline $result
+  .text mark set insert $insline
+  if { $nextline == $insline } {
+    .text insert $insline "\n"
+  }
+  .text insert $insline $result
   set endtag [.text index insert]
-  .text tag add sel $nextline $endtag
+  .text tag add sel $insline $endtag
   .text mark set insert $endtag
-  <? % [(Tcl fnOf: {:code
-    ^evaluate-or-error[code].
-  })]
+  <? % [(Tcl fnOf: evaluate-or-error)]
 ).
 
 Tcl proc: 'handle_menu' args: ['w'] body: (

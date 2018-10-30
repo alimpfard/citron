@@ -3074,8 +3074,10 @@ ctr_string_format_map (ctr_object * myself, ctr_argument * argumentList)
 	}
       if (interpolate)
 	{
-	  args->object = ctr_build_string (buf, fmtct);
+	  ctr_object* prop = args->object = ctr_build_string (buf, fmtct);
 	  args->object = ctr_map_get (objects, args);
+    if (args->object == CtrStdNil)
+      args->object = ctr_internal_object_find_property(objects, prop, 0);
 	  args->object = ctr_send_message (args->object, "toString", 8, NULL);
 	  ctr_string_append (buffer, args);
 	  interpolate = 0;
@@ -3098,10 +3100,12 @@ ctr_string_format_map (ctr_object * myself, ctr_argument * argumentList)
     }
   if (fmtct)
     {
-      args->object = ctr_build_string (buf, fmtct);
+      ctr_object* prop = args->object = ctr_build_string (buf, fmtct);
       if (interpolate)
 	{
 	  args->object = ctr_map_get (objects, args);
+    if (args->object == CtrStdNil)
+      args->object = ctr_internal_object_find_property(objects, prop, 0);
 	  args->object = ctr_send_message (args->object, "toString", 8, NULL);
 	  interpolate = 0;
 	}

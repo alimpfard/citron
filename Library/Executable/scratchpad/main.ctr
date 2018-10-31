@@ -3,7 +3,12 @@ Broom memoryLimit: 1024 * 1024 * 1024 * 9.
 import Library/GUI/TK.
 import Library/Utils/Colors.
 
-var syn is Program env: 'SCRATCHPAD_ENTHIGHLIGHT', isNil.
+var args is [(Program argument: i),, (Generator from: 0 to: Program argCount)].
+
+var syn is args contains: '--no-highlight'.
+var livesyn is syn not & (args contains: '--no-live', not).
+
+syn is syn not.
 
 var helpString is Colors % [
                 '+-------------------------------------------------------+\n' +
@@ -235,7 +240,7 @@ handle_menu .menu
 ansicolor::text .text -yscrollcommand ".scroll set" -setgrid true
 bind .text <KeyRelease-F5> "ctrExecute"
 <?
-+ (syn either: 'bind .text <KeyRelease> colorize' or: 'bind .text <Return> colorize')
++ (syn either: (livesyn either: 'bind .text <KeyRelease> colorize' or: 'bind .text <Return> colorize') or: '')
 +
 ?>
 scrollbar .scroll -command ".text yview"

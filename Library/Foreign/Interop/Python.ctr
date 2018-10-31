@@ -19,7 +19,7 @@ var Python is Object cnew: {:self
     ^my interp eval: expr.
   }.
   on: 'exec:' do: {:stmt
-    ^my interp compile: stmt, exec.
+    my interp compile: stmt, exec.
   }.
   on: 'toPyObject:' do: {:obj
     ^my interp asPyObject: obj.

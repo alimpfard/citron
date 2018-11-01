@@ -1,3 +1,5 @@
+import Library/Data/Map.
+
 var _Python is Python init.
 
 var Python is Object cnew: {:self
@@ -30,9 +32,9 @@ var Python is Object cnew: {:self
   (1..5) each: {:_:s
     self on: 'respondTo:' + ('and:' * s) do: {:self:msg:*args
       # model a call, with the successive args being kwargs
-      var mnames is (msg ~ 's/;/./g') split: ':'. # replace ';' with '.'
+      var mnames is (msg ~ 's/;/./g') split: ':'. # replace ';' with '.', a thing python doesn't allow in id's but we do!
       var fn is my interp eval: mnames head.
-      var kwargs is (Map fromArray: (mnames tail imap: \:i:x [x, (self toPyObject: args @ (i + 1))])).
+      var kwargs is (Map fromArray: (mnames tail imap: {:i:x ^[x, (self toPyObject: args @ (i + 1))].})).
       ^fn applyAll: [kwargs, (self toPyObject: args head)].
     }.
   }.

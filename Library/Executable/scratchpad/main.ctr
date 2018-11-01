@@ -247,6 +247,4 @@ evaluate-or-error['DefaultTheme beCurrent'].
 
 Tcl eval: '.text insert 0.0 {' + helpString + '}'.
 
-{Clock wait: 13 ms. ^True.} whileTrue: {
-  Tcl update.
-}.
+Tcl tkwait: 'window .'.

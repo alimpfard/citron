@@ -1,5 +1,7 @@
 import Library/Utils/Colors.
 
+#:language XFrozen
+
 var Highlight is Object new.
 Highlight on: 'highlight:' do: {:code:html
   var space is html either: '&nbsp;' or: ' '.
@@ -17,7 +19,7 @@ Highlight on: 'highlight:' do: {:code:html
     var last_toc_override is Nil.
     var after_color is ''.
     var noquote is False.
-    token @ 0
+    (frozen _ is
        case: 'RET' do: {
         color is (Colors bold) + (Colors magenta).
         after_color is (Colors bold_off).
@@ -113,7 +115,7 @@ Highlight on: 'highlight:' do: {:code:html
             (c = '\\') ifTrue: {
               in_escape either: {
                 in_escape is False.
-                True continue.
+                justInEscape is True.
               } or: {
                 justInEscape is True.
                 in_escape is True.
@@ -121,19 +123,21 @@ Highlight on: 'highlight:' do: {:code:html
             }.
               justInEscape not & in_escape ifTrue: {
                 this_thing append: (Colors cyan + c + Colors yellow).
-                delet_this +=: (Colors cyan length * 2).
+                delet_this +=: Colors cyan length * 2.
                 in_escape is False.
                 True continue.
               }.
               justInEscape ifTrue: {
                 this_thing append: (Colors cyan + c + Colors yellow).
-                delet_this +=: (Colors cyan length * 2).
+                delet_this +=: Colors cyan length * 2.
+                justInEscape is False.
                 True continue.
               }.
               this_thing append: c.
           }.
           AST lexSkip: this_thing length - delet_this.
-          token put: AST lexpos - (begin length - 1) at: 2.
+          token put: (var length is this_thing length - delet_this + begin length) at: 3.
+          token put: (length + (token at: 2)) at: 2.
           color is Colors yellow.
           this_thing is begin + this_thing.
         } or: {
@@ -219,9 +223,9 @@ Highlight on: 'highlight:' do: {:code:html
     }, default: {
         # Pen writeln: token.
         this_thing is token @ 1.
-    }, switch.
+    }) switch: token @ 0.
     # Pen writeln: [token, this_thing, rlen].
-    returned +=: space * ((token @ 2) - rlen - (this_thing length)).
+    returned +=: space * ((token @ 2) - rlen - (token @ 3)).
     returned +=: color + this_thing + (Colors default) + (after_color).
     #Pen writeln: [token @ 0, last_toc, last_toc_override].
     (token @ 0 = 'CHAIN') & (last_toc = 'REF') ifTrue: { last_toc_override is 'NOT-CHAIN'. }.

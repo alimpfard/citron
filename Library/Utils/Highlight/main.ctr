@@ -4,6 +4,14 @@ import Library/Utils/Colors.
 
 var Highlight is Object new.
 Highlight on: 'highlight:' do: {:code:html
+  # preprocess the code to get rid of pesky comments
+  code is code findPattern: ?>'((\\[^\n]|[^''\n])*)'|\#(.*?)\r?\n<? do: {:groups
+    var cv is groups @ 0.
+    cv startsWith: '#', ifTrue: {
+      ^'\n'.
+    }.
+    ^cv.
+  }.
   var space is html either: '&nbsp;' or: ' '.
   var returned is ''.
   var Tokens is AST feedLexer: code.

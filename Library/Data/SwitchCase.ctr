@@ -18,6 +18,18 @@ CaseConstruct on: 'switch' do: {
   var default is my default or: \:_ {^Nil.}.
   ^ans isNil either: default or: ans.
 }.
+['respondTo:and:and:and:', 'respondTo:and:and:and:and:', 'respondTo:and:and:and:and:and:', 'respondTo:'] each_v: {:msgv
+  CaseConstruct on: msgv do: {:self:msg:*args
+    msg is msg split: ':'.
+    msg last = 'do' ifFalse: {
+      thisBlock error: 'CaseConstruct expectes (case:)+do:'.
+    }.
+    msg is args pop.
+    args each: {:_:v
+      self case: v do: msg.
+    }.
+  }.
+}.
 Object on: 'case:do:' do: { :s :b
   var ret is const CaseConstruct new initFor: me.
   ^ret case: s do: b.

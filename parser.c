@@ -26,8 +26,8 @@ ctr_tnode *ctr_cparse_expr (int);
 ctr_tnode *ctr_cparse_false ();
 ctr_tnode *ctr_cparse_fin ();
 ctr_tnode *ctr_cparse_list_comp ();
-ctr_tnode *ctr_cparse_lit_esc ();
-ctr_tnode *ctr_cparse_message ();
+ctr_tnode *ctr_cparse_lit_esc (int opt);
+ctr_tnode *ctr_cparse_message (int mode);
 ctr_tlistitem *ctr_cparse_messages (ctr_tnode *, int);
 ctr_tnode *ctr_cparse_nil ();
 ctr_tnode *ctr_cparse_number ();
@@ -147,6 +147,7 @@ ctr_cparse_create_node (int type)
  * - precedence mode 1: as argument of keyword message (allows processing of unary message and binary message)
  * - precedence mode 2: as argument of binary message (only allows processing of unary message)
  */
+const static char* DOLLAR_SIGN = "$";
 ctr_tnode *
 ctr_cparse_message (int mode)
 {
@@ -189,6 +190,7 @@ ctr_cparse_message (int mode)
     }
   lookAhead = ctr_clex_tok ();
   ctr_clex_putback ();
+  int replacement = 0;
   if (lookAhead == CTR_TOKEN_COLON)
     {
       if (mode > 0)
@@ -243,7 +245,7 @@ ctr_cparse_message (int mode)
 	      t = ctr_clex_tok ();
 	      if (t != CTR_TOKEN_COLON)
 		{
-		  ctr_cparse_emit_error_unexpected (t, "Expected colon.\n");
+		  ctr_cparse_emit_error_unexpected (t, "Expected a colon.\n");
 		}
 	    }
 	}
@@ -251,13 +253,33 @@ ctr_cparse_message (int mode)
       m->value = msg;
       m->vlen = msgpartlen;
     }
+  else if (t == CTR_TOKEN_BLOCKOPEN)
+    {
+      replacement = CTR_TOKEN_BLOCKCLOSE;
+      goto callShorthand;
+    }
   else if (t == callShorthand->value)
     {
+      callShorthand:;
       ctr_clex_putback();
       memcpy (msg, "applyAll:", 9);
       msgpartlen = 9;
       li = ctr_heap_allocate_tracked (sizeof (*li));
-      li->node = ctr_cparse_tuple (callShorthand->value_e);
+      if (nextCallLazy->value == 1 || replacement) {
+        if (!replacement)
+          nextCallLazy->value--;
+        if (ctr_clex_inject_token(CTR_TOKEN_INV, DOLLAR_SIGN, -2, 1)) {
+          ctr_cparse_emit_error_unexpected(t, "lazy call cannot be instantiated at this state");
+          return NULL;
+        }
+        li->node = ctr_cparse_lit_esc(replacement?:callShorthand->value_e);
+      } else if (nextCallLazy->value > 1) {
+        nextCallLazy->value--;
+        li->node = ctr_cparse_tuple (replacement?:callShorthand->value_e);
+      }
+      else
+        li->node = ctr_cparse_tuple (replacement?:callShorthand->value_e);
+      replacement = 0;
       m->type = CTR_AST_NODE_KWMESSAGE;
       m->nodes = li;
       m->value = msg;
@@ -289,8 +311,11 @@ ctr_cparse_messages (ctr_tnode * r, int mode)
   int first = 1;
   ctr_tnode *node = NULL;
   /* explicit chaining (,) only allowed for keyword message: Console write: 3 factorial, write: 3 factorial is not possible otherwise. */
-  while ((t == CTR_TOKEN_REF || (t == CTR_TOKEN_CHAIN && node && node->type == CTR_AST_NODE_KWMESSAGE && node->modifier != -2)
-	  || (t == callShorthand->value)))
+  while (   t == CTR_TOKEN_REF
+        || (t == CTR_TOKEN_CHAIN && node && node->type == CTR_AST_NODE_KWMESSAGE && node->modifier != -2)
+	      || (t == callShorthand->value)
+        || (t == CTR_TOKEN_BLOCKOPEN)
+        )
     {
       if (t == CTR_TOKEN_CHAIN)
 	{
@@ -450,7 +475,7 @@ parse_predicates:;
  * Generates a node for literal escapes
  */
 ctr_tnode *
-ctr_cparse_lit_esc ()
+ctr_cparse_lit_esc (int opt)
 {
   ctr_tnode *r, *v;
   ctr_clex_tok ();
@@ -469,7 +494,7 @@ ctr_cparse_lit_esc ()
       break;
     case -2: // $[]
       ctr_transform_template_expr = 2;
-      r = ctr_cparse_tuple (CTR_TOKEN_TUPCLOSE);
+      r = ctr_cparse_tuple (opt);
       ctr_transform_template_expr = texpr_res;
       break;
     case -4: // $'()
@@ -1189,7 +1214,7 @@ ctr_cparse_receiver ()
     case CTR_TOKEN_TUPOPEN:
       return ctr_cparse_tuple (CTR_TOKEN_TUPCLOSE);
     case CTR_TOKEN_LITERAL_ESC:
-      return ctr_cparse_lit_esc ();
+      return ctr_cparse_lit_esc (CTR_TOKEN_TUPCLOSE);
     case CTR_TOKEN_SYMBOL:
       return ctr_cparse_symbol ();
     default:
@@ -1250,7 +1275,7 @@ ctr_cparse_expr (int mode)
     {
       /* Parse as if we had a "me" before this */
       ctr_clex_load_state (lexer_state);
-      if (ctr_clex_inject_token (CTR_TOKEN_REF, me_s, 2))
+      if (ctr_clex_inject_token (CTR_TOKEN_REF, me_s, 2, 2))
 	ctr_cparse_emit_error_unexpected (t2, "Recipient cannot be followed by a colon in this state.\n");
       return ctr_cparse_expr (mode);
     }

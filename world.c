@@ -1608,11 +1608,7 @@ ctr_set (ctr_object * key, ctr_object * object)
     }
 assign_anyway:
   if (
-<<<<<<< HEAD
           key != generator_end_marker &&
-=======
-          object != generator_end_marker &&
->>>>>>> master
           strncmp (key->value.svalue->value, "me", key->value.svalue->vlen) != 0
     )
     object->lexical_name = key;
@@ -2228,6 +2224,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring (CTR_DICT_INCLUDEHERE), &ctr_file_include_here);
   ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring (CTR_DICT_OPEN), &ctr_file_open);
   ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring (CTR_DICT_CLOSE), &ctr_file_close);
+  ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring ("flush"), &ctr_file_flush);
   ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring (CTR_DICT_READ_BYTES), &ctr_file_read_bytes);
   ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring (CTR_DICT_WRITE_BYTES), &ctr_file_write_bytes);
   ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring (CTR_DICT_SEEK), &ctr_file_seek);
@@ -2363,6 +2360,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdShell, ctr_build_string_from_cstring (CTR_DICT_RESPOND_TO), &ctr_shell_respond_to);
   ctr_internal_create_func (CtrStdShell, ctr_build_string_from_cstring (CTR_DICT_RESPOND_TO_AND), &ctr_shell_respond_to_and);
   ctr_internal_create_func (CtrStdShell, ctr_build_string_from_cstring (CTR_DICT_CALL), &ctr_shell_call);
+  ctr_internal_create_func (CtrStdShell, ctr_build_string_from_cstring ("open:mode:"), &ctr_shell_open);
   ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring (CTR_DICT_SHELL), CtrStdShell, 0);
   ctr_set_link_all (CtrStdShell, CtrStdObject);
   CtrStdShell->info.sticky = 1;

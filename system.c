@@ -10,6 +10,7 @@
 #include <errno.h>
 #include <sys/wait.h>
 #include <sys/ioctl.h>
+#include <sys/fcntl.h>
 #include <syslog.h>
 #include <signal.h>
 #include <sys/socket.h>
@@ -787,6 +788,42 @@ ctr_shell_call (ctr_object * myself, ctr_argument * argumentList)
   return outputString;
 }
 
+// open for writing only
+/**
+ * [Shell] open: [String] mode: [String: 'r'|'w'|'e']
+ *
+ * Opens a write-or-read only stream to the given command
+ *
+ * -> a File
+ */
+ctr_object *
+ctr_shell_open (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_check_permission (CTR_SECPRO_NO_SHELL);
+  ctr_did_side_effect = 1;
+  FILE *stream;
+  ctr_object* ret = CtrStdNil;
+  char* comstring = ctr_heap_allocate_cstring (ctr_internal_cast2string(argumentList->object));
+  char* modestring = ctr_heap_allocate_cstring (ctr_internal_cast2string(argumentList->next->object));
+  if (!(stream = popen(comstring, modestring)))
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("Unable to execute command");
+      goto _exit;
+    }
+  ctr_object *s = ctr_format_str("-Shell[%s]", comstring);
+  ctr_argument arg = {s, NULL};
+  ctr_object *nv = ctr_file_new(CtrStdFile, &arg);
+  ctr_resource *res = ctr_heap_allocate(sizeof *res);
+  nv->value.rvalue = res;
+  res->ptr = stream;
+  res->type = 2;
+  ret = nv;
+  _exit:;
+  ctr_heap_free(comstring);
+  ctr_heap_free(modestring);
+  return ret;
+}
+
 /**
  * [Shell] unpack: [String:Ref], [Object:ctx]
  * assigns the instance to the reference
@@ -1462,6 +1499,11 @@ ctr_command_fork (ctr_object * myself, ctr_argument * argumentList)
   newArgumentList->object = child;
   pipe (ps);
   pipe (ps + 2);
+  for (int i=0; i<4; i++) {
+    // set the descriptors not to block
+    int flags = fcntl(ps[i], F_GETFL, 0);
+    fcntl(ps[i], F_SETFL, flags | O_NONBLOCK);
+  }
   p = fork ();
   if (p < 0)
     {
@@ -1535,6 +1577,18 @@ ctr_command_message (ctr_object * myself, ctr_argument * argumentList)
   return myself;
 }
 
+__attribute__((always_inline))
+inline int istimeout(struct timespec tout, struct timespec now, struct timespec *space) {
+  clock_gettime(CLOCK_MONOTONIC, space);
+  int ssec = space->tv_sec, diff = ssec - now.tv_sec;
+  if (diff > tout.tv_sec)
+    return 1;
+  if (diff == tout.tv_sec)
+    return space->tv_nsec - now.tv_nsec > tout.tv_nsec;
+  // it's smaller
+  return 0;
+}
+
 /**
  * [Program] listen: [Block].
  * [Program] listen: [Block] timeout: [Number {qualification:timespec}]
@@ -1545,7 +1599,7 @@ ctr_command_message (ctr_object * myself, ctr_argument * argumentList)
  * and passed the message that has been received.
 
  * If a timeout is set, and it expires without getting a message,
- * this message will throw.
+ * this message will return False; otherwise it will return True.
  */
 ctr_object *
 ctr_command_listen (ctr_object * myself, ctr_argument * argumentList)
@@ -1560,6 +1614,7 @@ ctr_command_listen (ctr_object * myself, ctr_argument * argumentList)
   q = 0;
   r = myself->value.rvalue;
   ctr_did_side_effect = 1;
+  printf ("Trying to listen on resource %p\n", r);
   if (r == NULL)
     {
       CtrStdFlow = ctr_build_string_from_cstring ("The main program is not allowed to wait for messages.");
@@ -1572,12 +1627,12 @@ ctr_command_listen (ctr_object * myself, ctr_argument * argumentList)
   ctr_size *szptr = &sz;
   ssize_t szcp = sizeof (ctr_size);
   ssize_t readp;
-  int timeout = -1;
+  struct timespec timeout = {-1, 0}, intime;
   _Bool dotime = 0;
   if (argumentList->next && argumentList->next->object) {
     dotime = 1;
     ctr_object* tobj = ctr_internal_cast2number(argumentList->next->object);
-    timeout = tobj->value.nvalue;
+    double t_o = tobj->value.nvalue;
     ctr_object *qual = ctr_internal_object_find_property (tobj,
   							ctr_build_string_from_cstring (CTR_DICT_QUALIFICATION),
   							CTR_CATEGORY_PRIVATE_PROPERTY);
@@ -1585,33 +1640,56 @@ ctr_command_listen (ctr_object * myself, ctr_argument * argumentList)
       {
         char *qualf = ctr_heap_allocate_cstring (qual);
         if (strncasecmp (qualf, "ns", 2) == 0)
-  	  timeout /= 1000000000;
+        {
+  	  timeout.tv_nsec = fmod(t_o, 1000000000);
+      timeout.tv_sec  = t_o / 1000000000;
+        }
         else if (strncasecmp (qualf, "us", 2) == 0)
-  	  timeout /= 1000000;
+        {
+      timeout.tv_sec  = t_o / 1000000;
+      timeout.tv_nsec = fmod(t_o * 1000, 1000000000);
+        }
         else if (strncasecmp (qualf, "ms", 2) == 0)
-  	  timeout /= 1000;
+  	    {
+      timeout.tv_sec = t_o / 1000;
+      timeout.tv_nsec= fmod(t_o * 1000000, 1000000000);
+        }
+        else if (strncasecmp (qualf, "s", 1) == 0)
+      timeout.tv_sec = t_o;
         else if (strncasecmp (qualf, "mi", 2) == 0)
-  	  timeout *= 60;
+  	  timeout.tv_sec = t_o*60;
         else if (strncasecmp (qualf, "ho", 2) == 0)
-  	  timeout *= 60*60;
+  	  timeout.tv_sec = t_o*60*60;
       }
   }
-  time_t t0 = time(NULL);
-  while ((readp = read (fileno (fd), szptr, szcp)) < szcp && (!dotime || (dotime&&time(NULL)-t0<timeout)))
-    //timeout listening if nothing was given
+  struct timespec now;
+  clock_gettime(CLOCK_MONOTONIC, &now);
+  while ((readp = read (fileno (fd), szptr, szcp)) <= szcp && szcp>0)
     {
       if (readp == -1)
 	{
-	  perror ("Error occurred while reading pipe");
+    if (errno!=EAGAIN)
+	     perror ("Error occurred while reading pipe");
+    if (dotime && istimeout(timeout, now, &intime) && szcp == sizeof(ctr_size))
+       break;
 	  continue;
 	}
+      printf("Read %zd bytes from fd %d, with %zd bytes to read\n", readp, fileno(fd), szcp);
       szcp -= readp;
       szptr += readp;
     }
-  if (dotime && time(NULL) - t0 >= timeout) {
-    CtrStdFlow = ctr_build_string_from_cstring("Timeout expired");
-    return myself;
+  if (dotime && istimeout(timeout, now, &intime)) {
+    // CtrStdFlow = ctr_build_string_from_cstring("Timeout expired");
+    if (szcp == 0) goto process_anyway;
+// #ifdef DEBUG
+    printf("We're supposed to read (probably) %zd bytes [%d unread bytes], but we're also supposed to quit due to timeout\n", sz, szcp);
+// #endif
+    return ctr_build_bool(0);
   }
+  process_anyway:;
+// #ifdef DEBUG
+  printf("We're supposed to read (probably) %zd bytes [%zd unread bytes]\n", sz, szcp);
+// #endif
   blob = ctr_heap_allocate (sz);
   char *blobptr = blob;
   szcp = sz;
@@ -1630,7 +1708,9 @@ ctr_command_listen (ctr_object * myself, ctr_argument * argumentList)
   answer = ctr_block_runIt (argumentList->object, newArgumentList);
   ctr_heap_free (blob);
   ctr_heap_free (newArgumentList);
-  return answer;
+  if (!dotime)
+    return answer;
+  return ctr_build_bool(1);
 }
 
 /**

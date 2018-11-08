@@ -1,0 +1,13 @@
+import internal: 'GnuPlotInternal'.
+
+var GnuPlot is GnuPlotInternal.
+
+GnuPlot on: 'plotList:opts:' do: {:self:list:opts
+  opts is opts or: ''.
+  opts isA: Array, ifTrue: {
+    opts is opts join: ' '.
+  }.
+  ^self send:
+    'plot \'-\' using 1:2 $$opts \n\t' + (list imap: \:i:x '\t%s %s' % [i, x], join: '\n') + '\n\te\n'.
+}.
+GnuPlot learn: 'plotList:' means: 'plotList:opts:'.

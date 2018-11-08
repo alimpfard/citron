@@ -1,7 +1,17 @@
 import Library/Utils/Colors.
 
+#:language XFrozen
+
 var Highlight is Object new.
 Highlight on: 'highlight:' do: {:code:html
+  # preprocess the code to get rid of pesky comments
+  code is code findPattern: ?>'((\\[^\n]|[^''\n])*)'|\#(.*?)\r?\n<? do: {:groups
+    var cv is groups @ 0.
+    cv startsWith: '#', ifTrue: {
+      ^'\n'.
+    }.
+    ^cv.
+  }.
   var space is html either: '&nbsp;' or: ' '.
   var returned is ''.
   var Tokens is AST feedLexer: code.
@@ -17,7 +27,7 @@ Highlight on: 'highlight:' do: {:code:html
     var last_toc_override is Nil.
     var after_color is ''.
     var noquote is False.
-    token @ 0
+    (frozen _ is
        case: 'RET' do: {
         color is (Colors bold) + (Colors magenta).
         after_color is (Colors bold_off).
@@ -26,35 +36,42 @@ Highlight on: 'highlight:' do: {:code:html
         # rlen +=: 1.
         color is (Colors bold) + (Colors magenta).
         after_color is (Colors bold_off).
+        token put: 2 at: 3.
         this_thing is 'is'.
     }, case: 'PASSIGNMENT' do: {
         # rlen +=: 1.
         color is (Colors bold) + (Colors magenta).
         after_color is Colors bold_off.
+        token put: 2 at: 3.
         this_thing is '=>'.
     }, case: 'BLOCKCLOSE' do: {
       color is (Colors bold) + (Colors bright) + (Colors green).
       after_color is (Colors bold_off) + (Colors bright_off).
         this_thing is '}'.
+        token put: this_thing length at: 3.
     }, case: 'BLOCKOPEN' do: {
-      color is (Colors bold) + (Colors bright) + (Colors green).
-      after_color is (Colors bold_off) + (Colors bright_off).
+        color is (Colors bold) + (Colors bright) + (Colors green).
+        after_color is (Colors bold_off) + (Colors bright_off).
         this_thing is '{'.
+          token put: this_thing length at: 3.
     }, case: 'BLOCKOPEN_MAP' do: {
       color is (Colors bold) + (Colors bright) + (Colors green).
       after_color is (Colors bold_off) + (Colors bright_off).
         this_thing is ?>{\<?.
+          token put: this_thing length at: 3.
         last_toc_override is 'BLOCKOPEN'.
     }, case: 'BOOLEANNO' do: {
     color is Colors magenta.
         this_thing is 'False'.
+        token put: this_thing length at: 3.
     }, case: 'BOOLEANYES' do: {
     color is Colors magenta.
         this_thing is 'True'.
+        token put: this_thing length at: 3.
     }, case: 'CHAIN' do: {
         color is (Colors white).
         this_thing is ','.
-        rlen +=: 1.
+        token put: this_thing length at: 3.
     }, case: 'COLON' do: {
         this_thing is ':'.
         (last_toc = 'BLOCKOPEN') | (last_toc = 'PARAMN') ifTrue: {
@@ -64,15 +81,17 @@ Highlight on: 'highlight:' do: {:code:html
         }, else: {
           color is Colors magenta.
         }.
-        rlen +=: 1.
+        token put: this_thing length at: 3.
+        token put: (token @ 2 - 1) at: 2.
     }, case: 'DOT' do: {
         this_thing is '.'.
-        rlen +=: 1.
+        token put: this_thing length at: 3.
     }, case: 'FIN' do: {
         done is True.
     }, case: 'NIL' do: {
     color is Colors magenta.
         this_thing is 'Nil'.
+        token put: this_thing length at: 3.
     }, case: 'NUMBER' do: {
         color is Colors green.
         this_thing is (token @ 1) .
@@ -80,39 +99,42 @@ Highlight on: 'highlight:' do: {:code:html
         color is (Colors bold) + (Colors bright) + (Colors green).
         after_color is (Colors bold_off) + (Colors bright_off).
         this_thing is ')'.
+        token put: this_thing length at: 3.
     }, case: 'PAROPEN' do: {
         color is (Colors bold) + (Colors bright) + (Colors green).
         after_color is (Colors bold_off) + (Colors bright_off).
         this_thing is '('.
+        token put: this_thing length at: 3.
     }, case: 'QUOTE' do: {
         this_thing is ''.
         noquote not either: {
           var string is AST getlexbuf.
           var in_escape is False.
           var begin is '\''.
-          var maybe_in_quot is False.
+          # var maybe_in_quot is False.
           var delet_this is 0.
+          # var slen is string length.
           string characters each: {:i:c
             var justInEscape is False.
-            maybe_in_quot ifTrue: {
-              maybe_in_quot is False.
-              (c = '?') ifTrue: {
-                this_thing append: c.
-                begin is '?>'.
-                rlen -=: 1.
-                True continue.
-              }.
-            }.
+            # maybe_in_quot ifTrue: {
+            #   maybe_in_quot is False.
+            #   (c = '?') & (slen - 1 = i) ifTrue: {
+            #     this_thing append: c.
+            #     begin is '?>'.
+            #     rlen -=: 1.
+            #     True break.
+            #   }.
+            # }.
             (c = '\'') & (in_escape not) ifTrue: { this_thing append: c. True break. }.
-            (c = '<') ifTrue: {
-              this_thing append: c.
-              maybe_in_quot is True.
-              True break.
-            }.
+            # (c = '<') & (slen - 2 = i) ifTrue: {
+            #   this_thing append: c.
+            #   maybe_in_quot is True.
+            #   True continue.
+            # }.
             (c = '\\') ifTrue: {
               in_escape either: {
                 in_escape is False.
-                True continue.
+                justInEscape is True.
               } or: {
                 justInEscape is True.
                 in_escape is True.
@@ -120,19 +142,21 @@ Highlight on: 'highlight:' do: {:code:html
             }.
               justInEscape not & in_escape ifTrue: {
                 this_thing append: (Colors cyan + c + Colors yellow).
-                delet_this +=: (Colors cyan length * 2).
+                delet_this +=: Colors cyan length * 2.
                 in_escape is False.
                 True continue.
               }.
               justInEscape ifTrue: {
                 this_thing append: (Colors cyan + c + Colors yellow).
-                delet_this +=: (Colors cyan length * 2).
+                delet_this +=: Colors cyan length * 2.
+                justInEscape is False.
                 True continue.
               }.
               this_thing append: c.
           }.
           AST lexSkip: this_thing length - delet_this.
-          token put: AST lexpos - (begin length - 1) at: 2.
+          token put: (var length is this_thing length - delet_this + begin length) at: 3.
+          token put: AST lexpos at: 2.
           color is Colors yellow.
           this_thing is begin + this_thing.
         } or: {
@@ -197,10 +221,13 @@ Highlight on: 'highlight:' do: {:code:html
             after_color +=: Colors italic_off.
           }.
         } or: {}.
+        token put: this_thing length at: 3.
     }, case: 'TUPOPEN' do: {
         this_thing is '['.
+        token put: this_thing length at: 3.
     }, case: 'TUPCLOSE' do: {
         this_thing is ']'.
+        token put: this_thing length at: 3.
     }, case: 'SYMBOL' do: {
         color is (Colors bold) + (Colors bright) + (Colors green).
         after_color is (Colors bold_off) + (Colors bright_off).
@@ -209,18 +236,20 @@ Highlight on: 'highlight:' do: {:code:html
           ifTrue: { token put: (t @ 2) at: 2. },
           else:   { token put: (t @ 2) at: 2. }.
         this_thing is '\\' + (t @ 1).
+        token put: this_thing length at: 3.
     }, case: 'LITERAL_ESC' do: {
       this_thing is '$'.
       token last case: -1 do: {}, case: -2 do: {},
                  case: -3 do: { this_thing +=: '!'. }, case: -4 do: { this_thing +=: '\''. noquote is True.},
                  switch.
       color is Colors cyan.
+      token put: this_thing length at: 3.
     }, default: {
         # Pen writeln: token.
         this_thing is token @ 1.
-    }, switch.
+    }) switch: token @ 0.
     # Pen writeln: [token, this_thing, rlen].
-    returned +=: space * ((token @ 2) - rlen - (this_thing length)).
+    returned +=: space * ((token @ 2) - rlen - (token @ 3)).
     returned +=: color + this_thing + (Colors default) + (after_color).
     #Pen writeln: [token @ 0, last_toc, last_toc_override].
     (token @ 0 = 'CHAIN') & (last_toc = 'REF') ifTrue: { last_toc_override is 'NOT-CHAIN'. }.

@@ -499,7 +499,7 @@ int     ctr_clex_save_state();
 int     ctr_clex_dump_state(struct lexer_state*);
 int     ctr_clex_restore_state( int id );
 int     ctr_clex_load_state(struct lexer_state);
-int     ctr_clex_inject_token( int token, const char* value, const int vlen );
+int     ctr_clex_inject_token( int token, const char* value, const int vlen, const int real_vlen);
 void    ctr_match_toggle_pragma();
 void    ctr_lex_parse_pragma();
 CTR_H_DECLSPEC char*   ctr_clex_code_init;
@@ -544,6 +544,7 @@ CTR_H_DECLSPEC ctr_code_pragma* oneLineExpressions;
 CTR_H_DECLSPEC ctr_code_pragma* flexibleConstructs;
 CTR_H_DECLSPEC ctr_code_pragma* regexLineCheck;
 CTR_H_DECLSPEC ctr_code_pragma* callShorthand;
+CTR_H_DECLSPEC ctr_code_pragma* nextCallLazy;
 CTR_H_DECLSPEC ctr_code_pragma* extensionsPra;
 
 // XFrozen
@@ -993,6 +994,7 @@ ctr_object* ctr_file_include(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_include_here(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_open(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_close(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_file_flush(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_read_bytes(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_write_bytes(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_seek(ctr_object* myself, ctr_argument* argumentList);
@@ -1107,6 +1109,7 @@ ctr_object* ctr_slurp_respond_to_and(ctr_object* myself, ctr_argument* argumentL
  * Shell Interface
  */
 ctr_object* ctr_shell_call(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_shell_open(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_shell_respond_to(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_shell_respond_to_and(ctr_object* myself, ctr_argument* argumentList);
 

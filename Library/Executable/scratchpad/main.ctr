@@ -24,6 +24,7 @@ var helpString is Colors % [
                 \blue,
                 \bright
                 ].
+var executeDefaultBindings is Map new.
 var fontCache is Map new.
 var __scratchpad is Nil.
 var __eval_context is Object cnew: {
@@ -120,6 +121,12 @@ var __eval_context is Object cnew: {
     }.
     __scratchpad is my Scratchpad is Object cnew: {:self
         currentTheme => const DefaultTheme.
+        executeBindings => ['KeyRelease-F5', 'Return'].
+        boundExecute => 0.
+        on: 'cycleExecuteBinding' do: {
+          my boundExecute is (my boundExecute + 1) mod: my executeBindings count.
+        }.
+        on: 'currentExecuteBinding' do: {\ my executeBindings @ my boundExecute. }.
         on: 'help' do: {\ helpString }.
         genAccessors: ['currentTheme'].
         on: 'exit' do: {
@@ -181,13 +188,17 @@ Tcl proc: 'ctrExecute' args: [] body: (
   set insline [lindex $_res 0]
   .text tag remove sel 0.0 end
   .text mark set insert $insline
+  set tend [.text index end]
   if { $nextline == $insline } {
     .text insert $insline "\n"
   }
   .text insert $insline $result
+  if { $nextline == $tend } {
+    .text insert [.text index insert] "\n"
+  }
   set endtag [.text index insert]
-  .text tag add sel $insline $endtag
   .text mark set insert $endtag
+  .text tag add sel $insline $endtag
   <? % [(Tcl fnOf: evaluate-or-error)]
 ).
 
@@ -197,6 +208,7 @@ Tcl proc: 'handle_menu' args: ['w'] body: (
     $w add command -label load -command %s
     $w add command -label "load theme" -command %s
     $w add command -label "save theme" -command %s
+    $w add command -label "exec on Return" -command "%s $w"
   <? % [
     (Tcl fnOf: {
       var path is Tcl valueOf: 'tk_getSaveFile -defaultextension {.ctr} -title "Save into..."'.
@@ -230,6 +242,14 @@ Tcl proc: 'handle_menu' args: ['w'] body: (
       var path is Tcl valueOf: 'tk_getSaveFile -defaultextension {.ctr} -initialfile "%s" -title "Save theme into..."' % [theme name].
       path = '' ifTrue: { ^Nil. }.
       File new: path, write: theme describe, close.
+    }),
+    (Tcl fnOf: {:w
+      var oldBinding is __scratchpad currentExecuteBinding.
+      var currentBinding is __scratchpad cycleExecuteBinding currentExecuteBinding.
+      Tcl eval: 'bind .text <%s> {}' % [oldBinding].
+      Tcl eval: 'bind .text <%s> ctrExecute' % [currentBinding].
+      Tcl eval: 'bind .text <%s> +break' % [currentBinding].
+      Tcl eval: '%s entryconfigure 5 -label "exec on %s"' % [w, oldBinding].
     })
   ]
 ).

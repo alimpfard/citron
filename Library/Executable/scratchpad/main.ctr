@@ -10,6 +10,8 @@ var livesyn is syn not & (args contains: '--no-live', not).
 
 syn is syn not.
 
+Colors mode: True.
+
 var helpString is Colors % [
                 '+-------------------------------------------------------+\n' +
                 '|                     Scratchpad Help                   |\n' +
@@ -18,9 +20,6 @@ var helpString is Colors % [
                 '|     Pressing F5 without selecting anything will       |\n' +
                 '|     execute from the beginning of the line until      |\n' +
                 '|     the cursor                                        |\n' +
-                '|     Comments are not going to work, so use strings    |\n' +
-                '|     instead; they do pretty much the same thing here  |\n' +
-                '|                                                       |\n' +
                 '+-------------------------------------------------------+\n',
                 \blue,
                 \bright
@@ -147,7 +146,11 @@ var load-and-apply-theme is Tcl fnOf: {\:code :obj
 }.
 
 import Library/Utils/Highlight.
-var highlight is Tcl fnOf: {:txt ^Highlight highlight: txt html: False.}.
+var highlight is Tcl fnOf: {:txt
+  ^txt findPattern: ?>^([^#]+)(.*)$<? do: {:groups
+    ^(Highlight highlight: groups @ 1 html: False) + (Colors paint: groups @ 2 options: [[100, 100, 100]]).
+  }.
+}.
 
 Tcl proc: 'colorize' args: [] body: (
    ?>

@@ -25,10 +25,10 @@ Colors on: 'cnew:' do: {
 }.
 
 Colors on: '%' do: {:arr
-  ^me message: 'paint:' arguments: arr.
+  ^me paint: arr head options: arr tail.
 }.
 
-Colors on: 'paint:' do: {:str:*options
+Colors on: 'paint:options:' do: {:str:options
   var cache is my cache.
   ^(my mode = 0) | (options count = 0)
     either: {\ str toString }
@@ -155,5 +155,6 @@ Colors on: 'stripColors:' do: {\:str
 }.
 
 Colors on: 'respondTo:' do: {:name ^me simple: name background: False. }.
+Colors learn: 'applyAll:' means: 'paint:'.
 
 import export: Colors as: 'Colors'.

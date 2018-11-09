@@ -322,6 +322,11 @@ ctr_reflect_extst_obj (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_reflect_cb_ac (ctr_object * myself, ctr_argument * argumentList)
 {
+  static ctr_argument arg;
+  if (argumentList->object->info.type == CTR_OBJECT_TYPE_OTNATFUNC) {
+    arg.object = ctr_build_string_from_cstring("native-args");
+    return ctr_array_new_and_push(CtrStdArray, &arg);
+  }
   CTR_ENSURE_TYPE_BLOCK (argumentList->object);
   ctr_tnode *obj = argumentList->object->value.block;
   if (obj == NULL)

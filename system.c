@@ -1674,22 +1674,24 @@ ctr_command_listen (ctr_object * myself, ctr_argument * argumentList)
        break;
 	  continue;
 	}
+#ifdef DEBUG
       printf("Read %zd bytes from fd %d, with %zd bytes to read\n", readp, fileno(fd), szcp);
+#endif
       szcp -= readp;
       szptr += readp;
     }
   if (dotime && istimeout(timeout, now, &intime)) {
     // CtrStdFlow = ctr_build_string_from_cstring("Timeout expired");
     if (szcp == 0) goto process_anyway;
-// #ifdef DEBUG
+#ifdef DEBUG
     printf("We're supposed to read (probably) %zd bytes [%d unread bytes], but we're also supposed to quit due to timeout\n", sz, szcp);
-// #endif
+#endif
     return ctr_build_bool(0);
   }
   process_anyway:;
-// #ifdef DEBUG
+#ifdef DEBUG
   printf("We're supposed to read (probably) %zd bytes [%zd unread bytes]\n", sz, szcp);
-// #endif
+#endif
   blob = ctr_heap_allocate (sz);
   char *blobptr = blob;
   szcp = sz;

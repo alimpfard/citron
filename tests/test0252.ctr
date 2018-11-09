@@ -1,6 +1,6 @@
 
 #c is Clock new: 3600 * 55. #3
-#Pen write: c day, brk.
+# c day.
 
 clock is Clock new.
 
@@ -9,35 +9,35 @@ clock is Clock new.
 clock year: 1981, month: 1, day: 5,
       hour: 13, minute: 15, second: 13.
 
-Pen write: clock, brk.
+ clock.
 
-Pen write: (
+ (
 	(clock year) + '-' + (clock month) + '-' + (clock day) + ' ' +
 	(clock hour) + ':' + (clock minute) + ':' + (clock second) + ' ' +
 	'W' + (clock week) + ' t' + (clock time) + ' ' + (clock zone)
-), brk.
+).
 
 
 clock zone: 'Europe/Amsterdam'.
-Pen write: (
+ (
 	(clock year) + '-' + (clock month) + '-' + (clock day) + ' ' +
 	(clock hour) + ':' + (clock minute) + ':' + (clock second) + ' ' +
 	'W' + (clock week) + ' t' + (clock time) + ' ' + (clock zone)
-), brk.
+).
 
 clock2 is clock new zone: 'Europe/Amsterdam', hour: 8.
 
 
-Pen write: (clock2 format: Nil), brk. #should not cause segfault - Nil
-Pen write: (clock format: 'Clock1 %H'), brk.
-Pen write: (clock2 format: 'Clock2 %H'), brk.
+ (clock2 format: Nil). #should not cause segfault - Nil
+ (clock format: 'Clock1 %H').
+ (clock2 format: 'Clock2 %H').
 
 clock2 zone: 'America/New York'.
-Pen write: (clock format: 'Clock1 %H'), brk.
-Pen write: (clock2 format: 'Clock2 %H'), brk.
+ (clock format: 'Clock1 %H').
+ (clock2 format: 'Clock2 %H').
 
 clock3 is Clock new like: (Clock new zone: 'UTC', hour: 13).
 clock3 is Clock new: clock3 time.
-Pen write: (clock3 format: 'Clock3 %H'), brk.
+ (clock3 format: 'Clock3 %H').
 
 #GTK greet.

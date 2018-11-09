@@ -1,3 +1,5 @@
-#NOAST
-#Test parser error
-Nil keyword: 1 message {}. 
+# test expr {}
+Number on: 'applyAll:' do: {:expr
+  Pen writeln: '$$me ' + expr head evaluate.
+}.
+Nil keyword: 1 message { 123 + 321 }.

@@ -1614,7 +1614,9 @@ ctr_command_listen (ctr_object * myself, ctr_argument * argumentList)
   q = 0;
   r = myself->value.rvalue;
   ctr_did_side_effect = 1;
+#ifdef DEBUG
   printf ("Trying to listen on resource %p\n", r);
+#endif
   if (r == NULL)
     {
       CtrStdFlow = ctr_build_string_from_cstring ("The main program is not allowed to wait for messages.");

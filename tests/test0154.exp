@@ -1,3 +1,10 @@
+1 444
 Uncaught error has occurred.
-Parser error, unexpected . ( tests/test0154.ctr: 3)
--> Expected a message recipient.
+Unknown method Nil::'keyword:' was called
+#1 keyword: (tests/test0154.ctr: 5)
+------------------------------------
+The probable cause of the exception: 
+3 | 
+4 | }.
+5 | Nil keyword: 1 message { 123 + 321 }.
+~~~~~~~~~~~~~^

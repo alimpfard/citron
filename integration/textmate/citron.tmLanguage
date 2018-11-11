@@ -332,7 +332,7 @@
         </dict>
         <dict>
           <key>begin</key>
-          <string>(?:(\s+)([^\s\d\x{003a}.\x{002c}\[\]\(\)\{\}\#])(\s+))</string>
+          <string>(?:(\s+)([^\s\d\x{003a}.\x{002c}\[\]\(\)\{\}\#\&apos;])(\s+))</string>
           <key>beginCaptures</key>
           <dict>
             <key>1</key>

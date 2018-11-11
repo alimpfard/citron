@@ -1,7 +1,9 @@
 Broom memoryLimit: 1024 * 1024 * 1024 * 9.
 
+
 import Library/GUI/TK.
 import Library/Utils/Colors.
+import Library/Data/Map.
 
 var args is [(Program argument: i),, (Generator from: 0 to: Program argCount)].
 
@@ -24,9 +26,60 @@ var helpString is Colors % [
                 \blue,
                 \bright
                 ].
+var executeDefaultBindings is Map new.
 var fontCache is Map new.
 var __scratchpad is Nil.
 var __eval_context is Object cnew: {
+  var newWindowCounter is 0.
+  my properties-of is {:object
+    object isA: Map, ifTrue: {^object.}.
+    object isA: Array, ifTrue: {
+      ^Map fromArray: (object imap: \:i:x ['#$$i', x]).
+    }.
+    ^Map fromArray: ((Reflect getPropertiesOf: object) fmap: \:x [x, (Reflect getProperty: x ofObject: object)]). }.
+  my proper-name-ize is {:name ^name ~ 's/\\s/_/g'.}.
+  my inspect-object is {:object
+    var actual-arglist is {:list
+      list count = 0 ifTrue: { ^'--nothing--'. }.
+      list head = 'self' ifTrue: { list shift. }.
+      ^list join: ', '.
+    }.
+    var windowId is '.gui' + (const newWindowCounter +=: 1).
+    Tcl toplevel: windowId.
+    Tcl eval: 'set w ' + windowId.
+    Tcl eval: 'wm title $w {Inspect {%s}}' % [(Reflect strTypeOf: object, ~ ?>s/(\[|\])/$1/g<?)].
+    Tcl ttk->treeview: '$w.ptree' columns: '{type value}'.
+    Tcl eval: '$w.ptree heading #0 -text Name'.
+    Tcl eval: '$w.ptree heading type -text Type'.
+    Tcl eval: '$w.ptree heading value -text Value'.
+    Reflect generateLinkTree: object, tail each: {:i:parent
+      Tcl eval: '$w.ptree insert "" end -text {parent%s} -values [list {%s} {%s}] -tags "show-inspect-parent-%d"' % [i, (Reflect strTypeOf: parent), parent, i].
+      Tcl eval: '$w.ptree tag bind show-inspect-parent-%d <2> %s' % [i, (Tcl fnOf: {\ parent inspect. Nil.})].
+    }.
+    Tcl eval: '$w.ptree insert "" end -text "------" -values [list "------" "-------"]'.
+    properties-of[object] each: {:pname:prop
+      Tcl eval: '$w.ptree insert "" end -text {%s} -values [list {%s} {%s}] -tags "show-view show-inspect-%s"' % [pname, (Reflect strTypeOf: prop), prop toString, proper-name-ize[pname]].
+      Tcl eval: '$w.ptree tag bind show-inspect-%s <2> %s' % [proper-name-ize[pname], (Tcl fnOf: {\ prop inspect. Nil.})].
+    }.
+    Tcl eval: '$w.ptree tag bind show-view <1> {
+      set w %s
+      $w.descr delete 0.0 end
+      $w.descr insert 0.0 [lindex [$w.ptree item [$w.ptree focus] -values] 1]
+    }' % [windowId].
+    Tcl text: '$w.descr'.
+    Tcl ttk->treeview: '$w.mtree' columns: '{num_args}'.
+    Tcl eval: '$w.mtree heading #0 -text Method'.
+    Tcl eval: '$w.mtree heading num_args -text Arguments'.
+    Reflect getMethodsOf: object, each_v: {:pname
+      var prop is object &responder: pname.
+      Pen writeln: [pname, prop].
+      Tcl eval: '$w.mtree insert "" end -text {%s} -values [list {%s}]' % [pname, (actual-arglist[(Reflect argumentListOf: prop)])].
+    }.
+    Tcl pack: '$w.descr' fill: 'both' side: 'bottom' anchor: 's'.
+    Tcl pack: '$w.mtree' fill: 'x' side: 'right'.
+    Tcl pack: '$w.ptree' fill: 'x' side: 'left'.
+    Tcl tkwait: 'window $w'.
+  }.
     var Themes is my Themes is Map new.
     var Theme is Object cnew: {
       genAccessors: [
@@ -120,6 +173,12 @@ var __eval_context is Object cnew: {
     }.
     __scratchpad is my Scratchpad is Object cnew: {:self
         currentTheme => const DefaultTheme.
+        executeBindings => ['KeyRelease-F5', 'Return'].
+        boundExecute => 0.
+        on: 'cycleExecuteBinding' do: {
+          my boundExecute is (my boundExecute + 1) mod: my executeBindings count.
+        }.
+        on: 'currentExecuteBinding' do: {\ my executeBindings @ my boundExecute. }.
         on: 'help' do: {\ helpString }.
         genAccessors: ['currentTheme'].
         on: 'exit' do: {
@@ -181,13 +240,17 @@ Tcl proc: 'ctrExecute' args: [] body: (
   set insline [lindex $_res 0]
   .text tag remove sel 0.0 end
   .text mark set insert $insline
+  set tend [.text index end]
   if { $nextline == $insline } {
     .text insert $insline "\n"
   }
   .text insert $insline $result
+  if { $nextline == $tend } {
+    .text insert [.text index insert] "\n"
+  }
   set endtag [.text index insert]
-  .text tag add sel $insline $endtag
   .text mark set insert $endtag
+  .text tag add sel $insline $endtag
   <? % [(Tcl fnOf: evaluate-or-error)]
 ).
 
@@ -197,6 +260,7 @@ Tcl proc: 'handle_menu' args: ['w'] body: (
     $w add command -label load -command %s
     $w add command -label "load theme" -command %s
     $w add command -label "save theme" -command %s
+    $w add command -label "exec on Return" -command "%s $w"
   <? % [
     (Tcl fnOf: {
       var path is Tcl valueOf: 'tk_getSaveFile -defaultextension {.ctr} -title "Save into..."'.
@@ -230,9 +294,19 @@ Tcl proc: 'handle_menu' args: ['w'] body: (
       var path is Tcl valueOf: 'tk_getSaveFile -defaultextension {.ctr} -initialfile "%s" -title "Save theme into..."' % [theme name].
       path = '' ifTrue: { ^Nil. }.
       File new: path, write: theme describe, close.
+    }),
+    (Tcl fnOf: {:w
+      var oldBinding is __scratchpad currentExecuteBinding.
+      var currentBinding is __scratchpad cycleExecuteBinding currentExecuteBinding.
+      Tcl eval: 'bind .text <%s> {}' % [oldBinding].
+      Tcl eval: 'bind .text <%s> ctrExecute' % [currentBinding].
+      Tcl eval: 'bind .text <%s> +break' % [currentBinding].
+      Tcl eval: '%s entryconfigure 5 -label "exec on %s"' % [w, oldBinding].
     })
   ]
 ).
+
+Object on: 'inspect' do: {:self inspect-object applyTo: self. }.
 
 Tcl eval: ?>
 source ansicolor.tcl

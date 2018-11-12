@@ -279,11 +279,7 @@ var ParticleSystem is RenderableEntity cnew: {
           surface setPixelWithX: coords head andY: coords last toColor: color.
         }.
       },
-      case: 1 do: {
-        [[2, 2]] each_v: {:coords
-          surface setPixelWithX: coords head andY: coords last toColor: color.
-        }.
-      },
+      case: 1
       case: 2 do: {
         [[2, 2]] each_v: {:coords
           surface setPixelWithX: coords head andY: coords last toColor: color.

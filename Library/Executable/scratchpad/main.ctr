@@ -14,14 +14,19 @@ syn is syn not.
 
 Colors mode: True.
 
+#:declare lazyev and
+var and is {:a:b a evaluate ifFalse: {^False.}. ^b evaluate.}.
+
 var helpString is Colors % [
                 '+-------------------------------------------------------+\n' +
                 '|                     Scratchpad Help                   |\n' +
                 '|                                                       |\n' +
-                '|     Select some range and press F5 to execute it      |\n' +
-                '|     Pressing F5 without selecting anything will       |\n' +
-                '|     execute from the beginning of the line until      |\n' +
-                '|     the cursor                                        |\n' +
+                '|    Select some range and press F5 to execute it       |\n' +
+                '|    Pressing F5 without selecting anything will        |\n' +
+                '|    execute from the beginning of the line until       |\n' +
+                '|    the cursor                                         |\n' +
+                '|    Scratchpad dark theme #{MonokaiTheme beCurrent}#   |\n' +
+                '|    Scratchpad light theme #{DefaultTheme beCurrent}#  |\n' +
                 '+-------------------------------------------------------+\n',
                 \blue,
                 \bright
@@ -72,7 +77,7 @@ var __eval_context is Object cnew: {
     Tcl eval: '$w.mtree heading num_args -text Arguments'.
     Reflect getMethodsOf: object, each_v: {:pname
       var prop is object &responder: pname.
-      Pen writeln: [pname, prop].
+      # Pen writeln: [pname, prop].
       Tcl eval: '$w.mtree insert "" end -text {%s} -values [list {%s}]' % [pname, (actual-arglist[(Reflect argumentListOf: prop)])].
     }.
     Tcl pack: '$w.descr' fill: 'both' side: 'bottom' anchor: 's'.
@@ -195,7 +200,7 @@ var evaluate-or-error is {\:code:start:end
   var exc is Tcl valueOf: '.text index {%s + %s chars}' % [start, ex last - 2].
   ^[exc, Colors % [e toString, \red] + ' =>'].
 }.
-
+var evaluate-or-error-f is Tcl fnOf: evaluate-or-error.
 var load-and-apply-theme is Tcl fnOf: {\:code :obj
   code is code rightTrim ~ 's/\\.$//'.
   { obj is Reflect run: {:code ^('( $$code ) beCurrent') eval.} inContextAsMain: __eval_context arguments: [code]. } catch: {:e
@@ -211,14 +216,25 @@ var highlight is Tcl fnOf: {:txt
   }.
 }.
 
+var line-cmp is {:@d:@a:@b
+  ^(@d head between: @a head and: @b head) `and` (@d last between: @a last and: @b last).
+}.
+
 Tcl proc: 'colorize' args: [] body: (
    ?>
+   set re {\#\{(.+?)\}\#}
    set ins [.text index insert]
    set init [expr "floor($ins)"]
    set txt [%s [.text get $init $ins]]
    .text delete $init $ins
    .text mark set index $init
    .text insert $init $txt
+   set idxs [regexp -all -inline -indices $re [.text get $init [.text index insert]]]
+   foreach {_ start} $idxs {
+     set start [list [lindex $start 0] [expr [lindex $start 1]+1]]
+     set start [lmap a $start [format {.text index "%%s + $a chars"} $init]]
+     .text tag add execute {*}$start
+   }
    <? % [highlight]
  ).
 
@@ -245,13 +261,23 @@ Tcl proc: 'ctrExecute' args: [] body: (
     .text insert $insline "\n"
   }
   .text insert $insline $result
-  if { $nextline == $tend } {
-    .text insert [.text index insert] "\n"
-  }
   set endtag [.text index insert]
   .text mark set insert $endtag
   .text tag add sel $insline $endtag
-  <? % [(Tcl fnOf: evaluate-or-error)]
+  <? % [evaluate-or-error-f]
+).
+
+Tcl proc: 'ctrExecuteEx' args: ['x', 'y'] body: (
+?>
+  set cpos [.text index @$x,$y]
+  set posall [.text tag ranges execute]
+  foreach {start end} $posall {
+    set s [%s $cpos $start $end]
+    if $s break
+  }
+  set code [.text get $start $end]
+  puts [%s $code $start $end]
+<? % [(Tcl fnOf: {:d:a:b ^line-cmp applyAll: ([d, a, b] fmap: \:x x split: '.', fmap: \:x x toNumber).}), evaluate-or-error-f]
 ).
 
 Tcl proc: 'handle_menu' args: ['w'] body: (
@@ -315,7 +341,10 @@ menu .menu -type menubar
 pack .menu -side top -fill both
 handle_menu .menu
 ansicolor::text .text -yscrollcommand ".scroll set" -setgrid true
+.text tag configure execute -underline true
+.text tag bind execute <1> {ctrExecuteEx %x %y}
 bind .text <KeyRelease-F5> "ctrExecute"
+bind .text <<Highlight>> colorize
 <?
 + (syn either: (livesyn either: 'bind .text <KeyRelease> colorize' or: 'bind .text <Return> colorize') or: '')
 +
@@ -328,5 +357,9 @@ pack .text -expand yes -fill both
 evaluate-or-error['DefaultTheme beCurrent'].
 
 Tcl eval: '.text insert 0.0 {' + helpString + '}'.
-
+0 to: (Tcl valueOf: '.text index insert', split: '.', head toNumber) step: 1 do: {:x
+  var v is Tcl valueOf: '.text index {%d.0 lineend}' % [x].
+  Tcl eval: '.text mark set insert $$v'.
+  Tcl eval: 'event generate .text <<Highlight>>'.
+}.
 Tcl tkwait: 'window .'.

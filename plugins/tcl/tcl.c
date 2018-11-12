@@ -84,7 +84,7 @@ static Tcl_Obj* ctr_tcl_as_obj(ctr_object* ctrobj, void* interp) {
       }
       return Tcl_NewDoubleObj(ctrobj->value.nvalue);
     }
-    case CTR_OBJECT_TYPE_OTBOOL: Tcl_NewBooleanObj(ctrobj->value.bvalue);
+    case CTR_OBJECT_TYPE_OTBOOL: return Tcl_NewBooleanObj(ctrobj->value.bvalue);
     case CTR_OBJECT_TYPE_OTSTRING: {
       size_t slen = ctr_getutf8len(ctrobj->value.svalue->value, ctrobj->value.svalue->vlen);
       Tcl_UniChar* inbuf = ctr_heap_allocate(sizeof(Tcl_UniChar)*slen);

@@ -200,7 +200,7 @@ ctr_ast_nth (ctr_object * myself, ctr_argument * argumentList)
     }
   if (!pitem)
     goto err;
-  if (pitem->node->type == CTR_AST_NODE_EMBED)
+  if (pitem->node->type == CTR_AST_NODE_EMBED && pitem->node->modifier == 1)
     {
       return (ctr_object *) (pitem->node->nodes->node);
     }

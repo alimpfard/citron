@@ -105,7 +105,7 @@ ctr_cwlk_message (ctr_tnode * paramNode)
 	result = ctr_cwlk_expr (receiverNode->nodes->node, "\0");
       else
 	{
-	  result = receiverNode->nodes->node;
+	  result = (ctr_object*) receiverNode->nodes->node;
 	}
       break;
     case CTR_AST_NODE_IMMUTABLE:
@@ -301,6 +301,41 @@ ctr_cwlk_assignment (ctr_tnode * node)
   return result;
 }
 
+void execute_if_quote(ctr_tnode* node) {
+  if (node->type == CTR_AST_NODE_EMBED && node->modifier == 0) {
+    node->modifier = 1;
+    node->nodes->node = (ctr_tnode*) ctr_cwlk_expr(node->nodes->node, "");
+    return;
+  }
+  switch (node->type) {
+    case CTR_AST_NODE_CODEBLOCK:
+      execute_if_quote(node->nodes->next->node);
+      return;
+    case CTR_AST_NODE_EXPRMESSAGE:
+    case CTR_AST_NODE_EXPRASSIGNMENT:
+      execute_if_quote(node->nodes->node);
+      execute_if_quote(node->nodes->next->node);
+      return;
+    case CTR_AST_NODE_BINMESSAGE:
+    case CTR_AST_NODE_RAW:
+    case CTR_AST_NODE_NESTED:
+      execute_if_quote(node->nodes->node);
+      return;
+    case CTR_AST_NODE_IMMUTABLE:
+    case CTR_AST_NODE_PROGRAM:
+      node = node->nodes->node;
+    /* Fallthrough */
+    case CTR_AST_NODE_KWMESSAGE:
+    case CTR_AST_NODE_INSTRLIST:
+      for (ctr_tlistitem* instr=node->nodes; instr; instr=instr->next)
+        execute_if_quote(instr->node);
+      return;
+      // TODO X: handle listcomp
+    default:
+      break;
+  }
+}
+
 /**
  * CTRWalkerExpression
  *
@@ -383,6 +418,7 @@ ctr_cwlk_expr (ctr_tnode * node, char *wasReturn)
 	switch (node->modifier)
 	  {
 	  case 1:
+      execute_if_quote(node->nodes->node);
 	    result = ctr_ast_from_node (node->nodes->node);
 	    break;
 	  case 2:

@@ -5,9 +5,9 @@ var tbs is Object cnew: {
   my array is [1,2,3,4,'test', (Object cnew: {my inner is [1].})].
 }.
 var handle is Curl new.
-handle url: 'https://requestb.in/1a5a2s31',
+handle url: 'http://scooterlabs.com/echo', # sorry!
        post: True,
        httpheader: ['content-type: application/json'],
        copypostfields: (JSON serialize: tbs).
 
-Pen write: (handle perform), brk.
+var resp is handle perform.

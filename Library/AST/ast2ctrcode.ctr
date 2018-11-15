@@ -1,6 +1,7 @@
 #:language XFrozen
 
-var ast2ctrcode is {:ast
+var ast2ctrcode is {:self:ast:curindent
+  curindent is curindent or: 0.
   ^(frozen __ is
     case: 'LTRNUM' do: {
       ^ast value.
@@ -21,18 +22,18 @@ var ast2ctrcode is {:ast
     case: 'REFERENCE' do: {
       var value is ast value.
       ^(frozen __ is
-        case: 1 do: {\ 'my %s' },
-        case: 2 do: {\ 'var %s' },
-        case: 3 do: {\ 'const %s' },
-        case: 4 do: {\ 'frozen %s' },
+        case: 'My'     do: {\ 'my %s' },
+        case: 'Var'    do: {\ 'var %s' },
+        case: 'Const'  do: {\ 'const %s' },
+        case: 'Frozen' do: {\ 'frozen %s' },
         default: {\ '%s' }) switch: ast modifier, % [value].
     },
     case: 'EXPRMESSAGE' do: {
-      var rec is ast2ctrcode[ast @ 0].
+      var rec is self[ast @ 0, curindent].
       var ct is ast count.
       ct - 1 times: {:i
         var s is ast @ (i + 1).
-        rec +=: ' ' + ast2ctrcode[s].
+        rec +=: ' ' + self[s, curindent].
         i !=: ct - 2, & (s type = 'KWMESSAGE') ifTrue: { rec +=: ','. }.
       }.
       ^rec.
@@ -41,36 +42,58 @@ var ast2ctrcode is {:ast
       ^ast value.
     },
     case: 'BINMESSAGE' do: {
-      ^ast value + ' ' + ast2ctrcode[ast @ 0].
+      ^ast value + ' ' + self[ast @ 0, curindent].
     },
     case: 'KWMESSAGE' do: {
       var value is ast value split: ':'.
-      ^value imap: \:i:x '%s: %s' % [x, ast2ctrcode[ast @ i]], join: ' '.
+      ^value imap: \:i:x '%s: %s' % [x, self[ast @ i, curindent]], join: ' '.
     },
     case: 'EXPRASSIGNMENT' do: {
-      var ref is ast2ctrcode[(ast at: 0)].
-      var _value is ast2ctrcode[(ast at: 1)].
-      ^_value length > 0 either: { ^'%s is %s' % [ref, value]. } or: ref.
+      var ref is self[(ast at: 0), curindent].
+      var _value is self[(ast at: 1), curindent].
+      ^_value length > 0 either: { ^'%s is %s' % [ref, _value]. } or: ref.
     },
     case: 'SYMBOL' do: {
       ^'\\' + ast value.
     },
     case: 'NESTED' do: {
-      ^'(' + ast2ctrcode[(ast at: 0)] + ')'.
+      var code is '('.
+      var ps is ast at: 0.
+      var tcode is self[ps, curindent].
+      tcode length > 80 ifTrue: { code +=: '\n' + ('  ' * (curindent + 1)). }.
+      code +=: tcode.
+      ^code + ')'.
     },
     case: 'CODEBLOCK' do: {
       var ps is ast at: 0.
       var ins is ast at: 1.
-      var fmt is ast modifier = 'My' either: '{\\%:L %:L}' or: '{%:L %:L}'.
-      ^fmt % ['', (Array new fill: ps count with: \:x ':' + (ps @ x) value), ' ', (Array new fill: ins count with: \:x ast2ctrcode[ins @ x] + '.')].
+      var fmt is ast modifier = 'My' either: '{\\%:L\n%s%:L\n%s}' or: '{%:L\n%s%:L\n%s}'.
+      var cindent is '  ' * (curindent +=: 1).
+      ^fmt % ['',
+              (Array new fill: ps count with: \:x ':' + (ps @ x) value),
+              cindent,
+              '\n' + cindent,
+              (Array new fill: ins count with: \:x self[ins @ x, curindent] + '.'),
+              '  ' * (curindent - 1)
+            ].
     },
     case: 'PROGRAM' do: {
-      ^(Array new fill: ast count with: \:x ast2ctrcode[ast @ x] + '.') join: '\n'.
+      ^(Array new fill: ast count with: \:x self[ast @ x, curindent + 1] + '.') join: '\n' + ('  ' * curindent).
     },
     case: 'ENDOFPROGRAM' do: { ^''. },
-    case: 'RETURNFROMBLOCK' do: { ^'^' + ast2ctrcode[ast @ 0]. },
+    case: 'RETURNFROMBLOCK' do: { ^'^' + self[ast @ 0, curindent]. },
     case: 'IMMUTABLE' do: {
-      ^'[]'.
+      var code is '['.
+      var ps is ast at: 0.
+      var pcount is ps count.
+      (Array new fill: pcount with: \:i self[ps @ i, curindent]) each_v: {:gen
+        var tcode is code + gen + ', '.
+        tcode split: '\n', last length > 80 ifTrue: { tcode is code + '\n' + ('  ' * (curindent + 1)) + gen + ', '. }.
+        code is tcode.
+      }.
+      pcount > 0 ifTrue: { code is code from: 0 to: code length - 2. }.
+      code split: '\n', last length > 80 ifTrue: { code +=: '\n'. }.
+      ^code + ']'.
     },
-    default: { errPen red writeln: '$$ast is not unparsable at the moment', resetColor. }) switch: ast type.
+    default: { errPen red writeln: '$$ast is not unparsable at the moment ( because of $$value )', resetColor. }) switch: ast type.
 }.

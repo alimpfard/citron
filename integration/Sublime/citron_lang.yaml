@@ -143,7 +143,7 @@ contexts:
         - match: '(.)'
           captures:
             0: keyword.control.Citron
-    - match: '(?:(\s+)([^\s\d\x{003a}.\x{002c}\[\]\(\)\{\}\#])(\s+))'
+    - match: '(?:(\s+)([^\s\d\x{003a}.\x{002c}\[\]\(\)\{\}\#]|[-\x{002b}\x{002a}\x{0026}\x{0025}\x{0024}\x{0040}\x{0021}\x{003d}\x{0022}\x{003b}\x{002f}\x{005c}\x{003c}\x{003e}\x{003f}\x{007e}]+)(\s+))'
       captures:
         0: entity.name.Citron
         1: entity.name.function.Citron

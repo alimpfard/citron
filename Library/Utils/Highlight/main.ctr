@@ -32,6 +32,7 @@ Highlight on: 'highlight:' do: {:code:html
         color is (Colors bold) + (Colors magenta).
         after_color is (Colors bold_off).
         this_thing is '^'.
+        token put: 1 at: 3.
     }, case: 'ASSIGNMENT' do: {
         # rlen +=: 1.
         color is (Colors bold) + (Colors magenta).

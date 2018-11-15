@@ -6,7 +6,7 @@ var groups is Map fromArray: [
     }, join: ' ') + ' }'.
   }.})],
   ['=', ({^{:self:other
-    ^Reflect getPropertiesOf: self, fmap: {:prop ^(Reflect getProperty: prop ofObject: self) = (Reflect getProperty: prop ofObject: other).}, all: {:x ^x.}.
+    ^Reflect getPropertiesOf: self, fmap: ({:prop ^(Reflect getProperty: prop ofObject: self) = (Reflect getProperty: prop ofObject: other).} catch: {:e ^False.}), all: {:x ^x.}.
   }.})],
   ['new:', ({^{:self:argmap :val:instance
     val is Map fromArray: argmap.

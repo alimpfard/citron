@@ -114,10 +114,16 @@ var ast2ctrcode is {:self:ast:curindent
     },
     case: 'RAW' do: {
       ^((frozen _ is
-          case: 'None' do: {\ '$!(%s)'},
+          case: 'None' do: {\ '%s'},
           case: 'My'   do: {\ '$(%s)'},
-          default:     do: {\ '%s'}
-        ) switch: ast modifier) % [self[ast @ 0]].
+          default:         {
+            ^'%s'.
+          }
+        ) switch: ast modifier) % [self[ast @ 0, curindent]].
+    },
+    case: 'EMBED' do: {
+      var qq is ast at: 0.
+      ^'$`(' + self[qq, curindent] + ')'.
     },
     default: { errPen red writeln: '$$ast is not unparsable at the moment ( because of $$value )', resetColor. }) switch: ast type.
 }.

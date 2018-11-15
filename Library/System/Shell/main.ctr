@@ -1,0 +1,42 @@
+Shell on: '_addStrToCommand:' do: {:str
+  my command +=: ' ' + str.
+}.
+Shell on: 'respondTo:' do: {:self:msg
+  my accum_mode ifTrue: {
+    self _addStrToCommand: msg.
+  }, ifFalse: {
+    var res is call: my command.
+    my command is ''.
+    ^res.
+  }.
+}.
+(1..4) each: {:_:i
+  Shell on: 'respondTo:' + ('and:' * i) do: {:self:msg:*args
+    var opts is msg split: ':'.
+    my command length > 0 ifTrue: { my command +=: ' | '. }. # pipe consecutive messages
+    opts each: {:idx:val
+      self _addStrToCommand: val + ' ' + ('"%s"' % [(args at: idx) escapeDoubleQuotes]).
+    }.
+    my accum_mode ifFalse: {
+      var res is call: my command.
+      my command is ''.
+      ^res.
+    }.
+  }.
+}.
+
+Shell on: 'do' do: {
+  my accum_mode is True.
+  my command is ''.
+}, on: 'done' do: {
+  my accum_mode ifTrue: {
+    my accum_mode is False.
+    var res is call: my command.
+    my command is ''.
+    ^res.
+  }.
+  my accum_mode is False.
+}.
+
+Reflect setProperty: 'command' ofObject: Shell toValue: ''.
+Reflect setProperty: 'accum_mode' ofObject: Shell toValue: False.

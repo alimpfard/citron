@@ -138,6 +138,23 @@ ctr_cparse_create_node (int type)
   return node;
 }
 
+static int ctr_is_binary_alternative(char const* s, long length) {
+  // return 0;
+  if (length == 1) return 0;
+  if (length == 0) return 0;
+  for (long i=0; i<length; i++) {
+    char c = s[i];
+    if (!(
+      c == '-' || c == '+' || c == '*' || c == '&' ||
+      c == '%' || c == '$' || c == '@' || c == '!' ||
+      c == '=' || c == '"' || c == ';' || c == '/' ||
+      c == '\\'|| c == '<' || c == '>' || c == '?' ||
+      c == '~' )) {
+        return 0;
+      }
+  }
+  return 1;
+}
 /**
  * CTRParserMessage
  *
@@ -172,7 +189,9 @@ ctr_cparse_message (int mode)
   s = ctr_clex_tok_value ();
   msg = ctr_heap_allocate_tracked (255 * sizeof (char));
   memcpy (msg, s, msgpartlen);
-  isBin = ctr_utf8_is_one_cluster (msg, msgpartlen);
+  lookAhead = ctr_clex_tok ();
+  ctr_clex_putback ();
+  isBin = lookAhead!=CTR_TOKEN_COLON && (ctr_utf8_is_one_cluster (msg, msgpartlen) || ctr_is_binary_alternative(msg, msgpartlen));
   if (mode == 2 && isBin)
     {
       ctr_clex_putback ();
@@ -188,8 +207,6 @@ ctr_cparse_message (int mode)
       m->nodes = li;
       return m;
     }
-  lookAhead = ctr_clex_tok ();
-  ctr_clex_putback ();
   int replacement = 0;
   if (lookAhead == CTR_TOKEN_COLON)
     {

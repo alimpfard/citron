@@ -8,7 +8,7 @@ var ast2ctrcode is {:self:ast:curindent
     },
     case: 'LTRSTRING' do: {
       var value is ast value.
-      ^'\'%s\'' % [value ~ 's/(?!\\\\)\'/\\\'/g'].
+      ^'\'%s\'' % [value escapeQuotes ~ ?>s/\\(?!')/\\\\/g<?].
     },
     case: 'LTRNIL' do: {
       ^'Nil'.
@@ -33,7 +33,13 @@ var ast2ctrcode is {:self:ast:curindent
       var ct is ast count.
       ct - 1 times: {:i
         var s is ast @ (i + 1).
-        rec +=: ' ' + self[s, curindent].
+        var rv is ' ' + self[s, curindent].
+        (rec length > 80) ifTrue: {
+          (rec split: '\n', last) length + rv length > 80 ifTrue: {
+            rec +=: '\n'.
+          }.
+        }.
+        rec +=: rv.
         i !=: ct - 2, & (s type = 'KWMESSAGE') ifTrue: { rec +=: ','. }.
       }.
       ^rec.
@@ -46,7 +52,18 @@ var ast2ctrcode is {:self:ast:curindent
     },
     case: 'KWMESSAGE' do: {
       var value is ast value split: ':'.
-      ^value imap: \:i:x '%s: %s' % [x, self[ast @ i, curindent]], join: ' '.
+      var code is ''.
+      value each: {:i:x
+        var tc is '%s: %s ' % [x, self[ast @ i, curindent]].
+        (code length > 80) ifTrue: {
+          (code split: '\n', last) length + tc length > 80 ifTrue: {
+            code +=: '\n'.
+          }.
+        }.
+        code +=: tc.
+      }.
+      code is code from: 0 to: code length - 1.
+      ^code.
     },
     case: 'EXPRASSIGNMENT' do: {
       var ref is self[(ast at: 0), curindent].
@@ -59,20 +76,20 @@ var ast2ctrcode is {:self:ast:curindent
     case: 'NESTED' do: {
       var code is '('.
       var ps is ast at: 0.
-      var tcode is self[ps, curindent].
-      tcode length > 80 ifTrue: { code +=: '\n' + ('  ' * (curindent + 1)). }.
+      var tcode is self[ps, (curindent +=: 1)].
+      tcode length > 80 ifTrue: { code +=: '\n' + ('  ' * curindent). }.
       code +=: tcode.
       ^code + ')'.
     },
     case: 'CODEBLOCK' do: {
       var ps is ast at: 0.
       var ins is ast at: 1.
-      var fmt is ast modifier = 'My' either: '{\\%:L\n%s%:L\n%s}' or: '{%:L\n%s%:L\n%s}'.
-      var cindent is '  ' * (curindent +=: 1).
+      var fmt is ast modifier = 'My' either: '{\\%:L%s%:L\n%s}' or: '{%:L%s%:L\n%s}'.
+      var cindent is '\n' + ('  ' * (curindent +=: 1)).
       ^fmt % ['',
               (Array new fill: ps count with: \:x ':' + (ps @ x) value),
               cindent,
-              '\n' + cindent,
+              cindent,
               (Array new fill: ins count with: \:x self[ins @ x, curindent] + '.'),
               '  ' * (curindent - 1)
             ].
@@ -94,6 +111,13 @@ var ast2ctrcode is {:self:ast:curindent
       pcount > 0 ifTrue: { code is code from: 0 to: code length - 2. }.
       code split: '\n', last length > 80 ifTrue: { code +=: '\n'. }.
       ^code + ']'.
+    },
+    case: 'RAW' do: {
+      ^((frozen _ is
+          case: 'None' do: {\ '$!(%s)'},
+          case: 'My'   do: {\ '$(%s)'},
+          default:     do: {\ '%s'}
+        ) switch: ast modifier) % [self[ast @ 0]].
     },
     default: { errPen red writeln: '$$ast is not unparsable at the moment ( because of $$value )', resetColor. }) switch: ast type.
 }.

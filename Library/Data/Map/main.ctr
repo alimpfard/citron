@@ -43,3 +43,5 @@ Map on: 'respondTo:' do: {:self:msg
 Map on: 'respondTo:and:' do: {:self:msg:val
   ^(msg startsWith: '@') either: { ^self put: val at: (msg from: 1 to: msg length - 1). } or: { ^self `respondTo: msg and: val. }.
 }.
+
+CodeBlock on: 'toMap' do: { ^Map cnew: me. }.

@@ -172,6 +172,11 @@ ctr_object *ctr_inject_run(ctr_object *myself, ctr_argument *argumentList)
         CtrStdFlow = ctr_build_string_from_cstring("compile request to uninitialized Inject object");
         return CtrStdNil;
     }
+    if (ds->info.relocated)
+    {
+      CtrStdFlow = ctr_format_str("ESymbols in this context have already been relocated");
+      return CtrStdNil;
+    }
     ctr_object *prg = argumentList->object;
     CTR_ENSURE_TYPE_STRING(prg);
     char *program = ctr_heap_allocate_cstring(prg);
@@ -188,6 +193,72 @@ ctr_object *ctr_inject_run(ctr_object *myself, ctr_argument *argumentList)
     for(int i=0; i<length; i++)
         argv[i] = ctr_heap_allocate_cstring(ctr_internal_cast2string(arr->elements[arr->tail+i]));
     int result = tcc_run(s, length, argv);
+    ds->info.relocated = 1;
+    for(int i=0; i<length; i++)
+        ctr_heap_free(argv[i]);
+    free(argv);
+    return ctr_build_number_from_float(result);
+}
+
+/**
+ *[Inject] run: [String] arguments: [[String]] function: [String]
+ *
+ * Run a complete C program's given function
+ */
+ctr_object *ctr_inject_run_named(ctr_object *myself, ctr_argument *argumentList)
+{
+    if (ctr_check_permission_internal (CTR_SECPRO_NO_SHELL))
+      return myself;
+    ctr_resource *r = myself->value.rvalue;
+    ctr_inject_data_t *ds;
+    if (!r || !(ds = r->ptr))
+    {
+        CtrStdFlow = ctr_build_string_from_cstring("compile request to uninitialized Inject object");
+        return CtrStdNil;
+    }
+    if (ds->info.relocated)
+    {
+      CtrStdFlow = ctr_format_str("ESymbols in this context have already been relocated");
+      return CtrStdNil;
+    }
+    ctr_object *prg = argumentList->object;
+    CTR_ENSURE_TYPE_STRING(prg);
+    char *program = ctr_heap_allocate_cstring(prg);
+    TCCState *s = ds->state;
+    int status = tcc_compile_string(s, program);
+    ctr_heap_free(program);
+    if (CtrStdFlow) return CtrStdNil; // stop exec in case of any errors in the handler
+    ctr_object* argl = argumentList->next->object;
+    CTR_ENSURE_TYPE_ARRAY(argl);
+    int length = ctr_array_count(argl, NULL)->value.nvalue;
+    char** argv = malloc(sizeof(char*) * (length+1));
+    argv[length] = NULL;
+    ctr_collection* arr = argl->value.avalue;
+    for(int i=0; i<length; i++)
+        argv[i] = ctr_heap_allocate_cstring(ctr_internal_cast2string(arr->elements[arr->tail+i]));
+    int (*fn)(int,char**);
+    ssize_t size = tcc_relocate(s, NULL);
+    if (size <= 0) {
+        CtrStdFlow = ctr_build_string_from_cstring("Relocation failed");
+    return CtrStdNil;
+    }
+    void *mem = ctr_heap_allocate(size);
+    tcc_relocate(s, mem);
+    ds->info.relocated = 1;
+    ctr_object *sym = argumentList->next->next->object;
+    if (sym->info.type != CTR_OBJECT_TYPE_OTSTRING)
+    {
+      CtrStdFlow = ctr_format_str("EExpected String but got %S", ctr_internal_cast2string(ctr_send_message_blocking(sym, "type", 4, NULL)));
+      return CtrStdNil;
+    }
+    char *sym_s = ctr_heap_allocate_cstring(sym);
+    fn = tcc_get_symbol(s, sym_s);
+    if (!fn) {
+      ctr_heap_free(sym_s);
+      CtrStdFlow = ctr_format_str("ENo such function %s", sym_s);
+      return CtrStdNil;
+    }
+    int result = fn(length, argv);
     for(int i=0; i<length; i++)
         ctr_heap_free(argv[i]);
     free(argv);

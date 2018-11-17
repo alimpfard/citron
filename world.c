@@ -2482,6 +2482,7 @@ ctr_initialize_world ()
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("new"), &ctr_inject_make);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("compile:"), &ctr_inject_compile);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("run:arguments:"), &ctr_inject_run);
+  ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("run:arguments:function:"), &ctr_inject_run_named);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("symbol:"), &ctr_inject_get_symbol);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("addIncludePath:"), &ctr_inject_add_inclp);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("linkInLibrary:"), &ctr_inject_add_lib);

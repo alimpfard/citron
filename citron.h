@@ -1236,6 +1236,7 @@ ctr_object* ctr_inject_make(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_inject_compile(ctr_object* myself, ctr_argument* argumentList);
 ctr_object *ctr_inject_get_symbol(ctr_object *myself, ctr_argument *argumentList);
 ctr_object *ctr_inject_run(ctr_object *myself, ctr_argument *argumentList);
+ctr_object *ctr_inject_run_named(ctr_object *myself, ctr_argument *argumentList);
 ctr_object *ctr_inject_add_inclp(ctr_object* myself, ctr_argument* argumentList);
 ctr_object *ctr_inject_export_f(ctr_object *myself, ctr_argument *argumentList);
 ctr_object *ctr_inject_add_lib(ctr_object* myself, ctr_argument* argumentList);

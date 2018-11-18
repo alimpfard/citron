@@ -1,5 +1,6 @@
 var pPen is Object new.
 
+pPen on: 'compose:' do: {:fn my fun is \:*args fun[(fn applyAll: args)]. }.
 pPen on: 'for:' do: {:io
   var COLOR_RED      is '\x1b[31m'.
   var COLOR_GREEN    is '\x1b[32m'.
@@ -10,8 +11,9 @@ pPen on: 'for:' do: {:io
   var COLOR_RESET    is '\x1b[0m'.
   ^me cnew: {
     my file is io.
+    my fun is \:x x.
     me on: 'write:' do: {:str
-      my file write: str.
+      my file write: my fun[str].
     }, on: 'writeln:' do: {:str
       my file write: str, write: '\n'.
     }, on: 'brk' do: {

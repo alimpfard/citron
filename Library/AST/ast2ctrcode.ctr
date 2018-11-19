@@ -1,3 +1,5 @@
+import Library/Data/SwitchCase.
+
 #:language XFrozen
 
 var ast2ctrcode is {:self:ast:curindent:options

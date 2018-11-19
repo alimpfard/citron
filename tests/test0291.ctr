@@ -1,0 +1,23 @@
+import Library/Control/Assert: 'assert'.
+
+#:language XNakedAsmBlock
+
+var test0 is {asm intel (=&{eax})
+  push    rbp
+  xor     eax, eax
+  mov     rbp, rsp
+  add     eax, 6
+  add     eax, 0x100
+  pop     rbp
+}.
+var test1 is {asm intel (=&{eax})
+  push    rbp
+  xor     eax, eax
+  mov     rbp, rsp
+  add     eax, 1024
+  add     eax, 0x100
+  pop     rbp
+}.
+
+assert {test0[] = 262}.
+assert {test1[] = (262 - 6 + 1024)}.

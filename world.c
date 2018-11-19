@@ -2272,6 +2272,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdCommand, ctr_build_string_from_cstring (CTR_DICT_INPUT), &ctr_command_input);
   ctr_internal_create_func (CtrStdCommand, ctr_build_string_from_cstring ("setInterruptHandler:"), &ctr_command_set_INT_handler);
   ctr_internal_create_func (CtrStdCommand, ctr_build_string_from_cstring (CTR_DICT_EXIT), &ctr_command_exit);
+  ctr_internal_create_func (CtrStdCommand, ctr_build_string_from_cstring (CTR_DICT_EXIT":"), &ctr_command_exit);
   ctr_internal_create_func (CtrStdCommand, ctr_build_string_from_cstring (CTR_DICT_FLUSH), &ctr_command_flush);
   ctr_internal_create_func (CtrStdCommand, ctr_build_string_from_cstring (CTR_DICT_FORBID_SHELL), &ctr_command_forbid_shell);
   ctr_internal_create_func (CtrStdCommand, ctr_build_string_from_cstring (CTR_DICT_FORBID_FILE_WRITE), &ctr_command_forbid_file_write);

@@ -1,0 +1,16 @@
+import Library/AST/ast2ctrcode: 'ast2ctrcode'.
+
+var assert is {:o0exp:msg
+  o0exp evaluate ifFalse: {
+    File special: 'stderr', write: 'Assertion `%s\' failed' % [(msg or: {^ast2ctrcode[o0exp].})].
+    Program exit: 1.
+  }.
+}.
+
+var assertEq is {\:o0:o1
+  assert{o0 = o1}.
+}.
+
+var assertNEq is {\:o0:o1
+  assert{(o0 !=: o1)}.
+}.

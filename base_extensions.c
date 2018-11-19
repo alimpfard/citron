@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#define WITH_UCONTEXT
+//#define WITH_UCONTEXT
 #ifdef WITH_UCONTEXT
 #include <ucontext.h>
 #else
@@ -799,7 +799,7 @@ str_split (char *a_str, const char a_delim, int *count_out)
 char *
 ctr_ast_pure_stringify (ctr_tnode * node)
 {
-  char buf[2048];
+  char buf[20480];
   char *ret = NULL;
   if (node)
     switch (node->type)
@@ -808,11 +808,10 @@ ctr_ast_pure_stringify (ctr_tnode * node)
 	{
 	  char *rn = ctr_ast_pure_stringify (node->nodes->node);
 	  char *rv = ctr_ast_pure_stringify (node->nodes->next->node);
-	  sprintf (buf, "%s is %s", rn, rv);
+	  int len = sprintf (buf, "%s is %s", rn, rv);
 	  ctr_heap_free (rn);
 	  ctr_heap_free (rv);
-	  int len = strlen (buf);
-	  ret = ctr_heap_allocate (sizeof (char) * len);
+	  ret = ctr_heap_allocate (sizeof (char) * (len+1));
 	  memcpy (ret, buf, len);
 	  break;
 	}
@@ -820,28 +819,26 @@ ctr_ast_pure_stringify (ctr_tnode * node)
 	{
 	  char *rr = ctr_ast_pure_stringify (node->nodes->node);
 	  char *rm = ctr_ast_pure_stringify (node->nodes->next->node);
-	  sprintf (buf, "%s %s", rr, rm);
+	  int len = sprintf (buf, "%s %s", rr, rm);
 	  ctr_heap_free (rr);
 	  ctr_heap_free (rm);
-	  int len = strlen (buf);
-	  ret = ctr_heap_allocate (sizeof (char) * len);
+	  ret = ctr_heap_allocate (sizeof (char) * (len+1));
 	  memcpy (ret, buf, len);
 	  break;
 	}
       case CTR_AST_NODE_UNAMESSAGE:
 	{
 	  size_t len = node->vlen;
-	  ret = ctr_heap_allocate (sizeof (char) * len);
+	  ret = ctr_heap_allocate (sizeof (char) * (len+1));
 	  memcpy (ret, node->value, len);
 	  break;
 	}
       case CTR_AST_NODE_BINMESSAGE:
 	{
 	  char *rr = ctr_ast_pure_stringify (node->nodes->node);
-	  sprintf (buf, "%.*s %s", (int) (node->vlen), node->value, rr);
+	  int len = sprintf (buf, "%.*s %s", (int) (node->vlen), node->value, rr);
 	  ctr_heap_free (rr);
-	  int len = strlen (buf);
-	  ret = ctr_heap_allocate (sizeof (char) * len);
+	  ret = ctr_heap_allocate (sizeof (char) * (len+1));
 	  memcpy (ret, buf, len);
 	  break;
 	}
@@ -866,7 +863,7 @@ ctr_ast_pure_stringify (ctr_tnode * node)
 	  free (parts);
 	  ctr_heap_free (rm);
 	  int len = strlen (buf);
-	  ret = ctr_heap_allocate (sizeof (char) * len);
+	  ret = ctr_heap_allocate (sizeof (char) * (len+1));
 	  memcpy (ret, buf, len);
 	  break;
 	}
@@ -928,11 +925,10 @@ ctr_ast_pure_stringify (ctr_tnode * node)
 	{
 	  char *rparams = ctr_ast_pure_stringify (node->nodes->node);
 	  char *rinstru = ctr_ast_pure_stringify (node->nodes->next->node);
-	  sprintf (buf, "{%s %s}", rparams, rinstru);
+	  int len = sprintf (buf, "{%s%s\n%s}", (node->lexical?"\\":""), rparams, rinstru);
 	  ctr_heap_free (rparams);
 	  ctr_heap_free (rinstru);
-	  int len = strlen (buf);
-	  ret = ctr_heap_allocate (sizeof (char) * len);
+	  ret = ctr_heap_allocate (sizeof (char) * (len+1));
 	  memcpy (ret, buf, len);
 	  break;
 	}
@@ -984,8 +980,13 @@ ctr_ast_pure_stringify (ctr_tnode * node)
 		}
 	      partnodes = partnodes->next;
 	    }
+      if (x == 0) {
+        ret = ctr_heap_allocate(1);
+        ret[0] = 0;
+        break;
+      }
 	  int len = strlen (buf);
-	  ret = ctr_heap_allocate (sizeof (char) * len);
+	  ret = ctr_heap_allocate (sizeof (char) * (len+1));
 	  memcpy (ret, buf, len);
 	  break;
 	}
@@ -996,13 +997,18 @@ ctr_ast_pure_stringify (ctr_tnode * node)
 	  while (partnodes)
 	    {
 	      char *rr = ctr_ast_pure_stringify (partnodes->node);
-	      x = sprintf (buf + x, "%s. ", rr);
+	      x += sprintf (buf + x, "%s.\n", rr);
 	      ctr_heap_free (rr);
 	      partnodes = partnodes->next;
 	    }
+      if (x == 0) {
+        ret = ctr_heap_allocate(1);
+        ret[0] = 0;
+        break;
+      }
 	  int len = strlen (buf);
-	  ret = ctr_heap_allocate (sizeof (char) * len);
-	  memcpy (ret, buf, len);
+	  ret = ctr_heap_allocate (sizeof (char) * (len+1));
+	  memcpy (ret, buf, len+1);
 	  break;
 	}
       case CTR_AST_NODE_ENDOFPROGRAM:
@@ -1033,7 +1039,7 @@ ctr_ast_pure_stringify (ctr_tnode * node)
 	{
 	  char *rv = ctr_ast_pure_stringify (node->nodes->node);
 	  int len = strlen (rv);
-	  ret = ctr_heap_allocate (sizeof (char) * len);
+	  ret = ctr_heap_allocate (sizeof (char) * (len+1));
 	  memcpy (ret, rv, len);
 	  ctr_heap_free (rv);
 	  break;
@@ -1053,7 +1059,7 @@ ctr_ast_pure_stringify (ctr_tnode * node)
 	      partnodes = partnodes->next;
 	    }
 	  int len = strlen (buf);
-	  ret = ctr_heap_allocate (sizeof (char) * len);
+	  ret = ctr_heap_allocate (sizeof (char) * (len+1));
 	  memcpy (ret, buf, len);
 	  break;
 	}

@@ -230,7 +230,7 @@ contexts[] {
          }
       }
       : inline_push {
-         regex            \= (?:(\s+)([^\s\d:.,\[\]\(\)\{\}\#])(\s+))
+         regex            \= (?:(\s+)([^\s\d:.,\[\]\(\)\{\}\#]|[-+*&%$@!=";/\\<>?~]+)(\s+))
          styles []         = .punctuation, .sl_message, .punctuation;
          default_style     = .punctuation
          : pop {

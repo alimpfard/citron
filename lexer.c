@@ -114,6 +114,27 @@ __attribute__ ((always_inline))
 }
 
 /**
+ * Lexer - Scan for character
+ *
+ * @return position of the encountered token or NULL if it doesn't exist
+ */
+char* ctr_clex_scan(char c) {
+  if (*ctr_code == c)
+    return ctr_code;
+  char* older = ctr_clex_olderptr;
+  ctr_clex_olderptr = ctr_clex_oldptr;
+  ctr_clex_oldptr = ctr_code;
+  while (ctr_code<=ctr_eofcode&& *++ctr_code != c);
+  if (ctr_code == ctr_eofcode) {
+    ctr_code = ctr_clex_oldptr;
+    ctr_clex_oldptr = ctr_clex_olderptr;
+    ctr_clex_olderptr = older;
+    return NULL;
+  }
+  return ctr_code;
+}
+
+/**
  * Lexer - Save Lexer state
  *
  * saves the state of the lexer and
@@ -479,6 +500,9 @@ static void handle_extension()
   }
   else if (len == 11 && strncmp(ext, "XPureLambda", 11) == 0) {
     extensionsPra->value |= CTR_EXT_PURE_FS;
+  }
+  else if (len == 14 && strncmp(ext, "XNakedAsmBlock", 14) == 0) {
+    extensionsPra->value |= CTR_EXT_ASM_BLOCK;
   }
   else {
     static char errbuf[1024];

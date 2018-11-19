@@ -8,6 +8,10 @@
 #include "citron.h"
 #include "symbol.h"
 
+#if withInjectNative
+#include "native-asm.h"
+#endif
+
 char *ctr_cparse_current_program;
 int do_compare_locals = 0;
 int all_plains_private = 0;
@@ -711,11 +715,77 @@ ctr_cparse_popen ()
   return r;
 }
 
+#if withInjectNative
+ctr_tnode *ctr_cparse_intern_asm_block_() {
+  /**
+   *
+   * {asm att|intel? (STRING)? _asm_}
+   *
+   */
+   int t = ctr_clex_tok();
+   ctr_clex_putback();
+   while (t == CTR_TOKEN_COLON) {
+     // get the argument names and their types
+     // [TODO]
+     ctr_cparse_emit_error_unexpected(t, "Passing arguments to asm blocks not supported yet\n");
+     return NULL;
+   }
+   char* constraint = "\0";
+   int att = 1;
+   if (t == CTR_TOKEN_REF) {
+     int len = ctr_clex_tok_value_length();
+     char* tok = ctr_clex_tok_value();
+     if (len == 5 && strncasecmp(tok, "intel", 5) == 0)
+        att = 0;
+     else if (!(len == 4 && strncasecmp(tok, "at&t", 4) == 0 || len == 3 && strncasecmp(tok, "att", 3) == 0)) {
+       ctr_cparse_emit_error_unexpected(t, "Expected literal name att|at&t|intel\n");
+       return NULL;
+     }
+     t = ctr_clex_tok();
+     t = ctr_clex_tok();
+     ctr_clex_putback();
+   }
+   if (t == CTR_TOKEN_PAROPEN) {
+     ctr_clex_tok();
+     char* begin = ctr_code;
+     char* end = ctr_clex_scan(')');
+     if (!end) {
+       ctr_cparse_emit_error_unexpected(t, "Expected a ')' to end the asm constraint block\n");
+       return NULL;
+     }
+     constraint = ctr_heap_allocate(end-begin+1);
+     memcpy(constraint, begin, end-begin);
+     constraint[end-begin] = 0;
+     ctr_code++;
+   }
+   char* asm_begin = ctr_code;
+   char* asm_end   = ctr_clex_scan('}');
+   ctr_clex_tok();
+   if (!asm_end) {
+     ctr_cparse_emit_error_unexpected(t, "Expected a '}' to end the native block\n");
+     return NULL;
+   }
+   void* fn = ctr_cparse_intern_asm_block(asm_begin, asm_end, constraint, att);
+   if (constraint[0]) ctr_heap_free(constraint);
+   if (!fn) {
+     ctr_cparse_emit_error_unexpected(t, "Invalid assembly\n");
+     return NULL;
+   }
+   ctr_tnode* node = ctr_cparse_create_node(CTR_AST_NODE);
+    node->type = CTR_AST_NODE_NATIVEFN;
+    node->value = (char*)fn;
+    node->vlen = 0;
+    return node;
+}
+#endif
+
+
 /**
  * CTRParserBlock
  *
  * Generates a set of AST nodes to represent a block of code.
  */
+
 ctr_tnode *ctr_cparse_block_ (int autocap);
 // __attribute__ ((always_inline))
 ctr_tnode *
@@ -744,6 +814,16 @@ ctr_cparse_block_ (int autocap)
   int t;
   int first;
   ctr_clex_tok ();
+  t = ctr_clex_tok ();
+#if withInjectNative
+  if (
+    (extensionsPra->value & CTR_EXT_ASM_BLOCK) == CTR_EXT_ASM_BLOCK &&
+    t == CTR_TOKEN_REF &&
+    ctr_clex_tok_value_length() == 3 &&
+    strncmp(ctr_clex_tok_value(), "asm", 3) == 0
+  )
+    return ctr_cparse_intern_asm_block_();
+#endif
   r = ctr_cparse_create_node (CTR_AST_NODE);
   r->type = CTR_AST_NODE_CODEBLOCK;
   codeBlockPart1 = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
@@ -756,7 +836,6 @@ ctr_cparse_block_ (int autocap)
   codeBlockPart2->node = codeList;
   paramList->type = CTR_AST_NODE_PARAMLIST;
   codeList->type = CTR_AST_NODE_INSTRLIST;
-  t = ctr_clex_tok ();
   first = 1;
   while (t == CTR_TOKEN_COLON)
     {

@@ -1030,7 +1030,7 @@ ctr_program_assign (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * [Program] exit
+ * [Program] exit [: [Number]]
  *
  * Exits program immediately.
  */
@@ -1038,6 +1038,7 @@ ctr_object *
 ctr_command_exit (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_did_side_effect = 1;
+  exit(argumentList&&argumentList->object?ctr_internal_cast2number(argumentList->object)->value.nvalue:0);
   CtrStdFlow = CtrStdExit;
   return CtrStdNil;
 }

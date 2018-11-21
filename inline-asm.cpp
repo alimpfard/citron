@@ -115,7 +115,7 @@ void llvmDebugPrint(Module* value) {
         GenContext() {
             module = new Module("citron-inline", _ctx);
         }
-        void *run(std::string,std::string,InlineAsm::AsmDialect,int,int);
+        void *run(std::string,std::string,InlineAsm::AsmDialect,int,int,asm_arg_info_t*);
         BlockT context() { return *blocks.top(); }
         Function* function() const { return tempFunction; }
         void currentFunction(Function* f) { tempFunction = f; }
@@ -137,7 +137,7 @@ void llvmDebugPrint(Module* value) {
     struct __avstruct { void* a; void* b; };
     constexpr auto addr_a = offsetof(__avstruct, a);
     constexpr auto addr_b = offsetof(__avstruct, b);
-    std::string generateEntryFunction(std::string asmdec, std::string constr, InlineAsm::AsmDialect dialect, int off, int cnt, GenContext& context) {
+    std::string generateEntryFunction(std::string asmdec, std::string constr, InlineAsm::AsmDialect dialect, int off, int cnt, asm_arg_info_t* arginfo, GenContext& context) {
         std::vector<llvm::Type *> FnArgTypes {
             PointerType::get(Type::getInt8Ty(_ctx), 0),
             PointerType::get(Type::getInt8Ty(_ctx), 0)
@@ -159,6 +159,7 @@ void llvmDebugPrint(Module* value) {
             Value* args = func->arg_end()-1;
             Type* dblty = Type::getDoubleTy(_ctx);
             Type* i8ty = Type::getInt8Ty(_ctx);
+            Type* i64ty = Type::getInt64Ty(_ctx);
             Type* i8pty = PointerType::get(i8ty, 0);
             Type* i8ppty= PointerType::get(i8pty, 0);
             Type* dblpty = PointerType::get(dblty, 0);
@@ -173,6 +174,14 @@ void llvmDebugPrint(Module* value) {
                 arg = GetElementPtrInst::CreateInBounds(arg, ConstantInt::get(i8ty, off, false), "", blk);
                 arg = new BitCastInst(arg, dblpty, "", blk);
                 arg = new LoadInst(arg, "", blk);
+                auto dty = arginfo[i].ty;
+                auto argty = dblty;
+                if (dty == ASM_ARG_TY_INT)
+                    arg = new FPToSIInst(arg, (argty=i64ty), "", blk);
+                else if (dty == ASM_ARG_TY_STR || dty == ASM_ARG_TY_PTR) {
+                    arg = new IntToPtrInst(new FPToSIInst(arg, i64ty, "", blk), i8pty, "", blk);
+                    argty = i8pty;
+                }
                 if (i!=cnt-1) {
                     args = GetElementPtrInst::CreateInBounds(args, ConstantInt::get(i8ty, addr_b, false), "", blk);
                     args = new BitCastInst(args, i8ppty, "", blk);
@@ -180,7 +189,7 @@ void llvmDebugPrint(Module* value) {
                 }
                 // first
                 callargs.push_back(arg);
-                AsmArgTypes.push_back(dblty);
+                AsmArgTypes.push_back(argty);
             }
         }
         auto* x = generateInlineAsm(asmdec, constr, dialect, AsmArgTypes);
@@ -199,14 +208,14 @@ void llvmDebugPrint(Module* value) {
 
     static orc::KaleidoscopeJIT jit{};
 
-    void* GenContext::run(std::string dec, std::string ct, InlineAsm::AsmDialect dialect, int offset, int count) {
+    void* GenContext::run(std::string dec, std::string ct, InlineAsm::AsmDialect dialect, int offset, int count, asm_arg_info_t* arginfo) {
         std::vector<Type*> srtsArgs {
             Type::getDoubleTy(_ctx)
         };
         FunctionType* malloc_ty = FunctionType::get(Type::getInt8PtrTy(_ctx), srtsArgs, false);
         Function *ctr_build_number_from_float_f = Function::Create(malloc_ty, Function::ExternalLinkage, Twine("ctr_build_number_from_float"), module);
         ctr_build_number_from_float_f->setCallingConv(CallingConv::C);
-        auto name = generateEntryFunction(dec, ct, dialect, offset, count, *this);
+        auto name = generateEntryFunction(dec, ct, dialect, offset, count, arginfo, *this);
         // llvmDebugPrint(module);
         if (llvm::verifyModule(*module))
             return nullptr;
@@ -214,14 +223,14 @@ void llvmDebugPrint(Module* value) {
         return (void*)jit.getSymbolAddress(name);
     }
 
-    extern "C" void *ctr_cparse_intern_asm_block(char* asm_begin, char* asm_end, char* constraints, int offset, int argc, int att) {
+    extern "C" void *ctr_cparse_intern_asm_block(char* asm_begin, char* asm_end, char* constraints, int offset, int argc, asm_arg_info_t* arginfo, int att) {
         int len = asm_end-asm_begin;
         char* s = (char*)malloc(len+1);
         memcpy(s, asm_begin, len);
         s[len] = 0;
         GenContext context;
         void* fn = NULL; /* get pointer */
-        if ((fn = context.run(s, constraints, att?InlineAsm::AsmDialect::AD_ATT:InlineAsm::AsmDialect::AD_Intel, offset, argc+1)) == nullptr) {
+        if ((fn = context.run(s, constraints, att?InlineAsm::AsmDialect::AD_ATT:InlineAsm::AsmDialect::AD_Intel, offset, argc+1, arginfo)) == nullptr) {
             return NULL;
         }
         free(s);

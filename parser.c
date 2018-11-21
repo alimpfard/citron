@@ -722,6 +722,8 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
    * {asm att|intel? (STRING)? _asm_}
    *
    */
+   asm_arg_info_t arginfo[64];
+
    int t = ctr_clex_tok();
    int argidx = -1;
    while (t == CTR_TOKEN_COLON) {
@@ -742,6 +744,10 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
         return NULL;
       }
      argidx++;
+     enum AsmArgType _ty = ASM_ARG_TY_DBL;
+     if (len == 3 && strncmp(val, "int", 3) == 0) _ty = ASM_ARG_TY_INT;
+     if (len == 3 && strncmp(val, "str", 3) == 0) _ty = ASM_ARG_TY_STR;
+     arginfo[argidx].ty = _ty;
      t = ctr_clex_tok();
    }
    char* constraint = "\0";
@@ -776,7 +782,15 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
      ctr_cparse_emit_error_unexpected(t, "Expected a '}' to end the native block\n");
      return NULL;
    }
-   void* fn = ctr_cparse_intern_asm_block(asm_begin, asm_end, constraint, &((ctr_object*)NULL)->value.nvalue, argidx, att);
+   void* fn = ctr_cparse_intern_asm_block(
+    /* start = */     asm_begin,
+    /* end = */       asm_end,
+    /* constraint= */ constraint,
+    /* offset = */    &((ctr_object*)NULL)->value.nvalue,
+    /* argc = */      argidx,
+    /* arginfo = */   &arginfo,
+    /* dialect = */   att
+   );
    if (constraint[0]) ctr_heap_free(constraint);
    if (!fn) {
      ctr_cparse_emit_error_unexpected(t, "Invalid assembly\n");

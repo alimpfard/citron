@@ -90,16 +90,16 @@ public:
 } // end namespace orc
 } // end namespace llvm
 
-static void llvmDebugPrint(BasicBlock* value) {
+void llvmDebugPrint(BasicBlock* value) {
     errs() << *value;
 }
-static void llvmDebugPrint(Value* value) {
+void llvmDebugPrint(Value* value) {
     errs() << *value;
 }
-static void llvmDebugPrint(Type* value) {
+void llvmDebugPrint(Type* value) {
     errs() << *value;
 }
-static void llvmDebugPrint(Module* value) {
+void llvmDebugPrint(Module* value) {
     errs() << *value;
 }
 
@@ -126,8 +126,7 @@ static void llvmDebugPrint(Module* value) {
         }
     };
 
-    Value* generateInlineAsm(std::string asmdec, std::string constraint, InlineAsm::AsmDialect dialect) {
-        std::vector<llvm::Type *> AsmArgTypes;
+    Value* generateInlineAsm(std::string asmdec, std::string constraint, InlineAsm::AsmDialect dialect, std::vector<llvm::Type *> AsmArgTypes) {
         FunctionType *AsmFTy =
         FunctionType::get(Type::getInt64Ty(_ctx), AsmArgTypes, false);
         auto* value = InlineAsm::get(AsmFTy, asmdec, StringRef(constraint), true, false, dialect);
@@ -155,6 +154,7 @@ static void llvmDebugPrint(Module* value) {
         func->setCallingConv(CallingConv::C);
         BasicBlock *blk = BasicBlock::Create(_ctx, "", func, 0);
         std::vector<Value*> callargs{};
+        std::vector<llvm::Type *> AsmArgTypes;
         if (cnt>0) {
             Value* args = func->arg_end()-1;
             Type* dblty = Type::getDoubleTy(_ctx);
@@ -179,16 +179,20 @@ static void llvmDebugPrint(Module* value) {
                 }
                 // first
                 callargs.push_back(arg);
+                AsmArgTypes.push_back(dblty);
             }
         }
-        Value* retval = CallInst::Create(generateInlineAsm(asmdec, constr, dialect), callargs, "", blk);
+        auto* x = generateInlineAsm(asmdec, constr, dialect, AsmArgTypes);
+        Value* retval = CallInst::Create(x, callargs, "", blk);
         retval = new SIToFPInst(retval, Type::getDoubleTy(_ctx), "", blk);
         retval = CallInst::Create(context.module->getFunction("ctr_build_number_from_float"), std::vector<Value*>{retval}, "", blk);
         ReturnInst::Create(_ctx, retval, blk);
-        llvmDebugPrint(func);
-        // if(verifyFunction(*func, &llvm::errs())) {
-            // puts("What the actual fuck?");
-        // }
+        // llvmDebugPrint(func);
+        if(verifyFunction(*func, &llvm::errs())) {
+            puts("What the actual fuck? [Invalid program is as follows]");
+            llvmDebugPrint(func);
+            return "__NEVER_EXIST__";
+        }
         return name;
     }
 
@@ -203,7 +207,8 @@ static void llvmDebugPrint(Module* value) {
         ctr_build_number_from_float_f->setCallingConv(CallingConv::C);
         auto name = generateEntryFunction(dec, ct, dialect, offset, count, *this);
         // llvmDebugPrint(module);
-        // llvm::verifyModule(*module);
+        if (llvm::verifyModule(*module))
+            return nullptr;
         jit.addModule(std::unique_ptr<Module>(module));
         return (void*)jit.getSymbolAddress(name);
     }

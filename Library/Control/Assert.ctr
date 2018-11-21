@@ -2,7 +2,7 @@ import Library/AST/ast2ctrcode: 'ast2ctrcode'.
 
 var assert is {:o0exp:msg
   o0exp evaluate ifFalse: {
-    File special: 'stderr', write: 'Assertion `%s\' failed' % [(msg or: {^ast2ctrcode[o0exp].})].
+    File special: 'stderr', write: 'Assertion `%s\' failed' % [(msg evaluate or: {^ast2ctrcode[o0exp].})].
     Program exit: 1.
   }.
 }.

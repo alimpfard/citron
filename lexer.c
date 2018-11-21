@@ -124,7 +124,9 @@ char* ctr_clex_scan(char c) {
   char* older = ctr_clex_olderptr;
   ctr_clex_olderptr = ctr_clex_oldptr;
   ctr_clex_oldptr = ctr_code;
-  while (ctr_code<=ctr_eofcode&& *++ctr_code != c);
+  while (ctr_code<=ctr_eofcode&& *++ctr_code != c) {
+    if (*ctr_code == '\n') ctr_clex_line_number++;
+  }
   if (ctr_code == ctr_eofcode) {
     ctr_code = ctr_clex_oldptr;
     ctr_clex_oldptr = ctr_clex_olderptr;

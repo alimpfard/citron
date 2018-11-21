@@ -1,0 +1,14 @@
+#:language XNakedAsmBlock
+
+var t is {asm :arg intel (=&{eax},m)
+  cvtsd2si $0, $1
+  cmp $0, 100
+  jge where
+  jmp end
+  where:
+    movabs $0, 11111111111
+  end:
+}.
+
+
+Pen writeln: t[0].

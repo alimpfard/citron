@@ -189,7 +189,20 @@ contexts[] {
 
       }
       : inline_push {
-         regex      \= (?:(\{)((?:\:(?:[^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*))*))
+         regex            \= (?:(\{)(asm)(\s*(?:\:)\s*(?:\w+))*(\s*intel|att|at\&t)?(\s*\(.*\)\s*))
+         styles []         = .punctuation, .sl_pragma, .sl_defn, .sl_pragma, .sl_pragma;
+         : pop {
+            regex      \= (\})
+            styles []   = .punctuation;
+         }
+         : push {
+            regex      \= (?:\s*)
+            styles []   = .punctuation;
+            context []  = asm;
+         }
+      }
+      : inline_push {
+         regex      \= (?:(\{)((?:\s*\:(?:[^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*))*))
          styles []   = .punctuation, .sl_defn;
          default_style     = .punctuation
          : pop {
@@ -256,6 +269,18 @@ contexts[] {
             regex      \= (\s*?)
             styles []   = .punctuation;
          }
+      }
+   }
+
+   // dummy construct
+   asm : context {
+       : pop {
+          regex      \= (?=\})
+          styles []   = .punctuation;
+       }
+      : pattern {
+         regex      \= (.*)
+         styles []   =  .sl_comment;
       }
    }
 }

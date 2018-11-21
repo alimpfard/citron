@@ -723,12 +723,26 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
    *
    */
    int t = ctr_clex_tok();
-   ctr_clex_putback();
+   int argidx = -1;
    while (t == CTR_TOKEN_COLON) {
-     // get the argument names and their types
-     // [TODO]
-     ctr_cparse_emit_error_unexpected(t, "Passing arguments to asm blocks not supported yet\n");
-     return NULL;
+     // arguments to asm _must_ be numbers,
+     // they must be used prepended with a colon
+     // in the output/input constraints
+     // no more than 4 arguments will be processed
+     t = ctr_clex_tok();
+     if (t != CTR_TOKEN_REF) {
+       ctr_cparse_emit_error_unexpected(t, "Expected an argument name\n");
+       return NULL;
+     }
+     int len = ctr_clex_tok_value_length();
+     char* val = ctr_clex_tok_value();
+     for(int i=0;i<len;i++)
+      if(!isalpha(val[i])) {
+        ctr_cparse_emit_error_unexpected(t, "asm block arguments must contain only alpha characters\n");
+        return NULL;
+      }
+     argidx++;
+     t = ctr_clex_tok();
    }
    char* constraint = "\0";
    int att = 1;
@@ -742,11 +756,8 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
        return NULL;
      }
      t = ctr_clex_tok();
-     t = ctr_clex_tok();
-     ctr_clex_putback();
    }
    if (t == CTR_TOKEN_PAROPEN) {
-     ctr_clex_tok();
      char* begin = ctr_code;
      char* end = ctr_clex_scan(')');
      if (!end) {
@@ -765,7 +776,7 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
      ctr_cparse_emit_error_unexpected(t, "Expected a '}' to end the native block\n");
      return NULL;
    }
-   void* fn = ctr_cparse_intern_asm_block(asm_begin, asm_end, constraint, att);
+   void* fn = ctr_cparse_intern_asm_block(asm_begin, asm_end, constraint, &((ctr_object*)NULL)->value.nvalue, argidx, att);
    if (constraint[0]) ctr_heap_free(constraint);
    if (!fn) {
      ctr_cparse_emit_error_unexpected(t, "Invalid assembly\n");

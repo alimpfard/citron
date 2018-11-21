@@ -57,4 +57,4 @@ extern "C"
 #else
 extern
 #endif
-void* ctr_cparse_intern_asm_block(char* asm_begin, char* asm_end, char* con, int att);
+void* ctr_cparse_intern_asm_block(char* asm_begin, char* asm_end, char* con, int offset, int argc, int att);

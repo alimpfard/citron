@@ -9,6 +9,9 @@ HashSet on: 'new' do: {
 HashSet on: 'from:' do: {:map
   ^me cnew: {my map is map.}.
 }.
+HashSet on: 'fromArray:' do: {:array
+  ^me new addAll: array. 
+}.
 HashSet on: '_marker' do: {^const HashSetValueMarker.}.
 HashSet on: 'add:' do: {:v
   my map put: const HashSetValueMarker at: v.

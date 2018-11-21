@@ -175,6 +175,7 @@ void llvmDebugPrint(Module* value) {
                 arg = new LoadInst(arg, "", blk);
                 if (i!=cnt-1) {
                     args = GetElementPtrInst::CreateInBounds(args, ConstantInt::get(i8ty, addr_b, false), "", blk);
+                    args = new BitCastInst(args, i8ppty, "", blk);
                     args = new LoadInst(args, "", blk);
                 }
                 // first

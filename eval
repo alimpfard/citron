@@ -500,7 +500,7 @@ Eval on: 'addFile:named:' do: {:str:fname
   Reflect run: {:fname:ctx:str ('var %s is {
     Eval statsb: 0, statsa: 0, exectime: 0.
     Reflect run: {:str str eval.} inContext: const ctx arguments: [const str].
-  }' % [fname]) eval. } inContextAsMain: my evaluationContext arguments: [varname, my evaluationContext, str].
+  }' % [fname]) eval. } inContextAsMain: my evaluationContext arguments: [varname, my evaluationContext, '{\n $$str \n}'].
 }.
 Eval on: 'pushHist:' do: {:h
   my history push: h.
@@ -1137,7 +1137,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
     Eval getFlag: 'printvs', ifTrue: { Pen message: Eval color arguments: [], write: var str is Eval __eval_ret toString. printed is str length > 0. }.
     Eval display/resetColor.
     Eval getFlag: 'ptype', ifTrue: {
-      Eval display/yellow write: '%s=> (%s)%s' % [(printed either: ' ' or: ''), (Reflect strTypeOf: Eval __eval_ret, replace: '\'' with: ''), (printed either: '' or: '\n')].
+      Eval display/yellow write: '%s=> (%s)%s' % [(printed either: ' ' or: ''), (Reflect strTypeOf: Eval __eval_ret, ~ 's/\\\\?\\\'//g'), (printed either: '' or: '\n')].
       Eval display/resetColor.
     }.
     Eval getFlag: 'stats', ifTrue: {

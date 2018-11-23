@@ -36,6 +36,7 @@ import
   Library/Control/MethodResolve
   Library/Data/Json
   Library/Data/String
+  Library/Data/IO/UTF-8/input
   Library/Data/Array/LRArray: 'LRArray'
   Library/Utils/CLIContextMenu: ['generate_context_menu', 'clear_next_line']
   Library/Data/IO/Pen: 'pPen'.
@@ -880,7 +881,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
   Eval break break.
   Eval display/cyan write: prompt, resetColor.
 
-  var inc is stdin readBytes: 1.
+  var inc is stdin readUTF8Bytes: 1.
   var last_was_comp is False.
   var last_comp_entry is ''.
   var last_comp_index is -1.
@@ -1016,7 +1017,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
           clear_next_line applyTo: linesp. have_context is False.
 
         }, case: '\x1b' do: {
-          inc is stdin readBytes: 2.
+          inc is stdin readUTF8Bytes: 2.
           (frozen select_inlevel_q is case: '\x5b\x41' do: { #Up Arrow
             hindex > 0 ifTrue: {
               cursor is (inp is Eval getHistory at: (hindex is hindex - 1)) length.
@@ -1048,7 +1049,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
             }, else: {Eval display/write: '\a'.}.
             clear_next_line applyTo: linesp. have_context is False.
           }, case: '\x5b\x31' do: { #Supposedly <ctrl>
-            inc is stdin readBytes: 3.
+            inc is stdin readUTF8Bytes: 3.
               (inc = '\x3b\x35\x44') & (cursor > 0) ifTrue: { #^Left Arrow
                 var ct is inp from: 0 to: cursor.
                 var ct is ct trim.
@@ -1105,7 +1106,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
     # Eval display/write: inc toByteArray.
     done is (done & (inBlock = 0)).
     done break.
-    inc is stdin readBytes: 1.
+    inc is stdin readUTF8Byte.
   }.
   hindex is Eval getHistory count.
   # Eval display/cyan write: ' [cursor %d in (%s)]' % [cursor, (inp)], resetColor.

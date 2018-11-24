@@ -677,7 +677,11 @@ struct ctr_context_t {
 };
 CTR_H_DECLSPEC void ctr_dump_context(struct ctr_context_t*);
 CTR_H_DECLSPEC void ctr_load_context(struct ctr_context_t);
+#ifndef CTR_GLOBALS_DEFINE
+extern ctr_object* ctr_contexts[CTR_CONTEXT_VECTOR_DEPTH];
+#else
 CTR_H_DECLSPEC ctr_object* ctr_contexts[CTR_CONTEXT_VECTOR_DEPTH];
+#endif
 CTR_H_DECLSPEC int ctr_context_id;
 CTR_H_DECLSPEC ctr_tnode* ctr_callstack[CTR_CONTEXT_VECTOR_DEPTH]; //That should be enough... right?
 CTR_H_DECLSPEC uint8_t ctr_callstack_index;

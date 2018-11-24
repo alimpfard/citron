@@ -80,15 +80,15 @@ configuration: Release
 
 # to run your custom scripts instead of automatic MSBuild
 build_script:
-  - if %prepare_mode%==YES c:\ciuploadtool\ciuploadtool.exe -preponly -suffix="%APPVEYoR_REPO_BRANCH%"
-  - ps: if ($env:prepare_mode -eq "YES") { throw "Failing in order to stop the current build matrix job early" }
+  - if %prepare_mode%==YES c:\ciuploadtool\ciuploadtool.exe -preponly -suffix="%APPVEYOR_REPO_BRANCH%"
+  - if %prepare_mode%==YES exit 1
   - '%APPVEYOR_BUILD_FOLDER%\build_windows_package.bat'
 
 on_finish:
   - c:\ciuploadtool\ciuploadtool.exe -suffix="%APPVEYOR_REPO_BRANCH%" citron-release.tar
 
 # to disable automatic builds
-build: on
+build: off
 
 #---------------------------------#
 #         notifications           #

@@ -6,6 +6,7 @@ var debug is {:blk DEBUG ifTrue: {blk run.}.}.
 
 var QAHELP is 's/$register>/value :: set register to value
 p/<register> :: print the contents of register <register>
+pm <from> : <count> :: print <count> bytes of memory starting at <from>
 a+<number> :: print the disassembly of instructions from the current PC for <number> lines
 a-<number> :: print the disassembly of instructions from the current PC minus number for <number> lines
 break<pc> :: break on PC = <pc>
@@ -42,7 +43,9 @@ var MemoryBlock is Array new.
 
 MemoryBlock on: 'init' do: {:self
   my bp is 0.
-  64 * 1024 times: {:i self put: 0 at: i.}. #64 KB of accessible memory. for now
+  Pen red writeln: 'Initializing memory...', resetColor.
+  64 * 1024 times: {:i self push: 0.}. #64 KB of accessible memory. for now
+  Pen cyan writeln: 'Memory init done', resetColor.
 }.
 MemoryBlock on: 'absForBase:offset:' do: {:base:offset
   ^(base toNumber) + (offset toNumber).
@@ -356,8 +359,8 @@ MIPSIntructions on: 'assemble:forMachine:' do: {:self:instrs:machine
     (v trim = '') continue.
     machine setParseLocation: i.
     var instr is (MIPSIntructions assembleInstr: (v trim) forMachine: machine).
-    instr each: {:i:v dec push: v.}.
-    ((instr type) !=: 'Array') ifTrue: {dec push: instr.}.
+    # instr each: {:i:v dec push: v.}.
+    instr isA: Array, ifFalse: {dec push: instr.}.
     #Pen red write: v, green write: (dec @ i), resetColor brk.
   }.
   ^dec.

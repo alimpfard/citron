@@ -155,11 +155,12 @@ Highlight on: 'highlight:' do: {:code:html
               }.
               this_thing append: c.
           }.
-          AST lexSkip: this_thing length - delet_this.
-          var length is this_thing length - delet_this + begin length.
-          var lendiff is length + (token @ 3).
-          token put: AST lexpos - (token @ 2 - lendiff) at: 2.
-          token put: length at: 3.
+          AST lexSkip: this_thing bytes - delet_this.
+          # Pen writeln: '-%d:%d, %s => l%d b%d' % [token @ 2, AST lexpos, this_thing, this_thing length, this_thing bytes].
+          var lendiff is this_thing bytes - this_thing length.
+          token put: AST lexpos - lendiff - 1 at: 2.
+          token put: this_thing length at: 3.
+          # Pen writeln: '+%d:%d, %s => l%d b%d' % [token @ 2, AST lexpos, this_thing, this_thing length, this_thing bytes].
           color is Colors yellow.
           this_thing is begin + this_thing.
         } or: {

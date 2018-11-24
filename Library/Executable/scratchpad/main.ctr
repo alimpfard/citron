@@ -37,72 +37,7 @@ var executeDefaultBindings is Map new.
 var fontCache is Map new.
 var __scratchpad is Nil.
 var __eval_context is Object cnew: {
-  var newWindowCounter is 0.
-  my properties-of is {:object
-    object isA: Map, ifTrue: {^object.}.
-    object isA: Array, ifTrue: {
-      ^Map fromArray: (object imap: \:i:x ['#$$i', x]).
-    }.
-    ^Map fromArray: ((Reflect getPropertiesOf: object) fmap: \:x [x, (Reflect getProperty: x ofObject: object)]). }.
-  my proper-name-ize is {:name ^name ~ 's/\\s/_/g'.}.
-  my inspect-object is {:object
-    var actual-arglist is {:list
-      list count = 0 ifTrue: { ^'--nothing--'. }.
-      list head = 'self' ifTrue: { list shift. }.
-      ^list join: ', '.
-    }.
-    var windowId is '.gui' + (const newWindowCounter +=: 1).
-    Scratchpad openWindow: windowId.
-    var currentTheme is Scratchpad currentTheme.
-    Tcl toplevel: windowId.
-    Tcl eval: 'set w ' + windowId.
-    Tcl eval: 'wm title $w {Inspect {%s}}' % [(Reflect strTypeOf: object, ~ ?>s/(\[|\])/$1/g<?)].
-    Tcl ttk->treeview: '$w.ptree' columns: '{type value}'.
-    Tcl eval: '$w.ptree heading #0 -text Name'.
-    Tcl eval: '$w.ptree heading type -text Type'.
-    Tcl eval: '$w.ptree heading value -text Value'.
-    Reflect generateLinkTree: object, tail each: {:i:parent
-      Tcl eval: '$w.ptree insert "" end -text {parent%s} -values [list {%s} {%s}] -tags "show-inspect-parent-%d"' % [i, (Reflect strTypeOf: parent), parent, i].
-      Tcl eval: '$w.ptree tag bind show-inspect-parent-%d <2> %s' % [i, (Tcl fnOf: {\ parent inspect. Nil.})].
-    }.
-    Tcl eval: '$w.ptree insert "" end -text "------" -values [list "------" "-------"]'.
-    properties-of[object] each: {:pname:prop
-      Tcl eval: '$w.ptree insert "" end -text {%s} -values [list {%s} {%s}] -tags "show-view show-inspect-%s"' % [pname, (Reflect strTypeOf: prop), prop toString, proper-name-ize[pname]].
-      Tcl eval: '$w.ptree tag bind show-inspect-%s <2> %s' % [proper-name-ize[pname], (Tcl fnOf: {\ prop inspect. Nil.})].
-    }.
-    Tcl eval: '$w.ptree tag bind show-view <1> {
-      set w %s
-      $w.text delete 0.0 end
-      $w.text insert 0.0 [lindex [$w.ptree item [$w.ptree focus] -values] 1]
-    }' % [windowId].
-    Tcl ansicolor->text: '$w.text'.
-    Scratchpad currentTheme applyToText: '%s.text' % [windowId].
-    Tcl ttk->treeview: '$w.mtree' columns: '{num_args}'.
-    Tcl eval: '$w.mtree heading #0 -text Method'.
-    Tcl eval: '$w.mtree heading num_args -text Arguments'.
-    Reflect getMethodsOf: object, each_v: {:pname
-      var prop is object &responder: pname.
-      # Pen writeln: [pname, prop].
-      var arglist is actual-arglist[(Reflect argumentListOf: prop)].
-      var propername is proper-name-ize[pname].
-      Tcl eval: '$w.mtree insert "" end -text {%s} -values [list {%s}] -tags "show-view-%s"' % [pname, arglist, propername].
-      arglist !=: 'native-args', ifTrue: {
-        Tcl eval: '$w.mtree tag bind show-view-%s <1> %s' % [propername, (Tcl fnOf: {
-          var code is Highlight highlight: ast2ctrcode [(AST fromBlock: const prop)] html: False.
-          Tcl eval: ?>
-            set w %s
-            $w.text delete 0.0 end
-            $w.text insert 0.0 { %s }
-          <? % [const windowId, code].
-        })].
-      }.
-    }.
-    Tcl pack: '$w.text' fill: 'both' side: 'bottom' anchor: 's'.
-    Tcl pack: '$w.mtree' fill: 'x' side: 'right'.
-    Tcl pack: '$w.ptree' fill: 'x' side: 'left'.
-    Tcl tkwait: 'window $w'.
-    Scratchpad closeWindow: windowId.
-  }.
+    import Library/GUI/inspect: \*.
     var Themes is my Themes is Map new.
     var Theme is Object cnew: {
       genAccessors: [
@@ -377,7 +312,7 @@ Tcl proc: 'handle_menu' args: ['w'] body: (
   ]
 ).
 
-Object on: 'inspect' do: {:self inspect-object applyTo: self. }.
+Object on: 'inspect' do: {:self inspect-object applyTo: self and: 'ansicolor::text' and: Scratchpad. }.
 
 Tcl eval: ?>
 source ansicolor.tcl

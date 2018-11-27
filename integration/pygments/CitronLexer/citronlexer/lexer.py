@@ -22,14 +22,20 @@ class CitronLexer(RegexLexer):
             (u'(0[xX][0-9a-fA-F]+|0[cC][0-7]|\\d+\\.\\d+|\\d+)', bygroups(Number)),
             (u'(\')', bygroups(String), 'main__3'),
             (u'(?:(\\\\)((?:\\:[^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*\\s*)+))', bygroups(Keyword.Reserved, Keyword.Pseudo), 'main__4'),
-            (u'(?:(\\{)((?:\\:(?:[^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*))*))', bygroups(Name, Keyword.Pseudo), 'main__5'),
-            (u'(?:(\\#:))', bygroups(Comment), 'main__6'),
+            (u'(?:(\\{)(asm)(\\s*(?:\\:)\\s*(?:\\w+))*(\\s*intel|att|at\\&t)?(\\s*\\(.*\\)\\s*))', bygroups(Name, Generic.Deleted, Keyword.Pseudo, Generic.Deleted, Generic.Deleted), 'main__5'),
+            (u'(?:(\\{)((?:\\s*\\:(?:[^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*))*))', bygroups(Name, Keyword.Pseudo), 'main__6'),
+            (u'(?:(\\#:))', bygroups(Comment), 'main__7'),
             (u'(\\#.*$)', bygroups(Comment)),
-            (u'((?:[^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*)\\:)', bygroups(Name.Decorator), 'main__7'),
-            (u'(\\\\)', bygroups(String.Escape), 'main__8'),
-            (u'(?:(\\s+)([^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]|[-+*&%$@!=\";/\\\\<>?~]+)(\\s+))', bygroups(Name, Name.Decorator, Name), 'main__9'),
-            (u'(?:(\\`)([^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*)(\\1))', bygroups(String.Escape, Name.Function, String.Escape), 'main__10'),
-            (u'(?:(\\`?)([^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*)(\\1))', bygroups(String.Escape, Generic, String.Escape), 'main__11'),
+            (u'((?:[^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*)\\:)', bygroups(Name.Decorator), 'main__8'),
+            (u'(\\\\)', bygroups(String.Escape), 'main__9'),
+            (u'(?:(\\s+)([^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]|[-+*&%$@!=\";/\\\\<>?~]+)(\\s+))', bygroups(Name, Name.Decorator, Name), 'main__10'),
+            (u'(?:(\\`)([^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*)(\\1))', bygroups(String.Escape, Name.Function, String.Escape), 'main__11'),
+            (u'(?:(\\`?)([^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*)(\\1))', bygroups(String.Escape, Generic, String.Escape), 'main__12'),
+            ('(\n|\r|\r\n)', String),
+            ('.', String),
+        ],
+        'asm' : [
+            (u'(.*)', bygroups(Comment)),
             ('(\n|\r|\r\n)', String),
             ('.', String),
         ],
@@ -42,6 +48,10 @@ class CitronLexer(RegexLexer):
             ('.', Name),
         ],
         'main__11' : [
+            ('(\n|\r|\r\n)', String),
+            ('.', Name),
+        ],
+        'main__12' : [
             ('(\n|\r|\r\n)', String),
             ('.', Name),
         ],
@@ -62,23 +72,24 @@ class CitronLexer(RegexLexer):
             ('.', Generic),
         ],
         'main__5' : [
+            (u'(?:\\s*)', bygroups(Name), 'asm'),
             ('(\n|\r|\r\n)', String),
-            ('.', Name),
+            ('.', String),
         ],
         'main__6' : [
             ('(\n|\r|\r\n)', String),
-            ('.', Generic.Deleted),
+            ('.', Name),
         ],
         'main__7' : [
             ('(\n|\r|\r\n)', String),
-            ('.', Name),
+            ('.', Generic.Deleted),
         ],
         'main__8' : [
             ('(\n|\r|\r\n)', String),
-            ('.', Keyword.Reserved),
+            ('.', Name),
         ],
         'main__9' : [
             ('(\n|\r|\r\n)', String),
-            ('.', Name),
+            ('.', Keyword.Reserved),
         ]
     }

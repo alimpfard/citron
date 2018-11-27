@@ -1,6 +1,11 @@
+import Library/Data/SwitchCase.
+
 #:language XFrozen
 
-var ast2ctrcode is {:self:ast:curindent
+var ast2ctrcode is {:self:ast:curindent:options
+  options is options or: Map.
+  var max_line_length is options at: 'max_line_length', or: 80.
+  var indent_s      is ' ' * (options at: 'indent_length', or: 2).
   curindent is curindent or: 0.
   ^(frozen __ is
     case: 'LTRNUM' do: {
@@ -8,7 +13,7 @@ var ast2ctrcode is {:self:ast:curindent
     },
     case: 'LTRSTRING' do: {
       var value is ast value.
-      ^'\'%s\'' % [value ~ 's/(?!\\\\)\'/\\\'/g'].
+      ^'\'%s\'' % [value escapeQuotes ~ ?>s/\\(?!')/\\\\/g<?].
     },
     case: 'LTRNIL' do: {
       ^'Nil'.
@@ -29,11 +34,17 @@ var ast2ctrcode is {:self:ast:curindent
         default: {\ '%s' }) switch: ast modifier, % [value].
     },
     case: 'EXPRMESSAGE' do: {
-      var rec is self[ast @ 0, curindent].
+      var rec is self[ast @ 0, curindent, options].
       var ct is ast count.
       ct - 1 times: {:i
         var s is ast @ (i + 1).
-        rec +=: ' ' + self[s, curindent].
+        var rv is ' ' + self[s, curindent, options].
+        (rec length > max_line_length) ifTrue: {
+          (rec split: '\n', last) length + rv length > max_line_length ifTrue: {
+            rec +=: '\n'.
+          }.
+        }.
+        rec +=: rv.
         i !=: ct - 2, & (s type = 'KWMESSAGE') ifTrue: { rec +=: ','. }.
       }.
       ^rec.
@@ -42,15 +53,26 @@ var ast2ctrcode is {:self:ast:curindent
       ^ast value.
     },
     case: 'BINMESSAGE' do: {
-      ^ast value + ' ' + self[ast @ 0, curindent].
+      ^ast value + ' ' + self[ast @ 0, curindent, options].
     },
     case: 'KWMESSAGE' do: {
       var value is ast value split: ':'.
-      ^value imap: \:i:x '%s: %s' % [x, self[ast @ i, curindent]], join: ' '.
+      var code is ''.
+      value each: {:i:x
+        var tc is '%s: %s ' % [x, self[ast @ i, curindent, options]].
+        (code length > max_line_length) ifTrue: {
+          (code split: '\n', last) length + tc length > max_line_length ifTrue: {
+            code +=: '\n'.
+          }.
+        }.
+        code +=: tc.
+      }.
+      code is code from: 0 to: code length - 1.
+      ^code.
     },
     case: 'EXPRASSIGNMENT' do: {
-      var ref is self[(ast at: 0), curindent].
-      var _value is self[(ast at: 1), curindent].
+      var ref is self[(ast at: 0), curindent, options].
+      var _value is self[(ast at: 1), curindent, options].
       ^_value length > 0 either: { ^'%s is %s' % [ref, _value]. } or: ref.
     },
     case: 'SYMBOL' do: {
@@ -59,41 +81,54 @@ var ast2ctrcode is {:self:ast:curindent
     case: 'NESTED' do: {
       var code is '('.
       var ps is ast at: 0.
-      var tcode is self[ps, curindent].
-      tcode length > 80 ifTrue: { code +=: '\n' + ('  ' * (curindent + 1)). }.
+      var tcode is self[ps, (curindent +=: 1), options].
+      tcode length > max_line_length ifTrue: { code +=: '\n' + (indent_s * curindent). }.
       code +=: tcode.
       ^code + ')'.
     },
     case: 'CODEBLOCK' do: {
       var ps is ast at: 0.
       var ins is ast at: 1.
-      var fmt is ast modifier = 'My' either: '{\\%:L\n%s%:L\n%s}' or: '{%:L\n%s%:L\n%s}'.
-      var cindent is '  ' * (curindent +=: 1).
+      var fmt is ast modifier = 'My' either: '{\\%:L%s%:L\n%s}' or: '{%:L%s%:L\n%s}'.
+      var cindent is '\n' + (indent_s * (curindent +=: 1)).
       ^fmt % ['',
               (Array new fill: ps count with: \:x ':' + (ps @ x) value),
               cindent,
-              '\n' + cindent,
-              (Array new fill: ins count with: \:x self[ins @ x, curindent] + '.'),
-              '  ' * (curindent - 1)
+              cindent,
+              (Array new fill: ins count with: \:x self[ins @ x, curindent, options] + '.'),
+              indent_s * (curindent - 1)
             ].
     },
     case: 'PROGRAM' do: {
-      ^(Array new fill: ast count with: \:x self[ast @ x, curindent + 1] + '.') join: '\n' + ('  ' * curindent).
+      ^(Array new fill: ast count with: \:x self[ast @ x, curindent + 1, options] + '.') join: '\n' + (indent_s * curindent).
     },
     case: 'ENDOFPROGRAM' do: { ^''. },
-    case: 'RETURNFROMBLOCK' do: { ^'^' + self[ast @ 0, curindent]. },
+    case: 'RETURNFROMBLOCK' do: { ^'^' + self[ast @ 0, curindent, options]. },
     case: 'IMMUTABLE' do: {
       var code is '['.
       var ps is ast at: 0.
       var pcount is ps count.
-      (Array new fill: pcount with: \:i self[ps @ i, curindent]) each_v: {:gen
+      (Array new fill: pcount with: \:i self[ps @ i, curindent, options]) each_v: {:gen
         var tcode is code + gen + ', '.
-        tcode split: '\n', last length > 80 ifTrue: { tcode is code + '\n' + ('  ' * (curindent + 1)) + gen + ', '. }.
+        tcode split: '\n', last length > max_line_length ifTrue: { tcode is code + '\n' + (indent_s * (curindent + 1)) + gen + ', '. }.
         code is tcode.
       }.
       pcount > 0 ifTrue: { code is code from: 0 to: code length - 2. }.
-      code split: '\n', last length > 80 ifTrue: { code +=: '\n'. }.
+      code split: '\n', last length > max_line_length ifTrue: { code +=: '\n'. }.
       ^code + ']'.
+    },
+    case: 'RAW' do: {
+      ^((frozen _ is
+          case: 'None' do: {\ '%s'},
+          case: 'My'   do: {\ '$(%s)'},
+          default:         {
+            ^'%s'.
+          }
+        ) switch: ast modifier) % [self[ast @ 0, curindent, options]].
+    },
+    case: 'EMBED' do: {
+      var qq is ast at: 0.
+      ^'$`(' + self[qq, curindent, options] + ')'.
     },
     default: { errPen red writeln: '$$ast is not unparsable at the moment ( because of $$value )', resetColor. }) switch: ast type.
 }.

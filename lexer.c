@@ -114,6 +114,97 @@ __attribute__ ((always_inline))
 }
 
 /**
+ * Lexer - Scan for character
+ *
+ * @return position of the encountered token or NULL if it doesn't exist
+ */
+char* ctr_clex_scan(char c) {
+  if (*ctr_code == c)
+    return ctr_code;
+  char* older = ctr_clex_olderptr;
+  ctr_clex_olderptr = ctr_clex_oldptr;
+  ctr_clex_oldptr = ctr_code;
+  while (ctr_code<=ctr_eofcode&& *++ctr_code != c) {
+    if (*ctr_code == '\n') ctr_clex_line_number++;
+  }
+  if (ctr_code == ctr_eofcode) {
+    ctr_code = ctr_clex_oldptr;
+    ctr_clex_oldptr = ctr_clex_olderptr;
+    ctr_clex_olderptr = older;
+    return NULL;
+  }
+  return ctr_code;
+}
+
+static
+struct ctr_extension_descriptor {
+  int ext;
+  const char* name;
+} ctr_clex_extensions[] = {
+  {CTR_EXT_PURE_FS, "XPureLambda"},
+  {CTR_EXT_FROZEN_K, "XFrozen"},
+#if withInlineAsm
+  {CTR_EXT_ASM_BLOCK, "XNakedAsmBlock"},
+#endif  
+  {0, NULL}
+};
+
+unsigned int
+ctr_internal_edit_distance (const char *a, const char *b, unsigned int length, unsigned int bLength) {
+  unsigned int *cache = ctr_heap_allocate(length * sizeof(unsigned int));
+  unsigned int index = 0;
+  unsigned int bIndex = 0;
+  unsigned int distance;
+  unsigned int bDistance;
+  unsigned int result;
+  char code;
+
+  /* Shortcut optimizations / degenerate cases. */
+  if (a == b) return 0;
+  if (length == 0) return bLength;
+  if (bLength == 0) return length;
+
+  while (index < length) {
+    cache[index] = index + 1;
+    index++;
+  }
+
+  while (bIndex < bLength) {
+    code = b[bIndex];
+    result = distance = bIndex++;
+    index = -1;
+
+    while (++index < length) {
+      bDistance = code == a[index] ? distance : distance + 1;
+      distance = cache[index];
+
+      cache[index] = result = distance > result
+        ? bDistance > result
+          ? result + 1
+          : bDistance
+        : bDistance > distance
+          ? distance + 1
+          : bDistance;
+    }
+  }
+
+  ctr_heap_free(cache);
+
+  return result;
+}
+
+const char* ctr_clex_find_closest_extension(int length, char* val) {
+  struct ctr_extension_descriptor *closest = NULL;
+  unsigned int closested = length;
+  for(struct ctr_extension_descriptor *current=ctr_clex_extensions; current->name; current++) {
+    char const* name = current->name;
+    if (ctr_internal_edit_distance(val, name, length, strlen(name)) < closested)
+      closest = current;
+  }
+  return closest ? closest->name : "(¯\\_(ツ)_/¯)";
+}
+
+/**
  * Lexer - Save Lexer state
  *
  * saves the state of the lexer and
@@ -223,7 +314,6 @@ ctr_clex_load_state (struct lexer_state ls)
   return 0;
 }
 
-
 void
 ctr_clex_pop_saved_state ()
 {
@@ -244,7 +334,9 @@ ctr_clex_is_delimiter (char symbol)
 {
 
   return (symbol == '(' || symbol == '[' || symbol == ']'
-	  || symbol == ')' || symbol == ',' || symbol == '.' || symbol == ':' || symbol == ' ' || symbol == '\t');
+	     || symbol == ')' || symbol == ',' || symbol == '.'
+       || symbol == ':' || symbol == ' ' || symbol == '\t'
+       || symbol == '{' || symbol == '}' || symbol == '#');
 }
 
 unsigned long
@@ -480,9 +572,17 @@ static void handle_extension()
   else if (len == 11 && strncmp(ext, "XPureLambda", 11) == 0) {
     extensionsPra->value |= CTR_EXT_PURE_FS;
   }
+  else if (len == 14 && strncmp(ext, "XNakedAsmBlock", 14) == 0) {
+#if withInlineAsm
+      extensionsPra->value |= CTR_EXT_ASM_BLOCK;
+#else
+      goto elsecase;
+#endif
+  }
   else {
+elsecase:;
     static char errbuf[1024];
-    sprintf(errbuf, "Unknown extension '%.*s'", len, ext);
+    sprintf(errbuf, "Unknown extension '%.*s' did you mean '%s'?", len, ext, ctr_clex_find_closest_extension(len, ext));
     ctr_clex_emit_error(errbuf);
   }
 }

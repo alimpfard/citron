@@ -105,8 +105,16 @@ ctr_cwlk_message (ctr_tnode * paramNode)
 	result = ctr_cwlk_expr (receiverNode->nodes->node, "\0");
       else
 	{
-	  result = receiverNode->nodes->node;
+	  result = (ctr_object*) receiverNode->nodes->node;
 	}
+      break;
+    case CTR_AST_NODE_LISTCOMP:
+      result = ctr_build_listcomp (receiverNode);
+      break;
+    case CTR_AST_NODE_NATIVEFN:
+      result = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNATFUNC);
+      result->value.fvalue = (void*) receiverNode->value;
+      ctr_set_link_all(result, CtrStdBlock);
       break;
     case CTR_AST_NODE_IMMUTABLE:
     case CTR_AST_NODE_NESTED:
@@ -301,6 +309,41 @@ ctr_cwlk_assignment (ctr_tnode * node)
   return result;
 }
 
+void execute_if_quote(ctr_tnode* node) {
+  if (node->type == CTR_AST_NODE_EMBED && node->modifier == 0) {
+    node->modifier = 1;
+    node->nodes->node = (ctr_tnode*) ctr_cwlk_expr(node->nodes->node, "");
+    return;
+  }
+  switch (node->type) {
+    case CTR_AST_NODE_CODEBLOCK:
+      execute_if_quote(node->nodes->next->node);
+      return;
+    case CTR_AST_NODE_EXPRMESSAGE:
+    case CTR_AST_NODE_EXPRASSIGNMENT:
+      execute_if_quote(node->nodes->node);
+      execute_if_quote(node->nodes->next->node);
+      return;
+    case CTR_AST_NODE_BINMESSAGE:
+    case CTR_AST_NODE_RAW:
+    case CTR_AST_NODE_NESTED:
+      execute_if_quote(node->nodes->node);
+      return;
+    case CTR_AST_NODE_IMMUTABLE:
+    case CTR_AST_NODE_PROGRAM:
+      node = node->nodes->node;
+    /* Fallthrough */
+    case CTR_AST_NODE_KWMESSAGE:
+    case CTR_AST_NODE_INSTRLIST:
+      for (ctr_tlistitem* instr=node->nodes; instr; instr=instr->next)
+        execute_if_quote(instr->node);
+      return;
+      // TODO X: handle listcomp
+    default:
+      break;
+  }
+}
+
 /**
  * CTRWalkerExpression
  *
@@ -383,6 +426,7 @@ ctr_cwlk_expr (ctr_tnode * node, char *wasReturn)
 	switch (node->modifier)
 	  {
 	  case 1:
+      execute_if_quote(node->nodes->node);
 	    result = ctr_ast_from_node (node->nodes->node);
 	    break;
 	  case 2:
@@ -417,6 +461,11 @@ ctr_cwlk_expr (ctr_tnode * node, char *wasReturn)
       break;
     case CTR_AST_NODE_LISTCOMP:
       result = ctr_build_listcomp (node);
+      break;
+    case CTR_AST_NODE_NATIVEFN:
+      result = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNATFUNC);
+      result->value.fvalue = (void*) node->value;
+      ctr_set_link_all(result, CtrStdBlock);
       break;
     case CTR_AST_NODE_ENDOFPROGRAM:
       if (CtrStdFlow && CtrStdFlow != CtrStdExit && ctr_cwlk_subprogram == 0)

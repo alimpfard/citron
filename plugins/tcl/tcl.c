@@ -111,6 +111,7 @@ static Tcl_Obj* ctr_tcl_as_obj(ctr_object* ctrobj, void* interp) {
 struct tcl_run_data {
   ctr_object* blk;
   ctr_argument* argumentList;
+  char *name;
 };
 
 int ctr_tcl_run_blk(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj *const objv[]) {
@@ -121,7 +122,7 @@ int ctr_tcl_run_blk(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj
   ctr_object* sym = ctr_get_or_create_symbol_table_entry(name, namelen);
   ctr_object* blk = ctr_internal_object_find_property(ctr_bound_fn_map, sym, 0);
   if(!blk) {
-    (*get_CtrStdFlow()) = ctr_build_string_from_cstring("No such bound function");
+    (*get_CtrStdFlow()) = ctr_format_str("ENo such bound function (last name was %s)", ((struct tcl_run_data*)clientData)->name?:"<Unknown>");
     Tcl_SetObjResult(interp, ctr_tcl_as_obj(*get_CtrStdFlow(), interp));
     return TCL_ERROR;
   }
@@ -153,6 +154,7 @@ int ctr_tcl_run_blk(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj
 void kill_argml(ClientData clientData) {
   struct tcl_run_data* data = clientData;
   if(data->argumentList) ctr_free_argumentList(data->argumentList);
+  if(data->name) ctr_heap_free(data->name);
   ctr_heap_free(data);
 }
 
@@ -165,11 +167,22 @@ ctr_object* ctr_tcl_fnof(ctr_object* myself, ctr_argument* argumentList) {
   ctr_object* interps = ctr_internal_object_find_property(myself, CSTR_INTERP, 0);
   if (interps == NULL) ctrraise("Tcl object not initialized", myself);
   interp = (void*)(intptr_t)interps->value.nvalue;
+  struct tcl_run_data* data = ctr_heap_allocate(sizeof(*data));
+  data->blk = blk;
+  data->argumentList = NULL;
+  ctr_object* sname = blk->lexical_name;
+  if (sname && sname->info.type == CTR_OBJECT_TYPE_OTSTRING) {
+    struct ctr_string* strn = sname->value.svalue;
+    data->name = ctr_heap_allocate(strn->vlen+1);
+    memcpy(data->name, strn->value, strn->vlen);
+    data->name[strn->vlen] = '\0';
+  } else
+    data->name = NULL;
   static char fnname[1024];
-  size_t len = sprintf(fnname, "CtrBlock%ld", (intptr_t)blk);
+  size_t len = sprintf(fnname, "CtrBlock_%s_%ld", (data->name?data->name:""), (intptr_t)blk);
   ctr_object* sym = ctr_get_or_create_symbol_table_entry(fnname, len);
   ctr_internal_object_set_property(ctr_bound_fn_map, sym, blk, 0);
-  Tcl_Command cmd = Tcl_CreateObjCommand(interp->interp, fnname, &ctr_tcl_run_blk, NULL, NULL);
+  Tcl_Command cmd = Tcl_CreateObjCommand(interp->interp, fnname, &ctr_tcl_run_blk, data, &kill_argml);
   if(!cmd) ctrraise((char*)Tcl_GetStringResult(interp->interp), myself);
   ctr_object* blk_ren = ctr_build_string_from_cstring(fnname);
   ctr_internal_object_add_property(blk_ren, ctr_build_string_from_cstring(":function"), blk, 0);

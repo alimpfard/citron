@@ -1,0 +1,43 @@
+import Library/Control/Assert: 'assert'.
+
+#:language XNakedAsmBlock
+
+var test0 is {asm intel (=&{eax})
+  push    rbp
+  xor     eax, eax
+  mov     rbp, rsp
+  add     eax, 6
+  add     eax, 0x100
+  pop     rbp
+}.
+var test1 is {asm intel (=&{eax})
+  push    rbp
+  xor     eax, eax
+  mov     rbp, rsp
+  add     eax, 1024
+  add     eax, 0x100
+  pop     rbp
+}.
+
+assert {test0[] = 262}.
+assert {test1[] = (262 - 6 + 1024)}.
+
+var test2 is {asm :int intel (=r,r)
+  xor $0, $0
+  cmp $1, 100
+  jl end
+  end:
+    movabs $0, 1000
+}.
+
+assert { test2[10] = 1000 }.
+
+var test3 is {asm :a:b:c att (=r,{xmm0},{xmm1},{xmm2})
+  VFMADD213SD $3, $2, $1
+  cvtsd2siq $1, $0
+}.
+
+# test capturable as normal function
+var test4 is \:_ test3[2, 4, 2].
+
+assert { test4[] = 10 }.

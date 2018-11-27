@@ -130,6 +130,7 @@ extern "C" {
 #define CTR_AST_NODE_LTRBOOLFALSE 82
 #define CTR_AST_NODE_LTRNIL 83
 #define CTR_AST_NODE_PROGRAM 84
+#define CTR_AST_NODE_NATIVEFN 85
 
 /**
  * Define the basic object types.
@@ -494,6 +495,7 @@ char* 	ctr_clex_tok_value();
 long    ctr_clex_tok_value_length();
 void 	ctr_clex_putback();
 char*	ctr_clex_readstr();
+char* ctr_clex_scan(char c);
 char*   ctr_clex_tok_describe( int token );
 int     ctr_clex_save_state();
 int     ctr_clex_dump_state(struct lexer_state*);
@@ -552,6 +554,8 @@ CTR_H_DECLSPEC ctr_code_pragma* extensionsPra;
 // XPureLambda
 // force enables XFrozen
 #define CTR_EXT_PURE_FS  (1|2)
+// XNakedAsmBlock
+#define CTR_EXT_ASM_BLOCK 4
 
 extern int ctr_did_side_effect;
 void ctr_mksrands(char* buf);
@@ -673,7 +677,11 @@ struct ctr_context_t {
 };
 CTR_H_DECLSPEC void ctr_dump_context(struct ctr_context_t*);
 CTR_H_DECLSPEC void ctr_load_context(struct ctr_context_t);
+#ifndef CTR_GLOBALS_DEFINE
+extern ctr_object* ctr_contexts[CTR_CONTEXT_VECTOR_DEPTH];
+#else
 CTR_H_DECLSPEC ctr_object* ctr_contexts[CTR_CONTEXT_VECTOR_DEPTH];
+#endif
 CTR_H_DECLSPEC int ctr_context_id;
 CTR_H_DECLSPEC ctr_tnode* ctr_callstack[CTR_CONTEXT_VECTOR_DEPTH]; //That should be enough... right?
 CTR_H_DECLSPEC uint8_t ctr_callstack_index;
@@ -1236,6 +1244,7 @@ ctr_object* ctr_inject_make(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_inject_compile(ctr_object* myself, ctr_argument* argumentList);
 ctr_object *ctr_inject_get_symbol(ctr_object *myself, ctr_argument *argumentList);
 ctr_object *ctr_inject_run(ctr_object *myself, ctr_argument *argumentList);
+ctr_object *ctr_inject_run_named(ctr_object *myself, ctr_argument *argumentList);
 ctr_object *ctr_inject_add_inclp(ctr_object* myself, ctr_argument* argumentList);
 ctr_object *ctr_inject_export_f(ctr_object *myself, ctr_argument *argumentList);
 ctr_object *ctr_inject_add_lib(ctr_object* myself, ctr_argument* argumentList);

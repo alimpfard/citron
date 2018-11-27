@@ -93,7 +93,7 @@ import on: '__load:' do: {:self:name
       var pf is Reflect runInNewContext: { file runHere. }.
       import __is_being_imported: imp.
       Program changeDirectory: oldp.
-      _lm put: pf at: path.
+      _lm put: pf at: full_path.
       ^pf.
     }.
 }.

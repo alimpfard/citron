@@ -501,7 +501,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_SET(pointer) {
   if(argumentList->object->info.type == CTR_OBJECT_TYPE_OTEX) {
     myself->value.rvalue->ptr = argumentList->object->value.rvalue->ptr;
   } else
-    (myself->value.rvalue->ptr) = (void*)(argumentList->object);
+    (myself->value.rvalue->ptr) = (void*)((intptr_t)argumentList->object->value.nvalue);
   return myself;
 }
 CTR_CT_SIMPLE_TYPE_FUNC_GET(pointer) {

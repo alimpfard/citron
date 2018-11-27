@@ -200,7 +200,7 @@ ctr_ast_nth (ctr_object * myself, ctr_argument * argumentList)
     }
   if (!pitem)
     goto err;
-  if (pitem->node->type == CTR_AST_NODE_EMBED)
+  if (pitem->node->type == CTR_AST_NODE_EMBED && pitem->node->modifier == 1)
     {
       return (ctr_object *) (pitem->node->nodes->node);
     }
@@ -458,6 +458,8 @@ ctr_ast_tystr (ctr_tnode * ast)
       return "EMBED";
     case CTR_AST_NODE_LISTCOMP:
       return "LISTCOMP";
+    case CTR_AST_NODE_NATIVEFN:
+      return "NATIVEFN";
     default:
       return "UNKNOWN";
     }
@@ -530,6 +532,8 @@ ctr_ast_tyfstr (char *type)
     return CTR_AST_NODE_RAW;
   if (strcasecmp ("EMBED", type) == 0)
     return CTR_AST_NODE_EMBED;
+  if (strcasecmp ("NATIVEFN", type) == 0)
+    return CTR_AST_NODE_NATIVEFN;
   return CTR_AST_NODE_ENDOFPROGRAM;
 }
 
@@ -1025,6 +1029,7 @@ ctr_ast_pure_stringify (ctr_tnode * node)
 	  break;
 	}
       case CTR_AST_NODE_LISTCOMP:
+      case CTR_AST_NODE_NATIVEFN:
       case CTR_AST_NODE_RAW:
       case CTR_AST_NODE_EMBED:
   {

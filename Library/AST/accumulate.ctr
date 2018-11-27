@@ -1,0 +1,21 @@
+AST on: 'respondTo:' do: {:msg
+  var res is $(REC MSG).
+  res put: me at: 0.
+  res at: 1, value: msg.
+  ^res.
+}.
+
+1 to: 6 step: 1 do: {:i
+  AST on: 'respondTo:' + ('and:' * i) do: {:msg:*args
+    args is args fmap: \:x $($`x).
+    var res is $(REC MSG: ARG).
+    res put: me at: 0.
+    var msgnode is res at: 1.
+    msgnode value: msg.
+    msgnode put: args shift at: 0.
+    args each: {:i:arg
+      msgnode insert: arg at: i + 1.
+    }.
+    ^res.
+  }.
+}.

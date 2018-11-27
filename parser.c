@@ -8,6 +8,10 @@
 #include "citron.h"
 #include "symbol.h"
 
+#if withInlineAsm
+#include "native-asm.h"
+#endif
+
 char *ctr_cparse_current_program;
 int do_compare_locals = 0;
 int all_plains_private = 0;
@@ -711,11 +715,102 @@ ctr_cparse_popen ()
   return r;
 }
 
+#if withInlineAsm
+ctr_tnode *ctr_cparse_intern_asm_block_() {
+  /**
+   *
+   * {asm att|intel? (STRING)? _asm_}
+   *
+   */
+   asm_arg_info_t arginfo[64];
+
+   int t = ctr_clex_tok();
+   int argidx = -1;
+   while (t == CTR_TOKEN_COLON) {
+     // arguments to asm _must_ be numbers,
+     // they must be used prepended with a colon
+     // in the output/input constraints
+     // no more than 4 arguments will be processed
+     t = ctr_clex_tok();
+     if (t != CTR_TOKEN_REF) {
+       ctr_cparse_emit_error_unexpected(t, "Expected an argument name\n");
+       return NULL;
+     }
+     int len = ctr_clex_tok_value_length();
+     char* val = ctr_clex_tok_value();
+     for(int i=0;i<len;i++)
+      if(!isalpha(val[i])) {
+        ctr_cparse_emit_error_unexpected(t, "asm block arguments must contain only alpha characters\n");
+        return NULL;
+      }
+     argidx++;
+     enum AsmArgType _ty = ASM_ARG_TY_DBL;
+     if (len == 3 && strncmp(val, "int", 3) == 0) _ty = ASM_ARG_TY_INT;
+     if (len == 3 && strncmp(val, "str", 3) == 0) _ty = ASM_ARG_TY_STR;
+     arginfo[argidx].ty = _ty;
+     t = ctr_clex_tok();
+   }
+   char* constraint = "\0";
+   int att = 1;
+   if (t == CTR_TOKEN_REF) {
+     int len = ctr_clex_tok_value_length();
+     char* tok = ctr_clex_tok_value();
+     if (len == 5 && strncasecmp(tok, "intel", 5) == 0)
+        att = 0;
+     else if (!(len == 4 && strncasecmp(tok, "at&t", 4) == 0 || len == 3 && strncasecmp(tok, "att", 3) == 0)) {
+       ctr_cparse_emit_error_unexpected(t, "Expected literal name att|at&t|intel\n");
+       return NULL;
+     }
+     t = ctr_clex_tok();
+   }
+   if (t == CTR_TOKEN_PAROPEN) {
+     char* begin = ctr_code;
+     char* end = ctr_clex_scan(')');
+     if (!end) {
+       ctr_cparse_emit_error_unexpected(t, "Expected a ')' to end the asm constraint block\n");
+       return NULL;
+     }
+     constraint = ctr_heap_allocate(end-begin+1);
+     memcpy(constraint, begin, end-begin);
+     constraint[end-begin] = 0;
+     ctr_code++;
+   }
+   char* asm_begin = ctr_code;
+   char* asm_end   = ctr_clex_scan('}');
+   ctr_clex_tok();
+   if (!asm_end) {
+     ctr_cparse_emit_error_unexpected(t, "Expected a '}' to end the native block\n");
+     return NULL;
+   }
+   void* fn = ctr_cparse_intern_asm_block(
+    /* start = */     asm_begin,
+    /* end = */       asm_end,
+    /* constraint= */ constraint,
+    /* offset = */    &((ctr_object*)NULL)->value.nvalue,
+    /* argc = */      argidx,
+    /* arginfo = */   &arginfo,
+    /* dialect = */   att
+   );
+   if (constraint[0]) ctr_heap_free(constraint);
+   if (!fn) {
+     ctr_cparse_emit_error_unexpected(t, "Invalid assembly\n");
+     return NULL;
+   }
+   ctr_tnode* node = ctr_cparse_create_node(CTR_AST_NODE);
+    node->type = CTR_AST_NODE_NATIVEFN;
+    node->value = (char*)fn;
+    node->vlen = 0;
+    return node;
+}
+#endif
+
+
 /**
  * CTRParserBlock
  *
  * Generates a set of AST nodes to represent a block of code.
  */
+
 ctr_tnode *ctr_cparse_block_ (int autocap);
 // __attribute__ ((always_inline))
 ctr_tnode *
@@ -744,6 +839,16 @@ ctr_cparse_block_ (int autocap)
   int t;
   int first;
   ctr_clex_tok ();
+  t = ctr_clex_tok ();
+#if withInlineAsm
+  if (
+    (extensionsPra->value & CTR_EXT_ASM_BLOCK) == CTR_EXT_ASM_BLOCK &&
+    t == CTR_TOKEN_REF &&
+    ctr_clex_tok_value_length() == 3 &&
+    strncmp(ctr_clex_tok_value(), "asm", 3) == 0
+  )
+    return ctr_cparse_intern_asm_block_();
+#endif
   r = ctr_cparse_create_node (CTR_AST_NODE);
   r->type = CTR_AST_NODE_CODEBLOCK;
   codeBlockPart1 = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
@@ -756,7 +861,6 @@ ctr_cparse_block_ (int autocap)
   codeBlockPart2->node = codeList;
   paramList->type = CTR_AST_NODE_PARAMLIST;
   codeList->type = CTR_AST_NODE_INSTRLIST;
-  t = ctr_clex_tok ();
   first = 1;
   while (t == CTR_TOKEN_COLON)
     {

@@ -1,0 +1,53 @@
+Number on: '//' do: {:other ^(me / other) floor. }.
+Number learn: '///' means: 'mod:'.
+
+Number on: 'gcd:' do: {:other
+  var n is me.
+  var m is other.
+  {^n = 0.} whileFalse: {
+    n is m /// (m is n).
+  }.
+  ^m abs.
+}.
+
+Number on: 'alignedTo:' do: {:self:other
+  ^(self + other - 1 // other) * other.
+}.
+
+Number learn: 'negated' means: 'neg'.
+
+Number on: 'crossSumBase:' do: {:self:base
+  # base isA: Number, and: {^base >= 2.}
+  self < 0 ifTrue: {^self negated crossSumBase: base.}.
+  self < base ifTrue: {^self.}.
+  var result is self /// base + (self // base crossSumBase: base).
+  # (result /// (base - 1) = 0) = ((self /// (base - 1)) = 0)
+  ^result.
+}.
+
+Number on: 'bitShift:' do: {:self:value
+  value = 0 ifTrue: {^self.}.
+  value < 0 ifTrue: { ^self shiftRight: value negated. }.
+  value > 0 ifTrue: { ^self shiftLeft: value. }.
+}.
+
+Number on: 'reciprocalModulo:' do: {:self:n
+  # (self * x) /// n = 1, x > 0, x < n
+  ((self <= 0) or: {^n <= 0.}) ifTrue: { thisBlock error: 'self and n must be greater than zero'. }.
+  self >= n ifTrue: { thisBlock error: 'self must be < n'. }.
+  var b is n highBit + 1.
+  var f is 1 bitShift: b.
+  var v is (self bitShift: b) + 1.
+  var u is n bitShift: b.
+  var fPn is f + n.
+  {^v >= fPn.} whileTrue: {
+    v is u /// (u is v).
+  }.
+  var result is v - f.
+  (var result2 is result + n) > 0 ifFalse: { thisBlock error: 'no inverse'. }.
+  ^result pos either: result or: result2.
+}.
+
+Number
+  learn: '>>' means: 'shiftRight:',
+  learn: '<<' means: 'shiftLeft:'.

@@ -1,4 +1,4 @@
-DEBUG_VERSION := 554
+DEBUG_VERSION := 667
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 o_cflags := -I/mingw64/include
 #it ain't so easy
@@ -44,12 +44,20 @@ OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o\
 		lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o\
 		importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o\
 		promise.o symbol_cxx.o world.o
+EXTRAOBJS =
 
 ifneq ($(findstring withCTypesNative=1,${CFLAGS}),)
 OBJS := ${OBJS} _struct.o ctypes.o structmember.o
 endif
+
+ifneq ($(findstring withInlineAsm=1,${CFLAGS}),)
+EXTRAOBJS := ${EXTRAOBJS} inline-asm.o
+CFLAGS := ${CFLAGS} `llvm-config --cflags --system-libs --libs core orcjit native`
+CXXFLAGS := `llvm-config --cxxflags --system-libs --libs core orcjit native` ${CXXFLAGS} -fexceptions
+endif
+
 ifneq ($(findstring withInjectNative=1,${CFLAGS}),)
-OBJS := ${OBJS} tcc/libtcc1.a tcc/libtcc.a inject.o
+OBJS := ${OBJS} inject.o tcc/libtcc1.a tcc/libtcc.a
 endif
 
 COBJS = ${OBJS} compiler.o
@@ -83,8 +91,8 @@ debug:
 install:
 	echo -e "install directly from source not allowed.\nUse citron_autohell instead for installs"
 	exit 1;
-ctr: $(OBJS) modules
-	$(CC) -fopenmp ${LDFLAGS} $(OBJS) modules.o -static -lm -ldl -lpcre -lpthread /usr/lib/libgc.dll.a ${LEXTRACF} -o ctr
+ctr:	$(OBJS) $(EXTRAOBJS)
+	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) ${CXXFLAGS}  -rdynamic -lm -ldl -lbsd -lpcre -l:libffi.so.7 -lpthread /usr/lib/libgc.dll.a ${LEXTRACF} -o ctr
 
 libctr: CFLAGS := $(CFLAGS) -fPIC -DCITRON_LIBRARY
 libctr: deps
@@ -106,6 +114,9 @@ tcc/%.a:
 # %.o: %.c
 # 	echo "$<"
 # 	$(CC) $(CFLAHS) -c $< -o $@ >/dev/null 2>&1
+
+inline-asm.o:
+	$(CXX) -g $(CFLAGS) -c inline-asm.cpp ${CXXFLAGS} -o inline-asm.o
 
 %.o: %.c
 	$(CC) -fopenmp $(CFLAGS) -static -c $< -o $@

@@ -143,7 +143,9 @@ struct ctr_extension_descriptor {
 } ctr_clex_extensions[] = {
   {CTR_EXT_PURE_FS, "XPureLambda"},
   {CTR_EXT_FROZEN_K, "XFrozen"},
+#if withInlineAsm
   {CTR_EXT_ASM_BLOCK, "XNakedAsmBlock"},
+#endif  
   {0, NULL}
 };
 
@@ -571,9 +573,14 @@ static void handle_extension()
     extensionsPra->value |= CTR_EXT_PURE_FS;
   }
   else if (len == 14 && strncmp(ext, "XNakedAsmBlock", 14) == 0) {
-    extensionsPra->value |= CTR_EXT_ASM_BLOCK;
+#if withInlineAsm
+      extensionsPra->value |= CTR_EXT_ASM_BLOCK;
+#else
+      goto elsecase;
+#endif
   }
   else {
+elsecase:;
     static char errbuf[1024];
     sprintf(errbuf, "Unknown extension '%.*s' did you mean '%s'?", len, ext, ctr_clex_find_closest_extension(len, ext));
     ctr_clex_emit_error(errbuf);

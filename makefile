@@ -1,4 +1,4 @@
-DEBUG_VERSION := 665
+DEBUG_VERSION := 667
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 LEXTRACF := ${LEXTRACF} -flto -lstdc++
 fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
@@ -46,14 +46,20 @@ OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o\
 		lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o\
 		importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o\
 		promise.o symbol_cxx.o world.o
-EXTRAOBJS = inline-asm.o
+EXTRAOBJS = 
 
 ifneq ($(findstring withCTypesNative=1,${CFLAGS}),)
 OBJS := ${OBJS} _struct.o ctypes.o structmember.o
 endif
+
+ifneq ($(findstring withInlineAsm=1,${CFLAGS}),)
+EXTRAOBJS := ${EXTRAOBJS} inline-asm.o
+CFLAGS := ${CFLAGS} `llvm-config --cflags --system-libs --libs core orcjit native`
+CXXFLAGS := `llvm-config --cxxflags --system-libs --libs core orcjit native` ${CXXFLAGS} -fexceptions
+endif
+
 ifneq ($(findstring withInjectNative=1,${CFLAGS}),)
 OBJS := ${OBJS} inject.o tcc/libtcc1.a tcc/libtcc.a
-CFLAGS := ${CFLAGS} `llvm-config --cflags --system-libs --libs core orcjit native`
 endif
 
 COBJS = ${OBJS} compiler.o
@@ -77,7 +83,7 @@ install:
 	echo -e "install directly from source not allowed.\nUse citron_autohell instead for installs"
 	exit 1;
 ctr:	$(OBJS) $(EXTRAOBJS)
-	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) `llvm-config --cxxflags --system-libs --libs core orcjit native` -rdynamic -lm -ldl -lbsd -lpcre -l:libffi.so.7 -lpthread ${LEXTRACF} -o ctr
+	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) ${CXXFLAGS}  -rdynamic -lm -ldl -lbsd -lpcre -l:libffi.so.7 -lpthread ${LEXTRACF} -o ctr
 
 libctr: CFLAGS := $(CFLAGS) -fPIC -DCITRON_LIBRARY
 libctr: symbol_cxx
@@ -100,7 +106,7 @@ tcc/%.a:
 # 	$(CC) $(CFLAHS) -c $< -o $@ >/dev/null 2>&1
 
 inline-asm.o:
-	$(CXX) -g $(CFLAGS) -c inline-asm.cpp `llvm-config --cxxflags --system-libs --libs core orcjit native` -o inline-asm.o
+	$(CXX) -g $(CFLAGS) -c inline-asm.cpp ${CXXFLAGS} -o inline-asm.o
 
 %.o: %.c
 	$(CC) -fopenmp $(CFLAGS) -c $< -o $@ >/dev/null 2>&1

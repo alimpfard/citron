@@ -8,7 +8,7 @@
 #include "citron.h"
 #include "symbol.h"
 
-#if withInjectNative
+#if withInlineAsm
 #include "native-asm.h"
 #endif
 
@@ -715,7 +715,7 @@ ctr_cparse_popen ()
   return r;
 }
 
-#if withInjectNative
+#if withInlineAsm
 ctr_tnode *ctr_cparse_intern_asm_block_() {
   /**
    *
@@ -840,7 +840,7 @@ ctr_cparse_block_ (int autocap)
   int first;
   ctr_clex_tok ();
   t = ctr_clex_tok ();
-#if withInjectNative
+#if withInlineAsm
   if (
     (extensionsPra->value & CTR_EXT_ASM_BLOCK) == CTR_EXT_ASM_BLOCK &&
     t == CTR_TOKEN_REF &&

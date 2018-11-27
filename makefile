@@ -43,7 +43,7 @@ LDFLAGS += ${shell_ldflags}
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o\
 		lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o\
 		importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o\
-		promise.o symbol_cxx.o world.o
+		promise.o symbol_cxx.o modules.o world.o
 EXTRAOBJS =
 
 ifneq ($(findstring withCTypesNative=1,${CFLAGS}),)
@@ -75,7 +75,7 @@ deps:
 	cp /usr/bin/msys-gcc_s-seh-1.dll .
 
 all: CFALGS := $(CFLAGS) -O2
-all: deps cxx
+all: deps modules cxx
 all: ctr ctrconfig
 
 ctrconfig:
@@ -92,7 +92,7 @@ install:
 	echo -e "install directly from source not allowed.\nUse citron_autohell instead for installs"
 	exit 1;
 ctr:	$(OBJS) $(EXTRAOBJS)
-	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) ${CXXFLAGS}  -rdynamic -lm -ldl -lbsd -lpcre -l:libffi.so.7 -lpthread /usr/lib/libgc.dll.a ${LEXTRACF} -o ctr
+	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) ${CXXFLAGS}  -rdynamic -lm -ldl -lpcre -lpthread /usr/lib/libgc.dll.a ${LEXTRACF} -o ctr
 
 libctr: CFLAGS := $(CFLAGS) -fPIC -DCITRON_LIBRARY
 libctr: deps
@@ -184,4 +184,10 @@ package:
 	tar cf citron-release.tar package install.bat
 	rm -rf package install.bat
 
-distribute: all package
+release:
+	  wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
+		export UPLOADTOOL_SUFFIX="windows"
+		export REPO_SLUG="alimpfard/citron"
+		./upload.sh citron-release.tar
+
+distribute: all package release

@@ -69,10 +69,6 @@ deps:
 	# Do not expect it to work anywhere else
 	# TODO: Find a better solution
 	pacman --noconfirm -S libgc-devel libgc
-	# These guys are dynamically linked
-	cp /usr/bin/msys-gc-1.dll .
-	cp /usr/bin/msys-2.0.dll .
-	cp /usr/bin/msys-gcc_s-seh-1.dll .
 
 all: CFALGS := $(CFLAGS) -O2
 all: deps modules cxx
@@ -173,6 +169,10 @@ modules:
 	# TODO: the rest of the modules
 
 package:
+	for dep in `ldd ./ctr | grep '=>' | cut -d' ' -f3 | xargs realpath`; do \
+		echo "Resolved dependancy $$dep" ; \
+		cp $$dep . ; \
+	done
 	# create a package for windows people
 	# really, how lazy can y'all get?
 	mkdir -p package/prepared/basemods

@@ -619,6 +619,7 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '--Fs : display all the available flags\n',
           indent: 2 write: '--meta <command> : execute a metacommand (sans the initial :)\n',
           indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
+          indent: 2 write: '--qe : evaluate expression without printing the value, then exit, all args after the expr will be passed to the code as var `args`\n',
           indent: 2 write: '-v : print version information and exit\n',
           indent: 2 write: '-s <port>: start a evaluation server on the specified port (Forked and the current process will be killed. pidfile at ~/.ctrpid.pid)\n',
           indent: 2 write: '-m <executable module> <modu_arg>* : Execute an executable module (at Library/Executable)\n',
@@ -670,15 +671,31 @@ Eval on: 'togglePasteMode' do: {
 
     }, case: '-e' do: {
         args pop. #consume option..
-        var value is Eval shiftArgs.
+        var value is Eval shiftArgs rightTrim.
         (value isNil) ifTrue: { thisBlock error: '-e requires an argument.'. }.
+        Reflect addGlobalVariable: '&0'.
+        &0 is value.
         { ^(Eval argCount > 0). } whileTrue: { args push: Eval shiftArgs. }. #consume all other arguments.
-        # if it ends in a dot, delete it.
         args imap: {:i:n Reflect addGlobalVariable: '&' + (i + 1). Reflect set: '&' + (i + 1) to: (Eval tryNumrify: n).}.
         Reflect addGlobalVariable: '&_'.
         &_ is args.
-        value findPattern: '(.*)\\.' do: {:p value is p at: 1.}.
-        Eval display/write: (Eval evaluate: value).
+        value endsWith: '.', ifFalse: { value +=: '.'. }.
+        value is '{ ^$$value }'.
+        Eval display/write: (Eval evaluate: value) run.
+        Program exit.
+    }, case: '--qe' do: {
+        args pop. #consume option..
+        var value is Eval shiftArgs rightTrim.
+        (value isNil) ifTrue: { thisBlock error: '--qe requires an argument.'. }.
+        Reflect addGlobalVariable: '&0'.
+        &0 is value.
+        { ^(Eval argCount > 0). } whileTrue: { args push: Eval shiftArgs. }. #consume all other arguments.
+        args imap: {:i:n Reflect addGlobalVariable: '&' + (i + 1). Reflect set: '&' + (i + 1) to: (Eval tryNumrify: n).}.
+        Reflect addGlobalVariable: '&_'.
+        &_ is args.
+        value endsWith: '.', ifFalse: { value +=: '.'. }.
+        value is '{ $$value }'.
+        (Eval evaluate: value) run.
         Program exit.
     }, case: '-v' do: {
         Eval display/writeln: 'Citron Version ' + Reflect version.

@@ -6,6 +6,17 @@ import
 
 var newWindowCounter is 0.
 
+Tcl proc: 'eCtr_flash' args: ['what', 'text', 'it', 'pacargs'] body: (
+  ?>if {$it > 0} {
+    pack $what {*}$pacargs
+    $what configure -text $text
+    after 250 [list eCtr_flash $what $text [expr $it-1] $pacargs]
+  } else {
+    pack forget $what
+  }
+  <?
+).
+
 var properties-of is {:object
   object isA: Map, ifTrue: {^object.}.
   object isA: Array, ifTrue: {
@@ -15,13 +26,14 @@ var properties-of is {:object
 }.
 
 var proper-name-ize is {:name ^name ~ 's/\\s/_/g'.}.
-var inspect-object is {:object:textcmd:scratchpad
+var inspect-object is {:object:textcmd:scratchpad:modify?
   var actual-arglist is {:list
     list count = 0 ifTrue: { ^'--nothing--'. }.
     list head = 'self' ifTrue: { list shift. }.
     ^list join: ', '.
   }.
   var Scratchpad is scratchpad nullable.
+  modify? is modify? or: False.
   textcmd is textcmd or: 'text'.
 
   var windowId is '.gui' + (const newWindowCounter +=: 1).
@@ -49,6 +61,7 @@ var inspect-object is {:object:textcmd:scratchpad
     $w.text insert 0.0 [lindex [$w.ptree item [$w.ptree focus] -values] 1]
   }' % [windowId].
   Tcl eval: ' $$textcmd $w.text'.
+  Tcl eval: 'ttk::label $w.statusl'.
   Scratchpad currentTheme applyToText: '%s.text' % [windowId].
   Tcl ttk->treeview: '$w.mtree' columns: '{num_args}'.
   Tcl eval: '$w.mtree heading #0 -text Method'.
@@ -62,14 +75,22 @@ var inspect-object is {:object:textcmd:scratchpad
     arglist !=: 'native-args', ifTrue: {
       Tcl eval: '$w.mtree tag bind show-view-%s <1> %s' % [propername, (Tcl fnOf: {
         var code is Highlight highlight: ast2ctrcode [(AST fromBlock: const prop)] html: False.
+        var pname is const pname.
         Tcl eval: ?>
           set w %s
           $w.text delete 0.0 end
           $w.text insert 0.0 { %s }
         <? % [const windowId, code].
+        const modify? ifTrue: {
+          Tcl eval: 'bind $w.text <Control-s> %s' % [(Tcl fnOf: ({\
+            const prop swapRefs: (Tcl valueOf: '$w.text get 0.0 end', eval).
+            Tcl eval: 'eCtr_flash $w.statusl {saved property} 2 [list -before $w.text -side bottom -anchor w]'.
+          } catch: {:e Tcl eval: 'eCtr_flash $w.statusl {Error: %s} 8 [list -before $w.text -side bottom -anchor w]' % [e].}))].
+        }.
       })].
     }.
   }.
+  # Tcl pack: '$w.statusl' side: 'bottom' anchor: 'w'.
   Tcl pack: '$w.text' fill: 'both' side: 'bottom' anchor: 's'.
   Tcl pack: '$w.mtree' fill: 'x' side: 'right'.
   Tcl pack: '$w.ptree' fill: 'x' side: 'left'.

@@ -312,7 +312,7 @@ Tcl proc: 'handle_menu' args: ['w'] body: (
   ]
 ).
 
-Object on: 'inspect' do: {:self inspect-object applyTo: self and: 'ansicolor::text' and: Scratchpad. }.
+Object on: 'inspect' do: {:self inspect-object applyTo: self and: 'ansicolor::text' and: Scratchpad and: True. }.
 
 Tcl eval: ?>
 source ansicolor.tcl

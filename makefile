@@ -170,8 +170,12 @@ modules:
 
 package:
 	for dep in `ldd ./ctr | grep '=>' | cut -d' ' -f3 | xargs realpath`; do \
-		echo "Resolved dependancy $$dep" ; \
-		cp $$dep . ; \
+		printf '%s ... ' "Resolving dependancy '$$dep'" ; \
+		if [[ $$dep == *msys* ]]; then \
+			cp $$dep . && echo "Check" || echo "Failed" ; \
+		else \
+			echo "Not useful" ; \
+		fi ; \
 	done
 	# create a package for windows people
 	# really, how lazy can y'all get?

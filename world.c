@@ -1677,6 +1677,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("or:"), &ctr_object_elvis_op);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring (CTR_DICT_IFFALSE), &ctr_object_if_false);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring (CTR_DICT_IFTRUE), &ctr_object_if_true);
+  ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("ifTrue:ifFalse:"), &ctr_object_if_tf);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring (CTR_DICT_MESSAGEARGS), &ctr_object_message);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring (CTR_DICT_LEARN), &ctr_object_learn_meaning);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring (CTR_DICT_TOSTRING), &ctr_object_to_string);
@@ -1712,6 +1713,7 @@ ctr_initialize_world ()
   CtrStdBool = ctr_internal_create_object (CTR_OBJECT_TYPE_OTBOOL);
   ctr_internal_create_func (CtrStdBool, ctr_build_string_from_cstring (CTR_DICT_IFTRUE), &ctr_bool_if_true);
   ctr_internal_create_func (CtrStdBool, ctr_build_string_from_cstring (CTR_DICT_IFFALSE), &ctr_bool_if_false);
+  ctr_internal_create_func (CtrStdBool, ctr_build_string_from_cstring ("ifTrue:ifFalse:"), &ctr_bool_if_tf);
   ctr_internal_create_func (CtrStdBool, ctr_build_string_from_cstring (CTR_DICT_BREAK), &ctr_bool_break);
   ctr_internal_create_func (CtrStdBool, ctr_build_string_from_cstring (CTR_DICT_CONTINUE), &ctr_bool_continue);
   ctr_internal_create_func (CtrStdBool, ctr_build_string_from_cstring (CTR_DICT_ELSE), &ctr_bool_if_false);

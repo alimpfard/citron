@@ -722,6 +722,7 @@ ctr_object* ctr_object_message(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_elvis_op(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_if_false(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_if_true(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_object_if_tf(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_learn_meaning(ctr_object* myself, ctr_argument* ctr_argumentList);
 ctr_object* ctr_object_to_string(ctr_object* myself, ctr_argument* ctr_argumentList);
 ctr_object* ctr_object_to_number(ctr_object* myself, ctr_argument* ctr_argumentList);
@@ -735,6 +736,7 @@ ctr_object* ctr_object_respond_and_and(ctr_object* myself, ctr_argument* ctr_arg
  */
 ctr_object* ctr_bool_if_true(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_bool_if_false(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_bool_if_tf(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_bool_and(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_bool_nor(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_bool_or(ctr_object* myself, ctr_argument* argumentList);

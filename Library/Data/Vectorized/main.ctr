@@ -1,0 +1,32 @@
+var Vector is Object cnew: { _array => Array new. }.
+
+Vector on: 'applyAll:' do: {\:args ^Vector create: args copy.}.
+Vector on: 'create:' do: {\:arr ^Vector cnew: { _array => arr isA: Array, either: arr or: [arr]. }.}.
+
+Reflect getMethodsOf: Array, each_v: {:meth
+  Vector on: meth do: {\:*args my _array message: meth arguments: args. }.
+}.
+
+Vector on: 'toString' do: {
+  ^'Vector[%:L]' % [', ', my _array].
+}.
+
+Vector on: 'cycle' do: {
+  on: 'at:' do: {:idx
+    my _array count <=: idx, ifTrue: {
+      ^my _array at: (idx mod: my _array count).
+    } ifFalse: {
+      ^my _array at: idx.
+    }.
+  }.
+}.
+
+Vector on: '<-' do: {:other
+  (other isA: Vector) ifTrue: {
+    my _array +=: other asArray.
+  } ifFalse: {
+    my _array push: other.
+  }.
+}.
+
+import export: Vector as: 'Vector'.

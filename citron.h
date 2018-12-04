@@ -210,6 +210,7 @@ typedef struct ctr_map ctr_map;
  * Map item
  */
 struct ctr_mapitem {
+	int hits;
 	uint64_t hashKey;
 	struct ctr_object* key;
 	struct ctr_object* value;
@@ -580,7 +581,7 @@ ctr_object* ctr_ast_from_node (ctr_tnode * node);
 int ctr_ast_is_splice (ctr_object* obj);
 ctr_object* ctr_ast_splice (ctr_object* obj);
 
-#define CTR_CONTEXT_VECTOR_DEPTH  10000
+#define CTR_CONTEXT_VECTOR_DEPTH  50000
 
 CTR_H_DECLSPEC char* ctr_last_parser_error;
 CTR_H_DECLSPEC int        ctr_cparse_calltime_name_id;
@@ -672,7 +673,7 @@ void ctr_switch_context();
  * Global Scoping variables
  */
 struct ctr_context_t {
-    ctr_object* contexts[CTR_CONTEXT_VECTOR_DEPTH ];
+    ctr_object* contexts[CTR_CONTEXT_VECTOR_DEPTH];
     int id;
 };
 CTR_H_DECLSPEC void ctr_dump_context(struct ctr_context_t*);

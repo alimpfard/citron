@@ -512,132 +512,60 @@ ctr_internal_index_hash (ctr_object * key)
 ctr_object *
 ctr_internal_object_find_property (ctr_object * owner, ctr_object * key, int is_method)
 {
-  uint64_t hashKey = ctr_internal_index_hash (key);
-//      uint64_t ahashKey = ctr_internal_alt_hash(key);
-  ctr_mapitem *head, *first_head;
-  if (is_method)
-    {
-      if (!owner->methods || owner->methods->size == 0)
-	{
-	  return NULL;
-	}
-      // if((owner->methods->s_hash&hashKey) != hashKey || (owner->methods->m_hash&ahashKey) != ahashKey)
-      // return NULL;
-      head = owner->methods->head;
-    }
-  else
-    {
-      if (owner->properties->size == 0)
-	{
-	  return NULL;
-	}
-      // if((owner->properties->s_hash&hashKey) != hashKey || (owner->properties->m_hash&ahashKey) != ahashKey)
-      // return NULL;
-      head = owner->properties->head;
-    }
-  first_head = head;
-  while (head)
-    {
-      if ((hashKey == head->hashKey) && ctr_internal_object_is_equal (head->key, key))
-	{
-	  // if(head->prev) {
-	  //      ctr_mapitem* prev = head->prev;
-	  //      if(prev != first_head && prev->prev != first_head) {
-	  //              ctr_mapitem* next = head->next;
-	  //              head->next = prev;
-	  //              prev->next = next;
-	  //              head->prev = prev->prev;
-	  //              prev->prev = head;
-	  //              if(next) next->prev = prev;
-	  //      }
-	  // }
-	  return head->value;
-	}
-      head = head->next;
-    }
-  return NULL;
+  return ctr_internal_object_find_property_with_hash(owner, key, ctr_internal_index_hash (key), is_method);
 }
 
 ctr_object *
 ctr_internal_object_find_property_ignore (ctr_object * owner, ctr_object * key, int is_method, int ignore)
 {
-  ctr_mapitem *head;
-  uint64_t hashKey = ctr_internal_index_hash (key);
-//      uint64_t ahashKey = ctr_internal_alt_hash(key);
-  if (is_method)
-    {
-      if (!owner->methods || owner->methods->size == 0)
-	{
-	  return NULL;
-	}
-      // if((owner->methods->s_hash&hashKey) != hashKey || (owner->methods->m_hash&ahashKey) != ahashKey)
-      // return NULL;
-      head = owner->methods->head;
-    }
-  else
-    {
-      if (owner->properties->size == 0)
-	{
-	  return NULL;
-	}
-      // if((owner->properties->s_hash&hashKey) != hashKey || (owner->properties->m_hash&ahashKey) != ahashKey)
-      // return NULL;
-      head = owner->properties->head;
-    }
-  while (head)
-    {
-      if ((hashKey == head->hashKey) && ctr_internal_object_is_equal (head->key, key))
-	{
-	  return head->value;
-	}
-      head = head->next;
-    }
-  return NULL;
+  return ctr_internal_object_find_property(owner, key, is_method);
 }
 
 ctr_object *
 ctr_internal_object_find_property_with_hash (ctr_object * owner, ctr_object * key, uint64_t hashKey, int is_method)
 {
+  // TODO: Use a binary tree-map
   ctr_mapitem *head, *first_head;
-  if (is_method)
-    {
-      if (!owner->methods || owner->methods->size == 0)
-	{
-	  return NULL;
-	}
-      // if((owner->methods->s_hash&hashKey) != hashKey)
-      // return NULL;
-      head = owner->methods->head;
+  ctr_map *lookup;
+  if (is_method) {
+    if (!owner->methods)
+	   return NULL;
+    lookup = owner->methods;
     }
   else
-    {
-      if (owner->properties->size == 0)
-	{
-	  return NULL;
-	}
-      // if((owner->properties->s_hash&hashKey) != hashKey)
-      // return NULL;
-      head = owner->properties->head;
+    lookup = owner->properties;
+  if (unlikely(lookup->size == 1 && (head=lookup->head)->hashKey == hashKey)) {
+    if (likely(ctr_internal_object_is_equal(head->key, key))) {
+      head->hits++;
+      return head->value;
     }
-  first_head = head;
+    return NULL;
+  }
+
+  head = lookup->head;
   while (head)
     {
-      if (hashKey == head->hashKey)
-	{
-	  if (ctr_internal_object_is_equal (head->key, key))
-	    {
-	      // if(head->prev && head->prev != first_head) {
-	      //      ctr_mapitem* prev = head->prev;
-	      //      ctr_mapitem* next = head->next;
-	      //      head->next = prev;
-	      //      prev->next = next;
-	      //      head->prev = prev->prev;
-	      //      prev->prev = head;
-	      //      if(next) next->prev = prev;
-	      // }
-	      return head->value;
-	    }
-	}
+      if ((hashKey == head->hashKey) && ctr_internal_object_is_equal (head->key, key)) {
+        ctr_object* val = head->value;
+        first_head=head->prev;
+        if (!first_head || first_head == head)
+          return val;
+        if (++head->hits > first_head->hits) {
+          int fh = first_head->hits;
+          void* fk = first_head->key, *fv = first_head->value;
+          uint64_t fhk = first_head->hashKey;
+          first_head->hits    = head->hits;
+          first_head->key     = head->key;
+          first_head->value   = val;
+          first_head->hashKey = hashKey;
+          head->hits          = fh;
+          head->key           = fk;
+          head->value         = fv;
+          head->hashKey       = fhk;
+        }
+        return val;
+      }
+      head->hits = 0;
       head = head->next;
     }
   return NULL;
@@ -654,86 +582,7 @@ ctr_internal_object_find_property_with_hash (ctr_object * owner, ctr_object * ke
 void
 ctr_internal_object_delete_property (ctr_object * owner, ctr_object * key, int is_method)
 {
-  ctr_did_side_effect = 1;
-  uint64_t hashKey = ctr_internal_index_hash (key);
-//      uint64_t ahashKey = ctr_internal_alt_hash(key);
-  ctr_mapitem *head;
-  if (is_method)
-    {
-      if (!owner->methods || owner->methods->size == 0)
-	{
-	  return;
-	}
-      // if((owner->methods->s_hash&hashKey) != hashKey || (owner->methods->m_hash&ahashKey) != ahashKey)
-      // return;
-      head = owner->methods->head;
-    }
-  else
-    {
-      if (owner->properties->size == 0)
-	{
-	  return;
-	}
-      // if((owner->properties->s_hash&hashKey) != hashKey || (owner->properties->m_hash&ahashKey) != ahashKey)
-      // return;
-      head = owner->properties->head;
-    }
-  while (head)
-    {
-      if ((hashKey == head->hashKey) && ctr_internal_object_is_equal (head->key, key))
-	{
-	  if (head->next && head->prev)
-	    {
-	      head->next->prev = head->prev;
-	      head->prev->next = head->next;
-	    }
-	  else
-	    {
-	      if (head->next)
-		{
-		  head->next->prev = NULL;
-		}
-	      if (head->prev)
-		{
-		  head->prev->next = NULL;
-		}
-	    }
-	  if (is_method)
-	    {
-	      if (owner->methods->head == head)
-		{
-		  if (head->next)
-		    {
-		      owner->methods->head = head->next;
-		    }
-		  else
-		    {
-		      owner->methods->head = NULL;
-		    }
-		}
-	      owner->methods->size--;
-	    }
-	  else
-	    {
-	      if (owner->properties->head == head)
-		{
-		  if (head->next)
-		    {
-		      owner->properties->head = head->next;
-		    }
-		  else
-		    {
-		      owner->properties->head = NULL;
-		    }
-		}
-	      owner->properties->size--;
-	    }
-	  ctr_heap_free (head);
-	  return;
-	}
-      head = head->next;
-    }
-  return;
+  ctr_internal_object_delete_property_with_hash(owner, key, ctr_internal_index_hash(key), is_method);
 }
 
 /**
@@ -836,56 +685,7 @@ ctr_internal_object_delete_property_with_hash (ctr_object * owner, ctr_object * 
 void
 ctr_internal_object_add_property (ctr_object * owner, ctr_object * key, ctr_object * value, int m)
 {
-  ctr_did_side_effect = 1;
-  if (value->lexical_name == NULL &&
-      value != generator_end_marker &&
-      strncmp (key->value.svalue->value, "me", key->value.svalue->vlen) != 0 &&
-      strncmp (key->value.svalue->value, "thisBlock", key->value.svalue->vlen) != 0)
-    value->lexical_name = key;
-  ctr_mapitem *new_item = ctr_heap_allocate (sizeof (ctr_mapitem));
-  ctr_mapitem *current_head = NULL;
-  new_item->key = key;
-  new_item->hashKey = ctr_internal_index_hash (key);
-//      uint32_t ahash = ctr_internal_alt_hash(key);
-  new_item->value = value;
-  new_item->next = NULL;
-  new_item->prev = NULL;
-  if (m)
-    {
-      if (!owner->methods || owner->methods->size == 0)
-	{
-    if (!owner->methods)
-      owner->methods = ctr_heap_allocate(sizeof(typeof(*owner->methods)));
-    owner->methods->head = new_item;
-	}
-      else
-	{
-	  current_head = owner->methods->head;
-	  current_head->prev = new_item;
-	  new_item->next = current_head;
-	  owner->methods->head = new_item;
-	}
-      // owner->methods->s_hash = owner->methods->s_hash | new_item->hashKey;
-      // owner->methods->m_hash |= ahash;
-      owner->methods->size++;
-    }
-  else
-    {
-      if (owner->properties->size == 0)
-	{
-	  owner->properties->head = new_item;
-	}
-      else
-	{
-	  current_head = owner->properties->head;
-	  current_head->prev = new_item;
-	  new_item->next = current_head;
-	  owner->properties->head = new_item;
-	}
-      // owner->properties->s_hash |= new_item->hashKey;
-      // owner->properties->m_hash |= ahash;
-      owner->properties->size++;
-    }
+  return ctr_internal_object_add_property_with_hash(owner, key, ctr_internal_index_hash(key), value, m);
 }
 
 /**
@@ -1351,7 +1151,7 @@ ctr_internal_cast2bool (ctr_object * o)
 void
 ctr_switch_context (ctr_object * context)
 {
-  if (ctr_context_id >= 9999)
+  if (ctr_context_id >= CTR_CONTEXT_VECTOR_DEPTH)
     {
       CtrStdFlow = ctr_build_string_from_cstring ("Too many nested calls.");
       CtrStdFlow->info.sticky = 1;
@@ -1405,7 +1205,7 @@ void
 ctr_open_context ()
 {
   ctr_object *context;
-  if (ctr_context_id >= 9999)
+  if (ctr_context_id >= CTR_CONTEXT_VECTOR_DEPTH)
     {
       CtrStdFlow = ctr_build_string_from_cstring ("Too many nested calls.");
       CtrStdFlow->info.sticky = 1;

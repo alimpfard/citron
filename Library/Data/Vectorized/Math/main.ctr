@@ -1,0 +1,27 @@
+# Overload binary mathematical operations to work on arrays
+# Scary business
+import require-parent.
+
+[
+  '+', '-', '/', '*',
+  'mod:', 'pow:',
+  '=', '!=:', '>', '<',
+  '>=:', '<=:', 'toBits:',
+  'bitXor:', 'bitAnd:', 'bitOr:',
+  'shiftLeft:', 'shiftRight:'
+] each_v: {:method
+  Vector on: method do: {:others
+    others is Vector create: others, cycle.
+    ^Vector create: (me imap: \:idx:inner inner message: const method arguments: [(others at: idx)]).
+  }.
+}.
+
+[
+  'factorial', 'floor', 'ceil', 'round', 'abs',
+  'sin', 'cos', 'tan', 'atan', 'log', 'even', 'odd',
+  'pos', 'neg', 'exp', 'sqrt'
+] each_v: {:method
+  Vector on: method do: {
+    ^Vector create: (me imap: \:idx:inner inner message: const method arguments: []).
+  }.
+}.

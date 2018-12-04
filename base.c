@@ -5426,9 +5426,9 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
   if (is_tail_call)
     {
 #ifdef DEBUG_BUILD
-      printf ("tailcall at %p (%d from %d)\n", myself, id, ctr_context_id);
+      // printf ("tailcall at %p (%d from %d)\n", myself, id, ctr_context_id);
 #endif
-      ctr_context_id = id;
+      // ctr_context_id = id;
     }
   ctr_tnode *node = myself->value.block;
   ctr_tlistitem *codeBlockParts = node->nodes;
@@ -5608,9 +5608,9 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
   if (is_tail_call)
     {
 #ifdef DEBUG_BUILD
-      printf ("tailcall at %p (%d from %d)\n", myself, id, ctr_context_id);
+      // printf ("tailcall at %p (%d from %d)\n", myself, id, ctr_context_id);
 #endif
-      ctr_context_id = id;
+      // ctr_context_id = id;
     }
   ctr_object *result;
   ctr_tnode *node = myself->value.block;

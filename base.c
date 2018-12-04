@@ -1211,6 +1211,46 @@ ctr_bool_if_false (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
+ *[Boolean] ifTrue: [block] ifFalse: [Block]
+ */
+ctr_object *
+ctr_bool_if_tf (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *result;
+  if (myself->value.bvalue)
+    {
+      ctr_object *codeBlock = argumentList->object;
+      ctr_argument *arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+      arguments->object = myself;
+      result = ctr_block_run_here (codeBlock, arguments, NULL);
+      ctr_heap_free (arguments);
+      if (result != codeBlock)
+	{
+	  ctr_internal_next_return = 1;
+	  return result;
+	}
+      return myself;
+    }
+  else
+  {
+      ctr_object *codeBlock = argumentList->next->object;
+      ctr_argument *arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+      arguments->object = myself;
+      result = ctr_block_run_here (codeBlock, arguments, NULL);
+      ctr_heap_free (arguments);
+      if (result != codeBlock)
+	{
+	  ctr_internal_next_return = 1;
+	  return result;
+	}
+      return myself;
+    }
+  if (CtrStdFlow == CtrStdBreak)
+    CtrStdFlow = NULL;		/* consume break */
+  return myself;
+}
+
+/**
  *[b:Object] or: [Block|Object]
  *
  * Evaluates and returns the block if b evaluates to false, else returns b
@@ -1240,6 +1280,15 @@ ctr_object *
 ctr_object_if_true (ctr_object * myself, ctr_argument * argumentList)
 {
   return ctr_bool_if_true (ctr_internal_cast2bool (myself), argumentList);
+}
+
+/**
+ * @internal
+ */
+ctr_object *
+ctr_object_if_tf (ctr_object * myself, ctr_argument * argumentList)
+{
+  return ctr_bool_if_tf (ctr_internal_cast2bool (myself), argumentList);
 }
 
 /**

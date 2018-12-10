@@ -236,6 +236,15 @@ struct ctr_interfaces {
 };
 typedef struct ctr_interfaces ctr_interfaces;
 
+struct ctr_overload_set {
+	int bucket_count;
+	struct ctr_overload_set** sub_buckets;
+	struct ctr_object * this_terminating_value;
+	struct ctr_object * this_terminating_bucket;
+};
+
+typedef struct ctr_overload_set ctr_overload_set;
+
 /**
  * Root Object
  */
@@ -251,6 +260,7 @@ struct ctr_object {
 		unsigned int remote: 1;
 		unsigned int shared: 1;
 		unsigned int raw: 1;
+		unsigned int overloaded: 1;
 	} info;
 	struct ctr_interfaces* interfaces;
 	struct ctr_object* lexical_name;
@@ -264,7 +274,10 @@ struct ctr_object {
 		struct ctr_object* (*fvalue) (struct ctr_object* myself, struct ctr_argument* argumentList);
 		struct ctr_object* defvalue;
 	} value;
-	voidptrfn_t* release_hook;
+	union {
+		voidptrfn_t* release_hook;
+		struct ctr_overload_set*  overloads; // overloaded functions may not specify a release hook
+	};
 #if !defined(withBoehmGC)
 	struct ctr_object* gnext;
 #endif
@@ -440,6 +453,7 @@ ctr_object** get_CTR_FILE_STDERR_STR();
 ctr_object* ctr_exception_getinfo(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_internal_ex_data();
 
+ctr_object* ctr_internal_find_overload(ctr_object*,ctr_argument*);
 /**
 * @internal
  * standard instrumentor, do not override.
@@ -877,6 +891,7 @@ ctr_object* ctr_string_assign(ctr_object* myself, ctr_argument* argumentList);
  * Block Interface
  */
 ctr_object* ctr_block_runIt(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_block_specialise(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_runall(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_run_variadic(ctr_object* myself, int count, ...);
 ctr_object* ctr_block_run_variadic_my(ctr_object* myself, ctr_object* my, int count, ...);

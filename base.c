@@ -5430,6 +5430,51 @@ ctr_block_assign (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
+ * [Block] specialize: [types...] with: [Block]
+ *
+ * Specialise a block for the given types with the given block
+ */
+ctr_overload_set * ctr_internal_next_bucket(ctr_overload_set* set, ctr_argument* arg);
+ctr_object *
+ctr_block_specialise(ctr_object * myself, ctr_argument* argumentList)
+{
+  ctr_object* types = argumentList->object;
+  if (!types || types->info.type != CTR_OBJECT_TYPE_OTARRAY) {
+    CtrStdFlow = ctr_build_string_from_cstring("Invalid argument for specialize:(*)with:");
+    return myself;
+  }
+  ctr_object* blk = argumentList->next->object;
+  if (!blk || (blk->info.type != CTR_OBJECT_TYPE_OTBLOCK&&blk->info.type != CTR_OBJECT_TYPE_OTNATFUNC)) {
+    CtrStdFlow = ctr_build_string_from_cstring("Invalid argument for specialize:with:(*)");
+    return myself;
+  }
+  ctr_collection* tycoll = types->value.avalue;
+
+  if (!myself->info.overloaded) {
+    myself->info.overloaded = 1;
+    myself->overloads = ctr_heap_allocate(sizeof (ctr_overload_set));
+    myself->overloads->bucket_count = 0;
+    myself->overloads->sub_buckets = ctr_heap_allocate(sizeof(ctr_overload_set*));
+  }
+  ctr_overload_set *overload = myself->overloads;
+  ctr_argument arg;
+  for (int i=tycoll->tail;i<tycoll->head;i++) {
+    arg.object = tycoll->elements[i];
+    ctr_overload_set* next = ctr_internal_next_bucket(overload, &arg);
+    if (!next) {
+      overload->sub_buckets = overload->bucket_count++
+        ?ctr_heap_reallocate(overload->sub_buckets, sizeof(ctr_overload_set*)*overload->bucket_count)
+        :ctr_heap_allocate(sizeof(ctr_overload_set*)*overload->bucket_count);
+      next = (overload->sub_buckets[overload->bucket_count-1] = ctr_heap_allocate(sizeof(ctr_overload_set)));
+      next->this_terminating_bucket = arg.object;
+    }
+    // if (i<tycoll->head-1)
+      overload = next;
+  }
+  overload->this_terminating_value = blk;
+  return myself;
+}
+/**
  *[Block] applyTo: [object]
  *
  * Runs a block of code using the specified object as a parameter.
@@ -5470,6 +5515,14 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
       ctr_object *result = myself->value.fvalue (my, argList);
       return result;
     }
+    // overload begin
+    if (myself->info.overloaded) {
+      // find proper overload to run
+      if (myself->overloads)
+        myself = ctr_internal_find_overload(myself, argList);
+    }
+    // overload end
+
   int is_tail_call = 0, id;
   for (id = ctr_context_id; id > 0 && !is_tail_call && ctr_current_node_is_return; id--, is_tail_call = ctr_contexts[id] == myself);
   if (is_tail_call)
@@ -5652,6 +5705,13 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
       ctr_object *result = myself->value.fvalue (my, argList);
       return result;
     }
+  // overload begin
+  if (myself->info.overloaded) {
+    // find proper overload to run
+    if (myself->overloads)
+      myself = ctr_internal_find_overload(myself, argList);
+  }
+  // overload end
   int is_tail_call = 0, id;
   for (id = ctr_context_id; id > 0 && !is_tail_call && ctr_current_node_is_return; id--, is_tail_call = ctr_contexts[id] == myself);
   if (is_tail_call)
@@ -5838,6 +5898,14 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
       ctr_object *result = myself->value.fvalue (my, argList);
       return result;
     }
+    // overload begin
+    if (myself->info.overloaded) {
+      // find proper overload to run
+      if (myself->overloads)
+        myself = ctr_internal_find_overload(myself, argList);
+    }
+    // overload end
+
   ctr_object *result;
   ctr_tnode *node = myself->value.block;
   ctr_tlistitem *codeBlockParts = node->nodes;

@@ -973,6 +973,8 @@ ctr_reflect_is_linked_to_ (ctr_argument * argumentList)
 {
   if (argumentList->object->interfaces->link == NULL)
     return 0;
+  if (argumentList->object == argumentList->next->object)
+    return 1;
   ctr_object *link = argumentList->object->interfaces->link;
   argumentList->object = link;
   return (link == argumentList->next->object) || ctr_reflect_is_linked_to_ (argumentList);

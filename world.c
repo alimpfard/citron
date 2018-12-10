@@ -1871,6 +1871,7 @@ ctr_initialize_world ()
 
   /* Block */
   ctr_internal_create_func (CtrStdBlock, ctr_build_string_from_cstring (CTR_DICT_RUN), &ctr_block_runIt);
+  ctr_internal_create_func (CtrStdBlock, ctr_build_string_from_cstring ("specialize:with:"), &ctr_block_specialise);
   ctr_internal_create_func (CtrStdBlock, ctr_build_string_from_cstring (CTR_DICT_APPLY_TO), &ctr_block_runIt);
   ctr_internal_create_func (CtrStdBlock, ctr_build_string_from_cstring (CTR_DICT_APPLY_TO_AND), &ctr_block_runIt);
   ctr_internal_create_func (CtrStdBlock, ctr_build_string_from_cstring (CTR_DICT_APPLY_TO_AND_AND), &ctr_block_runIt);
@@ -2858,6 +2859,49 @@ ctr_set_link_all (ctr_object * what, ctr_object * to)
     what->info.shared ? ctr_heap_allocate_shared (sizeof (ctr_object *) * (count + 1)) : ctr_heap_allocate (sizeof (ctr_object *) * (count + 1));
   // for (int i = 0; i < count; i++)
   memcpy (what->interfaces->ifs, to->interfaces->ifs, sizeof (ctr_object *) * count);
+}
+
+int ctr_reflect_is_linked_to_(ctr_argument*);
+
+ctr_overload_set * ctr_internal_next_bucket(ctr_overload_set* set, ctr_argument* arg) {
+  if (!set) return NULL;
+  if (!arg) return set;
+  if (!arg->object) return set;
+  ctr_argument after={NULL,NULL}, refl={arg->object,&after};
+  for (int i=0; i<set->bucket_count; i++) {
+    after.object = set->sub_buckets[i]->this_terminating_bucket;
+    refl.object = arg->object;
+    if (ctr_reflect_is_linked_to_(&refl)) {
+      return set->sub_buckets[i];
+    }
+  }
+  return NULL;
+}
+
+ctr_object *
+ctr_internal_find_overload (ctr_object * original, ctr_argument * argList)
+{
+  ctr_overload_set * set = original->overloads;
+  if (!set->bucket_count) return original;
+  ctr_argument* arg;
+  ctr_overload_set* overload, *ans=NULL;
+  int complete=0;
+  for (
+    arg=argList, overload=set;;
+  ) {
+    if(!arg) { complete=1; break; }
+    if(!overload) break;
+    if(!overload->bucket_count) break;
+    ans = overload;
+    overload=ctr_internal_next_bucket(overload,arg);
+    arg=arg->next;
+  }
+  if (overload) ans = overload;
+  if (complete&&ans->this_terminating_value) {
+    ctr_object* res = ans->this_terminating_value;
+    return res;
+  }
+  return original;
 }
 
 

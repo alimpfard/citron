@@ -48,9 +48,9 @@ extern "C" {
 #endif
 
 #ifdef withBoehmGC
-#define CTR_VERSION "0.0.8.8-boehm-gc" IS_DEBUG_STRING
+#define CTR_VERSION "0.0.8.9-boehm-gc" IS_DEBUG_STRING
 #else
-#define CTR_VERSION "0.0.8.8" IS_DEBUG_STRING
+#define CTR_VERSION "0.0.8.9" IS_DEBUG_STRING
 #endif
 
 #define CTR_LOG_WARNINGS 2//2 to enable

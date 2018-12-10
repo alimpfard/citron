@@ -5444,11 +5444,16 @@ ctr_block_specialise(ctr_object * myself, ctr_argument* argumentList)
     return myself;
   }
   ctr_object* blk = argumentList->next->object;
+  if (blk->info.overloaded) {
+    CtrStdFlow = ctr_build_string_from_cstring("Refusing to merge specialisations");
+    return myself;
+  }
   if (!blk || (blk->info.type != CTR_OBJECT_TYPE_OTBLOCK&&blk->info.type != CTR_OBJECT_TYPE_OTNATFUNC)) {
     CtrStdFlow = ctr_build_string_from_cstring("Invalid argument for specialize:with:(*)");
     return myself;
   }
   ctr_collection* tycoll = types->value.avalue;
+  blk->info.overloaded = 1; // link the specialisations
 
   if (!myself->info.overloaded) {
     myself->info.overloaded = 1;
@@ -5472,6 +5477,7 @@ ctr_block_specialise(ctr_object * myself, ctr_argument* argumentList)
       overload = next;
   }
   overload->this_terminating_value = blk;
+  blk->overloads = myself->overloads;
   return myself;
 }
 /**

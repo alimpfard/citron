@@ -1719,6 +1719,7 @@ initiailize_base_extensions ()
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("fmap:"), &ctr_generator_fmap);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("ifmap:"), &ctr_generator_ifmap);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("imap:"), &ctr_generator_imap);
+  ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("filter:"), &ctr_generator_filter);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("next"), &ctr_generator_next);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("inext"), &ctr_generator_inext);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("each:"), &ctr_generator_each);

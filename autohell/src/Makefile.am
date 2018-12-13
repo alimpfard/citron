@@ -26,7 +26,7 @@ pkginclude_HEADERS = *.h
 
 lib_LTLIBRARIES = libcitron.la
 libcitron_la_CFLAGS= -DLIBRARY_BUILD $(AM_CFLAGS)
-libcitron_la_LDFLAGS= -rdynamic $(AM_LDFLAGS)
+libcitron_la_LDFLAGS= -rdynamic -lm -ldl -lbsd -lpcre -lpthread $(MAYBE_FFI_L) $(MAYBE_TCC_L) $(MAYBE_ASM_L) -o ctr
 libcitron_la_CXXFLAGS= $(AM_CXXFLAGS)
 
 libcitron_la_SOURCES = citron.c base.c world.c importlib.c fiber.c reflect.c\

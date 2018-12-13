@@ -17,6 +17,21 @@ contexts:
         - match: '(.)'
           captures:
             0: variable.Citron
+    - match: '(?:(pure)(\s*\{))'
+      captures:
+        0: keyword.other.unit.Citron
+        1: entity.name.Citron
+      push:
+        - match: '(\})'
+          pop: true
+          captures:
+            0: entity.name.Citron
+        - match: '(.)'
+          captures:
+            0: text.Citron
+        - match: '(.)'
+          captures:
+            0: text.Citron
     - match: '(\$[\x{0021}\x{002c}\x{0027}\x{0060}](?!=\s))'
       captures:
         0: constant.character.escape.Citron
@@ -87,7 +102,7 @@ contexts:
         - match: '(.)'
           captures:
             0: text.Citron
-    - match: '(?:(\{)(asm)(\s*(?:\:)\s*(?:\w+))*(\s*intel|att|at\&t)?(\s*\(.*\)\s*))'
+    - match: '(?:(\{)(asm)(\s*(?:\:)\s*(?:\w+))*(\s*(?:intel|att|at\&t))?(\s*\(.*\)\s*))'
       captures:
         0: entity.name.Citron
         1: markup.deleted.Citron

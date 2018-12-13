@@ -1,0 +1,31 @@
+# functional prelude
+# Nothing fancy
+
+var id is \:x x.
+var rconst is \:x {\ x }.
+var $ is \:x:y x[y].
+
+var flip is \:f \:x:y f[y, x].
+var flip* is \:f \:*args f applyAll: args reverse.
+
+var ;; is \:val:list list do unshift: val, done.
+
+# very scary currying
+var _curry is {:self:blk:args:fcurry
+    var argc is (Reflect argumentListOf: blk, count).
+    ^{:*argvs
+        var argsv is const args + argvs.
+        argsv count = const argc ifTrue: {
+            var res is const blk applyAll: argsv.
+            res isA: CodeBlock, ifTrue: { ^const fcurry[res]. } ifFalse: { ^res. }.
+        }.
+        argsv count > const argc ifTrue: {
+            var res is const blk
+              applyAll: (argsv from: 0 length: const argc),
+              applyAll: (argsv from: const argc lengthMax: argsv count).
+            res isA: CodeBlock, ifTrue: { ^const fcurry[res]. } ifFalse: { ^res. }.
+        }.
+        ^const self[const blk, argsv].
+    } on: 'self' do: {^my blk.}.
+}.
+var curry is \:self:blk _curry[blk, [], self].

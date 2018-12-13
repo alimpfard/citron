@@ -51,6 +51,40 @@
           </dict>
         </dict>
         <dict>
+          <key>begin</key>
+          <string>(?:(pure)(\s*\{))</string>
+          <key>beginCaptures</key>
+          <dict>
+            <key>1</key>
+            <dict>
+              <key>name</key>
+              <string>keyword.other.unit.Citron</string>
+            </dict>
+            <key>2</key>
+            <dict>
+              <key>name</key>
+              <string>entity.name.Citron</string>
+            </dict>
+          </dict>
+          <key>patterns</key>
+          <array>
+            <dict>
+              <key>include</key>
+              <string>#main__2</string>
+            </dict>
+           </array>
+          <key>end</key>
+          <string>(\})</string>
+          <key>endCaptures</key>
+          <dict>
+            <key>1</key>
+            <dict>
+              <key>name</key>
+              <string>entity.name.Citron</string>
+            </dict>
+          </dict>
+        </dict>
+        <dict>
           <key>match</key>
           <string>(\$[\x{0021}\x{002c}\x{0027}\x{0060}](?!=\s))</string>
           <key>name</key>
@@ -105,7 +139,7 @@
           <array>
             <dict>
               <key>include</key>
-              <string>#main__2</string>
+              <string>#main__3</string>
             </dict>
            </array>
           <key>end</key>
@@ -140,7 +174,7 @@
           <array>
             <dict>
               <key>include</key>
-              <string>#main__3</string>
+              <string>#main__4</string>
             </dict>
            </array>
           <key>end</key>
@@ -185,7 +219,7 @@
         </dict>
         <dict>
           <key>begin</key>
-          <string>(?:(\{)(asm)(\s*(?:\:)\s*(?:\w+))*(\s*intel|att|at\&amp;t)?(\s*\(.*\)\s*))</string>
+          <string>(?:(\{)(asm)(\s*(?:\:)\s*(?:\w+))*(\s*(?:intel|att|at\&amp;t))?(\s*\(.*\)\s*))</string>
           <key>beginCaptures</key>
           <dict>
             <key>1</key>
@@ -218,7 +252,7 @@
           <array>
             <dict>
               <key>include</key>
-              <string>#main__5</string>
+              <string>#main__6</string>
             </dict>
            </array>
           <key>end</key>
@@ -519,7 +553,25 @@
       <array>
        </array>
     </dict>
+    <key>main__13</key>
+    <dict>
+      <key>patterns</key>
+      <array>
+       </array>
+    </dict>
     <key>main__2</key>
+    <dict>
+      <key>patterns</key>
+      <array>
+        <dict>
+          <key>match</key>
+          <string>(.)</string>
+          <key>name</key>
+          <string>text.Citron</string>
+        </dict>
+       </array>
+    </dict>
+    <key>main__3</key>
     <dict>
       <key>patterns</key>
       <array>
@@ -531,7 +583,7 @@
         </dict>
        </array>
     </dict>
-    <key>main__3</key>
+    <key>main__4</key>
     <dict>
       <key>patterns</key>
       <array>
@@ -576,13 +628,13 @@
         </dict>
        </array>
     </dict>
-    <key>main__4</key>
+    <key>main__5</key>
     <dict>
       <key>patterns</key>
       <array>
        </array>
     </dict>
-    <key>main__5</key>
+    <key>main__6</key>
     <dict>
       <key>patterns</key>
       <array>
@@ -615,12 +667,6 @@
             </dict>
           </dict>
         </dict>
-       </array>
-    </dict>
-    <key>main__6</key>
-    <dict>
-      <key>patterns</key>
-      <array>
        </array>
     </dict>
     <key>main__7</key>

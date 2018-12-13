@@ -100,7 +100,7 @@ AS_IF([test "x$want_inlineasm" = "xyes"], [
        CTR_MAYBE_ASM="inline-asm.cpp native-asm.h"
        ])
 AS_IF([test 1 = 1], [
-  BUILD_DIR_L="`pwd`/autohell/src"
+  BUILD_DIR_L="`pwd`/.."
   ])
 AC_MSG_RESULT($want_inlineasm)
 AC_SUBST([MAYBE_TCC_L])

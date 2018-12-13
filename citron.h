@@ -511,6 +511,7 @@ long    ctr_clex_tok_value_length();
 void 	ctr_clex_putback();
 char*	ctr_clex_readstr();
 char* ctr_clex_scan(char c);
+char* ctr_clex_scan_balanced(char c, char d);
 char*   ctr_clex_tok_describe( int token );
 int     ctr_clex_save_state();
 int     ctr_clex_dump_state(struct lexer_state*);

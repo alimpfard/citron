@@ -998,7 +998,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
                 }.
                 done is inBlock = 0.
               }.
-              inBlock !=: 0, ifTrue: { Eval newBlock. Pen brk. inp +=: ' '. inpbrk is inp length. cursor +=: 1.}.
+              inBlock !=: 0, ifTrue: { Eval newBlock. Pen brk. inp +=: '\n'. inpbrk is inp length. cursor +=: 1.}.
             }, else: { Pen brk. done is True. }.
           }.
           have_context is False.

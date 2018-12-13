@@ -37,6 +37,7 @@ import
   Library/Data/Json
   Library/Data/String
   Library/Data/IO/UTF-8/input
+  Library/Prelude: \*
   Library/Data/Array/LRArray: 'LRArray'
   Library/Utils/CLIContextMenu: ['generate_context_menu', 'clear_next_line']
   Library/Data/IO/Pen: 'pPen'.

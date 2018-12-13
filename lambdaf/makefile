@@ -1,0 +1,8 @@
+all:
+	cd $(realpath .)/.. && ./make-lambdaf.sh
+
+clean:
+	cd $(realpath .)/.. && ./make-lambdaf.sh clean
+
+install:
+	echo "Hello!"

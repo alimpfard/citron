@@ -1,5 +1,5 @@
 AM_CFLAGS = --pedantic -ggdb3 -Wall -fPIC -mtune=native -D withTermios -D forLinux -DCTR_STD_EXTENSION_PATH=\"$(pkgdatadir)\" -D WITH_AUTOMAKE=\"$(pkgdatadir)\" $(MAYBE_ASM_C)
-AM_LDFLAGS = -rdynamic -lm -ldl -lbsd -lpcre -lpthread $(MAYBE_FFI_L) $(MAYBE_TCC_L) $(MAYBE_ASM_L) $(BUILD_DIR_L)/lambdaf/lambdaf.a -o ctr
+AM_LDFLAGS = -rdynamic -lm -ldl -lbsd -lpcre -lpthread $(MAYBE_FFI_L) $(MAYBE_TCC_L) $(MAYBE_ASM_L) $(BUILD_DIR_L)/lambdaf.a -o ctr
 
 SUBDIRS = $(MAYBE_TCC) lambdaf
 

@@ -21,7 +21,7 @@ AR=ar
 # to catch multiple cases, which we are using
 CC_FLAGS="-c -std=c99 -pedantic -pedantic-errors -Ilambdaf/ \
 -Werror -Wfatal-errors -Wall -Wextra -Wshadow -Winit-self -Wwrite-strings \
--Wconversion -Wcast-qual -Wredundant-decls \
+-Wconversion -Wcast-qual -Wredundant-decls -fpic \
 -fno-ident -fno-stack-protector -fno-asynchronous-unwind-tables"
 
 

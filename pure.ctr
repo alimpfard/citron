@@ -1,0 +1,6 @@
+pure {
+    define pprimes(count)
+        primes.take(count).reverse.showList(showNatural)
+
+    main(input) := parseNatural(input.takeWhile(isDigit), 10).pprimes
+}.

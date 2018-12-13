@@ -1,4 +1,4 @@
-DEBUG_VERSION := 751
+DEBUG_VERSION := 772
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 LEXTRACF := ${LEXTRACF} -flto -lstdc++
 fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
@@ -45,8 +45,8 @@ LDFLAGS += ${shell_ldflags}
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o\
 		lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o\
 		importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o\
-		promise.o symbol_cxx.o world.o
-EXTRAOBJS = 
+		promise.o symbol_cxx.o world.o lambdaf.a
+EXTRAOBJS =
 
 ifneq ($(findstring withCTypesNative=1,${CFLAGS}),)
 OBJS := ${OBJS} _struct.o ctypes.o structmember.o
@@ -105,6 +105,9 @@ tcc/%.a:
 # 	echo "$<"
 # 	$(CC) $(CFLAHS) -c $< -o $@ >/dev/null 2>&1
 
+lambdaf.a:
+	./make-lambdaf.sh
+
 inline-asm.o:
 	$(CXX) -g $(CFLAGS) -c inline-asm.cpp ${CXXFLAGS} -o inline-asm.o
 
@@ -132,6 +135,7 @@ unback:
 
 clean:
 	rm -rf ${OBJS} ctr
+	./make-lambdaf.sh clean
 
 cclean:
 	rm -rf ${COBJS} ctrc

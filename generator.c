@@ -10,6 +10,7 @@
 #define CTR_FN_OF_GENNY  6
 #define CTR_IFN_OF_GENNY 7
 #define CTR_XFN_OF_GENNY 8
+#define CTR_FIL_OF_GENNY 9
 
 const static ctr_object generator_end_marker_o;
 ctr_object *generator_end_marker = (ctr_object *) & generator_end_marker_o;
@@ -170,6 +171,36 @@ ctr_generator_make_rept (ctr_object * myself, ctr_argument * argumentList)
   gen->finished = 0;
   gen->sequence = arg;
   res->ptr = gen;
+  return inst;
+}
+
+/**
+ * [Generator] filter: [Block<idx,value>]
+ *
+ * Creates a generator that filters another generator through the given block
+ */
+ctr_object* ctr_generator_filter(ctr_object* myself, ctr_argument* argumentList) {
+  ctr_object *blk = argumentList->object;
+  ctr_object *inst = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
+  ctr_set_link_all (inst, ctr_std_generator);
+  ctr_generator *under = myself->value.rvalue->ptr;
+  inst->release_hook = ctr_generator_free;
+  inst->value.rvalue = ctr_heap_allocate (sizeof (ctr_resource));
+  ctr_resource *res = inst->value.rvalue;
+  res->type = CTR_FIL_OF_GENNY;
+  ctr_mapping_generator *genny = ctr_heap_allocate (sizeof (*genny));
+  genny->i_type = myself->value.rvalue->type;
+  genny->genny = myself->value.rvalue->ptr;
+  genny->fn = blk;
+  ctr_generator *generator = ctr_heap_allocate (sizeof (*generator));
+  generator->seq_index = under->seq_index;
+  generator->sequence = genny;
+  ctr_argument *argm = ctr_heap_allocate (sizeof (ctr_argument));
+  argm->next = ctr_heap_allocate (sizeof (ctr_argument));
+  generator->data = argm;
+  generator->finished = under->finished;
+  // ctr_condense_generator(generator, CTR_FN_OF_GENNY);
+  res->ptr = generator;
   return inst;
 }
 
@@ -459,6 +490,37 @@ ctr_generator_internal_next (ctr_generator * genny, int gtype)
 	  }
 	return genny->current = res;
       }
+    case CTR_FIL_OF_GENNY:
+      {
+  ctr_mapping_generator *mgen = genny->sequence;
+  ctr_argument *argm = genny->data;
+  ctr_generator *igen = mgen->genny;
+  int igen_type = mgen->i_type;
+  ctr_object *fn = mgen->fn;
+  argm->object = ctr_build_number_from_float (genny->seq_index++);
+  do
+    {
+      argm->next->object = ctr_generator_internal_next (igen, igen_type);
+    }
+  while ((argm->next->object == generator_end_marker && !igen->finished) || !ctr_block_run(fn, argm, fn)->value.bvalue);
+  genny->finished = genny->finished || igen->finished;
+  if (argm->next->object == generator_end_marker)
+    return argm->next->object;
+  if (CtrStdFlow)
+    {
+      if (CtrStdFlow == CtrStdContinue)
+        {
+  	CtrStdFlow = NULL;
+  	return ctr_generator_internal_next (genny, gtype);
+        }
+      if (CtrStdFlow == CtrStdBreak)
+        {
+  	CtrStdFlow = NULL;
+  	genny->finished = 1;
+        }
+    }
+  return genny->current = argm->next->object;
+      }
     default:
       return NULL;
     }
@@ -710,6 +772,18 @@ ctr_generator_internal_tostr (ctr_generator * gen, int gtype)
 	ctr_string_append (str, arg);
 	return str;
       }
+    case CTR_FIL_OF_GENNY:
+    {
+  ctr_object *str = ctr_build_string_from_cstring ("[FilteredGenerator<");
+  ctr_mapping_generator *mgen = gen->sequence;
+  ctr_object *inner = ctr_generator_internal_tostr (mgen->genny, mgen->i_type);
+  ctr_argument *arg = gen->data;
+  arg->object = inner;
+  ctr_string_append (str, arg);
+  arg->object = ctr_build_string_from_cstring (">]");
+  ctr_string_append (str, arg);
+  return str;
+    }
     default:
       return ctr_build_string_from_cstring ("[Generator]");
     }

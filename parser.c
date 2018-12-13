@@ -8,6 +8,8 @@
 #include "citron.h"
 #include "symbol.h"
 
+#include "lambdaf.h"
+
 #if withInlineAsm
 #include "native-asm.h"
 #endif
@@ -37,8 +39,9 @@ ctr_tnode *ctr_cparse_nil ();
 ctr_tnode *ctr_cparse_number ();
 ctr_tnode *ctr_cparse_parse ();
 ctr_tnode *ctr_cparse_popen ();
-ctr_tnode *ctr_cparse_program ();
+ctr_tnode *ctr_cparse_pure ();
 ctr_tnode *ctr_cparse_receiver ();
+ctr_tnode *ctr_cparse_program ();
 ctr_tnode *ctr_cparse_ref ();
 ctr_tnode *ctr_cparse_ret ();
 ctr_tlistitem *ctr_cparse_statement ();
@@ -993,6 +996,17 @@ ctr_cparse_ref ()
   ctr_tnode *r;
   char *tmp;
   ctr_clex_tok ();
+  if (ctr_clex_tok_value_length() == 4 && strncmp(ctr_clex_tok_value(), "pure", 4) == 0) {
+    // pure { ... }
+    int t = ctr_clex_tok();
+    if (t != CTR_TOKEN_BLOCKOPEN) {
+      ctr_clex_putback();
+      ctr_clex_putback();
+      goto the_else;
+    }
+    return ctr_cparse_pure();
+  }
+  the_else:;
   r = ctr_cparse_create_node (CTR_AST_NODE);
   r->type = CTR_AST_NODE_REFERENCE;
   r->vlen = ctr_clex_tok_value_length ();
@@ -1564,6 +1578,30 @@ ctr_cparse_fin ()
   f = ctr_cparse_create_node (CTR_AST_NODE);
   f->type = CTR_AST_NODE_ENDOFPROGRAM;
   return f;
+}
+
+/**
+ * CTRParserPure
+ *
+ * Generates an empty node for a pure block, and executes the block
+ */
+ctr_tnode *
+ctr_cparse_pure ()
+{
+  char* code_s = ctr_code;
+  char* end = ctr_clex_scan_balanced('}', '{');
+  if (end) {
+    char* code = ctr_heap_allocate(end-code_s+1);
+    memcpy(code, code_s, end-code_s);
+    code[end-code_s] = 0;
+    lambdaf_interpret(code);
+    ctr_clex_tok();
+  }
+  ctr_tnode *r = ctr_cparse_create_node (CTR_AST_NODE);
+  r->type = CTR_AST_NODE_LTRNIL;
+  r->value = "Nil";
+  r->vlen = 3;
+  return r;
 }
 
 /**

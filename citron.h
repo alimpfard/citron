@@ -48,9 +48,9 @@ extern "C" {
 #endif
 
 #ifdef withBoehmGC
-#define CTR_VERSION "0.0.8.8-boehm-gc" IS_DEBUG_STRING
+#define CTR_VERSION "0.0.8.9-boehm-gc" IS_DEBUG_STRING
 #else
-#define CTR_VERSION "0.0.8.8" IS_DEBUG_STRING
+#define CTR_VERSION "0.0.8.9" IS_DEBUG_STRING
 #endif
 
 #define CTR_LOG_WARNINGS 2//2 to enable
@@ -210,6 +210,7 @@ typedef struct ctr_map ctr_map;
  * Map item
  */
 struct ctr_mapitem {
+	int hits;
 	uint64_t hashKey;
 	struct ctr_object* key;
 	struct ctr_object* value;
@@ -235,6 +236,15 @@ struct ctr_interfaces {
 };
 typedef struct ctr_interfaces ctr_interfaces;
 
+struct ctr_overload_set {
+	int bucket_count;
+	struct ctr_overload_set** sub_buckets;
+	struct ctr_object * this_terminating_value;
+	struct ctr_object * this_terminating_bucket;
+};
+
+typedef struct ctr_overload_set ctr_overload_set;
+
 /**
  * Root Object
  */
@@ -250,6 +260,7 @@ struct ctr_object {
 		unsigned int remote: 1;
 		unsigned int shared: 1;
 		unsigned int raw: 1;
+		unsigned int overloaded: 1;
 	} info;
 	struct ctr_interfaces* interfaces;
 	struct ctr_object* lexical_name;
@@ -263,7 +274,10 @@ struct ctr_object {
 		struct ctr_object* (*fvalue) (struct ctr_object* myself, struct ctr_argument* argumentList);
 		struct ctr_object* defvalue;
 	} value;
-	voidptrfn_t* release_hook;
+	union {
+		voidptrfn_t* release_hook;
+		struct ctr_overload_set*  overloads; // overloaded functions may not specify a release hook
+	};
 #if !defined(withBoehmGC)
 	struct ctr_object* gnext;
 #endif
@@ -439,6 +453,7 @@ ctr_object** get_CTR_FILE_STDERR_STR();
 ctr_object* ctr_exception_getinfo(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_internal_ex_data();
 
+ctr_object* ctr_internal_find_overload(ctr_object*,ctr_argument*);
 /**
 * @internal
  * standard instrumentor, do not override.
@@ -580,7 +595,7 @@ ctr_object* ctr_ast_from_node (ctr_tnode * node);
 int ctr_ast_is_splice (ctr_object* obj);
 ctr_object* ctr_ast_splice (ctr_object* obj);
 
-#define CTR_CONTEXT_VECTOR_DEPTH  10000
+#define CTR_CONTEXT_VECTOR_DEPTH  50000
 
 CTR_H_DECLSPEC char* ctr_last_parser_error;
 CTR_H_DECLSPEC int        ctr_cparse_calltime_name_id;
@@ -672,7 +687,7 @@ void ctr_switch_context();
  * Global Scoping variables
  */
 struct ctr_context_t {
-    ctr_object* contexts[CTR_CONTEXT_VECTOR_DEPTH ];
+    ctr_object* contexts[CTR_CONTEXT_VECTOR_DEPTH];
     int id;
 };
 CTR_H_DECLSPEC void ctr_dump_context(struct ctr_context_t*);
@@ -721,6 +736,7 @@ ctr_object* ctr_object_message(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_elvis_op(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_if_false(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_if_true(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_object_if_tf(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_object_learn_meaning(ctr_object* myself, ctr_argument* ctr_argumentList);
 ctr_object* ctr_object_to_string(ctr_object* myself, ctr_argument* ctr_argumentList);
 ctr_object* ctr_object_to_number(ctr_object* myself, ctr_argument* ctr_argumentList);
@@ -734,6 +750,7 @@ ctr_object* ctr_object_respond_and_and(ctr_object* myself, ctr_argument* ctr_arg
  */
 ctr_object* ctr_bool_if_true(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_bool_if_false(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_bool_if_tf(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_bool_and(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_bool_nor(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_bool_or(ctr_object* myself, ctr_argument* argumentList);
@@ -874,6 +891,7 @@ ctr_object* ctr_string_assign(ctr_object* myself, ctr_argument* argumentList);
  * Block Interface
  */
 ctr_object* ctr_block_runIt(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_block_specialise(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_runall(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_run_variadic(ctr_object* myself, int count, ...);
 ctr_object* ctr_block_run_variadic_my(ctr_object* myself, ctr_object* my, int count, ...);

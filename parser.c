@@ -299,10 +299,17 @@ ctr_cparse_message (int mode)
         li->node = ctr_cparse_lit_esc(replacement?:callShorthand->value_e);
       } else if (nextCallLazy->value > 1) {
         nextCallLazy->value--;
+        int texpr_res = ctr_transform_template_expr;
+        ctr_transform_template_expr = 0;
         li->node = ctr_cparse_tuple (replacement?:callShorthand->value_e);
+        ctr_transform_template_expr = texpr_res;
       }
-      else
+      else {
+        int texpr_res = ctr_transform_template_expr;
+        ctr_transform_template_expr = 0;
         li->node = ctr_cparse_tuple (replacement?:callShorthand->value_e);
+        ctr_transform_template_expr = texpr_res;
+      }
       replacement = 0;
       m->type = CTR_AST_NODE_KWMESSAGE;
       m->nodes = li;

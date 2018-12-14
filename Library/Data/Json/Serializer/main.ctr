@@ -1,5 +1,3 @@
-import Library/Data/Json/Parser: 'Json'.
-
 Json on: '_internal_serialize:' do: {:obj
   ^obj toJSON.
 }.
@@ -20,8 +18,11 @@ String on: 'toJSON' do: {
 Array on: 'toJSON' do: {
   ^'[%:L]' % [',', (me fmap: \:x x toJSON)].
 }.
+Boolean on: 'toJSON' do: {
+  ^either: 'true' or: 'false'. 
+}.
 Map on: 'toJSON' do: {
-  ^'{%:L}' % [',', (me kvmap: \:kv kv fmap: \:x x toJSON, join: ':')].
+  ^'{%:L}' % [',', (me kvlist: \:kv kv fmap: \:x x toJSON, join: ':')].
 }.
 Object on: 'toJSON' do: {
   thisBlock error: 'Cannot serialize object of type ' + me type.

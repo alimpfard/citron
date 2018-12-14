@@ -1,6 +1,29 @@
 pure {
-    define pprimes(count)
-        primes.take(count).reverse.showList(showNatural)
+    Nat(a) ::= {nat(_ : a)}
 
-    main(input) := parseNatural(input.takeWhile(isDigit), 10).pprimes
+    zero := nat(f -> x -> x)
+    one := nat(f -> x -> x.f)
+
+    succ := nat(a) -> nat(f -> x -> f(a(f,x)))
+    pred := nat(a) -> nat(f -> x -> a(g -> h -> h(f.g))(u -> x)(v -> v))
+
+    five := one.succ.succ.succ.succ
+
+    plus(nat(a), nat(b)) := nat(f -> x -> a(f, b(f,x)))
+    minus(a, nat(b)) := b(pred, a)
+    mul(nat(a), nat(b)) := nat(f -> x -> a(y -> b(f,y), x))
+    exp(nat(a), nat(b)) := nat(a.b)
+    
+    zero?(nat(a)) := a(x -> false, true)
+
+    leq := m -> n -> zero?(m.minus(n))
+
+    toNat(nat(n)) := (1 +).n(0)
+    
+    fromNat := n -> if n <= 0 then zero else (n - 1).fromNat.succ
+
+    xfact(n, y) := if n.leq(one) then y else xfact(n.minus(one), y.mul(n))
+    fact(n) := xfact(n.fromNat, one)
+
+    main(input) := toNat(8.fact).showNatural
 }.

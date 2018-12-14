@@ -11,7 +11,7 @@ GCC_MAJOR=4
 HOST_CC=gcc
 AR=ar
 STRIP=strip -s -R .comment -R .note
-CFLAGS=-Wall -Wextra -Wno-unused-parameter -mtune=native -march=native -D withTermios -D forLinux -D CTR_STD_EXTENSION_PATH=\"`pwd`\" "-D withBoehmGC" -DwithCTypesNative=1 -DwithInjectNative=1 -DwithInlineAsm=1 `llvm-config --cflags --system-libs --libs core orcjit native` -DDEBUG_BUILD -DDEBUG_BUILD_VERSION="\"769\"" -Og -g3 -ggdb3 -Wno-unused-function
+CFLAGS=-Wall -Wextra -Wno-unused-parameter -mtune=native -march=native -D withTermios -D forLinux -D CTR_STD_EXTENSION_PATH=\"`pwd`\" "-D withBoehmGC" -DwithCTypesNative=1 -DwithInjectNative=1 -DwithInlineAsm=1 `llvm-config --cflags --system-libs --libs core orcjit native` -DDEBUG_BUILD -DDEBUG_BUILD_VERSION="\"772\"" -Og -g3 -ggdb3 -Wno-unused-function
 LDFLAGS=
 LIBSUF=.a
 EXESUF=

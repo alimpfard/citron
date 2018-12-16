@@ -13,16 +13,20 @@ Number on: 'toJSON' do: {
   ^me toString.
 }.
 String on: 'toJSON' do: {
-  ^'"%s"' % [me escapeDoubleQuotes].
+  ^'"%s"' % [(me ~ 's/\\\\/\\\\\\\\/g') escapeDoubleQuotes].
 }.
 Array on: 'toJSON' do: {
   ^'[%:L]' % [',', (me fmap: \:x x toJSON)].
 }.
 Boolean on: 'toJSON' do: {
-  ^either: 'true' or: 'false'. 
+  ^either: 'true' or: 'false'.
 }.
 Map on: 'toJSON' do: {
-  ^'{%:L}' % [',', (me kvlist: \:kv kv fmap: \:x x toJSON, join: ':')].
+  ^'{%:L}' % [',', (me kvlist: \:kv [({:key
+    key isA: String,
+      ifTrue: {^key.}
+      ifFalse: { thisBlock error: 'Only a String is allowed as json keys, not some ' + key type. }.
+  })[kv head] toJSON, kv last toJSON] join: ':')].
 }.
 Object on: 'toJSON' do: {
   thisBlock error: 'Cannot serialize object of type ' + me type.

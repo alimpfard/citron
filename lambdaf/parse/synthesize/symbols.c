@@ -150,7 +150,7 @@ static void appendSyntax(Rules rules) {
 void addSyntax(Tag tag, Precedence leftPrecedence, Precedence rightPrecedence,
         Fixity fixity, Associativity associativity,
         void (*shifter)(Stack*, Node*), Node* (*reducer)(Node*, Node*, Node*)) {
-    tokenErrorIf(findRules(tag.lexeme) != NULL, "syntax already defined", tag);
+    // tokenErrorIf(findRules(tag.lexeme) != NULL, "syntax already defined", tag);
     appendSyntax((Rules){tag.lexeme, tag.lexeme, {"", 0}, leftPrecedence,
         rightPrecedence, fixity, associativity, false, shifter, reducer});
 }
@@ -175,7 +175,7 @@ static Node* reduceMixfix(Node* operator, Node* left, Node* right) {
 }
 
 void addMixfixSyntax(Tag tag, Node* prior, void (*shifter)(Stack*, Node*)) {
-    tokenErrorIf(findRules(tag.lexeme) != NULL, "syntax already defined", tag);
+    // tokenErrorIf(findRules(tag.lexeme) != NULL, "syntax already defined", tag);
     Rules* rules = findRules(getLexeme(prior));
     syntaxErrorIf(rules == NULL, "syntax not defined", prior);
     Precedence p = rules->rightPrecedence;

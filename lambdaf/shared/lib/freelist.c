@@ -22,7 +22,10 @@ void initPool(size_t itemSize, size_t initialCapacity) {
     NEXT = POOL = newPool(SIZE, initialCapacity);
 }
 
-void destroyPool(void) {deletePool(POOL);}
+void destroyPool(void) {
+    deletePool(POOL);
+    POOL = NULL;
+}
 size_t getMemoryUsage(void) {return COUNT * SIZE;}
 
 /*void* mark(void* slot) {

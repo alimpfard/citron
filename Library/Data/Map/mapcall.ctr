@@ -3,9 +3,9 @@ import maplit: \*.
 
 #:declare lazyev 2 mapcall
 
-var mapcall is {:fn:mapdesc
-  fn is $!fn.
-  mapdesc is const maplit-gen[(mapdesc at: 1), Reflect thisContext].
+var mapcall is {:__here__fn:mapdesc
+  __here__fn is __here__fn evaluateInContext: (var ctx is Reflect frame: Reflect frameId - 1). # in parent context
+  mapdesc is const maplit-gen[(mapdesc at: 1), ctx].
   ^fn applyAll: ({
     var arglist is Reflect argumentListOf: fn.
     arglist count > 0 ifTrue: {

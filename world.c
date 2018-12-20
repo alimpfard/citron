@@ -1928,6 +1928,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_FROM_LENGTH), &ctr_array_from_length);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("skip:"), &ctr_array_skip);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("zip"), &ctr_array_zip);
+  ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("internal-zip"), &ctr_array_internal_zip);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("zipWith:"), &ctr_array_zip_with);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_PLUS), &ctr_array_add);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("head"), &ctr_array_head);

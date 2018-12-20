@@ -9,7 +9,7 @@ var process-arg is {:elem
   (eref type = 'REFERENCE') & (['me', '->'] contains: eref value) ifFalse: {
     thisBlock error: 'Expected `->`'.
   }.
-  elem is [elem @ i,, range[1, elem count]].
+  elem is [elem @ i,, range[1, elem count - 1]].
   ^elem fmap: {:e
     ['KWMESSAGE', 'BINMESSAGE'] contains: e type, ifFalse: {
       thisBlock error: 'Syntax error: Expected `key: value`'.

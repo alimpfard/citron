@@ -400,7 +400,7 @@ ctr_tnode *
 ctr_cparse_list_comp (ctr_tnode * main_expr)
 {
   ctr_tnode *r;
-  ctr_tlistitem *part0, *part1, *part2, *prev;
+  ctr_tlistitem *part0, *part1, *part2;
 
   int t;
 
@@ -415,8 +415,11 @@ ctr_cparse_list_comp (ctr_tnode * main_expr)
      r
      |_ part0 -- main expression
      |_ part1 -- generator
-     |          |_ gen0
+     |          |_ gen0 -- (kwmessage?) name || expr
+     |          | (kwmessage?) |_ expr
+     |          |
      |          |_ gen1, etc
+     |
      |_ part2 -- predicate
      |_ p0
      |_ p1, etc
@@ -436,7 +439,7 @@ ctr_cparse_list_comp (ctr_tnode * main_expr)
       part1->node = NULL;
       goto parse_predicates;
     }
-  //[ expression ,, expression* (,,)? expression* ]
+  //[ expression ,, (name: expression)* (,,)? expression* ]
   //                ^
   //parse a series of expressions, separated by CHAIN, put into part1
   ctr_tnode *gen = ctr_heap_allocate_tracked (sizeof (*gen));

@@ -34,7 +34,6 @@ import
   Library/Data/Set
   Library/Utils/Highlight
   Library/Control/MethodResolve
-  Library/Data/Json
   Library/Data/String
   Library/Data/IO/UTF-8/input
   Library/Prelude: \*
@@ -91,9 +90,9 @@ Eval on: 'init' do: {
 Eval on: 'initHistory' do: {
   (var hddir is File new: '~/.citron') exists ifFalse: { hddir mkdir. }.
   my hs_file is File new: '~/.citron/ctrhist'.
-  my hs_file exists ifFalse: { my hs_file write: '[]'. }.
+  my hs_file exists ifFalse: { my hs_file write: ''. }.
   var history is my history.
-  (Json parse: (my hs_file read or: '[]') genericType: Object) each_v: \:x history push: x.
+  (my hs_file read split: '\n\n\n') each_v: \:x history push: x.
 }.
 Eval on: 'display' do: {
   ^my displayObject.
@@ -157,7 +156,7 @@ Eval on: 'end' do: {
     me stopEvalServer.
     getFlag: 'history', & my hs_file isNil not ifTrue: {
       my hs_file write: (
-        {:json Json parse: json. ^json.} catch: {:e ^'[]'.}, applyTo: (Json serialize: my history, ~ ?>s/\\/\\\\/g<?)
+        my history join: '\n\n\n'
       ).
     }.
   }.
@@ -998,7 +997,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
                 }.
                 done is inBlock = 0.
               }.
-              inBlock !=: 0, ifTrue: { Eval newBlock. Pen brk. inp +=: ' '. inpbrk is inp length. cursor +=: 1.}.
+              inBlock !=: 0, ifTrue: { Eval newBlock. Pen brk. inp +=: '\n'. inpbrk is inp length. cursor +=: 1.}.
             }, else: { Pen brk. done is True. }.
           }.
           have_context is False.

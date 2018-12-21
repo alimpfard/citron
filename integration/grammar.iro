@@ -108,6 +108,28 @@ contexts[] {
       //    styles []   = .punctuation;
       //    context []  = main;
       // }
+      : inline_push {
+         regex            \= (?:(pure)(\s*\{))
+         styles []         = .sl_defn, .punctuation;
+
+         : pop {
+
+            regex      \= (\})
+
+            styles []   = .punctuation;
+
+         }
+
+         : pattern {
+
+            regex      \= (.)
+
+            styles []   = .text;
+
+         }
+
+
+      }
       : pattern {
          regex      \= (\$[!,'`](?!=\s))
          styles []   = .sl_strescape;
@@ -189,7 +211,7 @@ contexts[] {
 
       }
       : inline_push {
-         regex            \= (?:(\{)(asm)(\s*(?:\:)\s*(?:\w+))*(\s*intel|att|at\&t)?(\s*\(.*\)\s*))
+         regex            \= (?:(\{)(asm)(\s*(?:\:)\s*(?:\w+))*(\s*(?:intel|att|at\&t))?(\s*\(.*\)\s*))
          styles []         = .punctuation, .sl_pragma, .sl_defn, .sl_pragma, .sl_pragma;
          : pop {
             regex      \= (\})

@@ -99,10 +99,14 @@ AS_IF([test "x$want_inlineasm" = "xyes"], [
        MAYBE_ASM_L=`llvm-config --system-libs --libs core orcjit native`
        CTR_MAYBE_ASM="inline-asm.cpp native-asm.h"
        ])
+AS_IF([test 1 = 1], [
+  BUILD_DIR_L="`pwd`/.."
+  ])
 AC_MSG_RESULT($want_inlineasm)
 AC_SUBST([MAYBE_TCC_L])
 AC_SUBST([MAYBE_FFI_L])
 AC_SUBST([MAYBE_ASM_L])
+AC_SUBST([BUILD_DIR_L])
 AM_CONDITIONAL([WITH_INJECT], [test "x$want_inject" = "xyes"])
 AM_CONDITIONAL([WITH_FFI], [test "x$want_ffi" = "xyes"])
 AM_CONDITIONAL([WITH_INLINEASM], [test "x$want_inlineasm" = "xyes"])

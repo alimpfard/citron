@@ -127,7 +127,38 @@ char* ctr_clex_scan(char c) {
   while (ctr_code<=ctr_eofcode&& *++ctr_code != c) {
     if (*ctr_code == '\n') ctr_clex_line_number++;
   }
-  if (ctr_code == ctr_eofcode) {
+  if (ctr_code == ctr_eofcode || *ctr_code != c) {
+    ctr_code = ctr_clex_oldptr;
+    ctr_clex_oldptr = ctr_clex_olderptr;
+    ctr_clex_olderptr = older;
+    return NULL;
+  }
+  return ctr_code;
+}
+
+/**
+ * Lexer - Scan for balanced character
+ *
+ * @return position of the encountered token or NULL if it doesn't exist
+ */
+char* ctr_clex_scan_balanced(char c, char d) {
+  if (*ctr_code == c)
+    return ctr_code;
+  int bc = *ctr_code == d;
+  char* older = ctr_clex_olderptr;
+  ctr_clex_olderptr = ctr_clex_oldptr;
+  ctr_clex_oldptr = ctr_code;
+  resume:
+  while (ctr_code<=ctr_eofcode&& *++ctr_code != c) {
+    if (*ctr_code == '\n') ctr_clex_line_number++;
+    if (*ctr_code == d) bc++;
+  }
+  if (*ctr_code == c && bc>0) {
+    ctr_code++;
+    bc--;
+    goto resume;
+  }
+  if (ctr_code == ctr_eofcode || *ctr_code != c) {
     ctr_code = ctr_clex_oldptr;
     ctr_clex_oldptr = ctr_clex_olderptr;
     ctr_clex_olderptr = older;
@@ -145,7 +176,7 @@ struct ctr_extension_descriptor {
   {CTR_EXT_FROZEN_K, "XFrozen"},
 #if withInlineAsm
   {CTR_EXT_ASM_BLOCK, "XNakedAsmBlock"},
-#endif  
+#endif
   {0, NULL}
 };
 

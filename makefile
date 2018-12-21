@@ -1,4 +1,4 @@
-DEBUG_VERSION := 751
+DEBUG_VERSION := 818
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 o_cflags := -I/mingw64/include
 #it ain't so easy
@@ -111,6 +111,9 @@ tcc/%.a:
 # 	echo "$<"
 # 	$(CC) $(CFLAHS) -c $< -o $@ >/dev/null 2>&1
 
+lambdaf.a:
+	./make-lambdaf.sh
+
 inline-asm.o:
 	$(CXX) -g $(CFLAGS) -c inline-asm.cpp ${CXXFLAGS} -o inline-asm.o
 
@@ -139,6 +142,7 @@ unback:
 
 clean:
 	rm -rf ${OBJS} ctr
+	./make-lambdaf.sh clean
 
 cclean:
 	rm -rf ${COBJS} ctrc

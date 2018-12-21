@@ -1,0 +1,22 @@
+# Test pure dialect
+pure {
+  What ::= { A(_ : ℕ), B(_ : ℕ) }
+  define test0
+    match A(64)
+      case B(x) -> x
+      case A(x) -> x + 1
+
+  define test1
+    64 + 56
+
+  syntax(letIn) := infixL(10)
+  x letIn y := y
+
+  define test2
+    x -> y -> x + y letIn y - x
+
+  define allTests
+    [test0, test1, test2(10, 20)]
+
+  main(input) := allTests.showList(showNatural)
+}.

@@ -3,5 +3,6 @@
   Json is JSON.
 } catch: {
   import Parser: 'Json'.
-  import Serializer.
 }, run.
+
+import Serializer.

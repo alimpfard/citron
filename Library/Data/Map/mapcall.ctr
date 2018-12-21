@@ -4,7 +4,7 @@ import maplit: \*.
 #:declare lazyev 2 mapcall
 
 var mapcall is {:__here__fn:mapdesc
-  __here__fn is __here__fn evaluateInContext: (var ctx is Reflect frame: Reflect frameId - 1). # in parent context
+  __here__fn is __here__fn evaluateInContext: (var ctx is Reflect frame: (Reflect frameId - 1 max: 0)). # in parent context
   mapdesc is const maplit-gen[(mapdesc at: 1), ctx].
   ^fn applyAll: ({
     var arglist is Reflect argumentListOf: fn.

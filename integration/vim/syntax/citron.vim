@@ -1,12 +1,18 @@
 autocmd BufEnter * :syntax sync fromstart
 
-syntax match citronMessage "[a-zA-Z_;!@%^&*+=-~`\/\"][0-9a-zA-Z_;!@%^&*+=-~`/\"]*:"
+syntax match citronMessage "\<[a-zA-Z_;!@%^&*+=-~`\/\"][0-9a-zA-Z_;!@%^&*+=-~`/\"]*:"
 
-syntax match citronIdent "[a-zA-Z_;!@%^&*+=-~`\/\"][0-9a-zA-Z_;!@%^&*+=-~`/\"]*|\<.\>"
+syntax match citronIdent "\<[a-zA-Z_;!@%^&*+=-~`\/\"][0-9a-zA-Z_;!@%^&*+=-~`/\"]*\>|\<.\>"
 syntax match citronDelimiter "[()\[\]{},.]"
-syntax match citronBlockInit "\\\(\:[a-zA-Z_;!@%^&*+=-~`/\"][0-9a-zA-Z_;!@%^&*+=-~`/\"]*\)\+"
-syntax region citronBlockIni2 start="{\\\?\(:[a-zA-Z_;!@%^&*+=-~`/\"][0-9a-zA-Z_;!@%^&*+=-~`/\"]\*\)\*" end=/}/
-syntax match citronTypeName "[A-Z][a-zA-Z_;!@%^&*+=-~`]*"
+
+syn cluster citronStmtGroup contains=citronMessage,citronIdent,citronDelimiter,citronBlock,citronTypeName,citronInteger,citronFloat,itronString,citronLineComment,citronBoolean
+
+syntax match citronBlockInit "\\\(\:[a-zA-Z_;!@%^&*+=-~`/\"][0-9a-zA-Z_;!@%^&*+=-~`/\"]*\)\+" contains=@citronStmtGroup
+syntax region citronBlockIni0 start="{\(:[a-zA-Z_;!@%^&*+=-~`/\"][0-9a-zA-Z_;!@%^&*+=-~`/\"]*\)*" end=/}/ contains=@citronStmtGroup
+syntax region citronBlockIni2 start="{\\\(:[a-zA-Z_;!@%^&*+=-~`/\"][0-9a-zA-Z_;!@%^&*+=-~`/\"]*\)*" end=/}/ contains=@citronStmtGroup
+syntax cluster citronBlock contains=citronBlockInit,citronBlockIni0,citronBlockInit2
+
+syntax match citronTypeName "\<[A-Z][a-zA-Z_;!@%^&*+=-~`]*\>"
 syntax match citronInteger "\<\d\+"
 
 syn match       citronFloat             "\<-\=\d\+\.\d*\%([Ee][-+]\=\d\+\)\=\>"
@@ -40,16 +46,21 @@ syn cluster citronStringGroup contains=citronEscapeOctal,citronEscapeC,citronEsc
 syntax region citronString start=/>?/ skip=/\\./ end=/<?/
 syntax region citronRString start=/'/ skip=/\\./ end=/'/ contains=@citronStringGroup
 
-syntax match citronLineComment "#.*$"
+syntax match citronLineComment "#.*$" contains=citronTodo
+
+syn keyword citronTodo contained NOTE
+hi def link citronTodo Todo
+
 syntax keyword citronKW var const my is frozen
 syntax keyword citronConstant String Object Program Clock CodeBlock Reflect Generator Array Pen Nil Boolean
 syn keyword citronBoolean True False
 
 hi def link citronBoolean Boolean
 
-highlight link citronIdent Normal
-highlight link citronBlockInit Normal
-highlight link citronBlockInit2 Normal
+highlight link citronIdent Identifier
+highlight link citronBlockInit  Operator
+highlight link citronBlockInit0 Operator
+highlight link citronBlockInit2 Operator
 highlight link citronMessage Operator
 highlight link citronDelimiter Operator
 highlight link citronInteger Constant

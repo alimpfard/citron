@@ -2481,6 +2481,478 @@ ctr_get_appropriate_catch_all (char *message, long vlen, int argCount)
     }
 }
 
+#if CTR_TAGS_ONLY
+struct ctr_internal_tag_ll {
+  void* value;
+  struct ctr_internal_tag_ll* next;
+};
+
+#include "rforeach.h"
+
+ctr_object* ctr_array_internal_zip(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_each(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_eachv(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_evaluate(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_flex(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_get_block(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_get_mod(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_get_type(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_get_value(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_insert_nth(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_instrcount(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_lexbuf(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_lexline(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_lexpos(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_lexputback(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_lexskip(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_lexstring(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_lextoken(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_marshal(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_nth(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_parse(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_set_mod(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_set_nth(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_set_type(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_set_value(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_stringify(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_tostring(ctr_object*,ctr_argument*);
+ctr_object* ctr_ast_with_value(ctr_object*,ctr_argument*);
+ctr_object* ctr_block_assign(ctr_object*,ctr_argument*);
+ctr_object* ctr_block_catch(ctr_object*,ctr_argument*);
+ctr_object* ctr_block_catch_type(ctr_object*,ctr_argument*);
+ctr_object* ctr_block_error(ctr_object*,ctr_argument*);
+ctr_object* ctr_block_forever(ctr_object*,ctr_argument*);
+ctr_object* ctr_block_let(ctr_object*,ctr_argument*);
+ctr_object* ctr_block_letast(ctr_object*,ctr_argument*);
+ctr_object* ctr_block_runIt(ctr_object*,ctr_argument*);
+ctr_object* ctr_block_runall(ctr_object*,ctr_argument*);
+ctr_object* ctr_block_set(ctr_object*,ctr_argument*);
+ctr_object* ctr_block_specialise(ctr_object*,ctr_argument*);
+ctr_object* ctr_block_to_string(ctr_object*,ctr_argument*);
+ctr_object* ctr_block_while_false(ctr_object*,ctr_argument*);
+ctr_object* ctr_block_while_true(ctr_object*,ctr_argument*);
+ctr_object* ctr_bool_and(ctr_object*,ctr_argument*);
+ctr_object* ctr_bool_assign(ctr_object*,ctr_argument*);
+ctr_object* ctr_bool_break(ctr_object*,ctr_argument*);
+ctr_object* ctr_bool_continue(ctr_object*,ctr_argument*);
+ctr_object* ctr_bool_either_or(ctr_object*,ctr_argument*);
+ctr_object* ctr_bool_eq(ctr_object*,ctr_argument*);
+ctr_object* ctr_bool_flip(ctr_object*,ctr_argument*);
+ctr_object* ctr_bool_if_false(ctr_object*,ctr_argument*);
+ctr_object* ctr_bool_if_tf(ctr_object*,ctr_argument*);
+ctr_object* ctr_bool_if_true(ctr_object*,ctr_argument*);
+ctr_object* ctr_bool_neq(ctr_object*,ctr_argument*);
+ctr_object* ctr_bool_nor(ctr_object*,ctr_argument*);
+ctr_object* ctr_bool_not(ctr_object*,ctr_argument*);
+ctr_object* ctr_bool_or(ctr_object*,ctr_argument*);
+ctr_object* ctr_bool_to_number(ctr_object*,ctr_argument*);
+ctr_object* ctr_bool_to_string(ctr_object*,ctr_argument*);
+ctr_object* ctr_bool_xor(ctr_object*,ctr_argument*);
+ctr_object* ctr_coro_error(ctr_object*,ctr_argument*);
+ctr_object* ctr_coro_isrunning(ctr_object*,ctr_argument*);
+ctr_object* ctr_coro_make(ctr_object*,ctr_argument*);
+ctr_object* ctr_coro_new(ctr_object*,ctr_argument*);
+ctr_object* ctr_coro_resume(ctr_object*,ctr_argument*);
+ctr_object* ctr_coro_state(ctr_object*,ctr_argument*);
+ctr_object* ctr_coro_yield(ctr_object*,ctr_argument*);
+ctr_object* ctr_exception_getinfo(ctr_object*,ctr_argument*);
+ctr_object* ctr_get_last_trace(ctr_object*,ctr_argument*);
+ctr_object* ctr_get_stack_trace(ctr_object*,ctr_argument*);
+ctr_object* ctr_nil_assign(ctr_object*,ctr_argument*);
+ctr_object* ctr_nil_is_nil(ctr_object*,ctr_argument*);
+ctr_object* ctr_nil_to_boolean(ctr_object*,ctr_argument*);
+ctr_object* ctr_nil_to_number(ctr_object*,ctr_argument*);
+ctr_object* ctr_nil_to_string(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_abs(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_add(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_and(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_assign(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_atan(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_between(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_ceil(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_cos(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_dec(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_div(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_divide(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_eq(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_even(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_exp(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_factorial(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_floor(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_higherEqThan(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_higherThan(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_inc(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_log(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_lowerEqThan(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_lowerThan(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_max(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_min(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_minus(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_modulo(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_mul(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_multiply(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_negate(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_negative(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_neq(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_odd(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_or(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_positive(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_pow(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_qualify(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_respond_to(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_round(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_shl(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_shr(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_sin(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_sqrt(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_tan(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_times(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_to_boolean(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_to_byte(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_to_step(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_to_step_do(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_to_string(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_uint_binrep(ctr_object*,ctr_argument*);
+ctr_object* ctr_number_xor(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_assign(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_attr_accessor(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_attr_reader(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_attr_writer(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_ctor(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_do(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_done(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_elvis_op(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_equals(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_hash(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_id(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_if_false(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_if_tf(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_if_true(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_inh_check(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_inherit(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_is_nil(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_learn_meaning(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_make(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_make_hiding(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_message(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_myself(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_on_do(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_swap(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_to_boolean(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_to_number(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_to_string(ctr_object*,ctr_argument*);
+ctr_object* ctr_object_type(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_append(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_append_byte(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_assign(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_at(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_byte_at(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_bytes(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_cadd(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_characters(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_concat(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_contains(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_contains_pattern(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_count_of(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_csub(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_dquotes_escape(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_ends_with(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_eq(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_filter(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_find_pattern_do(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_find_pattern_options_do(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_fmap(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_format(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_format_map(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_from_length(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_fromto(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_hash_with_key(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_html_escape(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_imap(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_index_of(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_is_ctor(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_is_regex_pcre(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_last_index_of(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_length(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_ltrim(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_multiply(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_neq(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_padding(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_padding_left(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_padding_right(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_put_at(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_quotes_escape(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_randomize_bytes(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_re_index_of(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_re_last_index_of(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_reg_replace(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_replace_with(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_reverse(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_rtrim(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_skip(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_slice(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_split(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_split_re(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_starts_with(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_to_boolean(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_to_byte_array(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_to_lower(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_to_lower1st(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_to_number(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_to_string(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_to_symbol(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_to_upper(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_to_upper1st(ctr_object*,ctr_argument*);
+ctr_object* ctr_string_trim(ctr_object*,ctr_argument*);
+#pragma endregion dummies
+
+#define INITIALISE_TAG_DESCR_HELPER(tag_ptr, inner) &(struct ctr_internal_tag_ll){tag_ptr, inner}
+// 256 max
+#define INITIALISE_TAG_DESCR(...) R_FOR_EACH(INITIALISE_TAG_DESCR_HELPER, __VA_ARGS__, {})
+
+static struct ctr_internal_tag_ll *ctr_internal_tag_whitelist_list = INITIALISE_TAG_DESCR(
+  &ctr_array_internal_zip,
+  &ctr_ast_each,
+  &ctr_ast_eachv,
+  &ctr_ast_evaluate,
+  &ctr_ast_flex,
+  &ctr_ast_from_node,
+  &ctr_ast_get_block,
+  &ctr_ast_get_mod,
+  &ctr_ast_get_type,
+  &ctr_ast_get_value,
+  &ctr_ast_insert_nth,
+  &ctr_ast_instrcount,
+  &ctr_ast_lexbuf,
+  &ctr_ast_lexline,
+  &ctr_ast_lexpos,
+  &ctr_ast_lexputback,
+  &ctr_ast_lexskip,
+  &ctr_ast_lexstring,
+  &ctr_ast_lextoken,
+  &ctr_ast_marshal,
+  &ctr_ast_nth,
+  &ctr_ast_parse,
+  &ctr_ast_set_mod,
+  &ctr_ast_set_nth,
+  &ctr_ast_set_type,
+  &ctr_ast_set_value,
+  &ctr_ast_stringify,
+  &ctr_ast_tostring,
+  &ctr_ast_with_value,
+  &ctr_block_assign,
+  &ctr_block_catch,
+  &ctr_block_catch_type,
+  &ctr_block_error,
+  &ctr_block_forever,
+  &ctr_block_let,
+  &ctr_block_letast,
+  &ctr_block_run,
+  &ctr_block_runIt,
+  &ctr_block_run_here,
+  &ctr_block_runall,
+  &ctr_block_set,
+  &ctr_block_specialise,
+  &ctr_block_to_string,
+  &ctr_block_while_false,
+  &ctr_block_while_true,
+  &ctr_bool_and,
+  &ctr_bool_assign,
+  &ctr_bool_break,
+  &ctr_bool_continue,
+  &ctr_bool_either_or,
+  &ctr_bool_eq,
+  &ctr_bool_flip,
+  &ctr_bool_if_false,
+  &ctr_bool_if_tf,
+  &ctr_bool_if_true,
+  &ctr_bool_neq,
+  &ctr_bool_nor,
+  &ctr_bool_not,
+  &ctr_bool_or,
+  &ctr_bool_to_number,
+  &ctr_bool_to_string,
+  &ctr_bool_xor,
+  &ctr_coro_error,
+  &ctr_coro_isrunning,
+  &ctr_coro_make,
+  &ctr_coro_new,
+  &ctr_coro_resume,
+  &ctr_coro_state,
+  &ctr_coro_yield,
+  &ctr_exception_getinfo,
+  &ctr_get_last_trace,
+  &ctr_get_stack_trace,
+  &ctr_invoke_variadic,
+  &ctr_nil_assign,
+  &ctr_nil_is_nil,
+  &ctr_nil_to_boolean,
+  &ctr_nil_to_number,
+  &ctr_nil_to_string,
+  &ctr_number_abs,
+  &ctr_number_add,
+  &ctr_number_and,
+  &ctr_number_assign,
+  &ctr_number_atan,
+  &ctr_number_between,
+  &ctr_number_ceil,
+  &ctr_number_cos,
+  &ctr_number_dec,
+  &ctr_number_div,
+  &ctr_number_divide,
+  &ctr_number_eq,
+  &ctr_number_even,
+  &ctr_number_exp,
+  &ctr_number_factorial,
+  &ctr_number_floor,
+  &ctr_number_higherEqThan,
+  &ctr_number_higherThan,
+  &ctr_number_inc,
+  &ctr_number_log,
+  &ctr_number_lowerEqThan,
+  &ctr_number_lowerThan,
+  &ctr_number_max,
+  &ctr_number_min,
+  &ctr_number_minus,
+  &ctr_number_modulo,
+  &ctr_number_mul,
+  &ctr_number_multiply,
+  &ctr_number_negate,
+  &ctr_number_negative,
+  &ctr_number_neq,
+  &ctr_number_odd,
+  &ctr_number_or,
+  &ctr_number_positive,
+  &ctr_number_pow,
+  &ctr_number_qualify,
+  &ctr_number_respond_to,
+  &ctr_number_round,
+  &ctr_number_shl,
+  &ctr_number_shr,
+  &ctr_number_sin,
+  &ctr_number_sqrt,
+  &ctr_number_tan,
+  &ctr_number_times,
+  &ctr_number_to_boolean,
+  &ctr_number_to_byte,
+  &ctr_number_to_step,
+  &ctr_number_to_step_do,
+  &ctr_number_to_string,
+  &ctr_number_uint_binrep,
+  &ctr_number_xor,
+  &ctr_object_assign,
+  &ctr_object_attr_accessor,
+  &ctr_object_attr_reader,
+  &ctr_object_attr_writer,
+  &ctr_object_ctor,
+  &ctr_object_do,
+  &ctr_object_done,
+  &ctr_object_elvis_op,
+  &ctr_object_equals,
+  &ctr_object_hash,
+  &ctr_object_id,
+  &ctr_object_if_false,
+  &ctr_object_if_tf,
+  &ctr_object_if_true,
+  &ctr_object_inh_check,
+  &ctr_object_inherit,
+  &ctr_object_is_nil,
+  &ctr_object_learn_meaning,
+  &ctr_object_make,
+  &ctr_object_make_hiding,
+  &ctr_object_message,
+  &ctr_object_myself,
+  &ctr_object_on_do,
+  &ctr_object_swap,
+  &ctr_object_to_boolean,
+  &ctr_object_to_number,
+  &ctr_object_to_string,
+  &ctr_object_type,
+  &ctr_str_count_substr,
+  &ctr_string_append,
+  &ctr_string_append_byte,
+  &ctr_string_assign,
+  &ctr_string_at,
+  &ctr_string_byte_at,
+  &ctr_string_bytes,
+  &ctr_string_cadd,
+  &ctr_string_characters,
+  &ctr_string_concat,
+  &ctr_string_contains,
+  &ctr_string_contains_pattern,
+  &ctr_string_count_of,
+  &ctr_string_csub,
+  &ctr_string_dquotes_escape,
+  &ctr_string_ends_with,
+  &ctr_string_eq,
+  &ctr_string_filter,
+  &ctr_string_find_pattern_do,
+  &ctr_string_find_pattern_options_do,
+  &ctr_string_fmap,
+  &ctr_string_format,
+  &ctr_string_format_map,
+  &ctr_string_from_length,
+  &ctr_string_fromto,
+  &ctr_string_hash_with_key,
+  &ctr_string_html_escape,
+  &ctr_string_imap,
+  &ctr_string_index_of,
+  &ctr_string_is_ctor,
+  &ctr_string_is_regex_pcre,
+  &ctr_string_last_index_of,
+  &ctr_string_length,
+  &ctr_string_ltrim,
+  &ctr_string_multiply,
+  &ctr_string_neq,
+  &ctr_string_padding,
+  &ctr_string_padding_left,
+  &ctr_string_padding_right,
+  &ctr_string_put_at,
+  &ctr_string_quotes_escape,
+  &ctr_string_randomize_bytes,
+  &ctr_string_re_index_of,
+  &ctr_string_re_last_index_of,
+  &ctr_string_reg_replace,
+  &ctr_string_replace_with,
+  &ctr_string_reverse,
+  &ctr_string_rtrim,
+  &ctr_string_skip,
+  &ctr_string_slice,
+  &ctr_string_split,
+  &ctr_string_split_re,
+  &ctr_string_starts_with,
+  &ctr_string_to_boolean,
+  &ctr_string_to_byte_array,
+  &ctr_string_to_lower,
+  &ctr_string_to_lower1st,
+  &ctr_string_to_number,
+  &ctr_string_to_string,
+  &ctr_string_to_symbol,
+  &ctr_string_to_upper,
+  &ctr_string_to_upper1st,
+  &ctr_string_trim,
+  &ctr_object_learn_meaning
+);
+
+int ctr_internal_check_tag_whitelisted(void* ptr) {
+  struct ctr_internal_tag_ll* node = ctr_internal_tag_whitelist_list;
+  while(node) {
+    if (node->value == ptr)
+      return 1;
+    node = node->next;
+  }
+  return 0;
+}
+void ctr_internal_tag_whitelist(void* ptr) {
+  if(!ptr) return;
+  if (ctr_internal_check_tag_whitelisted(ptr)) return;
+  struct ctr_internal_tag_ll* node = ctr_heap_allocate(sizeof(*node));
+  node->value = ptr;
+  node->next = ctr_internal_tag_whitelist_list;
+  ctr_internal_tag_whitelist_list = node;
+}
+#endif
+
 char* msgName__ = NULL;
 long msgLen__ = 0;
 /**
@@ -2617,6 +3089,11 @@ no_instrum:;
 #endif //EVALSECURITY
 
       CTR_THREAD_UNLOCK ();
+
+      #if CTR_TAGS_ONLY
+        if (!ctr_internal_check_tag_whitelisted(funct))
+          return receiverObject;
+      #endif
       result = funct (receiverObject, argumentList);
     }
   else if (methodObject->info.type == CTR_OBJECT_TYPE_OTBLOCK)
@@ -2630,6 +3107,10 @@ no_instrum:;
 	}
 #endif //EVALSECURITY
       CTR_THREAD_UNLOCK ();
+      #if CTR_TAGS_ONLY
+        if (!ctr_internal_check_tag_whitelisted(methodObject))
+          return receiverObject;
+      #endif
       result = ctr_block_run (methodObject, argumentList, receiverObject);
     }
   if (msg)

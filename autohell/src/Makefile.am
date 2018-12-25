@@ -12,7 +12,7 @@ ctr_SOURCES = citron.c base.c world.c importlib.c fiber.c reflect.c\
 			  collections.c util.c memory.c utf8.c symbol.c siphash.c\
 			  coroutine.c generator.c base_extensions.c dictionary.h\
 			  siphash.h marshal.c promise.c symbol_cxx.cpp symbol.hpp\
-			  promise.h native-asm.h
+			  promise.h native-asm.h rforeach.h
 
 EXTRA_ctr_SOURCES = inject.c ctypes.c reverse_sizes.h\
 			  _struct.h structmember.h ctypes.h _struct.c\
@@ -34,7 +34,7 @@ libcitron_la_SOURCES = citron.c base.c world.c importlib.c fiber.c reflect.c\
                		   collections.c util.c memory.c utf8.c symbol.c siphash.c\
                        coroutine.c generator.c base_extensions.c dictionary.h\
 					   siphash.h marshal.c promise.c symbol_cxx.cpp symbol.hpp\
-					   promise.h native-asm.h
+					   promise.h native-asm.h rforeach.h
 
 EXTRA_libcitron_la_SOURCES = inject.c ctypes.c reverse_sizes.h\
 					   _struct.h structmember.h ctypes.h\

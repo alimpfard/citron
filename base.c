@@ -753,6 +753,9 @@ ctr_object_on_do (ctr_object * myself, ctr_argument * argumentList)
       CtrStdFlow->info.sticky = 1;
       return myself;
     }
+  #if CTR_TAGS_ONLY
+    ctr_internal_tag_whitelist(methodBlock);
+  #endif
   ctr_internal_object_set_property (myself, methodName, methodBlock, 1);
   return myself;
 }

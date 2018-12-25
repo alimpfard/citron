@@ -1,1 +1,1 @@
-Array* bind(Hold* root);
+Array* bindRoot(Hold* root);

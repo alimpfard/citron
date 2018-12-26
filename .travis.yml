@@ -1,6 +1,20 @@
 language: c
 compiler: gcc
 dist: xenial
+matrix:
+  include:
+    - name: "Coverage Tests"
+      env: TEST=YES
+      install:
+        - CC='gcc-8 -fuse-ld=gold' CXX='g++-8 -fuse-ld=gold' CFLAGS='-DwithCTypesNative=1 -DwithInjectNative=1 -DwithInlineAsm=1 -fprofile-arcs -ftest-coverage' LDFLAGS="-lgcov --coverage" make all
+      script:
+        - bash ./runtests.sh
+      after_success:
+        - curl -s https://codecov.io/bash -o codecov.sh
+        - bash codecov.sh -x gcov-8 >/dev/null 2>&1
+    - name: "Build Artifacts"
+      env: TEST=NO
+
 before_install:
     - wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
     - echo "deb [trusted=yes] http://apt.llvm.org/xenial/ llvm-toolchain-xenial-7 main" | sudo tee -a /etc/apt/sources.list.d/llvm.list
@@ -14,10 +28,11 @@ before_install:
     - sudo apt-get install -y --allow-unauthenticated gcc-8 g++-8
     - echo =====================================================================
     - /usr/lib/llvm-7/bin/llvm-config --ldflags --cxxflags --libs core orcjit native
+    - /usr/lib/llvm-7/bin/llvm-config --ldflags --cflags --libs core orcjit native
     - echo =====================================================================
     - /usr/lib/llvm-7/bin/llvm-config --version
     - echo =====================================================================
-    - export PATH=/usr/lib/llvm-7/bin/llvm-config:$PATH
+    - export PATH=/usr/lib/llvm-7/bin:$PATH
 
 install:
   - cd autohell && aclocal && libtoolize && autoconf && automake --add-missing
@@ -35,7 +50,6 @@ install:
   - cd ..
 
 script:
-  - bash ./runtests.sh autohell/build/bin
   - export VERSION=$(git rev-parse --short HEAD)
 
 after_success:

@@ -1,4 +1,4 @@
-DEBUG_VERSION := 826
+DEBUG_VERSION := 827
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
 location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
@@ -66,7 +66,7 @@ COBJS = ${OBJS} compiler.o
 
 # .SUFFIXES:	.o .c
 
-all: CFALGS := $(CFLAGS) -O2
+all: CFLAGS := $(CFLAGS) -O2
 all: cxx
 all: ctr ctrconfig
 
@@ -83,17 +83,17 @@ install:
 	echo -e "install directly from source not allowed.\nUse citron_autohell instead for installs"
 	exit 1;
 ctr:	$(OBJS) $(EXTRAOBJS)
-	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) ${CXXFLAGS}  -rdynamic -lm -ldl -lbsd -lpcre -l:libffi.so.7 -lpthread ${LEXTRACF} -o ctr
+	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) ${CXXFLAGS}  -rdynamic -lm -ldl -lbsd -lpcre -lffi -lpthread ${LEXTRACF} -o ctr
 
 libctr: CFLAGS := $(CFLAGS) -fPIC -DCITRON_LIBRARY
 libctr: symbol_cxx
 libctr: $(OBJS)
-	$(CC) $(OBJS) -shared -export-dynamic -ldl -lbsd -lpcre -l:libffi.so.7 -lpthread -o libctr.so
+	$(CC) $(OBJS) -shared -export-dynamic -ldl -lbsd -lpcre -lffi -lpthread -o libctr.so
 
 compiler: CFLAGS := $(CFLAGS) -D comp=1
 compiler: cxx
 compiler: $(COBJS)
-	$(CC) $(COBJS) -rdynamic -lm -ldl -lbsd -lpcre -l:libffi.so.7 -lprofiler -lpthread ${LEXTRACF} -o ctrc
+	$(CC) $(COBJS) -rdynamic -lm -ldl -lbsd -lpcre -lffi -lprofiler -lpthread ${LEXTRACF} -o ctrc
 
 cxx:
 	echo "blah"
@@ -112,7 +112,7 @@ inline-asm.o:
 	$(CXX) -g $(CFLAGS) -c inline-asm.cpp ${CXXFLAGS} -o inline-asm.o
 
 %.o: %.c
-	$(CC) -fopenmp $(CFLAGS) -c $< -o $@ >/dev/null 2>&1
+	$(CC) -fopenmp $(CFLAGS) -c $< -o $@
 
 define SHVAL =
 for f in *.c; do\

@@ -1,6 +1,5 @@
-DEBUG_VERSION := 824
+DEBUG_VERSION := 826
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
-LEXTRACF := ${LEXTRACF} -flto -lstdc++
 fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
 location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 WHERE_ART_THOU := $(location)
@@ -39,6 +38,7 @@ gc_check:
 
 CFLAGS += ${shell_cflags}
 LDFLAGS += ${shell_ldflags}
+LEXTRACF := ${LDFLAGS} ${LEXTRACF} -flto -lstdc++
 
 -include gc_check
 

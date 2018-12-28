@@ -1,0 +1,70 @@
+import Library/Foreign/C/C_Types: {
+  c_int => 'int'.
+  c_sint32 => 'ssize_t'.
+  c_sint => 'size_t'.
+  c_ptr => 'char*'.
+  c_sint16 => 'char'.
+  load_library => 'load_library'.
+}.
+
+var SocketInternals is Object cnew: {
+  var library is load_library['thisexec'].
+
+  create_inet_stream_socket_cif   => CIF new setABI: 0 return: int     argTypes: [char*, char*, char, int].
+  create_inet_dgram_socket_cif    => CIF new setABI: 0 return: int     argTypes: [char, int].
+  sendto_inet_dgram_socket_cif    => CIF new setABI: 0 return: ssize_t argTypes: [int, char*, char*].
+  recvfrom_inet_dgram_socket_cif  => CIF new setABI: 0 return: ssize_t argTypes: [int, char*, size_t, char*, size_t, char*, size_t, int, int].
+  connect_inet_dgram_socket_cif   => CIF new setABI: 0 return: int     argTypes: [int, char*, char*].
+  destroy_inet_socket_cif         => CIF new setABI: 0 return: int     argTypes: [int].
+  shutdown_inet_stream_socket_cif => CIF new setABI: 0 return: int     argTypes: [int, int].
+  create_inet_server_socket_cif   => CIF new setABI: 0 return: int     argTypes: [char*, char*, char, char, int].
+  accept_inet_stream_socket_cif   => CIF new setABI: 0 return: int     argTypes: [int, char*, size_t, char*, size_t, int, int].
+  get_address_family_cif          => CIF new setABI: 0 return: int     argTypes: [char*].
+  create_multicast_socket_cif     => CIF new setABI: 0 return: int     argTypes: [char*, char*, char*].
+
+  create_inet_stream_socket_sym   => library create_inet_stream_socket.
+  create_inet_dgram_socket_sym    => library create_inet_dgram_socket.
+  sendto_inet_dgram_socket_sym    => library sendto_inet_dgram_socket.
+  recvfrom_inet_dgram_socket_sym  => library recvfrom_inet_dgram_socket.
+  connect_inet_dgram_socket_sym   => library connect_inet_dgram_socket.
+  destroy_inet_socket_sym         => library destroy_inet_socket.
+  shutdown_inet_stream_socket_sym => library shutdown_inet_stream_socket.
+  create_inet_server_socket_sym   => library create_inet_server_socket.
+  accept_inet_stream_socket_sym   => library accept_inet_stream_socket.
+  get_address_family_sym          => library get_address_family.
+  create_multicast_socket_sym     => library create_multicast_socket.
+
+  var create_inet_stream_socket   is {:char*:char*1:char:int ^my create_inet_stream_socket_cif call: my create_inet_stream_socket_sym withArgs: [char*, char*1, char, int].}.
+  var create_inet_dgram_socket    is {:char:int ^my create_inet_dgram_socket_cif call: my create_inet_dgram_socket_sym withArgs: [char, int].}.
+  var sendto_inet_dgram_socket    is {:int:char*:char*1 ^my sendto_inet_dgram_socket_cif call: my sendto_inet_dgram_socket_sym withArgs: [int, char*, char*1].}.
+  var recvfrom_inet_dgram_socket  is {:int:char*:size_t:char*1:size_t1:char*2:size_t2:int1:int2 ^my recvfrom_inet_dgram_socket_cif call: my recvfrom_inet_dgram_socket_sym withArgs: [int, char*, size_t, char*1, size_t1, char*2, size_t2, int1, int2].}.
+  var connect_inet_dgram_socket   is {:int:char*:char*1 ^my connect_inet_dgram_socket_cif call: my connect_inet_dgram_socket_sym withArgs: [int, char*, char*1].}.
+  var destroy_inet_socket         is {:int ^my destroy_inet_socket_cif call: my destroy_inet_socket_sym withArgs: [int].}.
+  var shutdown_inet_stream_socket is {:int:int1 ^my shutdown_inet_stream_socket_cif call: my shutdown_inet_stream_socket_sym withArgs: [int, int1].}.
+  var create_inet_server_socket   is {:char*:char*1:char:char1:int ^my create_inet_server_socket_cif call: my create_inet_server_socket_sym withArgs: [char*, char*1, char, char1, int].}.
+  var accept_inet_stream_socket   is {:int:char*:size_t:char*1:size_t1:int1:int2 ^my accept_inet_stream_socket_cif call: my accept_inet_stream_socket_sym withArgs: [int, char*, size_t, char*1, size_t1, int1, int2].}.
+  var get_address_family          is {:char* ^my get_address_family_cif call: my get_address_family_sym withArgs: [char*].}.
+  var create_multicast_socket     is {:char*:char*1:char*2 ^my create_multicast_socket_cif call: my create_multicast_socket_sym withArgs: [char*, char*1, char*].}.
+
+  on: 'createINetStreamSocketTo:service:withProto:andFlags:' do: create_inet_stream_socket.
+  on: 'createINetDgramSocketWithProto:andFlags:' do: create_inet_dgram_socket.
+  on: 'sendToINetDgramSocket:data:withLength:toHost:service:withFlags:' do: sendto_inet_dgram_socket.
+  on: 'receiveFromINetDgreamSocket:intoBuffer:withLength:fromHost:withHostLength:withService:withServiceLength:andFlags:numeric:' do: recvfrom_inet_dgram_socket.
+  on: 'connectINetDgramSocket:toHost:withService:' do: connect_inet_dgram_socket.
+  on: 'destroyINetStreamSocket:' do: destroy_inet_socket.
+  on: 'shutdownINetStreamSocket:withMethod:' do: shutdown_inet_stream_socket.
+  on: 'createINetServerSocketBoundToAddress:andPort:withProto4:andProto3:andFlags:' do: create_inet_server_socket.
+  on: 'acceptINetStreamSocket:fromHost:withLength:withService:withServiceLength:andFlags:andAcceptFlags:' do: accept_inet_stream_socket.
+  on: 'getAddressFamily:' do: get_address_family.
+  on: 'createMulticastSocketInGroup:withPort:andLocal:' do: create_multicast_socket.
+
+  # macros
+  on: 'TCP'       do: { ^1. }.
+  on: 'UDP'       do: { ^2. }.
+  on: 'IPv4'      do: { ^3. }.
+  on: 'IPv6'      do: { ^4. }.
+  on: 'BOTH'      do: { ^5. }.
+  on: 'READ'      do: { ^1. }.
+  on: 'WRITE'     do: { ^2. }.
+  on: 'NUMERIC'   do: { ^1. }.
+}.

@@ -1,6 +1,6 @@
 all:
 	mkdir libsocket/build
-	cd libsocket/build && cmake .. && make
+	cd libsocket/build && cmake .. -G "Unix Makefiles" && make
 	cp -r libsocket/build/C/libsocket.so .
 	cp -r libsocket/build/C/libsocket.so $(realpath .)/..
 clean:

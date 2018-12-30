@@ -1,4 +1,4 @@
-DEBUG_VERSION := 818
+DEBUG_VERSION := 850
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 o_cflags := -I/mingw64/include
 #it ain't so easy
@@ -39,11 +39,12 @@ CFLAGS := ${CFLAGS} -pthread -fsigned-char
 
 CFLAGS += ${shell_cflags}
 LDFLAGS += ${shell_ldflags}
+LEXTRACF := ${LDFLAGS} ${LEXTRACF} -flto -lstdc++
 
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o\
 		lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o\
 		importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o\
-		promise.o symbol_cxx.o modules.o world.o lambdaf.a
+		promise.o symbol_cxx.o modules.o world.o lambdaf.a libsocket.so
 EXTRAOBJS =
 
 ifneq ($(findstring withCTypesNative=1,${CFLAGS}),)
@@ -52,8 +53,8 @@ endif
 
 ifneq ($(findstring withInlineAsm=1,${CFLAGS}),)
 EXTRAOBJS := ${EXTRAOBJS} inline-asm.o
-CFLAGS := ${CFLAGS} `llvm-config --cflags --system-libs --libs core orcjit native`
-CXXFLAGS := `llvm-config --cxxflags --system-libs --libs core orcjit native` ${CXXFLAGS} -fexceptions
+CFLAGS := ${CFLAGS} $(shell llvm-config --cflags --system-libs --libs core orcjit native)
+CXXFLAGS := $(shell llvm-config --cxxflags --system-libs --libs core orcjit native) ${CXXFLAGS} -fexceptions
 endif
 
 ifneq ($(findstring withInjectNative=1,${CFLAGS}),)
@@ -114,6 +115,10 @@ tcc/%.a:
 lambdaf.a:
 	./make-lambdaf.sh
 
+libsocket.so:
+	make -C libsocket
+	cp libsocket/libsocket.so libsocket.so
+
 inline-asm.o:
 	$(CXX) -g $(CFLAGS) -c inline-asm.cpp ${CXXFLAGS} -o inline-asm.o
 
@@ -143,6 +148,7 @@ unback:
 clean:
 	rm -rf ${OBJS} ctr
 	./make-lambdaf.sh clean
+	make -C libsocket clean
 
 cclean:
 	rm -rf ${COBJS} ctrc

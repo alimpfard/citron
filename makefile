@@ -44,7 +44,7 @@ LEXTRACF := ${LDFLAGS} ${LEXTRACF} -flto -lstdc++
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o\
 		lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o\
 		importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o\
-		promise.o symbol_cxx.o modules.o world.o lambdaf.a libsocket.so
+		promise.o symbol_cxx.o modules.o world.o lambdaf.a 
 EXTRAOBJS =
 
 ifneq ($(findstring withCTypesNative=1,${CFLAGS}),)

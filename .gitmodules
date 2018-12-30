@@ -13,6 +13,3 @@
 [submodule "tests/inject_test_suite/C"]
 	path = tests/inject_test_suite/C
 	url = https://github.com/c-testsuite/c-testsuite.git
-[submodule "libsocket/libsocket"]
-	path = libsocket/libsocket
-	url = https://github.com/dermesser/libsocket

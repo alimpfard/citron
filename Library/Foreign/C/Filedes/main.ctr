@@ -1,0 +1,20 @@
+import _internal: 'FileDesInternals'.
+
+var FileDes is Object cnew: {
+  fd => 0.
+  on: 'new:' do: {:fd
+    ^cnew: {
+      fd => fd.
+    }.
+  }.
+  on: 'new' do: { thisBlock error: 'Unknown method FileDes::\'new\' called'. }.
+  on: 'read' do: {
+    ^const FileDesInternals readFrom: my fd.
+  }.
+  on: 'write:' do: {:str
+    ^const FileDesInternals writeInto: my fd string: str.
+  }.
+  on: 'readUntilSeen:' do: {:c
+    ^const FileDesInternals readFrom: my fd untilSeen: c.
+  }.
+}.

@@ -11,7 +11,7 @@
 Program parse(const char* input) {
     Hold* result = synthesize(lex, newStartToken(input));
     debugParseStage("parse", getNode(result), DEBUG >= 2);
-    Array* globals = bind(result);
+    Array* globals = bindRoot(result);
     debugParseStage("bind", getNode(result), DEBUG >= 2);
     Node* entry = elementAt(globals, length(globals) - 1);
     debugParseStage("entry", entry, DEBUG >= 1);

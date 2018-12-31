@@ -1,4 +1,4 @@
-DEBUG_VERSION := 68
+DEBUG_VERSION := 70
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
 fv := '/data/data/com.termux/files/usr/lib/libgc.so'

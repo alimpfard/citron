@@ -200,7 +200,7 @@ ctr_ast_nth (ctr_object * myself, ctr_argument * argumentList)
     }
   if (!pitem)
     goto err;
-  if (pitem->node->type == CTR_AST_NODE_EMBED)
+  if (pitem->node->type == CTR_AST_NODE_EMBED && pitem->node->modifier == 1)
     {
       return (ctr_object *) (pitem->node->nodes->node);
     }
@@ -458,6 +458,8 @@ ctr_ast_tystr (ctr_tnode * ast)
       return "EMBED";
     case CTR_AST_NODE_LISTCOMP:
       return "LISTCOMP";
+    case CTR_AST_NODE_NATIVEFN:
+      return "NATIVEFN";
     default:
       return "UNKNOWN";
     }
@@ -530,6 +532,8 @@ ctr_ast_tyfstr (char *type)
     return CTR_AST_NODE_RAW;
   if (strcasecmp ("EMBED", type) == 0)
     return CTR_AST_NODE_EMBED;
+  if (strcasecmp ("NATIVEFN", type) == 0)
+    return CTR_AST_NODE_NATIVEFN;
   return CTR_AST_NODE_ENDOFPROGRAM;
 }
 
@@ -733,9 +737,9 @@ ctr_ast_set_mod (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * [AST] evaluate
+ * [AST] evaluate[InContext: [Object]]
  *
- * Evaluates this ast node
+ * Evaluates this ast node (in the given context)
  */
 
 ctr_object *
@@ -748,12 +752,20 @@ ctr_ast_evaluate (ctr_object * myself, ctr_argument * argumentList)
       CtrStdFlow = ctr_build_string_from_cstring ("Null ast node");
       return CtrStdNil;
     }
+  ctr_object *ctx = ctr_contexts[ctr_context_id], *old_ctx=ctx;
+  if (argumentList && argumentList->object)
+    ctx = argumentList->object;
+
   ctr_tnode *node = myself->value.rvalue->ptr;
   char ir;
+  ctr_contexts[ctr_context_id] = ctx;
+  ctr_object* res;
   if (node->type == CTR_AST_NODE_PROGRAM)
-    return ctr_cwlk_run (node);
+    res = ctr_cwlk_run (node);
   else
-    return ctr_cwlk_expr (node, &ir);
+    res = ctr_cwlk_expr (node, &ir);
+  ctr_contexts[ctr_context_id] = old_ctx;
+  return res;
 }
 
 char **
@@ -1025,6 +1037,7 @@ ctr_ast_pure_stringify (ctr_tnode * node)
 	  break;
 	}
       case CTR_AST_NODE_LISTCOMP:
+      case CTR_AST_NODE_NATIVEFN:
       case CTR_AST_NODE_RAW:
       case CTR_AST_NODE_EMBED:
   {
@@ -1306,6 +1319,58 @@ ctr_ast_lexskip (ctr_object * myself, ctr_argument * argumentList)
   ctr_lex_skip (len);
   return myself;
 }
+
+/**
+ * [Array|String] letEqualAst: [Array|Object] in: [Block]
+ *
+ * Assigns local values to the block, evaluating them if an ast type in the block context, and runs it as a closure
+ */
+ctr_object *
+ctr_block_letast (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *defs = argumentList->object, *block = argumentList->next->object, *defv;
+  ctr_object *result;
+  ctr_open_context ();
+  if (myself->info.type == CTR_OBJECT_TYPE_OTARRAY)
+    {
+      for (ctr_size i = 0;
+	   i < myself->value.avalue->head - myself->value.avalue->tail &&
+	   (defs->info.type == CTR_OBJECT_TYPE_OTARRAY && i < defs->value.avalue->head - defs->value.avalue->tail); i++)
+	{
+	  switch (defs->info.type)
+	    {
+	    case CTR_OBJECT_TYPE_OTARRAY:
+        defv = defs->value.avalue->elements[i];
+        if (ctr_ast_is_splice(defv)) {
+          defv = ctr_ast_evaluate(defv, NULL);
+        }
+	      ctr_assign_value_to_local (myself->value.avalue->elements[i], defv);
+	      break;
+	    default:
+        defv = defs;
+        if (ctr_ast_is_splice(defv)) {
+          defv = ctr_ast_evaluate(defv, NULL);
+        }
+	      ctr_assign_value_to_local (myself->value.avalue->elements[i], defv);
+	      break;
+	    }
+	}
+      result = ctr_block_run_here (block, NULL, block);
+    }
+  else
+    {
+      myself = ctr_internal_cast2string (myself);
+      defv = defs;
+      if (ctr_ast_is_splice(defv)) {
+        defv = ctr_ast_evaluate(defv, NULL);
+      }
+      ctr_assign_value_to_local (myself, defv);
+      result = ctr_block_run_here (block, NULL, block);
+    }
+  ctr_close_context ();
+  return result;
+}
+
 
 struct ctr_coro_args_data
 {
@@ -1642,6 +1707,7 @@ initiailize_base_extensions ()
 {
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring("_ApplyAll:"), &ctr_obj_intern_applyall);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("letEqual:in:"), &ctr_block_let);
+  ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("letEqualAst:in:"), &ctr_block_letast);
   ctr_internal_create_func (CtrStdBlock, ctr_build_string_from_cstring ("transferOwnershipOf:to:"), &ctr_reown_obj);
   CtrStdAst = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
   ctr_set_link_all (CtrStdAst, CtrStdObject);
@@ -1664,6 +1730,7 @@ initiailize_base_extensions ()
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("type:"), &ctr_ast_set_type);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("modifier:"), &ctr_ast_set_mod);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("evaluate"), &ctr_ast_evaluate);
+  ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("evaluateInContext:"), &ctr_ast_evaluate);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("unparse"), &ctr_ast_stringify);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("feedLexer:"), &ctr_ast_flex);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("fromBlock:"), &ctr_ast_get_block);
@@ -1714,6 +1781,7 @@ initiailize_base_extensions ()
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("fmap:"), &ctr_generator_fmap);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("ifmap:"), &ctr_generator_ifmap);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("imap:"), &ctr_generator_imap);
+  ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("filter:"), &ctr_generator_filter);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("next"), &ctr_generator_next);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("inext"), &ctr_generator_inext);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("each:"), &ctr_generator_each);

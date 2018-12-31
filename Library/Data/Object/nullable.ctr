@@ -1,0 +1,11 @@
+Object on: 'nullable' do: {
+  me isNil ifTrue: {
+    ^Nil cnew: {:self
+      on: 'toString' do: { ^'nullable[Nil]'. }.
+      on: 'respondTo:' do: { ^me. }.
+      (1..3) each: {:_:x
+        self on: 'respondTo:' + ('and:' * x) do: { ^me. }.
+      }.
+    }.
+  }.
+}.

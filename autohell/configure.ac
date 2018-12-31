@@ -65,6 +65,10 @@ AC_ARG_WITH([ffi],
               AS_HELP_STRING([--with-ffi], [Build with the CTypes object]),
               [want_ffi=yes],
               [])
+AC_ARG_WITH([inlineasm],
+              AS_HELP_STRING([--with-inline-asm], [Build with Inline assembly support (requires llvm)]),
+              [want_inlineasm=yes],
+              [])
 
 AS_IF([test "x$enable_boehm_gc" = "xyes"], [
        CFLAGS+=" -DwithBoehmGC"
@@ -87,10 +91,25 @@ AS_IF([test "x$want_ffi" = "xyes"], [
        CTR_MAYBE_FFI="ctypes.c reverse_sizes.h _struct.h structmember.h ctypes.h _struct.c structmember.c"
        ])
 AC_MSG_RESULT($want_ffi)
+AC_MSG_CHECKING(inlineasm)
+AS_IF([test "x$want_inlineasm" = "xyes"], [
+       CFLAGS+=" -DwithInlineAsm=1"
+       MAYBE_ASM_C=`llvm-config --cflags --system-libs --libs core orcjit native`
+       MAYBE_ASM_CXX=`llvm-config --cxxflags --system-libs --libs core orcjit native`
+       MAYBE_ASM_L=`llvm-config --system-libs --libs core orcjit native`
+       CTR_MAYBE_ASM="inline-asm.cpp native-asm.h"
+       ])
+AS_IF([test 1 = 1], [
+  BUILD_DIR_L="`pwd`/.."
+  ])
+AC_MSG_RESULT($want_inlineasm)
 AC_SUBST([MAYBE_TCC_L])
 AC_SUBST([MAYBE_FFI_L])
+AC_SUBST([MAYBE_ASM_L])
+AC_SUBST([BUILD_DIR_L])
 AM_CONDITIONAL([WITH_INJECT], [test "x$want_inject" = "xyes"])
 AM_CONDITIONAL([WITH_FFI], [test "x$want_ffi" = "xyes"])
+AM_CONDITIONAL([WITH_INLINEASM], [test "x$want_inlineasm" = "xyes"])
 
 AC_ARG_WITH([linux],
               AS_HELP_STRING([--for-linux], [Build for linux OSs]),

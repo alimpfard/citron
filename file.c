@@ -324,7 +324,8 @@ ctr_file_read (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *path = ctr_file_rpath (myself, NULL);
   ctr_object *str;
-  ctr_size vlen, fileLen;
+  ctr_size vlen;
+  ssize_t fileLen;
   char *pathString;
   char *buffer;
   FILE *f;
@@ -811,7 +812,7 @@ ctr_file_read_bytes (ctr_object * myself, ctr_argument * argumentList)
 	}
     }
   else
-    fread (buffer, sizeof (char), (int) bytes, (FILE *) myself->value.rvalue->ptr);
+    bytes = fread (buffer, sizeof (char), (int) bytes, (FILE *) myself->value.rvalue->ptr);
   result = ctr_build_string (buffer, bytes);
   ctr_heap_free (buffer);
   return result;

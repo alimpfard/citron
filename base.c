@@ -753,6 +753,9 @@ ctr_object_on_do (ctr_object * myself, ctr_argument * argumentList)
       CtrStdFlow->info.sticky = 1;
       return myself;
     }
+  #if CTR_TAGS_ONLY
+    ctr_internal_tag_whitelist(methodBlock);
+  #endif
   ctr_internal_object_set_property (myself, methodName, methodBlock, 1);
   return myself;
 }
@@ -1211,6 +1214,46 @@ ctr_bool_if_false (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
+ *[Boolean] ifTrue: [block] ifFalse: [Block]
+ */
+ctr_object *
+ctr_bool_if_tf (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *result;
+  if (myself->value.bvalue)
+    {
+      ctr_object *codeBlock = argumentList->object;
+      ctr_argument *arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+      arguments->object = myself;
+      result = ctr_block_run_here (codeBlock, arguments, NULL);
+      ctr_heap_free (arguments);
+      if (result != codeBlock)
+	{
+	  ctr_internal_next_return = 1;
+	  return result;
+	}
+      return myself;
+    }
+  else
+  {
+      ctr_object *codeBlock = argumentList->next->object;
+      ctr_argument *arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+      arguments->object = myself;
+      result = ctr_block_run_here (codeBlock, arguments, NULL);
+      ctr_heap_free (arguments);
+      if (result != codeBlock)
+	{
+	  ctr_internal_next_return = 1;
+	  return result;
+	}
+      return myself;
+    }
+  if (CtrStdFlow == CtrStdBreak)
+    CtrStdFlow = NULL;		/* consume break */
+  return myself;
+}
+
+/**
  *[b:Object] or: [Block|Object]
  *
  * Evaluates and returns the block if b evaluates to false, else returns b
@@ -1240,6 +1283,15 @@ ctr_object *
 ctr_object_if_true (ctr_object * myself, ctr_argument * argumentList)
 {
   return ctr_bool_if_true (ctr_internal_cast2bool (myself), argumentList);
+}
+
+/**
+ * @internal
+ */
+ctr_object *
+ctr_object_if_tf (ctr_object * myself, ctr_argument * argumentList)
+{
+  return ctr_bool_if_tf (ctr_internal_cast2bool (myself), argumentList);
 }
 
 /**
@@ -5173,8 +5225,9 @@ ctr_build_listcomp (ctr_tnode * node)
   ctr_tnode *main_expr = node->nodes->node, *generators = node->nodes->next->node, *preds = node->nodes->next->next->node;
 
   ctr_object *free_refs = ctr_map_keys(ctr_scan_free_refs (main_expr), NULL), *mainexprb = ctr_build_block (ctr_expr_to_block (main_expr));
+  ctr_object *resolved_refs = ctr_array_new(CtrStdArray, NULL);
 
-  ctr_object *bindings = ctr_array_new(CtrStdArray, NULL);
+  ctr_object *bindings = ctr_array_new   (CtrStdArray, NULL);
   ctr_object *predicates = ctr_array_new (CtrStdArray, NULL);
   ctr_argument *argm = ctr_heap_allocate (sizeof (*argm));
   char dummy;
@@ -5185,13 +5238,47 @@ ctr_build_listcomp (ctr_tnode * node)
       ctr_tlistitem *generator = generators->nodes;
       while (generator)
 	{
-	  argm->object = ctr_cwlk_expr (generator->node, &dummy);
+    ctr_object *exprn;
+    ctr_tlistitem* genv = generator;
+
+    if (generator->node->type == CTR_AST_NODE_NESTED &&
+        generator->node->nodes->node->type == CTR_AST_NODE_EXPRMESSAGE &&
+        generator->node->nodes->node->nodes->node->vlen == 2 &&
+        strncmp(generator->node->nodes->node->nodes->node->value, "me", generator->node->nodes->node->nodes->node->vlen) == 0
+      ) {
+      generator = generator->node->nodes->node->nodes->next;
+      if (generator->node->type == CTR_AST_NODE_KWMESSAGE) {
+        int i = 0;
+        char* sv = NULL;
+        while ((sv=strchr(generator->node->value, ':'))!=NULL&&i++==0);
+        if(i!=2) {
+          CtrStdFlow = ctr_format_str("EExpected exactly one keyword to name the expression in listcomp, not %d (%s)", i, generator->node->value);
+          return CtrStdNil;
+        }
+        exprn = ctr_build_string(generator->node->value, generator->node->vlen-1);
+        generator = generator->node->nodes;
+      } else {
+        CtrStdFlow = ctr_build_string_from_cstring("Invalid use of non-keyword message to dynamic resolution `me' in list comprehension");
+        return CtrStdNil;
+      }
+    } else {
+      if (free_refs->value.avalue->head-free_refs->value.avalue->tail==0) {
+        CtrStdFlow = ctr_build_string_from_cstring("Extraneous expression without a name in a list comprehension");
+        return CtrStdNil;
+      }
+      exprn = ctr_array_shift(free_refs, NULL);
+    }
+    argm->object = exprn;
+    // name
+    ctr_array_push(resolved_refs, argm);
+    // binding expression
+	  argm->object = ctr_ast_from_node(generator->node);
 	  ctr_array_push (bindings, argm);
-	  generator = generator->next;
+	  generator = genv->next;
 	}
     }
   size_t ps, fs;
-  if ((ps = ctr_array_count (bindings, NULL)->value.nvalue) < (fs = ctr_map_count (free_refs, NULL)->value.nvalue))
+  if ((ps = ctr_array_count (bindings, NULL)->value.nvalue) < (fs = ctr_array_count(resolved_refs, NULL)->value.nvalue))
     {
       CtrStdFlow = ctr_format_str ("-Number of bindings do not match the number of symbols (%d vs %d)", ps, fs);
       return CtrStdNil;
@@ -5229,13 +5316,31 @@ ctr_build_listcomp (ctr_tnode * node)
       return res;
     }
   if (generators && !preds)
-    {				//no filter: [e ,, g+] -> [e for frees in g]
-      ctr_object *filter_s = ctr_build_string_from_cstring ("{:gen var syms is my syms." "^\\:blk syms letEqual: gen in: blk.}");
+    {				//no filter: [e ,, gs@g+] -> [evaluate(e) ]
+      ctr_object *filter_s = ctr_build_string_from_cstring (
+        "{:gen "
+          "var syms is my syms. "
+          "^{\\:blk "
+            "syms letEqual: gen in: blk."
+          "}."
+        "}"
+      );
       argm->object = ctr_string_eval (filter_s, NULL);
-      ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("syms"), free_refs, 0);
-      ctr_object *gss = ctr_array_internal_zip (bindings, NULL);
-      int g_is_gen = gss->interfaces->link == ctr_std_generator;
-      ctr_object *bindingfns = ctr_send_message (gss, g_is_gen ? "ifmap:" : "fmap:", 5 + g_is_gen, argm);
+      ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("syms"), resolved_refs, 0);
+      ctr_object* filter_sobj = argm->object;
+      ctr_object *filter_sv = ctr_build_string_from_cstring (
+        "{"
+          "^(my names fmap: \\:__vname Reflect getObject: __vname) internal-zip fmap: my filter_s."
+        "}"
+      );
+      ctr_object *filter_svobj;
+      filter_svobj = ctr_string_eval (filter_sv, NULL);
+      ctr_internal_object_add_property(filter_svobj, ctr_build_string_from_cstring ("names"), resolved_refs, CTR_CATEGORY_PRIVATE_PROPERTY);
+      ctr_internal_object_add_property(filter_svobj, ctr_build_string_from_cstring ("filter_s"), filter_sobj, CTR_CATEGORY_PRIVATE_PROPERTY);
+      // ctr_argument arg = {bindings, NULL};
+      // ctr_console_writeln(CtrStdConsole, &arg);
+      // names letEqualAst: bindings in: { internal-zip[names-as-names] fmap: filter_s }, fmap: (main_expr $)
+      ctr_object *bindingfns = ctr_send_message_variadic(resolved_refs, "letEqualAst:in:", 15, 2, bindings, filter_svobj);
       ctr_object *call_s = ctr_build_string_from_cstring ("{:blk ^blk applyTo: my main_expr.}");
       argm->object = ctr_string_eval (call_s, NULL);
       ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("main_expr"), mainexprb, 0);
@@ -5246,14 +5351,27 @@ ctr_build_listcomp (ctr_tnode * node)
   //expression with generators and predicates
   ctr_object *filter_s =
     ctr_build_string_from_cstring
-    ("{:gen var syms is my syms."
-     "(my filters fmap: \\:filter syms letEqual: gen in: filter) all: {:x ^x.}," "not continue. ^\\:blk syms letEqual: gen in: blk.}");
+    ("{:gen "
+        "var syms is my syms."
+        "my filters fmap: {:filter "
+            "^syms letEqualAst: gen in: filter."
+          "}, all: {:x ^x.}, not continue. "
+        "^\\:blk syms letEqualAst: gen in: blk."
+    "}");
   argm->object = ctr_string_eval (filter_s, NULL);
-  ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("syms"), free_refs, 0);
+  ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("syms"), resolved_refs, 0);
   ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("filters"), predicates, 0);
-  ctr_object *gss = ctr_array_internal_zip (bindings, NULL);
-  int g_is_gen = gss->interfaces->link == ctr_std_generator;
-  ctr_object *bindingfns = ctr_send_message (gss, g_is_gen ? "ifmap:" : "fmap:", 5 + g_is_gen, argm);
+  ctr_object* filter_sobj = argm->object;
+  ctr_object *filter_sv = ctr_build_string_from_cstring (
+    "{"
+      "^(my names fmap: \\:__vname Reflect getObject: __vname) internal-zip fmap: my filter_s."
+    "}"
+  );
+  ctr_object *filter_svobj;
+  filter_svobj = ctr_string_eval (filter_sv, NULL);
+  ctr_internal_object_add_property(filter_svobj, ctr_build_string_from_cstring ("names"), resolved_refs, CTR_CATEGORY_PRIVATE_PROPERTY);
+  ctr_internal_object_add_property(filter_svobj, ctr_build_string_from_cstring ("filter_s"), filter_sobj, CTR_CATEGORY_PRIVATE_PROPERTY);
+  ctr_object *bindingfns = ctr_send_message_variadic(resolved_refs, "letEqualAst:in:", 15, 2, bindings, filter_svobj);
   ctr_object *call_s = ctr_build_string_from_cstring ("{:blk ^blk applyTo: my main_expr.}");
   argm->object = ctr_string_eval (call_s, NULL);
   ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("main_expr"), mainexprb, 0);
@@ -5381,6 +5499,57 @@ ctr_block_assign (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
+ * [Block] specialize: [types...] with: [Block]
+ *
+ * Specialise a block for the given types with the given block
+ */
+ctr_overload_set * ctr_internal_next_bucket(ctr_overload_set* set, ctr_argument* arg);
+ctr_object *
+ctr_block_specialise(ctr_object * myself, ctr_argument* argumentList)
+{
+  ctr_object* types = argumentList->object;
+  if (!types || types->info.type != CTR_OBJECT_TYPE_OTARRAY) {
+    CtrStdFlow = ctr_build_string_from_cstring("Invalid argument for specialize:(*)with:");
+    return myself;
+  }
+  ctr_object* blk = argumentList->next->object;
+  if (blk->info.overloaded) {
+    CtrStdFlow = ctr_build_string_from_cstring("Refusing to merge specialisations");
+    return myself;
+  }
+  if (!blk || (blk->info.type != CTR_OBJECT_TYPE_OTBLOCK&&blk->info.type != CTR_OBJECT_TYPE_OTNATFUNC)) {
+    CtrStdFlow = ctr_build_string_from_cstring("Invalid argument for specialize:with:(*)");
+    return myself;
+  }
+  ctr_collection* tycoll = types->value.avalue;
+  blk->info.overloaded = 1; // link the specialisations
+
+  if (!myself->info.overloaded) {
+    myself->info.overloaded = 1;
+    myself->overloads = ctr_heap_allocate(sizeof (ctr_overload_set));
+    myself->overloads->bucket_count = 0;
+    myself->overloads->sub_buckets = ctr_heap_allocate(sizeof(ctr_overload_set*));
+  }
+  ctr_overload_set *overload = myself->overloads;
+  ctr_argument arg;
+  for (int i=tycoll->tail;i<tycoll->head;i++) {
+    arg.object = tycoll->elements[i];
+    ctr_overload_set* next = ctr_internal_next_bucket(overload, &arg);
+    if (!next) {
+      overload->sub_buckets = overload->bucket_count++
+        ?ctr_heap_reallocate(overload->sub_buckets, sizeof(ctr_overload_set*)*overload->bucket_count)
+        :ctr_heap_allocate(sizeof(ctr_overload_set*)*overload->bucket_count);
+      next = (overload->sub_buckets[overload->bucket_count-1] = ctr_heap_allocate(sizeof(ctr_overload_set)));
+      next->this_terminating_bucket = arg.object;
+    }
+    // if (i<tycoll->head-1)
+      overload = next;
+  }
+  overload->this_terminating_value = blk;
+  blk->overloads = myself->overloads;
+  return myself;
+}
+/**
  *[Block] applyTo: [object]
  *
  * Runs a block of code using the specified object as a parameter.
@@ -5421,14 +5590,22 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
       ctr_object *result = myself->value.fvalue (my, argList);
       return result;
     }
+    // overload begin
+    if (myself->info.overloaded) {
+      // find proper overload to run
+      if (myself->overloads)
+        myself = ctr_internal_find_overload(myself, argList);
+    }
+    // overload end
+
   int is_tail_call = 0, id;
   for (id = ctr_context_id; id > 0 && !is_tail_call && ctr_current_node_is_return; id--, is_tail_call = ctr_contexts[id] == myself);
   if (is_tail_call)
     {
 #ifdef DEBUG_BUILD
-      printf ("tailcall at %p (%d from %d)\n", myself, id, ctr_context_id);
+      // printf ("tailcall at %p (%d from %d)\n", myself, id, ctr_context_id);
 #endif
-      ctr_context_id = id;
+      // ctr_context_id = id;
     }
   ctr_tnode *node = myself->value.block;
   ctr_tlistitem *codeBlockParts = node->nodes;
@@ -5603,14 +5780,21 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
       ctr_object *result = myself->value.fvalue (my, argList);
       return result;
     }
+  // overload begin
+  if (myself->info.overloaded) {
+    // find proper overload to run
+    if (myself->overloads)
+      myself = ctr_internal_find_overload(myself, argList);
+  }
+  // overload end
   int is_tail_call = 0, id;
   for (id = ctr_context_id; id > 0 && !is_tail_call && ctr_current_node_is_return; id--, is_tail_call = ctr_contexts[id] == myself);
   if (is_tail_call)
     {
 #ifdef DEBUG_BUILD
-      printf ("tailcall at %p (%d from %d)\n", myself, id, ctr_context_id);
+      // printf ("tailcall at %p (%d from %d)\n", myself, id, ctr_context_id);
 #endif
-      ctr_context_id = id;
+      // ctr_context_id = id;
     }
   ctr_object *result;
   ctr_tnode *node = myself->value.block;
@@ -5789,6 +5973,14 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
       ctr_object *result = myself->value.fvalue (my, argList);
       return result;
     }
+    // overload begin
+    if (myself->info.overloaded) {
+      // find proper overload to run
+      if (myself->overloads)
+        myself = ctr_internal_find_overload(myself, argList);
+    }
+    // overload end
+
   ctr_object *result;
   ctr_tnode *node = myself->value.block;
   ctr_tlistitem *codeBlockParts = node->nodes;

@@ -1,0 +1,1 @@
+Array* bindRoot(Hold* root);

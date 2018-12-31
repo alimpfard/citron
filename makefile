@@ -1,6 +1,5 @@
 DEBUG_VERSION := 68
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
-LEXTRACF := ${LEXTRACF} -flto -lstdc++
 fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
 fv := '/data/data/com.termux/files/usr/lib/libgc.so'
 location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
@@ -40,26 +39,35 @@ gc_check:
 
 CFLAGS += ${shell_cflags}
 LDFLAGS += ${shell_ldflags}
+LEXTRACF := ${LDFLAGS} ${LEXTRACF} -flto -lstdc++
 
 -include gc_check
 
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o\
 		lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o\
 		importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o\
-		promise.o symbol_cxx.o world.o
+		promise.o symbol_cxx.o world.o lambdaf.a libsocket.so
+EXTRAOBJS =
 
 ifneq ($(findstring withCTypesNative=1,${CFLAGS}),)
 OBJS := ${OBJS} _struct.o ctypes.o structmember.o
 endif
+
+ifneq ($(findstring withInlineAsm=1,${CFLAGS}),)
+EXTRAOBJS := ${EXTRAOBJS} inline-asm.o
+CFLAGS := ${CFLAGS} $(shell llvm-config --cflags --system-libs --libs core orcjit native)
+CXXFLAGS := $(shell llvm-config --cxxflags --system-libs --libs core orcjit native) ${CXXFLAGS} -fexceptions
+endif
+
 ifneq ($(findstring withInjectNative=1,${CFLAGS}),)
-OBJS := ${OBJS} tcc/libtcc1.a tcc/libtcc.a inject.o
+OBJS := ${OBJS} inject.o tcc/libtcc1.a tcc/libtcc.a
 endif
 
 COBJS = ${OBJS} compiler.o
 
 # .SUFFIXES:	.o .c
 
-all: CFALGS := $(CFLAGS) -O2
+all: CFLAGS := $(CFLAGS) -O2
 all: cxx
 all: ctr ctrconfig
 
@@ -75,13 +83,13 @@ debug:
 install:
 	echo -e "install directly from source not allowed.\nUse citron_autohell instead for installs"
 	exit 1;
-ctr:	$(OBJS)
-	$(CC) -fopenmp $(OBJS) -rdynamic -lm -ldl -llog -lpcre -lpthread ${LEXTRACF} -o ctr
+ctr:	$(OBJS) $(EXTRAOBJS)
+	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) ${CXXFLAGS}  -rdynamic -lm -ldl -llog -lpcre -lffi -lpthread ${LEXTRACF} -o ctr
 
 libctr: CFLAGS := $(CFLAGS) -fPIC -DCITRON_LIBRARY
 libctr: symbol_cxx
 libctr: $(OBJS)
-	$(CC) $(OBJS) -shared -export-dynamic -ldl -llog -lpcre -lpthread -o libctr.so
+	$(CC) $(OBJS) -shared -export-dynamic -ldl -llog -lpcre -lffi -lpthread -o libctr.so
 
 compiler: CFLAGS := $(CFLAGS) -D comp=1
 compiler: cxx
@@ -97,8 +105,18 @@ tcc/%.a:
 # 	echo "$<"
 # 	$(CC) $(CFLAHS) -c $< -o $@ >/dev/null 2>&1
 
+lambdaf.a:
+	./make-lambdaf.sh
+
+libsocket.so:
+	make -C libsocket
+	cp libsocket/libsocket.so libsocket.so
+
+inline-asm.o:
+	$(CXX) -g $(CFLAGS) -c inline-asm.cpp ${CXXFLAGS} -o inline-asm.o
+
 %.o: %.c
-	$(CC) -fopenmp $(CFLAGS) -c $< -o $@ >/dev/null 2>&1
+	$(CC) -fopenmp $(CFLAGS) -c $< -o $@
 
 define SHVAL =
 for f in *.c; do\
@@ -121,6 +139,8 @@ unback:
 
 clean:
 	rm -rf ${OBJS} ctr
+	./make-lambdaf.sh clean
+	make -C libsocket clean
 
 cclean:
 	rm -rf ${COBJS} ctrc

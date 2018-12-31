@@ -34,8 +34,9 @@ import
   Library/Data/Set
   Library/Utils/Highlight
   Library/Control/MethodResolve
-  Library/Data/Json
   Library/Data/String
+  Library/Data/IO/UTF-8/input
+  Library/Prelude: \*
   Library/Data/Array/LRArray: 'LRArray'
   Library/Utils/CLIContextMenu: ['generate_context_menu', 'clear_next_line']
   Library/Data/IO/Pen: 'pPen'.
@@ -89,9 +90,9 @@ Eval on: 'init' do: {
 Eval on: 'initHistory' do: {
   (var hddir is File new: '~/.citron') exists ifFalse: { hddir mkdir. }.
   my hs_file is File new: '~/.citron/ctrhist'.
-  my hs_file exists ifFalse: { my hs_file write: '[]'. }.
+  my hs_file exists ifFalse: { my hs_file write: ''. }.
   var history is my history.
-  (Json parse: (my hs_file read or: '[]') genericType: Object) each_v: \:x history push: x.
+  (my hs_file read split: '\n\n\n') each_v: \:x history push: x.
 }.
 Eval on: 'display' do: {
   ^my displayObject.
@@ -155,7 +156,7 @@ Eval on: 'end' do: {
     me stopEvalServer.
     getFlag: 'history', & my hs_file isNil not ifTrue: {
       my hs_file write: (
-        {:json Json parse: json. ^json.} catch: {:e ^'[]'.}, applyTo: (Json serialize: my history, ~ ?>s/\\/\\\\/g<?)
+        my history join: '\n\n\n'
       ).
     }.
   }.
@@ -500,7 +501,7 @@ Eval on: 'addFile:named:' do: {:str:fname
   Reflect run: {:fname:ctx:str ('var %s is {
     Eval statsb: 0, statsa: 0, exectime: 0.
     Reflect run: {:str str eval.} inContext: const ctx arguments: [const str].
-  }' % [fname]) eval. } inContextAsMain: my evaluationContext arguments: [varname, my evaluationContext, str].
+  }' % [fname]) eval. } inContextAsMain: my evaluationContext arguments: [varname, my evaluationContext, '{\n $$str \n}'].
 }.
 Eval on: 'pushHist:' do: {:h
   my history push: h.
@@ -618,6 +619,7 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '--Fs : display all the available flags\n',
           indent: 2 write: '--meta <command> : execute a metacommand (sans the initial :)\n',
           indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
+          indent: 2 write: '--qe : evaluate expression without printing the value, then exit, all args after the expr will be passed to the code as var `args`\n',
           indent: 2 write: '-v : print version information and exit\n',
           indent: 2 write: '-s <port>: start a evaluation server on the specified port (Forked and the current process will be killed. pidfile at ~/.ctrpid.pid)\n',
           indent: 2 write: '-m <executable module> <modu_arg>* : Execute an executable module (at Library/Executable)\n',
@@ -669,15 +671,31 @@ Eval on: 'togglePasteMode' do: {
 
     }, case: '-e' do: {
         args pop. #consume option..
-        var value is Eval shiftArgs.
+        var value is Eval shiftArgs rightTrim.
         (value isNil) ifTrue: { thisBlock error: '-e requires an argument.'. }.
+        Reflect addGlobalVariable: '&0'.
+        &0 is value.
         { ^(Eval argCount > 0). } whileTrue: { args push: Eval shiftArgs. }. #consume all other arguments.
-        # if it ends in a dot, delete it.
         args imap: {:i:n Reflect addGlobalVariable: '&' + (i + 1). Reflect set: '&' + (i + 1) to: (Eval tryNumrify: n).}.
         Reflect addGlobalVariable: '&_'.
         &_ is args.
-        value findPattern: '(.*)\\.' do: {:p value is p at: 1.}.
-        Eval display/write: (Eval evaluate: value).
+        value endsWith: '.', ifFalse: { value +=: '.'. }.
+        value is '{ ^$$value }'.
+        Eval display/write: (Eval evaluate: value) run.
+        Program exit.
+    }, case: '--qe' do: {
+        args pop. #consume option..
+        var value is Eval shiftArgs rightTrim.
+        (value isNil) ifTrue: { thisBlock error: '--qe requires an argument.'. }.
+        Reflect addGlobalVariable: '&0'.
+        &0 is value.
+        { ^(Eval argCount > 0). } whileTrue: { args push: Eval shiftArgs. }. #consume all other arguments.
+        args imap: {:i:n Reflect addGlobalVariable: '&' + (i + 1). Reflect set: '&' + (i + 1) to: (Eval tryNumrify: n).}.
+        Reflect addGlobalVariable: '&_'.
+        &_ is args.
+        value endsWith: '.', ifFalse: { value +=: '.'. }.
+        value is '{ $$value }'.
+        (Eval evaluate: value) run.
         Program exit.
     }, case: '-v' do: {
         Eval display/writeln: 'Citron Version ' + Reflect version.
@@ -880,7 +898,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
   Eval break break.
   Eval display/cyan write: prompt, resetColor.
 
-  var inc is stdin readBytes: 1.
+  var inc is stdin readUTF8Bytes: 1.
   var last_was_comp is False.
   var last_comp_entry is ''.
   var last_comp_index is -1.
@@ -979,7 +997,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
                 }.
                 done is inBlock = 0.
               }.
-              inBlock !=: 0, ifTrue: { Eval newBlock. Pen brk. inp +=: ' '. inpbrk is inp length. cursor +=: 1.}.
+              inBlock !=: 0, ifTrue: { Eval newBlock. Pen brk. inp +=: '\n'. inpbrk is inp length. cursor +=: 1.}.
             }, else: { Pen brk. done is True. }.
           }.
           have_context is False.
@@ -1016,7 +1034,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
           clear_next_line applyTo: linesp. have_context is False.
 
         }, case: '\x1b' do: {
-          inc is stdin readBytes: 2.
+          inc is stdin readUTF8Bytes: 2.
           (frozen select_inlevel_q is case: '\x5b\x41' do: { #Up Arrow
             hindex > 0 ifTrue: {
               cursor is (inp is Eval getHistory at: (hindex is hindex - 1)) length.
@@ -1048,7 +1066,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
             }, else: {Eval display/write: '\a'.}.
             clear_next_line applyTo: linesp. have_context is False.
           }, case: '\x5b\x31' do: { #Supposedly <ctrl>
-            inc is stdin readBytes: 3.
+            inc is stdin readUTF8Bytes: 3.
               (inc = '\x3b\x35\x44') & (cursor > 0) ifTrue: { #^Left Arrow
                 var ct is inp from: 0 to: cursor.
                 var ct is ct trim.
@@ -1105,7 +1123,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
     # Eval display/write: inc toByteArray.
     done is (done & (inBlock = 0)).
     done break.
-    inc is stdin readBytes: 1.
+    inc is stdin readUTF8Byte.
   }.
   hindex is Eval getHistory count.
   # Eval display/cyan write: ' [cursor %d in (%s)]' % [cursor, (inp)], resetColor.
@@ -1137,7 +1155,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
     Eval getFlag: 'printvs', ifTrue: { Pen message: Eval color arguments: [], write: var str is Eval __eval_ret toString. printed is str length > 0. }.
     Eval display/resetColor.
     Eval getFlag: 'ptype', ifTrue: {
-      Eval display/yellow write: '%s=> (%s)%s' % [(printed either: ' ' or: ''), (Reflect strTypeOf: Eval __eval_ret, replace: '\'' with: ''), (printed either: '' or: '\n')].
+      Eval display/yellow write: '%s=> (%s)%s' % [(printed either: ' ' or: ''), (Reflect strTypeOf: Eval __eval_ret, ~ 's/\\\\?\\\'//g'), (printed either: '' or: '\n')].
       Eval display/resetColor.
     }.
     Eval getFlag: 'stats', ifTrue: {

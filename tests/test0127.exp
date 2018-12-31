@@ -2,7 +2,8 @@ Confirmed. Target file does not exist.
 hello world
 Uncaught error has occurred.
 Unknown method Object::'open' was called
-#1 open (tests/test0127.ctr: 19)
+#2 open (tests/test0127.ctr: 19)
+#1 run (tests/test0127.ctr: 4)
 ------------------------------------
 The probable cause of the exception: 
 17 | 

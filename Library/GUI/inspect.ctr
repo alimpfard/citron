@@ -1,0 +1,99 @@
+import
+  TK
+  Library/Data/Object/nullable
+  Library/AST/ast2ctrcode: 'ast2ctrcode'
+.
+
+var newWindowCounter is 0.
+
+Tcl proc: 'eCtr_flash' args: ['what', 'text', 'it', 'pacargs'] body: (
+  ?>if {$it > 0} {
+    pack $what {*}$pacargs
+    $what configure -text $text
+    after 250 [list eCtr_flash $what $text [expr $it-1] $pacargs]
+  } else {
+    pack forget $what
+  }
+  <?
+).
+
+var properties-of is {:object
+  object isA: Map, ifTrue: {^object.}.
+  object isA: Array, ifTrue: {
+    ^Map fromArray: (object imap: \:i:x ['#$$i', x]).
+  }.
+  ^Map fromArray: ((Reflect getPropertiesOf: object) fmap: \:x [x, (Reflect getProperty: x ofObject: object)]).
+}.
+
+var proper-name-ize is {:name ^name ~ 's/\\s/_/g'.}.
+var inspect-object is {:object:textcmd:scratchpad:modify?
+  var actual-arglist is {:list
+    list count = 0 ifTrue: { ^'--nothing--'. }.
+    list head = 'self' ifTrue: { list shift. }.
+    ^list join: ', '.
+  }.
+  var Scratchpad is scratchpad nullable.
+  modify? is modify? or: False.
+  textcmd is textcmd or: 'text'.
+
+  var windowId is '.gui' + (const newWindowCounter +=: 1).
+  Scratchpad openWindow: windowId.
+  var currentTheme is Scratchpad currentTheme.
+  Tcl toplevel: windowId.
+  Tcl eval: 'set w ' + windowId.
+  Tcl eval: 'wm title $w {Inspect {%s}}' % [(Reflect strTypeOf: object, ~ ?>s/(\[|\])/$1/g<?)].
+  Tcl ttk->treeview: '$w.ptree' columns: '{type value}'.
+  Tcl eval: '$w.ptree heading #0 -text Name'.
+  Tcl eval: '$w.ptree heading type -text Type'.
+  Tcl eval: '$w.ptree heading value -text Value'.
+  Reflect generateLinkTree: object, tail each: {:i:parent
+    Tcl eval: '$w.ptree insert "" end -text {parent%s} -values [list {%s} {%s}] -tags "show-inspect-parent-%d"' % [i, (Reflect strTypeOf: parent), parent, i].
+    Tcl eval: '$w.ptree tag bind show-inspect-parent-%d <2> %s' % [i, (Tcl fnOf: {\ parent inspect. Nil.})].
+  }.
+  Tcl eval: '$w.ptree insert "" end -text "------" -values [list "------" "-------"]'.
+  properties-of[object] each: {:pname:prop
+    Tcl eval: '$w.ptree insert "" end -text {%s} -values [list {%s} {%s}] -tags "show-view show-inspect-%s"' % [pname, (Reflect strTypeOf: prop), prop toString, proper-name-ize[pname]].
+    Tcl eval: '$w.ptree tag bind show-inspect-%s <2> %s' % [proper-name-ize[pname], (Tcl fnOf: {\ prop inspect. Nil.})].
+  }.
+  Tcl eval: '$w.ptree tag bind show-view <1> {
+    set w %s
+    $w.text delete 0.0 end
+    $w.text insert 0.0 [lindex [$w.ptree item [$w.ptree focus] -values] 1]
+  }' % [windowId].
+  Tcl eval: ' $$textcmd $w.text'.
+  Tcl eval: 'ttk::label $w.statusl'.
+  Scratchpad currentTheme applyToText: '%s.text' % [windowId].
+  Tcl ttk->treeview: '$w.mtree' columns: '{num_args}'.
+  Tcl eval: '$w.mtree heading #0 -text Method'.
+  Tcl eval: '$w.mtree heading num_args -text Arguments'.
+  Reflect getMethodsOf: object, each_v: {:pname
+    var prop is object &responder: pname.
+    # Pen writeln: [pname, prop].
+    var arglist is actual-arglist[(Reflect argumentListOf: prop)].
+    var propername is proper-name-ize[pname].
+    Tcl eval: '$w.mtree insert "" end -text {%s} -values [list {%s}] -tags "show-view-%s"' % [pname, arglist, propername].
+    arglist !=: 'native-args', ifTrue: {
+      Tcl eval: '$w.mtree tag bind show-view-%s <1> %s' % [propername, (Tcl fnOf: {
+        var code is Highlight highlight: ast2ctrcode [(AST fromBlock: const prop)] html: False.
+        var pname is const pname.
+        Tcl eval: ?>
+          set w %s
+          $w.text delete 0.0 end
+          $w.text insert 0.0 { %s }
+        <? % [const windowId, code].
+        const modify? ifTrue: {
+          Tcl eval: 'bind $w.text <Control-s> %s' % [(Tcl fnOf: ({\
+            const prop swapRefs: (Tcl valueOf: '$w.text get 0.0 end', eval).
+            Tcl eval: 'eCtr_flash $w.statusl {saved property} 2 [list -before $w.text -side bottom -anchor w]'.
+          } catch: {:e Tcl eval: 'eCtr_flash $w.statusl {Error: %s} 8 [list -before $w.text -side bottom -anchor w]' % [e].}))].
+        }.
+      })].
+    }.
+  }.
+  # Tcl pack: '$w.statusl' side: 'bottom' anchor: 'w'.
+  Tcl pack: '$w.text' fill: 'both' side: 'bottom' anchor: 's'.
+  Tcl pack: '$w.mtree' fill: 'x' side: 'right'.
+  Tcl pack: '$w.ptree' fill: 'x' side: 'left'.
+  Tcl tkwait: 'window $w'.
+  Scratchpad closeWindow: windowId.
+}.

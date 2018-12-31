@@ -1,0 +1,18 @@
+import Library/Foreign/C/C_Types: ['c_uint64', 'c_ptr', 'c_char', 'load_library'].
+
+var thisexec is load_library applyTo: 'thisexec'.
+var _malloc_sym  is thisexec malloc.
+var _calloc_sym  is thisexec calloc.
+var _realloc_sym is thisexec realloc.
+var _free_sym    is thisexec free.
+var _memset_sym  is thisexec memset.
+
+var _malloc_ty  is CIF new setABI: 0 return: c_ptr argTypes: [c_uint64].
+var _calloc_ty  is CIF new setABI: 0 return: c_ptr argTypes: [c_uint64, c_uint64].
+var _realloc_ty is CIF new setABI: 0 return: c_ptr argTypes: [c_ptr, c_uint64].
+var _free_ty    is CIF new setABI: 0 return: Nil argTypes: [c_ptr].
+var _memset_ty  is CIF new setABI: 0 return: c_ptr argTypes: [c_ptr, c_char, c_uint64].
+
+var malloc      is \:bytes _malloc_ty call: _malloc_sym withArgs: [bytes].
+var free        is \:mem   _free_ty call: _free_sym withArgs: [mem].
+var memset      is \:m:l:c _memset_ty call: _memset_sym withArgs: [m, l, c].

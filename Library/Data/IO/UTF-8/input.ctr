@@ -1,0 +1,24 @@
+import Library/Data/Numeric/Number/arithmetic.
+
+File on: 'readUTF8Byte' do: {:self
+  # read a single byte
+  var str is self readBytes: 1.
+  var byte0 is str toByteArray @ 0.
+  byte0 >> 7 = 0 ifTrue: {
+    # single byte
+    ^str.
+  }.
+  byte0 >> 5 = 6 ifTrue: {
+    # 110xxxxx 10xxxxxx
+    ^str + (self readBytes: 1).
+  }.
+  byte0 >> 4 = 0xe ifTrue: {
+    # 1110xxxx 10xxxxxx 10xxxxxx
+    ^str + (self readBytes: 2).
+  }.
+  ^str + (self readBytes: 3).
+}.
+
+File on: 'readUTF8Bytes:' do: {:self:n
+  ^Array new fill: n with: \:_ self readUTF8Byte, join: ''.
+}.

@@ -622,6 +622,7 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
           indent: 2 write: '--qe : evaluate expression without printing the value, then exit, all args after the expr will be passed to the code as var `args`\n',
           indent: 2 write: '-v : print version information and exit\n',
+          indent: 2 write: '--tidy : [Experimental] try to tidy up the given file and write it back out to stdout\n',
           indent: 2 write: '-s <port>: start a evaluation server on the specified port (Forked and the current process will be killed. pidfile at ~/.ctrpid.pid)\n',
           indent: 2 write: '-m <executable module> <modu_arg>* : Execute an executable module (at Library/Executable)\n',
           indent: 2 write: '--pid <pidfile>: set the pid file. value is ignored unless [-s <port>] comes after\n',
@@ -684,7 +685,14 @@ Eval on: 'togglePasteMode' do: {
     }, case: '--meta' do: {
         args pop.
         Eval doMeta: Eval shiftArgs.
-
+    }, case: '--tidy' do: {
+        args pop.
+        var fname is Eval shiftArgs.
+        fname isNil ifTrue: { thisBlock error: '--cleanup requires an argument'. }.
+        import Library/AST/ast2ctrcode: 'ast2ctrcode'.
+        Pen writeln: '# File $$fname'.
+        Pen writeln: ast2ctrcode[(AST parse: (File new: fname, read))].
+        Program exit.
     }, case: '-e' do: {
         args pop. #consume option..
         var value is Eval shiftArgs rightTrim.

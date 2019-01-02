@@ -1,0 +1,10 @@
+var config is Map new
+  put: '➡️' at: 'cursor-mark',
+  put: '⬆️' at: 'up-arrow',
+  put: '⬇️' at: 'down-arrow',
+  put: '↕️' at: 'cursor-mark-gutter',
+  put: '  ' at: 'cursor-nomark-gutter',
+  put: '🗹' at: 'check-full',
+  put: '🗆' at: 'check-empty'.
+
+config on: 'respondTo:' do: {:msg ^at: msg.}.

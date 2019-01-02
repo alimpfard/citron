@@ -617,6 +617,7 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '-f : evaluate file. many can be passed. All the files get added as runnable blocks (fully-qualified path without extensions)\n',
           indent: 2 write: '-F<[no-]flag> : enables the passed flag\n',
           indent: 2 write: '--Fs : display all the available flags\n',
+          indent: 2 write: '--Fsel : allow the user to pick from available flags via a terminal selection menu\n',
           indent: 2 write: '--meta <command> : execute a metacommand (sans the initial :)\n',
           indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
           indent: 2 write: '--qe : evaluate expression without printing the value, then exit, all args after the expr will be passed to the code as var `args`\n',
@@ -665,6 +666,21 @@ Eval on: 'togglePasteMode' do: {
         args pop. #consume option.
         Eval display/writeln: (Eval flags keys join: '\n').
         Program exit.
+    }, case: '--Fsel' do: {
+        import Library/Utils/CLISelectMenu: \*.
+        var keys is Eval flags keys.
+        var res is MultiSelectMenu
+          new: keys
+          pagesize: 5
+          preSelected: (Eval flags keys filter: \:_:k Eval flags at: k),
+        request.
+        keys each_v: {:key
+          res contains: key, ifTrue: {
+            Eval enableFlag: key.
+          } ifFalse: {
+            Eval disableFlag: key.
+          }.
+        }.
     }, case: '--meta' do: {
         args pop.
         Eval doMeta: Eval shiftArgs.

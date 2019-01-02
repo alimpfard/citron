@@ -14,10 +14,12 @@ var AbstractMenu is Object cnew: {
     }.
     on: 'selected' do: { ^my selected. }.
     on: 'init' do: {
+        config => const AbstractMenuConfig.
         pageSize => 0.
         pageOffset => 0.
         selected => -1.
     }.
+    on: 'config' do: { ^my config. }.
     on: 'pick:' do:   { thisBlock error: 'unimplemented'. }.
     on: 'cancel' do:  { thisBlock error: 'unimplemented'. }.
     on: 'options' do: { thisBlock error: 'unimplemented'. }.
@@ -27,6 +29,9 @@ var AbstractMenu is Object cnew: {
     on: 'header' do: { ^''. }.
     on: 'keypress:' do: { ^False. }.
     on: 'request' do: {
+      ^requestWithHeader: Nil.
+    }.
+    on: 'requestWithHeader:' do: {:header
       frozen Term is Object cnew: {
           stdin => File special: 'stdin'.
           stdout => File special: 'stdout'.
@@ -34,10 +39,13 @@ var AbstractMenu is Object cnew: {
           on: 'writeln:' do: {:str my stdout write: str, write: '\n'. }.
           on: 'readBytes:' do: {:bytes ^my stdin readBytes: bytes. }.
       }.
-      ^request: Term.
+      ^request: Term header: header.
     }.
-    on: 'request:' do: {:self:term
+    on: 'request:' do: {:term ^request: term header: Nil. }.
+    on: 'request:header:' do: {:self:term:header
         var cursor is 0.
+        var scursor is 0.
+        header isNil ifFalse: {term write: '[%s]\r\n' % [header].}.
         printMenu: term cursor: cursor init: True.
         Shell stty: 'raw -echo'. # TODO: Fix
         var last is me options count - 1.
@@ -104,12 +112,12 @@ var AbstractMenu is Object cnew: {
         first to: last step: 1 do: {:i
             term write: '\x1b[2K'.
             i = first & (self pageOffset > 0) ifTrue: {
-                term write: AbstractMenuConfig up-arrow.
+                term write: self config up-arrow.
             } ifFalse: {
                 i = (last - 1) & (self options count - 1 > i) ifTrue: {
-                    term write: AbstractMenuConfig down-arrow.
+                    term write: self config down-arrow.
                 } ifFalse: {
-                    term write: (i = cursor either: AbstractMenuConfig cursor-mark-gutter or: AbstractMenuConfig cursor-nomark-gutter).
+                    term write: (i = cursor either: self config cursor-mark-gutter or: self config cursor-nomark-gutter).
                 }.
             }.
             i >=: self options count, ifFalse: {

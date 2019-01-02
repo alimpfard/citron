@@ -1,5 +1,7 @@
 import Library/Data/SwitchCase.
-import config: 'config'.
+import config: {
+  config => 'AbstractMenuConfig'.
+}.
 
 #:language XFrozen
 
@@ -102,12 +104,12 @@ var AbstractMenu is Object cnew: {
         first to: last step: 1 do: {:i
             term write: '\x1b[2K'.
             i = first & (self pageOffset > 0) ifTrue: {
-                term write: config up-arrow.
+                term write: AbstractMenuConfig up-arrow.
             } ifFalse: {
                 i = (last - 1) & (self options count - 1 > i) ifTrue: {
-                    term write: config down-arrow.
+                    term write: AbstractMenuConfig down-arrow.
                 } ifFalse: {
-                    term write: (i = cursor either: config cursor-mark-gutter or: config cursor-nomark-gutter).
+                    term write: (i = cursor either: AbstractMenuConfig cursor-mark-gutter or: AbstractMenuConfig cursor-nomark-gutter).
                 }.
             }.
             i >=: self options count, ifFalse: {

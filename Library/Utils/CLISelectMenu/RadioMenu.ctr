@@ -22,7 +22,7 @@ var RadioMenu is AbstractMenu cnew: {
     }.
     on: 'writelnInto:index:cursor:' do: {:term:idx:cursor
         cursor ifTrue: {
-            term write: config cursor-mark.
+            term write: AbstractMenuConfig cursor-mark.
         } ifFalse: {
             term write: '  '.
         }.

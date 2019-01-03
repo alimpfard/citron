@@ -1,0 +1,7 @@
+import Library/Foreign/Interop/C.
+
+Inject importFunctions: ['fmaxf', 'fminf'] fromHeaders: ['math.h'] andLibrary: Nil.
+
+var a is 123.
+var b is 234.5.
+Pen writeln: 'max: %d, min: %d' % [fmaxf[a, b], fminf[a, b]].

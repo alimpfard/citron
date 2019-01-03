@@ -2285,6 +2285,7 @@ ctr_initialize_world ()
   ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Inject"), CtrStdInject, 0);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("newWithOutputMode:"), &ctr_inject_make);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("new"), &ctr_inject_make);
+  ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("definedFunctions"), &ctr_inject_defined_functions);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("compile:"), &ctr_inject_compile);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("run:arguments:"), &ctr_inject_run);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("run:arguments:function:"), &ctr_inject_run_named);

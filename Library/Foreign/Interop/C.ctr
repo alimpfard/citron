@@ -1,0 +1,49 @@
+Inject on: 'importFunctions:fromHeaders:andLibrary:' do: {:funcs:headers:lib
+  var fns is getFunctions: funcs fromHeaders: headers andLibrary: lib.
+  fns each: {:key:value
+    Reflect addGlobalVariable: key.
+    Reflect set: key to: value.
+  }.
+}.
+Inject on: 'getFunctions:fromHeaders:andLibrary:' do: {:self:funcs:headers:lib
+  var context is me new.
+  lib isNil ifFalse: {
+    context linkInLibrary: lib.
+  }.
+  context compile: ((['#include <%s>\n' % [x],, (x: headers)]) join: '').
+  var cifs is context definedFunctions.
+  var str is 'void dummy' + (context id toString) + '() {return %:L;}' % [
+    '+',
+    ['((int)&%s)' % [xs],, (xs: funcs)]
+  ].
+  Pen writeln: str.
+  context compile: str.
+  ^Map fromArray: (funcs fmap: \:x [x, (context generateCFunctionWrapperFor: (context symbol: x) withCIF: (cifs at: x) andName: x)]).
+}.
+
+
+Inject on: 'generateCFunctionWrapperFor:withCIF:andName:' do: {:sym:cif:x
+  sym get = 0 ifTrue: {
+    thisBlock error: 'Function $$x has not been defined, or does not exist'.
+  }.
+  var genName is {:i
+    var name is $(ref) withValue: 'ident$$i'.
+    name type: 'REFERENCE'.
+    Pen writeln: [i, name].
+    ^name.
+  }.
+  # TODO add a way to deep-copy ASTs
+  var av0 is AST parse: '{:catch ^my cif call: my symbol withArgs: args. }.', at: 0.
+  var args is av0 at: 0.
+  var argvs is (var argfs is $(Array < 0)) at: 1.
+  cif argumentCount times: {:i
+    argvs insert: (var name is genName[i]) at: 0.
+    args insert: name at: 0.
+  }.
+#    instrs return  exprm  kwmesg  'args'
+  av0 at: 1, at: 0, at: 0, at: 1, put: argfs at: 1.
+  Pen writeln: ast2ctrcode[av0].
+  ^($!av0)
+    set: 'cif' value: cif,
+    set: 'symbol' value: sym.
+}.

@@ -1,7 +1,8 @@
 #include "citron.h"
-#if withInjectNative
+#ifdef withInjectNative
 
 #include "tcc/tcc.h"
+#include <ffi.h>
 
 void *ctr_inject_compiled_state_release_hook(void *state)
 {
@@ -80,6 +81,216 @@ ctr_object *ctr_inject_make(ctr_object *myself, ctr_argument *argumentList)
     handle->value.rvalue = ctr_heap_allocate(sizeof(ctr_resource));
     handle->value.rvalue->ptr = ds;
     return handle;
+}
+
+typedef struct ctr_inferred_ctype_type_t {
+  int is_function;
+  int nb_args;
+  union {
+    ffi_type* return_type;
+    ffi_type* vtype;
+  };
+  struct ctr_inferred_ctype_type_t** arguments;
+} ctr_inferred_ctype_type_t;
+
+ctr_inferred_ctype_type_t ctr_inject_type_to_ctype(CType *type)
+{
+    int bt, t;
+    Sym *s, *sa;
+    int is_unsigned = 0;
+    ffi_type* fty = NULL;
+
+    t = type->t & VT_TYPE;
+    bt = t & VT_BTYPE;
+
+    if (t & VT_CONSTANT)
+        // pstrcat(buf, buf_size, "const ");
+        ; // can't do anything to this
+    if (t & VT_VOLATILE)
+        // pstrcat(buf, buf_size, "volatile ");
+        ; // can't do anything to this
+    if (t & VT_UNSIGNED)
+        is_unsigned = 1;
+
+    switch(bt) {
+    case VT_VOID:
+        fty = &ffi_type_void;
+        goto add_tstr;
+    case VT_BOOL:
+      /* die */
+        CtrStdFlow = ctr_build_string_from_cstring("_Bool is not supported with automatic inference");
+        return (ctr_inferred_ctype_type_t){.vtype=NULL};
+    case VT_BYTE:
+        fty = &ffi_type_sint8;
+        goto add_tstr;
+    case VT_SHORT:
+        fty = &ffi_type_sshort;
+        goto add_tstr;
+    case VT_INT:
+        fty = &ffi_type_sint;
+        goto add_tstr;
+    case VT_LONG:
+        fty = &ffi_type_slong;
+        goto add_tstr;
+    case VT_LLONG:
+        fty = &ffi_type_ulong; // ?
+        goto add_tstr;
+    case VT_FLOAT:
+        fty = &ffi_type_float;
+        goto add_tstr;
+    case VT_DOUBLE:
+        fty = &ffi_type_double;
+        goto add_tstr;
+    case VT_LDOUBLE:
+        fty = &ffi_type_longdouble;
+    add_tstr:
+        return (ctr_inferred_ctype_type_t){.vtype=fty};
+    case VT_ENUM:
+    case VT_STRUCT:
+        if (bt != VT_STRUCT) {
+          CtrStdFlow = ctr_build_string_from_cstring("Enums are not supported as automatic inference targets");
+          return (ctr_inferred_ctype_type_t){.vtype=NULL};
+        }
+        /* TODO: fix structs */
+        return (ctr_inferred_ctype_type_t){.vtype=NULL};
+        // v = type->ref->v & ~SYM_STRUCT;
+        // if (v >= SYM_FIRST_ANOM)
+        //     pstrcat(buf, buf_size, "<anonymous>");
+        // else
+        //     pstrcat(buf, buf_size, get_tok_str(v, NULL));
+        // break;
+    case VT_FUNC:
+        s = type->ref;
+        ctr_inferred_ctype_type_t fntype = {
+          .is_function = 1
+        };
+        ctr_inferred_ctype_type_t rtype = ctr_inject_type_to_ctype(&s->type);
+        if (!rtype.vtype) {
+          // cascade error down
+          return rtype;
+        }
+        fntype.return_type = rtype.vtype;
+        sa = s->next;
+        while (sa != NULL) {
+            ctr_inferred_ctype_type_t argtype = ctr_inject_type_to_ctype(&sa->type);
+            if (!argtype.vtype) {
+              // dynarray_reset((void***)&fntype.arguments, &fntype.nb_args);
+              return (ctr_inferred_ctype_type_t){.is_function=1, .return_type=NULL};
+            }
+            ctr_inferred_ctype_type_t* argtype_p = ctr_heap_allocate(sizeof(argtype));
+            *argtype_p = argtype;
+            dynarray_add((void***)&fntype.arguments, &fntype.nb_args, argtype_p);
+            sa = sa->next;
+            if (sa == s) break; // wtf
+        }
+        return fntype;
+    case VT_PTR:
+        // s = type->ref;
+        // :shrug:
+        return (ctr_inferred_ctype_type_t){.vtype = &ffi_type_pointer};
+    }
+    return (ctr_inferred_ctype_type_t){.vtype = &ffi_type_sint}; // good guess!
+}
+
+void ctr_inject_free_function_type(ctr_inferred_ctype_type_t ty) {
+  for (size_t i = 0; i < ty.nb_args; i++) {
+    ctr_inferred_ctype_type_t* aty = ty.arguments[i];
+    if (aty->is_function)
+      ctr_inject_free_function_type(*aty);
+  }
+  // dynarray_reset((void***)&ty.arguments, &ty.nb_args);
+}
+extern void ctr_ctypes_set_type(ctr_object* object, ctr_ctype type);
+extern ctr_ctype ctr_ctypes_ffi_convert_ffi_type_to_ctype(ffi_type* type);
+
+ctr_object *ctr_inject_generate_ctype(ctr_inferred_ctype_type_t ty) {
+  if (ty.is_function) {
+    ffi_cif*      cif_res = ctr_heap_allocate(sizeof (ffi_cif));
+    ffi_type*     rtype   = ty.return_type;
+    int           asize   = ty.nb_args;
+    ffi_type**    atypes  = ctr_heap_allocate(sizeof(ffi_type) * asize);
+    for(int i = 0; i<asize; i++) {
+      ctr_inferred_ctype_type_t t = *ty.arguments[i];
+      atypes[i] = t.is_function ? &ffi_type_pointer : t.vtype; // can't be anything else, but just in case
+    }
+    ffi_abi abi = FFI_DEFAULT_ABI;
+    ffi_status status = ffi_prep_cif(cif_res, abi, asize, rtype, atypes);
+    if (status != FFI_OK)
+      CtrStdFlow = ctr_build_string_from_cstring((status==FFI_BAD_ABI?"FFI_BAD_ABI":"FFI_ERROR"));
+    ctr_object* cifobj = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+    ctr_internal_object_set_property (
+      cifobj,
+      ctr_build_string_from_cstring(":crType"),
+      ctr_build_number_from_float(ctr_ctypes_ffi_convert_ffi_type_to_ctype(ty.vtype)),
+      0
+    );
+    ctr_ctypes_set_type(cifobj, CTR_CTYPE_CIF);
+    ctr_set_link_all(cifobj, CtrStdCType_ffi_cif);
+    cifobj->value.rvalue->ptr = (void*)cif_res;
+    return cifobj;
+  } else {
+    // just a normal value type
+    ctr_object* cifobj = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+    ctr_ctypes_set_type(cifobj, ctr_ctypes_ffi_convert_ffi_type_to_ctype(ty.vtype));
+    return cifobj;
+  }
+}
+
+extern TokenSym **table_ident;
+
+ctr_object *ctr_inject_defined_functions(ctr_object* myself, ctr_argument* argumentList)
+{
+  ctr_resource *r = myself->value.rvalue;
+  ctr_inject_data_t *ds;
+  if (!r || !(ds = r->ptr))
+  {
+      CtrStdFlow = ctr_build_string_from_cstring("request to uninitialized Inject object");
+      return CtrStdNil;
+  }
+  TCCState *state = ds->state;
+  Sym* symbols = state->global_stack;
+  ctr_object *type_map = ctr_map_new(CtrStdMap, NULL);
+  ctr_argument* map_put_arg = &(ctr_argument){ .next = &(ctr_argument){} };
+
+  Sym *s, *ss, **ps;
+  TokenSym *ts;
+  int v;
+
+  s = symbols;
+  while(s != NULL) {
+      ss = s->prev;
+      v = s->v;
+      /* remove symbol in token array */
+      /* XXX: simplify */
+      if (!(v & SYM_FIELD) && (v & ~SYM_STRUCT) < SYM_FIRST_ANOM) {
+          ts = table_ident[(v & ~SYM_STRUCT) - TOK_IDENT];
+          if (v & SYM_STRUCT)
+              // ps = &ts->sym_struct;
+              goto NOT_THIS_ONE;
+          else
+              ps = &ts->sym_identifier;
+          ctr_inferred_ctype_type_t ty = ctr_inject_type_to_ctype(&s->type);
+          if (!ty.vtype) {
+            if (ty.is_function)
+              ctr_inject_free_function_type(ty);
+            goto NOT_THIS_ONE;
+          }
+          int tok = s->v;
+          if (tok < TOK_IDENT)
+            goto NOT_THIS_ONE;
+          tok -= TOK_IDENT;
+          TokenSym *tokdata = table_ident[tok];
+
+          map_put_arg->object = ctr_inject_generate_ctype(ty);
+          map_put_arg->next->object = ctr_build_string(tokdata->str, tokdata->len);
+
+          ctr_map_put(type_map, map_put_arg);
+      }
+      NOT_THIS_ONE:
+      s = ss;
+  }
+
+  return type_map;
 }
 
 /**

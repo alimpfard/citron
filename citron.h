@@ -1261,6 +1261,7 @@ ctr_object* ctr_importlib_begin(ctr_object* myself, ctr_argument* argumentList);
 CTR_H_DECLSPEC ctr_object* CtrStdInject;
 voidptrfn_t ctr_inject_compiled_state_release_hook;
 ctr_object* ctr_inject_make(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_inject_defined_functions(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_inject_compile(ctr_object* myself, ctr_argument* argumentList);
 ctr_object *ctr_inject_get_symbol(ctr_object *myself, ctr_argument *argumentList);
 ctr_object *ctr_inject_run(ctr_object *myself, ctr_argument *argumentList);

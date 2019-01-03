@@ -1374,6 +1374,29 @@ CTR_CT_FFI_BIND(prep_cif_inferred) { //[*atypes, rtype]
   return cifobj;
 }
 
+CTR_CT_FFI_BIND(cif_arg_count) { //<cif; ^Nil|Number
+  ffi_cif*      cif       = (ffi_cif*)(myself->value.rvalue->ptr);
+  if (!cif) {
+    CtrStdFlow = ctr_build_string_from_cstring("Invalid request, CIF does not exist");
+    return CtrStdNil;
+  }
+  return ctr_build_number_from_float(cif->nargs);
+}
+
+CTR_CT_FFI_BIND(cif_arg_at) { //<cif, Number; ^CType
+  ffi_cif*      cif       = (ffi_cif*)(myself->value.rvalue->ptr);
+  if (!cif) {
+    CtrStdFlow = ctr_build_string_from_cstring("Invalid request, CIF does not exist");
+    return CtrStdNil;
+  }
+  int i = argumentList->object->value.nvalue;
+  if (i >= cif->nargs || i < 0) {
+    CtrStdFlow = ctr_build_string_from_cstring("argument index out of bounds");
+    return CtrStdNil;
+  }
+  return ctr_build_number_from_float(ctr_ctypes_ffi_convert_ffi_type_to_ctype(cif->arg_types[i]));
+}
+
 CTR_CT_FFI_BIND(call) { //<cif, CTypes pointer (fn), Array avalues; ^Citron object
   ffi_arg*      result    = ctr_heap_allocate(sizeof(ffi_arg));
   ffi_cif*      cif       = (ffi_cif*)(myself->value.rvalue->ptr);
@@ -1788,6 +1811,8 @@ void ctr_ffi_begin() {
   ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("setABI:return:argTypes:"), &ctr_ctype_ffi_prep_cif);
   ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("newByInferringTypes:"), &ctr_ctype_ffi_prep_cif_inferred);
   ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("call:withArgs:"), &ctr_ctype_ffi_call);
+  ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("argumentCount"), &ctr_ctype_ffi_cif_arg_count);
+  ctr_internal_create_func(CtrStdCType_ffi_cif, ctr_build_string_from_cstring("argumentTypeOfIdx:"), &ctr_ctype_ffi_cif_arg_at);
   CTR_CT_INTRODUCE_TYPE(cont_pointer);
   ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring("packed:count:"), &ctr_ctypes_make_packed);
   ctr_internal_create_func(CtrStdCType_cont_pointer, ctr_build_string_from_cstring("at:"), &ctr_ctypes_packed_get);

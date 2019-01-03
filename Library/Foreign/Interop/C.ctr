@@ -16,9 +16,16 @@ Inject on: 'getFunctions:fromHeaders:andLibrary:' do: {:self:funcs:headers:lib
     '+',
     ['((int)&%s)' % [xs],, (xs: funcs)]
   ].
-  Pen writeln: str.
   context compile: str.
-  ^Map fromArray: (funcs fmap: \:x [x, (context generateCFunctionWrapperFor: (context symbol: x) withCIF: (cifs at: x) andName: x)]).
+  ^(funcs fmap:
+    \:x [
+      x,
+      (context
+        generateCFunctionWrapperFor: (context symbol: x)
+        withCIF: (cifs at: x)
+        andName: x)
+      ]
+  ) foldl: {:acc:x ^acc put: x @ 1 at: x @ 0.} accumulator: Map new.
 }.
 
 
@@ -29,20 +36,22 @@ Inject on: 'generateCFunctionWrapperFor:withCIF:andName:' do: {:sym:cif:x
   var genName is {:i
     var name is $(ref) withValue: 'ident$$i'.
     name type: 'REFERENCE'.
-    Pen writeln: [i, name].
     ^name.
   }.
   # TODO add a way to deep-copy ASTs
   var av0 is AST parse: '{:catch ^my cif call: my symbol withArgs: args. }.', at: 0.
   var args is av0 at: 0.
-  var argvs is (var argfs is $(Array < 0)) at: 1.
+  var argvs is (var argfs is AST parse: '[0].', at: 0) at: 0.
   cif argumentCount times: {:i
-    argvs insert: (var name is genName[i]) at: 0.
+    i = 0 ifTrue: {
+      argvs put: (var name is genName[i]) at: 0.
+    } ifFalse: {
+      argvs insert: (var name is genName[i]) at: 0.
+    }.
     args insert: name at: 0.
   }.
 #    instrs return  exprm  kwmesg  'args'
   av0 at: 1, at: 0, at: 0, at: 1, put: argfs at: 1.
-  Pen writeln: ast2ctrcode[av0].
   ^($!av0)
     set: 'cif' value: cif,
     set: 'symbol' value: sym.

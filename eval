@@ -36,10 +36,16 @@ import
   Library/Control/MethodResolve
   Library/Data/String
   Library/Data/IO/UTF-8/input
+  Library/Functional/LazyBoolean: ['&&', '||']
   Library/Prelude: \*
   Library/Data/Array/LRArray: 'LRArray'
   Library/Utils/CLIContextMenu: ['generate_context_menu', 'clear_next_line']
   Library/Data/IO/Pen: 'pPen'.
+
+#:declare lazyev ||
+#:declare lazyev &&
+#:declare lazyev or
+#:declare lazyev and
 
 var OneGateFlipper is Object new on: 'new' do: { ^me cnew: {my value is False.}. }.
 OneGateFlipper on: 'set' do: { my value is True. }.
@@ -599,7 +605,15 @@ Eval on: 'allTheNames:' do: {:obj
           var dir is File new: spath + '/' + pathv.
           dir exists ifFalse: { ^[]. }.
           ^File list: dir path,
-            filter_v: {:v ^(v @ 'type' = 'folder') | (v @ 'type' = 'file' & (v @ 'file' endsWith: '.ctr')). },
+            filter_v: {:v
+              ^ (['.', '..'] contains: v @ 'file', not)
+                  `&&`
+                (v @ 'type' = 'folder')
+                  `||`
+                ( (v @ 'type' = 'file')
+                    `&&`
+                  (v @ 'file' endsWith: '.ctr')
+                ). },
             fmap: {:value ^value at: 'file'. },
             filter_v: {:x ^x lower startsWith: path. },
             fmap: {:x

@@ -824,6 +824,7 @@ ctr_object *ctr_number_negate(ctr_object * myself, ctr_argument * argumentList);
 /**
  * String Interface
  */
+ctr_object* ctr_string_escape_ascii(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_bytes(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_length(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_fromto(ctr_object* myself, ctr_argument* argumentList);

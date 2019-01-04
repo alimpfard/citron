@@ -2167,12 +2167,12 @@ ctr_number_to_step_do (ctr_object * myself, ctr_argument * argumentList)
   arg->value.nvalue = curValue;
   while ((forward ? curValue < endValue : curValue > endValue) && !CtrStdFlow)
     {
+      arg->value.nvalue = curValue;
       arguments->object = arg;
       ctr_block_run_here (codeBlock, arguments, codeBlock);
       if (CtrStdFlow == CtrStdContinue)
 	CtrStdFlow = NULL;	/* consume continue and go on */
-    arg->value.nvalue += incValue;
-    curValue = arg->value.nvalue;
+      curValue += incValue;
     }
   ctr_heap_free (arguments);
   if (!codeBlock->value.block->lexical)
@@ -6102,7 +6102,10 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
 	      if (parameterList->next)
 		{
 		  a = argList->object;
-		  ctr_assign_value_to_local (ctr_build_string (parameter->value, parameter->vlen), a);
+      // if (a->info.raw)
+		    // ctr_assign_value_to_local_by_ref (ctr_build_string (parameter->value, parameter->vlen), a);
+		  // else
+        ctr_assign_value_to_local (ctr_build_string (parameter->value, parameter->vlen), a);
 		}
 	      else if (!parameterList->next && was_vararg)
 		{
@@ -6120,7 +6123,10 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
 	      else if (!was_vararg)
 		{
 		  a = argList->object;
-		  ctr_assign_value_to_local (ctr_build_string (parameter->value, parameter->vlen), a);
+      // if (a->info.raw)
+		    // ctr_assign_value_to_local_by_ref (ctr_build_string (parameter->value, parameter->vlen), a);
+		  // else
+        ctr_assign_value_to_local (ctr_build_string (parameter->value, parameter->vlen), a);
 		}
 	    }
 	  if (!argList->next)

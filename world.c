@@ -1793,6 +1793,8 @@ ctr_initialize_world ()
   /* String */
   //CtrStdString = ctr_internal_create_object(CTR_OBJECT_TYPE_OTSTRING);
   ctr_linkstr ();
+  ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("escape:"), &ctr_string_escape_ascii);
+  ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("escapeAsciiControls"), &ctr_string_escape_ascii);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_BYTES), &ctr_string_bytes);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_LENGTH), &ctr_string_length);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_FROM_TO), &ctr_string_fromto);
@@ -3272,8 +3274,6 @@ ctr_assign_value_to_local (ctr_object * key, ctr_object * o)
       object = ctr_build_number_from_float (o->value.nvalue);
       break;
     case CTR_OBJECT_TYPE_OTSTRING:
-      object = ctr_build_string (o->value.svalue->value, o->value.svalue->vlen);
-      break;
     case CTR_OBJECT_TYPE_OTNIL:
     case CTR_OBJECT_TYPE_OTNATFUNC:
     case CTR_OBJECT_TYPE_OTOBJECT:

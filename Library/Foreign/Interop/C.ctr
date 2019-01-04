@@ -1,6 +1,9 @@
 Inject on: 'importFunctions:fromHeaders:andLibrary:' do: {:funcs:headers:lib
   var fns is getFunctions: funcs fromHeaders: headers andLibrary: lib.
   fns each: {:key:value
+    Reflect objectExists: key, ifTrue: {
+      thisBlock error: 'Object $$key exists, I refuse to replace it'.
+    }.
     Reflect addGlobalVariable: key.
     Reflect set: key to: value.
   }.
@@ -10,6 +13,8 @@ Inject on: 'getFunctions:fromHeaders:andLibrary:' do: {:self:funcs:headers:lib
   lib isNil ifFalse: {
     context linkInLibrary: lib.
   }.
+  #:declare lazyev if-then-else
+  var if-then-else is \:cond:ift:iff cond evaluate ifTrue: { ^ift evaluate. } ifFalse: { ^iff evaluate. }.
   context compile: ((['#include <%s>\n' % [x],, (x: headers)]) join: '').
   var cifs is context definedFunctions.
   var str is 'void dummy' + (context id toString) + '() {return %:L;}' % [
@@ -20,11 +25,15 @@ Inject on: 'getFunctions:fromHeaders:andLibrary:' do: {:self:funcs:headers:lib
   ^(funcs fmap:
     \:x [
       x,
-      (context
-        generateCFunctionWrapperFor: (context symbol: x)
-        withCIF: (cifs at: x)
-        andName: x)
-      ]
+      if-then-else {
+        (cifs at: x, isA: CIF),
+        (context
+          generateCFunctionWrapperFor: (context symbol: x)
+          withCIF: (cifs at: x)
+          andName: x),
+        (cifs at: x)
+      }
+    ]
   ) foldl: {:acc:x ^acc put: x @ 1 at: x @ 0.} accumulator: Map new.
 }.
 

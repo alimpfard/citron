@@ -578,7 +578,40 @@ Eval on: 'allTheNames' do: {
 }.
 
 Eval on: 'allTheNames:' do: {:obj
-  ^obj isNil not either: {^[(False), (Reflect getMethodsOf: obj)].} or: {^[(True), (Eval allTheNames)].}.
+  obj = import ifTrue: {
+    # SPeCIAl CaSe
+    ^[
+      \import,
+      {:path-or-m
+        var meths is Reflect getMethodsOf: import.
+        var pml is path-or-m lower.
+        # Early exit in case it's not a path...probably
+        meths is meths filter_v: {:meth
+          ^meth lower startsWith: pml.
+        }.
+        meths count > 0 ifTrue: { ^meths. }.
+        # It's a path...maybe
+        var paths is path-or-m split: '/'.
+        path-or-m endsWith: '/', ifTrue: { paths push: ''. }.
+        var path is paths last lower.
+        var pathv is paths init join: '/'.
+        ^import searchPaths fmap: {:spath
+          var dir is File new: spath + '/' + pathv.
+          dir exists ifFalse: { ^[]. }.
+          ^File list: dir path,
+            filter_v: {:v ^(v @ 'type' = 'folder') | (v @ 'type' = 'file' & (v @ 'file' endsWith: '.ctr')). },
+            fmap: {:value ^value at: 'file'. },
+            filter_v: {:x ^x lower startsWith: path. },
+            fmap: {:x
+              x endsWith: '.ctr',
+                ifTrue: { ^ (pathv length > 0 either: pathv + '/' or: '') + (x from: 0 to: x length - 4). }
+                ifFalse: { ^(pathv length > 0 either: pathv + '/' or: '') + (x).}.
+            }.
+        }, sum.
+      }
+    ].
+  }.
+  ^obj isNil not either: {^[\method, (Reflect getMethodsOf: obj)].} or: {^[\object, (Eval allTheNames)].}.
 }.
 
 Eval on: 'togglePasteMode' do: {
@@ -965,7 +998,8 @@ Eval on: 'read_eval_print:' do: ({:prompt
           } or: { cmt is '<- No completion'. }.
         } or: {
           var candidate is 'Nil'.
-          var toc is (inp trim or: '  ') split: ' ', last.
+          var toc is inp trim reSplit: '\\s+|\\b|(?=[\\]})])'.
+          toc is toc count = 0 either: '' or: { ^toc last. }.
 
           last_was_comp ifTrue: {
             var toremove is ((toc length) - (last_comp_entry length)).
@@ -976,25 +1010,64 @@ Eval on: 'read_eval_print:' do: ({:prompt
           toc is last_was_comp either: last_comp_entry or: toc.
           last_comp_entry is toc.
           var flipper is OneGateFlipper new.
-          last_toc is (inp trim or: 'Nil') split: ' ', filter: {:_:v (v endsWith: ':') ifTrue: {flipper set. ^False.}. ^((v endsWith: ':') | (flipper get)) not | (v containsPattern: ?>(-?(0[xXcC])?[\d]+(\.[\d]+)?)|($\')<?). }.
-          last_toc is (last_toc count) >=: 2, either: {^last_toc init last.} or: 'Nil'.
+          last_toc is inp trim
+            or: 'Nil',
+            reSplit: '\\s+',
+            filter: {:_:v
+              (v endsWith: ':')
+                ifTrue: {
+                  flipper set.
+                  ^False.
+                }.
+              ^(
+                (v endsWith: ':') | (flipper get)
+              ) not |
+                (v containsPattern: ?>(-?(0[xXcC])?[\d]+(\.[\d]+)?)|(\'$)|(\]|\})$<?).
+            }.
+          last_toc is (last_toc count) >=: 2, either: {
+            toc is last_toc last.
+            ^last_toc init last.
+          } or: {
+            ^last_toc count = 0 either: 'Nil' or: {
+              ^last_toc head.
+            }.
+          }.
           last_toc containsPattern: ?>^(-?(0[xXcC])?[\d]+(\.[\d]+)?)$<?, ifTrue: { last_toc is 'Number'. }.
-          last_toc containsPattern: ?>^(\'|\?>)<?, ifTrue: { last_toc is 'String'. }.
+          last_toc containsPattern: ?>(\'|\?>)$<?, ifTrue: { last_toc is 'String'. }.
           last_toc containsPattern: ?>\]\s*$<?, ifTrue: { last_toc is 'Array'. }.
-          var candidates is Eval allTheNames: ({^Reflect getObject: (['my', 'var'] contains: last_toc, either: Nil or: last_toc).} catch: {^Nil.}, run).
-          var skipthis is candidates @ 0.
-          candidates is (candidates @ 1) filter: {:_:i ^i startsWith: toc.}.
+          last_toc containsPattern: ?>\}\s*$<?, ifTrue: { last_toc is 'CodeBlock'. }.
+          var candidates is Eval allTheNames: (
+            {
+              ^Reflect getObject: (
+                ['my', 'var'] contains: last_toc,
+                  either: Nil
+                  or: last_toc).
+            } catch: {
+              ^Nil.
+            }, run).
+          var resolver is Nil.
+          var skipthis is False.
+          candidates head = \import ifTrue: {
+            resolver is candidates @ 1.
+          } ifFalse: {
+            resolver is {:toc ^candidates @ 1 filter: {:_:i ^i lower startsWith: toc lower.}. }.
+            skipthis is candidates head = \object.
+          }.
+          candidates is resolver[toc].
           candidates count !=: 0, ifTrue: {
             have_context is True.
             candidate is candidates @ (last_comp_index is (last_comp_index +=: 1) >=: (candidates count), either: 0 or: last_comp_index).
             var uniq is comp_set addAll: candidates, toArray.
+            uniq each_v: {:k comp_set remove: k. }.
             var uid is uniq indexOf: candidate.
             linesp is generate_context_menu applyTo: uniq and: uid.
-            var cc is candidate skip: toc length.
             cmt is (var iis is '[from %s]' % [last_toc]).
             last_comp_rewind is iis length.
-            inp is inp insert: cc at: cursor.
-            cursor +=: cc length.
+            toc length times: {:i
+              inp put: candidate @ i at: cursor - (toc length - i).
+            }.
+            inp is inp insert: (candidate skip: toc length) at: cursor.
+            cursor +=: candidate length - toc length.
           }, else: {
             cmt is ncmessage.
           }.

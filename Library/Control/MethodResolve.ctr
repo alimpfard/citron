@@ -12,3 +12,51 @@ Object on: ':::apply:' do: {:self:meth:aargs
   var mobj is me:::meth.
   ^{\:*args mobj applyAll: [self] + (aargs + [args]). }.
 }.
+
+var asBlock is {:msg:active
+    var count is 0.
+    var template is \:argc
+        '{' + (
+            Generator
+                from: 0 to: argc - 1,
+                fmap: {\:x ':arg$$x'},
+                toArray join: ''
+        ) +
+        ' ^me ' +
+        (argc = 0
+            either: 'msg'
+            or: {
+                ^argc = 1
+                    either: '- arg0'
+                    or: 'msg: arg0'.
+                }
+        ) +
+        '.}.'.
+    msg length = 1 ifTrue: {
+        count is 1.
+        template is template[1].
+    } ifFalse: {
+        msg contains: ':', ifTrue: {
+            count is msg countOf: ':'.
+            template is template[count].
+        } ifFalse: {
+            template is template[0].
+        }.
+    }.
+    var bms is AST parse: template, at: 0.
+    (var expr is bms at: 1, at: 0, at: 0) at: 1, value: msg.
+    expr is expr at: 1.
+    count - 1 times: {:i
+        expr
+            insert: (
+                $(x) copy value: 'arg' + (count - i - 1)
+            )
+            at: 0.
+    }.
+    ^bms evaluate.
+}.
+
+var sendMsg is {\:msg:*arg0s
+    var msgv is asBlock[msg, arg0s count].
+    ^\:obj:*args Reflect run: msgv forObject: obj arguments: arg0s + args.
+}.

@@ -1,3 +1,9 @@
+{
+  Curl.
+} catch: {
+  Program exit: 0. # Nothing wrong here
+}, run.
+
 var tbs is Object cnew: {
   my test is '5'.
   my trash is 123.

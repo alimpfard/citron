@@ -1,10 +1,10 @@
-#Plugin test
+import Library/Data/Json: \*.
 
 whatever is Map cnew: {
   put: 64 at: 'string',
-  put: 'string' at: 0,
+  put: 'string' at: '0',
   put: [1, 2, ['Array?']] at: 'Not_An_Array',
-  put: (Map new put: Nil at: 1234) at: 'poof'.
+  put: (Map new put: Nil at: '1234') at: 'poof'.
 }.
 
-Pen writeln: (JSON serialize: whatever).
+Pen writeln: (Json serialize: whatever).

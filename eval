@@ -744,7 +744,7 @@ Eval on: 'togglePasteMode' do: {
         args pop. #consume option..
         var value is Eval shiftArgs rightTrim.
         (value isNil) ifTrue: { thisBlock error: '-e requires an argument.'. }.
-        import Library/Control/MethodResolve: \*.
+        import Library/Utils/Shell: \*.
         Reflect addGlobalVariable: '&0'.
         &0 is value.
         { ^(Eval argCount > 0). } whileTrue: { args push: Eval shiftArgs. }. #consume all other arguments.
@@ -753,7 +753,12 @@ Eval on: 'togglePasteMode' do: {
         &_ is args.
         value endsWith: '.', ifFalse: { value +=: '.'. }.
         value is '{ ^$$value }'.
-        Eval display/write: (Eval evaluate: value) run.
+        var val is (Eval evaluate: value) run.
+        val isA: Array, ifTrue: {
+          Eval display/write: val join. # convert to lines
+        } ifFalse: {
+          Eval display/write: val.
+        }.
         Program exit.
     }, case: '--qe' do: {
         args pop. #consume option..

@@ -1,0 +1,37 @@
+# add some useful methods and functions for use in shell scripts :P
+import Library/Control/MethodResolve: 'sendMsg'.
+
+# split|join on newlines
+String on: 'split' do: { ^split: '\n'. }.
+Array on: 'join' do: { ^join: '\n'. }.
+
+# read lines from file or stdin
+var readLines is {:file
+  file is file isNil either: {
+    ^Object new on: 'read' do: { ^Program input. }.
+  } or: file.
+  ^file read split.
+}.
+
+# write array or str to stdout
+var putLines is {:lines
+  lines isA: Array, ifTrue: {
+    lines each: {:_:line Pen writeln: line. }.
+  } ifFalse: {
+    Pen writeln: lines.
+  }.
+  ^ ''.
+}.
+
+var execPutLines is {:expr
+  putLines[expr evaluate].
+  ^ ''.
+}.
+
+# Execute shell cmd (sync), ignore output
+var shExec is {:cmd
+  Shell call: cmd.
+  ^Nil.
+}.
+
+var <- is Object new on: 'respondTo:' do: sendMsg.

@@ -1,4 +1,4 @@
-.TH "Citron v0.0.8.8-boehm-gc" 1 "09 September 2018" "The Citron programming language Manual"
+.TH "Citron v0.0.8.9-boehm-gc" 1 "06 January 2019" "The Citron programming language Manual"
 .SH NAME
 ctr \- run a Citron program
 .PP
@@ -133,7 +133,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B [Nil] unpack: [Ref:string]
+.B [Nil] unpack: [Ref:string], [Object:context]
 
  Assigns Nil into Ref
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
@@ -186,7 +186,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B [Object] unpack: [Object:{Ref*}]
+.B [Object] unpack: [Object:{Ref*}], [Object:Context]
 
  Element-wise object assign
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
@@ -395,7 +395,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B [Boolean] unpack: [String:Ref]
+.B [Boolean] unpack: [String:Ref], [Object:Context]
  Assign ref to boolean
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
@@ -481,6 +481,11 @@ The following messages are part of the Core API of the Citron Programming Langua
 
  You can also use ifFalse and ifTrue with other objects because the
  Object instance also responds to these messages.
+.BR
+
+.PP
+.SS
+.B [Boolean] ifTrue: [block] ifFalse: [Block]
 .BR
 
 .PP
@@ -602,7 +607,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B [Number] unpack: [String:Ref]
+.B [Number] unpack: [String:Ref], [Object:context]
  Assign ref to number
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
@@ -1075,9 +1080,16 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B [String] unpack: [String:Ref]
+.B [String] unpack: [String:Ref],[Object:ctx]
  Assign ref to string
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
+.BR
+
+.PP
+.SS
+.B [String] escape: '\n'.
+
+ Escapes the specified ASCII character(s) in a string.
 .BR
 
 .PP
@@ -1662,9 +1674,16 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B [Block] unpack: [String:Ref]
+.B [Block] unpack: [String:Ref], [Object:ctx]
  Assign ref to block
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
+.BR
+
+.PP
+.SS
+.B [Block] specialize: [types...] with: [Block]
+
+ Specialise a block for the given types with the given block
 .BR
 
 .PP
@@ -1823,6 +1842,13 @@ The following messages are part of the Core API of the Citron Programming Langua
  Returns a string representation of the Block. This basic behavior, part
  of any object will just return [Block]. Other objects typically override this
  behavior with more useful implementations.
+.BR
+
+.PP
+.SS
+.B exception in catch block] exceptionInfo
+
+ Returns line info about an exception
 .BR
 
 .PP
@@ -2313,7 +2339,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B [Array] unpack: [Array:{Ref:string}]
+.B [Array] unpack: [Array:{Ref:string}], [Object:ctx]
  Element-wise assign
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
@@ -2505,7 +2531,7 @@ The following messages are part of the Core API of the Citron Programming Langua
 
 .PP
 .SS
-.B [Map] unpack: [Map:{Ref:AlternativeName}]
+.B [Map] unpack: [Map:{Ref:AlternativeName}], [Object:ctx]
 Key-wise assign
 Give alternative names as the values of the constructor
 
@@ -2565,7 +2591,7 @@ e.g. (Map new put: 'Hello' at: 'test0', put: 'World' at: 'test1') unpack: (Map c
 
 .PP
 .SS
-.B [File] unpack: [String:Ref]
+.B [File] unpack: [String:Ref], [Object:ctx]
  Assigns the file instance to the reference
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
@@ -2679,6 +2705,21 @@ e.g. (Map new put: 'Hello' at: 'test0', put: 'World' at: 'test1') unpack: (Map c
 .PP
 .SS
 .B [File] close.
+
+ Closes the file represented by the recipient.
+
+ Usage:
+
+ f is File new: '/path/to/file.txt'.
+ f open: 'r+'.
+ f close.
+
+ The example above opens and closes a file.
+.BR
+
+.PP
+.SS
+.B [File] flush.
 
  Closes the file represented by the recipient.
 
@@ -2817,6 +2858,13 @@ e.g. (Map new put: 'Hello' at: 'test0', put: 'World' at: 'test1') unpack: (Map c
 
 .PP
 .SS
+.B [Generator] filter: [Block<idx,value>]
+
+ Creates a generator that filters another generator through the given block
+.BR
+
+.PP
+.SS
 .B [Generator] imap: [Block]
 
  Creates a generator that maps the elements of this generator through the given
@@ -2932,6 +2980,13 @@ e.g. (Map new put: 'Hello' at: 'test0', put: 'World' at: 'test1') unpack: (Map c
 
 .PP
 .SS
+.B [AST] fromBlock: [Block]
+
+ TODO
+.BR
+
+.PP
+.SS
 .B [AST] at: [n:Number]
 
  Gets the nth child of this AST node
@@ -3009,6 +3064,13 @@ e.g. (Map new put: 'Hello' at: 'test0', put: 'World' at: 'test1') unpack: (Map c
 
 .PP
 .SS
+.B [AST] copy
+
+ copies an ast node [note: shallow copy]
+.BR
+
+.PP
+.SS
 .B [AST] type: [String]
 
  sets the type of this AST node
@@ -3023,9 +3085,9 @@ e.g. (Map new put: 'Hello' at: 'test0', put: 'World' at: 'test1') unpack: (Map c
 
 .PP
 .SS
-.B [AST] evaluate
+.B [AST] evaluate[InContext: [Object]]
 
- Evaluates this ast node
+ Evaluates this ast node (in the given context)
 .BR
 
 .PP
@@ -3100,6 +3162,13 @@ e.g. (Map new put: 'Hello' at: 'test0', put: 'World' at: 'test1') unpack: (Map c
 
 .PP
 .SS
+.B [Array|String] letEqualAst: [Array|Object] in: [Block]
+
+ Assigns local values to the block, evaluating them if an ast type in the block context, and runs it as a closure
+.BR
+
+.PP
+.SS
 .B [Coroutine] new
 
  Makes a new coroutine scheduler
@@ -3155,7 +3224,7 @@ e.g. (Map new put: 'Hello' at: 'test0', put: 'World' at: 'test1') unpack: (Map c
 
 .PP
 .SS
-.B [Broom] unpack: [String:Ref]
+.B [Broom] unpack: [String:Ref], [Object:ctx]
  assigns the instance to the reference
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
@@ -3247,7 +3316,16 @@ e.g. (Map new put: 'Hello' at: 'test0', put: 'World' at: 'test1') unpack: (Map c
 
 .PP
 .SS
-.B [Shell] unpack: [String:Ref]
+.B [Shell] open: [String] mode: [String: 'r'|'w'|'e']
+
+ Opens a write-or-read only stream to the given command
+
+ -> a File
+.BR
+
+.PP
+.SS
+.B [Shell] unpack: [String:Ref], [Object:ctx]
  assigns the instance to the reference
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
@@ -3315,14 +3393,14 @@ e.g. (Map new put: 'Hello' at: 'test0', put: 'World' at: 'test1') unpack: (Map c
 
 .PP
 .SS
-.B [Program] unpack: [String:Ref]
+.B [Program] unpack: [String:Ref], [Object:ctx]
  assigns the instance to the reference
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR
 
 .PP
 .SS
-.B [Program] exit
+.B [Program] exit [: [Number]]
 
  Exits program immediately.
 .BR
@@ -3516,7 +3594,7 @@ e.g. (Map new put: 'Hello' at: 'test0', put: 'World' at: 'test1') unpack: (Map c
  and passed the message that has been received.
 
  If a timeout is set, and it expires without getting a message,
- this message will throw.
+ this message will return False; otherwise it will return True.
 .BR
 
 .PP
@@ -4127,12 +4205,24 @@ e.g. (Map new put: 'Hello' at: 'test0', put: 'World' at: 'test1') unpack: (Map c
 
 .PP
 .SS
+.B [Reflect] run: [Block] inContext: [context:Object] forObject: [object:Object] arguments: [Array]
+
+ runs a block with its 'me'/'my' set to object inside a given context
+.BR
+
+.PP
+.SS
 .B [Reflect] run: [Block] inContext: [Map] arguments: [Array]
 .BR
 
 .PP
 .SS
 .B [Reflect] run: [Block] inContextAsWorld: [Map] arguments: [Array]
+.BR
+
+.PP
+.SS
+.B [Reflect] run: [Block] inContextAsMain: [Map] arguments: [Array]
 .BR
 
 .PP
@@ -4312,7 +4402,7 @@ yield control and pass an object along
 
 .PP
 .SS
-.B [Fiber] unpack: [String:Ref]
+.B [Fiber] unpack: [String:Ref], [Object:ctx]
  Assigns the fiber instance to the reference
  (Always prefer using algebraic deconstruction assignments: look at section 'Assignment')
 .BR

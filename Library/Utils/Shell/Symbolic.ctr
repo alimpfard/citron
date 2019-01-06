@@ -1,0 +1,11 @@
+import Library/Control/MethodResolve: 'sendMsg'.
+
+var <- is Object new on: 'respondTo:' do: sendMsg.
+
+# arr <$> expr
+Array learn: '<$>' means: 'fmap:'.
+Generator learn: '<$>' means: 'fmap:'.
+
+# arr <?> expr
+Array learn: '<?>' means: 'filter_v:'.
+Generator on: '<?>' do: {:arg ^filter: \:_:x arg[x]. }.

@@ -1,5 +1,4 @@
 # add some useful methods and functions for use in shell scripts :P
-import Library/Control/MethodResolve: 'sendMsg'.
 
 # split|join on newlines
 String on: 'split' do: { ^split: '\n'. }.
@@ -33,5 +32,3 @@ var shExec is {:cmd
   Shell call: cmd.
   ^Nil.
 }.
-
-var <- is Object new on: 'respondTo:' do: sendMsg.

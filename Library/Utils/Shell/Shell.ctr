@@ -32,3 +32,18 @@ var shExec is {:cmd
   Shell call: cmd.
   ^Nil.
 }.
+
+# Returns the arguments as an array
+var collect is \:*args args.
+
+# transform each line with a given function
+var interact is {:fn:indicator
+  indicator is indicator or: ''.
+  { ^False. } whileFalse: {
+    Pen write: indicator.
+    var res is Program waitForInput rightTrim.
+    (res = '') break.
+    Pen writeln: (fn applyTo: res).
+  }.
+  ^ ''.
+}.

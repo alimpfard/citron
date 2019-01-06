@@ -2244,6 +2244,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("frameId"), &ctr_get_frame_id);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("isInFrame:"), &ctr_frame_present);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("run:inContext:arguments:"), &ctr_reflect_run_for_object_in_ctx);
+  ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("run:inContext:forObject:arguments:"), &ctr_reflect_run_for_object_inside_ctx);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("run:inContextAsWorld:arguments:"), &ctr_reflect_run_for_object_in_ctx_as_world);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("run:inContextAsMain:arguments:"), &ctr_reflect_run_for_object_in_ctx_as_main);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("worldSnapshot"), &ctr_reflect_world_snap);

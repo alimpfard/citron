@@ -1217,6 +1217,7 @@ ctr_object* ctr_reflect_noginstr(ctr_object* myself, ctr_argument* argumentList)
 ctr_object* ctr_reflect_world_snap(ctr_object*, ctr_argument*);
 ctr_object* ctr_reflect_run_glob(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_for_object_in_ctx (ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_run_for_object_inside_ctx (ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_for_object_in_ctx_as_world (ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_for_object_in_ctx_as_main (ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_in_new_ctx(ctr_object * myself, ctr_argument * argumentList);

@@ -1453,6 +1453,62 @@ ctr_reflect_run_for_object (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
+ * [Reflect] run: [Block] inContext: [context:Object] forObject: [object:Object] arguments: [Array]
+ *
+ * runs a block with its 'me'/'my' set to object inside a given context
+ **/
+ctr_object *
+ctr_reflect_run_for_object_inside_ctx (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *blk, *me, *argl, *ctx;
+  blk = argumentList->object;
+  // CTR_ENSURE_TYPE_BLOCK((blk = argumentList->object));
+  CTR_ENSURE_NON_NULL (argumentList->next);
+  ctx = argumentList->next->object;
+  CTR_ENSURE_NON_NULL (argumentList->next->next);
+  me = argumentList->next->next->object;
+  CTR_ENSURE_NON_NULL (argumentList->next->next->next);
+  CTR_ENSURE_TYPE_ARRAY ((argl = argumentList->next->next->next->object));
+
+  ctr_object *arr = argl;
+  ctr_size length = (int) ctr_array_count (arr, NULL)->value.nvalue;
+  int i = 0;
+  ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
+  ctr_argument *cur = args;
+  for (i = 0; i < length; i++)
+    {
+      ctr_argument *index = ctr_heap_allocate (sizeof (ctr_argument));
+      if (i > 0)
+	{
+	  cur->next = ctr_heap_allocate (sizeof (ctr_argument));
+	  cur = cur->next;
+	}
+      index->object = ctr_build_number_from_float ((double) i);
+      cur->object = ctr_array_get (arr, index);
+      ctr_heap_free (index);
+    }
+  ctr_switch_context(ctx);
+  ctr_object *answer = ctr_block_run (blk, args, me);
+  cur = args;
+  ctr_close_context();
+  if (length == 0)
+    {
+      ctr_heap_free (args);
+    }
+  else
+    {
+      for (i = 0; i < length; i++)
+	{
+	  ctr_argument *a = cur;
+	  if (i < length - 1)
+	    cur = cur->next;
+	  ctr_heap_free (a);
+	}
+    }
+  return answer;
+}
+
+/**
  * [Reflect] run: [Block] inContext: [Map] arguments: [Array]
  *
  */

@@ -5,7 +5,8 @@ rept is 2000.
 ptr is CTypes pointer.
 int is CTypes sint.
 cif is CIF new setABI: 0 return: Nil argTypes: [].
-ll is CTypes loadLibrary: '/lib64/libpython3.so'.
+ll is CTypes loadLibrary: 'libpython3.so'.
+
 pyinit is ll Py_Initialize.
 pyfinalize is ll Py_Finalize.
 pyrun is ll PyRun_SimpleString.

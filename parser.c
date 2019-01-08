@@ -255,6 +255,10 @@ ctr_cparse_message (int mode)
 	    break;
 	  if (t == CTR_TOKEN_PARCLOSE)
 	    break;
+    if (t == CTR_TOKEN_TUPCLOSE)
+      break;
+    if (t == CTR_TOKEN_BLOCKCLOSE)
+      break;
 	  if (t == CTR_TOKEN_REF)
 	    {
 	      long l = ctr_clex_tok_value_length ();
@@ -1458,7 +1462,7 @@ ctr_cparse_expr (int mode)
          e->nodes->next->node->nodes->next = ctr_heap_allocate(sizeof(ctr_tlistitem));
          e->nodes->next->node->nodes->next->node = r->nodes->next->node; */
     }
-  else if (t2 != CTR_TOKEN_DOT && t2 != CTR_TOKEN_PARCLOSE && t2 != CTR_TOKEN_CHAIN)
+  else if (t2 != CTR_TOKEN_DOT && t2 != CTR_TOKEN_PARCLOSE && t2 != CTR_TOKEN_CHAIN && t2 != CTR_TOKEN_TUPCLOSE)
     {
       e = ctr_cparse_create_node (CTR_AST_NODE);
       e->type = CTR_AST_NODE_EXPRMESSAGE;

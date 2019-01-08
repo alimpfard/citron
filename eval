@@ -36,10 +36,16 @@ import
   Library/Control/MethodResolve
   Library/Data/String
   Library/Data/IO/UTF-8/input
+  Library/Functional/LazyBoolean: ['&&', '||']
   Library/Prelude: \*
   Library/Data/Array/LRArray: 'LRArray'
   Library/Utils/CLIContextMenu: ['generate_context_menu', 'clear_next_line']
   Library/Data/IO/Pen: 'pPen'.
+
+#:declare lazyev ||
+#:declare lazyev &&
+#:declare lazyev or
+#:declare lazyev and
 
 var OneGateFlipper is Object new on: 'new' do: { ^me cnew: {my value is False.}. }.
 OneGateFlipper on: 'set' do: { my value is True. }.
@@ -578,7 +584,48 @@ Eval on: 'allTheNames' do: {
 }.
 
 Eval on: 'allTheNames:' do: {:obj
-  ^obj isNil not either: {^[(False), (Reflect getMethodsOf: obj)].} or: {^[(True), (Eval allTheNames)].}.
+  obj = import ifTrue: {
+    # SPeCIAl CaSe
+    ^[
+      \import,
+      {:path-or-m
+        var meths is Reflect getMethodsOf: import.
+        var pml is path-or-m lower.
+        # Early exit in case it's not a path...probably
+        meths is meths filter_v: {:meth
+          ^meth lower startsWith: pml.
+        }.
+        meths count > 0 ifTrue: { ^meths. }.
+        # It's a path...maybe
+        var paths is path-or-m split: '/'.
+        path-or-m endsWith: '/', ifTrue: { paths push: ''. }.
+        var path is paths last lower.
+        var pathv is paths init join: '/'.
+        ^import searchPaths fmap: {:spath
+          var dir is File new: spath + '/' + pathv.
+          dir exists ifFalse: { ^[]. }.
+          ^File list: dir path,
+            filter_v: {:v
+              ^ (['.', '..'] contains: v @ 'file', not)
+                  `&&`
+                (v @ 'type' = 'folder')
+                  `||`
+                ( (v @ 'type' = 'file')
+                    `&&`
+                  (v @ 'file' endsWith: '.ctr')
+                ). },
+            fmap: {:value ^value at: 'file'. },
+            filter_v: {:x ^x lower startsWith: path. },
+            fmap: {:x
+              x endsWith: '.ctr',
+                ifTrue: { ^ (pathv length > 0 either: pathv + '/' or: '') + (x from: 0 to: x length - 4). }
+                ifFalse: { ^(pathv length > 0 either: pathv + '/' or: '') + (x).}.
+            }.
+        }, sum.
+      }
+    ].
+  }.
+  ^obj isNil not either: {^[\method, (Reflect getMethodsOf: obj)].} or: {^[\object, (Eval allTheNames)].}.
 }.
 
 Eval on: 'togglePasteMode' do: {
@@ -622,6 +669,7 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
           indent: 2 write: '--qe : evaluate expression without printing the value, then exit, all args after the expr will be passed to the code as var `args`\n',
           indent: 2 write: '-v : print version information and exit\n',
+          indent: 2 write: '--tidy : [Experimental] try to tidy up the given file and write it back out to stdout\n',
           indent: 2 write: '-s <port>: start a evaluation server on the specified port (Forked and the current process will be killed. pidfile at ~/.ctrpid.pid)\n',
           indent: 2 write: '-m <executable module> <modu_arg>* : Execute an executable module (at Library/Executable)\n',
           indent: 2 write: '--pid <pidfile>: set the pid file. value is ignored unless [-s <port>] comes after\n',
@@ -684,11 +732,19 @@ Eval on: 'togglePasteMode' do: {
     }, case: '--meta' do: {
         args pop.
         Eval doMeta: Eval shiftArgs.
-
+    }, case: '--tidy' do: {
+        args pop.
+        var fname is Eval shiftArgs.
+        fname isNil ifTrue: { thisBlock error: '--cleanup requires an argument'. }.
+        import Library/AST/ast2ctrcode: 'ast2ctrcode'.
+        Pen writeln: '# File $$fname'.
+        Pen writeln: ast2ctrcode[(AST parse: (File new: fname, read))].
+        Program exit.
     }, case: '-e' do: {
         args pop. #consume option..
         var value is Eval shiftArgs rightTrim.
         (value isNil) ifTrue: { thisBlock error: '-e requires an argument.'. }.
+        import Library/Utils/Shell: \*.
         Reflect addGlobalVariable: '&0'.
         &0 is value.
         { ^(Eval argCount > 0). } whileTrue: { args push: Eval shiftArgs. }. #consume all other arguments.
@@ -697,7 +753,12 @@ Eval on: 'togglePasteMode' do: {
         &_ is args.
         value endsWith: '.', ifFalse: { value +=: '.'. }.
         value is '{ ^$$value }'.
-        Eval display/write: (Eval evaluate: value) run.
+        var val is (Eval evaluate: value) run.
+        val isA: Array, ifTrue: {
+          Eval display/write: val join. # convert to lines
+        } ifFalse: {
+          Eval display/write: val.
+        }.
         Program exit.
     }, case: '--qe' do: {
         args pop. #consume option..
@@ -957,7 +1018,8 @@ Eval on: 'read_eval_print:' do: ({:prompt
           } or: { cmt is '<- No completion'. }.
         } or: {
           var candidate is 'Nil'.
-          var toc is (inp trim or: '  ') split: ' ', last.
+          var toc is inp trim reSplit: '\\s+|\\b|(?=[\\]})])'.
+          toc is toc count = 0 either: '' or: { ^toc last. }.
 
           last_was_comp ifTrue: {
             var toremove is ((toc length) - (last_comp_entry length)).
@@ -968,25 +1030,64 @@ Eval on: 'read_eval_print:' do: ({:prompt
           toc is last_was_comp either: last_comp_entry or: toc.
           last_comp_entry is toc.
           var flipper is OneGateFlipper new.
-          last_toc is (inp trim or: 'Nil') split: ' ', filter: {:_:v (v endsWith: ':') ifTrue: {flipper set. ^False.}. ^((v endsWith: ':') | (flipper get)) not | (v containsPattern: ?>(-?(0[xXcC])?[\d]+(\.[\d]+)?)|($\')<?). }.
-          last_toc is (last_toc count) >=: 2, either: {^last_toc init last.} or: 'Nil'.
+          last_toc is inp trim
+            or: 'Nil',
+            reSplit: '\\s+',
+            filter: {:_:v
+              (v endsWith: ':')
+                ifTrue: {
+                  flipper set.
+                  ^False.
+                }.
+              ^(
+                (v endsWith: ':') | (flipper get)
+              ) not |
+                (v containsPattern: ?>(-?(0[xXcC])?[\d]+(\.[\d]+)?)|(\'$)|(\]|\})$<?).
+            }.
+          last_toc is (last_toc count) >=: 2, either: {
+            toc is last_toc last.
+            ^last_toc init last.
+          } or: {
+            ^last_toc count = 0 either: 'Nil' or: {
+              ^last_toc head.
+            }.
+          }.
           last_toc containsPattern: ?>^(-?(0[xXcC])?[\d]+(\.[\d]+)?)$<?, ifTrue: { last_toc is 'Number'. }.
-          last_toc containsPattern: ?>^(\'|\?>)<?, ifTrue: { last_toc is 'String'. }.
+          last_toc containsPattern: ?>(\'|\?>)$<?, ifTrue: { last_toc is 'String'. }.
           last_toc containsPattern: ?>\]\s*$<?, ifTrue: { last_toc is 'Array'. }.
-          var candidates is Eval allTheNames: ({^Reflect getObject: (['my', 'var'] contains: last_toc, either: Nil or: last_toc).} catch: {^Nil.}, run).
-          var skipthis is candidates @ 0.
-          candidates is (candidates @ 1) filter: {:_:i ^i startsWith: toc.}.
+          last_toc containsPattern: ?>\}\s*$<?, ifTrue: { last_toc is 'CodeBlock'. }.
+          var candidates is Eval allTheNames: (
+            {
+              ^Reflect getObject: (
+                ['my', 'var'] contains: last_toc,
+                  either: Nil
+                  or: last_toc).
+            } catch: {
+              ^Nil.
+            }, run).
+          var resolver is Nil.
+          var skipthis is False.
+          candidates head = \import ifTrue: {
+            resolver is candidates @ 1.
+          } ifFalse: {
+            resolver is {:toc ^candidates @ 1 filter: {:_:i ^i lower startsWith: toc lower.}. }.
+            skipthis is candidates head = \object.
+          }.
+          candidates is resolver[toc].
           candidates count !=: 0, ifTrue: {
             have_context is True.
             candidate is candidates @ (last_comp_index is (last_comp_index +=: 1) >=: (candidates count), either: 0 or: last_comp_index).
             var uniq is comp_set addAll: candidates, toArray.
+            uniq each_v: {:k comp_set remove: k. }.
             var uid is uniq indexOf: candidate.
             linesp is generate_context_menu applyTo: uniq and: uid.
-            var cc is candidate skip: toc length.
             cmt is (var iis is '[from %s]' % [last_toc]).
             last_comp_rewind is iis length.
-            inp is inp insert: cc at: cursor.
-            cursor +=: cc length.
+            toc length times: {:i
+              inp put: candidate @ i at: cursor - (toc length - i).
+            }.
+            inp is inp insert: (candidate skip: toc length) at: cursor.
+            cursor +=: candidate length - toc length.
           }, else: {
             cmt is ncmessage.
           }.

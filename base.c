@@ -2164,9 +2164,10 @@ ctr_number_to_step_do (ctr_object * myself, ctr_argument * argumentList)
     ctr_open_context ();
   arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   ctr_object *arg = ctr_internal_create_standalone_object (CTR_OBJECT_TYPE_OTNUMBER);
+  arg->value.nvalue = curValue;
   while ((forward ? curValue < endValue : curValue > endValue) && !CtrStdFlow)
     {
-      arg->value.nvalue = (ctr_number) curValue;
+      arg->value.nvalue = curValue;
       arguments->object = arg;
       ctr_block_run_here (codeBlock, arguments, codeBlock);
       if (CtrStdFlow == CtrStdContinue)
@@ -2672,6 +2673,95 @@ ctr_build_empty_string ()
 {
   return ctr_build_string ("", 0);
 }
+
+/**
+ * [String] escape: '\n'.
+ *
+ * Escapes the specified ASCII character(s) in a string.
+ */
+ctr_object* ctr_string_escape_ascii(ctr_object* myself, ctr_argument* argumentList)  {
+	ctr_object* escape =
+    argumentList && argumentList->object ?
+      ctr_internal_cast2string(argumentList->object):
+      ctr_build_string_from_cstring("\f\v\a\\"); // sensible default
+	ctr_object* newString = NULL;
+	char* str = myself->value.svalue->value;
+	long  len = myself->value.svalue->vlen;
+	char* tstr;
+	long i=0;
+	long k=0;
+	ctr_size q = 0;
+	ctr_size nchars = 0;
+	long tlen = 0;
+	char* characters;
+	char character;
+	char descr;
+	char is_cchar = 0;
+	char escaped;
+	long tag_len = 0;
+	characters = escape->value.svalue->value;
+	nchars = escape->value.svalue->vlen;
+	if (nchars < 1) {
+		return myself;
+	}
+	for (q = 0; q < nchars; ++q) {
+		character = characters[q];
+		is_cchar = 0;
+		descr = character;
+		for(i =0; i < len; i++) {
+			char c = str[i];
+			if (c == character) {
+				tag_len += 2;
+			}
+		}
+	}
+	tlen = len + tag_len;
+	tstr = ctr_heap_allocate(tlen * sizeof(char));
+	for(i = 0; i < len; i++) {
+		char c = str[i];
+		escaped = 0;
+		for (q = 0; q < nchars; q ++) {
+			character = characters[q];
+			is_cchar = 0;
+      switch(character) {
+    			case '\t':
+    				descr = 't';
+    				is_cchar = 1;
+    			  break;
+    			case '\r':
+    				descr = 'r';
+    				is_cchar = 1;
+    			  break;
+    			case '\n':
+    				descr = 'n';
+    				is_cchar = 1;
+    			  break;
+    			case '\b':
+    				descr = 'b';
+    				is_cchar = 1;
+    			  break;
+      }
+			if (c == character) {
+				tstr[k++] = '\\';
+				if (is_cchar) {
+					tstr[k++] = descr;
+				} else {
+					tstr[k++] = str[i];
+				}
+				escaped = 1;
+				break;
+			}
+		}
+		if (!escaped) {
+			tstr[k++] = str[i];
+		}
+	}
+	newString = ctr_build_string(tstr, tlen);
+	ctr_heap_free (tstr);
+	return newString;
+}
+
+
 
 /**
  *[String] bytes
@@ -6012,7 +6102,10 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
 	      if (parameterList->next)
 		{
 		  a = argList->object;
-		  ctr_assign_value_to_local (ctr_build_string (parameter->value, parameter->vlen), a);
+      // if (a->info.raw)
+		    // ctr_assign_value_to_local_by_ref (ctr_build_string (parameter->value, parameter->vlen), a);
+		  // else
+        ctr_assign_value_to_local (ctr_build_string (parameter->value, parameter->vlen), a);
 		}
 	      else if (!parameterList->next && was_vararg)
 		{
@@ -6030,7 +6123,10 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
 	      else if (!was_vararg)
 		{
 		  a = argList->object;
-		  ctr_assign_value_to_local (ctr_build_string (parameter->value, parameter->vlen), a);
+      // if (a->info.raw)
+		    // ctr_assign_value_to_local_by_ref (ctr_build_string (parameter->value, parameter->vlen), a);
+		  // else
+        ctr_assign_value_to_local (ctr_build_string (parameter->value, parameter->vlen), a);
 		}
 	    }
 	  if (!argList->next)

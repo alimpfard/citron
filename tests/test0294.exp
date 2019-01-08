@@ -1,0 +1,17 @@
+True
+False
+HELLO
+True
+Array ← 'unpack:' ; 'toBoolean' ; 'toNumber' ; 'toString' ; 'isNil'
+Array ← 'test'
+(Map new) put:'test' at:'HELLO'
+HELLO
+Array ← 'arg0'
+Array ← 'arg0' ; 'arg1'
+Unknown method Block::'applyAll:' was called
+2
+2
+True
+HELLO
+(Map new) put:1024 at:'test', put:([:Block]) at:'thisBlock', put:':selfReference:' at:'me'
+True

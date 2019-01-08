@@ -1793,6 +1793,8 @@ ctr_initialize_world ()
   /* String */
   //CtrStdString = ctr_internal_create_object(CTR_OBJECT_TYPE_OTSTRING);
   ctr_linkstr ();
+  ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("escape:"), &ctr_string_escape_ascii);
+  ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("escapeAsciiControls"), &ctr_string_escape_ascii);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_BYTES), &ctr_string_bytes);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_LENGTH), &ctr_string_length);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_FROM_TO), &ctr_string_fromto);
@@ -2242,6 +2244,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("frameId"), &ctr_get_frame_id);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("isInFrame:"), &ctr_frame_present);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("run:inContext:arguments:"), &ctr_reflect_run_for_object_in_ctx);
+  ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("run:inContext:forObject:arguments:"), &ctr_reflect_run_for_object_inside_ctx);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("run:inContextAsWorld:arguments:"), &ctr_reflect_run_for_object_in_ctx_as_world);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("run:inContextAsMain:arguments:"), &ctr_reflect_run_for_object_in_ctx_as_main);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("worldSnapshot"), &ctr_reflect_world_snap);
@@ -2285,6 +2288,7 @@ ctr_initialize_world ()
   ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Inject"), CtrStdInject, 0);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("newWithOutputMode:"), &ctr_inject_make);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("new"), &ctr_inject_make);
+  ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("definedFunctions"), &ctr_inject_defined_functions);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("compile:"), &ctr_inject_compile);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("run:arguments:"), &ctr_inject_run);
   ctr_internal_create_func(CtrStdInject, ctr_build_string_from_cstring("run:arguments:function:"), &ctr_inject_run_named);
@@ -3271,8 +3275,6 @@ ctr_assign_value_to_local (ctr_object * key, ctr_object * o)
       object = ctr_build_number_from_float (o->value.nvalue);
       break;
     case CTR_OBJECT_TYPE_OTSTRING:
-      object = ctr_build_string (o->value.svalue->value, o->value.svalue->vlen);
-      break;
     case CTR_OBJECT_TYPE_OTNIL:
     case CTR_OBJECT_TYPE_OTNATFUNC:
     case CTR_OBJECT_TYPE_OTOBJECT:

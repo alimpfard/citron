@@ -1,0 +1,67 @@
+Inject on: 'importFunctions:fromHeaders:andLibrary:' do: {:funcs:headers:lib
+  var fns is getFunctions: funcs fromHeaders: headers andLibrary: lib.
+  fns each: {:key:value
+    Reflect objectExists: key, ifTrue: {
+      thisBlock error: 'Object $$key exists, I refuse to replace it'.
+    }.
+    Reflect addGlobalVariable: key.
+    Reflect set: key to: value.
+  }.
+}.
+Inject on: 'getFunctions:fromHeaders:andLibrary:' do: {:self:funcs:headers:lib
+  var context is me new.
+  lib isNil ifFalse: {
+    context linkInLibrary: lib.
+  }.
+  #:declare lazyev if-then-else
+  var if-then-else is \:cond:ift:iff cond evaluate ifTrue: { ^ift evaluate. } ifFalse: { ^iff evaluate. }.
+  context compile: ((['#include <%s>\n' % [x],, (x: headers)]) join: '').
+  var cifs is context definedFunctions.
+  var str is 'void dummy' + (context id toString) + '() {return %:L;}' % [
+    '+',
+    ['((int)&%s)' % [xs],, (xs: funcs)]
+  ].
+  context compile: str.
+  ^(funcs fmap:
+    \:x [
+      x,
+      if-then-else {
+        (cifs at: x, isA: CIF),
+        (context
+          generateCFunctionWrapperFor: (context symbol: x)
+          withCIF: (cifs at: x)
+          andName: x),
+        (cifs at: x)
+      }
+    ]
+  ) foldl: {:acc:x ^acc put: x @ 1 at: x @ 0.} accumulator: Map new.
+}.
+
+
+Inject on: 'generateCFunctionWrapperFor:withCIF:andName:' do: {:sym:cif:x
+  sym get = 0 ifTrue: {
+    thisBlock error: 'Function $$x has not been defined, or does not exist'.
+  }.
+  var genName is {:i
+    var name is $(ref) withValue: 'ident$$i'.
+    name type: 'REFERENCE'.
+    ^name.
+  }.
+  # TODO add a way to deep-copy ASTs
+  var av0 is AST parse: '{:catch ^my cif call: my symbol withArgs: args. }.', at: 0.
+  var args is av0 at: 0.
+  var argvs is (var argfs is AST parse: '[0].', at: 0) at: 0.
+  cif argumentCount times: {:i
+    i = 0 ifTrue: {
+      argvs put: (var name is genName[i]) at: 0.
+    } ifFalse: {
+      argvs insert: (var name is genName[i]) at: 0.
+    }.
+    args insert: name at: 0.
+  }.
+#    instrs return  exprm  kwmesg  'args'
+  av0 at: 1, at: 0, at: 0, at: 1, put: argfs at: 1.
+  ^($!av0)
+    set: 'cif' value: cif,
+    set: 'symbol' value: sym.
+}.

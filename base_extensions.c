@@ -678,8 +678,27 @@ ctr_ast_with_value (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_tnode *node = ctr_heap_allocate (sizeof (ctr_tnode));
   ctr_string *str = argumentList->object->value.svalue;
+  *node = *(ctr_tnode*)(myself->value.rvalue->ptr);
   node->value = str->value;
   node->vlen = str->vlen;
+  ctr_object *ast = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
+  ctr_set_link_all (ast, CtrStdAst);
+  ast->value.rvalue = ctr_heap_allocate (sizeof (ctr_resource));
+  ast->value.rvalue->ptr = node;
+  ast->value.rvalue->type = CTR_AST_TYPE;
+  return ast;
+}
+
+/**
+ * [AST] copy
+ *
+ * copies an ast node [note: shallow copy]
+ */
+ctr_object *
+ctr_ast_copy (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_tnode *node = ctr_heap_allocate (sizeof (ctr_tnode));
+  *node = *(ctr_tnode*)(myself->value.rvalue->ptr);
   ctr_object *ast = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
   ctr_set_link_all (ast, CtrStdAst);
   ast->value.rvalue = ctr_heap_allocate (sizeof (ctr_resource));
@@ -1727,6 +1746,7 @@ initiailize_base_extensions ()
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("modifier"), &ctr_ast_get_mod);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("value:"), &ctr_ast_set_value);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("withValue:"), &ctr_ast_with_value);
+  ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("copy"), &ctr_ast_copy);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("type:"), &ctr_ast_set_type);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("modifier:"), &ctr_ast_set_mod);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("evaluate"), &ctr_ast_evaluate);

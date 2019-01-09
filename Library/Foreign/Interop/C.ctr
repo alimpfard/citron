@@ -1,5 +1,5 @@
-Inject on: 'importFunctions:fromHeaders:andLibrary:' do: {:funcs:headers:lib
-  var fns is getFunctions: funcs fromHeaders: headers andLibrary: lib.
+Inject on: 'importFunctionsOrTypes:fromHeaders:andLibraries:' do: {:funcs:headers:lib
+  var fns is getFunctionsOrTypes: funcs fromHeaders: headers andLibraries: lib.
   fns each: {:key:value
     Reflect objectExists: key, ifTrue: {
       thisBlock error: 'Object $$key exists, I refuse to replace it'.
@@ -8,18 +8,21 @@ Inject on: 'importFunctions:fromHeaders:andLibrary:' do: {:funcs:headers:lib
     Reflect set: key to: value.
   }.
 }.
-Inject on: 'getFunctions:fromHeaders:andLibrary:' do: {:self:funcs:headers:lib
+Inject on: 'getFunctionsOrTypes:fromHeaders:andLibraries:' do: {:self:funcs:headers:lib
   var context is me new.
+  me includePaths each_v: {:path context addIncludePath: path. }.
   lib isNil ifFalse: {
-    context linkInLibrary: lib.
+    lib each_v: {:lib
+      context linkInLibrary: lib.
+    }.
   }.
   #:declare lazyev if-then-else
   var if-then-else is \:cond:ift:iff cond evaluate ifTrue: { ^ift evaluate. } ifFalse: { ^iff evaluate. }.
   context compile: ((['#include <%s>\n' % [x],, (x: headers)]) join: '').
-  var cifs is context definedFunctions.
+  var cifs is context definedFunctions: funcs.
   var str is 'void dummy' + (context id toString) + '() {return %:L;}' % [
     '+',
-    ['((int)&%s)' % [xs],, (xs: funcs)]
+    ['((int)&%s)' % [xs],, (xs: (funcs filter_v: \:fn cifs @ fn isA: CIF))]
   ].
   context compile: str.
   ^(funcs fmap:

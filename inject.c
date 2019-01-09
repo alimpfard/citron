@@ -247,6 +247,9 @@ ctr_object *ctr_inject_defined_functions(ctr_object* myself, ctr_argument* argum
       CtrStdFlow = ctr_build_string_from_cstring("request to uninitialized Inject object");
       return CtrStdNil;
   }
+  ctr_object *all = NULL;
+  if (argumentList&&argumentList->object)
+    all = argumentList->object;
   TCCState *state = ds->state;
   Sym* symbols = state->global_stack;
   ctr_object *type_map = ctr_map_new(CtrStdMap, NULL);
@@ -269,20 +272,30 @@ ctr_object *ctr_inject_defined_functions(ctr_object* myself, ctr_argument* argum
               goto NOT_THIS_ONE;
           else
               ps = &ts->sym_identifier;
-          ctr_inferred_ctype_type_t ty = ctr_inject_type_to_ctype(&s->type);
-          if (!ty.vtype) {
-            if (ty.is_function)
-              ctr_inject_free_function_type(ty);
-            goto NOT_THIS_ONE;
-          }
+
           int tok = s->v;
           if (tok < TOK_IDENT)
             goto NOT_THIS_ONE;
           tok -= TOK_IDENT;
           TokenSym *tokdata = table_ident[tok];
 
+          ctr_object* svname = ctr_build_string(tokdata->str, tokdata->len);
+
+          if (!all)
+            goto go_on;
+          if (!ctr_array_contains(all, &(ctr_argument){.object=svname})->value.bvalue)
+            goto NOT_THIS_ONE;
+
+          go_on:;
+          ctr_inferred_ctype_type_t ty = ctr_inject_type_to_ctype(&s->type);
+          if (!ty.vtype) {
+            if (ty.is_function)
+              ctr_inject_free_function_type(ty);
+            goto NOT_THIS_ONE;
+          }
+
           map_put_arg->object = ctr_inject_generate_ctype(ty);
-          map_put_arg->next->object = ctr_build_string(tokdata->str, tokdata->len);
+          map_put_arg->next->object = svname;
 
           ctr_map_put(type_map, map_put_arg);
       }
@@ -313,6 +326,29 @@ ctr_object *ctr_inject_add_inclp(ctr_object* myself, ctr_argument* argumentList)
     int status = tcc_add_include_path(s, ls);
     ctr_heap_free(ls);
     return ctr_build_bool(status != -1);
+}
+
+/**
+ * [Inject] includePaths
+ *
+ */
+ctr_object *ctr_inject_get_inclp(ctr_object* myself, ctr_argument* argumentList)
+{
+  ctr_resource *r = myself->value.rvalue;
+  ctr_inject_data_t *ds;
+  if (!r || !(ds = r->ptr))
+  {
+      CtrStdFlow = ctr_build_string_from_cstring("compile request to uninitialized Inject object");
+      return CtrStdNil;
+  }
+  TCCState *s = ds->state;
+  ctr_argument arg = { NULL, NULL };
+  ctr_object *res = ctr_array_new(CtrStdArray, NULL);
+  for (size_t i = 0; i < s->nb_include_paths; i++) {
+    arg.object = ctr_build_string_from_cstring(s->include_paths[i]);
+    ctr_array_push(res, &arg);
+  }
+  return res;
 }
 /**
  *[Inject] compile: [String]

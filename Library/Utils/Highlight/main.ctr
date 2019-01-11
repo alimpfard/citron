@@ -220,7 +220,7 @@ Highlight on: 'highlight:' do: {:code:html
                 ^['me', 'my', 'const', 'var', 'frozen'] contains: token @ 1, either: {
                   last_toc_override is 'QUAL'.
                   color is (Colors bold) + (Colors bright) + (Colors blue).
-                  after_color is (Colors bold_off) + (Colors bright_off).
+                  after_color is (Colors bright_off) + (Colors bold_off).
                   ^(token @ 1) .
                 } or: {
                   ^(token @ 1).

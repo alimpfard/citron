@@ -995,6 +995,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
   var cmt is ''.
   var comp_set is HashSet new.
   var have_context is False.
+  var last_comp_init is ''.
   {^done & (inBlock = 0).} whileFalse: {
     cmt is ''.
     inc = '\t' ifTrue: {#<Tab>
@@ -1022,13 +1023,15 @@ Eval on: 'read_eval_print:' do: ({:prompt
           toc is toc count = 0 either: '' or: { ^toc last. }.
 
           last_was_comp ifTrue: {
-            var toremove is ((toc length) - (last_comp_entry length)).
+            # Pen writeln: [last_comp_entry, '\n'].
+            var toremove is last_comp_entry length - last_comp_init length.
             Pen write: '\b \b' * toremove.
             inp is inp removeFrom: (cursor - toremove) to: cursor.
             cursor is (cursor - toremove) max: 0.
           }.
-          toc is last_was_comp either: last_comp_entry or: toc.
-          last_comp_entry is toc.
+          # toc is last_was_comp either: last_comp_entry or: toc.
+          last_comp_entry_len is last_comp_entry length.
+
           var flipper is OneGateFlipper new.
           last_toc is inp trim
             or: 'Nil',
@@ -1084,17 +1087,24 @@ Eval on: 'read_eval_print:' do: ({:prompt
             cmt is (var iis is '[from %s]' % [last_toc]).
             last_comp_rewind is iis length.
             toc length times: {:i
-              inp put: candidate @ i at: cursor - (toc length - i).
+              var pos is cursor - (toc length - i).
+              pos >=: inp length, ifTrue: {
+                inp +=: candidate @ i.
+              } ifFalse: {
+                inp put: candidate @ i at: pos.
+              }.
             }.
             inp is inp insert: (candidate skip: toc length) at: cursor.
             cursor +=: candidate length - toc length.
-          }, else: {
+            last_comp_init is toc.
+            last_comp_entry is candidate.
+            last_comp_entry_len is last_comp_entry length.
+          } ifFalse: {
             cmt is ncmessage.
           }.
           last_was_comp is True.
-          skipthis ifTrue: {last_toc is candidate.}.
         }.
-      }, else: {
+      } ifFalse: {
         (frozen select_toplevel_inc is Object case: '\xd' do: {#<Enter>
           clear_next_line applyTo: linesp.
           have_context ifFalse: {

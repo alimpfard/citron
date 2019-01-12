@@ -584,7 +584,7 @@ Eval on: 'allTheNames' do: {
 }.
 
 Eval on: 'allTheNames:' do: {:obj
-  obj = import ifTrue: {
+  obj id = import id ifTrue: {
     # SPeCIAl CaSe
     ^[
       \import,
@@ -1197,13 +1197,14 @@ Eval on: 'read_eval_print:' do: ({:prompt
               (inc = '\x3b\x35\x44') & (cursor > 0) ifTrue: { #^Left Arrow
                 var ct is inp from: 0 to: cursor.
                 var ct is ct trim.
-                ct is (ct reLastIndexOf: ?>\s|\'<?).
+                ct at: ct length - 1, = ':' ifTrue: { ct is ct from: 0 to: ct length - 1. }.
+                ct is (ct reLastIndexOf: ?>\s|\'|(?<!^):\b|:$<?).
                 ct is ct equals: cursor - 1, either: ct - 1 or: ct.
                 cursor is ct + 1.
-              }, else: {
+              } ifFalse: {
                 (inc = '\x3b\x35\x43') ifTrue: { #^Right Arrow
-                  var ct is (var ix is inp from: cursor to: (inp length), trim) reIndexOf: ?>\s|\'<?, - 1.
-                  ct is ct equals: 0, either: ct + 1 or: ct.
+                  var ct is (var ix is inp from: cursor to: (inp length), rightTrim) reIndexOf: ?>\s|\'|(?<!^):\b|:$<?, - 1.
+                  ct is ct equals: 0, either: ct + 1 or: ct - 1.
                   cursor is cursor + ct + ((inp length) - (ix length)).
                 }.#, else: { Eval display/red write: inc. }.
               }.

@@ -83,17 +83,46 @@ ctr_object *ctr_inject_make(ctr_object *myself, ctr_argument *argumentList)
     return handle;
 }
 
+typedef struct {
+    size_t member_count;
+    size_t max_alignment;
+    pad_info_node_t** pad_structure;
+    size_t format_length;
+    ctr_object* names;
+    char* format;
+} struct_member_desc_complement_t;
+
+static inline struct_member_desc_complement_t new_struct_member_desc_complement() {
+  struct_member_desc_complement_t obj = {};
+  obj.names = ctr_array_new(CtrStdArray, NULL);
+  obj.format = ctr_heap_allocate(obj.format_length = 1024);
+  obj.pad_structure = ctr_heap_allocate(sizeof(*obj.pad_structure));
+  return obj;
+}
+
 typedef struct ctr_inferred_ctype_type_t {
-  int is_function;
+  int kind;
   int nb_args;
   union {
     ffi_type* return_type;
     ffi_type* vtype;
+    ctr_object* const_value;
   };
-  struct ctr_inferred_ctype_type_t** arguments;
+  union {
+    struct ctr_inferred_ctype_type_t** arguments;
+    struct_member_desc_complement_t struct_member_desc;
+  };
 } ctr_inferred_ctype_type_t;
+extern TokenSym **table_ident;
+enum ctr_inferred_ctype_type_kind {
+  KIND_BASIC,
+  KIND_FUNCTION,
+  KIND_STRUCT,
+  KIND_CONSTANT
+};
+extern int type_size(CType *type, int *a);
 
-ctr_inferred_ctype_type_t ctr_inject_type_to_ctype(CType *type)
+ctr_inferred_ctype_type_t ctr_inject_type_to_ctype(Sym* svv, CType *type)
 {
     int bt, t;
     Sym *s, *sa;
@@ -146,25 +175,85 @@ ctr_inferred_ctype_type_t ctr_inject_type_to_ctype(CType *type)
     add_tstr:
         return (ctr_inferred_ctype_type_t){.vtype=fty};
     case VT_ENUM:
+        return (ctr_inferred_ctype_type_t){.const_value=ctr_build_number_from_float(svv->c), .kind=KIND_CONSTANT};
     case VT_STRUCT:
-        if (bt != VT_STRUCT) {
-          CtrStdFlow = ctr_build_string_from_cstring("Enums are not supported as automatic inference targets");
-          return (ctr_inferred_ctype_type_t){.vtype=NULL};
-        }
         /* TODO: fix structs */
-        return (ctr_inferred_ctype_type_t){.vtype=NULL};
+        // return (ctr_inferred_ctype_type_t){.vtype=NULL};
         // v = type->ref->v & ~SYM_STRUCT;
         // if (v >= SYM_FIRST_ANOM)
         //     pstrcat(buf, buf_size, "<anonymous>");
         // else
         //     pstrcat(buf, buf_size, get_tok_str(v, NULL));
         // break;
+        s = svv;
+        fty = ctr_heap_allocate(sizeof(ffi_type));
+        fty->size = 0;
+        fty->alignment = 0;
+        fty->type = FFI_TYPE_STRUCT;
+        struct_member_desc_complement_t descriptor = new_struct_member_desc_complement();
+        int offset = 0;
+
+        ffi_type** elems = ctr_heap_allocate(sizeof(ffi_type*)); //plus one for the terminating NULL
+        size_t this_size = 0;
+        int this_alignment = 0;
+        int max_alignment = 0;
+        char* buf = descriptor.format;
+        size_t remaining_buf_len = descriptor.format_length;
+
+        while ((s = s->next) != NULL) {
+          // really shitty, but it's not exactly a hot-spot
+          descriptor.pad_structure = ctr_heap_reallocate(descriptor.pad_structure, sizeof(*descriptor.pad_structure)*(descriptor.member_count+1));
+          elems = ctr_heap_reallocate(elems, (descriptor.member_count+1)*sizeof(*elems));
+
+          pad_info_node_t* current_padinfo = ctr_heap_allocate(sizeof(pad_info_node_t*));
+          descriptor.pad_structure[descriptor.member_count++] = current_padinfo;
+          current_padinfo->offset = offset;
+          offset += type_size(&s->type, &this_alignment);
+          max_alignment = fmax(max_alignment, this_alignment);
+          int pad = 0;
+          int tok = s->v&~SYM_FIELD;
+          if (tok > SYM_FIRST_ANOM)
+            pad=1;
+          if (!pad) {
+            tok -= TOK_IDENT;
+            TokenSym* token = table_ident[tok];
+            printf("FIELD %.*s\n", token->len, token->str);
+            // todo get field name
+            ctr_array_push(
+              descriptor.names,
+              &(ctr_argument){ctr_build_string(token->str, token->len)}
+            );
+          }
+          current_padinfo->pad = pad;
+          ctr_inferred_ctype_type_t innerty = ctr_inject_type_to_ctype(s, &s->type);
+          if(!pad) {
+            if (ctr_create_ffi_str_descriptor(innerty.vtype, NULL) > remaining_buf_len) {
+              remaining_buf_len += descriptor.format_length;
+              buf = descriptor.format = ctr_heap_reallocate(descriptor.format, descriptor.format_length+=descriptor.format_length);
+            }
+            int sz = ctr_create_ffi_str_descriptor(innerty.vtype, buf);
+            buf += sz;
+            remaining_buf_len -= sz;
+          }
+          elems[descriptor.member_count-1] = innerty.vtype;
+        }
+        elems[descriptor.member_count] = NULL;
+        fty->elements = elems;
+        fty->size = offset;
+        descriptor.max_alignment = max_alignment;
+        buf[0] = 0;
+        ctr_inferred_ctype_type_t ftype = {
+          .kind = KIND_STRUCT,
+          .vtype = fty,
+          .struct_member_desc = descriptor
+        };
+        return ftype;
     case VT_FUNC:
         s = type->ref;
         ctr_inferred_ctype_type_t fntype = {
-          .is_function = 1
+          .kind = KIND_FUNCTION
         };
-        ctr_inferred_ctype_type_t rtype = ctr_inject_type_to_ctype(&s->type);
+        ctr_inferred_ctype_type_t rtype = ctr_inject_type_to_ctype(s, &s->type);
         if (!rtype.vtype) {
           // cascade error down
           return rtype;
@@ -172,10 +261,10 @@ ctr_inferred_ctype_type_t ctr_inject_type_to_ctype(CType *type)
         fntype.return_type = rtype.vtype;
         sa = s->next;
         while (sa != NULL) {
-            ctr_inferred_ctype_type_t argtype = ctr_inject_type_to_ctype(&sa->type);
+            ctr_inferred_ctype_type_t argtype = ctr_inject_type_to_ctype(sa, &sa->type);
             if (!argtype.vtype) {
               // dynarray_reset((void***)&fntype.arguments, &fntype.nb_args);
-              return (ctr_inferred_ctype_type_t){.is_function=1, .return_type=NULL};
+              return (ctr_inferred_ctype_type_t){.kind=KIND_FUNCTION, .return_type=NULL};
             }
             ctr_inferred_ctype_type_t* argtype_p = ctr_heap_allocate(sizeof(argtype));
             *argtype_p = argtype;
@@ -195,7 +284,7 @@ ctr_inferred_ctype_type_t ctr_inject_type_to_ctype(CType *type)
 void ctr_inject_free_function_type(ctr_inferred_ctype_type_t ty) {
   for (size_t i = 0; i < ty.nb_args; i++) {
     ctr_inferred_ctype_type_t* aty = ty.arguments[i];
-    if (aty->is_function)
+    if (aty->kind == KIND_FUNCTION)
       ctr_inject_free_function_type(*aty);
   }
   // dynarray_reset((void***)&ty.arguments, &ty.nb_args);
@@ -204,14 +293,14 @@ extern void ctr_ctypes_set_type(ctr_object* object, ctr_ctype type);
 extern ctr_ctype ctr_ctypes_ffi_convert_ffi_type_to_ctype(ffi_type* type);
 
 ctr_object *ctr_inject_generate_ctype(ctr_inferred_ctype_type_t ty) {
-  if (ty.is_function) {
+  if (ty.kind == KIND_FUNCTION) {
     ffi_cif*      cif_res = ctr_heap_allocate(sizeof (ffi_cif));
     ffi_type*     rtype   = ty.return_type;
     int           asize   = ty.nb_args;
     ffi_type**    atypes  = ctr_heap_allocate(sizeof(ffi_type) * asize);
     for(int i = 0; i<asize; i++) {
       ctr_inferred_ctype_type_t t = *ty.arguments[i];
-      atypes[i] = t.is_function ? &ffi_type_pointer : t.vtype; // can't be anything else, but just in case
+      atypes[i] = t.kind == KIND_FUNCTION ? &ffi_type_pointer : t.vtype; // can't be anything else, but just in case
     }
     ffi_abi abi = FFI_DEFAULT_ABI;
     ffi_status status = ffi_prep_cif(cif_res, abi, asize, rtype, atypes);
@@ -228,6 +317,43 @@ ctr_object *ctr_inject_generate_ctype(ctr_inferred_ctype_type_t ty) {
     ctr_set_link_all(cifobj, CtrStdCType_ffi_cif);
     cifobj->value.rvalue->ptr = (void*)cif_res;
     return cifobj;
+  } else if (ty.kind == KIND_STRUCT) {
+    ctr_object* cifobj = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+    ctr_ctypes_set_type(cifobj, CTR_CTYPE_STRUCT);
+
+    ctr_ctypes_ffi_struct_value* ptr = ctr_heap_allocate(sizeof(ctr_ctypes_ffi_struct_value));
+    struct_member_desc_complement_t de = ty.struct_member_desc;
+
+    ptr->member_count = de.member_count;
+    ptr->type = ty.vtype;
+    ptr->size = ty.vtype->size;
+    ptr->padinfo = de.pad_structure;
+    ptr->value = NULL;
+    ptr->original_format = de.format;
+    cifobj->value.rvalue->ptr = (void*)ptr;
+    ctr_send_message_variadic(
+      ctr_find(ctr_build_string_from_cstring("import")),
+      "Library/Foreign/C/NamedStruct",
+      29,
+      0
+    );
+    ctr_object* ns = ctr_send_message_variadic(
+      ctr_find(ctr_build_string_from_cstring("NamedStruct")),
+      "new",
+      3,
+      0
+    );
+    ctr_send_message_variadic(
+      ns,
+      "initWith:names:",
+      15,
+      2,
+      cifobj,
+      de.names
+    );
+    return ns;
+  } else if (ty.kind == KIND_CONSTANT) {
+    return ty.const_value;
   } else {
     // just a normal value type
     ctr_object* cifobj = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
@@ -236,7 +362,6 @@ ctr_object *ctr_inject_generate_ctype(ctr_inferred_ctype_type_t ty) {
   }
 }
 
-extern TokenSym **table_ident;
 
 ctr_object *ctr_inject_defined_functions(ctr_object* myself, ctr_argument* argumentList)
 {
@@ -250,6 +375,7 @@ ctr_object *ctr_inject_defined_functions(ctr_object* myself, ctr_argument* argum
   ctr_object *all = NULL;
   if (argumentList&&argumentList->object)
     all = argumentList->object;
+  all = all == CtrStdNil ? NULL : all;
   TCCState *state = ds->state;
   Sym* symbols = state->global_stack;
   ctr_object *type_map = ctr_map_new(CtrStdMap, NULL);
@@ -267,13 +393,16 @@ ctr_object *ctr_inject_defined_functions(ctr_object* myself, ctr_argument* argum
       /* XXX: simplify */
       if (!(v & SYM_FIELD) && (v & ~SYM_STRUCT) < SYM_FIRST_ANOM) {
           ts = table_ident[(v & ~SYM_STRUCT) - TOK_IDENT];
-          if (v & SYM_STRUCT)
+          int tok;
+          if (v & SYM_STRUCT) {
               // ps = &ts->sym_struct;
-              goto NOT_THIS_ONE;
-          else
+              // goto NOT_THIS_ONE;
+              ps = &ts->sym_struct;
+              tok = s->v & ~SYM_STRUCT;
+          } else {
               ps = &ts->sym_identifier;
-
-          int tok = s->v;
+              tok = s->v;
+          }
           if (tok < TOK_IDENT)
             goto NOT_THIS_ONE;
           tok -= TOK_IDENT;
@@ -287,9 +416,9 @@ ctr_object *ctr_inject_defined_functions(ctr_object* myself, ctr_argument* argum
             goto NOT_THIS_ONE;
 
           go_on:;
-          ctr_inferred_ctype_type_t ty = ctr_inject_type_to_ctype(&s->type);
+          ctr_inferred_ctype_type_t ty = ctr_inject_type_to_ctype(s, &s->type);
           if (!ty.vtype) {
-            if (ty.is_function)
+            if (ty.kind == KIND_FUNCTION)
               ctr_inject_free_function_type(ty);
             goto NOT_THIS_ONE;
           }

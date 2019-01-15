@@ -416,7 +416,31 @@ ffi_type* ctr_create_ffi_type_descriptor_(char* format, int member_count) {
 
 //pass null for buf to get length
 int ctr_create_ffi_str_descriptor(ffi_type* type, char* buf) {
-  if(type->type!=FFI_TYPE_STRUCT) return -1;//bullshit requested
+  if(type->type!=FFI_TYPE_STRUCT) {
+    size_t size = 0;
+    if      (type == &ffi_type_void)       { if (buf != NULL) memcpy(buf, "v", 1);   size += 1;}
+    else if (type == &ffi_type_sint)       { if (buf != NULL) memcpy(buf, "si", 2);  size += 2;}
+    else if (type == &ffi_type_uint)       { if (buf != NULL) memcpy(buf, "ui", 2);  size += 2;}
+    else if (type == &ffi_type_sshort)     { if (buf != NULL) memcpy(buf, "ss", 2);  size += 2;}
+    else if (type == &ffi_type_ushort)     { if (buf != NULL) memcpy(buf, "us", 2);  size += 2;}
+    else if (type == &ffi_type_slong)      { if (buf != NULL) memcpy(buf, "sl", 2);  size += 2;}
+    else if (type == &ffi_type_ulong)      { if (buf != NULL) memcpy(buf, "ul", 2);  size += 2;}
+    else if (type == &ffi_type_schar)      { if (buf != NULL) memcpy(buf, "sc", 2);  size += 2;}
+    else if (type == &ffi_type_uchar)      { if (buf != NULL) memcpy(buf, "uc", 2);  size += 2;}
+    else if (type == &ffi_type_pointer)    { if (buf != NULL) memcpy(buf, "p", 1);   size += 1;}
+    else if (type == &ffi_type_float)      { if (buf != NULL) memcpy(buf, "f", 1);   size += 1;}
+    else if (type == &ffi_type_double)     { if (buf != NULL) memcpy(buf, "d", 1);   size += 1;}
+    else if (type == &ffi_type_sint8)      { if (buf != NULL) memcpy(buf, "3si", 3); size += 3;}
+    else if (type == &ffi_type_uint8)      { if (buf != NULL) memcpy(buf, "3ui", 3); size += 3;}
+    else if (type == &ffi_type_sint16)     { if (buf != NULL) memcpy(buf, "4si", 3); size += 3;}
+    else if (type == &ffi_type_sint32)     { if (buf != NULL) memcpy(buf, "5si", 3); size += 3;}
+    else if (type == &ffi_type_sint64)     { if (buf != NULL) memcpy(buf, "6si", 3); size += 3;}
+    else if (type == &ffi_type_uint16)     { if (buf != NULL) memcpy(buf, "4ui", 3); size += 3;}
+    else if (type == &ffi_type_uint32)     { if (buf != NULL) memcpy(buf, "5ui", 3); size += 3;}
+    else if (type == &ffi_type_uint64)     { if (buf != NULL) memcpy(buf, "6ui", 3); size += 3;}
+    else if (type == &ffi_type_longdouble) { if (buf != NULL) memcpy(buf, "l", 1);   size += 1;}
+    return size;
+  }
   ffi_type** elems = type->elements;
   int size = 0;
   int imm_size = 0;

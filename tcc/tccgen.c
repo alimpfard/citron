@@ -1657,7 +1657,7 @@ static void gen_cast(CType *type)
 }
 
 /* return type size. Put alignment at 'a' */
-static int type_size(CType *type, int *a)
+int type_size(CType *type, int *a)
 {
     Sym *s;
     int bt;
@@ -2298,14 +2298,14 @@ static void struct_decl(CType *type, int u)
             expect("struct/union/enum name");
         s = struct_find(v);
         if (s) {
-            if (s->type.t != a)
-                error("invalid type");
+            // if (s->type.t != a)
+                // error("invalid type");
             goto do_decl;
         }
     } else {
         v = anon_sym++;
     }
-    type1.t = a;
+    type1.t = (a&~VT_FLOAT)|VT_STRUCT;
     /* we put an undefined size for struct/union */
     s = sym_push(v | SYM_STRUCT, &type1, 0, -1);
     s->r = 0; /* default alignment is zero as gcc */

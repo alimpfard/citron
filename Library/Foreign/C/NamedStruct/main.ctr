@@ -24,6 +24,18 @@ NamedStruct on: 'initAs:names:' do: {:self:desc:names
     self on: 'member' + (self transformName: name) do: {^my struct at: my struct offsets @ const idx.}.
   }.
 }.
+NamedStruct on: 'initWith:names:' do: {:self:struct:names
+  struct => struct.
+  var pi is my struct padInfo.
+  var oc is pi filter: {:_:i ^(i @ 0) not.}.
+  (names count !=: oc count) ifTrue: {thisBlock error: 'Expected %d name(s), but got %d' % [(oc count), (names count)].}.
+  var pnames is my pnames.
+  names each: {:idx:name
+    pnames push: (self transformName: name).
+    self on: 'member' + (self transformName: name) + ':' do: {:v my struct put: v at: my struct offsets @ const idx.}.
+    self on: 'member' + (self transformName: name) do: {^my struct at: my struct offsets @ const idx.}.
+  }.
+}.
 NamedStruct on: 'newIns' do: {
   ^me sameFor: my struct new.
 }.

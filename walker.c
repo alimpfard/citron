@@ -105,16 +105,16 @@ ctr_cwlk_message (ctr_tnode * paramNode)
 	result = ctr_cwlk_expr (receiverNode->nodes->node, "\0");
       else
 	{
-	  result = (ctr_object*) receiverNode->nodes->node;
+	  result = (ctr_object *) receiverNode->nodes->node;
 	}
       break;
     case CTR_AST_NODE_LISTCOMP:
       result = ctr_build_listcomp (receiverNode);
       break;
     case CTR_AST_NODE_NATIVEFN:
-      result = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNATFUNC);
-      result->value.fvalue = (void*) receiverNode->value;
-      ctr_set_link_all(result, CtrStdBlock);
+      result = ctr_internal_create_object (CTR_OBJECT_TYPE_OTNATFUNC);
+      result->value.fvalue = (void *) receiverNode->value;
+      ctr_set_link_all (result, CtrStdBlock);
       break;
     case CTR_AST_NODE_IMMUTABLE:
     case CTR_AST_NODE_NESTED:
@@ -190,13 +190,16 @@ ctr_cwlk_message (ctr_tnode * paramNode)
 }
 
 /* make sure to allocate enough; size is 16 */
-void ctr_mksrands(char* buf) {
+void
+ctr_mksrands (char *buf)
+{
   static const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVXYZ1234567890____:;";
   const static int size = 16;
-  for (size_t n = 0; n < size; n++) {
-    int key = rand() % (int) (sizeof charset - 1);
-    buf[n] = charset[key];
-  }
+  for (size_t n = 0; n < size; n++)
+    {
+      int key = rand () % (int) (sizeof charset - 1);
+      buf[n] = charset[key];
+    }
 }
 
 /**
@@ -241,53 +244,56 @@ ctr_cwlk_assignment (ctr_tnode * node)
 	  result = ctr_assign_value (ctr_build_string (assignee->value, assignee->vlen), x);	//Handle lexical scoping
 	}
       else if (assignee->modifier == 4)
-  {
-    // char* name_s = ctr_heap_allocate(17 * sizeof(char));
-    // name_s[0] = ':'; //make it inaccessable from the system
-    // ctr_mksrands(name_s+1);
+	{
+	  // char* name_s = ctr_heap_allocate(17 * sizeof(char));
+	  // name_s[0] = ':'; //make it inaccessable from the system
+	  // ctr_mksrands(name_s+1);
 
-    // ctr_tnode* repl = ctr_heap_allocate(sizeof(*repl));
-    // *repl = *assignee;
-    // assignee->modifier = /* var */2; /* modify for subsequent evaluation */
-    // repl->value = name_s; /* lookup from global */
-    // repl->vlen = 17;
+	  // ctr_tnode* repl = ctr_heap_allocate(sizeof(*repl));
+	  // *repl = *assignee;
+	  // assignee->modifier = /* var */2; /* modify for subsequent evaluation */
+	  // repl->value = name_s; /* lookup from global */
+	  // repl->vlen = 17;
 
-    // repl->modifier = /* var */2;
-    // valueListItem->node = repl; /* modify for subsequent evaluation */
-    // ctr_heap_free(value);
-    ctr_object* lname = ctr_build_string (assignee->value, assignee->vlen);
-    // ctr_object* name = ctr_build_string(repl->value, repl->vlen);
-    result = ctr_assign_value_to_local (lname, x); // for this run only
-    // result = ctr_hand_value_to_global (name, x);
-    node->type = CTR_AST_NODE_EMBED;
-    node->modifier = 1;
-    node->nodes = ctr_heap_allocate(sizeof (ctr_tlistitem));
-    node->nodes->node = (ctr_tnode*) x;
-  }
+	  // repl->modifier = /* var */2;
+	  // valueListItem->node = repl; /* modify for subsequent evaluation */
+	  // ctr_heap_free(value);
+	  ctr_object *lname = ctr_build_string (assignee->value, assignee->vlen);
+	  // ctr_object* name = ctr_build_string(repl->value, repl->vlen);
+	  result = ctr_assign_value_to_local (lname, x);	// for this run only
+	  // result = ctr_hand_value_to_global (name, x);
+	  node->type = CTR_AST_NODE_EMBED;
+	  node->modifier = 1;
+	  node->nodes = ctr_heap_allocate (sizeof (ctr_tlistitem));
+	  node->nodes->node = (ctr_tnode *) x;
+	}
       else if (assignee->modifier == 5)
-  {
-    if (ctr_did_side_effect) {
-      ctr_heap_free(assignee);
-      *node = *value;
-      result = x; //we did a boo-boo, fix it
-    } else {
-      char* name_s = ctr_heap_allocate(17 * sizeof(char));
-      name_s[0] = ':'; //make it inaccessable from the system
-      ctr_mksrands(name_s+1);
+	{
+	  if (ctr_did_side_effect)
+	    {
+	      ctr_heap_free (assignee);
+	      *node = *value;
+	      result = x;	//we did a boo-boo, fix it
+	    }
+	  else
+	    {
+	      char *name_s = ctr_heap_allocate (17 * sizeof (char));
+	      name_s[0] = ':';	//make it inaccessable from the system
+	      ctr_mksrands (name_s + 1);
 
-      node->type = CTR_AST_NODE_REFERENCE;
-      node->value = name_s; /* lookup from global */
-      node->vlen = 17;
-      node->modifier = /* var */2;
+	      node->type = CTR_AST_NODE_REFERENCE;
+	      node->value = name_s;	/* lookup from global */
+	      node->vlen = 17;
+	      node->modifier = /* var */ 2;
 
-      ctr_heap_free(value);
-      ctr_heap_free(assignee);
-      ctr_heap_free(valueListItem);
+	      ctr_heap_free (value);
+	      ctr_heap_free (assignee);
+	      ctr_heap_free (valueListItem);
 
-      ctr_object* name = ctr_build_string(name_s, 17);
-      result = ctr_hand_value_to_global (name, x);
-    }
-  }
+	      ctr_object *name = ctr_build_string (name_s, 17);
+	      result = ctr_hand_value_to_global (name, x);
+	    }
+	}
       else
 	{
 	  result = ctr_assign_value (ctr_build_string (assignee->value, assignee->vlen), x);
@@ -300,7 +306,7 @@ ctr_cwlk_assignment (ctr_tnode * node)
       ctr_cwlk_last_msg_level = ctr_cwlk_msg_level;
       ctr_object *y = ctr_cwlk_expr (assignee, &ret);
       ctr_cwlk_replace_refs = old_replace;	//set back in case we didn't reset
-      result = ctr_send_message_variadic (x, "unpack:", 7, 2, y, ctr_contexts[ctr_context_id]); // hand the block the context
+      result = ctr_send_message_variadic (x, "unpack:", 7, 2, y, ctr_contexts[ctr_context_id]);	// hand the block the context
     }
   if (CtrStdFlow == NULL)
     {
@@ -309,39 +315,43 @@ ctr_cwlk_assignment (ctr_tnode * node)
   return result;
 }
 
-void execute_if_quote(ctr_tnode* node) {
-  if (node->type == CTR_AST_NODE_EMBED && node->modifier == 0) {
-    node->modifier = 1;
-    node->nodes->node = (ctr_tnode*) ctr_cwlk_expr(node->nodes->node, "");
-    return;
-  }
-  switch (node->type) {
+void
+execute_if_quote (ctr_tnode * node)
+{
+  if (node->type == CTR_AST_NODE_EMBED && node->modifier == 0)
+    {
+      node->modifier = 1;
+      node->nodes->node = (ctr_tnode *) ctr_cwlk_expr (node->nodes->node, "");
+      return;
+    }
+  switch (node->type)
+    {
     case CTR_AST_NODE_CODEBLOCK:
-      execute_if_quote(node->nodes->next->node);
+      execute_if_quote (node->nodes->next->node);
       return;
     case CTR_AST_NODE_EXPRMESSAGE:
     case CTR_AST_NODE_EXPRASSIGNMENT:
-      execute_if_quote(node->nodes->node);
-      execute_if_quote(node->nodes->next->node);
+      execute_if_quote (node->nodes->node);
+      execute_if_quote (node->nodes->next->node);
       return;
     case CTR_AST_NODE_BINMESSAGE:
     case CTR_AST_NODE_RAW:
     case CTR_AST_NODE_NESTED:
-      execute_if_quote(node->nodes->node);
+      execute_if_quote (node->nodes->node);
       return;
     case CTR_AST_NODE_IMMUTABLE:
     case CTR_AST_NODE_PROGRAM:
       node = node->nodes->node;
-    /* Fallthrough */
+      /* Fallthrough */
     case CTR_AST_NODE_KWMESSAGE:
     case CTR_AST_NODE_INSTRLIST:
-      for (ctr_tlistitem* instr=node->nodes; instr; instr=instr->next)
-        execute_if_quote(instr->node);
+      for (ctr_tlistitem * instr = node->nodes; instr; instr = instr->next)
+	execute_if_quote (instr->node);
       return;
       // TODO X: handle listcomp
     default:
       break;
-  }
+    }
 }
 
 /**
@@ -426,7 +436,7 @@ ctr_cwlk_expr (ctr_tnode * node, char *wasReturn)
 	switch (node->modifier)
 	  {
 	  case 1:
-      execute_if_quote(node->nodes->node);
+	    execute_if_quote (node->nodes->node);
 	    result = ctr_ast_from_node (node->nodes->node);
 	    break;
 	  case 2:
@@ -438,12 +448,12 @@ ctr_cwlk_expr (ctr_tnode * node, char *wasReturn)
 	  case 0:
 	    {
 	      char ret;
-	      int oldquote = force_quote, refs=ctr_cwlk_replace_refs;
+	      int oldquote = force_quote, refs = ctr_cwlk_replace_refs;
 	      force_quote = quote;
 	      ctr_cwlk_last_msg_level = ctr_cwlk_msg_level;
-        ctr_cwlk_replace_refs = 0;
+	      ctr_cwlk_replace_refs = 0;
 	      result = ctr_cwlk_expr (node->nodes->node, &ret);
-        ctr_cwlk_replace_refs = refs;
+	      ctr_cwlk_replace_refs = refs;
 	      force_quote = oldquote;	//set back in case we didn't reset
 	      if (ctr_ast_is_splice (result))
 		result = ctr_ast_splice (result);
@@ -463,9 +473,9 @@ ctr_cwlk_expr (ctr_tnode * node, char *wasReturn)
       result = ctr_build_listcomp (node);
       break;
     case CTR_AST_NODE_NATIVEFN:
-      result = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNATFUNC);
-      result->value.fvalue = (void*) node->value;
-      ctr_set_link_all(result, CtrStdBlock);
+      result = ctr_internal_create_object (CTR_OBJECT_TYPE_OTNATFUNC);
+      result->value.fvalue = (void *) node->value;
+      ctr_set_link_all (result, CtrStdBlock);
       break;
     case CTR_AST_NODE_ENDOFPROGRAM:
       if (CtrStdFlow && CtrStdFlow != CtrStdExit && ctr_cwlk_subprogram == 0)
@@ -527,9 +537,9 @@ ctr_cwlk_run (ctr_tnode * program)
       /* Perform garbage collection cycle */
       if (((ctr_gc_mode & 1) && ctr_gc_alloc > (ctr_gc_memlimit * 0.8)) || ctr_gc_mode & 4)
 	{
-    printf ("GC : %d bytes\n", ctr_gc_alloc);
+	  printf ("GC : %d bytes\n", ctr_gc_alloc);
 	  ctr_gc_internal_collect ();	//collect on limit mode
-    printf ("GC : %d bytes\n", ctr_gc_alloc);
+	  printf ("GC : %d bytes\n", ctr_gc_alloc);
 	}
       if (!li->next)
 	break;

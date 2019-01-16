@@ -323,10 +323,11 @@ ctr_object *
 ctr_reflect_cb_ac (ctr_object * myself, ctr_argument * argumentList)
 {
   static ctr_argument arg;
-  if (argumentList->object->info.type == CTR_OBJECT_TYPE_OTNATFUNC) {
-    arg.object = ctr_build_string_from_cstring("native-args");
-    return ctr_array_new_and_push(CtrStdArray, &arg);
-  }
+  if (argumentList->object->info.type == CTR_OBJECT_TYPE_OTNATFUNC)
+    {
+      arg.object = ctr_build_string_from_cstring ("native-args");
+      return ctr_array_new_and_push (CtrStdArray, &arg);
+    }
   CTR_ENSURE_TYPE_BLOCK (argumentList->object);
   ctr_tnode *obj = argumentList->object->value.block;
   if (obj == NULL)
@@ -1286,7 +1287,7 @@ ctr_reflect_bind (ctr_object * myself, ctr_argument * argumentList)
   //if(!ctr_reflect_check_bind_valid(from, to, 0)) {
   //  return CtrStdNil;
   //}
-  ctr_argument arg2, arg2n = {.object=ctr_contexts[ctr_context_id]};
+  ctr_argument arg2, arg2n = {.object = ctr_contexts[ctr_context_id] };
   arg2.object = to;
   arg2.next = &arg2n;
   ctr_send_message (from, "unpack:", 7, &arg2);
@@ -1487,10 +1488,10 @@ ctr_reflect_run_for_object_inside_ctx (ctr_object * myself, ctr_argument * argum
       cur->object = ctr_array_get (arr, index);
       ctr_heap_free (index);
     }
-  ctr_switch_context(ctx);
+  ctr_switch_context (ctx);
   ctr_object *answer = ctr_block_run (blk, args, me);
   cur = args;
-  ctr_close_context();
+  ctr_close_context ();
   if (length == 0)
     {
       ctr_heap_free (args);
@@ -1640,18 +1641,18 @@ ctr_reflect_run_for_object_in_ctx (ctr_object * myself, ctr_argument * argumentL
 	{
 	  ctr_object *catch_type = ctr_internal_object_find_property (catchBlock, ctr_build_string_from_cstring ("%catch"), 0);
 	  ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
-    ctr_object *exdata = ctr_build_string_from_cstring(":exdata"),
-    *ex = CtrStdFlow,
-    *getexinfo = ctr_build_string_from_cstring("exceptionInfo");
-    ctr_internal_object_set_property(ex, exdata, ctr_internal_ex_data(), 0);
-    ctr_internal_create_func(ex, getexinfo, &ctr_exception_getinfo);
-    int setstr = 0;
-    if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING) {
-      ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
-      setstr = 1;
-      ctr_internal_create_func(ex, ctr_build_string_from_cstring("toString"), &ctr_string_to_string);
-    }
-    a->object = ex;
+	  ctr_object *exdata = ctr_build_string_from_cstring (":exdata"),
+	    *ex = CtrStdFlow, *getexinfo = ctr_build_string_from_cstring ("exceptionInfo");
+	  ctr_internal_object_set_property (ex, exdata, ctr_internal_ex_data (), 0);
+	  ctr_internal_create_func (ex, getexinfo, &ctr_exception_getinfo);
+	  int setstr = 0;
+	  if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING)
+	    {
+	      ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
+	      setstr = 1;
+	      ctr_internal_create_func (ex, ctr_build_string_from_cstring ("toString"), &ctr_string_to_string);
+	    }
+	  a->object = ex;
 	  a->next = ctr_heap_allocate (sizeof (ctr_argument));
 	  a->next->object = catch_type;
 	  if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
@@ -1660,10 +1661,10 @@ ctr_reflect_run_for_object_in_ctx (ctr_object * myself, ctr_argument * argumentL
 	      ctr_object *alternative = ctr_block_run_here (catchBlock, a, ctx);
 	      result = alternative;
 	    }
-      ctr_internal_object_delete_property(ex, exdata, 0);
-      ctr_internal_object_delete_property(ex, getexinfo, 1);
-      if (setstr)
-        ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
+	  ctr_internal_object_delete_property (ex, exdata, 0);
+	  ctr_internal_object_delete_property (ex, getexinfo, 1);
+	  if (setstr)
+	    ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
 	  ctr_heap_free (a->next);
 	  ctr_heap_free (a);
 	}
@@ -1675,20 +1676,21 @@ ctr_reflect_run_for_object_in_ctx (ctr_object * myself, ctr_argument * argumentL
 ctr_object *
 ctr_reflect_world_snap (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object* object = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-  ctr_map* worldprops = CtrStdWorld->properties, *newProps = object->properties;
-  ctr_mapitem* whead = worldprops->head, *newhead = (newProps->head=ctr_heap_allocate(sizeof(ctr_mapitem)));
+  ctr_object *object = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
+  ctr_map *worldprops = CtrStdWorld->properties, *newProps = object->properties;
+  ctr_mapitem *whead = worldprops->head, *newhead = (newProps->head = ctr_heap_allocate (sizeof (ctr_mapitem)));
   ctr_size size = newProps->size = worldprops->size;
   newProps->size = size;
-  while (whead) {
-    newhead->key = whead->key;
-    newhead->value = whead->value;
-    newhead->hashKey = whead->hashKey;
-    newhead->next = NULL;
-    newhead->next = ctr_heap_allocate(sizeof(ctr_mapitem));
-    newhead = newhead->next;
-    whead = whead->next;
-  }
+  while (whead)
+    {
+      newhead->key = whead->key;
+      newhead->value = whead->value;
+      newhead->hashKey = whead->hashKey;
+      newhead->next = NULL;
+      newhead->next = ctr_heap_allocate (sizeof (ctr_mapitem));
+      newhead = newhead->next;
+      whead = whead->next;
+    }
   return object;
 }
 
@@ -1849,7 +1851,7 @@ ctr_reflect_set_property (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *name = ctr_internal_cast2string (argumentList->object);
   ctr_object *ns = argumentList->next->object;
   ctr_object *val = argumentList->next->next->object;
-  ctr_internal_object_set_property(ns, name, val, 0);
+  ctr_internal_object_set_property (ns, name, val, 0);
   return myself;
 }
 

@@ -179,7 +179,9 @@ ctr_generator_make_rept (ctr_object * myself, ctr_argument * argumentList)
  *
  * Creates a generator that filters another generator through the given block
  */
-ctr_object* ctr_generator_filter(ctr_object* myself, ctr_argument* argumentList) {
+ctr_object *
+ctr_generator_filter (ctr_object * myself, ctr_argument * argumentList)
+{
   ctr_object *blk = argumentList->object;
   ctr_object *inst = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
   ctr_set_link_all (inst, ctr_std_generator);
@@ -330,7 +332,7 @@ ctr_generator_internal_next (ctr_generator * genny, int gtype)
 	  {
 	    genny->finished = 1;
 	  }
-    sg->current += sg->step;
+	sg->current += sg->step;
 	return num;
       }
     case CTR_REPEAT_GENNY:
@@ -492,34 +494,34 @@ ctr_generator_internal_next (ctr_generator * genny, int gtype)
       }
     case CTR_FIL_OF_GENNY:
       {
-  ctr_mapping_generator *mgen = genny->sequence;
-  ctr_argument *argm = genny->data;
-  ctr_generator *igen = mgen->genny;
-  int igen_type = mgen->i_type;
-  ctr_object *fn = mgen->fn;
-  argm->object = ctr_build_number_from_float (genny->seq_index++);
-  do
-    {
-      argm->next->object = ctr_generator_internal_next (igen, igen_type);
-    }
-  while ((argm->next->object == generator_end_marker && !igen->finished) || !ctr_block_run(fn, argm, fn)->value.bvalue);
-  genny->finished = genny->finished || igen->finished;
-  if (argm->next->object == generator_end_marker)
-    return argm->next->object;
-  if (CtrStdFlow)
-    {
-      if (CtrStdFlow == CtrStdContinue)
-        {
-  	CtrStdFlow = NULL;
-  	return ctr_generator_internal_next (genny, gtype);
-        }
-      if (CtrStdFlow == CtrStdBreak)
-        {
-  	CtrStdFlow = NULL;
-  	genny->finished = 1;
-        }
-    }
-  return genny->current = argm->next->object;
+	ctr_mapping_generator *mgen = genny->sequence;
+	ctr_argument *argm = genny->data;
+	ctr_generator *igen = mgen->genny;
+	int igen_type = mgen->i_type;
+	ctr_object *fn = mgen->fn;
+	argm->object = ctr_build_number_from_float (genny->seq_index++);
+	do
+	  {
+	    argm->next->object = ctr_generator_internal_next (igen, igen_type);
+	  }
+	while ((argm->next->object == generator_end_marker && !igen->finished) || !ctr_block_run (fn, argm, fn)->value.bvalue);
+	genny->finished = genny->finished || igen->finished;
+	if (argm->next->object == generator_end_marker)
+	  return argm->next->object;
+	if (CtrStdFlow)
+	  {
+	    if (CtrStdFlow == CtrStdContinue)
+	      {
+		CtrStdFlow = NULL;
+		return ctr_generator_internal_next (genny, gtype);
+	      }
+	    if (CtrStdFlow == CtrStdBreak)
+	      {
+		CtrStdFlow = NULL;
+		genny->finished = 1;
+	      }
+	  }
+	return genny->current = argm->next->object;
       }
     default:
       return NULL;
@@ -536,12 +538,14 @@ ctr_generator_internal_inext (ctr_generator * genny, int gtype, ctr_generator * 
   int fail = 0;
   if ((isnext = !current))
     current = ctr_generator_internal_next (genny, gtype);
-  while (current == generator_end_marker && !genny->finished) {
-    current = ctr_generator_internal_next(genny, gtype);
-  }
-  if (current == generator_end_marker) {
-    return current;
-  }
+  while (current == generator_end_marker && !genny->finished)
+    {
+      current = ctr_generator_internal_next (genny, gtype);
+    }
+  if (current == generator_end_marker)
+    {
+      return current;
+    }
   if (current->interfaces->link == ctr_std_generator)
     {
       ctr_generator *gen = current->value.rvalue->ptr;
@@ -590,10 +594,11 @@ ctr_generator_next (ctr_object * myself, ctr_argument * argumentList)
       CtrStdFlow = ctr_build_string_from_cstring ("Invalid generator type(probably)");
       return CtrStdNil;
     }
-  if (next == generator_end_marker) {
-    genny->finished = 1;
-    return CtrStdNil;
-  }
+  if (next == generator_end_marker)
+    {
+      genny->finished = 1;
+      return CtrStdNil;
+    }
   return next;
 }
 
@@ -620,12 +625,14 @@ ctr_generator_inext (ctr_object * myself, ctr_argument * argumentList)
       CtrStdFlow = ctr_build_string_from_cstring ("Invalid generator type(probably)");
       return CtrStdNil;
     }
-  if (next == generator_end_marker) {
-    genny->finished = 1;
-    return CtrStdNil;
-  }
+  if (next == generator_end_marker)
+    {
+      genny->finished = 1;
+      return CtrStdNil;
+    }
   return next;
 }
+
 /**
  * [Generator] finished
  *
@@ -773,17 +780,17 @@ ctr_generator_internal_tostr (ctr_generator * gen, int gtype)
 	return str;
       }
     case CTR_FIL_OF_GENNY:
-    {
-  ctr_object *str = ctr_build_string_from_cstring ("[FilteredGenerator<");
-  ctr_mapping_generator *mgen = gen->sequence;
-  ctr_object *inner = ctr_generator_internal_tostr (mgen->genny, mgen->i_type);
-  ctr_argument *arg = gen->data;
-  arg->object = inner;
-  ctr_string_append (str, arg);
-  arg->object = ctr_build_string_from_cstring (">]");
-  ctr_string_append (str, arg);
-  return str;
-    }
+      {
+	ctr_object *str = ctr_build_string_from_cstring ("[FilteredGenerator<");
+	ctr_mapping_generator *mgen = gen->sequence;
+	ctr_object *inner = ctr_generator_internal_tostr (mgen->genny, mgen->i_type);
+	ctr_argument *arg = gen->data;
+	arg->object = inner;
+	ctr_string_append (str, arg);
+	arg->object = ctr_build_string_from_cstring (">]");
+	ctr_string_append (str, arg);
+	return str;
+      }
     default:
       return ctr_build_string_from_cstring ("[Generator]");
     }
@@ -997,17 +1004,18 @@ ctr_generator_free (void *res_)
  *
  * Folds this generator from the left (see Array::'foldl::accumulator:' for details)
  */
-ctr_object*
-ctr_generator_foldl(ctr_object * myself, ctr_argument * argumentList)
+ctr_object *
+ctr_generator_foldl (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_resource *res = myself->value.rvalue;
   ctr_generator *genny = res->ptr;
   int gtype = res->type;
   ctr_object *folder = argumentList->object;
-  if (!argumentList->next) {
-    CtrStdFlow = ctr_build_string_from_cstring("Expected two arguments to Generator::'foldl:accumulator:'");
-    return CtrStdNil;
-  }
+  if (!argumentList->next)
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("Expected two arguments to Generator::'foldl:accumulator:'");
+      return CtrStdNil;
+    }
   ctr_object *result = argumentList->next->object;
   if (!genny)
     {
@@ -1026,7 +1034,7 @@ ctr_generator_foldl(ctr_object * myself, ctr_argument * argumentList)
 	continue;
       argm.object = result;
       argm.next->object = next;
-      result = ctr_block_run(folder, &argm, folder);
+      result = ctr_block_run (folder, &argm, folder);
       if (CtrStdFlow)
 	{
 	  if (CtrStdFlow == CtrStdContinue)

@@ -1,6 +1,6 @@
 /*
  *  TCC - Tiny C Compiler
- * 
+ *
  *  Copyright (c) 2001-2004 Fabrice Bellard
  *
  * This library is free software; you can redistribute it and/or
@@ -245,7 +245,7 @@ typedef struct DLLReference {
 /* GNUC attribute definition */
 typedef struct AttributeDef {
     int aligned;
-    int packed; 
+    int packed;
     Section *section;
     int func_attr; /* calling convention, exports, ... */
 } AttributeDef;
@@ -367,7 +367,7 @@ typedef struct ASMOperand {
 
 struct TCCState {
     int output_type;
- 
+
     BufferedFile **include_stack_ptr;
     int *ifdef_stack_ptr;
 
@@ -393,6 +393,8 @@ struct TCCState {
 
     Section **priv_sections;
     int nb_priv_sections; /* number of private sections */
+
+    Sym *global_stack; /* replacement gloal stack */
 
     /* got handling */
     Section *got;
@@ -426,14 +428,14 @@ struct TCCState {
     /* address of text section */
     unsigned long text_addr;
     int has_text_addr;
-    
+
     /* output format, see TCC_OUTPUT_FORMAT_xxx */
     int output_format;
 
     /* C language options */
     int char_is_unsigned;
     int leading_underscore;
-    
+
     /* warning switches */
     int warn_write_strings;
     int warn_unsupported;
@@ -488,7 +490,7 @@ struct TCCState {
 
 /* The current value can be: */
 #define VT_VALMASK   0x00ff
-#define VT_CONST     0x00f0  /* constant in vc 
+#define VT_CONST     0x00f0  /* constant in vc
                               (must be first non register value) */
 #define VT_LLOCAL    0x00f1  /* lvalue, offset on stack */
 #define VT_LOCAL     0x00f2  /* offset on stack */
@@ -594,7 +596,7 @@ struct TCCState {
 
 #define TOK_SHL   0x01 /* shift left */
 #define TOK_SAR   0x02 /* signed shift right */
-  
+
 /* assignement operators : normal operator or 0x80 */
 #define TOK_A_MOD 0xa5
 #define TOK_A_AND 0xa6
@@ -763,4 +765,3 @@ static inline int is_space(int ch)
 {
     return ch == ' ' || ch == '\t' || ch == '\v' || ch == '\f' || ch == '\r';
 }
-

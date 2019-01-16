@@ -1,6 +1,6 @@
 /*
  *  TCC - Tiny C Compiler
- * 
+ *
  *  Copyright (c) 2001-2004 Fabrice Bellard
  *
  * This library is free software; you can redistribute it and/or
@@ -51,7 +51,7 @@ static int parse_flags;
                                         returned at eof */
 #define PARSE_FLAG_ASM_COMMENTS 0x0008 /* '#' can be used for line comment */
 #define PARSE_FLAG_SPACES     0x0010 /* next() returns space tokens (for -E) */
- 
+
 static Section *text_section, *data_section, *bss_section; /* predefined sections */
 static Section *cur_text_section; /* current section where function code is
                               generated */
@@ -83,13 +83,14 @@ static CType func_vt; /* current function return type (used by return
 static int func_vc;
 static int last_line_num, last_ind, func_ind; /* debug last line number and pc */
 static int tok_ident;
-static TokenSym **table_ident;
+TokenSym **table_ident;
 static TokenSym *hash_ident[TOK_HASH_SIZE];
 static char token_buf[STRING_MAX_SIZE + 1];
 static char *funcname;
-static Sym *global_stack, *local_stack;
+static Sym **global_stack, *local_stack;
 static Sym *define_stack;
 static Sym *global_label_stack, *local_label_stack;
+TCCState *current_state;
 /* symbol allocator */
 #define SYM_POOL_NB (8192 / sizeof(Sym))
 static Sym *sym_free_first;
@@ -126,16 +127,16 @@ char *get_tok_str(int v, CValue *cv);
 static void parse_expr_type(CType *type);
 static void expr_type(CType *type);
 static void unary_type(CType *type);
-static void block(int *bsym, int *csym, int *case_sym, int *def_sym, 
+static void block(int *bsym, int *csym, int *case_sym, int *def_sym,
                   int case_reg, int is_expr);
 static int expr_const(void);
 static void expr_eq(void);
 static void gexpr(void);
 static void gen_inline_functions(void);
 static void decl(int l);
-static void decl_initializer(CType *type, Section *sec, unsigned long c, 
+static void decl_initializer(CType *type, Section *sec, unsigned long c,
                              int first, int size_only);
-static void decl_initializer_alloc(CType *type, AttributeDef *ad, int r, 
+static void decl_initializer_alloc(CType *type, AttributeDef *ad, int r,
                                    int has_init, int v, int scope);
 int gv(int rc);
 void gv2(int rc1, int rc2);
@@ -156,7 +157,7 @@ static Sym *sym_find(int v);
 static Sym *sym_push(int v, CType *type, int r, int c);
 
 /* type handling */
-static int type_size(CType *type, int *a);
+int type_size(CType *type, int *a);
 static inline CType *pointed_type(CType *type);
 static int pointed_size(CType *type);
 static int lvalue_type(int t);
@@ -174,7 +175,7 @@ void vnrott(int n);
 void lexpand_nr(void);
 static void vpush_global_sym(CType *type, int v);
 void vset(CType *type, int r, int v);
-void type_to_str(char *buf, int buf_size, 
+void type_to_str(char *buf, int buf_size,
                  CType *type, const char *varstr);
 static Sym *get_sym_ref(CType *type, Section *sec,
                         unsigned long offset, unsigned long size);
@@ -183,20 +184,20 @@ static Sym *external_global_sym(int v, CType *type, int r);
 /* section generation */
 static void section_realloc(Section *sec, unsigned long new_size);
 static void *section_ptr_add(Section *sec, unsigned long size);
-static void put_extern_sym(Sym *sym, Section *section, 
+static void put_extern_sym(Sym *sym, Section *section,
                            unsigned long value, unsigned long size);
 static void greloc(Section *s, Sym *sym, unsigned long addr, int type);
 static int put_elf_str(Section *s, const char *sym);
-static int put_elf_sym(Section *s, 
+static int put_elf_sym(Section *s,
                        unsigned long value, unsigned long size,
                        int info, int other, int shndx, const char *name);
 static int add_elf_sym(Section *s, unsigned long value, unsigned long size,
                        int info, int other, int sh_num, const char *name);
 static void put_elf_reloc(Section *symtab, Section *s, unsigned long offset,
                           int type, int symbol);
-static void put_stabs(const char *str, int type, int other, int desc, 
+static void put_stabs(const char *str, int type, int other, int desc,
                       unsigned long value);
-static void put_stabs_r(const char *str, int type, int other, int desc, 
+static void put_stabs_r(const char *str, int type, int other, int desc,
                         unsigned long value, Section *sec, int sym_index);
 static void put_stabn(int type, int other, int desc, int value);
 static void put_stabd(int type, int other, int desc);
@@ -223,7 +224,7 @@ int pe_output_file(struct TCCState *s1, const char *filename);
 #ifdef CONFIG_TCC_ASM
 static void asm_expr(TCCState *s1, ExprValue *pe);
 static int asm_int_expr(TCCState *s1);
-static int find_constraint(ASMOperand *operands, int nb_operands, 
+static int find_constraint(ASMOperand *operands, int nb_operands,
                            const char *name, const char **pp);
 
 static int tcc_assemble(TCCState *s1, int do_preprocess);
@@ -316,6 +317,15 @@ void *resolve_sym(TCCState *s1, const char *sym, int type)
 
 /********************************************************/
 
+/* set this context as current */
+/* Only global values are transferred */
+TCCState *tcc_set_context_current(TCCState *state) {
+  TCCState *s = current_state;
+  current_state = state;
+  global_stack = &current_state->global_stack;
+  return s;
+}
+
 /* we use our own 'finite' function to avoid potential problems with
    non standard math libs */
 /* XXX: endianness dependent */
@@ -350,7 +360,7 @@ char *pstrcat(char *buf, int buf_size, const char *s)
 {
     int len;
     len = strlen(buf);
-    if (len < buf_size) 
+    if (len < buf_size)
         pstrcpy(buf + len, buf_size - len, s);
     return buf;
 }
@@ -408,7 +418,7 @@ void set_pages_executable(void *ptr, unsigned long length)
     end = (unsigned long)ptr + length;
     end = (end + PAGESIZE - 1) & ~(PAGESIZE - 1);
     mprotect((void *)start, end - start, PROT_READ | PROT_WRITE | PROT_EXEC);
-#endif            
+#endif
 }
 
 /* memory management */
@@ -480,7 +490,7 @@ void dynarray_add(void ***ptab, int *nb_ptr, void *data)
 {
     int nb, nb_alloc;
     void **pp;
-    
+
     nb = *nb_ptr;
     pp = *ptab;
     /* every power of two we double array size */
@@ -589,7 +599,7 @@ static void section_realloc(Section *sec, unsigned long new_size)
 {
     unsigned long size;
     unsigned char *data;
-    
+
     size = sec->data_allocated;
     if (size == 0)
         size = 1;
@@ -625,7 +635,7 @@ Section *find_section(TCCState *s1, const char *name)
     int i;
     for(i = 1; i < s1->nb_sections; i++) {
         sec = s1->sections[i];
-        if (!strcmp(name, sec->name)) 
+        if (!strcmp(name, sec->name))
             return sec;
     }
     /* sections are created as PROGBITS */
@@ -634,7 +644,7 @@ Section *find_section(TCCState *s1, const char *name)
 
 /* update sym->c so that it points to an external symbol in section
    'section' with value 'value' */
-static void put_extern_sym2(Sym *sym, Section *section, 
+static void put_extern_sym2(Sym *sym, Section *section,
                             unsigned long value, unsigned long size,
                             int can_add_underscore)
 {
@@ -645,7 +655,7 @@ static void put_extern_sym2(Sym *sym, Section *section,
 
     if (section == NULL)
         sh_num = SHN_UNDEF;
-    else if (section == SECTION_ABS) 
+    else if (section == SECTION_ABS)
         sh_num = SHN_ABS;
     else
         sh_num = section->sh_num;
@@ -683,13 +693,13 @@ static void put_extern_sym2(Sym *sym, Section *section,
             switch(sym->v) {
 #if 0
             /* XXX: we rely only on malloc hooks */
-            case TOK_malloc: 
-            case TOK_free: 
-            case TOK_realloc: 
-            case TOK_memalign: 
-            case TOK_calloc: 
+            case TOK_malloc:
+            case TOK_free:
+            case TOK_realloc:
+            case TOK_memalign:
+            case TOK_calloc:
 #endif
-            case TOK_memcpy: 
+            case TOK_memcpy:
             case TOK_memmove:
             case TOK_memset:
             case TOK_strlen:
@@ -725,7 +735,7 @@ static void put_extern_sym2(Sym *sym, Section *section,
     }
 }
 
-static void put_extern_sym(Sym *sym, Section *section, 
+static void put_extern_sym(Sym *sym, Section *section,
                            unsigned long value, unsigned long size)
 {
     put_extern_sym2(sym, section, value, size, 1);
@@ -734,7 +744,7 @@ static void put_extern_sym(Sym *sym, Section *section,
 /* add a new relocation entry to symbol 'sym' in section 's' */
 static void greloc(Section *s, Sym *sym, unsigned long offset, int type)
 {
-    if (!sym->c) 
+    if (!sym->c)
         put_extern_sym(sym, NULL, 0, 0);
     /* now we can add ELF relocation info */
     put_elf_reloc(symtab_section, s, offset, type, sym->c);
@@ -784,14 +794,14 @@ void error1(TCCState *s1, int is_warning, const char *fmt, va_list ap)
 {
     char buf[2048];
     BufferedFile **f;
-    
+
     buf[0] = '\0';
     if (file) {
         for(f = s1->include_stack; f < s1->include_stack_ptr; f++)
-            strcat_printf(buf, sizeof(buf), "In file included from %s:%d:\n", 
+            strcat_printf(buf, sizeof(buf), "In file included from %s:%d:\n",
                           (*f)->filename, (*f)->line_num);
         if (file->line_num > 0) {
-            strcat_printf(buf, sizeof(buf), 
+            strcat_printf(buf, sizeof(buf),
                           "%s:%d: ", file->filename, file->line_num);
         } else {
             strcat_printf(buf, sizeof(buf),
@@ -1024,7 +1034,7 @@ static Sym *sym_push(int v, CType *type, int r, int c)
     if (local_stack)
         ps = &local_stack;
     else
-        ps = &global_stack;
+        ps = global_stack;
     s = sym_push2(ps, v, type->t, c);
     s->type.ref = type->ref;
     s->r = r;
@@ -1047,7 +1057,7 @@ static Sym *sym_push(int v, CType *type, int r, int c)
 static Sym *global_identifier_push(int v, int t, int c)
 {
     Sym *s, **ps;
-    s = sym_push2(&global_stack, v, t, c);
+    s = sym_push2(global_stack, v, t, c);
     /* don't record anonymous symbol */
     if (v < SYM_FIRST_ANOM) {
         ps = &table_ident[v - TOK_IDENT]->sym_identifier;
@@ -1134,6 +1144,7 @@ void tcc_close(BufferedFile *bf)
 /* compile the C file opened in 'file'. Return non zero if errors. */
 static int tcc_compile(TCCState *s1)
 {
+    tcc_set_context_current(s1);
     Sym *define_start;
     char buf[512];
     volatile int section_sym;
@@ -1145,28 +1156,28 @@ static int tcc_compile(TCCState *s1)
 
     cur_text_section = NULL;
     funcname = "";
-    anon_sym = SYM_FIRST_ANOM; 
+    anon_sym = SYM_FIRST_ANOM;
 
     /* file info: full path + filename */
     section_sym = 0; /* avoid warning */
     if (s1->do_debug) {
-        section_sym = put_elf_sym(symtab_section, 0, 0, 
-                                  ELFW(ST_INFO)(STB_LOCAL, STT_SECTION), 0, 
+        section_sym = put_elf_sym(symtab_section, 0, 0,
+                                  ELFW(ST_INFO)(STB_LOCAL, STT_SECTION), 0,
                                   text_section->sh_num, NULL);
         getcwd(buf, sizeof(buf));
 #ifdef _WIN32
         normalize_slashes(buf);
 #endif
         pstrcat(buf, sizeof(buf), "/");
-        put_stabs_r(buf, N_SO, 0, 0, 
+        put_stabs_r(buf, N_SO, 0, 0,
                     text_section->data_offset, text_section, section_sym);
-        put_stabs_r(file->filename, N_SO, 0, 0, 
+        put_stabs_r(file->filename, N_SO, 0, 0,
                     text_section->data_offset, text_section, section_sym);
     }
     /* an elf symbol of type STT_FILE must be put so that STB_LOCAL
        symbols can be safely used */
-    put_elf_sym(symtab_section, 0, 0, 
-                ELFW(ST_INFO)(STB_LOCAL, STT_FILE), 0, 
+    put_elf_sym(symtab_section, 0, 0,
+                ELFW(ST_INFO)(STB_LOCAL, STT_FILE), 0,
                 SHN_ABS, file->filename);
 
     /* define some often used types */
@@ -1219,7 +1230,7 @@ static int tcc_compile(TCCState *s1)
 
         /* end of translation unit info */
         if (s1->do_debug) {
-            put_stabs_r(NULL, N_SO, 0, 0, 
+            put_stabs_r(NULL, N_SO, 0, 0,
                         text_section->data_offset, text_section, section_sym);
         }
     }
@@ -1227,11 +1238,10 @@ static int tcc_compile(TCCState *s1)
 
     /* reset define stack, but leave -Dsymbols (may be incorrect if
        they are undefined) */
-    free_defines(define_start); 
+    free_defines(define_start);
 
     gen_inline_functions();
 
-    sym_pop(&global_stack, NULL);
     sym_pop(&local_stack, NULL);
 
     return s1->nb_errors != 0 ? -1 : 0;
@@ -1273,10 +1283,10 @@ void tcc_define_symbol(TCCState *s1, const char *sym, const char *value)
     pstrcpy(bf->buffer, IO_BUF_SIZE, sym);
     pstrcat(bf->buffer, IO_BUF_SIZE, " ");
     /* default value */
-    if (!value) 
+    if (!value)
         value = "1";
     pstrcat(bf->buffer, IO_BUF_SIZE, value);
-    
+
     /* init file structure */
     bf->fd = -1;
     bf->buf_ptr = bf->buffer;
@@ -1285,7 +1295,7 @@ void tcc_define_symbol(TCCState *s1, const char *sym, const char *value)
     bf->filename[0] = '\0';
     bf->line_num = 1;
     file = bf;
-    
+
     s1->include_stack_ptr = s1->include_stack;
 
     /* parse with define parser */
@@ -1427,7 +1437,7 @@ static void rt_printline(unsigned long wanted_pc)
         int type;
 
         sym_end = (ElfW(Sym) *)(symtab_section->data + symtab_section->data_offset);
-        for(sym = (ElfW(Sym) *)symtab_section->data + 1; 
+        for(sym = (ElfW(Sym) *)symtab_section->data + 1;
             sym < sym_end;
             sym++) {
             type = ELFW(ST_TYPE)(sym->st_info);
@@ -1449,7 +1459,7 @@ static void rt_printline(unsigned long wanted_pc)
         fprintf(stderr, " %s()", last_func_name);
     }
     if (incl_index > 0) {
-        fprintf(stderr, " (%s:%d", 
+        fprintf(stderr, " (%s:%d",
                 incl_files[incl_index - 1], last_line_num);
         for(i = incl_index - 2; i >= 0; i--)
             fprintf(stderr, ", included from %s", incl_files[i]);
@@ -1466,7 +1476,7 @@ static void rt_printline(unsigned long wanted_pc)
 #endif
 
 /* return the PC at frame level 'level'. Return non zero if not found */
-static int rt_get_caller_pc(unsigned long *paddr, 
+static int rt_get_caller_pc(unsigned long *paddr,
                             ucontext_t *uc, int level)
 {
     unsigned long fp;
@@ -1482,7 +1492,7 @@ static int rt_get_caller_pc(unsigned long *paddr,
 #endif
         return 0;
     } else {
-#if defined(__FreeBSD__) 
+#if defined(__FreeBSD__)
         fp = uc->uc_mcontext.mc_ebp;
 #elif defined(__dietlibc__)
         fp = uc->uc_mcontext.ebp;
@@ -1688,7 +1698,7 @@ int tcc_run(TCCState *s1, int argc, char **argv)
     tcc_relocate(s1, ptr);
 
     prog_main = tcc_get_symbol_err(s1, "main");
-    
+
     if (s1->do_debug) {
 #ifdef CONFIG_TCC_BACKTRACE
         struct sigaction sigact;
@@ -1702,7 +1712,7 @@ int tcc_run(TCCState *s1, int argc, char **argv)
         sigaction(SIGSEGV, &sigact, NULL);
         sigaction(SIGBUS, &sigact, NULL);
         sigaction(SIGABRT, &sigact, NULL);
-#else        
+#else
         error("debug mode not available");
 #endif
     }
@@ -1768,6 +1778,7 @@ TCCState *tcc_new(void)
     if (!s)
         return NULL;
     tcc_state = s;
+    tcc_set_context_current(s);
     s->output_type = TCC_OUTPUT_MEMORY;
     s->tcc_lib_path = CONFIG_TCCDIR;
 
@@ -1820,7 +1831,7 @@ TCCState *tcc_new(void)
 #else
     tcc_define_symbol(s, "__WCHAR_TYPE__", "int");
 #endif
-    
+
 #ifndef TCC_TARGET_PE
     /* default library paths */
     tcc_add_library_path(s, CONFIG_SYSROOT "/usr/local/lib");
@@ -1839,12 +1850,12 @@ TCCState *tcc_new(void)
     /* symbols are always generated for linking stage */
     symtab_section = new_symtab(s, ".symtab", SHT_SYMTAB, 0,
                                 ".strtab",
-                                ".hashtab", SHF_PRIVATE); 
+                                ".hashtab", SHF_PRIVATE);
     strtab_section = symtab_section->link;
-    
+
     /* private symbol table for dynamic symbols */
     s->dynsymtab_section = new_symtab(s, ".dynsymtab", SHT_SYMTAB, SHF_PRIVATE,
-                                      ".dynstrtab", 
+                                      ".dynstrtab",
                                       ".dynhashtab", SHF_PRIVATE);
     s->alacarte_link = 1;
 
@@ -1872,14 +1883,14 @@ void tcc_delete(TCCState *s1)
     for(i = 0; i < s1->nb_priv_sections; i++)
         free_section(s1->priv_sections[i]);
     dynarray_reset(&s1->priv_sections, &s1->nb_priv_sections);
-        
+
     /* free any loaded DLLs */
     for ( i = 0; i < s1->nb_loaded_dlls; i++) {
         DLLReference *ref = s1->loaded_dlls[i];
         if ( ref->handle )
             dlclose(ref->handle);
     }
-    
+
     /* free loaded dlls array */
     dynarray_reset(&s1->loaded_dlls, &s1->nb_loaded_dlls);
 
@@ -1897,7 +1908,7 @@ void tcc_delete(TCCState *s1)
 int tcc_add_include_path(TCCState *s1, const char *pathname)
 {
     char *pathname1;
-    
+
     pathname1 = tcc_strdup(pathname);
     dynarray_add((void ***)&s1->include_paths, &s1->nb_include_paths, pathname1);
     return 0;
@@ -1906,7 +1917,7 @@ int tcc_add_include_path(TCCState *s1, const char *pathname)
 int tcc_add_sysinclude_path(TCCState *s1, const char *pathname)
 {
     char *pathname1;
-    
+
     pathname1 = tcc_strdup(pathname);
     dynarray_add((void ***)&s1->sysinclude_paths, &s1->nb_sysinclude_paths, pathname1);
     return 0;
@@ -1940,7 +1951,7 @@ static int tcc_add_file_internal(TCCState *s1, const char *filename, int flags)
     } else if (!ext[0] || !PATHCMP(ext, "c")) {
         /* C file assumed */
         ret = tcc_compile(s1);
-    } else 
+    } else
 #ifdef CONFIG_TCC_ASM
     if (!strcmp(ext, "S")) {
         /* preprocessed assembler */
@@ -1948,7 +1959,7 @@ static int tcc_add_file_internal(TCCState *s1, const char *filename, int flags)
     } else if (!strcmp(ext, "s")) {
         /* non preprocessed assembler */
         ret = tcc_assemble(s1, 0);
-    } else 
+    } else
 #endif
 #ifdef TCC_TARGET_PE
     if (!PATHCMP(ext, "def")) {
@@ -1987,7 +1998,7 @@ static int tcc_add_file_internal(TCCState *s1, const char *filename, int flags)
                         ret = -1;
 #endif
                 } else {
-                    ret = tcc_load_dll(s1, fd, filename, 
+                    ret = tcc_load_dll(s1, fd, filename,
                                        (flags & AFF_REFERENCED_DLL) != 0);
                 }
             } else {
@@ -1997,7 +2008,7 @@ static int tcc_add_file_internal(TCCState *s1, const char *filename, int flags)
         } else if (memcmp((char *)&ehdr, ARMAG, 8) == 0) {
             file->line_num = 0; /* do not display line number if error */
             ret = tcc_load_archive(s1, fd);
-        } else 
+        } else
 #ifdef TCC_TARGET_COFF
         if (*(uint16_t *)(&ehdr) == COFF_C67_MAGIC) {
             ret = tcc_load_coff(s1, fd);
@@ -2039,7 +2050,7 @@ int tcc_add_file(TCCState *s, const char *filename)
 int tcc_add_library_path(TCCState *s, const char *pathname)
 {
     char *pathname1;
-    
+
     pathname1 = tcc_strdup(pathname);
     dynarray_add((void ***)&s->library_paths, &s->nb_library_paths, pathname1);
     return 0;
@@ -2053,7 +2064,7 @@ static int tcc_add_dll(TCCState *s, const char *filename, int flags)
     int i;
 
     for(i = 0; i < s->nb_library_paths; i++) {
-        snprintf(buf, sizeof(buf), "%s/%s", 
+        snprintf(buf, sizeof(buf), "%s/%s",
                  s->library_paths[i], filename);
         if (tcc_add_file_internal(s, buf, flags) == 0)
             return 0;
@@ -2066,7 +2077,7 @@ int tcc_add_library(TCCState *s, const char *libraryname)
 {
     char buf[1024];
     int i;
-    
+
     /* first we look for the dynamic library if not static linking */
     if (!s->static_link) {
 #ifdef TCC_TARGET_PE
@@ -2080,7 +2091,7 @@ int tcc_add_library(TCCState *s, const char *libraryname)
 
     /* then we look for the static library */
     for(i = 0; i < s->nb_library_paths; i++) {
-        snprintf(buf, sizeof(buf), "%s/lib%s.a", 
+        snprintf(buf, sizeof(buf), "%s/lib%s.a",
                  s->library_paths[i], libraryname);
         if (tcc_add_file_internal(s, buf, 0) == 0)
             return 0;
@@ -2090,7 +2101,7 @@ int tcc_add_library(TCCState *s, const char *libraryname)
 
 int tcc_add_symbol(TCCState *s, const char *name, void *val)
 {
-    add_elf_sym(symtab_section, (unsigned long)val, 0, 
+    add_elf_sym(symtab_section, (unsigned long)val, 0,
                 ELFW(ST_INFO)(STB_GLOBAL, STT_NOTYPE), 0,
                 SHN_ABS, name);
     return 0;
@@ -2123,9 +2134,9 @@ int tcc_set_output_type(TCCState *s, int output_type)
         /* define symbol */
         tcc_define_symbol(s, "__BOUNDS_CHECKING_ON", NULL);
         /* create bounds sections */
-        bounds_section = new_section(s, ".bounds", 
+        bounds_section = new_section(s, ".bounds",
                                      SHT_PROGBITS, SHF_ALLOC);
-        lbounds_section = new_section(s, ".lbounds", 
+        lbounds_section = new_section(s, ".lbounds",
                                       SHT_PROGBITS, SHF_ALLOC);
     }
 #endif
@@ -2252,7 +2263,7 @@ void tcc_print_stats(TCCState *s, int64_t total_time)
         tt = 0.001;
     if (total_bytes < 1)
         total_bytes = 1;
-    printf("%d idents, %d lines, %d bytes, %0.3f s, %d lines/s, %0.1f MB/s\n", 
+    printf("%d idents, %d lines, %d bytes, %0.3f s, %d lines/s, %0.1f MB/s\n",
            tok_ident - TOK_IDENT, total_lines, total_bytes,
            tt, (int)(total_lines / tt),
            total_bytes / tt / 1000000.0);

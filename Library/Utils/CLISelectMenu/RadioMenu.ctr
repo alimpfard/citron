@@ -1,0 +1,31 @@
+import AbstractMenu: \*.
+
+var RadioMenu is AbstractMenu cnew: {
+    on: 'new:pagesize:' do: {:options:ps
+        options count < 2 ifTrue: {
+            thisBlock error: 'Radio menu must have at least two options'.
+        }.
+        me init.
+        options => options.
+        pageSize => ps = -1 either: options count or: ps, min: options count - 2.
+        my pageSize +=: 1.
+        my pageSize < 2 ifTrue: {
+            thisBlock error: 'pageSize must be >= 2'.
+        }.
+    }.
+    on: 'selected' do: { ^my options at: my selected. }.
+    on: 'options' do: { ^my options. }.
+    on: 'cancel' do: { my selected is -1. }.
+    on: 'pick:' do: {:cursor
+        my selected is cursor.
+        ^True.
+    }.
+    on: 'writelnInto:index:cursor:' do: {:term:idx:cursor
+        cursor ifTrue: {
+            term write: me config cursor-mark.
+        } ifFalse: {
+            term write: '  '.
+        }.
+        term write: (my options at: idx, replace: '\n' with: '\\n').
+    }.
+}.

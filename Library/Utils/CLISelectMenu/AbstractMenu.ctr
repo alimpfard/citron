@@ -1,0 +1,131 @@
+import Library/Data/SwitchCase.
+import config: {
+  config => 'AbstractMenuConfig'.
+}.
+
+#:language XFrozen
+
+var AbstractMenu is Object cnew: {
+    on: 'pageSize' do: { ^my pageSize. }.
+    on: 'pageOffset' do: { ^my pageOffset. }.
+    on: 'pageOffset:' do: {:x my pageOffset is x. }.
+    on: 'offsetPage:' do: {:x
+        my pageOffset +=: x.
+    }.
+    on: 'selected' do: { ^my selected. }.
+    on: 'init' do: {
+        config => const AbstractMenuConfig.
+        pageSize => 0.
+        pageOffset => 0.
+        selected => -1.
+    }.
+    on: 'config' do: { ^my config. }.
+    on: 'pick:' do:   { thisBlock error: 'unimplemented'. }.
+    on: 'cancel' do:  { thisBlock error: 'unimplemented'. }.
+    on: 'options' do: { thisBlock error: 'unimplemented'. }.
+    on: 'writelnInto:index:cursor:' do: {
+        thisBlock error: 'unimplemented'.
+    }.
+    on: 'header' do: { ^''. }.
+    on: 'keypress:' do: { ^False. }.
+    on: 'request' do: {
+      ^requestWithHeader: Nil.
+    }.
+    on: 'requestWithHeader:' do: {:header
+      frozen Term is Object cnew: {
+          stdin => File special: 'stdin'.
+          stdout => File special: 'stdout'.
+          on: 'write:' do: {:str my stdout write: str. }.
+          on: 'writeln:' do: {:str my stdout write: str, write: '\n'. }.
+          on: 'readBytes:' do: {:bytes ^my stdin readBytes: bytes. }.
+      }.
+      ^request: Term header: header.
+    }.
+    on: 'request:' do: {:term ^request: term header: Nil. }.
+    on: 'request:header:' do: {:self:term:header
+        var cursor is 0.
+        var scursor is 0.
+        header isNil ifFalse: {term write: '[%s]\r\n' % [header].}.
+        printMenu: term cursor: cursor init: True.
+        Shell stty: 'raw -echo'. # TODO: Fix
+        var last is me options count - 1.
+        {^True.} whileTrue: ({
+            var c is term readBytes: 1.
+            (frozen _ is String
+                case: '\x1b' do: {
+                    var c2 is term readBytes: 2.
+                    case: '\x5b\x41' do: { # UP
+                        cursor > 0 ifTrue: {
+                            cursor -=: 1.
+                            cursor < (2 + self pageOffset) & (self pageOffset > 0) ifTrue: {
+                                self offsetPage: -1.
+                            }.
+                        } ifFalse: {
+                            cursor is last.
+                            self pageOffset: last - self pageSize + 2.
+                        }.
+                    },
+                    case: '\x5b\x42' do: { # DOWN
+                        cursor < last ifTrue: {
+                            cursor +=: 1.
+                            self pageSize + self pageOffset - 2 <=: cursor, ifTrue: {
+                                self offsetPage: 1.
+                            }.
+                        } ifFalse: {
+                            cursor is 0.
+                            self pageOffset: 0.
+                        }.
+                    },
+                    switch: c2.
+                },
+                case: '\xd' do: {
+                  self pick: cursor, break.
+                },
+                case: 'q' do: {
+                    self cancel.
+                    True break.
+                },
+                case: '\x3' do: {
+                    self cancel.
+                },
+                default: {
+                    self keypress: c, break.
+                }
+            ) switch: c.
+            self printMenu: term cursor: cursor init: False.
+        } catch: {:e
+            Shell stty: '-raw echo'.
+            thisBlock error: e.
+        }).
+        Shell stty: '-raw echo'.
+        ^self selected.
+    }.
+    on: 'printMenu:cursor:init:' do: {:self:term:cursor:init
+        var lines is self pageSize - 1.
+        init ifTrue: {
+            self pageOffset: 0.
+        } ifFalse: {
+            term write: '\x1b[999D\x1b[%dA' % [lines].
+        }.
+        var first is self pageOffset.
+        var last is self pageSize + self pageOffset - 1.
+        first to: last step: 1 do: {:i
+            term write: '\x1b[2K'.
+            i = first & (self pageOffset > 0) ifTrue: {
+                term write: self config up-arrow.
+            } ifFalse: {
+                i = (last - 1) & (self options count - 1 > i) ifTrue: {
+                    term write: self config down-arrow.
+                } ifFalse: {
+                    term write: (i = cursor either: self config cursor-mark-gutter or: self config cursor-nomark-gutter).
+                }.
+            }.
+            i >=: self options count, ifFalse: {
+                self writelnInto: term index: i cursor: i = cursor.
+            }.
+            i !=: last, ifTrue: {
+                term write: '\r\n'.
+            }.
+        }.
+    }.
+}.

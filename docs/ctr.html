@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.22.3 -->
-<!-- CreationDate: Sun Sep  9 22:27:54 2018 -->
+<!-- CreationDate: Mon Jan  7 00:32:41 2019 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -13,12 +13,12 @@
        table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
        h1      { text-align: center }
 </style>
-<title>Citron v0.0.8.8-boehm-gc</title>
+<title>Citron v0.0.8.9-boehm-gc</title>
 
 </head>
 <body>
 
-<h1 align="center">Citron v0.0.8.8-boehm-gc</h1>
+<h1 align="center">Citron v0.0.8.9-boehm-gc</h1>
 
 <a href="#NAME">NAME</a><br>
 <a href="#SYNOPSIS">SYNOPSIS</a><br>
@@ -304,7 +304,7 @@ toBoolean</b> <br>
 boolean representation of Nil: False.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Nil]
-unpack: [Ref:string]</b> <br>
+unpack: [Ref:string], [Object:context]</b> <br>
 Assigns Nil into Ref <br>
 (Always prefer using algebraic deconstruction assignments:
 look at section &rsquo;Assignment&rsquo;)</p>
@@ -343,7 +343,7 @@ generate writer method for property. <br>
 does not create the property is it doesn&rsquo;t exist</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Object]
-unpack: [Object:{Ref*}]</b> <br>
+unpack: [Object:{Ref*}], [Object:Context]</b> <br>
 Element-wise object assign <br>
 (Always prefer using algebraic deconstruction assignments:
 look at section &rsquo;Assignment&rsquo;)</p>
@@ -537,7 +537,7 @@ Literal:</p>
 False</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Boolean]
-unpack: [String:Ref]</b> <br>
+unpack: [String:Ref], [Object:Context]</b> <br>
 Assign ref to boolean <br>
 (Always prefer using algebraic deconstruction assignments:
 look at section &rsquo;Assignment&rsquo;)</p>
@@ -614,6 +614,9 @@ object is True.</p>
 <p style="margin-left:11%; margin-top: 1em">You can also
 use ifFalse and ifTrue with other objects because the <br>
 Object instance also responds to these messages.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Boolean]
+ifTrue: [block] ifFalse: [Block]</b></p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[b:Object]
 or: [Block|Object]</b> <br>
@@ -713,7 +716,7 @@ Literal:</p>
 number object in Citron.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Number]
-unpack: [String:Ref]</b> <br>
+unpack: [String:Ref], [Object:context]</b> <br>
 Assign ref to number <br>
 (Always prefer using algebraic deconstruction assignments:
 look at section &rsquo;Assignment&rsquo;)</p>
@@ -1102,10 +1105,14 @@ isConstructible: [Object]</b> <br>
 returns whether object is constructible from string</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[String]
-unpack: [String:Ref]</b> <br>
+unpack: [String:Ref],[Object:ctx]</b> <br>
 Assign ref to string <br>
 (Always prefer using algebraic deconstruction assignments:
 look at section &rsquo;Assignment&rsquo;)</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[String]
+escape: &rsquo;0.</b> <br>
+Escapes the specified ASCII character(s) in a string.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[String]
 bytes</b> <br>
@@ -1626,10 +1633,15 @@ context auto-capture, <br>
 qualify captures with the &rsquo;const&rsquo; modifier</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Block]
-unpack: [String:Ref]</b> <br>
+unpack: [String:Ref], [Object:ctx]</b> <br>
 Assign ref to block <br>
 (Always prefer using algebraic deconstruction assignments:
 look at section &rsquo;Assignment&rsquo;)</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Block]
+specialize: [types...] with: [Block]</b> <br>
+Specialise a block for the given types with the given
+block</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Block]
 applyTo: [object]</b> <br>
@@ -1806,6 +1818,10 @@ behavior, part <br>
 of any object will just return [Block]. Other objects
 typically override this <br>
 behavior with more useful implementations.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>exception in
+catch block] exceptionInfo</b> <br>
+Returns line info about an exception</p>
 
 <h2>Array
 <a name="Array"></a>
@@ -2228,7 +2244,7 @@ from: [Block|Array|Map|supports &lsquo;each&lsquo;] [if:
 list comprehension</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Array]
-unpack: [Array:{Ref:string}]</b> <br>
+unpack: [Array:{Ref:string}], [Object:ctx]</b> <br>
 Element-wise assign <br>
 (Always prefer using algebraic deconstruction assignments:
 look at section &rsquo;Assignment&rsquo;)</p>
@@ -2402,7 +2418,7 @@ want to make <br>
 the serialization more explicit.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Map]
-unpack: [Map:{Ref:AlternativeName}]</b> <br>
+unpack: [Map:{Ref:AlternativeName}], [Object:ctx]</b> <br>
 Key-wise assign Give alternative names as the values of the
 constructor</p>
 
@@ -2459,7 +2475,7 @@ path to the <br>
 recipient.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[File]
-unpack: [String:Ref]</b> <br>
+unpack: [String:Ref], [Object:ctx]</b> <br>
 Assigns the file instance to the reference <br>
 (Always prefer using algebraic deconstruction assignments:
 look at section &rsquo;Assignment&rsquo;)</p>
@@ -2559,6 +2575,20 @@ above opens the file in f for reading and writing.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[File]
 close.</b> <br>
+Closes the file represented by the recipient.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Usage:</p>
+
+<p style="margin-left:11%; margin-top: 1em">f is File new:
+&rsquo;/path/to/file.txt&rsquo;. <br>
+f open: &rsquo;r+&rsquo;. <br>
+f close.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The example
+above opens and closes a file.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[File]
+flush.</b> <br>
 Closes the file represented by the recipient.</p>
 
 <p style="margin-left:11%; margin-top: 1em">Usage:</p>
@@ -2689,6 +2719,11 @@ Creates a generator that simply repeats an object
 forever</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Generator]
+filter: [Block&lt;idx,value&gt;]</b> <br>
+Creates a generator that filters another generator through
+the given block</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Generator]
 imap: [Block]</b> <br>
 Creates a generator that maps the elements of this generator
 through the given <br>
@@ -2767,6 +2802,10 @@ count</b> <br>
 Gives the count of available direct nodes under this AST
 node</p>
 
+<p style="margin-left:11%; margin-top: 1em"><b>[AST]
+fromBlock: [Block]</b> <br>
+TODO</p>
+
 <p style="margin-left:11%; margin-top: 1em"><b>[AST] at:
 [n:Number]</b> <br>
 Gets the nth child of this AST node</p>
@@ -2813,6 +2852,10 @@ sets the value of this AST node</p>
 withValue: [String]</b> <br>
 copies and sets the value of that AST node</p>
 
+<p style="margin-left:11%; margin-top: 1em"><b>[AST]
+copy</b> <br>
+copies an ast node [note: shallow copy]</p>
+
 <p style="margin-left:11%; margin-top: 1em"><b>[AST] type:
 [String]</b> <br>
 sets the type of this AST node</p>
@@ -2822,8 +2865,8 @@ modifier: [String]</b> <br>
 sets the modifier of this AST node</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[AST]
-evaluate</b> <br>
-Evaluates this ast node</p>
+evaluate[InContext: [Object]]</b> <br>
+Evaluates this ast node (in the given context)</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[AST]
 unparse</b> <br>
@@ -2865,6 +2908,12 @@ Marshals this AST node</p>
 <p style="margin-left:11%; margin-top: 1em"><b>[AST]
 lexSkip: [Number]</b> <br>
 skips the given number of tokens</p>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Array|String]
+letEqualAst: [Array|Object] in: [Block]</b> <br>
+Assigns local values to the block, evaluating them if an ast
+type in the block context, and runs it as a closure</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Coroutine]
 new</b> <br>
@@ -2908,7 +2957,7 @@ dust</b> <br>
 Returns the number of objects collected.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Broom]
-unpack: [String:Ref]</b> <br>
+unpack: [String:Ref], [Object:ctx]</b> <br>
 assigns the instance to the reference <br>
 (Always prefer using algebraic deconstruction assignments:
 look at section &rsquo;Assignment&rsquo;)</p>
@@ -2991,7 +3040,15 @@ dispatched to <br>
 the &rsquo;call:&rsquo; message.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Shell]
-unpack: [String:Ref]</b> <br>
+open: [String] mode: [String:
+&rsquo;r&rsquo;|&rsquo;w&rsquo;|&rsquo;e&rsquo;]</b> <br>
+Opens a write-or-read only stream to the given command</p>
+
+<p style="margin-left:11%; margin-top: 1em">-&gt; a
+File</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Shell]
+unpack: [String:Ref], [Object:ctx]</b> <br>
 assigns the instance to the reference <br>
 (Always prefer using algebraic deconstruction assignments:
 look at section &rsquo;Assignment&rsquo;)</p>
@@ -3068,13 +3125,13 @@ Returns the number of CLI arguments passed to the
 script.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Program]
-unpack: [String:Ref]</b> <br>
+unpack: [String:Ref], [Object:ctx]</b> <br>
 assigns the instance to the reference <br>
 (Always prefer using algebraic deconstruction assignments:
 look at section &rsquo;Assignment&rsquo;)</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Program]
-exit</b> <br>
+exit [: [Number]]</b> <br>
 Exits program immediately.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Program]
@@ -3276,7 +3333,8 @@ and passed the message that has been received.</p>
 
 <p style="margin-left:11%; margin-top: 1em">If a timeout is
 set, and it expires without getting a message, <br>
-this message will throw.</p>
+this message will return False; otherwise it will return
+True.</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Program]
 join</b> <br>
@@ -3698,10 +3756,20 @@ runs a block with its &rsquo;me&rsquo;/&rsquo;my&rsquo; set
 to object</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+run: [Block] inContext: [context:Object] forObject:
+[object:Object] arguments: [Array]</b> <br>
+runs a block with its &rsquo;me&rsquo;/&rsquo;my&rsquo; set
+to object inside a given context</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
 run: [Block] inContext: [Map] arguments: [Array]</b></p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
 run: [Block] inContextAsWorld: [Map] arguments:
+[Array]</b></p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
+run: [Block] inContextAsMain: [Map] arguments:
 [Array]</b></p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Reflect]
@@ -3838,7 +3906,7 @@ get the object that the last fiber yielded, or Nil if no
 object was yielded</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>[Fiber]
-unpack: [String:Ref]</b> <br>
+unpack: [String:Ref], [Object:ctx]</b> <br>
 Assigns the fiber instance to the reference <br>
 (Always prefer using algebraic deconstruction assignments:
 look at section &rsquo;Assignment&rsquo;)</p>

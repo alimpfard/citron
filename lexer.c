@@ -118,21 +118,26 @@ __attribute__ ((always_inline))
  *
  * @return position of the encountered token or NULL if it doesn't exist
  */
-char* ctr_clex_scan(char c) {
+char *
+ctr_clex_scan (char c)
+{
   if (*ctr_code == c)
     return ctr_code;
-  char* older = ctr_clex_olderptr;
+  char *older = ctr_clex_olderptr;
   ctr_clex_olderptr = ctr_clex_oldptr;
   ctr_clex_oldptr = ctr_code;
-  while (ctr_code<=ctr_eofcode&& *++ctr_code != c) {
-    if (*ctr_code == '\n') ctr_clex_line_number++;
-  }
-  if (ctr_code == ctr_eofcode || *ctr_code != c) {
-    ctr_code = ctr_clex_oldptr;
-    ctr_clex_oldptr = ctr_clex_olderptr;
-    ctr_clex_olderptr = older;
-    return NULL;
-  }
+  while (ctr_code <= ctr_eofcode && *++ctr_code != c)
+    {
+      if (*ctr_code == '\n')
+	ctr_clex_line_number++;
+    }
+  if (ctr_code == ctr_eofcode || *ctr_code != c)
+    {
+      ctr_code = ctr_clex_oldptr;
+      ctr_clex_oldptr = ctr_clex_olderptr;
+      ctr_clex_olderptr = older;
+      return NULL;
+    }
   return ctr_code;
 }
 
@@ -141,48 +146,61 @@ char* ctr_clex_scan(char c) {
  *
  * @return position of the encountered token or NULL if it doesn't exist
  */
-char* ctr_clex_scan_balanced(char c, char d) {
+char *
+ctr_clex_scan_balanced (char c, char d)
+{
   if (*ctr_code == c)
     return ctr_code;
   int bc = *ctr_code == d;
-  char* older = ctr_clex_olderptr;
+  char *older = ctr_clex_olderptr;
   ctr_clex_olderptr = ctr_clex_oldptr;
   ctr_clex_oldptr = ctr_code;
-  resume:
-  while (ctr_code<=ctr_eofcode&& *++ctr_code != c) {
-    if (*ctr_code == '\n') ctr_clex_line_number++;
-    if (*ctr_code == d) bc++;
-  }
-  if (*ctr_code == c && bc>0) {
-    ctr_code++;
-    bc--;
-    goto resume;
-  }
-  if (ctr_code == ctr_eofcode || *ctr_code != c) {
-    ctr_code = ctr_clex_oldptr;
-    ctr_clex_oldptr = ctr_clex_olderptr;
-    ctr_clex_olderptr = older;
-    return NULL;
-  }
+resume:
+  while (ctr_code <= ctr_eofcode && *++ctr_code != c)
+    {
+      if (*ctr_code == '\n')
+	ctr_clex_line_number++;
+      if (*ctr_code == d)
+	bc++;
+    }
+  if (*ctr_code == c && bc > 0)
+    {
+      ctr_code++;
+      bc--;
+      goto resume;
+    }
+  if (ctr_code == ctr_eofcode || *ctr_code != c)
+    {
+      ctr_code = ctr_clex_oldptr;
+      ctr_clex_oldptr = ctr_clex_olderptr;
+      ctr_clex_olderptr = older;
+      return NULL;
+    }
   return ctr_code;
 }
 
-static
-struct ctr_extension_descriptor {
+static struct ctr_extension_descriptor
+{
   int ext;
-  const char* name;
-} ctr_clex_extensions[] = {
-  {CTR_EXT_PURE_FS, "XPureLambda"},
-  {CTR_EXT_FROZEN_K, "XFrozen"},
+  const char *name;
+} ctr_clex_extensions[] =
+{
+  {
+  CTR_EXT_PURE_FS, "XPureLambda"},
+  {
+  CTR_EXT_FROZEN_K, "XFrozen"},
 #if withInlineAsm
-  {CTR_EXT_ASM_BLOCK, "XNakedAsmBlock"},
+  {
+  CTR_EXT_ASM_BLOCK, "XNakedAsmBlock"},
 #endif
-  {0, NULL}
+  {
+  0, NULL}
 };
 
 unsigned int
-ctr_internal_edit_distance (const char *a, const char *b, unsigned int length, unsigned int bLength) {
-  unsigned int *cache = ctr_heap_allocate(length * sizeof(unsigned int));
+ctr_internal_edit_distance (const char *a, const char *b, unsigned int length, unsigned int bLength)
+{
+  unsigned int *cache = ctr_heap_allocate (length * sizeof (unsigned int));
   unsigned int index = 0;
   unsigned int bIndex = 0;
   unsigned int distance;
@@ -191,47 +209,50 @@ ctr_internal_edit_distance (const char *a, const char *b, unsigned int length, u
   char code;
 
   /* Shortcut optimizations / degenerate cases. */
-  if (a == b) return 0;
-  if (length == 0) return bLength;
-  if (bLength == 0) return length;
+  if (a == b)
+    return 0;
+  if (length == 0)
+    return bLength;
+  if (bLength == 0)
+    return length;
 
-  while (index < length) {
-    cache[index] = index + 1;
-    index++;
-  }
-
-  while (bIndex < bLength) {
-    code = b[bIndex];
-    result = distance = bIndex++;
-    index = -1;
-
-    while (++index < length) {
-      bDistance = code == a[index] ? distance : distance + 1;
-      distance = cache[index];
-
-      cache[index] = result = distance > result
-        ? bDistance > result
-          ? result + 1
-          : bDistance
-        : bDistance > distance
-          ? distance + 1
-          : bDistance;
+  while (index < length)
+    {
+      cache[index] = index + 1;
+      index++;
     }
-  }
 
-  ctr_heap_free(cache);
+  while (bIndex < bLength)
+    {
+      code = b[bIndex];
+      result = distance = bIndex++;
+      index = -1;
+
+      while (++index < length)
+	{
+	  bDistance = code == a[index] ? distance : distance + 1;
+	  distance = cache[index];
+
+	  cache[index] = result = distance > result ? bDistance > result ? result + 1 : bDistance : bDistance > distance ? distance + 1 : bDistance;
+	}
+    }
+
+  ctr_heap_free (cache);
 
   return result;
 }
 
-const char* ctr_clex_find_closest_extension(int length, char* val) {
+const char *
+ctr_clex_find_closest_extension (int length, char *val)
+{
   struct ctr_extension_descriptor *closest = NULL;
   unsigned int closested = length;
-  for(struct ctr_extension_descriptor *current=ctr_clex_extensions; current->name; current++) {
-    char const* name = current->name;
-    if (ctr_internal_edit_distance(val, name, length, strlen(name)) < closested)
-      closest = current;
-  }
+  for (struct ctr_extension_descriptor * current = ctr_clex_extensions; current->name; current++)
+    {
+      char const *name = current->name;
+      if (ctr_internal_edit_distance (val, name, length, strlen (name)) < closested)
+	closest = current;
+    }
   return closest ? closest->name : "(¯\\_(ツ)_/¯)";
 }
 
@@ -365,9 +386,8 @@ ctr_clex_is_delimiter (char symbol)
 {
 
   return (symbol == '(' || symbol == '[' || symbol == ']'
-	     || symbol == ')' || symbol == ',' || symbol == '.'
-       || symbol == ':' || symbol == ' ' || symbol == '\t'
-       || symbol == '{' || symbol == '}' || symbol == '#');
+	  || symbol == ')' || symbol == ',' || symbol == '.'
+	  || symbol == ':' || symbol == ' ' || symbol == '\t' || symbol == '{' || symbol == '}' || symbol == '#');
 }
 
 unsigned long
@@ -578,45 +598,54 @@ ctr_activate_pragma (ctr_code_pragma * pragma)
     }
 }
 
-void ctr_set_pragma(ctr_code_pragma* pragma, int val, int val2) {
+void
+ctr_set_pragma (ctr_code_pragma * pragma, int val, int val2)
+{
   pragma->value = val;
   pragma->value_e = val2;
 }
-extern ctr_tnode* ctr_cparse_block_(int);
+
+extern ctr_tnode *ctr_cparse_block_ (int);
 /**
  * CTRLexPragmaToken
  *
  * Reads the token after '#:' and toggles a pragma.
  *
  */
-__attribute__((always_inline))
-static void handle_extension()
+__attribute__ ((always_inline))
+     static void
+     handle_extension ()
 {
-  char* ext = ctr_clex_buffer;
+  char *ext = ctr_clex_buffer;
   int len = ctr_clex_tokvlen;
 #ifdef DEBUG_BUILD
-  printf("+ext %.*s\n", len, ext);
+  printf ("+ext %.*s\n", len, ext);
 #endif
-  if (len == 7 && strncmp(ext, "XFrozen", 7) == 0) {
-    extensionsPra->value |= CTR_EXT_FROZEN_K;
-  }
-  else if (len == 11 && strncmp(ext, "XPureLambda", 11) == 0) {
-    extensionsPra->value |= CTR_EXT_PURE_FS;
-  }
-  else if (len == 14 && strncmp(ext, "XNakedAsmBlock", 14) == 0) {
+  if (len == 7 && strncmp (ext, "XFrozen", 7) == 0)
+    {
+      extensionsPra->value |= CTR_EXT_FROZEN_K;
+    }
+  else if (len == 11 && strncmp (ext, "XPureLambda", 11) == 0)
+    {
+      extensionsPra->value |= CTR_EXT_PURE_FS;
+    }
+  else if (len == 14 && strncmp (ext, "XNakedAsmBlock", 14) == 0)
+    {
 #if withInlineAsm
       extensionsPra->value |= CTR_EXT_ASM_BLOCK;
 #else
       goto elsecase;
 #endif
-  }
-  else {
-elsecase:;
-    static char errbuf[1024];
-    sprintf(errbuf, "Unknown extension '%.*s' did you mean '%s'?", len, ext, ctr_clex_find_closest_extension(len, ext));
-    ctr_clex_emit_error(errbuf);
-  }
+    }
+  else
+    {
+    elsecase:;
+      static char errbuf[1024];
+      sprintf (errbuf, "Unknown extension '%.*s' did you mean '%s'?", len, ext, ctr_clex_find_closest_extension (len, ext));
+      ctr_clex_emit_error (errbuf);
+    }
 }
+
 void
 ctr_match_toggle_pragma ()
 {
@@ -638,85 +667,98 @@ ctr_match_toggle_pragma ()
       ctr_code += 18;
       return;
     }
-  if (strncmp (ctr_code, ":callShorthand", 14) == 0) {
-    ctr_code += 14;
-    int t0 = ctr_clex_tok(), t1 = ctr_clex_tok();
-    ctr_set_pragma(callShorthand, t0, t1);
-    //while(isspace(*ctr_clex_oldptr)) ctr_clex_oldptr++; //no chance of it falling off
-    //ctr_clex_oldptr++;
-    //while(*(ctr_code--) != '\n'); //go back out
-    ctr_clex_olderptr = ctr_code;
-    ctr_clex_oldptr = ctr_code;
-    ctr_code--;
-    return;
-  }
-  if (strncmp (ctr_code, ":declare", 8) == 0) {
-    ctr_code += 8;
-    int t0 = ctr_clex_tok();
-    if (t0 != CTR_TOKEN_REF) {
-      err:;
-      ctr_clex_emit_error("Expected either infixr or infixl or lazyev");
+  if (strncmp (ctr_code, ":callShorthand", 14) == 0)
+    {
+      ctr_code += 14;
+      int t0 = ctr_clex_tok (), t1 = ctr_clex_tok ();
+      ctr_set_pragma (callShorthand, t0, t1);
+      //while(isspace(*ctr_clex_oldptr)) ctr_clex_oldptr++; //no chance of it falling off
+      //ctr_clex_oldptr++;
+      //while(*(ctr_code--) != '\n'); //go back out
+      ctr_clex_olderptr = ctr_code;
+      ctr_clex_oldptr = ctr_code;
+      ctr_code--;
       return;
     }
-    char* v = ctr_clex_tok_value();
-    int len = ctr_clex_tok_value_length();
-    int fixity = 0;
-    int prec = 2;
-    int lazy = 0;
-    if (len != strlen("infixr")) goto err;
-    if (strncmp(v, "infixr", len) == 0)
-      fixity = 0;
-    else if (strncmp(v, "infixl", len) == 0)
-      fixity = 1;
-    else if (strncmp(v, "lazyev", len) == 0)
-      prec = lazy = 1;
-    else goto err;
-    t0 = ctr_clex_tok();
-    if (t0 == CTR_TOKEN_NUMBER) {
-      prec = atoi(ctr_clex_tok_value());
-      t0 = ctr_clex_tok();
-    }
-    if (t0 != CTR_TOKEN_REF) {
-      if (t0 == CTR_TOKEN_COLON && lazy) {
-        // next call is lazy
-        nextCallLazy->value = prec;
-        goto ending;
-      }
-      ctr_clex_emit_error("Expected some op name");
-      return;
-    }
-    v = ctr_clex_tok_value();
-    len = ctr_clex_tok_value_length();
-    ctr_set_fix(v, len, fixity, prec, lazy);
+  if (strncmp (ctr_code, ":declare", 8) == 0)
+    {
+      ctr_code += 8;
+      int t0 = ctr_clex_tok ();
+      if (t0 != CTR_TOKEN_REF)
+	{
+	err:;
+	  ctr_clex_emit_error ("Expected either infixr or infixl or lazyev");
+	  return;
+	}
+      char *v = ctr_clex_tok_value ();
+      int len = ctr_clex_tok_value_length ();
+      int fixity = 0;
+      int prec = 2;
+      int lazy = 0;
+      if (len != strlen ("infixr"))
+	goto err;
+      if (strncmp (v, "infixr", len) == 0)
+	fixity = 0;
+      else if (strncmp (v, "infixl", len) == 0)
+	fixity = 1;
+      else if (strncmp (v, "lazyev", len) == 0)
+	prec = lazy = 1;
+      else
+	goto err;
+      t0 = ctr_clex_tok ();
+      if (t0 == CTR_TOKEN_NUMBER)
+	{
+	  prec = atoi (ctr_clex_tok_value ());
+	  t0 = ctr_clex_tok ();
+	}
+      if (t0 != CTR_TOKEN_REF)
+	{
+	  if (t0 == CTR_TOKEN_COLON && lazy)
+	    {
+	      // next call is lazy
+	      nextCallLazy->value = prec;
+	      goto ending;
+	    }
+	  ctr_clex_emit_error ("Expected some op name");
+	  return;
+	}
+      v = ctr_clex_tok_value ();
+      len = ctr_clex_tok_value_length ();
+      ctr_set_fix (v, len, fixity, prec, lazy);
     ending:;
-    ctr_clex_olderptr = ctr_code;
-    ctr_clex_oldptr = ctr_code;
-    return;
-  }
-  if (strncmp (ctr_code, ":language", 9) == 0) {
-    // #:language ext,ext,ext
-    int lineno = ctr_clex_line_number;
-    ctr_code += 9;
-    int t0 = ctr_clex_tok();
-    if (t0 != CTR_TOKEN_REF || lineno != ctr_clex_line_number) {
-      err_v:;
-      ctr_clex_emit_error("Expected an extension name");
+      ctr_clex_olderptr = ctr_code;
+      ctr_clex_oldptr = ctr_code;
       return;
     }
-    handle_extension();
-    // printf("+ %.*s\n", ctr_clex_tokvlen, ctr_clex_buffer);
-    while (ctr_clex_tok() == CTR_TOKEN_CHAIN) {
-      if (lineno != ctr_clex_line_number) break;
-      t0 = ctr_clex_tok();
-      if (t0 != CTR_TOKEN_REF) goto err_v;
+  if (strncmp (ctr_code, ":language", 9) == 0)
+    {
+      // #:language ext,ext,ext
+      int lineno = ctr_clex_line_number;
+      ctr_code += 9;
+      int t0 = ctr_clex_tok ();
+      if (t0 != CTR_TOKEN_REF || lineno != ctr_clex_line_number)
+	{
+	err_v:;
+	  ctr_clex_emit_error ("Expected an extension name");
+	  return;
+	}
+      handle_extension ();
       // printf("+ %.*s\n", ctr_clex_tokvlen, ctr_clex_buffer);
-      handle_extension();
+      while (ctr_clex_tok () == CTR_TOKEN_CHAIN)
+	{
+	  if (lineno != ctr_clex_line_number)
+	    break;
+	  t0 = ctr_clex_tok ();
+	  if (t0 != CTR_TOKEN_REF)
+	    goto err_v;
+	  // printf("+ %.*s\n", ctr_clex_tokvlen, ctr_clex_buffer);
+	  handle_extension ();
+	}
+      ctr_clex_putback ();
+      ctr_clex_olderptr = ctr_code;
+      ctr_clex_oldptr = ctr_code;
+      return;
     }
-    ctr_clex_putback();
-    ctr_clex_olderptr = ctr_code;
-    ctr_clex_oldptr = ctr_code;
-    return;
-  }
 }
 
 int
@@ -1034,20 +1076,22 @@ ctr_clex_tok ()
 	}
       return CTR_TOKEN_NUMBER;
     }
-  if (c == '`') {
-    ctr_code++;
-    struct lexer_state st;
-    ctr_clex_dump_state(&st);
-    int t = ctr_clex_tok(), rv=0;
-    if (t == CTR_TOKEN_REF) {
-      if(ctr_clex_buffer[ctr_clex_tokvlen-1] == '`')
-        rv = 1;
+  if (c == '`')
+    {
+      ctr_code++;
+      struct lexer_state st;
+      ctr_clex_dump_state (&st);
+      int t = ctr_clex_tok (), rv = 0;
+      if (t == CTR_TOKEN_REF)
+	{
+	  if (ctr_clex_buffer[ctr_clex_tokvlen - 1] == '`')
+	    rv = 1;
+	}
+      ctr_clex_load_state (st);
+      if (rv)
+	return CTR_TOKEN_INV;
+      ctr_code--;
     }
-    ctr_clex_load_state(st);
-    if (rv)
-      return CTR_TOKEN_INV;
-    ctr_code--;
-  }
   if (strncmp (ctr_code, "True", 4) == 0)
     {
       if (ctr_clex_is_delimiter (*(ctr_code + 4)))

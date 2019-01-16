@@ -1,0 +1,30 @@
+import Library/Control/MethodResolve: 'sendMsg'.
+
+var <- is Object new
+  on: 'respondTo:' do: sendMsg,
+  on: 'respondTo:and:' do: sendMsg.
+
+var -> is {:expr
+  var context is Reflect frame: (Reflect frameId - 1 max: 0).
+  ^\:value Reflect
+    run: {:value:expr
+      var it is value.
+      ^$!expr.
+    }
+    inContext: context
+    forObject: value
+    arguments: [value, expr].
+}.
+
+# arr <$> expr
+Array learn: '<$>' means: 'fmap:'.
+Generator learn: '<$>' means: 'fmap:'.
+
+# arr <*> expr
+Array learn: '<*>' means: 'imap:'.
+Generator learn: '<*>' means: 'imap:'.
+
+
+# arr <?> expr
+Array learn: '<?>' means: 'filter_v:'.
+Generator on: '<?>' do: {:arg ^filter: \:_:x arg[x]. }.

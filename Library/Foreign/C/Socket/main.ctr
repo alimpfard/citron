@@ -1,0 +1,102 @@
+import _internal: 'SocketInternals'.
+import Library/Foreign/C/errno: 'g_strerror'.
+import Library/Foreign/C/Filedes: 'FileDes'.
+
+var Socket is Object cnew: {
+  on: 'newOfType:withInternal:' do: {:type:guts
+    ^cnew: {
+      type => type.
+      filedes => FileDes new: guts.
+      fd => guts.
+    }.
+  }.
+  on: 'createINetStreamSocketTo:service:withProto:andFlags:' do: {:host:port:proto:flags
+    var fd is const SocketInternals
+      createINetStreamSocketTo: host
+      service: port
+      withProto: proto
+      andFlags: flags.
+    fd < 0 ifTrue: {
+      thisBlock error: g_strerror[].
+    }.
+    ^Socket newOfType: \stream withInternal: fd.
+  }.
+  on: 'createINetDgramSocketWithProto:andFlags:' do: {:proto:flags
+    var fd is const SocketInternals
+      createINetDgramSocketWithProto: proto
+      andFlags: flags.
+    fd < 0 ifTrue: {
+      thisBlock error: g_strerror[].
+    }.
+    ^Socket newOfType: \dgram withInternal: fd.
+  }.
+  on: 'createINetServerSocketBoundToAddress:andPort:withProto4:andProto3:andFlags:' do: {:addr:port:proto4:proto3:flags
+    var fd is const SocketInternals
+      createINetServerSocketBoundToAddress: addr
+      andPort: port
+      withProto4: proto4
+      andProto3: proto3
+      andFlags: flags.
+      fd < 0 ifTrue: {
+        thisBlock error: g_strerror[].
+      }.
+      ^Socket newOfType: \server withInternal: fd.
+  }.
+  on: 'createMulticastSocketInGroup:withPort:andLocal:' do: {:group:port:local
+    var fd is const SocketInternals
+      createMulticastSocketInGroup: group
+      withPort: port
+      andLocal: local.
+    fd < 0 ifTrue: {
+      thisBlock error: g_strerror[].
+    }.
+    ^Socket newOfType: \multicast withInternal: fd.
+  }.
+
+  on: 'write:' do: {:str
+    my filedes write: str.
+  }.
+
+  on: 'read' do: {
+    ^my filedes read.
+  }.
+
+  on: 'destroy' do: { const SocketInternals destroyINetStreamSocket: my fd. }.
+  on: 'shutdownWithMethod:' do: {:method
+    const SocketInternals shutdownINetStreamSocket: my fd withMethod: method.
+  }.
+  on: 'shutdownWrite' do: {
+    const SocketInternals shutdownINetStreamSocket: my fd withMethod: const SocketInternals WRITE.
+  }.
+  on: 'shutdownRead' do: {
+    const SocketInternals shutdownINetStreamSocket: my fd withMethod: const SocketInternals READ.
+  }.
+  on: 'getAddressFamily:' do: {:host ^const SocketInternals getAddressFamily: host. }.
+  on: 'accept' do: {
+    var hostmem is malloc[(var hostmemSize is 1024)].
+    var portmem is malloc[(var portmemSize is  128)].
+
+    var res is const SocketInternals
+      acceptINetStreamSocket: my fd
+      fromHost: hostmem
+      withLength: hostmemSize
+      withService: portmem
+      withServiceLength: portmemSize
+      andFlags: 0
+      andAcceptFlags: 0.
+
+    res < 0 ifTrue: {
+      free[hostmem].
+      free[portmem].
+      thisBlock error: g_strerror[].
+    }.
+
+    var ret is [(FileDes new: res), [hostmem readCString, portmem readCString]].
+    free[hostmem].
+    free[portmem].
+
+    ^ret.
+  }.
+
+  on: 'respondTo:' do: {:msg ^const SocketInternals message: msg arguments: []. }.
+}.

@@ -824,6 +824,7 @@ ctr_object *ctr_number_negate(ctr_object * myself, ctr_argument * argumentList);
 /**
  * String Interface
  */
+ctr_object* ctr_string_escape_ascii(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_bytes(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_length(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_fromto(ctr_object* myself, ctr_argument* argumentList);
@@ -1216,6 +1217,7 @@ ctr_object* ctr_reflect_noginstr(ctr_object* myself, ctr_argument* argumentList)
 ctr_object* ctr_reflect_world_snap(ctr_object*, ctr_argument*);
 ctr_object* ctr_reflect_run_glob(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_for_object_in_ctx (ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_run_for_object_inside_ctx (ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_for_object_in_ctx_as_world (ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_for_object_in_ctx_as_main (ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_run_in_new_ctx(ctr_object * myself, ctr_argument * argumentList);
@@ -1261,11 +1263,13 @@ ctr_object* ctr_importlib_begin(ctr_object* myself, ctr_argument* argumentList);
 CTR_H_DECLSPEC ctr_object* CtrStdInject;
 voidptrfn_t ctr_inject_compiled_state_release_hook;
 ctr_object* ctr_inject_make(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_inject_defined_functions(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_inject_compile(ctr_object* myself, ctr_argument* argumentList);
 ctr_object *ctr_inject_get_symbol(ctr_object *myself, ctr_argument *argumentList);
 ctr_object *ctr_inject_run(ctr_object *myself, ctr_argument *argumentList);
 ctr_object *ctr_inject_run_named(ctr_object *myself, ctr_argument *argumentList);
 ctr_object *ctr_inject_add_inclp(ctr_object* myself, ctr_argument* argumentList);
+ctr_object *ctr_inject_get_inclp(ctr_object* myself, ctr_argument* argumentList);
 ctr_object *ctr_inject_export_f(ctr_object *myself, ctr_argument *argumentList);
 ctr_object *ctr_inject_add_lib(ctr_object* myself, ctr_argument* argumentList);
 ctr_object *ctr_inject_set_error_handler(ctr_object* myself, ctr_argument* argumentList);

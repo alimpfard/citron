@@ -1,0 +1,62 @@
+# Test just about everything in Reflect
+
+# Global variables are accessible globally
+{
+  Reflect addGlobalVariable: 'test'.
+  Pen writeln: (Reflect objectExists: 'test').
+} run.
+
+
+# Local variable must shadow the global with the same name
+test is 'NOT THIS'.
+not-test is test.
+{
+  Reflect addLocalVariable: 'test'.
+  Pen writeln: test = not-test.
+} run.
+
+
+{
+  Reflect set: 'test' to: 'HELLO'.
+} run.
+Pen writeln: test.
+
+Pen writeln: (Reflect getContext @ 0 @ 0 @ 0 = 'test').
+
+Pen writeln: (Reflect getMethodsOf: Nil).
+
+Pen writeln: (Reflect getPropertiesOf: (Object cnew: { test => test. })).
+
+Pen writeln: (Reflect mapPropertiesOf: (Object cnew: { test => test. })).
+
+Pen writeln: (Reflect getObject: 'test').
+
+var blk is {:arg0 ^arg0 ifTrue: { ^arg1. } ifFalse: { ^my test. }.}.
+
+Pen writeln: (Reflect argumentListOf: blk).
+
+Reflect addArgumentTo: blk named: 'arg1'.
+
+Pen writeln: (Reflect argumentListOf: blk).
+
+# Shouldn't understand applyAll anymore
+Reflect link: blk to: Object.
+{
+  Pen writeln: blk[1,2].
+} catch: {:e Pen writeln: e. }, run.
+
+Reflect link: blk to: CodeBlock.
+Pen writeln: blk[1, 2].
+
+Pen writeln: (Reflect closure: 'applyAll:' of: blk, applyTo: [1, 2]).
+
+Reflect setProperty: 'test' ofObject: blk toValue: test.
+Pen writeln: (Reflect getProperty: 'test' ofObject: blk, = test).
+test is 'NOT-HELLO'.
+Pen writeln: blk[0, 1].
+
+Pen writeln: (Reflect runInNewContext: {
+  var test is 1024.
+}).
+
+Pen writeln: (Reflect thisContext id !=: (Reflect run: {^ Reflect thisContext.} forObject: Reflect arguments: []) id).

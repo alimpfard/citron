@@ -23,7 +23,7 @@ typedef struct split_t_internal {
 	unsigned int offset;
 } split_t_internal;
 
-split_t_internal *pcre_split_internal(pcre *, char *);
+split_t_internal *pcre_split_internal(pcre *, char *, int);
 
 ssize_t pcre_indexof(char* pattern, char* string) {
 	pcre *re;
@@ -97,20 +97,27 @@ ctr_object *pcre_split(char *pattern, char *string) {
 	  Loop thorough string
 	*/
 	char *match;
+	int flag = 0; // match flags
 	do {
 		/* Return first occurence of match of RegEx */
-		si = pcre_split_internal(re, s);
+		si = pcre_split_internal(re, s, flag);
 
 		/* Copy pointer of match */
 		match = si->match;
 
 		/* Push into array */
-		if(si->offset || si->length) {
+		if(si->offset) {
 			push_arg->object = ctr_build_string(s, si->offset);
 			ctr_array_push(sarr, push_arg);
 		}
 		/* Increment string pointer to skip previous match */
 		s += si->offset + si->length;
+
+		if (!si->length)
+			// we already got an empty match, skip past it
+			flag |= PCRE_NOTEMPTY_ATSTART;
+		else
+			flag &= ~PCRE_NOTEMPTY_ATSTART; // 🤷
 
 		ctr_heap_free(si);
 
@@ -128,7 +135,7 @@ ctr_object *pcre_split(char *pattern, char *string) {
 	return sarr;
 }
 
-split_t_internal *pcre_split_internal(pcre *re, char *string)
+split_t_internal *pcre_split_internal(pcre *re, char *string, int flags)
 {
 
 	int rc;
@@ -138,7 +145,7 @@ split_t_internal *pcre_split_internal(pcre *re, char *string)
 	s->offset = 0;
 	length = (int)strlen(string);
 
-	rc = pcre_exec(re, NULL, string, length, 0, 0, ovector, OVECCOUNT);
+	rc = pcre_exec(re, NULL, string, length, 0, flags, ovector, OVECCOUNT);
 
 	/* check for matches */
 	if(rc < 0) {

@@ -83,9 +83,9 @@ ctr_file_special (ctr_object * myself, ctr_argument * argumentList)
   else if (argumentList->object->interfaces->link == CtrStdNumber)
     {
       ctr_argument arg;
-      arg.object = ctr_number_to_string(argumentList->object, NULL);
+      arg.object = ctr_number_to_string (argumentList->object, NULL);
       file = ctr_file_new (myself, &arg);
-      rs->ptr = fdopen((int)argumentList->object->value.nvalue, argumentList->next->object->value.svalue->value);
+      rs->ptr = fdopen ((int) argumentList->object->value.nvalue, argumentList->next->object->value.svalue->value);
       rs->type = 1;
     }
   else
@@ -324,7 +324,8 @@ ctr_file_read (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *path = ctr_file_rpath (myself, NULL);
   ctr_object *str;
-  ctr_size vlen, fileLen;
+  ctr_size vlen;
+  ssize_t fileLen;
   char *pathString;
   char *buffer;
   FILE *f;
@@ -496,10 +497,11 @@ ctr_file_exists (ctr_object * myself, ctr_argument * argumentList)
   if (myself->value.rvalue && myself->value.rvalue->ptr)
     return ctr_build_bool (1);
   ctr_object *path = ctr_file_rpath (myself, NULL);
-  if (CtrStdFlow) {
-    CtrStdFlow = NULL;
-    return ctr_build_bool(0);
-  }
+  if (CtrStdFlow)
+    {
+      CtrStdFlow = NULL;
+      return ctr_build_bool (0);
+    }
   ctr_size vlen;
   char *pathString;
   FILE *f;
@@ -718,11 +720,12 @@ ctr_file_close (ctr_object * myself, ctr_argument * argumentList)
 {
   if (myself->value.rvalue == NULL)
     return myself;
-  if (myself->value.rvalue->type == 2) {
-    pclose ((FILE *) myself->value.rvalue->ptr);
-    myself->value.rvalue = NULL;
-    return myself;
-  }
+  if (myself->value.rvalue->type == 2)
+    {
+      pclose ((FILE *) myself->value.rvalue->ptr);
+      myself->value.rvalue = NULL;
+      return myself;
+    }
   if (myself->value.rvalue->type != 1)
     return myself;
   if (myself->value.rvalue->ptr)
@@ -811,7 +814,7 @@ ctr_file_read_bytes (ctr_object * myself, ctr_argument * argumentList)
 	}
     }
   else
-    fread (buffer, sizeof (char), (int) bytes, (FILE *) myself->value.rvalue->ptr);
+    bytes = fread (buffer, sizeof (char), (int) bytes, (FILE *) myself->value.rvalue->ptr);
   result = ctr_build_string (buffer, bytes);
   ctr_heap_free (buffer);
   return result;

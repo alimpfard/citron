@@ -61,7 +61,7 @@ clone_depth: 5                      # clone entire repository history if not def
 # scripts that run after cloning repository
 install:
   - echo "Wow Im alive"
-
+  - cd "%APPVEYOR_BUILD_FOLDER%" && git submodule update --init --recursive
 #---------------------------------#
 #       build configuration       #
 #---------------------------------#

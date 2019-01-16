@@ -670,7 +670,7 @@ ctr_gc_kept_alloc (ctr_object * myself, ctr_argument * argumentList)
 {
   return ctr_build_number_from_float ((ctr_number)
 #ifdef withBoehmGC
-	            GC_get_heap_size() - GC_get_free_bytes() - GC_get_unmapped_bytes()
+				      GC_get_heap_size () - GC_get_free_bytes () - GC_get_unmapped_bytes ()
 #else
 				      ctr_gc_alloc
 #endif
@@ -802,25 +802,25 @@ ctr_shell_open (ctr_object * myself, ctr_argument * argumentList)
   ctr_check_permission (CTR_SECPRO_NO_SHELL);
   ctr_did_side_effect = 1;
   FILE *stream;
-  ctr_object* ret = CtrStdNil;
-  char* comstring = ctr_heap_allocate_cstring (ctr_internal_cast2string(argumentList->object));
-  char* modestring = ctr_heap_allocate_cstring (ctr_internal_cast2string(argumentList->next->object));
-  if (!(stream = popen(comstring, modestring)))
+  ctr_object *ret = CtrStdNil;
+  char *comstring = ctr_heap_allocate_cstring (ctr_internal_cast2string (argumentList->object));
+  char *modestring = ctr_heap_allocate_cstring (ctr_internal_cast2string (argumentList->next->object));
+  if (!(stream = popen (comstring, modestring)))
     {
       CtrStdFlow = ctr_build_string_from_cstring ("Unable to execute command");
       goto _exit;
     }
-  ctr_object *s = ctr_format_str("-Shell[%s]", comstring);
-  ctr_argument arg = {s, NULL};
-  ctr_object *nv = ctr_file_new(CtrStdFile, &arg);
-  ctr_resource *res = ctr_heap_allocate(sizeof *res);
+  ctr_object *s = ctr_format_str ("-Shell[%s]", comstring);
+  ctr_argument arg = { s, NULL };
+  ctr_object *nv = ctr_file_new (CtrStdFile, &arg);
+  ctr_resource *res = ctr_heap_allocate (sizeof *res);
   nv->value.rvalue = res;
   res->ptr = stream;
   res->type = 2;
   ret = nv;
-  _exit:;
-  ctr_heap_free(comstring);
-  ctr_heap_free(modestring);
+_exit:;
+  ctr_heap_free (comstring);
+  ctr_heap_free (modestring);
   return ret;
 }
 
@@ -1038,7 +1038,7 @@ ctr_object *
 ctr_command_exit (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_did_side_effect = 1;
-  exit(argumentList&&argumentList->object?ctr_internal_cast2number(argumentList->object)->value.nvalue:0);
+  exit (argumentList && argumentList->object ? ctr_internal_cast2number (argumentList->object)->value.nvalue : 0);
   CtrStdFlow = CtrStdExit;
   return CtrStdNil;
 }
@@ -1308,17 +1308,18 @@ ctr_check_permission_internal (uint8_t operationID)
       CtrStdFlow = ctr_format_str ("ESecurityError: %s", reason);
       return 1;
     }
-    return 0;
+  return 0;
 }
 
-void ctr_check_permission(uint8_t operationID)
+void
+ctr_check_permission (uint8_t operationID)
 {
-  if (ctr_check_permission_internal(operationID))
-  {
-    ctr_argument arg = {CtrStdFlow, NULL};
-    ctr_console_writeln(NULL, &arg);
-    exit(1);
-  }
+  if (ctr_check_permission_internal (operationID))
+    {
+      ctr_argument arg = { CtrStdFlow, NULL };
+      ctr_console_writeln (NULL, &arg);
+      exit (1);
+    }
 }
 
 /**
@@ -1427,7 +1428,7 @@ ctr_command_countdown (ctr_object * myself, ctr_argument * argumentList)
       printf ("Message quota cannot change.\n");
       exit (1);
     }
-    ctr_did_side_effect = 1;
+  ctr_did_side_effect = 1;
   ctr_command_security_profile |= CTR_SECPRO_COUNTDOWN;
   ctr_command_maxtick = (uint64_t) ctr_internal_cast2number (argumentList->object)->value.nvalue;
   return myself;
@@ -1500,11 +1501,12 @@ ctr_command_fork (ctr_object * myself, ctr_argument * argumentList)
   newArgumentList->object = child;
   pipe (ps);
   pipe (ps + 2);
-  for (int i=0; i<4; i++) {
-    // set the descriptors not to block
-    int flags = fcntl(ps[i], F_GETFL, 0);
-    fcntl(ps[i], F_SETFL, flags | O_NONBLOCK);
-  }
+  for (int i = 0; i < 4; i++)
+    {
+      // set the descriptors not to block
+      int flags = fcntl (ps[i], F_GETFL, 0);
+      fcntl (ps[i], F_SETFL, flags | O_NONBLOCK);
+    }
   p = fork ();
   if (p < 0)
     {
@@ -1578,9 +1580,10 @@ ctr_command_message (ctr_object * myself, ctr_argument * argumentList)
   return myself;
 }
 
-__attribute__((always_inline))
-inline int istimeout(struct timespec tout, struct timespec now, struct timespec *space) {
-  clock_gettime(CLOCK_MONOTONIC, space);
+__attribute__ ((always_inline))
+     inline int istimeout (struct timespec tout, struct timespec now, struct timespec *space)
+{
+  clock_gettime (CLOCK_MONOTONIC, space);
   int ssec = space->tv_sec, diff = ssec - now.tv_sec;
   if (diff > tout.tv_sec)
     return 1;
@@ -1630,70 +1633,73 @@ ctr_command_listen (ctr_object * myself, ctr_argument * argumentList)
   ctr_size *szptr = &sz;
   ssize_t szcp = sizeof (ctr_size);
   ssize_t readp;
-  struct timespec timeout = {-1, 0}, intime;
+  struct timespec timeout = { -1, 0 }, intime;
   _Bool dotime = 0;
-  if (argumentList->next && argumentList->next->object) {
-    dotime = 1;
-    ctr_object* tobj = ctr_internal_cast2number(argumentList->next->object);
-    double t_o = tobj->value.nvalue;
-    ctr_object *qual = ctr_internal_object_find_property (tobj,
-  							ctr_build_string_from_cstring (CTR_DICT_QUALIFICATION),
-  							CTR_CATEGORY_PRIVATE_PROPERTY);
-    if (qual)
-      {
-        char *qualf = ctr_heap_allocate_cstring (qual);
-        if (strncasecmp (qualf, "ns", 2) == 0)
-        {
-  	  timeout.tv_nsec = fmod(t_o, 1000000000);
-      timeout.tv_sec  = t_o / 1000000000;
-        }
-        else if (strncasecmp (qualf, "us", 2) == 0)
-        {
-      timeout.tv_sec  = t_o / 1000000;
-      timeout.tv_nsec = fmod(t_o * 1000, 1000000000);
-        }
-        else if (strncasecmp (qualf, "ms", 2) == 0)
-  	    {
-      timeout.tv_sec = t_o / 1000;
-      timeout.tv_nsec= fmod(t_o * 1000000, 1000000000);
-        }
-        else if (strncasecmp (qualf, "s", 1) == 0)
-      timeout.tv_sec = t_o;
-        else if (strncasecmp (qualf, "mi", 2) == 0)
-  	  timeout.tv_sec = t_o*60;
-        else if (strncasecmp (qualf, "ho", 2) == 0)
-  	  timeout.tv_sec = t_o*60*60;
-      }
-  }
+  if (argumentList->next && argumentList->next->object)
+    {
+      dotime = 1;
+      ctr_object *tobj = ctr_internal_cast2number (argumentList->next->object);
+      double t_o = tobj->value.nvalue;
+      ctr_object *qual = ctr_internal_object_find_property (tobj,
+							    ctr_build_string_from_cstring (CTR_DICT_QUALIFICATION),
+							    CTR_CATEGORY_PRIVATE_PROPERTY);
+      if (qual)
+	{
+	  char *qualf = ctr_heap_allocate_cstring (qual);
+	  if (strncasecmp (qualf, "ns", 2) == 0)
+	    {
+	      timeout.tv_nsec = fmod (t_o, 1000000000);
+	      timeout.tv_sec = t_o / 1000000000;
+	    }
+	  else if (strncasecmp (qualf, "us", 2) == 0)
+	    {
+	      timeout.tv_sec = t_o / 1000000;
+	      timeout.tv_nsec = fmod (t_o * 1000, 1000000000);
+	    }
+	  else if (strncasecmp (qualf, "ms", 2) == 0)
+	    {
+	      timeout.tv_sec = t_o / 1000;
+	      timeout.tv_nsec = fmod (t_o * 1000000, 1000000000);
+	    }
+	  else if (strncasecmp (qualf, "s", 1) == 0)
+	    timeout.tv_sec = t_o;
+	  else if (strncasecmp (qualf, "mi", 2) == 0)
+	    timeout.tv_sec = t_o * 60;
+	  else if (strncasecmp (qualf, "ho", 2) == 0)
+	    timeout.tv_sec = t_o * 60 * 60;
+	}
+    }
   struct timespec now;
-  clock_gettime(CLOCK_MONOTONIC, &now);
-  while ((readp = read (fileno (fd), szptr, szcp)) <= szcp && szcp>0)
+  clock_gettime (CLOCK_MONOTONIC, &now);
+  while ((readp = read (fileno (fd), szptr, szcp)) <= szcp && szcp > 0)
     {
       if (readp == -1)
 	{
-    if (errno!=EAGAIN)
-	     perror ("Error occurred while reading pipe");
-    if (dotime && istimeout(timeout, now, &intime) && szcp == sizeof(ctr_size))
-       break;
+	  if (errno != EAGAIN)
+	    perror ("Error occurred while reading pipe");
+	  if (dotime && istimeout (timeout, now, &intime) && szcp == sizeof (ctr_size))
+	    break;
 	  continue;
 	}
 #ifdef DEBUG
-      printf("Read %zd bytes from fd %d, with %zd bytes to read\n", readp, fileno(fd), szcp);
+      printf ("Read %zd bytes from fd %d, with %zd bytes to read\n", readp, fileno (fd), szcp);
 #endif
       szcp -= readp;
       szptr += readp;
     }
-  if (dotime && istimeout(timeout, now, &intime)) {
-    // CtrStdFlow = ctr_build_string_from_cstring("Timeout expired");
-    if (szcp == 0) goto process_anyway;
+  if (dotime && istimeout (timeout, now, &intime))
+    {
+      // CtrStdFlow = ctr_build_string_from_cstring("Timeout expired");
+      if (szcp == 0)
+	goto process_anyway;
 #ifdef DEBUG
-    printf("We're supposed to read (probably) %zd bytes [%d unread bytes], but we're also supposed to quit due to timeout\n", sz, szcp);
+      printf ("We're supposed to read (probably) %zd bytes [%d unread bytes], but we're also supposed to quit due to timeout\n", sz, szcp);
 #endif
-    return ctr_build_bool(0);
-  }
-  process_anyway:;
+      return ctr_build_bool (0);
+    }
+process_anyway:;
 #ifdef DEBUG
-  printf("We're supposed to read (probably) %zd bytes [%zd unread bytes]\n", sz, szcp);
+  printf ("We're supposed to read (probably) %zd bytes [%zd unread bytes]\n", sz, szcp);
 #endif
   blob = ctr_heap_allocate (sz);
   char *blobptr = blob;
@@ -1715,7 +1721,7 @@ ctr_command_listen (ctr_object * myself, ctr_argument * argumentList)
   ctr_heap_free (newArgumentList);
   if (!dotime)
     return answer;
-  return ctr_build_bool(1);
+  return ctr_build_bool (1);
 }
 
 /**
@@ -1732,7 +1738,7 @@ ctr_command_join (ctr_object * myself, ctr_argument * argumentList)
   ctr_resource *rs = myself->value.rvalue;
   if (rs == NULL)
     return CtrStdNil;
-    ctr_did_side_effect = 1;
+  ctr_did_side_effect = 1;
   if (rs->type == 3)
     {
       CtrStdFlow = ctr_build_string_from_cstring ("a child process can not join.");
@@ -2600,10 +2606,11 @@ ctr_object *
 ctr_clock_isdst (ctr_object * myself, ctr_argument * argumentList)
 {
   time_t timestamp;
-  time(&timestamp);
-  struct tm *timeinfo = localtime(&timestamp);
-  return ctr_build_bool(timeinfo->tm_isdst);
+  time (&timestamp);
+  struct tm *timeinfo = localtime (&timestamp);
+  return ctr_build_bool (timeinfo->tm_isdst);
 }
+
 /**
  * @internal
  */
@@ -3224,9 +3231,10 @@ ctr_thread_join (ctr_object * myself, ctr_argument * argumentList)
 	  ctr_heap_free (retval);
 	  return CtrStdNil;
 	}
-      ctr_object* rvt = retval->retval;
+      ctr_object *rvt = retval->retval;
       ctr_heap_free (retval);
-      if (rvt == NULL) return CtrStdNil;
+      if (rvt == NULL)
+	return CtrStdNil;
       return rvt;
     }
 }

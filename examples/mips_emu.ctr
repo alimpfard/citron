@@ -2,7 +2,7 @@ Broom memoryLimit: 1024 * 1024 * 1024.
 
 import Library/Data/String.
 
-var debug is {:blk DEBUG ifTrue: {blk run.}.}.
+var debug is {:blk DEBUG ifTrue: {blk evaluate.}.}.
 
 var QAHELP is 's/$register>/value :: set register to value
 p/<register> :: print the contents of register <register>
@@ -32,6 +32,9 @@ Register on: 'get'  do: {^my value.}.
 Register on: 'toString' do: {^my value toString.}.
 var RegFile is Map new put: (ConstantReg new init: 0) at: 0.
 RegFile put: (Register new init) at: 32. #program counter
+RegFile put: Register new init at: 33. # hi (for MULT)
+RegFile put: Register new init at: 34. # lo (for MULT)
+
 31 times: {:i
   RegFile put: (Register new init) at: (i + 1).
 }.
@@ -81,49 +84,125 @@ var jal is {my machine setReg: 31 to: (me PC + 1). my machine nextJump: my jump.
 var jr is {my machine nextPC: (my machine getReg: my destintaion).}.
 var and is  {my machine setReg: my destintaion to: ((my machine getReg: my operand0) bitAnd: (my machine getReg: my operand1)).}.
 var andi is {my machine setReg: my destintaion to: (my immediate toNumber bitAnd: (my machine getReg: my operand0)).}.
+var sll is {my machine setReg: my destintaion to: ((my machine getReg: my operand0) shiftLeft: my immediate toNumber).}.
+var srl is {my machine setReg: my destintaion to: ((my machine getReg: my operand0) shiftRight: my immediate toNumber).}.
 #--Memory--
 var lbu is {my machine setReg: my destintaion to: (my machine getBytes: 1 base: (my immediate toNumber) offset: (my machine getReg: my operand0)).}.
 var sb is {my machine setBytes: 1 base: (my immediate toNumber) offset: (my machine getReg: my operand0) value: (my machine getReg: my destintaion).}.
 var lw is {my machine setReg: my destintaion to: (my machine getBytes: 32 base: (my immediate toNumber) offset: (my machine getReg: my operand0)).}.
 var sw is {my machine setBytes: 32 base: (my immediate toNumber) offset: (my machine getReg: my operand0) value: (my machine getReg: my destintaion).}.
+var lui is {my machine setReg: my destintaion to: (my immediate toNumber shiftLeft: 16).}.
+# -- mult stuff --
+var mfhi is {my machine setReg: my destintaion to: (my machine getReg: 33). }.
+var mflo is {my machine setReg: my destintaion to: (my machine getReg: 34). }.
+var mult is {var val is (my machine getReg: my operand0) * (my machine getReg: my operand1). my machine setReg: 34 to: (val bitAnd: 0xff). my machine setReg: 33 to: (val shiftRight: 8).}.
 var li is noop.
-#-----
+# ---
+# Descr
+# bit|runtime
+# [X] [X] ADD – Add (with overflow)
+# [X] [X] ADDI -- Add immediate (with overflow)
+# [X] [X] ADDIU -- Add immediate unsigned (no overflow)
+# [X] [X] ADDU -- Add unsigned (no overflow)
+# [X] [X] AND -- Bitwise and
+# [X] [X] ANDI -- Bitwise and immediate
+# [X] [X] BEQ -- Branch on equal
+# [ ] [X] BGEZ -- Branch on greater than or equal to zero
+# [ ] [X] BGEZAL -- Branch on greater than or equal to zero and link
+# [ ] [X] BGTZ -- Branch on greater than zero
+# [ ] [X] BLEZ -- Branch on less than or equal to zero
+# [ ] [X] BLTZ -- Branch on less than zero
+# [ ] [X] BLTZAL -- Branch on less than zero and link
+# [X] [X] BNE -- Branch on not equal
+# [ ] [ ] DIV -- Divide
+# [ ] [ ] DIVU -- Divide unsigned
+# [X] [X] J -- Jump
+# [X] [X] JAL -- Jump and link
+# [X] [X] JR -- Jump register
+# [X] [X] LB -- Load byte
+# [ ] [X] LUI -- Load upper immediate
+# [X] [X] LW -- Load word
+# [ ] [X] MFHI -- Move from HI
+# [ ] [X] MFLO -- Move from LO
+# [ ] [X] MULT -- Multiply
+# [ ] [X] MULTU -- Multiply unsigned
+# [X] [X] NOOP -- no operation
+# [X] [X] OR -- Bitwise or
+# [X] [X] ORI -- Bitwise or immediate
+# [X] [X] SB -- Store byte
+# [ ] [X] SLL -- Shift left logical
+# [ ] [ ] SLLV -- Shift left logical variable
+# [ ] [ ] SLT -- Set on less than (signed)
+# [ ] [ ] SLTI -- Set on less than immediate (signed)
+# [ ] [ ] SLTIU -- Set on less than immediate unsigned
+# [ ] [ ] SLTU -- Set on less than unsigned
+# [ ] [ ] SRA -- Shift right arithmetic
+# [ ] [X] SRL -- Shift right logical
+# [ ] [ ] SRLV -- Shift right logical variable
+# [ ] [ ] SUB -- Subtract
+# [ ] [ ] SUBU -- Subtract unsigned
+# [X] [X] SW -- Store word
+# [ ] [ ] SYSCALL -- System call
+# [X] [X] XOR -- Bitwise exclusive or
+# [X] [X] XORI -- Bitwise exclusive or immediate
+
+# ---
+
 #32-Bit instructions     #op        #func
 var tnoop is '00000000000000000000000000000000'.
-var jumpb is Array new < '000010' ; ''.
-var noopb is Array new < '000000' ; '000000'.
-var addb  is Array new < '000000' ; '100000'.
-var addib is Array new < '001000' ; ''.
-var xorb  is Array new < '000000' ; '100110'.
-var orib  is Array new < '001101' ; ''.
-var beqb  is Array new < '000100' ; ''.
-var lwb   is Array new < '100011' ; ''.
-var lbub  is Array new < '100100' ; ''.
-var swb   is Array new < '101011' ; ''.
-var sbb   is Array new < '101000' ; ''.
+var jumpb is Array < '000010' ; ''.
+var jalb  is Array < '000011' ; ''.
+var jalrb is Array < '001001' ; ''.
+var jrb   is Array < '000000' ; '001000'.
+var noopb is Array < '000000' ; '000000'.
+var addb  is Array < '000000' ; '100000'.
+var addib is Array < '001000' ; ''.
+var xorb  is Array < '000000' ; '100110'.
+var orb   is Array < '000000' ; '100101'.
+var orib  is Array < '001101' ; ''.
+var beqb  is Array < '000100' ; ''.
+var bgtzb is Array < '000111' ; ''.
+var blezb is Array < '000110' ; ''.
+var bneb  is Array < '000101' ; ''.
+var sllb  is Array < '000000' ; '000000'.
+var srlb  is Array < '000000' ; '000010'.
+var lwb   is Array < '100011' ; ''.
+var lbub  is Array < '100100' ; ''.
+var swb   is Array < '101011' ; ''.
+var sbb   is Array < '101000' ; ''.
 var lib   is tnoop.
 #-----
 
 var MIPSIntructions is Map new
-  put: add at: 'add',
-  put: addi at: 'addi',
-  put: addi at: 'addiu',
-  put: add at: 'addu',
-  put: and at: 'and',
-  put: andi at: 'andi',
-  put: noop at: 'or',
-  put: ori at: 'ori',
-  put: xor at: 'xor',
-  put: beq at: 'beq',
-  put: bne at: 'bne',
-  put: jump at: 'j',
-  put: jal at: 'jal',
-  put: jr at: 'jr',
-  put: lbu at: 'lbu',
-  put: sb at: 'sb',
-  put: lw at: 'lw',
-  put: sw at: 'sw',
-  put: li at: 'li'.
+  put: add     at: 'add',
+  put: addi    at: 'addi',
+  put: addi    at: 'addiu',
+  put: add     at: 'addu',
+  put: and     at: 'and',
+  put: andi    at: 'andi',
+  put: srl     at: 'srl',
+  put: sll     at: 'sll',
+  put: mult    at: 'mult',
+  put: mult    at: 'multu',
+  put: noop    at: 'or',
+  put: ori     at: 'ori',
+  put: xor     at: 'xor',
+  put: beq     at: 'beq',
+  put: bne     at: 'bne',
+  put: bgez    at: 'bgez',
+  put: bgezal  at: 'bgezal',
+  put: bgtz    at: 'bgtz',
+  put: bltz    at: 'bltz',
+  put: bltzal  at: 'bltzal',
+  put: jump    at: 'j',
+  put: jal     at: 'jal',
+  put: jr      at: 'jr',
+  put: lbu     at: 'lb',
+  put: sb      at: 'sb',
+  put: lw      at: 'lw',
+  put: sw      at: 'sw',
+  put: li      at: 'li',
+  put: lui     at: 'lui'.
   #TODO: Finish instructions
 
 var MIPSIntructionBits is Map new
@@ -133,19 +212,21 @@ var MIPSIntructionBits is Map new
     put: noopb at: 'addu',
     put: noopb at: 'and',
     put: noopb at: 'andi',
-    put: noopb at: 'or',
+    put: orb at: 'or',
     put: orib at: 'ori',
     put: xorb at: 'xor',
     put: beqb at: 'beq',
-    put: noopb at: 'bne',
+    put: bneb at: 'bne',
     put: jumpb at: 'j',
-    put: noopb at: 'jal',
-    put: noopb at: 'jr',
-    put: lbub at: 'lbu',
+    put: jalb at: 'jal',
+    put: jrb at: 'jr',
+    put: lbub at: 'lb',
     put: sbb at: 'sb',
     put: lwb at: 'lw',
     put: swb at: 'sw',
-    put: lib at: 'li'.
+    put: lib at: 'li',
+    put: bgtzb at: 'bgtz',
+    put: blezb at: 'blez'.
     #TODO: Finish instructions
 
 var MIPSOpsToInstrs is MIPSIntructionBits flip.
@@ -177,7 +258,9 @@ MIPSAbstractMachine on: 'getBytes:base:offset:' do: {:c:base:oreg
   var addr is my memory absForBase: base offset: oreg.
   var arr is my memory from: addr length: c.
   var ret is ''.
-  debug applyTo: {Pen write: '$$c bytes from $$addr', brk.}.
+  debug {
+    Pen writeln: '$$c bytes from $$addr'
+  }.
   arr each: {:i:v ret append: (v toBits: 8).}.
   ^MIPSIntructions bitsToSigned: ret.
 }.
@@ -185,7 +268,9 @@ MIPSAbstractMachine on: 'setBytes:base:offset:value:' do: {:c:base:oreg:val
   var addr is my memory absForBase: base offset: oreg.
   var memory is my memory.
   val is val toBits: 32.
-  debug applyTo: {Pen write: '$$c bytes from $$addr', brk.}.
+  debug {
+    Pen writeln: '$$c bytes from $$addr'
+  }.
   var $0 is MIPSIntructions bitsToSigned: (val from: 0 to: 8).
   var $1 is MIPSIntructions bitsToSigned: (val from: 8 to: 16).
   var $2 is MIPSIntructions bitsToSigned: (val from: 16 to: 24).
@@ -404,9 +489,13 @@ RFormat on: 'emitBits:op0:op1:dst:' do: {:op:o0:o1:dst #
 IFormat on: 'emitBits:op0:immediate:dst:machine:' do: {:op:o0:oimm:dst:machine
   var opf is MIPSIntructionBits at: op.
   opf isNil ifTrue: {opf is tnoop.}, else: {
-    debug applyTo: {Pen write: '--> $$oimm'.}.
+    debug {
+      Pen write: '--> $$oimm'
+    }.
     {oimm toNumber. ^True.} catch: {^False.}, run ifFalse: {oimm is machine getLabelAsm: oimm mode: (op = 'beq') toNumber.}.
-    debug applyTo: {Pen write: ' $$oimm', brk.}.
+    debug {
+      Pen writeln: ' $$oimm'
+    }.
     opf is (opf @ 0) + (o0 toNumber toBits: 5, reverse) + (dst toNumber toBits: 5, reverse) + (oimm toNumber toBits: 16, reverse).
   }.
   ^opf.
@@ -415,7 +504,9 @@ IFormat on: 'emitBits:op0:immediate:dst:machine:' do: {:op:o0:oimm:dst:machine
 JFormat on: 'emitBits:label:machine:' do: {:op:dst:machine
   var opf is MIPSIntructionBits at: op.
   opf isNil ifTrue: {opf is tnoop.}, else: {
-    #Pen write: '--> $$dst'.
+    debug {
+      Pen write: '--> $$dst'
+    }.
     {dst toNumber. ^True.} catch: {^False.}, run ifFalse: {dst is machine getLabelAsm: dst mode: 0.}.
     dst is (dst toNumber toBits: 32).
     dst is dst from: 4 to: 30.
@@ -514,7 +605,9 @@ MIPSIntructions on: 'assembleInstr:forMachine:' do: {:command:machine
     ^''.
   }.
   command findPattern: '(\\w+)\\s+' + iregregex + '\\s*,\\s*' + idataregex + '\\s*[(]\\s*' + iregregex + '\\s*[)]' do: {:parts #I-Format (op $reg, base($offset))
-    debug applyTo: {Pen write: parts, brk.}.
+    debug {
+      Pen writeln: parts
+    }.
     op is parts @ 1.
     reg_dest is parts @ 2.
     oimm is parts @ 3.
@@ -674,19 +767,28 @@ sw $5, 0($0)
 xor $5,$5,$5
 lw $5, 0($0)
 andi $4,$4,10
- ori $4,$0,40
- xor $2,$2,$2
- main:
- beq $2,$4,exit
- addi $2,$2,10
- add $3,$2,$2
- j main
+ori $4,$0,40
+xor $2,$2,$2
+srl $4,$4,2
+sll $2,$2,3
+mult $6,$4,$4
+main:
+beq $2,$4,exit
+addi $2,$2,10
+add $3,$2,$2
+j main
  exit:'.#And she supported multiline strings like normal ones
 # 'li $t0, 0'.
 MIPSAbstractMachine addWord: 'X' length: 12.
 MIPSAbstractMachine addWord: 'Y' length: 12.
 
-DEBUG is False.
+var args is
+  Generator from: 0 to: Program argCount,
+  fmap: (\:i Program argument: i),
+  do next next done
+  toArray.
+
+DEBUG is args contains: '-d'.
 
 Pen green write: masm, resetColor brk.
 Pen red write: '\nParsed:\n', resetColor.

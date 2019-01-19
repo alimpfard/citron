@@ -77,7 +77,7 @@ ctr_question_intent (void)
 }
 
 static char *EXT_PATH = 0;
-static char *argv0 = 0;
+/*static char *argv0 = 0;
 static char abs_exe_path[PATH_MAX];
 char* applicationDirPath(char* argv0) {
   char path_save[PATH_MAX];
@@ -95,7 +95,7 @@ char* applicationDirPath(char* argv0) {
     chdir(path_save);
   }
   return abs_exe_path;
-}
+}*/
 
 char const *
 ctr_file_stdext_path_raw ()
@@ -111,7 +111,7 @@ ctr_file_stdext_path_raw ()
       EXT_PATH = env;
       return (char const *) env;
     }
-  EXT_PATH = applicationDirPath(argv0);
+  EXT_PATH = CTR_STD_EXTENSION_PATH;//applicationDirPath(argv0);
   return EXT_PATH;
 }
 
@@ -218,7 +218,7 @@ main (int argc, char *argv[])
   char *prg;
   ctr_tnode *program;
   uint64_t program_text_size = 0;
-  argv0 = argv[0];
+  //argv0 = argv[0];
   ctr_argc = argc;
   ctr_argv = argv;
   ctr_cli_read_args (argc, argv);

@@ -17,6 +17,7 @@ args=(
     '-h[show help]'
     '-f[evaluate file]:filename:->ctr_files'
     '-F[enable/disable flag]:flag:->flags'
+    '--tidy[try to tidy up code]:filename:->ctr_files'
     '--Fs[show all flags]'
     '--meta[execute metacommand]'
     '-e[evaluate expression]'

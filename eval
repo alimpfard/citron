@@ -735,7 +735,7 @@ Eval on: 'togglePasteMode' do: {
     }, case: '--tidy' do: {
         args pop.
         var fname is Eval shiftArgs.
-        fname isNil ifTrue: { thisBlock error: '--cleanup requires an argument'. }.
+        fname isNil ifTrue: { thisBlock error: '--tidy requires an argument'. }.
         import Library/AST/ast2ctrcode: 'ast2ctrcode'.
         Pen writeln: '# File $$fname'.
         Pen writeln: ast2ctrcode[(AST parse: (File new: fname, read))].

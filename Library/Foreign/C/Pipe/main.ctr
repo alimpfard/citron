@@ -1,0 +1,24 @@
+import
+  Library/Foreign/Interop/C
+  Library/Foreign/C/Filedes: \*
+.
+
+Inject
+  importFunctionsOrTypes: ['pipe']
+  fromHeaders: ['unistd.h']
+  andLibraries: ['c']
+.
+
+var Int2ArrayType is CTypes structWithFormat: 'sisi'.
+
+var _pipe is {
+  var arr is const Int2ArrayType new allocate.
+
+  var retv is const pipe [arr getRawAddress].
+  retv !=: 0, ifTrue: {
+    thisBlock error: 'pipe returned $$retv'.
+  }.
+  ^[(FileDes new: (arr at: i)),, (i: arr offsets)].
+}.
+
+pipe is _pipe.

@@ -11,6 +11,9 @@ var FileDes is Object cnew: {
   on: 'read' do: {
     ^const FileDesInternals readFrom: my fd.
   }.
+  on: 'read:' do: {:bytes
+    ^const FileDesInternals readFrom: my fd bufferSize: bytes totalLength: bytes.
+  }.
   on: 'write:' do: {:str
     ^const FileDesInternals writeInto: my fd string: str.
   }.

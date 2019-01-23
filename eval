@@ -73,6 +73,7 @@ Eval on: 'init' do: {
     put: False at: 'stats',
     put: True at: 'printvs',
     put: True at: 'highlight',
+    put: False at: 'paste',
     put: False at: 'equit',
     put: False at: 'jsonout',
     put: True at: 'intty',
@@ -630,6 +631,7 @@ Eval on: 'allTheNames:' do: {:obj
 
 Eval on: 'togglePasteMode' do: {
   me toggleFlag: 'highlight'.
+  me toggleFlag: 'paste'.
 }.
 
 # parse arguments
@@ -1234,33 +1236,45 @@ Eval on: 'read_eval_print:' do: ({:prompt
           ) switch: inc.
         }, default: {
           have_context ifTrue: { clear_next_line applyTo: linesp. have_context is False. }.
-          (inc
-            case: '\'' do: {
-                inString either: {
-                  lastEscape ifFalse: { inString is False. }.
-                } or: { inString is True. }.
-            },
-            case: '\\' do: {
-                lastEscape is lastEscape not.
-                justInEscape is True.
-            },
-            case: '#' do: {
-              inString ifFalse: {
-                cmt is Colors % ['comments are not allowed in eval', \red].
-                done is True.
-                inc is ''.
-              }.
-            },
-            case: '}' do: {
-              (inString not) & (inBlock > 0) ifTrue: {
-                inBlock -=: 1.
-              }.
-            },
-            default: { lastEscape & inString ifTrue: {lastEscape is False.}. }, switch).
-            justInEscape ifFalse: { lastEscape is False. }.
-          inp is inp insert: inc at: cursor.
-          cursor +=: inc length.
-          # Eval redraw: inp at: cursor comment: ''.
+          Eval getFlag: 'paste', ifTrue: {
+            inp is inp insert: inc at: cursor.
+            cursor +=: inc length.
+          }
+          ifFalse: {
+            (frozen str_select_q is
+              case: '\'' do: {
+                  inString either: {
+                    lastEscape ifFalse: { inString is False. }.
+                  } or: { inString is True. }.
+              },
+              case: '\\' do: {
+                inString ifTrue: {
+                  lastEscape is lastEscape not.
+                  justInEscape is True.
+                }.
+              },
+              case: '#' do: {
+                inString ifFalse: {
+                  cmt is Colors % ['comments are not allowed in eval', \red].
+                  inc is ''.
+                }.
+              },
+              case: '{' do: {
+                (inString not) ifTrue: {
+                  inBlock +=: 1.
+                }.
+              },
+              case: '}' do: {
+                (inString not) & (inBlock > 0) ifTrue: {
+                  inBlock -=: 1.
+                }.
+              },
+              default: { lastEscape & inString ifTrue: {lastEscape is False.}. }) switch: inc.
+              justInEscape ifFalse: { lastEscape is False. }.
+              inp is inp insert: inc at: cursor.
+              cursor +=: inc length.
+              # Eval redraw: inp at: cursor comment: ''.
+          }.
         }
       ) switch: inc.
       last_was_comp is False.

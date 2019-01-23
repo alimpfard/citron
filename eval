@@ -1104,7 +1104,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
           }.
           last_was_comp is True.
         }.
-      } ifFalse: {
+    } ifFalse: {
         (frozen select_toplevel_inc is Object case: '\xd' do: {#<Enter>
           clear_next_line applyTo: linesp.
           have_context ifFalse: {
@@ -1147,7 +1147,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
             cursor -=: 1.
             Eval display/write: '\b \b'.
           }, else: { Eval display/write: '\a'. }.
-        }, case: '\x{7f}' do: {#<\b>
+        }, case: '\x7f' do: {#<\b>
           clear_next_line applyTo: linesp. have_context is False.
           cursor > 0 ifTrue: {
             inp is inp removeFrom: (cursor - 1) to: cursor.
@@ -1159,62 +1159,79 @@ Eval on: 'read_eval_print:' do: ({:prompt
           var recs is '%:L' % [' ', (Eval allTheNames filter: {:_:n ^n startsWith: toc.})].
           Eval display/cyan write: recs, resetColor.
           clear_next_line applyTo: linesp. have_context is False.
-
-        }, case: '\x1b' do: {
-          inc is stdin readUTF8Bytes: 2.
-          (frozen select_inlevel_q is case: '\x5b\x41' do: { #Up Arrow
-            hindex > 0 ifTrue: {
-              cursor is (inp is Eval getHistory at: (hindex is hindex - 1)) length.
-            }.
-            clear_next_line applyTo: linesp. have_context is False.
-          }, case: '\x5b\x42' do: { #Down Arrow
-            (hindex > 0) & (Eval getHistory count > 0) ifTrue: {
-              hindex +=: 1.
-              Eval display/write: '\b' * (inp length).
-              inp is Eval getHistory.
-              inp count <=: hindex, ifTrue: {hindex is inp count.}.
-              inp is inp at: hindex - 1.
-              cursor is inp length.
-            }, else: {
-              hindex is 0.
-              Eval display/write: '\b \b' * (inp length).
-              inp is ''.
-              cursor is 0.
-            }.
-            clear_next_line applyTo: linesp. have_context is False.
-          }, case: '\x5b\x43' do: { #Right Arrow
-            (cursor < inp length) ifTrue: {
-              cursor +=: 1.
-            }, else: {Eval display/write: '\a'.}.
-            clear_next_line applyTo: linesp. have_context is False.
-          }, case: '\x5b\x44' do: { #Left Arrow
-            (cursor > 0) ifTrue: {
-              cursor -=: 1.
-            }, else: {Eval display/write: '\a'.}.
-            clear_next_line applyTo: linesp. have_context is False.
-          }, case: '\x5b\x31' do: { #Supposedly <ctrl>
-            inc is stdin readUTF8Bytes: 3.
-              (inc = '\x3b\x35\x44') & (cursor > 0) ifTrue: { #^Left Arrow
-                var ct is inp from: 0 to: cursor.
-                var ct is ct trim.
-                ct at: ct length - 1, = ':' ifTrue: { ct is ct from: 0 to: ct length - 1. }.
-                ct is (ct reLastIndexOf: ?>\s|\'|(?<!^):\b|:$<?).
-                ct is ct equals: cursor - 1, either: ct - 1 or: ct.
-                cursor is ct + 1.
-              } ifFalse: {
-                (inc = '\x3b\x35\x43') ifTrue: { #^Right Arrow
-                  var ct is (var ix is inp from: cursor to: (inp length), rightTrim) reIndexOf: ?>\s|\'|(?<!^):\b|:$<?, - 1.
-                  ct is ct equals: 0, either: ct + 1 or: ct - 1.
-                  cursor is cursor + ct + ((inp length) - (ix length)).
-                }.#, else: { Eval display/red write: inc. }.
-              }.
-              clear_next_line applyTo: linesp. have_context is False.
-          }, case: '\x4f\x51' do: { #F2
-              clear_next_line applyTo: linesp. have_context is False.
-              Eval togglePasteMode.
-          }, default: {
-            Pen write: inc toByteArray.
-          }) switch: inc.
+        }, case: '\x1b' do: { #<esc>
+          # Eval redraw: inp at: cursor - 1 comment: '<escape>'.
+          inc is stdin readUTF8Bytes: 1.
+          (frozen select_inlevel_t is
+               case: '\x5b' do: {
+                 inc is stdin readUTF8Bytes: 1.
+                 (frozen select_inlevel_q is
+                     case: '\x41' do: { #Up Arrow
+                      hindex > 0 ifTrue: {
+                        cursor is (inp is Eval getHistory at: (hindex is hindex - 1)) length.
+                      }.
+                      clear_next_line applyTo: linesp. have_context is False.
+                  }, case: '\x42' do: { #Down Arrow
+                      (hindex > 0) & (Eval getHistory count > 0) ifTrue: {
+                        hindex +=: 1.
+                        Eval display/write: '\b' * (inp length).
+                        inp is Eval getHistory.
+                        inp count <=: hindex, ifTrue: {hindex is inp count.}.
+                        inp is inp at: hindex - 1.
+                        cursor is inp length.
+                      }, else: {
+                        hindex is 0.
+                        Eval display/write: '\b \b' * (inp length).
+                        inp is ''.
+                        cursor is 0.
+                      }.
+                      clear_next_line applyTo: linesp. have_context is False.
+                  }, case: '\x43' do: { #Right Arrow
+                    (cursor < inp length) ifTrue: {
+                      cursor +=: 1.
+                    }, else: {Eval display/write: '\a'.}.
+                    clear_next_line applyTo: linesp. have_context is False.
+                  }, case: '\x44' do: { #Left Arrow
+                    (cursor > 0) ifTrue: {
+                      cursor -=: 1.
+                    }, else: {Eval display/write: '\a'.}.
+                    clear_next_line applyTo: linesp. have_context is False.
+                  }, case: '\x31' do: { #Supposedly <ctrl>
+                    inc is stdin readUTF8Bytes: 3.
+                      (inc = '\x3b\x35\x44') & (cursor > 0) ifTrue: { #^Left Arrow
+                        var ct is inp from: 0 to: cursor.
+                        var ct is ct trim.
+                        ct at: ct length - 1, = ':' ifTrue: { ct is ct from: 0 to: ct length - 1. }.
+                        ct is (ct reLastIndexOf: ?>\s|\'|(?<!^):\b|:$<?).
+                        ct is ct equals: cursor - 1, either: ct - 1 or: ct.
+                        cursor is ct + 1.
+                      } ifFalse: {
+                        (inc = '\x3b\x35\x43') ifTrue: { #^Right Arrow
+                          var ct is (var ix is inp from: cursor to: (inp length), rightTrim) reIndexOf: ?>\s|\'|(?<!^):\b|:$<?, - 1.
+                          ct is ct equals: 0, either: ct + 1 or: ct - 1.
+                          cursor is cursor + ct + ((inp length) - (ix length)).
+                        }.#, else: { Eval display/red write: inc. }.
+                      }.
+                      clear_next_line applyTo: linesp. have_context is False.
+                  }, default: {
+                    Pen writeln: inc toByteArray.
+                  }) switch: inc.
+            }, case: '\x4f' do: {
+                inc is stdin readUTF8Bytes: 1.
+                (frozen select_inlevel_c is
+                     case: '\x51' do: { #F2
+                      clear_next_line applyTo: linesp. have_context is False.
+                      Eval togglePasteMode.
+                  }
+                ) switch: inc.
+            }, case: '\xd' do: { #<Enter>
+              inBlock +=: 1.
+              True continue.
+            }, case: '\x1b' do: { #<esc>
+              inBlock is 0 max: inBlock - 1.
+            }, default: {
+            }
+          ) switch: inc.
         }, default: {
           have_context ifTrue: { clear_next_line applyTo: linesp. have_context is False. }.
           (inc
@@ -1244,9 +1261,10 @@ Eval on: 'read_eval_print:' do: ({:prompt
           inp is inp insert: inc at: cursor.
           cursor +=: inc length.
           # Eval redraw: inp at: cursor comment: ''.
-        }) switch: inc.
-        last_was_comp is False.
-      }.
+        }
+      ) switch: inc.
+      last_was_comp is False.
+    }.
     Eval redraw: inp at: cursor - 1 comment: (inBlock either: '%s%d' % ['%{', inBlock] or: cmt).
     # Eval display/write: inc toByteArray.
     done is (done & (inBlock = 0)).

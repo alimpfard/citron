@@ -172,7 +172,7 @@ contexts[] {
          }
       }
       : pattern {
-         regex      \= (0[xX][0-9a-fA-F]+|0[cC][0-7]|\d+\.\d+|\d+)
+         regex      \= (0[xX][0-9a-fA-F]+|0[cC][0-7]+|0[bB][01]+|\d+\.\d+|\d+)
          styles []   = .sl_number;
       }
       : inline_push {

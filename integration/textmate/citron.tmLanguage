@@ -155,7 +155,7 @@
         </dict>
         <dict>
           <key>match</key>
-          <string>(0[xX][0-9a-fA-F]+|0[cC][0-7]|\d+\.\d+|\d+)</string>
+          <string>(0[xX][0-9a-fA-F]+|0[cC][0-7]+|0[bB][01]+|\d+\.\d+|\d+)</string>
           <key>name</key>
           <string>constant.numeric.Citron</string>
         </dict>

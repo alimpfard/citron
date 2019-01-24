@@ -20,7 +20,7 @@ class CitronLexer(RegexLexer):
             (u'([\\[\\]\\(\\)\\^\\}])', bygroups(Name)),
             (u'(?:(\\s*)(\\bis\\b|\\:\\=|\\=\\>)(\\s*))', bygroups(Generic, Keyword.Reserved, Generic)),
             (u'(?:(\\?>))', bygroups(String.Regex), 'main__3'),
-            (u'(0[xX][0-9a-fA-F]+|0[cC][0-7]|\\d+\\.\\d+|\\d+)', bygroups(Number)),
+            (u'(0[xX][0-9a-fA-F]+|0[cC][0-7]+|0[bB][01]+|\\d+\\.\\d+|\\d+)', bygroups(Number)),
             (u'(\')', bygroups(String), 'main__4'),
             (u'(?:(\\\\)((?:\\:[^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*\\s*)+))', bygroups(Keyword.Reserved, Keyword.Pseudo), 'main__5'),
             (u'(?:(\\{)(asm)(\\s*(?:\\:)\\s*(?:\\w+))*(\\s*(?:intel|att|at\\&t))?(\\s*\\(.*\\)\\s*))', bygroups(Name, Generic.Deleted, Keyword.Pseudo, Generic.Deleted, Generic.Deleted), 'main__6'),

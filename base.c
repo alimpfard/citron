@@ -1454,7 +1454,7 @@ ctr_object *
 ctr_build_number (char *n)
 {
   ctr_object *numberObject = ctr_internal_create_object (CTR_OBJECT_TYPE_OTNUMBER);
-  if (strncmp (n, "0x", 2) == 0)
+  if (strncasecmp (n, "0x", 2) == 0 || strncasecmp (n, "0b", 2) == 0)
     numberObject->value.nvalue = (double) strtol (n, NULL, 0);
   else
     numberObject->value.nvalue = atof (n);
@@ -1507,7 +1507,7 @@ ctr_build_number_from_string (char *str, ctr_size length)
   /* max length is 40 (and that's probably even too long... ) */
   numCStr = (char *) ctr_heap_allocate (41 * sizeof (char));
   memcpy (numCStr, str, stringNumberLength);
-  char *baseptr = NULL, bases[] = "xXcCoO";
+  char *baseptr = NULL, bases[] = "xXcCoObB";
   if (numCStr[0] == '0' && length > 1 && numCStr[1] != '.')
     {
       if (numCStr[1] == '0')
@@ -1530,6 +1530,11 @@ ctr_build_number_from_string (char *str, ctr_size length)
 	    baseptr = numCStr + 2;
 	    base = 16;
 	    break;
+    case 6:
+    case 7:
+      baseptr = numCStr + 2;
+      base = 2;
+      break;
 	  default:
 	    baseptr = numCStr;
 	    break;

@@ -272,6 +272,59 @@ ctr_ast_insert_nth (ctr_object * myself, ctr_argument * argumentList)
   return myself;
 }
 
+
+/**
+ * [AST] insert: [AST]
+ *
+ * Inserts (emplace) the given AST node at the end
+ */
+ctr_object *
+ctr_ast_insert_end (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *tnodeobj = argumentList->object;
+  int nullast = 0, ip = 0;
+  if (myself == CtrStdAst)
+    return CtrStdNil;
+  if (!(myself->value.rvalue && myself->value.rvalue->ptr))
+    {
+      nullast = 1;
+    err:;
+      CtrStdFlow = ctr_build_string_from_cstring (ip ? "incorrect passed argument" : (nullast ? "Null ast node" : "count out of range"));
+      return CtrStdNil;
+    }
+  if (tnodeobj->value.rvalue->type != CTR_AST_TYPE)
+    {
+      ip = 1;
+      goto err;
+    }
+  ctr_tnode *insnode = tnodeobj->value.rvalue->ptr;
+  if (!insnode)
+    goto err;
+  ctr_tnode *node = myself->value.rvalue->ptr;
+  ctr_tlistitem *pitem = node->nodes, *oldpitem = pitem;
+  while (pitem)
+    {
+      oldpitem = pitem;
+      pitem = pitem->next;
+    }
+  if (oldpitem != pitem)
+    {
+      ctr_tlistitem *insitem = ctr_heap_allocate (sizeof (ctr_tlistitem));
+      insitem->node = insnode;
+      insitem->next = pitem->next;
+      pitem->next = insitem;
+    }
+  else
+    {
+      ctr_tlistitem *insitem = ctr_heap_allocate (sizeof (ctr_tlistitem));
+      insitem->node = insnode;
+      insitem->next = pitem;
+      node->nodes = insitem;
+    }
+  return myself;
+}
+
+
 /**
  * [AST] put: [AST] at: [Number]
  *
@@ -1747,6 +1800,7 @@ initiailize_base_extensions ()
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("parse:"), &ctr_ast_parse);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("at:"), &ctr_ast_nth);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("insert:at:"), &ctr_ast_insert_nth);
+  ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("insert:"), &ctr_ast_insert_end);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("put:at:"), &ctr_ast_set_nth);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("@"), &ctr_ast_nth);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("each:"), &ctr_ast_each);

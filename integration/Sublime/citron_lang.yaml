@@ -64,7 +64,7 @@ contexts:
         - match: '(.)'
           captures:
             0: text.Citron
-    - match: '(0[xX][0-9a-fA-F]+|0[cC][0-7]|\d+\.\d+|\d+)'
+    - match: '(0[xX][0-9a-fA-F]+|0[cC][0-7]+|0[bB][01]+|\d+\.\d+|\d+)'
       captures:
         0: constant.numeric.Citron
     - match: '('')'

@@ -307,20 +307,12 @@ ctr_ast_insert_end (ctr_object * myself, ctr_argument * argumentList)
       oldpitem = pitem;
       pitem = pitem->next;
     }
-  if (oldpitem != pitem)
-    {
-      ctr_tlistitem *insitem = ctr_heap_allocate (sizeof (ctr_tlistitem));
-      insitem->node = insnode;
-      insitem->next = pitem->next;
-      pitem->next = insitem;
-    }
-  else
-    {
-      ctr_tlistitem *insitem = ctr_heap_allocate (sizeof (ctr_tlistitem));
-      insitem->node = insnode;
-      insitem->next = pitem;
+    ctr_tlistitem *insitem = ctr_heap_allocate (sizeof (ctr_tlistitem));
+    insitem->node = insnode;
+    if (oldpitem)
+      oldpitem->next = insitem;
+    else
       node->nodes = insitem;
-    }
   return myself;
 }
 

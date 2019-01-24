@@ -3484,7 +3484,7 @@ ctr_string_at (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_string_byte_at (ctr_object * myself, ctr_argument * argumentList)
 {
-  char x;
+  unsigned char x;
   ctr_object *fromPos = ctr_internal_cast2number (argumentList->object);
   long a = (fromPos->value.nvalue);
   long len = myself->value.svalue->vlen;
@@ -3492,7 +3492,7 @@ ctr_string_byte_at (ctr_object * myself, ctr_argument * argumentList)
     return CtrStdNil;
   if (a < 0)
     return CtrStdNil;
-  x = (char) *(myself->value.svalue->value + a);
+  x = (unsigned char) *(myself->value.svalue->value + a);
   return ctr_build_number_from_float ((double) x);
 }
 

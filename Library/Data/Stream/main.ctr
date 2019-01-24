@@ -9,11 +9,12 @@ var Stream is Object cnew: {
   on: 'atEnd' do: {
     ^my position = my end.
   }.
+  on: 'tell' do: { ^my position. }.
   on: 'peek' do: {
-    ^my source at: my position.
+    ^my source byteAt: my position.
   }.
   on: 'next' do: {
-    ^my source at: (my position +=: 1, - 1).
+    ^my source byteAt: (my position +=: 1, - 1).
   }.
   on: 'takeUntilMatches:' do: {:vstr
     var startPos is my position.

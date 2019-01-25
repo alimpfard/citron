@@ -3184,10 +3184,13 @@ ctr_send_message_async (ctr_object * receiverObject, char *message, long vlen, c
 ctr_object *
 ctr_assign_value (ctr_object * key, ctr_object * o)
 {
-  ctr_object *object = NULL;
+  ctr_object *object = o;
   if (CtrStdFlow)
     return CtrStdNil;
   key->info.sticky = 0;
+  int byref = key->value.svalue->vlen > 1 && key->value.svalue->value[0] == '&';
+  if (byref) { key->value.svalue->value++; key->value.svalue->vlen--; }
+  else
   switch (o->info.type)
     {
     case CTR_OBJECT_TYPE_OTBOOL:
@@ -3238,11 +3241,14 @@ ctr_const_assign_value (ctr_object * key, ctr_object * o, ctr_object * context)
 ctr_object *
 ctr_assign_value_to_my (ctr_object * key, ctr_object * o)
 {
-  ctr_object *object = NULL;
+  ctr_object *object = o;
   ctr_object *my = ctr_find (&CTR_CLEX_KW_ME);
   if (CtrStdFlow)
     return CtrStdNil;
   key->info.sticky = 0;
+  int byref = key->value.svalue->vlen > 1 && key->value.svalue->value[0] == '&';
+  if (byref) { key->value.svalue->value++; key->value.svalue->vlen--; }
+  else
   switch (o->info.type)
     {
     case CTR_OBJECT_TYPE_OTBOOL:
@@ -3278,12 +3284,15 @@ ctr_assign_value_to_my (ctr_object * key, ctr_object * o)
 ctr_object *
 ctr_assign_value_to_local (ctr_object * key, ctr_object * o)
 {
-  ctr_object *object = NULL;
+  ctr_object *object = o;
   ctr_object *context;
   if (CtrStdFlow)
     return CtrStdNil;
   context = ctr_contexts[ctr_context_id];
   key->info.sticky = 0;
+  int byref = key->value.svalue->vlen > 1 && key->value.svalue->value[0] == '&';
+  if (byref) { key->value.svalue->value++; key->value.svalue->vlen--; }
+  else
   switch (o->info.type)
     {
     case CTR_OBJECT_TYPE_OTBOOL:

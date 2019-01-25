@@ -139,6 +139,37 @@ ctr_reflect_dump_context (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
+ * Reflect getStrNativeTypeOf: [Object]
+ *
+ * returns the native type of the given object
+ */
+ctr_object *
+ctr_reflect_nat_type (ctr_object * myself, ctr_argument * argumentList) {
+  switch (argumentList->object->info.type) {
+    case CTR_OBJECT_TYPE_OTNIL:
+      return ctr_build_string_from_cstring("NIL");
+    case CTR_OBJECT_TYPE_OTBOOL:
+      return ctr_build_string_from_cstring("BOOL");
+    case CTR_OBJECT_TYPE_OTNUMBER:
+      return ctr_build_string_from_cstring("NUMBER");
+    case CTR_OBJECT_TYPE_OTSTRING:
+      return ctr_build_string_from_cstring("STRING");
+    case CTR_OBJECT_TYPE_OTBLOCK:
+      return ctr_build_string_from_cstring("BLOCK");
+    case CTR_OBJECT_TYPE_OTOBJECT:
+      return ctr_build_string_from_cstring("OBJECT");
+    case CTR_OBJECT_TYPE_OTNATFUNC:
+      return ctr_build_string_from_cstring("NATFUNC");
+    case CTR_OBJECT_TYPE_OTARRAY:
+      return ctr_build_string_from_cstring("ARRAY");
+    case CTR_OBJECT_TYPE_OTMISC:
+      return ctr_build_string_from_cstring("MISC");
+    case CTR_OBJECT_TYPE_OTEX:
+      return ctr_build_string_from_cstring("EX");
+  }
+  return CtrStdNil;
+}
+/**
  * Reflect getMethodsOf: [Object]
  *
  * returns all the method names of object

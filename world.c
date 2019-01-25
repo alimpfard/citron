@@ -2198,6 +2198,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("addLocalVariable:"), &ctr_reflect_add_local);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("addPrivateVariable:"), &ctr_reflect_add_my);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("set:to:"), &ctr_reflect_set_to);
+  ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("getStrNativeTypeOf:"), &ctr_reflect_nat_type);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("getContext"), &ctr_reflect_dump_context);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("thisContext"), &ctr_reflect_this_context);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("getMethodsOf:"), &ctr_reflect_dump_context_spec);

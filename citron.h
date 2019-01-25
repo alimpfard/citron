@@ -1224,6 +1224,7 @@ ctr_object* ctr_reflect_run_in_new_ctx(ctr_object * myself, ctr_argument * argum
 ctr_object* ctr_reflect_compilerinfo (ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_delegate_set_private_property(ctr_object* itself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_set_ignore_file (ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_nat_type (ctr_object* myself, ctr_argument* argumentList);
 ctr_argument* ctr_array_to_argument_list (ctr_object * arr, ctr_argument * provided);
 int ctr_internal_has_own_responder(ctr_object* myself, ctr_object* meth);
 int ctr_internal_has_responder(ctr_object* myself, ctr_object* meth);

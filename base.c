@@ -5907,6 +5907,7 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
     }
   // overload end
   int is_tail_call = 0, id;
+  if (myself->value.block && myself->value.block->lexical)
   for (id = ctr_context_id; id > 0 && !is_tail_call && ctr_current_node_is_return; id--, is_tail_call = ctr_contexts[id] == myself);
   if (is_tail_call)
     {

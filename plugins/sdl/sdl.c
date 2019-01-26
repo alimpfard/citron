@@ -9,12 +9,12 @@
 #include <stdlib.h>
 #include <math.h>
 #include <unistd.h>
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
-#include <SDL/SDL_ttf.h>
-#include <SDL/SDL_rotozoom.h>
-#include <SDL/SDL_gfxPrimitives.h>
-#include <SDL/SDL_gfxBlitFunc.h>
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h>
+#include <SDL_rotozoom.h>
+#include <SDL_gfxPrimitives.h>
+#include <SDL_gfxBlitFunc.h>
 
 static int sdl_inited = 0;
 static int ttf_inited = 0;

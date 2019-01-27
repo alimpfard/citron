@@ -8,3 +8,6 @@ clean:
 	rm -rf libsocket.so
 install:
 	make -C libsocket/build install
+
+uninstall:
+	# make -C libsocket/build uninstall

@@ -6,3 +6,6 @@ clean:
 
 install:
 	echo "Hello!"
+
+uninstall:
+	echo "Noooooooooooooooooooooooooooooooo!"

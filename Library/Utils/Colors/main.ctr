@@ -15,6 +15,7 @@ var Colors is Object cnew: {
     }.
   }.
   mode => 256.
+  on: 'backendType' do: {\ \ANSI. }.
 }.
 
 Colors on: 'new' do: {

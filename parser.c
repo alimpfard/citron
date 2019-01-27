@@ -69,7 +69,7 @@ ctr_paramlist_has_name (char *namenode, size_t len)
 	while (name)
 	  {
 	    // printf("  -- %d %.*s\n", i, name->node->vlen, name->node->value);
-	    int vararg = name->node->value[0] == '*';
+	    int vararg = name->node->value[0] == '*' || name->node->value[0] == '&';
 	    if (unlikely (name->node->vlen == len || vararg))
 	      {
 		if (strncmp (name->node->value + vararg, namenode, len - vararg) == 0)

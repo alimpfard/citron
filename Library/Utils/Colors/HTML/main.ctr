@@ -5,7 +5,7 @@ import
   Library/Control/Error/NotImplementedError
 .
 
-#:callShorthand ()
+##:callShorthand ()
 
 var compose_call is \:fn0:fn1 \:arg fn0 applyTo: (fn1 applyTo: arg).
 
@@ -19,6 +19,7 @@ var Colors is Object cnew: {
     }.
   }.
   mode => 256.
+  on: 'backendType' do: {\ \HTML. }.
 }.
 
 Colors on: 'new' do: {
@@ -39,8 +40,26 @@ Colors on: 'paint:' do: {:str:*options
     either: {\ str }
     or: {
       (options count = 1) & (Reflect isObject: options @ 0 linkedTo: Array) ifTrue: { options is options head. }.
-      ^'<a style="%s">%s</a>' % [(cache at: options), str].
+      ^'<a style="%s">%s</a>' % [(Colors fixSpaceFor: str withStyle: (cache at: options)), str].
     }.
+}.
+
+Colors on: 'fixSpaceFor:withStyle:' do: {:&str:&style
+  var s is 0.
+  var e is 0.
+  str length times: {:i
+    (str @ i = ' ') not break.
+    s +=: 1.
+  }.
+  (var len is str length - s) times: {:i
+    (str @ (len + s - i - 1) = ' ') not break.
+    e +=: 1.
+  }.
+  Pen writeln: [str, s, e].
+  s + e = 0 ifTrue: {
+    ^style.
+  }.
+  ^'margin-left: %dch; margin-right: %dch;' % [s, e] + style.
 }.
 
 Colors on: 'color' do: {:*options
@@ -154,7 +173,13 @@ SComp on: '+' do: {\:self:other
 }.
 SComp on: 'toString' do: { ^me(''). }.
 
-Colors on: 'fwrap:' do: {:self:p ^const SComp fromBlock: \:s '<a style="%s">%s</a>' % [(self wrap: [p]), s].}.
+Colors on: 'fwrap:' do: {:self:p
+  ^const SComp fromBlock: {:s
+    s = '' ifTrue: { ^s. }.
+    var p is const self wrap: [const p].
+    ^'<a style="%s">%s</a>' % [(const self fixSpaceFor: s withStyle: p), s].
+  }.
+}.
 Colors on: 'fwrape:' do: {:self:e ^const SComp fromBlock: e.}.
 Colors on: 'simple:background:' do: {:self:name:bg
   name is name toSymbol.
@@ -171,7 +196,7 @@ Colors on: 'simple:background:' do: {:self:name:bg
 }.
 
 Colors on: 'stripColors:' do: {\:str
-  (str ~ 's/\x1b\\[(?:[0-9];?)+m//g')
+  (str ~ 's/<[^>]+>//g')
 }.
 
 Colors on: 'respondTo:' do: {:name ^me simple: name background: False. }.

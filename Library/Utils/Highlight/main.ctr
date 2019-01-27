@@ -12,7 +12,8 @@ Highlight on: 'highlight:' do: {:code:html
     }.
     ^cv.
   }.
-  var space is html either: '&nbsp;' or: ' '.
+  var space is ' '.
+  var nocolor is Colors backendType = \HTML either: { ^Colors white. } or: ''.
   var returned is ''.
   var Tokens is AST feedLexer: code.
   var token is AST token.
@@ -263,7 +264,7 @@ Highlight on: 'highlight:' do: {:code:html
         this_thing is token @ 1.
     }) switch: token @ 0.
     # Pen writeln: [token, this_thing, rlen].
-    returned +=: space * ((token @ 2) - rlen - (token @ 3)).
+    returned +=: nocolor + (space * ((token @ 2) - rlen - (token @ 3))).
     returned +=: color + this_thing + (Colors default) + (after_color).
     #Pen writeln: [token @ 0, last_toc, last_toc_override].
     (token @ 0 = 'CHAIN') & (last_toc = 'REF') ifTrue: { last_toc_override is 'NOT-CHAIN'. }.

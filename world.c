@@ -1776,6 +1776,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdNumber, ctr_build_string_from_cstring (CTR_DICT_POS), &ctr_number_positive);
   ctr_internal_create_func (CtrStdNumber, ctr_build_string_from_cstring (CTR_DICT_NEG), &ctr_number_negative);
   ctr_internal_create_func (CtrStdNumber, ctr_build_string_from_cstring (CTR_DICT_TOSTRING), &ctr_number_to_string);
+  ctr_internal_create_func (CtrStdNumber, ctr_build_string_from_cstring ("toStringInBase:"), &ctr_number_to_string_base);
   ctr_internal_create_func (CtrStdNumber, ctr_build_string_from_cstring (CTR_DICT_TOBOOL), &ctr_number_to_boolean);
   ctr_internal_create_func (CtrStdNumber, ctr_build_string_from_cstring (CTR_DICT_TONUMBER), &ctr_object_myself);
   ctr_internal_create_func (CtrStdNumber, ctr_build_string_from_cstring (CTR_DICT_BETWEEN), &ctr_number_between);

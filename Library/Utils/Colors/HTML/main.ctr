@@ -55,7 +55,6 @@ Colors on: 'fixSpaceFor:withStyle:' do: {:&str:&style
     (str @ (len + s - i - 1) = ' ') not break.
     e +=: 1.
   }.
-  Pen writeln: [str, s, e].
   s + e = 0 ifTrue: {
     ^style.
   }.

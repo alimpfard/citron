@@ -30,6 +30,7 @@
 #endif
 
 #include "generator.h"
+char* ctr_itoa(int value, char* buffer, int base);
 
 /**@I_OBJ_DEF Nil*/
 /**
@@ -2472,6 +2473,34 @@ ctr_number_uint_binrep (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
+ * [Number] toStringInBase: [Number]
+ *
+ * cast to number in the given base
+ */
+ctr_object *
+ctr_number_to_string_base (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *o = myself;
+  int slen;
+  char *s;
+  char *p;
+  char *buf;
+  int bufSize;
+  ctr_object *stringObject;
+  int base = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  s = ctr_heap_allocate (200 * sizeof (char));
+  bufSize = 2000 / 8 * sizeof (char);
+  buf = ctr_heap_allocate (bufSize);
+  ctr_itoa(o->value.nvalue, buf, base);
+  strncpy (s, buf, strlen (buf));
+  ctr_heap_free (buf);
+  slen = strlen (s);
+  stringObject = ctr_build_string (s, slen);
+  ctr_heap_free (s);
+  return stringObject;
+}
+
+/**
  *[Number] toString
  *
  * Wrapper for cast function.
@@ -2696,7 +2725,7 @@ ctr_build_empty_string ()
 ctr_object *
 ctr_string_escape_ascii (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object *escape = argumentList && argumentList->object ? ctr_internal_cast2string (argumentList->object) : ctr_build_string_from_cstring ("\f\v\a\\");	// sensible default
+  ctr_object *escape = argumentList && argumentList->object && argumentList->object != CtrStdNil ? ctr_internal_cast2string (argumentList->object) : ctr_build_string_from_cstring ("\n\b\t\f\v\a\\");	// sensible default
   ctr_object *newString = NULL;
   char *str = myself->value.svalue->value;
   long len = myself->value.svalue->vlen;

@@ -810,6 +810,7 @@ ctr_object* ctr_number_or(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_and(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_uint_binrep(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_to_string(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_number_to_string_base(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_to_boolean(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_between(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_to_step_do(ctr_object* myself, ctr_argument* argumentList);

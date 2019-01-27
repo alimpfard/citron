@@ -747,12 +747,12 @@ Eval on: 'togglePasteMode' do: {
         var value is Eval shiftArgs rightTrim.
         (value isNil) ifTrue: { thisBlock error: '-e requires an argument.'. }.
         import Library/Utils/Shell: \*.
-        Reflect addGlobalVariable: '&0'.
-        &0 is value.
+        Reflect addGlobalVariable: '%0'.
+        %0 is value.
         { ^(Eval argCount > 0). } whileTrue: { args push: Eval shiftArgs. }. #consume all other arguments.
-        args imap: {:i:n Reflect addGlobalVariable: '&' + (i + 1). Reflect set: '&' + (i + 1) to: (Eval tryNumrify: n).}.
-        Reflect addGlobalVariable: '&_'.
-        &_ is args.
+        args imap: {:i:n Reflect addGlobalVariable: '%' + (i + 1). Reflect set: '%' + (i + 1) to: (Eval tryNumrify: n).}.
+        Reflect addGlobalVariable: '%_'.
+        %_ is args.
         value endsWith: '.', ifFalse: { value +=: '.'. }.
         value is '{ ^$$value }'.
         var val is (Eval evaluate: value) run.
@@ -766,12 +766,12 @@ Eval on: 'togglePasteMode' do: {
         args pop. #consume option..
         var value is Eval shiftArgs rightTrim.
         (value isNil) ifTrue: { thisBlock error: '--qe requires an argument.'. }.
-        Reflect addGlobalVariable: '&0'.
-        &0 is value.
+        Reflect addGlobalVariable: '%0'.
+        %0 is value.
         { ^(Eval argCount > 0). } whileTrue: { args push: Eval shiftArgs. }. #consume all other arguments.
-        args imap: {:i:n Reflect addGlobalVariable: '&' + (i + 1). Reflect set: '&' + (i + 1) to: (Eval tryNumrify: n).}.
-        Reflect addGlobalVariable: '&_'.
-        &_ is args.
+        args imap: {:i:n Reflect addGlobalVariable: '%' + (i + 1). Reflect set: '%' + (i + 1) to: (Eval tryNumrify: n).}.
+        Reflect addGlobalVariable: '%_'.
+        %_ is args.
         value endsWith: '.', ifFalse: { value +=: '.'. }.
         value is '{ $$value }'.
         (Eval evaluate: value) run.

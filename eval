@@ -36,14 +36,12 @@ import
   Library/Control/MethodResolve
   Library/Data/String
   Library/Data/IO/UTF-8/input
-  Library/Functional/LazyBoolean: ['&&', '||']
+  Library/Functional/LazyBoolean: ['and', 'or']
   Library/Prelude: \*
   Library/Data/Array/LRArray: 'LRArray'
   Library/Utils/CLIContextMenu: ['generate_context_menu', 'clear_next_line']
   Library/Data/IO/Pen: 'pPen'.
 
-#:declare lazyev ||
-#:declare lazyev &&
 #:declare lazyev or
 #:declare lazyev and
 
@@ -608,11 +606,11 @@ Eval on: 'allTheNames:' do: {:obj
           ^File list: dir path,
             filter_v: {:v
               ^ (['.', '..'] contains: v @ 'file', not)
-                  `&&`
+                  `and`
                 (v @ 'type' = 'folder')
-                  `||`
+                  `or`
                 ( (v @ 'type' = 'file')
-                    `&&`
+                    `and`
                   (v @ 'file' endsWith: '.ctr')
                 ). },
             fmap: {:value ^value at: 'file'. },

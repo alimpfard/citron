@@ -1,0 +1,22 @@
+String on: 'escapeNonPrintableCharacters' do: {:self
+  var s is ''.
+  me length times: {:i
+    var point is self at: i.
+    point bytes = 1 ifTrue: {
+      # ascii
+      (var byte is point byteAt: 0) between: 0x20 and: 0x7e, ifTrue: {
+        s +=: point.
+      } ifFalse: {
+        s +=: '\\x{' + (byte toStringInBase: 16) + '}'.
+      }.
+    } ifFalse: {
+      # unicode
+      var code is 0.
+      point bytes times: {:i
+        code is code * 16 + (point byteAt: i).
+      }.
+      s +=: '\\u{' + code + '}'.
+    }.
+  }.
+  ^s.
+}.

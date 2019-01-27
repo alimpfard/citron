@@ -171,12 +171,13 @@ SComp on: '+' do: {\:self:other
   }.
 }.
 SComp on: 'toString' do: { ^me(''). }.
+SComp on: 'length' do: { ^me('') length. }.
 
 Colors on: 'fwrap:' do: {:self:p
   ^const SComp fromBlock: {:s
     s = '' ifTrue: { ^s. }.
     var p is const self wrap: [const p].
-    ^'<a style="%s">%s</a>' % [(const self fixSpaceFor: s withStyle: p), s].
+    ^'<a style="%s">%s</a>' % [(const self fixSpaceFor: s withStyle: p), s trim].
   }.
 }.
 Colors on: 'fwrape:' do: {:self:e ^const SComp fromBlock: e.}.

@@ -165,9 +165,9 @@ resume:
     }
   if (*ctr_code == c && bc > 0)
     {
-      ctr_code++;
       bc--;
-      goto resume;
+      if (bc)
+        goto resume;
     }
   if (ctr_code == ctr_eofcode || *ctr_code != c)
     {
@@ -177,6 +177,35 @@ resume:
       return NULL;
     }
   return ctr_code;
+}
+
+char *
+ctr_clex_read_balanced (char c, char d, int* line)
+{
+  char* cc = ctr_code;
+  {
+    char* ctr_code = cc;
+    if (*ctr_code == c)
+      return ctr_code;
+    int bc = *ctr_code == d;
+  resume:
+    while (ctr_code <= ctr_eofcode && *++ctr_code != c)
+      {
+        if (*ctr_code == '\n')
+  	line++;
+        if (*ctr_code == d)
+  	bc++;
+      }
+    if (*ctr_code == c && bc > 0)
+      {
+        bc--;
+        if (bc)
+          goto resume;
+      }
+    if (ctr_code == ctr_eofcode || *ctr_code != c)
+        return NULL;
+    return ctr_code;
+  }
 }
 
 static struct ctr_extension_descriptor
@@ -812,8 +841,10 @@ ctr_clex_tok ()
 
   /* a little state machine to handle string interpolation, */
   /* i.e. transforms ' $$x ' into: ' ' + x + ' '. */
+  /* 'x'$${y}z' -> 'x' + ( y ) + 'z' */
   switch (ctr_string_interpolation)
     {
+    // $$ref
     case 1:
       presetToken = CTR_TOKEN_QUOTE;
       break;
@@ -1276,20 +1307,40 @@ ctr_clex_readstr ()
     {
 
       /* enter interpolation mode ( $$x ) */
-      if (!ctr_clex_verbatim_mode && !escape && c == '$' && ((ctr_code + 1) < ctr_eofcode) && *(ctr_code + 1) == '$')
+      if (!ctr_clex_verbatim_mode && !escape && c == '$')
 	{
-	  int q = 2;
-	  while ((ctr_code + q) < ctr_eofcode && !isspace (*(ctr_code + q)) && *(ctr_code + q) != '$' && *(ctr_code + q) != '\'' && q < 255)
-	    q++;
-	  if (isspace (*(ctr_code + q)) || *(ctr_code + q) == '$' || *(ctr_code + q) == '\'')
-	    {
-	      ivarname = ctr_heap_allocate (q);
-	      ivarlen = q - 2;
-	      memcpy (ivarname, ctr_code + 2, q - 2);
-	      ctr_string_interpolation = 1;
-	      ctr_code_eoi = ctr_code + q + 0;	/* '$','$' and the name  ( name + 3 ) */
-	      break;
-	    }
+    /* expression interpolation ( ${{some expr}}$ ) */
+    if (((ctr_code + 1) < ctr_eofcode) && *(ctr_code + 1) == '{' && ((ctr_code + 2) < ctr_eofcode) && *(ctr_code + 1) == '{') {
+      // transform the source _in place_
+      char* end = ctr_clex_read_balanced('}', '{', &ctr_clex_line_number);
+      if (!end)
+      {
+        ctr_clex_emit_error("Invalid use of interpolation");
+      } else {
+        c = '\'';
+        ctr_code[0] = '\'';
+        ctr_code[1] = '+';
+        ctr_code[2] = '(';
+        end[-1] = ')';
+        end[0] = '+';
+        end[1] = '\'';
+        break;
+      }
+    }
+    else if (((ctr_code + 1) < ctr_eofcode) && *(ctr_code + 1) == '$') {
+	    int q = 2;
+	    while ((ctr_code + q) < ctr_eofcode && !isspace (*(ctr_code + q)) && *(ctr_code + q) != '$' && *(ctr_code + q) != '\'' && q < 255)
+	      q++;
+	    if (isspace (*(ctr_code + q)) || *(ctr_code + q) == '$' || *(ctr_code + q) == '\'')
+	      {
+	        ivarname = ctr_heap_allocate (q);
+	        ivarlen = q - 2;
+	        memcpy (ivarname, ctr_code + 2, q - 2);
+	        ctr_string_interpolation = 1;
+	        ctr_code_eoi = ctr_code + q + 0;	/* '$','$' and the name  ( name + 3 ) */
+	        break;
+	      }
+    }
 	}
 
       if (c == '\n')

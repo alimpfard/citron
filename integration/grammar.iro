@@ -175,30 +175,227 @@ contexts[] {
          regex      \= (0[xX][0-9a-fA-F]+|0[cC][0-7]+|0[bB][01]+|\d+\.\d+|\d+)
          styles []   = .sl_number;
       }
-      : inline_push {
+
+      : push {
          regex      \= (')
          styles []   = .sl_string;
+         context []  = string;
+      }
 
-         :pop {
-            regex      \= ((?!<\\)')
-            styles []   = .sl_string;
+      : inline_push {
+         regex            \= (?:(\\)((?:\:[^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*\s*)+))
+         styles []         = .sl_assign, .sl_defn;
+         default_style     = .text
+
+         : pop {
+            regex      \= (\s*?)
+            styles []   = .punctuation;
+         }
+
+      }
+      : inline_push {
+         regex            \= (?:(\{)(asm)(\s*(?:\:)\s*(?:\w+))*(\s*(?:intel|att|at\&t))?(\s*\(.*\)\s*))
+         styles []         = .punctuation, .sl_pragma, .sl_defn, .sl_pragma, .sl_pragma;
+         : pop {
+            regex      \= (\})
+            styles []   = .punctuation;
+         }
+         : push {
+            regex      \= (?:\s*)
+            styles []   = .punctuation;
+            context []  = asm;
+         }
+      }
+      : inline_push {
+         regex      \= (?:(\{)((?:\s*\:(?:[^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*))*))
+         styles []   = .punctuation, .sl_defn;
+         default_style     = .punctuation
+         : pop {
+            regex            \= (\s*)
+            styles []         = .punctuation;
+         }
+
+      }
+      : inline_push {
+         regex      \= (?:(\#:))
+         styles []   = .sl_comment;
+         : pop {
+            regex      \= (?:(?:(declare)(\s+)(infixr|infixl|lazyev)(\s*)(.*))|(?:(language)(\s+)(.*))$)
+            styles []   = .sl_pragma, .punctuation, .sl_rawstring, .punctuation, .sl_message, .sl_pragma, .punctuation, .sl_rawstring;
+         }
+         default_style     = .sl_pragma
+      }
+      : pattern {
+         regex      \= (\#.*$)
+         styles []   = .sl_comment;
+      }
+      : inline_push {
+            regex            \= ((?:[^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*)\:)
+            styles []         = .sl_message;
+            default_style     = .punctuation
+            : pop {
+               regex            \= (\s*)
+               styles []         = .punctuation;
+            }
+         }
+      : inline_push {
+         regex      \= (\\)
+         styles []         = .sl_strescape;
+         default_style     = .sl_assign
+         : pop {
+            regex      \= (?:([^:]\w*)|(\:(?:[^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*)))
+            styles []   = .sl_strescape, .sl_assign;
+         }
+      }
+      : inline_push {
+         regex            \= (?:(\s+)([^\s\d:.,\[\]\(\)\{\}\#]|[-+*&%$@!=";/\\<>?~]+)(\s+))
+         styles []         = .punctuation, .sl_message, .punctuation;
+         default_style     = .punctuation
+         : pop {
+            regex            \= (\s*)
+            styles []         = .punctuation;
+         }
+      }
+
+      : inline_push {
+         regex      \= (?:(\`)([^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*)(\1))
+         styles []   = .sl_strescape, .sl_backref, .sl_strescape;
+         default_style     = .punctuation
+         : pop {
+            regex      \= (\s*?)
+            styles []   = .punctuation;
+         }
+      }
+       : inline_push {
+         regex      \= (?:(\`?)([^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*)(\1))
+         styles []   = .sl_strescape, .text, .sl_strescape;
+         default_style     = .punctuation
+         : pop {
+            regex      \= (\s*?)
+            styles []   = .punctuation;
+         }
+      }
+   }
+   string : context {
+      :pop {
+         regex      \= ((?!<\\)')
+         styles []   = .sl_string;
+      }
+
+      : pattern {
+         regex      \= (?:(\$\$)(\w+)\b)
+         styles []   = .sl_strescape, .sl_message;
+      }
+
+      : pattern {
+         regex      \= (\\[^xu])
+         styles []   = .sl_strescape;
+      }
+
+      : pattern {
+         regex      \= (?:(\\[xuXU])([{]?)([0-9a-fA-F]+)([}]?))
+         styles []   = .sl_strescape, .sl_strescape, .sl_number,.sl_strescape;
+      }
+
+      : push {
+         regex      \= (\$\{\{)
+         styles []         = .sl_strescape;
+         context []  = expr_interpolation;
+      }
+
+
+      : pattern {
+         regex      \= (.)
+         styles []   = .sl_string;
+      }
+   }
+
+   expr_interpolation: context {
+      : pop {
+         regex      \= (\}\}\$)
+         styles []   = .sl_strescape;
+      }
+
+      : inline_push {
+         regex      \= \b(var|my|const|frozen)\b
+         styles []   = .sl_defn;
+         default_style     = .variable
+         : pop {
+            regex      \= ([^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*)
+            styles []   = .variable;
+         }
+
+      }
+
+      : inline_push {
+         regex            \= (?:(pure)(\s*\{))
+         styles []         = .sl_defn, .punctuation;
+
+         : pop {
+
+            regex      \= (\})
+
+            styles []   = .punctuation;
+
          }
 
          : pattern {
-            regex      \= (\\[^xu])
-            styles []   = .sl_strescape;
+
+            regex      \= (.)
+
+            styles []   = .text;
+
          }
 
-         : pattern {
-            regex      \= (?:(\\[xuXU])([{]?)([0-9a-fA-F]+)([}]?))
-            styles []   = .sl_strescape, .sl_strescape, .sl_number, .sl_strescape;
+
+      }
+      : pattern {
+         regex      \= (\$[!,'`](?!=\s))
+         styles []   = .sl_strescape;
+      }
+
+      : pattern {
+
+         regex      \= (\$(?=\())
+
+         styles []   = .sl_strescape;
+
+      }
+
+      : pattern {
+         regex      \= ([\[\]\(\)\^\}])
+         styles []   = .punctuation;
+      }
+
+      : pattern {
+         regex      \= (?:(\s*)(\bis\b|\:\=|\=\>)(\s*))
+         styles []   = .text, .sl_assign, .text;
+      }
+      : inline_push {
+         regex      \= (?:(\?>))
+         styles []   = .sl_rawstring;
+
+         : pop {
+            regex      \= (<\?)
+            styles []   = .sl_rawstring;
          }
 
          : pattern {
             regex      \= (.)
-            styles []   = .sl_string;
+            styles []   = .sl_rawstring;
          }
       }
+      : pattern {
+         regex      \= (0[xX][0-9a-fA-F]+|0[cC][0-7]+|0[bB][01]+|\d+\.\d+|\d+)
+         styles []   = .sl_number;
+      }
+
+      : push {
+         regex      \= (')
+         styles []   = .sl_string;
+         context []  = string;
+      }
+
       : inline_push {
          regex            \= (?:(\\)((?:\:[^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*\s*)+))
          styles []         = .sl_assign, .sl_defn;

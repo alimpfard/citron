@@ -5305,7 +5305,7 @@ ctr_scan_free_refs (ctr_tnode * node)
 }
 
 ctr_object *
-ctr_array_internal_zip (ctr_object * myself, ctr_argument * argumentList)
+ctr_array_internal_product (ctr_object * myself, ctr_argument * argumentList)
 {
   int has_argl = ! !argumentList;
   if (!argumentList)
@@ -5474,7 +5474,7 @@ ctr_build_listcomp (ctr_tnode * node)
       ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("syms"), resolved_refs, 0);
       ctr_object *filter_sobj = argm->object;
       ctr_object *filter_sv = ctr_build_string_from_cstring ("{"
-							     "^(my names fmap: \\:__vname Reflect getObject: __vname) internal-zip fmap: my filter_s."
+							     "^(my names fmap: \\:__vname Reflect getObject: __vname) internal-product fmap: my filter_s."
 							     "}");
       ctr_object *filter_svobj;
       filter_svobj = ctr_string_eval (filter_sv, NULL);
@@ -5482,7 +5482,7 @@ ctr_build_listcomp (ctr_tnode * node)
       ctr_internal_object_add_property (filter_svobj, ctr_build_string_from_cstring ("filter_s"), filter_sobj, CTR_CATEGORY_PRIVATE_PROPERTY);
       // ctr_argument arg = {bindings, NULL};
       // ctr_console_writeln(CtrStdConsole, &arg);
-      // names letEqualAst: bindings in: { internal-zip[names-as-names] fmap: filter_s }, fmap: (main_expr $)
+      // names letEqualAst: bindings in: { internal-product[names-as-names] fmap: filter_s }, fmap: (main_expr $)
       ctr_object *bindingfns = ctr_send_message_variadic (resolved_refs, "letEqualAst:in:", 15, 2, bindings, filter_svobj);
       ctr_object *call_s = ctr_build_string_from_cstring ("{:blk ^blk applyTo: my main_expr.}");
       argm->object = ctr_string_eval (call_s, NULL);
@@ -5503,7 +5503,7 @@ ctr_build_listcomp (ctr_tnode * node)
   ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("filters"), predicates, 0);
   ctr_object *filter_sobj = argm->object;
   ctr_object *filter_sv = ctr_build_string_from_cstring ("{"
-							 "^(my names fmap: \\:__vname Reflect getObject: __vname) internal-zip fmap: my filter_s."
+							 "^(my names fmap: \\:__vname Reflect getObject: __vname) internal-product fmap: my filter_s."
 							 "}");
   ctr_object *filter_svobj;
   filter_svobj = ctr_string_eval (filter_sv, NULL);

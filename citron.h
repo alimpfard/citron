@@ -940,7 +940,7 @@ ctr_object* ctr_array_put(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_from_length(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_skip(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_zip(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_array_internal_zip(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_internal_product(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_zip_with(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_head(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_tail(ctr_object* myself, ctr_argument* argumentList);

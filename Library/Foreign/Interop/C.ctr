@@ -8,7 +8,23 @@ Inject on: 'importFunctionsOrTypes:fromHeaders:andLibraries:' do: {:funcs:header
     Reflect set: key to: value.
   }.
 }.
-Inject on: 'getFunctionsOrTypes:fromHeaders:andLibraries:' do: {:self:funcs:headers:lib
+
+Inject on: 'importFunctionsOrTypes:' do: {:funcs
+  var fns is getFunctionsOrTypes: funcs.
+  fns each: {:key:value
+    Reflect objectExists: key, ifTrue: {
+      thisBlock error: 'Object $$key exists, I refuse to replace it'.
+    }.
+    Reflect addGlobalVariable: key.
+    Reflect set: key to: value.
+  }.
+}.
+
+Inject on: 'getFunctionsOrTypes:fromHeaders:andLibraries:' do: {:self:funcs:headers:libs
+  ^newWithHeaders: headers andLibraries: libs, getFunctionsOrTypes: funcs.
+}.
+
+Inject on: 'newWithHeaders:andLibraries:' do: {:self:headers:lib
   var context is me new.
   me includePaths each_v: {:path context addIncludePath: path. }.
   lib isNil ifFalse: {
@@ -16,9 +32,14 @@ Inject on: 'getFunctionsOrTypes:fromHeaders:andLibraries:' do: {:self:funcs:head
       context linkInLibrary: lib.
     }.
   }.
+  context compile: ((['#include <%s>\n' % [x],, (x: headers)]) join: '').
+  ^context.
+}.
+
+Inject on: 'getFunctionsOrTypes:' do: {:self:funcs
+  var &context is self.
   #:declare lazyev if-then-else
   var if-then-else is \:cond:ift:iff cond evaluate ifTrue: { ^ift evaluate. } ifFalse: { ^iff evaluate. }.
-  context compile: ((['#include <%s>\n' % [x],, (x: headers)]) join: '').
   var cifs is context definedFunctions: funcs.
   var str is 'void dummy' + (context id toString) + '() {return %:L;}' % [
     '+',
@@ -39,7 +60,6 @@ Inject on: 'getFunctionsOrTypes:fromHeaders:andLibraries:' do: {:self:funcs:head
     ]
   ) foldl: {:acc:x ^acc put: x @ 1 at: x @ 0.} accumulator: Map new.
 }.
-
 
 Inject on: 'generateCFunctionWrapperFor:withCIF:andName:' do: {:sym:cif:x
   sym get = 0 ifTrue: {
@@ -67,4 +87,82 @@ Inject on: 'generateCFunctionWrapperFor:withCIF:andName:' do: {:sym:cif:x
   ^($!av0)
     set: 'cif' value: cif,
     set: 'symbol' value: sym.
+}.
+
+Inject on: 'getDefines:fromHeaders:' do: {:defs:headers
+  var context is me new.
+  me includePaths each_v: {:path context addIncludePath: path. }.
+  var sheader is ((['#include <%s>\n' % [x],, (x: headers)]) join: '').
+  sheader +=: '#define CTR_INJECT_CAST_STR(x) CTR_INJECT_CAST_ST_STR(x)\n'.
+  sheader +=: '#define CTR_INJECT_CAST_ST_STR(x) #x\n'.
+  sheader +=: 'typedef struct { void* ptr; void* next; } ctr_argument;\n'.
+  sheader +=: 'extern void* ctr_array_push(void*,void*);\n'.
+  sheader +=: 'extern void* ctr_build_string_from_cstring(char*);\n'.
+  sheader +=: 'extern void* get_CtrStdArray();\n'.
+  sheader +=: 'extern void* ctr_array_new(void*,void*);\n'.
+  var ptr is CTypes pointer.
+  var sbody is defs
+    foldl: (\:&acc:&def 'ctr_array_push(${{acc}}$, &(ctr_argument*){ctr_build_string_from_cstring(CTR_INJECT_CAST_STR(${{def}}$))})')
+    accumulator: 'ctr_array_new(get_CtrStdArray(), 0)'.
+  var body is '$$sheader void* main() { return $$sbody ;}'.
+  # Pen writeln: body.
+  var main is context compile: body, symbol: 'main'.
+  var values is CIF newByInferringTypes: [ptr], call: main withArgs: [], asObject.
+  Reflect link: values to: Array.
+  var ret is Map new.
+  defs each: {:i:x ret put: (values at: i) at: x. }.
+  ^ret.
+}.
+
+Inject on: 'importDefines:fromHeaders:' do: {:defs:headers
+  defs is getDefines: defs fromHeaders: headers.
+  defs each: {:key:value
+    Reflect objectExists: key, ifTrue: {
+      thisBlock error: 'Object $$key exists, I refuse to replace it'.
+    }.
+    Reflect addGlobalVariable: key.
+    Reflect set: key to: value.
+  }.
+}.
+
+Inject on: 'struct' do: {:self
+  ^Object cnew: {
+    inject => self.
+    on: 'respondTo:' do: {:name
+      var inject is my inject.
+      ^Object cnew: {
+        inject => const inject.
+        name => name.
+        on: 'applyAll:' do: {:&descriptor
+          # Type msg -> normal field
+          # Type msg: num -> bitfield
+          # limitation: no inner struct
+          var strdsc is ''.
+          descriptor count times: {:i
+            var dsc is descriptor at: i.
+            var typename is dsc at: 0, value.
+            var rest is dsc at: 1.
+            rest type = 'KWMESSAGE' ifTrue: {
+              # bitfield
+              &&rest is '${{rest at: 0, value}}$ ${{rest at: 1, value}}$'.
+            } ifFalse: {
+              &&rest is rest value.
+            }.
+            dsc count > 2 ifTrue: {
+              # some array
+              dsc is dsc at: 2.
+              (dsc type = 'KWMESSAGE') & (dsc value = 'applyAll:') ifFalse: {
+                thisBlock error: 'Expected `type ident [ length ]\' in struct specifier'.
+              }.
+              rest +=: '[${{dsc at: 0, at: 0, at: 0, value}}$]'.
+            }.
+            strdsc +=: '$$typename ${{rest}}$; '.
+          }.
+          strdsc is 'struct ${{my name}}$ { $$strdsc };'.
+          # Pen writeln: strdsc.
+          my inject compile: strdsc, importFunctionsOrTypes: [my name].
+        }.
+      }.
+    }.
+  }.
 }.

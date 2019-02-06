@@ -3375,6 +3375,8 @@ void
 ctr_set_link_all (ctr_object * what, ctr_object * to)
 {
   what->interfaces->link = to;
+  if (!what->interfaces->ifs)
+    return;
   int count = to->interfaces->count;
   what->interfaces->count = count;
   what->interfaces->ifs =

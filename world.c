@@ -1380,6 +1380,16 @@ ctr_set (ctr_object * key, ctr_object * object)
   int i = ctr_context_id;
   ctr_object *context;
   ctr_object *foundObject = NULL;
+  if (key->value.svalue->value[0] == '&') { //we're setting a double-reference
+      key->value.svalue->value++;
+      key->value.svalue->vlen--;
+      foundObject = ctr_find(key);
+      if(foundObject)
+          *foundObject = *object;
+      key->value.svalue->value--;
+      key->value.svalue->vlen++;
+      return;
+  }
   if (ctr_contexts[ctr_context_id] == ctr_world_ptr)
     {
       ctr_internal_object_set_property (ctr_contexts[ctr_context_id], key, object, 0);

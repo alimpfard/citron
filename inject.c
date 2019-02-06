@@ -42,7 +42,7 @@ ctr_inject_make (ctr_object * myself, ctr_argument * argumentList)
   int imode = TCC_OUTPUT_MEMORY;
   if (argumentList && argumentList->object && argumentList->object->info.type != CTR_OBJECT_TYPE_OTNIL)
     {
-      const char *mode = ctr_heap_allocate_cstring (ctr_internal_cast2string (argumentList->object));
+      char *mode = ctr_heap_allocate_cstring (ctr_internal_cast2string (argumentList->object));
       if (strcasecmp (mode, "mem") == 0)
 	imode = TCC_OUTPUT_MEMORY;
       else if (strcasecmp (mode, "exe") == 0)

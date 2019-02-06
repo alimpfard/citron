@@ -214,6 +214,17 @@ ctr_ctypes_rtypeof (ctr_object * object)
   return CTR_CTYPE_INVALID;
 }
 
+ctr_object*
+ctr_ctype_generic_copy(ctr_object* myself, ctr_argument* argumentList)
+{
+  CTR_CREATE_CTOBJECT (object);
+  if (!myself->value.rvalue) {
+    CtrStdFlow = ctr_build_string_from_cstring("Cannon instantiate invalid CType object");
+  }
+  ctr_ctypes_set_type (object, myself->value.rvalue->type);
+  return object;
+}
+
 //Void
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE (void)
 {
@@ -2335,7 +2346,7 @@ ctr_ffi_begin ()
   CtrStdCType_ffi_cif = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
   ctr_set_link_all (CtrStdCType_ffi_cif, CtrStdObject);
   CtrStdCType_ffi_cif->info.sticky = 1;
-
+  ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring("newIns"), &ctr_ctype_generic_copy);
   //Void
   CTR_CT_INTRODUCE_TYPE (void);
   CTR_CT_INTRODUCE_SET (void);

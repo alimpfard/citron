@@ -471,10 +471,75 @@ ctr_inject_defined_functions (ctr_object * myself, ctr_argument * argumentList)
 	  ctr_map_put (type_map, map_put_arg);
 	}
     NOT_THIS_ONE:
-      s = ss;
+      s = s->prev;
     }
 
   return type_map;
+}
+
+ctr_object *
+ctr_inject_finish(ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_resource *r = myself->value.rvalue;
+  ctr_inject_data_t *ds;
+  if (!r || !(ds = r->ptr))
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("deinit request to uninitialized Inject object");
+      return CtrStdNil;
+    }
+    TCCState* s = ds->state;
+    tcc_delete(s);
+    ctr_heap_free(ds);
+    r->ptr = NULL;
+    return myself;
+}
+
+/**
+ * [Inject] addLibraryPath: [String]
+ *
+ */
+ctr_object *
+ctr_inject_add_libp (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_resource *r = myself->value.rvalue;
+  ctr_inject_data_t *ds;
+  if (!r || !(ds = r->ptr))
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("compile request to uninitialized Inject object");
+      return CtrStdNil;
+    }
+  ctr_object *l = argumentList->object;
+  CTR_ENSURE_TYPE_STRING (l);
+  char *ls = ctr_heap_allocate_cstring (l);
+  TCCState *s = ds->state;
+  int status = tcc_add_library_path (s, ls);
+  ctr_heap_free (ls);
+  return ctr_build_bool (status != -1);
+}
+
+/**
+ * [Inject] libraryPaths
+ *
+ */
+ctr_object *
+ctr_inject_get_libp (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_resource *r = myself->value.rvalue;
+  ctr_inject_data_t *ds;
+  if (!r || !(ds = r->ptr))
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("compile request to uninitialized Inject object");
+      return CtrStdNil;
+    }
+  TCCState *s = ds->state;
+  ctr_argument arg = { NULL, NULL };
+  ctr_object *res = ctr_array_new (CtrStdArray, NULL);
+  for (size_t i = 0; i < s->nb_library_paths; i++)
+    {
+      arg.object = ctr_build_string_from_cstring (s->library_paths[i]);
+      ctr_array_push (res, &arg);
+    }
+  return res;
 }
 
 /**

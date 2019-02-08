@@ -1424,10 +1424,7 @@ ctr_set (ctr_object * key, ctr_object * object)
       return;
     }
 assign_anyway:
-  if (
-          key != generator_end_marker &&
-          strncmp (key->value.svalue->value, "me", key->value.svalue->vlen) != 0
-    )
+  if (object != generator_end_marker && strncmp (key->value.svalue->value, "me", key->value.svalue->vlen) != 0)
     object->lexical_name = key;
   ctr_internal_object_set_property (context, key, object, 0);
 }

@@ -168,7 +168,7 @@ void lambdaf_end_instance ();
 void
 ctr_initialize_ex ()
 {
-  lambdaf_begin_instance ();
+  //lambdaf_begin_instance ();
   oneLineExpressions = &oneline_p;
   flexibleConstructs = &flex_const;
   regexLineCheck = &regex_lc;
@@ -284,7 +284,7 @@ main (int argc, char *argv[])
       ProfilerStop ();
 #endif
     }
-  lambdaf_end_instance ();
+  //lambdaf_end_instance ();
   return 0;
 }
 #endif //CITRON_LIBRARY

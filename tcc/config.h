@@ -2,5 +2,5 @@
 #define CONFIG_SYSROOT ""
 #define CONFIG_TCCDIR "/usr/local/lib/tcc"
 #define GCC_MAJOR 4
-#define HOST_X86_64 1
+#define HOST_ARM 1
 #define TCC_VERSION "0.9.25"

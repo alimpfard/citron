@@ -8,7 +8,6 @@
 #include "citron.h"
 #include "symbol.h"
 
-#include "lambdaf.h"
 
 #if withInlineAsm
 #include "native-asm.h"
@@ -1644,7 +1643,7 @@ ctr_cparse_pure ()
       char *code = ctr_heap_allocate (end - code_s + 1);
       memcpy (code, code_s, end - code_s);
       code[end - code_s] = 0;
-      lambdaf_interpret (code);
+      //lambdaf_interpret (code);
       ctr_clex_tok ();
     }
   ctr_tnode *r = ctr_cparse_create_node (CTR_AST_NODE);

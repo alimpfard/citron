@@ -1,4 +1,4 @@
-DEBUG_VERSION := 70
+DEBUG_VERSION := 76
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
 fv := '/data/data/com.termux/files/usr/lib/libgc.so'
@@ -60,7 +60,7 @@ CXXFLAGS := $(shell llvm-config --cxxflags --system-libs --libs core orcjit nati
 endif
 
 ifneq ($(findstring withInjectNative=1,${CFLAGS}),)
-OBJS := ${OBJS} inject.o tcc/libtcc1.a tcc/libtcc.a
+OBJS := ${OBJS} inject.o tcc/libtcc.so
 endif
 
 COBJS = ${OBJS} compiler.o

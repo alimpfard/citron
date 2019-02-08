@@ -8,6 +8,7 @@ ctr_object* ctr_ctypes_make_##type (ctr_object* myself, ctr_argument* argumentLi
 #define CTR_CT_SIMPLE_TYPE_FUNC_STR(type)  ctr_object* ctr_ctypes_str_##type (ctr_object* myself, ctr_argument* argumentList)
 #define CTR_CT_SIMPLE_TYPE_FUNC_SET(type)  ctr_object* ctr_ctypes_set_##type (ctr_object* myself, ctr_argument* argumentList)
 #define CTR_CT_SIMPLE_TYPE_FUNC_GET(type)  ctr_object* ctr_ctypes_get_##type (ctr_object* myself, ctr_argument* argumentList)
+#define CTR_CT_SIMPLE_TYPE_FUNC_TSTR(type)  ctr_object* ctr_ctypes_to_str_##type (ctr_object* myself, ctr_argument* argumentList)
 #define CTR_CT_FFI_BIND(name)              ctr_object* ctr_ctype_ffi_##name  (ctr_object* myself, ctr_argument* argumentList)
 
 #define CTR_CT_INTRODUCE_TYPE(type)        CtrStdCType_##type = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);\
@@ -15,9 +16,10 @@ ctr_set_link_all(CtrStdCType_##type, CtrStdCType);\
 CtrStdCType_##type->info.sticky = 1;\
 ctr_internal_object_add_property(CtrStdCType, ctr_build_string_from_cstring("type_"#type), CtrStdCType_##type, 0);
 #define CTR_CT_INTRODUCE_MAKE(type)        ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring(#type), &ctr_ctypes_make_##type)
-#define CTR_CT_INTRODUCE_UNMAKE(type)    ctr_internal_create_func(CtrStdCType_##type, ctr_build_string_from_cstring("destruct"), &ctr_ctypes_unmake_##type)
+#define CTR_CT_INTRODUCE_UNMAKE(type)      ctr_internal_create_func(CtrStdCType_##type, ctr_build_string_from_cstring("destruct"), &ctr_ctypes_unmake_##type)
 #define CTR_CT_INTRODUCE_SET(type)         ctr_internal_create_func(CtrStdCType_##type, ctr_build_string_from_cstring("set:"), &ctr_ctypes_set_##type)
 #define CTR_CT_INTRODUCE_GET(type)         ctr_internal_create_func(CtrStdCType_##type, ctr_build_string_from_cstring("get"), &ctr_ctypes_get_##type)
+#define CTR_CT_INTRODUCE_TSTR(type)         ctr_internal_create_func(CtrStdCType_##type, ctr_build_string_from_cstring("toString"), &ctr_ctypes_to_str_##type)
 #include <ffi.h>
 #ifdef existing
 #include <Citron/citron.h>
@@ -94,101 +96,121 @@ ctr_object* CtrStdCType_ffi_cif;
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(void);
 CTR_CT_SIMPLE_TYPE_FUNC_SET(void);
 CTR_CT_SIMPLE_TYPE_FUNC_GET(void);
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR(void);
 
 //Unsigned Int 8
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(uint8);
 CTR_CT_SIMPLE_TYPE_FUNC_SET(uint8);
 CTR_CT_SIMPLE_TYPE_FUNC_GET(uint8);
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR(uint8);
 
 //Signed Int 8
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(sint8);
 CTR_CT_SIMPLE_TYPE_FUNC_SET(sint8);
 CTR_CT_SIMPLE_TYPE_FUNC_GET(sint8);
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR(sint8);
 
 //Unsigned Int 16
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(uint16);
 CTR_CT_SIMPLE_TYPE_FUNC_SET(uint16);
 CTR_CT_SIMPLE_TYPE_FUNC_GET(uint16);
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR(uint16);
 
 //Signed Int 16
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(sint16);
 CTR_CT_SIMPLE_TYPE_FUNC_SET(sint16);
 CTR_CT_SIMPLE_TYPE_FUNC_GET(sint16);
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR(sint16);
 
 //Unsigned Int 32
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(uint32);
 CTR_CT_SIMPLE_TYPE_FUNC_SET(uint32);
 CTR_CT_SIMPLE_TYPE_FUNC_GET(uint32);
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR(uint32);
 
 //Signed Int 32
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(sint32);
 CTR_CT_SIMPLE_TYPE_FUNC_SET(sint32);
 CTR_CT_SIMPLE_TYPE_FUNC_GET(sint32);
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR(sint32);
 
 //Unsigned Int 64
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(uint64);
 CTR_CT_SIMPLE_TYPE_FUNC_SET(uint64);
 CTR_CT_SIMPLE_TYPE_FUNC_GET(uint64);
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR(uint64);
 
 //Signed Int 64
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(sint64);
 CTR_CT_SIMPLE_TYPE_FUNC_SET(sint64);
 CTR_CT_SIMPLE_TYPE_FUNC_GET(sint64);
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR(sint64);
 
 //Float
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(float);
 CTR_CT_SIMPLE_TYPE_FUNC_SET(float);
 CTR_CT_SIMPLE_TYPE_FUNC_GET(float);
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR(float);
 
 //Double
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(double);
 CTR_CT_SIMPLE_TYPE_FUNC_SET(double);
 CTR_CT_SIMPLE_TYPE_FUNC_GET(double);
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR(double);
 
 //Unsigned Char
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(uchar);
 CTR_CT_SIMPLE_TYPE_FUNC_SET(uchar);
 CTR_CT_SIMPLE_TYPE_FUNC_GET(uchar);
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR(uchar);
 
 //Signed Char
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(schar);
 CTR_CT_SIMPLE_TYPE_FUNC_SET(schar);
 CTR_CT_SIMPLE_TYPE_FUNC_GET(schar);
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR(schar);
 
 //Unsigned Short
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(ushort);
 CTR_CT_SIMPLE_TYPE_FUNC_SET(ushort);
 CTR_CT_SIMPLE_TYPE_FUNC_GET(ushort);
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR(ushort);
 
 //Signed Short
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(sshort);
 CTR_CT_SIMPLE_TYPE_FUNC_SET(sshort);
 CTR_CT_SIMPLE_TYPE_FUNC_GET(sshort);
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR(sshort);
 
 //Unsigned Int
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(uint);
 CTR_CT_SIMPLE_TYPE_FUNC_SET(uint);
 CTR_CT_SIMPLE_TYPE_FUNC_GET(uint);
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR(uint);
 
 //Signed Int
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(sint);
 CTR_CT_SIMPLE_TYPE_FUNC_SET(sint);
 CTR_CT_SIMPLE_TYPE_FUNC_GET(sint);
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR(sint);
 
 //Unsigned Long
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(ulong);
 CTR_CT_SIMPLE_TYPE_FUNC_SET(ulong);
 CTR_CT_SIMPLE_TYPE_FUNC_GET(ulong);
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR(ulong);
 
 //Signed Long
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(slong);
 CTR_CT_SIMPLE_TYPE_FUNC_SET(slong);
 CTR_CT_SIMPLE_TYPE_FUNC_GET(slong);
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR(slong);
 
 //Long Double
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(longdouble);
 CTR_CT_SIMPLE_TYPE_FUNC_SET(longdouble);
 CTR_CT_SIMPLE_TYPE_FUNC_GET(longdouble);
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR(longdouble);
 
 //Pointer
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(pointer);
@@ -198,6 +220,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_STR(pointer);
 //Dynamic Library
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(dynamic_lib);
 CTR_CT_SIMPLE_TYPE_FUNC_GET(dynamic_lib);
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR(dynamic_lib);
 CTR_CT_SIMPLE_TYPE_FUNC_STR(dynamic_lib);
 
 //Dynamic Library

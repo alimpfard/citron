@@ -1,6 +1,14 @@
 import Library/Foreign/Interop/C.
 
-Inject importFunctions: ['fmaxf', 'fminf'] fromHeaders: ['math.h'] andLibrary: Nil.
+# Discover all the current default include paths
+var includes is Shell
+  call: 'cpp -v /dev/null -o /dev/null 2>&1 | sed -n -e \'/^#include <...>/,$p\' | sed -n -e "1d;/^End/Q;p"',
+  split: '\n',
+  fmap: \:x x trim.
+
+includes each_v: {:inc Inject addIncludePath: inc. }.
+
+Inject importFunctionsOrTypes: ['fmaxf', 'fminf'] fromHeaders: ['math.h'] andLibraries: ['m'].
 
 var a is 123.
 var b is 234.5.

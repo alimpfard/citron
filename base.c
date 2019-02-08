@@ -30,6 +30,7 @@
 #endif
 
 #include "generator.h"
+char* ctr_itoa(int value, char* buffer, int base);
 
 /**@I_OBJ_DEF Nil*/
 /**
@@ -129,7 +130,8 @@ ctr_nil_assign (ctr_object * myself, ctr_argument * argumentList)
   if (argumentList->object->value.svalue->vlen == 0
       || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
     return myself;
-  ctr_internal_object_set_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), CtrStdNil, 0);
+  ctr_internal_object_set_property (argumentList->next->object ? : ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object),
+				    CtrStdNil, 0);
   return myself;
 }
 
@@ -318,7 +320,8 @@ ctr_object_assign (ctr_object * myself, ctr_argument * argumentList)
       if (argumentList->object->value.svalue->vlen == 0
 	  || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
 	return myself;
-      ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
+      ctr_internal_object_add_property (argumentList->next->object ? : ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object),
+					myself, 0);
       return myself;
     }
   if (!ctr_reflect_check_bind_valid (myself, argumentList->object, 0))
@@ -753,9 +756,9 @@ ctr_object_on_do (ctr_object * myself, ctr_argument * argumentList)
       CtrStdFlow->info.sticky = 1;
       return myself;
     }
-  #if CTR_TAGS_ONLY
-    ctr_internal_tag_whitelist(methodBlock);
-  #endif
+#if CTR_TAGS_ONLY
+  ctr_internal_tag_whitelist (methodBlock);
+#endif
   ctr_internal_object_set_property (myself, methodName, methodBlock, 1);
   return myself;
 }
@@ -1049,7 +1052,8 @@ ctr_bool_assign (ctr_object * myself, ctr_argument * argumentList)
   if (argumentList->object->value.svalue->vlen == 0
       || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
     return myself;
-  ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
+  ctr_internal_object_add_property (argumentList->next->object ? : ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself,
+				    0);
   return myself;
 }
 
@@ -1235,7 +1239,7 @@ ctr_bool_if_tf (ctr_object * myself, ctr_argument * argumentList)
       return myself;
     }
   else
-  {
+    {
       ctr_object *codeBlock = argumentList->next->object;
       ctr_argument *arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
       arguments->object = myself;
@@ -1451,7 +1455,7 @@ ctr_object *
 ctr_build_number (char *n)
 {
   ctr_object *numberObject = ctr_internal_create_object (CTR_OBJECT_TYPE_OTNUMBER);
-  if (strncmp (n, "0x", 2) == 0)
+  if (strncasecmp (n, "0x", 2) == 0 || strncasecmp (n, "0b", 2) == 0)
     numberObject->value.nvalue = (double) strtol (n, NULL, 0);
   else
     numberObject->value.nvalue = atof (n);
@@ -1485,7 +1489,8 @@ ctr_number_assign (ctr_object * myself, ctr_argument * argumentList)
   if (argumentList->object->value.svalue->vlen == 0
       || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
     return myself;
-  ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
+  ctr_internal_object_add_property (argumentList->next->object ? : ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself,
+				    0);
   return myself;
 }
 
@@ -1503,30 +1508,38 @@ ctr_build_number_from_string (char *str, ctr_size length)
   /* max length is 40 (and that's probably even too long... ) */
   numCStr = (char *) ctr_heap_allocate (41 * sizeof (char));
   memcpy (numCStr, str, stringNumberLength);
-  char* baseptr = NULL, bases[]="xXcCoO";
+  char *baseptr = NULL, bases[] = "xXcCoObB";
   if (numCStr[0] == '0' && length > 1 && numCStr[1] != '.')
     {
-      if(numCStr[1] == '0') {
-        CtrStdFlow = ctr_format_str("EInvalid number format at ->%s: extra `0'", numCStr+1);
-        return CtrStdNil;
-      }
+      if (numCStr[1] == '0')
+	{
+	  CtrStdFlow = ctr_format_str ("EInvalid number format at ->%s: extra `0'", numCStr + 1);
+	  return CtrStdNil;
+	}
       int base = 10;
       baseptr = strchr (bases, numCStr[1]);
-      if (baseptr == NULL) {
-        base = 8;
-        baseptr = numCStr+1;
-      }
+      if (baseptr == NULL)
+	{
+	  base = 8;
+	  baseptr = numCStr + 1;
+	}
       else
-      switch(baseptr-bases) {
-        case 0:
-        case 1:
-          baseptr = numCStr+2;
-          base = 16;
-          break;
-        default:
-          baseptr = numCStr;
-          break;
-      }
+	switch (baseptr - bases)
+	  {
+	  case 0:
+	  case 1:
+	    baseptr = numCStr + 2;
+	    base = 16;
+	    break;
+    case 6:
+    case 7:
+      baseptr = numCStr + 2;
+      base = 2;
+      break;
+	  default:
+	    baseptr = numCStr;
+	    break;
+	  }
       numberObject->value.nvalue = strtol (baseptr, 0, base);
     }
   else
@@ -1817,17 +1830,18 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
   arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
 
   if (block->info.type == CTR_OBJECT_TYPE_OTNATFUNC)
-  {
-    ctr_object* idx = arguments->object = ctr_internal_create_standalone_object(CTR_OBJECT_TYPE_OTNUMBER);
-    for (i = 0; i < t; i++) {
-      arguments->object->value.nvalue = i;
-      block->value.fvalue (block, arguments);
+    {
+      ctr_object *idx = arguments->object = ctr_internal_create_standalone_object (CTR_OBJECT_TYPE_OTNUMBER);
+      for (i = 0; i < t; i++)
+	{
+	  arguments->object->value.nvalue = i;
+	  block->value.fvalue (block, arguments);
+	}
+      ctr_internal_delete_standalone_object (idx);
+      ctr_heap_free (arguments);
+      ctr_close_context ();
+      return myself;
     }
-    ctr_internal_delete_standalone_object(idx);
-    ctr_heap_free(arguments);
-    ctr_close_context();
-    return myself;
-  }
   if (block->value.block->lexical)
     ctr_contexts[++ctr_context_id] = block;
   else
@@ -1869,17 +1883,17 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
 	    {
 	      ctr_object *catch_type = ctr_internal_object_find_property (catchBlock, ctr_build_string_from_cstring ("%catch"), 0);
 	      ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
-        ctr_object *exdata = ctr_build_string_from_cstring(":exdata"),
-        *ex = CtrStdFlow,
-        *getexinfo = ctr_build_string_from_cstring("exceptionInfo");
-        ctr_internal_object_set_property(ex, exdata, ctr_internal_ex_data(), 0);
-        ctr_internal_create_func(ex, getexinfo, &ctr_exception_getinfo);
-        int setstr = 0;
-        if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING) {
-          ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
-          setstr = 1;
-          ctr_internal_create_func(ex, ctr_build_string_from_cstring("toString"), &ctr_string_to_string);
-        }
+	      ctr_object *exdata = ctr_build_string_from_cstring (":exdata"),
+		*ex = CtrStdFlow, *getexinfo = ctr_build_string_from_cstring ("exceptionInfo");
+	      ctr_internal_object_set_property (ex, exdata, ctr_internal_ex_data (), 0);
+	      ctr_internal_create_func (ex, getexinfo, &ctr_exception_getinfo);
+	      int setstr = 0;
+	      if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING)
+		{
+		  ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
+		  setstr = 1;
+		  ctr_internal_create_func (ex, ctr_build_string_from_cstring ("toString"), &ctr_string_to_string);
+		}
 	      a->object = ex;
 	      a->next = ctr_heap_allocate (sizeof (ctr_argument));
 	      a->next->object = catch_type;
@@ -1888,10 +1902,10 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
 		  CtrStdFlow = NULL;
 		  ctr_block_run_here (catchBlock, a, block);
 		}
-        ctr_internal_object_delete_property(ex, exdata, 0);
-        ctr_internal_object_delete_property(ex, getexinfo, 1);
-        if (setstr)
-          ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
+	      ctr_internal_object_delete_property (ex, exdata, 0);
+	      ctr_internal_object_delete_property (ex, getexinfo, 1);
+	      if (setstr)
+		ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
 	      ctr_heap_free (a->next);
 	      ctr_heap_free (a);
 	    }
@@ -1902,7 +1916,7 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
 	break;
     }
   // ctr_object* ctx = ctr_contexts[ctr_context_id];
-  ctr_internal_delete_standalone_object(indexNumber);
+  ctr_internal_delete_standalone_object (indexNumber);
   ctr_close_context ();
   // arguments->object = ctx;
   // ctr_gc_sweep_this(CtrStdGC, arguments);
@@ -2189,8 +2203,8 @@ ctr_number_to_step_do (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_number_to_step (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_argument args = { .object = myself, .next = argumentList };
-  return ctr_generator_make(ctr_std_generator, &args);
+  ctr_argument args = {.object = myself,.next = argumentList };
+  return ctr_generator_make (ctr_std_generator, &args);
 }
 
 /**
@@ -2459,6 +2473,34 @@ ctr_number_uint_binrep (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
+ * [Number] toStringInBase: [Number]
+ *
+ * cast to number in the given base
+ */
+ctr_object *
+ctr_number_to_string_base (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *o = myself;
+  int slen;
+  char *s;
+  char *p;
+  char *buf;
+  int bufSize;
+  ctr_object *stringObject;
+  int base = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  s = ctr_heap_allocate (200 * sizeof (char));
+  bufSize = 2000 / 8 * sizeof (char);
+  buf = ctr_heap_allocate (bufSize);
+  ctr_itoa(o->value.nvalue, buf, base);
+  strncpy (s, buf, strlen (buf));
+  ctr_heap_free (buf);
+  slen = strlen (s);
+  stringObject = ctr_build_string (s, slen);
+  ctr_heap_free (s);
+  return stringObject;
+}
+
+/**
  *[Number] toString
  *
  * Wrapper for cast function.
@@ -2597,7 +2639,7 @@ ctr_string_assign (ctr_object * myself, ctr_argument * argumentList)
 	      if (i + x == coll->head)
 		{
 		  if (cs->value.svalue->vlen != 0 && !(cs->value.svalue->vlen == 1 && *cs->value.svalue->value == '_'))
-		    ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (cs),
+		    ctr_internal_object_add_property (argumentList->next->object ? : ctr_contexts[ctr_context_id], ctr_symbol_as_string (cs),
 						      ctr_build_string (myself->value.svalue->value + idx, len - idx), 0);
 		  return myself;
 		}
@@ -2615,7 +2657,7 @@ ctr_string_assign (ctr_object * myself, ctr_argument * argumentList)
 		  if (r != NULL)
 		    {
 		      if (cs->value.svalue->vlen != 0 && !(cs->value.svalue->vlen == 1 && *cs->value.svalue->value == '_'))
-			ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (cs),
+			ctr_internal_object_add_property (argumentList->next->object ? : ctr_contexts[ctr_context_id], ctr_symbol_as_string (cs),
 							  ctr_build_string (myself->value.svalue->value + idx, r - s), 0);
 		      idx += r - s;
 		      continue;
@@ -2644,7 +2686,8 @@ ctr_string_assign (ctr_object * myself, ctr_argument * argumentList)
   if (argumentList->object->value.svalue->vlen == 0
       || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
     return myself;
-  ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
+  ctr_internal_object_add_property (argumentList->next->object ? : ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself,
+				    0);
   return myself;
 }
 
@@ -2679,86 +2722,97 @@ ctr_build_empty_string ()
  *
  * Escapes the specified ASCII character(s) in a string.
  */
-ctr_object* ctr_string_escape_ascii(ctr_object* myself, ctr_argument* argumentList)  {
-	ctr_object* escape =
-    argumentList && argumentList->object ?
-      ctr_internal_cast2string(argumentList->object):
-      ctr_build_string_from_cstring("\f\v\a\\"); // sensible default
-	ctr_object* newString = NULL;
-	char* str = myself->value.svalue->value;
-	long  len = myself->value.svalue->vlen;
-	char* tstr;
-	long i=0;
-	long k=0;
-	ctr_size q = 0;
-	ctr_size nchars = 0;
-	long tlen = 0;
-	char* characters;
-	char character;
-	char descr;
-	char is_cchar = 0;
-	char escaped;
-	long tag_len = 0;
-	characters = escape->value.svalue->value;
-	nchars = escape->value.svalue->vlen;
-	if (nchars < 1) {
-		return myself;
+ctr_object *
+ctr_string_escape_ascii (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *escape = argumentList && argumentList->object && argumentList->object != CtrStdNil ? ctr_internal_cast2string (argumentList->object) : ctr_build_string_from_cstring ("\n\b\t\f\v\a\\");	// sensible default
+  ctr_object *newString = NULL;
+  char *str = myself->value.svalue->value;
+  long len = myself->value.svalue->vlen;
+  char *tstr;
+  long i = 0;
+  long k = 0;
+  ctr_size q = 0;
+  ctr_size nchars = 0;
+  long tlen = 0;
+  char *characters;
+  char character;
+  char descr;
+  char is_cchar = 0;
+  char escaped;
+  long tag_len = 0;
+  characters = escape->value.svalue->value;
+  nchars = escape->value.svalue->vlen;
+  if (nchars < 1)
+    {
+      return myself;
+    }
+  for (q = 0; q < nchars; ++q)
+    {
+      character = characters[q];
+      is_cchar = 0;
+      descr = character;
+      for (i = 0; i < len; i++)
+	{
+	  char c = str[i];
+	  if (c == character)
+	    {
+	      tag_len += 2;
+	    }
 	}
-	for (q = 0; q < nchars; ++q) {
-		character = characters[q];
-		is_cchar = 0;
-		descr = character;
-		for(i =0; i < len; i++) {
-			char c = str[i];
-			if (c == character) {
-				tag_len += 2;
-			}
+    }
+  tlen = len + tag_len;
+  tstr = ctr_heap_allocate (tlen * sizeof (char));
+  for (i = 0; i < len; i++)
+    {
+      char c = str[i];
+      escaped = 0;
+      for (q = 0; q < nchars; q++)
+	{
+	  character = characters[q];
+	  is_cchar = 0;
+	  switch (character)
+	    {
+	    case '\t':
+	      descr = 't';
+	      is_cchar = 1;
+	      break;
+	    case '\r':
+	      descr = 'r';
+	      is_cchar = 1;
+	      break;
+	    case '\n':
+	      descr = 'n';
+	      is_cchar = 1;
+	      break;
+	    case '\b':
+	      descr = 'b';
+	      is_cchar = 1;
+	      break;
+	    }
+	  if (c == character)
+	    {
+	      tstr[k++] = '\\';
+	      if (is_cchar)
+		{
+		  tstr[k++] = descr;
 		}
+	      else
+		{
+		  tstr[k++] = str[i];
+		}
+	      escaped = 1;
+	      break;
+	    }
 	}
-	tlen = len + tag_len;
-	tstr = ctr_heap_allocate(tlen * sizeof(char));
-	for(i = 0; i < len; i++) {
-		char c = str[i];
-		escaped = 0;
-		for (q = 0; q < nchars; q ++) {
-			character = characters[q];
-			is_cchar = 0;
-      switch(character) {
-    			case '\t':
-    				descr = 't';
-    				is_cchar = 1;
-    			  break;
-    			case '\r':
-    				descr = 'r';
-    				is_cchar = 1;
-    			  break;
-    			case '\n':
-    				descr = 'n';
-    				is_cchar = 1;
-    			  break;
-    			case '\b':
-    				descr = 'b';
-    				is_cchar = 1;
-    			  break;
-      }
-			if (c == character) {
-				tstr[k++] = '\\';
-				if (is_cchar) {
-					tstr[k++] = descr;
-				} else {
-					tstr[k++] = str[i];
-				}
-				escaped = 1;
-				break;
-			}
-		}
-		if (!escaped) {
-			tstr[k++] = str[i];
-		}
+      if (!escaped)
+	{
+	  tstr[k++] = str[i];
 	}
-	newString = ctr_build_string(tstr, tlen);
-	ctr_heap_free (tstr);
-	return newString;
+    }
+  newString = ctr_build_string (tstr, tlen);
+  ctr_heap_free (tstr);
+  return newString;
 }
 
 
@@ -3216,10 +3270,10 @@ ctr_string_format_map (ctr_object * myself, ctr_argument * argumentList)
 	}
       if (interpolate)
 	{
-	  ctr_object* prop = args->object = ctr_build_string (buf, fmtct);
+	  ctr_object *prop = args->object = ctr_build_string (buf, fmtct);
 	  args->object = ctr_map_get (objects, args);
-    if (args->object == CtrStdNil)
-      args->object = ctr_internal_object_find_property(objects, prop, 0);
+	  if (args->object == CtrStdNil)
+	    args->object = ctr_internal_object_find_property (objects, prop, 0);
 	  args->object = ctr_send_message (args->object, "toString", 8, NULL);
 	  ctr_string_append (buffer, args);
 	  interpolate = 0;
@@ -3242,12 +3296,12 @@ ctr_string_format_map (ctr_object * myself, ctr_argument * argumentList)
     }
   if (fmtct)
     {
-      ctr_object* prop = args->object = ctr_build_string (buf, fmtct);
+      ctr_object *prop = args->object = ctr_build_string (buf, fmtct);
       if (interpolate)
 	{
 	  args->object = ctr_map_get (objects, args);
-    if (args->object == CtrStdNil)
-      args->object = ctr_internal_object_find_property(objects, prop, 0);
+	  if (args->object == CtrStdNil)
+	    args->object = ctr_internal_object_find_property (objects, prop, 0);
 	  args->object = ctr_send_message (args->object, "toString", 8, NULL);
 	  interpolate = 0;
 	}
@@ -3459,7 +3513,7 @@ ctr_string_at (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_string_byte_at (ctr_object * myself, ctr_argument * argumentList)
 {
-  char x;
+  unsigned char x;
   ctr_object *fromPos = ctr_internal_cast2number (argumentList->object);
   long a = (fromPos->value.nvalue);
   long len = myself->value.svalue->vlen;
@@ -3467,7 +3521,7 @@ ctr_string_byte_at (ctr_object * myself, ctr_argument * argumentList)
     return CtrStdNil;
   if (a < 0)
     return CtrStdNil;
-  x = (char) *(myself->value.svalue->value + a);
+  x = (unsigned char) *(myself->value.svalue->value + a);
   return ctr_build_number_from_float ((double) x);
 }
 
@@ -3680,7 +3734,7 @@ ctr_string_to_upper1st (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_string_to_string (ctr_object * myself, ctr_argument * argumentList)
 {
-  return ctr_build_string(myself->value.svalue->value, myself->value.svalue->vlen);
+  return ctr_build_string (myself->value.svalue->value, myself->value.svalue->vlen);
 }
 
 /**
@@ -5158,7 +5212,7 @@ static ctr_object free_ref_marker;
 ctr_object *
 ctr_scan_free_refs (ctr_tnode * node)
 {
-  ctr_object *ret = ctr_map_new(CtrStdMap, NULL);
+  ctr_object *ret = ctr_map_new (CtrStdMap, NULL);
   ctr_argument *argm = ctr_heap_allocate (sizeof (ctr_argument));
   ctr_tlistitem *li;
   ctr_tnode *t;
@@ -5251,7 +5305,7 @@ ctr_scan_free_refs (ctr_tnode * node)
 }
 
 ctr_object *
-ctr_array_internal_zip (ctr_object * myself, ctr_argument * argumentList)
+ctr_array_internal_product (ctr_object * myself, ctr_argument * argumentList)
 {
   int has_argl = ! !argumentList;
   if (!argumentList)
@@ -5314,10 +5368,10 @@ ctr_build_listcomp (ctr_tnode * node)
 {
   ctr_tnode *main_expr = node->nodes->node, *generators = node->nodes->next->node, *preds = node->nodes->next->next->node;
 
-  ctr_object *free_refs = ctr_map_keys(ctr_scan_free_refs (main_expr), NULL), *mainexprb = ctr_build_block (ctr_expr_to_block (main_expr));
-  ctr_object *resolved_refs = ctr_array_new(CtrStdArray, NULL);
+  ctr_object *free_refs = ctr_map_keys (ctr_scan_free_refs (main_expr), NULL), *mainexprb = ctr_build_block (ctr_expr_to_block (main_expr));
+  ctr_object *resolved_refs = ctr_array_new (CtrStdArray, NULL);
 
-  ctr_object *bindings = ctr_array_new   (CtrStdArray, NULL);
+  ctr_object *bindings = ctr_array_new (CtrStdArray, NULL);
   ctr_object *predicates = ctr_array_new (CtrStdArray, NULL);
   ctr_argument *argm = ctr_heap_allocate (sizeof (*argm));
   char dummy;
@@ -5328,47 +5382,55 @@ ctr_build_listcomp (ctr_tnode * node)
       ctr_tlistitem *generator = generators->nodes;
       while (generator)
 	{
-    ctr_object *exprn;
-    ctr_tlistitem* genv = generator;
+	  ctr_object *exprn;
+	  ctr_tlistitem *genv = generator;
 
-    if (generator->node->type == CTR_AST_NODE_NESTED &&
-        generator->node->nodes->node->type == CTR_AST_NODE_EXPRMESSAGE &&
-        generator->node->nodes->node->nodes->node->vlen == 2 &&
-        strncmp(generator->node->nodes->node->nodes->node->value, "me", generator->node->nodes->node->nodes->node->vlen) == 0
-      ) {
-      generator = generator->node->nodes->node->nodes->next;
-      if (generator->node->type == CTR_AST_NODE_KWMESSAGE) {
-        int i = 0;
-        char* sv = NULL;
-        while ((sv=strchr(generator->node->value, ':'))!=NULL&&i++==0);
-        if(i!=2) {
-          CtrStdFlow = ctr_format_str("EExpected exactly one keyword to name the expression in listcomp, not %d (%s)", i, generator->node->value);
-          return CtrStdNil;
-        }
-        exprn = ctr_build_string(generator->node->value, generator->node->vlen-1);
-        generator = generator->node->nodes;
-      } else {
-        CtrStdFlow = ctr_build_string_from_cstring("Invalid use of non-keyword message to dynamic resolution `me' in list comprehension");
-        return CtrStdNil;
-      }
-    } else {
-      if (free_refs->value.avalue->head-free_refs->value.avalue->tail==0) {
-        CtrStdFlow = ctr_build_string_from_cstring("Extraneous expression without a name in a list comprehension");
-        return CtrStdNil;
-      }
-      exprn = ctr_array_shift(free_refs, NULL);
-    }
-    argm->object = exprn;
-    // name
-    ctr_array_push(resolved_refs, argm);
-    // binding expression
-	  argm->object = ctr_ast_from_node(generator->node);
+	  if (generator->node->type == CTR_AST_NODE_NESTED &&
+	      generator->node->nodes->node->type == CTR_AST_NODE_EXPRMESSAGE &&
+	      generator->node->nodes->node->nodes->node->vlen == 2 &&
+	      strncmp (generator->node->nodes->node->nodes->node->value, "me", generator->node->nodes->node->nodes->node->vlen) == 0)
+	    {
+	      generator = generator->node->nodes->node->nodes->next;
+	      if (generator->node->type == CTR_AST_NODE_KWMESSAGE)
+		{
+		  int i = 0;
+		  char *sv = NULL;
+		  while ((sv = strchr (generator->node->value, ':')) != NULL && i++ == 0);
+		  if (i != 2)
+		    {
+		      CtrStdFlow =
+			ctr_format_str ("EExpected exactly one keyword to name the expression in listcomp, not %d (%s)", i, generator->node->value);
+		      return CtrStdNil;
+		    }
+		  exprn = ctr_build_string (generator->node->value, generator->node->vlen - 1);
+		  generator = generator->node->nodes;
+		}
+	      else
+		{
+		  CtrStdFlow = ctr_build_string_from_cstring ("Invalid use of non-keyword message to dynamic resolution `me' in list comprehension");
+		  return CtrStdNil;
+		}
+	    }
+	  else
+	    {
+	      if (free_refs->value.avalue->head - free_refs->value.avalue->tail == 0)
+		{
+		  CtrStdFlow = ctr_build_string_from_cstring ("Extraneous expression without a name in a list comprehension");
+		  return CtrStdNil;
+		}
+	      exprn = ctr_array_shift (free_refs, NULL);
+	    }
+	  argm->object = exprn;
+	  // name
+	  ctr_array_push (resolved_refs, argm);
+	  // binding expression
+	  argm->object = ctr_ast_from_node (generator->node);
 	  ctr_array_push (bindings, argm);
 	  generator = genv->next;
 	}
     }
   size_t ps, fs;
-  if ((ps = ctr_array_count (bindings, NULL)->value.nvalue) < (fs = ctr_array_count(resolved_refs, NULL)->value.nvalue))
+  if ((ps = ctr_array_count (bindings, NULL)->value.nvalue) < (fs = ctr_array_count (resolved_refs, NULL)->value.nvalue))
     {
       CtrStdFlow = ctr_format_str ("-Number of bindings do not match the number of symbols (%d vs %d)", ps, fs);
       return CtrStdNil;
@@ -5407,30 +5469,21 @@ ctr_build_listcomp (ctr_tnode * node)
     }
   if (generators && !preds)
     {				//no filter: [e ,, gs@g+] -> [evaluate(e) ]
-      ctr_object *filter_s = ctr_build_string_from_cstring (
-        "{:gen "
-          "var syms is my syms. "
-          "^{\\:blk "
-            "syms letEqual: gen in: blk."
-          "}."
-        "}"
-      );
+      ctr_object *filter_s = ctr_build_string_from_cstring ("{:gen " "var syms is my syms. " "^{\\:blk " "syms letEqual: gen in: blk." "}." "}");
       argm->object = ctr_string_eval (filter_s, NULL);
       ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("syms"), resolved_refs, 0);
-      ctr_object* filter_sobj = argm->object;
-      ctr_object *filter_sv = ctr_build_string_from_cstring (
-        "{"
-          "^(my names fmap: \\:__vname Reflect getObject: __vname) internal-zip fmap: my filter_s."
-        "}"
-      );
+      ctr_object *filter_sobj = argm->object;
+      ctr_object *filter_sv = ctr_build_string_from_cstring ("{"
+							     "^(my names fmap: \\:__vname Reflect getObject: __vname) internal-product fmap: my filter_s."
+							     "}");
       ctr_object *filter_svobj;
       filter_svobj = ctr_string_eval (filter_sv, NULL);
-      ctr_internal_object_add_property(filter_svobj, ctr_build_string_from_cstring ("names"), resolved_refs, CTR_CATEGORY_PRIVATE_PROPERTY);
-      ctr_internal_object_add_property(filter_svobj, ctr_build_string_from_cstring ("filter_s"), filter_sobj, CTR_CATEGORY_PRIVATE_PROPERTY);
+      ctr_internal_object_add_property (filter_svobj, ctr_build_string_from_cstring ("names"), resolved_refs, CTR_CATEGORY_PRIVATE_PROPERTY);
+      ctr_internal_object_add_property (filter_svobj, ctr_build_string_from_cstring ("filter_s"), filter_sobj, CTR_CATEGORY_PRIVATE_PROPERTY);
       // ctr_argument arg = {bindings, NULL};
       // ctr_console_writeln(CtrStdConsole, &arg);
-      // names letEqualAst: bindings in: { internal-zip[names-as-names] fmap: filter_s }, fmap: (main_expr $)
-      ctr_object *bindingfns = ctr_send_message_variadic(resolved_refs, "letEqualAst:in:", 15, 2, bindings, filter_svobj);
+      // names letEqualAst: bindings in: { internal-product[names-as-names] fmap: filter_s }, fmap: (main_expr $)
+      ctr_object *bindingfns = ctr_send_message_variadic (resolved_refs, "letEqualAst:in:", 15, 2, bindings, filter_svobj);
       ctr_object *call_s = ctr_build_string_from_cstring ("{:blk ^blk applyTo: my main_expr.}");
       argm->object = ctr_string_eval (call_s, NULL);
       ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("main_expr"), mainexprb, 0);
@@ -5442,26 +5495,21 @@ ctr_build_listcomp (ctr_tnode * node)
   ctr_object *filter_s =
     ctr_build_string_from_cstring
     ("{:gen "
-        "var syms is my syms."
-        "my filters fmap: {:filter "
-            "^syms letEqualAst: gen in: filter."
-          "}, all: {:x ^x.}, not continue. "
-        "^\\:blk syms letEqualAst: gen in: blk."
-    "}");
+     "var syms is my syms."
+     "my filters fmap: {:filter "
+     "^syms letEqualAst: gen in: filter." "}, all: {:x ^x.}, not continue. " "^\\:blk syms letEqualAst: gen in: blk." "}");
   argm->object = ctr_string_eval (filter_s, NULL);
   ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("syms"), resolved_refs, 0);
   ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("filters"), predicates, 0);
-  ctr_object* filter_sobj = argm->object;
-  ctr_object *filter_sv = ctr_build_string_from_cstring (
-    "{"
-      "^(my names fmap: \\:__vname Reflect getObject: __vname) internal-zip fmap: my filter_s."
-    "}"
-  );
+  ctr_object *filter_sobj = argm->object;
+  ctr_object *filter_sv = ctr_build_string_from_cstring ("{"
+							 "^(my names fmap: \\:__vname Reflect getObject: __vname) internal-product fmap: my filter_s."
+							 "}");
   ctr_object *filter_svobj;
   filter_svobj = ctr_string_eval (filter_sv, NULL);
-  ctr_internal_object_add_property(filter_svobj, ctr_build_string_from_cstring ("names"), resolved_refs, CTR_CATEGORY_PRIVATE_PROPERTY);
-  ctr_internal_object_add_property(filter_svobj, ctr_build_string_from_cstring ("filter_s"), filter_sobj, CTR_CATEGORY_PRIVATE_PROPERTY);
-  ctr_object *bindingfns = ctr_send_message_variadic(resolved_refs, "letEqualAst:in:", 15, 2, bindings, filter_svobj);
+  ctr_internal_object_add_property (filter_svobj, ctr_build_string_from_cstring ("names"), resolved_refs, CTR_CATEGORY_PRIVATE_PROPERTY);
+  ctr_internal_object_add_property (filter_svobj, ctr_build_string_from_cstring ("filter_s"), filter_sobj, CTR_CATEGORY_PRIVATE_PROPERTY);
+  ctr_object *bindingfns = ctr_send_message_variadic (resolved_refs, "letEqualAst:in:", 15, 2, bindings, filter_svobj);
   ctr_object *call_s = ctr_build_string_from_cstring ("{:blk ^blk applyTo: my main_expr.}");
   argm->object = ctr_string_eval (call_s, NULL);
   ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("main_expr"), mainexprb, 0);
@@ -5584,7 +5632,8 @@ ctr_block_assign (ctr_object * myself, ctr_argument * argumentList)
   if (argumentList->object->value.svalue->vlen == 0
       || (argumentList->object->value.svalue->vlen == 1 && *argumentList->object->value.svalue->value == '_'))
     return myself;
-  ctr_internal_object_add_property (argumentList->next->object?:ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself, 0);
+  ctr_internal_object_add_property (argumentList->next->object ? : ctr_contexts[ctr_context_id], ctr_symbol_as_string (argumentList->object), myself,
+				    0);
   return myself;
 }
 
@@ -5593,52 +5642,59 @@ ctr_block_assign (ctr_object * myself, ctr_argument * argumentList)
  *
  * Specialise a block for the given types with the given block
  */
-ctr_overload_set * ctr_internal_next_bucket(ctr_overload_set* set, ctr_argument* arg);
+ctr_overload_set *ctr_internal_next_bucket (ctr_overload_set * set, ctr_argument * arg);
 ctr_object *
-ctr_block_specialise(ctr_object * myself, ctr_argument* argumentList)
+ctr_block_specialise (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object* types = argumentList->object;
-  if (!types || types->info.type != CTR_OBJECT_TYPE_OTARRAY) {
-    CtrStdFlow = ctr_build_string_from_cstring("Invalid argument for specialize:(*)with:");
-    return myself;
-  }
-  ctr_object* blk = argumentList->next->object;
-  if (blk->info.overloaded) {
-    CtrStdFlow = ctr_build_string_from_cstring("Refusing to merge specialisations");
-    return myself;
-  }
-  if (!blk || (blk->info.type != CTR_OBJECT_TYPE_OTBLOCK&&blk->info.type != CTR_OBJECT_TYPE_OTNATFUNC)) {
-    CtrStdFlow = ctr_build_string_from_cstring("Invalid argument for specialize:with:(*)");
-    return myself;
-  }
-  ctr_collection* tycoll = types->value.avalue;
-  blk->info.overloaded = 1; // link the specialisations
+  ctr_object *types = argumentList->object;
+  if (!types || types->info.type != CTR_OBJECT_TYPE_OTARRAY)
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("Invalid argument for specialize:(*)with:");
+      return myself;
+    }
+  ctr_object *blk = argumentList->next->object;
+  if (blk->info.overloaded)
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("Refusing to merge specialisations");
+      return myself;
+    }
+  if (!blk || (blk->info.type != CTR_OBJECT_TYPE_OTBLOCK && blk->info.type != CTR_OBJECT_TYPE_OTNATFUNC))
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("Invalid argument for specialize:with:(*)");
+      return myself;
+    }
+  ctr_collection *tycoll = types->value.avalue;
+  blk->info.overloaded = 1;	// link the specialisations
 
-  if (!myself->info.overloaded) {
-    myself->info.overloaded = 1;
-    myself->overloads = ctr_heap_allocate(sizeof (ctr_overload_set));
-    myself->overloads->bucket_count = 0;
-    myself->overloads->sub_buckets = ctr_heap_allocate(sizeof(ctr_overload_set*));
-  }
+  if (!myself->info.overloaded)
+    {
+      myself->info.overloaded = 1;
+      myself->overloads = ctr_heap_allocate (sizeof (ctr_overload_set));
+      myself->overloads->bucket_count = 0;
+      myself->overloads->sub_buckets = ctr_heap_allocate (sizeof (ctr_overload_set *));
+    }
   ctr_overload_set *overload = myself->overloads;
   ctr_argument arg;
-  for (int i=tycoll->tail;i<tycoll->head;i++) {
-    arg.object = tycoll->elements[i];
-    ctr_overload_set* next = ctr_internal_next_bucket(overload, &arg);
-    if (!next) {
-      overload->sub_buckets = overload->bucket_count++
-        ?ctr_heap_reallocate(overload->sub_buckets, sizeof(ctr_overload_set*)*overload->bucket_count)
-        :ctr_heap_allocate(sizeof(ctr_overload_set*)*overload->bucket_count);
-      next = (overload->sub_buckets[overload->bucket_count-1] = ctr_heap_allocate(sizeof(ctr_overload_set)));
-      next->this_terminating_bucket = arg.object;
-    }
-    // if (i<tycoll->head-1)
+  for (int i = tycoll->tail; i < tycoll->head; i++)
+    {
+      arg.object = tycoll->elements[i];
+      ctr_overload_set *next = ctr_internal_next_bucket (overload, &arg);
+      if (!next)
+	{
+	  overload->sub_buckets = overload->bucket_count++
+	    ? ctr_heap_reallocate (overload->sub_buckets, sizeof (ctr_overload_set *) * overload->bucket_count)
+	    : ctr_heap_allocate (sizeof (ctr_overload_set *) * overload->bucket_count);
+	  next = (overload->sub_buckets[overload->bucket_count - 1] = ctr_heap_allocate (sizeof (ctr_overload_set)));
+	  next->this_terminating_bucket = arg.object;
+	}
+      // if (i<tycoll->head-1)
       overload = next;
-  }
+    }
   overload->this_terminating_value = blk;
   blk->overloads = myself->overloads;
   return myself;
 }
+
 /**
  *[Block] applyTo: [object]
  *
@@ -5680,13 +5736,14 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
       ctr_object *result = myself->value.fvalue (my, argList);
       return result;
     }
-    // overload begin
-    if (myself->info.overloaded) {
+  // overload begin
+  if (myself->info.overloaded)
+    {
       // find proper overload to run
       if (myself->overloads)
-        myself = ctr_internal_find_overload(myself, argList);
+	myself = ctr_internal_find_overload (myself, argList);
     }
-    // overload end
+  // overload end
 
   int is_tail_call = 0, id;
   for (id = ctr_context_id; id > 0 && !is_tail_call && ctr_current_node_is_return; id--, is_tail_call = ctr_contexts[id] == myself);
@@ -5825,18 +5882,18 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
 	{
 	  ctr_object *catch_type = ctr_internal_object_find_property (catchBlock, ctr_build_string_from_cstring ("%catch"), 0);
 	  ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
-    ctr_object *exdata = ctr_build_string_from_cstring(":exdata"),
-    *ex = CtrStdFlow,
-    *getexinfo = ctr_build_string_from_cstring("exceptionInfo");
-    ctr_internal_object_set_property(ex, exdata, ctr_internal_ex_data(), 0);
-    ctr_internal_create_func(ex, getexinfo, &ctr_exception_getinfo);
-    int setstr = 0;
-    if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING) {
-      ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
-      setstr = 1;
-      ctr_internal_create_func(ex, ctr_build_string_from_cstring("toString"), &ctr_string_to_string);
-    }
-    a->object = ex;
+	  ctr_object *exdata = ctr_build_string_from_cstring (":exdata"),
+	    *ex = CtrStdFlow, *getexinfo = ctr_build_string_from_cstring ("exceptionInfo");
+	  ctr_internal_object_set_property (ex, exdata, ctr_internal_ex_data (), 0);
+	  ctr_internal_create_func (ex, getexinfo, &ctr_exception_getinfo);
+	  int setstr = 0;
+	  if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING)
+	    {
+	      ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
+	      setstr = 1;
+	      ctr_internal_create_func (ex, ctr_build_string_from_cstring ("toString"), &ctr_string_to_string);
+	    }
+	  a->object = ex;
 	  a->next = ctr_heap_allocate (sizeof (ctr_argument));
 	  a->next->object = catch_type;
 	  if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
@@ -5845,10 +5902,10 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
 	      ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
 	      result = alternative;
 	    }
-      ctr_internal_object_delete_property(ex, exdata, 0);
-      ctr_internal_object_delete_property(ex, getexinfo, 1);
-      if (setstr)
-        ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
+	  ctr_internal_object_delete_property (ex, exdata, 0);
+	  ctr_internal_object_delete_property (ex, getexinfo, 1);
+	  if (setstr)
+	    ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
 	  ctr_heap_free (a->next);
 	  ctr_heap_free (a);
 	}
@@ -5871,13 +5928,15 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
       return result;
     }
   // overload begin
-  if (myself->info.overloaded) {
-    // find proper overload to run
-    if (myself->overloads)
-      myself = ctr_internal_find_overload(myself, argList);
-  }
+  if (myself->info.overloaded)
+    {
+      // find proper overload to run
+      if (myself->overloads)
+	myself = ctr_internal_find_overload (myself, argList);
+    }
   // overload end
   int is_tail_call = 0, id;
+  if (myself->value.block && myself->value.block->lexical)
   for (id = ctr_context_id; id > 0 && !is_tail_call && ctr_current_node_is_return; id--, is_tail_call = ctr_contexts[id] == myself);
   if (is_tail_call)
     {
@@ -6014,19 +6073,18 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 	{
 	  ctr_object *catch_type = ctr_internal_object_find_property (catchBlock, ctr_build_string_from_cstring ("%catch"), 0);
 	  ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
-    ctr_object *exdata = ctr_build_string_from_cstring(":exdata"),
-    *ex = CtrStdFlow,
-    *getexinfo = ctr_build_string_from_cstring("exceptionInfo"),
-    *exd =  ctr_internal_ex_data();
-    ctr_internal_object_add_property(ex, exdata, exd, 0);
-    ctr_internal_create_func(ex, getexinfo, &ctr_exception_getinfo);
-    int setstr = 0;
-    if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING) {
-      ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
-      setstr = 1;
-      ctr_internal_create_func(ex, ctr_build_string_from_cstring("toString"), &ctr_string_to_string);
-    }
-    a->object = ex;
+	  ctr_object *exdata = ctr_build_string_from_cstring (":exdata"),
+	    *ex = CtrStdFlow, *getexinfo = ctr_build_string_from_cstring ("exceptionInfo"), *exd = ctr_internal_ex_data ();
+	  ctr_internal_object_add_property (ex, exdata, exd, 0);
+	  ctr_internal_create_func (ex, getexinfo, &ctr_exception_getinfo);
+	  int setstr = 0;
+	  if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING)
+	    {
+	      ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
+	      setstr = 1;
+	      ctr_internal_create_func (ex, ctr_build_string_from_cstring ("toString"), &ctr_string_to_string);
+	    }
+	  a->object = ex;
 	  a->next = ctr_heap_allocate (sizeof (ctr_argument));
 	  a->next->object = catch_type;
 	  if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
@@ -6035,10 +6093,10 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 	      ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
 	      result = alternative;
 	    }
-      ctr_internal_object_delete_property(ex, exdata, 0);
-      ctr_internal_object_delete_property(ex, getexinfo, 1);
-      if (setstr)
-        ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
+	  ctr_internal_object_delete_property (ex, exdata, 0);
+	  ctr_internal_object_delete_property (ex, getexinfo, 1);
+	  if (setstr)
+	    ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
 	  ctr_heap_free (a->next);
 	  ctr_heap_free (a);
 	}
@@ -6063,13 +6121,14 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
       ctr_object *result = myself->value.fvalue (my, argList);
       return result;
     }
-    // overload begin
-    if (myself->info.overloaded) {
+  // overload begin
+  if (myself->info.overloaded)
+    {
       // find proper overload to run
       if (myself->overloads)
-        myself = ctr_internal_find_overload(myself, argList);
+	myself = ctr_internal_find_overload (myself, argList);
     }
-    // overload end
+  // overload end
 
   ctr_object *result;
   ctr_tnode *node = myself->value.block;
@@ -6102,10 +6161,10 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
 	      if (parameterList->next)
 		{
 		  a = argList->object;
-      // if (a->info.raw)
-		    // ctr_assign_value_to_local_by_ref (ctr_build_string (parameter->value, parameter->vlen), a);
+		  // if (a->info.raw)
+		  // ctr_assign_value_to_local_by_ref (ctr_build_string (parameter->value, parameter->vlen), a);
 		  // else
-        ctr_assign_value_to_local (ctr_build_string (parameter->value, parameter->vlen), a);
+		  ctr_assign_value_to_local (ctr_build_string (parameter->value, parameter->vlen), a);
 		}
 	      else if (!parameterList->next && was_vararg)
 		{
@@ -6123,10 +6182,10 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
 	      else if (!was_vararg)
 		{
 		  a = argList->object;
-      // if (a->info.raw)
-		    // ctr_assign_value_to_local_by_ref (ctr_build_string (parameter->value, parameter->vlen), a);
+		  // if (a->info.raw)
+		  // ctr_assign_value_to_local_by_ref (ctr_build_string (parameter->value, parameter->vlen), a);
 		  // else
-        ctr_assign_value_to_local (ctr_build_string (parameter->value, parameter->vlen), a);
+		  ctr_assign_value_to_local (ctr_build_string (parameter->value, parameter->vlen), a);
 		}
 	    }
 	  if (!argList->next)
@@ -6169,18 +6228,18 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
 	{
 	  ctr_object *catch_type = ctr_internal_object_find_property (catchBlock, ctr_build_string_from_cstring ("%catch"), 0);
 	  ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
-    ctr_object *exdata = ctr_build_string_from_cstring(":exdata"),
-    *ex = CtrStdFlow,
-    *getexinfo = ctr_build_string_from_cstring("exceptionInfo");
-    ctr_internal_object_set_property(ex, exdata, ctr_internal_ex_data(), 0);
-    ctr_internal_create_func(ex, getexinfo, &ctr_exception_getinfo);
-    int setstr = 0;
-    if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING) {
-      ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
-      setstr = 1;
-      ctr_internal_create_func(ex, ctr_build_string_from_cstring("toString"), &ctr_string_to_string);
-    }
-    a->object = ex;
+	  ctr_object *exdata = ctr_build_string_from_cstring (":exdata"),
+	    *ex = CtrStdFlow, *getexinfo = ctr_build_string_from_cstring ("exceptionInfo");
+	  ctr_internal_object_set_property (ex, exdata, ctr_internal_ex_data (), 0);
+	  ctr_internal_create_func (ex, getexinfo, &ctr_exception_getinfo);
+	  int setstr = 0;
+	  if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING)
+	    {
+	      ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
+	      setstr = 1;
+	      ctr_internal_create_func (ex, ctr_build_string_from_cstring ("toString"), &ctr_string_to_string);
+	    }
+	  a->object = ex;
 	  a->next = ctr_heap_allocate (sizeof (ctr_argument));
 	  a->next->object = catch_type;
 	  if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
@@ -6189,10 +6248,10 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
 	      ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
 	      result = alternative;
 	    }
-      ctr_internal_object_delete_property(ex, exdata, 0);
-      ctr_internal_object_delete_property(ex, getexinfo, 1);
-      if (setstr)
-        ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
+	  ctr_internal_object_delete_property (ex, exdata, 0);
+	  ctr_internal_object_delete_property (ex, getexinfo, 1);
+	  if (setstr)
+	    ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
 	  ctr_heap_free (a->next);
 	  ctr_heap_free (a);
 	}
@@ -6224,10 +6283,7 @@ ctr_block_while_true (ctr_object * myself, ctr_argument * argumentList)
   sticky2 = argumentList->object->info.sticky;
   myself->info.sticky = 1;
   argumentList->object->info.sticky = 1;
-  ctr_object
-    *my = myself, *block = my,
-    *runblock = argumentList->object,
-    *result, *my0;
+  ctr_object * my = myself, *block = my, *runblock = argumentList->object, *result, *my0;
   if (myself->value.block->lexical)
     ctr_contexts[++ctr_context_id] = myself;
   else
@@ -6239,67 +6295,68 @@ ctr_block_while_true (ctr_object * myself, ctr_argument * argumentList)
   ctr_tlistitem *parameterList = codeBlockPart1->nodes, *paramList0;
   ctr_tnode *parameter;
   ctr_tnode *block0;
-  int snd_stage = 0; //are we running the predicate, or the block
+  int snd_stage = 0;		//are we running the predicate, or the block
   while (1 && !CtrStdFlow)
-  {
-    resolve_value: {
-        if (parameterList && parameterList->node)
-        {
-          parameter = parameterList->node;
-          if (parameter->vlen == 4 && strncmp (parameter->value, "self", 4) == 0)
-          {
-            //assign self selectively, skip that parameter
-            ctr_assign_value_to_local_by_ref (ctr_build_string (parameter->value, parameter->vlen), my);
-            parameterList = parameterList->next;
-          }
-        }
-        ctr_assign_value_to_local_by_ref (&CTR_CLEX_KW_ME, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
-        ctr_assign_value_to_local (&CTR_CLEX_KW_THIS, block);	/* otherwise running block may get gc'ed. */
-        result = ctr_cwlk_run (codeBlockPart2);
-        if (result == NULL)
-          result = my;
-        if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak && CtrStdFlow != CtrStdContinue)
-        {
-          ctr_object *catchBlock = ctr_internal_object_find_property (block,
-            ctr_build_string_from_cstring ("catch"),
-            0);
-            if (catchBlock != NULL)
-            {
-              ctr_object *catch_type = ctr_internal_object_find_property (catchBlock, ctr_build_string_from_cstring ("%catch"), 0);
-              ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
-              ctr_object *exdata = ctr_build_string_from_cstring(":exdata"),
-              *ex = CtrStdFlow,
-              *getexinfo = ctr_build_string_from_cstring("exceptionInfo");
-              ctr_internal_object_set_property(ex, exdata, ctr_internal_ex_data(), 0);
-              ctr_internal_create_func(ex, getexinfo, &ctr_exception_getinfo);
-              int setstr = 0;
-              if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING) {
-                ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
-                setstr = 1;
-                ctr_internal_create_func(ex, ctr_build_string_from_cstring("toString"), &ctr_string_to_string);
-              }
-              a->object = ex;
-              a->next = ctr_heap_allocate (sizeof (ctr_argument));
-              a->next->object = catch_type;
-              if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
-              {
-                CtrStdFlow = NULL;
-                ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
-                result = alternative;
-              }
-              ctr_internal_object_delete_property(ex, exdata, 0);
-              ctr_internal_object_delete_property(ex, getexinfo, 1);
-              if (setstr)
-                ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
-              ctr_heap_free (a->next);
-              ctr_heap_free (a);
-            }
-          }
-        }
-      if (snd_stage) goto restore_stuff;
+    {
+    resolve_value:{
+	if (parameterList && parameterList->node)
+	  {
+	    parameter = parameterList->node;
+	    if (parameter->vlen == 4 && strncmp (parameter->value, "self", 4) == 0)
+	      {
+		//assign self selectively, skip that parameter
+		ctr_assign_value_to_local_by_ref (ctr_build_string (parameter->value, parameter->vlen), my);
+		parameterList = parameterList->next;
+	      }
+	  }
+	ctr_assign_value_to_local_by_ref (&CTR_CLEX_KW_ME, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
+	ctr_assign_value_to_local (&CTR_CLEX_KW_THIS, block);	/* otherwise running block may get gc'ed. */
+	result = ctr_cwlk_run (codeBlockPart2);
+	if (result == NULL)
+	  result = my;
+	if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak && CtrStdFlow != CtrStdContinue)
+	  {
+	    ctr_object *catchBlock = ctr_internal_object_find_property (block,
+									ctr_build_string_from_cstring ("catch"),
+									0);
+	    if (catchBlock != NULL)
+	      {
+		ctr_object *catch_type = ctr_internal_object_find_property (catchBlock, ctr_build_string_from_cstring ("%catch"), 0);
+		ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+		ctr_object *exdata = ctr_build_string_from_cstring (":exdata"),
+		  *ex = CtrStdFlow, *getexinfo = ctr_build_string_from_cstring ("exceptionInfo");
+		ctr_internal_object_set_property (ex, exdata, ctr_internal_ex_data (), 0);
+		ctr_internal_create_func (ex, getexinfo, &ctr_exception_getinfo);
+		int setstr = 0;
+		if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING)
+		  {
+		    ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
+		    setstr = 1;
+		    ctr_internal_create_func (ex, ctr_build_string_from_cstring ("toString"), &ctr_string_to_string);
+		  }
+		a->object = ex;
+		a->next = ctr_heap_allocate (sizeof (ctr_argument));
+		a->next->object = catch_type;
+		if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
+		  {
+		    CtrStdFlow = NULL;
+		    ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
+		    result = alternative;
+		  }
+		ctr_internal_object_delete_property (ex, exdata, 0);
+		ctr_internal_object_delete_property (ex, getexinfo, 1);
+		if (setstr)
+		  ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
+		ctr_heap_free (a->next);
+		ctr_heap_free (a);
+	      }
+	  }
+      }
+      if (snd_stage)
+	goto restore_stuff;
       result = ctr_internal_cast2bool (result);
       if (result->value.bvalue == 0 || CtrStdFlow)
-        break;
+	break;
       // save the stuff for the predicate block
       paramList0 = parameterList;
       block0 = codeBlockPart2;
@@ -6310,15 +6367,15 @@ ctr_block_while_true (ctr_object * myself, ctr_argument * argumentList)
       my = runblock;
       snd_stage = 1;
       goto resolve_value;
-      restore_stuff:;
+    restore_stuff:;
       snd_stage = 0;
       parameterList = paramList0;
       codeBlockPart2 = block0;
       my = my0;
       if (CtrStdFlow == CtrStdContinue)
-      CtrStdFlow = NULL;	/* consume continue */
+	CtrStdFlow = NULL;	/* consume continue */
     }
-      ctr_close_context ();
+  ctr_close_context ();
   if (CtrStdFlow == CtrStdBreak)
     CtrStdFlow = NULL;		/* consume break */
   myself->info.sticky = sticky1;
@@ -6350,10 +6407,7 @@ ctr_block_while_false (ctr_object * myself, ctr_argument * argumentList)
   sticky2 = argumentList->object->info.sticky;
   myself->info.sticky = 1;
   argumentList->object->info.sticky = 1;
-  ctr_object
-    *my = myself, *block = my,
-    *runblock = argumentList->object,
-    *result, *my0;
+  ctr_object * my = myself, *block = my, *runblock = argumentList->object, *result, *my0;
   if (myself->value.block->lexical)
     ctr_contexts[++ctr_context_id] = myself;
   else
@@ -6365,67 +6419,68 @@ ctr_block_while_false (ctr_object * myself, ctr_argument * argumentList)
   ctr_tlistitem *parameterList = codeBlockPart1->nodes, *paramList0;
   ctr_tnode *parameter;
   ctr_tnode *block0;
-  int snd_stage = 0; //are we running the predicate, or the block
+  int snd_stage = 0;		//are we running the predicate, or the block
   while (1 && !CtrStdFlow)
-  {
-    resolve_value: {
-        if (parameterList && parameterList->node)
-        {
-          parameter = parameterList->node;
-          if (parameter->vlen == 4 && strncmp (parameter->value, "self", 4) == 0)
-          {
-            //assign self selectively, skip that parameter
-            ctr_assign_value_to_local_by_ref (ctr_build_string (parameter->value, parameter->vlen), my);
-            parameterList = parameterList->next;
-          }
-        }
-        ctr_assign_value_to_local_by_ref (&CTR_CLEX_KW_ME, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
-        ctr_assign_value_to_local (&CTR_CLEX_KW_THIS, block);	/* otherwise running block may get gc'ed. */
-        result = ctr_cwlk_run (codeBlockPart2);
-        if (result == NULL)
-          result = my;
-        if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak && CtrStdFlow != CtrStdContinue)
-        {
-          ctr_object *catchBlock = ctr_internal_object_find_property (block,
-            ctr_build_string_from_cstring ("catch"),
-            0);
-            if (catchBlock != NULL)
-            {
-              ctr_object *catch_type = ctr_internal_object_find_property (catchBlock, ctr_build_string_from_cstring ("%catch"), 0);
-              ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
-              ctr_object *exdata = ctr_build_string_from_cstring(":exdata"),
-              *ex = CtrStdFlow,
-              *getexinfo = ctr_build_string_from_cstring("exceptionInfo");
-              ctr_internal_object_set_property(ex, exdata, ctr_internal_ex_data(), 0);
-              ctr_internal_create_func(ex, getexinfo, &ctr_exception_getinfo);
-              int setstr = 0;
-              if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING) {
-                ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
-                setstr = 1;
-                ctr_internal_create_func(ex, ctr_build_string_from_cstring("toString"), &ctr_string_to_string);
-              }
-              a->object = ex;
-              a->next = ctr_heap_allocate (sizeof (ctr_argument));
-              a->next->object = catch_type;
-              if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
-              {
-                CtrStdFlow = NULL;
-                ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
-                result = alternative;
-              }
-              ctr_internal_object_delete_property(ex, exdata, 0);
-              ctr_internal_object_delete_property(ex, getexinfo, 1);
-              if (setstr)
-                ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
-              ctr_heap_free (a->next);
-              ctr_heap_free (a);
-            }
-          }
-        }
-      if (snd_stage) goto restore_stuff;
+    {
+    resolve_value:{
+	if (parameterList && parameterList->node)
+	  {
+	    parameter = parameterList->node;
+	    if (parameter->vlen == 4 && strncmp (parameter->value, "self", 4) == 0)
+	      {
+		//assign self selectively, skip that parameter
+		ctr_assign_value_to_local_by_ref (ctr_build_string (parameter->value, parameter->vlen), my);
+		parameterList = parameterList->next;
+	      }
+	  }
+	ctr_assign_value_to_local_by_ref (&CTR_CLEX_KW_ME, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
+	ctr_assign_value_to_local (&CTR_CLEX_KW_THIS, block);	/* otherwise running block may get gc'ed. */
+	result = ctr_cwlk_run (codeBlockPart2);
+	if (result == NULL)
+	  result = my;
+	if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak && CtrStdFlow != CtrStdContinue)
+	  {
+	    ctr_object *catchBlock = ctr_internal_object_find_property (block,
+									ctr_build_string_from_cstring ("catch"),
+									0);
+	    if (catchBlock != NULL)
+	      {
+		ctr_object *catch_type = ctr_internal_object_find_property (catchBlock, ctr_build_string_from_cstring ("%catch"), 0);
+		ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+		ctr_object *exdata = ctr_build_string_from_cstring (":exdata"),
+		  *ex = CtrStdFlow, *getexinfo = ctr_build_string_from_cstring ("exceptionInfo");
+		ctr_internal_object_set_property (ex, exdata, ctr_internal_ex_data (), 0);
+		ctr_internal_create_func (ex, getexinfo, &ctr_exception_getinfo);
+		int setstr = 0;
+		if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING)
+		  {
+		    ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
+		    setstr = 1;
+		    ctr_internal_create_func (ex, ctr_build_string_from_cstring ("toString"), &ctr_string_to_string);
+		  }
+		a->object = ex;
+		a->next = ctr_heap_allocate (sizeof (ctr_argument));
+		a->next->object = catch_type;
+		if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
+		  {
+		    CtrStdFlow = NULL;
+		    ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
+		    result = alternative;
+		  }
+		ctr_internal_object_delete_property (ex, exdata, 0);
+		ctr_internal_object_delete_property (ex, getexinfo, 1);
+		if (setstr)
+		  ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
+		ctr_heap_free (a->next);
+		ctr_heap_free (a);
+	      }
+	  }
+      }
+      if (snd_stage)
+	goto restore_stuff;
       result = ctr_internal_cast2bool (result);
       if (result->value.bvalue == 1 || CtrStdFlow)
-        break;
+	break;
       // save the stuff for the predicate block
       paramList0 = parameterList;
       block0 = codeBlockPart2;
@@ -6436,15 +6491,15 @@ ctr_block_while_false (ctr_object * myself, ctr_argument * argumentList)
       my = runblock;
       snd_stage = 1;
       goto resolve_value;
-      restore_stuff:;
+    restore_stuff:;
       snd_stage = 0;
       parameterList = paramList0;
       codeBlockPart2 = block0;
       my = my0;
       if (CtrStdFlow == CtrStdContinue)
-      CtrStdFlow = NULL;	/* consume continue */
+	CtrStdFlow = NULL;	/* consume continue */
     }
-      ctr_close_context ();
+  ctr_close_context ();
   if (CtrStdFlow == CtrStdBreak)
     CtrStdFlow = NULL;		/* consume break */
   myself->info.sticky = sticky1;
@@ -6455,41 +6510,45 @@ ctr_block_while_false (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_block_forever (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_tnode* cblock = myself->value.block;
-  ctr_tlistitem* params = cblock->nodes->node->nodes;
-  ctr_tnode* code = cblock->nodes->next->node;
+  ctr_tnode *cblock = myself->value.block;
+  ctr_tlistitem *params = cblock->nodes->node->nodes;
+  ctr_tnode *code = cblock->nodes->next->node;
   if (params && params->node && params->node->vlen == 4 && strncmp (params->node->value, "self", 4) == 0)
-  {
-    //assign self selectively, skip that parameter
-    ctr_assign_value_to_local_by_ref (ctr_build_string (params->node->value, params->node->vlen), myself);
-  }
-  ctr_object* catch = ctr_internal_object_find_property (myself,
-    ctr_build_string_from_cstring ("catch"),
-    0);
+    {
+      //assign self selectively, skip that parameter
+      ctr_assign_value_to_local_by_ref (ctr_build_string (params->node->value, params->node->vlen), myself);
+    }
+  ctr_object *catch = ctr_internal_object_find_property (myself,
+							 ctr_build_string_from_cstring ("catch"),
+							 0);
   ctr_argument agms;
   if (myself->value.block->lexical)
     ctr_contexts[++ctr_context_id] = myself;
   else
     ctr_open_context ();
-  while (1 && !CtrStdFlow) {
-    ctr_assign_value_to_local_by_ref (&CTR_CLEX_KW_ME, myself);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
-    ctr_assign_value_to_local (&CTR_CLEX_KW_THIS, myself);	/* otherwise running block may get gc'ed. */
-    ctr_cwlk_run (code);
-    if (CtrStdFlow == CtrStdBreak) {
-      CtrStdFlow = NULL;
-      break;
+  while (1 && !CtrStdFlow)
+    {
+      ctr_assign_value_to_local_by_ref (&CTR_CLEX_KW_ME, myself);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
+      ctr_assign_value_to_local (&CTR_CLEX_KW_THIS, myself);	/* otherwise running block may get gc'ed. */
+      ctr_cwlk_run (code);
+      if (CtrStdFlow == CtrStdBreak)
+	{
+	  CtrStdFlow = NULL;
+	  break;
+	}
+      if (CtrStdFlow == CtrStdContinue)
+	{
+	  CtrStdFlow = NULL;
+	  continue;
+	}
+      if (CtrStdFlow && catch)
+	{
+	  agms.object = CtrStdFlow;
+	  CtrStdFlow = NULL;
+	  ctr_block_run_here (catch, &agms, catch);
+	}
     }
-    if (CtrStdFlow == CtrStdContinue) {
-      CtrStdFlow = NULL;
-      continue;
-    }
-    if (CtrStdFlow && catch) {
-      agms.object = CtrStdFlow;
-      CtrStdFlow = NULL;
-      ctr_block_run_here(catch, &agms, catch);
-    }
-  }
-  ctr_close_context();
+  ctr_close_context ();
   return myself;
 }
 
@@ -6848,10 +6907,12 @@ ctr_is_primitive (ctr_object * object)
     || object == CtrStdReflect || object == CtrStdReflect_cons || object == CtrStdFiber || object == CtrStdThread || object == CtrStdSymbol;
 }
 
-int strchru(char const* restrict str, int length, char c) {
+int
+strchru (char const *restrict str, int length, char c)
+{
   int i = 0;
-  for (;i<length&&str[i++]!=c;);
-  return i<length?i-1:i;
+  for (; i < length && str[i++] != c;);
+  return i < length ? i - 1 : i;
 }
 
 //Stack-trace
@@ -7040,43 +7101,43 @@ ctr_print_stack_trace ()
  *
  * Returns line info about an exception
  */
-ctr_object* ctr_exception_getinfo(ctr_object* myself, ctr_argument* argumentList)
+ctr_object *
+ctr_exception_getinfo (ctr_object * myself, ctr_argument * argumentList)
 {
-  return ctr_internal_object_find_property(myself, ctr_build_string_from_cstring(":exdata"), 0);
+  return ctr_internal_object_find_property (myself, ctr_build_string_from_cstring (":exdata"), 0);
 }
 
 ctr_object *
-ctr_internal_ex_data()
+ctr_internal_ex_data ()
 {
   int lineno = -1, pos = -1;
   ctr_source_map *mapItem;
   ctr_tnode *stackNode = ctr_callstack[ctr_callstack_index - 1];
   mapItem = ctr_source_map_head;
   while (mapItem)
-{
-if (lineno == -1 && mapItem->node == stackNode)
-  {
-    lineno = mapItem->line;
-    int firstsec = strchru(stackNode->value, stackNode->vlen, ':');
-    pos = mapItem->p_ptr - mapItem->s_ptr - firstsec;
-    break;
-  }
-mapItem = mapItem->next;
-}
+    {
+      if (lineno == -1 && mapItem->node == stackNode)
+	{
+	  lineno = mapItem->line;
+	  int firstsec = strchru (stackNode->value, stackNode->vlen, ':');
+	  pos = mapItem->p_ptr - mapItem->s_ptr - firstsec;
+	  break;
+	}
+      mapItem = mapItem->next;
+    }
 
-  ctr_object
-    *linenumber = ctr_build_number_from_float(lineno),
-    *apos    = ctr_build_number_from_float(pos);
+  ctr_object * linenumber = ctr_build_number_from_float (lineno), *apos = ctr_build_number_from_float (pos);
 
   ctr_argument arg;
-  arg.object = linenumber; // line
+  arg.object = linenumber;	// line
   arg.next = NULL;
-  ctr_object* data = ctr_array_new(CtrStdArray, NULL);
-  ctr_array_push(data, &arg);
+  ctr_object *data = ctr_array_new (CtrStdArray, NULL);
+  ctr_array_push (data, &arg);
   arg.object = apos;
-  ctr_array_push(data, &arg);
+  ctr_array_push (data, &arg);
   return data;
 }
+
 ctr_object *
 ctr_get_last_trace (ctr_object * myself, ctr_argument * _)
 {

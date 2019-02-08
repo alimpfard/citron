@@ -1,5 +1,3 @@
-#:declare lazyev ||
-#:declare lazyev &&
 #:declare lazyev or
 #:declare lazyev and
 
@@ -21,6 +19,3 @@ var or is {:__x0:__y0 :__frame
       ^__y0 evaluateInContext: __frame.
     }.
 }.
-
-var && is and.
-var || is or.

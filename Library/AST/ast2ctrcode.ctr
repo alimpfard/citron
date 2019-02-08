@@ -13,7 +13,7 @@ var ast2ctrcode is {:self:ast:curindent:options
     },
     case: 'LTRSTRING' do: {
       var value is ast value.
-      ^'\'%s\'' % [value escapeQuotes ~ ?>s/\\(?!')/\\\\/g<?].
+      ^'\'%s\'' % [value escape: '\n\t\f\v\b\a\''].
     },
     case: 'LTRNIL' do: {
       ^'Nil'.

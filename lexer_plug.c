@@ -413,11 +413,11 @@ ctr_lex_tok ()
 	  ctr_lex_line_number++;
 	}
       if (c == '#')
-	  comment_mode = 1;
-    ctr_code++;
-    c = *ctr_code;
-    if(comment_mode)
-    commented_s++;
+	comment_mode = 1;
+      ctr_code++;
+      c = *ctr_code;
+      if (comment_mode)
+	commented_s++;
     }
   if (ctr_code == ctr_eofcode)
     {
@@ -570,7 +570,7 @@ ctr_lex_tok ()
       ctr_code++;
       c = toupper (*ctr_code);
       if (xnum_likely)
-	base = c == 'X' ? 16 : c == 'C' ? 8 : 10;	//let the parser handle incorrect values
+	base = c == 'X' ? 16 : c == 'C' ? 8 : c == 'B' ? 2 : 10;	//let the parser handle incorrect values
       if (base != 10)
 	{
 	  ctr_lex_buffer[i] = c;
@@ -844,15 +844,15 @@ ctr_lex_readstr ()
   return beginbuff;
 }
 
-void 
-ctr_lex_parse_pragma (const char* descr) 
+void
+ctr_lex_parse_pragma (const char *descr)
 {
-    struct lexer_state s, n;
-    ctr_clex_dump_state(&s);
-    n = s;
-    n.ctr_eofcode = descr + strlen(descr);
-    n.ctr_clex_oldptr = n.ctr_clex_olderptr = n.ctr_code = descr;
-    ctr_clex_load_state(n);
-    ctr_match_toggle_pragma();
-    ctr_clex_load_state(s);
+  struct lexer_state s, n;
+  ctr_clex_dump_state (&s);
+  n = s;
+  n.ctr_eofcode = descr + strlen (descr);
+  n.ctr_clex_oldptr = n.ctr_clex_olderptr = n.ctr_code = descr;
+  ctr_clex_load_state (n);
+  ctr_match_toggle_pragma ();
+  ctr_clex_load_state (s);
 }

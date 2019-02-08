@@ -27,11 +27,21 @@ var PackedArray is Object cnew: {
   count => 0.
   array => Nil.
 }.
-PackedArray on: 'sameFor:' do: {:struct
+PackedArray on: 'sameFor:' do: {:array
   ^me cnew: {
-    array => struct.
-    count => struct count.
-    type  => struct _type.
+    array => array.
+    count => array count.
+    type  => array _type.
+  }.
+}.
+PackedArray on: 'newIns' do: {
+  ^me sameFor: my array new.
+}.
+PackedArray on: 'initWithCType:count:' do: {:c:len
+  ^cnew: {
+    array  => c.
+    type   => Reflect getProperty: ':cType' ofObject: c.
+    count  => len.
   }.
 }.
 PackedArray on: 'initWithType:count:' do: {:t:len
@@ -45,7 +55,9 @@ PackedArray on: 'at:' do: {:idx ^my array at: idx. }.
 PackedArray on: 'put:at:' do: {:v:idx my array put: v at: idx. }.
 PackedArray on: 'count' do: { ^my count. }.
 PackedArray on: '_type' do: { ^my type. }.
-PackedArray on: 'type' do: { ^'PackedArray(%s[%d])' % [me rectifyType, my count].}.
+PackedArray on: 'type' do: {
+  ^'PackedArray(%s[%d])' % [my array, my count].
+}.
 PackedArray on: 'rectifyType' do: { ^const REVERSETYPEMAP at: my type.  }.
 PackedArray on: 'copy' do: {:self
   ^me cnew: {

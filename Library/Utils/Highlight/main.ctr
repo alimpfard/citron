@@ -12,13 +12,15 @@ Highlight on: 'highlight:' do: {:code:html
     }.
     ^cv.
   }.
-  var space is html either: '&nbsp;' or: ' '.
+  var space is ' '.
+  var nocolor is Colors backendType = \HTML either: { ^Colors white. } or: ''.
   var returned is ''.
   var Tokens is AST feedLexer: code.
   var token is AST token.
   var done is False.
   var last_toc is 'FIN'.
   var messageAcceptors is ['BLOCKCLOSE', 'BOOLEANNO', 'BOOLEANYES', 'CHAIN', 'NIL', 'NUMBER', 'PARCLOSE', 'QUOTE', 'REF', 'TUPCLOSE'].
+  var last_end is 0.
   {^done.} whileFalse: {
     var skip is False.
     var this_thing is ''.
@@ -83,7 +85,7 @@ Highlight on: 'highlight:' do: {:code:html
           color is Colors magenta.
         }.
         token put: this_thing length at: 3.
-        token put: (token @ 2 - 1) at: 2.
+        # token put: (token @ 2 - 1) at: 2.
     }, case: 'DOT' do: {
         this_thing is '.'.
         token put: this_thing length at: 3.
@@ -158,8 +160,8 @@ Highlight on: 'highlight:' do: {:code:html
           AST lexSkip: this_thing bytes - delet_this.
           # Pen writeln: '-%d:%d, %s => l%d b%d' % [token @ 2, AST lexpos, this_thing, this_thing length, this_thing bytes].
           var lendiff is this_thing bytes - this_thing length.
-          token put: AST lexpos - lendiff - 1 at: 2.
-          token put: this_thing length at: 3.
+          token put: AST lexpos - lendiff at: 2.
+          token put: (Colors stripColors: this_thing, length + 1) at: 3.
           # Pen writeln: '+%d:%d, %s => l%d b%d' % [token @ 2, AST lexpos, this_thing, this_thing length, this_thing bytes].
           color is Colors yellow.
           this_thing is begin + this_thing.
@@ -199,7 +201,7 @@ Highlight on: 'highlight:' do: {:code:html
               AST lexSkip: 1.
               token put: (token @ 2 + 1) at: 2.
               last_toc_override is 'MESSAGE'.
-              ^token @ 1 + ':'.
+              ^(token @ 1 + ':').
             }.
           } or: {
             ^(messageAcceptors contains: last_toc) either: {
@@ -220,7 +222,7 @@ Highlight on: 'highlight:' do: {:code:html
                 ^['me', 'my', 'const', 'var', 'frozen'] contains: token @ 1, either: {
                   last_toc_override is 'QUAL'.
                   color is (Colors bold) + (Colors bright) + (Colors blue).
-                  after_color is (Colors bold_off) + (Colors bright_off).
+                  after_color is (Colors bright_off) + (Colors bold_off).
                   ^(token @ 1) .
                 } or: {
                   ^(token @ 1).
@@ -262,12 +264,12 @@ Highlight on: 'highlight:' do: {:code:html
         # Pen writeln: token.
         this_thing is token @ 1.
     }) switch: token @ 0.
-    # Pen writeln: [token, this_thing, rlen].
-    returned +=: space * ((token @ 2) - rlen - (token @ 3)).
+    returned +=: nocolor + (space * ((token @ 2) - last_end - (token @ 3))).
     returned +=: color + this_thing + (Colors default) + (after_color).
     #Pen writeln: [token @ 0, last_toc, last_toc_override].
     (token @ 0 = 'CHAIN') & (last_toc = 'REF') ifTrue: { last_toc_override is 'NOT-CHAIN'. }.
     last_toc is last_toc_override or: token @ 0.
+    last_end is token @ 2.
     skip continue.
     var lin is AST lexline.
     token is AST token.

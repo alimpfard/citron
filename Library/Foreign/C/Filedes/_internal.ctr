@@ -23,15 +23,16 @@ var FileDesInternals is Object cnew: {
   on: 'writeInto:fromBuffer:withLength:' do: write.
 
   on: 'writeInto:string:' do: {:fd:str ^writeInto: fd fromBuffer: str withLength: str length. }.
-  on: 'readFrom:' do: {:self:fd
+  on: 'readFrom:' do: {:self:fd ^readFrom: fd bufferSize: 1024 totalLength: Nil. }.
+  on: 'readFrom:bufferSize:totalLength:' do: {:self:fd:size:tlen
     var str is ''.
-    var buf is malloc[1024].
-    memset[buf, 0, 1024].
+    var buf is malloc[size].
+    memset[buf, 0, size].
     var len is Nil.
     { ^True. } whileTrue: {
-      len is self readFrom: fd intoBuffer: buf withLength: 1024.
-      str +=: buf readCString.
-      (len <=: 0) break.
+      len is self readFrom: fd intoBuffer: buf withLength: size.
+      str +=: (buf readBytesAsString: size).
+      ((len <=: 0) | (str length >=: tlen)) break.
       memset[buf, 0, len]. # Todo: Figure out a way not to zero all this every iteration
     }.
     free[buf].

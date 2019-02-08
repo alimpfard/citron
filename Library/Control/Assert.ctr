@@ -8,6 +8,14 @@ var assert is {:o0exp:msg
   }.
 }.
 
+var assertFalse is {:o0exp:msg
+  $!(o0exp) ifTrue: {
+    msg is msg isNil either: {^ast2ctrcode[o0exp].} or: {^$!(msg).}.
+    File special: 'stderr', write: 'False assertion `%s\' failed' % [msg].
+    Program exit: 1.
+  }.
+}.
+
 var assertEq is {\:o0:o1
   assert{o0 = o1, ast2ctrcode[o0] + ' = ' + ast2ctrcode[o1] }.
 }.

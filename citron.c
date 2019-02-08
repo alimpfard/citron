@@ -27,14 +27,24 @@ static int debug = 0;
 static int from_stdin = 0;
 int with_stdlib = 1;
 
-char* SystemTZ;
+char *SystemTZ;
 
-ctr_code_pragma oneline_p  = {.type = 't',.value = 0},
-                flex_const = {.type = 'o',.value = 0},
-                regex_lc   = {.type = 't',.value = 0},
-                callshorth = {.type = 'o',.value = CTR_TOKEN_TUPOPEN,.value_e = CTR_TOKEN_TUPCLOSE},
-                extpragmas = {.type = 'o',.value = 0},
-                nextlazy   = {.type = 't',.value = 0};
+ctr_code_pragma oneline_p = {.type = 't',.value = 0 }, flex_const =
+
+{
+.type = 'o',.value = 0}, regex_lc =
+
+{
+.type = 't',.value = 0}, callshorth =
+
+{
+.type = 'o',.value = CTR_TOKEN_TUPOPEN,.value_e = CTR_TOKEN_TUPCLOSE}, extpragmas =
+
+{
+.type = 'o',.value = 0}, nextlazy =
+
+{
+.type = 't',.value = 0};
 
 /**
  * CommandLine Display Welcome Message
@@ -67,6 +77,25 @@ ctr_question_intent (void)
 }
 
 static char *EXT_PATH = 0;
+/*static char *argv0 = 0;
+static char abs_exe_path[PATH_MAX];
+char* applicationDirPath(char* argv0) {
+  char path_save[PATH_MAX];
+  char *p;
+
+  if((p = strrchr(argv0, '/')))
+    getcwd(abs_exe_path, sizeof(abs_exe_path));
+  else
+  {
+    *p = '\0';
+    getcwd(path_save, sizeof(path_save));
+    chdir(argv0);
+    chdir("../share/Citron");
+    getcwd(abs_exe_path, sizeof(abs_exe_path));
+    chdir(path_save);
+  }
+  return abs_exe_path;
+}*/
 
 char const *
 ctr_file_stdext_path_raw ()
@@ -82,8 +111,8 @@ ctr_file_stdext_path_raw ()
       EXT_PATH = env;
       return (char const *) env;
     }
-  EXT_PATH = CTR_STD_EXTENSION_PATH;
-  return CTR_STD_EXTENSION_PATH;
+  EXT_PATH = CTR_STD_EXTENSION_PATH;//applicationDirPath(argv0);
+  return EXT_PATH;
 }
 
 /**
@@ -133,11 +162,13 @@ ctr_cli_read_args (int argc, char *argv[])
 
 static const char ME_S[] = CTR_DICT_ME, MY_S[] = CTR_DICT_MY, VAR_S[] = CTR_DICT_VAR, CONST_S[] = CTR_DICT_CONST, STATIC_S[] = CTR_DICT_STATIC;
 
-void lambdaf_begin_instance();
-void lambdaf_end_instance();
+void lambdaf_begin_instance ();
+void lambdaf_end_instance ();
 
-void ctr_initialize_ex() {
-  lambdaf_begin_instance();
+void
+ctr_initialize_ex ()
+{
+  lambdaf_begin_instance ();
   oneLineExpressions = &oneline_p;
   flexibleConstructs = &flex_const;
   regexLineCheck = &regex_lc;
@@ -145,7 +176,7 @@ void ctr_initialize_ex() {
   extensionsPra = &extpragmas;
   nextCallLazy = &nextlazy;
 
-  SystemTZ = getenv("TZ") ?: "UTC";
+  SystemTZ = getenv ("TZ") ? : "UTC";
 
   ctr_gc_mode = 1;		/* default GC mode: activate GC */
   ctr_gc_memlimit = 8388608;
@@ -157,11 +188,11 @@ void ctr_initialize_ex() {
   ctr_command_security_profile = 0;
   ctr_command_tick = 0;
   ctr_source_mapping = 1;
-  ctr_clex_keyword_me = (char*)ME_S;
-  ctr_clex_keyword_my = (char*)MY_S;
-  ctr_clex_keyword_var = (char*)VAR_S;
-  ctr_clex_keyword_const = (char*)CONST_S;
-  ctr_clex_keyword_static = (char*)STATIC_S;
+  ctr_clex_keyword_me = (char *) ME_S;
+  ctr_clex_keyword_my = (char *) MY_S;
+  ctr_clex_keyword_var = (char *) VAR_S;
+  ctr_clex_keyword_const = (char *) CONST_S;
+  ctr_clex_keyword_static = (char *) STATIC_S;
   ctr_clex_keyword_my_len = strlen (MY_S);
   ctr_clex_keyword_var_len = strlen (VAR_S);
   ctr_clex_keyword_const_len = strlen (CONST_S);
@@ -187,10 +218,11 @@ main (int argc, char *argv[])
   char *prg;
   ctr_tnode *program;
   uint64_t program_text_size = 0;
+  //argv0 = argv[0];
   ctr_argc = argc;
   ctr_argv = argv;
   ctr_cli_read_args (argc, argv);
-  ctr_initialize_ex();
+  ctr_initialize_ex ();
   openlog (argv[0], LOG_PID | LOG_CONS, LOG_USER);
 #if (DO_PROFILE)
   ProfilerStart ("citron.log");
@@ -252,14 +284,14 @@ main (int argc, char *argv[])
       ProfilerStop ();
 #endif
     }
-    lambdaf_end_instance();
+  lambdaf_end_instance ();
   return 0;
 }
 #endif //CITRON_LIBRARY
 void
 initialize (int extensions)
 {
-  ctr_initialize_ex();
+  ctr_initialize_ex ();
   memcpy (ctr_mode_input_file, "lib", 3);
   *(ctr_mode_input_file + 3) = '\0';
   ctr_initialize_world ();

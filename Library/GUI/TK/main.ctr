@@ -1,7 +1,7 @@
 Tcl init eval: 'package require Tk'.
 
 var common_decls is Map new
-  put: 'proc center_window { w } {
+  put: ?>proc center_window { w } {
       if { [string equal $w [winfo toplevel $w]] } {
 
               # Calculate the desired geometry
@@ -14,7 +14,7 @@ var common_decls is Map new
               wm geometry $w ${width}x${height}+${x}+${y}
           }
           return
-      }' at: 'center_window'.
+      }<? at: 'center_window'.
 
 Tcl on: 'defineCommons:' do: {:names
   var common_decls is const common_decls.

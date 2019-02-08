@@ -8,9 +8,9 @@ void *
 ctr_promise_thread_sf (void *data)
 {
   struct ctr_promise_entry *entry = data, *c_ent = entry;
-# ifdef DEBUG_BUILD
-    printf("[CTR] Created thread %p\n", entry->thread);
-# endif
+#ifdef DEBUG_BUILD
+  printf ("[CTR] Created thread %p\n", entry->thread);
+#endif
   ctr_object *result = CtrStdNil, *target, *receiver;
   ctr_argument *args = ctr_heap_allocate (sizeof (*args));
   struct ctr_context_t octx;
@@ -36,7 +36,7 @@ again:
   while (pthread_mutex_trylock (entry->return_lock))
     {
       if (entry->discardable)
-        continue;
+	continue;
       if (c_ent->next)
 	{
 	  c_ent = c_ent->next;
@@ -48,10 +48,10 @@ again:
     {
       c_ent = c_ent->next;
       goto again;
-  }
-# ifdef DEBUG_BUILD
-    printf("[CTR] exiting thread %p\n", entry->thread);
-# endif
+    }
+#ifdef DEBUG_BUILD
+  printf ("[CTR] exiting thread %p\n", entry->thread);
+#endif
   entry->discardable |= 2;
   return result;
 }
@@ -200,9 +200,9 @@ ctr_promise_q_finished (ctr_object * myself, ctr_argument * argumentList)
 {
   struct ctr_promise_entry *entry = myself->value.rvalue->ptr;
   pthread_mutex_unlock (entry->return_lock);
-  ctr_object* s = ctr_build_bool(entry->discardable&2);
-  printf ("Thread %x has ready status %s\n", entry->thread, entry->discardable&2?"finished":"busy");
-  pthread_mutex_lock (entry->return_lock); // can't unlock if it's not locked
+  ctr_object *s = ctr_build_bool (entry->discardable & 2);
+  printf ("Thread %x has ready status %s\n", entry->thread, entry->discardable & 2 ? "finished" : "busy");
+  pthread_mutex_lock (entry->return_lock);	// can't unlock if it's not locked
   return s;
 }
 

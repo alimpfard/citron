@@ -20,7 +20,7 @@ int all_plains_private = 0;
 extern int ctr_cwlk_replace_refs;
 extern char *ctr_code;
 static int ctr_transform_template_expr;	/* flag: indicates whether the parser is supposed to parse a templated expr */
-static int uses_paramlist_item = 0; /* flag: indicates whether a lambda is using any parameters from its param list */
+static int uses_paramlist_item = 0;	/* flag: indicates whether a lambda is using any parameters from its param list */
 
 ctr_tnode *ctr_cparse_assignment ();
 ctr_tnode *ctr_cparse_block ();
@@ -49,8 +49,8 @@ ctr_tnode *ctr_cparse_string ();
 ctr_tnode *ctr_cparse_symbol ();
 ctr_tnode *ctr_cparse_true ();
 ctr_tnode *ctr_cparse_tuple (int);
-ctr_tnode *ctr_cparse_create_generator_node_step (ctr_tnode*,ctr_tnode*,ctr_tnode*);
-ctr_tnode *ctr_cparse_create_generator_node_simple (ctr_tnode*,ctr_tnode*);
+ctr_tnode *ctr_cparse_create_generator_node_step (ctr_tnode *, ctr_tnode *, ctr_tnode *);
+ctr_tnode *ctr_cparse_create_generator_node_simple (ctr_tnode *, ctr_tnode *);
 
 int
 ctr_paramlist_has_name (char *namenode, size_t len)
@@ -69,13 +69,14 @@ ctr_paramlist_has_name (char *namenode, size_t len)
 	while (name)
 	  {
 	    // printf("  -- %d %.*s\n", i, name->node->vlen, name->node->value);
-	    int vararg = name->node->value[0] == '*';
+	    int vararg = name->node->value[0] == '*' || name->node->value[0] == '&';
 	    if (unlikely (name->node->vlen == len || vararg))
 	      {
-		if (strncmp (name->node->value + vararg, namenode, len - vararg) == 0) {
-      uses_paramlist_item = 1;
-		  return 1;
-    }
+		if (strncmp (name->node->value + vararg, namenode, len - vararg) == 0)
+		  {
+		    uses_paramlist_item = 1;
+		    return 1;
+		  }
 	      }
 	    name = name->next;
 	  }
@@ -145,23 +146,27 @@ ctr_cparse_create_node (int type)
   return node;
 }
 
-static int ctr_is_binary_alternative(char const* s, long length) {
+static int
+ctr_is_binary_alternative (char const *s, long length)
+{
   // return 0;
-  if (length == 1) return 0;
-  if (length == 0) return 0;
-  for (long i=0; i<length; i++) {
-    char c = s[i];
-    if (!(
-      c == '-' || c == '+' || c == '*' || c == '&' ||
-      c == '%' || c == '$' || c == '@' || c == '!' ||
-      c == '=' || c == '"' || c == ';' || c == '/' ||
-      c == '\\'|| c == '<' || c == '>' || c == '?' ||
-      c == '~' )) {
-        return 0;
-      }
-  }
+  if (length == 1)
+    return 0;
+  if (length == 0)
+    return 0;
+  for (long i = 0; i < length; i++)
+    {
+      char c = s[i];
+      if (!(c == '-' || c == '+' || c == '*' || c == '&' ||
+	    c == '%' || c == '$' || c == '@' || c == '!' ||
+	    c == '=' || c == '"' || c == ';' || c == '/' || c == '\\' || c == '<' || c == '>' || c == '?' || c == '~'))
+	{
+	  return 0;
+	}
+    }
   return 1;
 }
+
 /**
  * CTRParserMessage
  *
@@ -171,7 +176,7 @@ static int ctr_is_binary_alternative(char const* s, long length) {
  * - precedence mode 1: as argument of keyword message (allows processing of unary message and binary message)
  * - precedence mode 2: as argument of binary message (only allows processing of unary message)
  */
-const static char* DOLLAR_SIGN = "$";
+const static char *DOLLAR_SIGN = "$";
 ctr_tnode *
 ctr_cparse_message (int mode)
 {
@@ -198,7 +203,7 @@ ctr_cparse_message (int mode)
   memcpy (msg, s, msgpartlen);
   lookAhead = ctr_clex_tok ();
   ctr_clex_putback ();
-  isBin = lookAhead!=CTR_TOKEN_COLON && (ctr_utf8_is_one_cluster (msg, msgpartlen) || ctr_is_binary_alternative(msg, msgpartlen));
+  isBin = lookAhead != CTR_TOKEN_COLON && (ctr_utf8_is_one_cluster (msg, msgpartlen) || ctr_is_binary_alternative (msg, msgpartlen));
   if (mode == 2 && isBin)
     {
       ctr_clex_putback ();
@@ -255,10 +260,10 @@ ctr_cparse_message (int mode)
 	    break;
 	  if (t == CTR_TOKEN_PARCLOSE)
 	    break;
-    if (t == CTR_TOKEN_TUPCLOSE)
-      break;
-    if (t == CTR_TOKEN_BLOCKCLOSE)
-      break;
+	  if (t == CTR_TOKEN_TUPCLOSE)
+	    break;
+	  if (t == CTR_TOKEN_BLOCKCLOSE)
+	    break;
 	  if (t == CTR_TOKEN_REF)
 	    {
 	      long l = ctr_clex_tok_value_length ();
@@ -288,32 +293,37 @@ ctr_cparse_message (int mode)
     }
   else if (t == callShorthand->value)
     {
-      callShorthand:;
-      ctr_clex_putback();
+    callShorthand:;
+      ctr_clex_putback ();
       memcpy (msg, "applyAll:", 9);
       msgpartlen = 9;
       li = ctr_heap_allocate_tracked (sizeof (*li));
-      if (nextCallLazy->value == 1 || replacement) {
-        if (!replacement)
-          nextCallLazy->value--;
-        if (ctr_clex_inject_token(CTR_TOKEN_INV, DOLLAR_SIGN, -2, 1)) {
-          ctr_cparse_emit_error_unexpected(t, "lazy call cannot be instantiated at this state");
-          return NULL;
-        }
-        li->node = ctr_cparse_lit_esc(replacement?:callShorthand->value_e);
-      } else if (nextCallLazy->value > 1) {
-        nextCallLazy->value--;
-        int texpr_res = ctr_transform_template_expr;
-        ctr_transform_template_expr = 0;
-        li->node = ctr_cparse_tuple (replacement?:callShorthand->value_e);
-        ctr_transform_template_expr = texpr_res;
-      }
-      else {
-        int texpr_res = ctr_transform_template_expr;
-        ctr_transform_template_expr = 0;
-        li->node = ctr_cparse_tuple (replacement?:callShorthand->value_e);
-        ctr_transform_template_expr = texpr_res;
-      }
+      if (nextCallLazy->value == 1 || replacement)
+	{
+	  if (!replacement)
+	    nextCallLazy->value--;
+	  if (ctr_clex_inject_token (CTR_TOKEN_INV, DOLLAR_SIGN, -2, 1))
+	    {
+	      ctr_cparse_emit_error_unexpected (t, "lazy call cannot be instantiated at this state");
+	      return NULL;
+	    }
+	  li->node = ctr_cparse_lit_esc (replacement ? : callShorthand->value_e);
+	}
+      else if (nextCallLazy->value > 1)
+	{
+	  nextCallLazy->value--;
+	  int texpr_res = ctr_transform_template_expr;
+	  ctr_transform_template_expr = 0;
+	  li->node = ctr_cparse_tuple (replacement ? : callShorthand->value_e);
+	  ctr_transform_template_expr = texpr_res;
+	}
+      else
+	{
+	  int texpr_res = ctr_transform_template_expr;
+	  ctr_transform_template_expr = 0;
+	  li->node = ctr_cparse_tuple (replacement ? : callShorthand->value_e);
+	  ctr_transform_template_expr = texpr_res;
+	}
       replacement = 0;
       m->type = CTR_AST_NODE_KWMESSAGE;
       m->nodes = li;
@@ -346,11 +356,9 @@ ctr_cparse_messages (ctr_tnode * r, int mode)
   int first = 1;
   ctr_tnode *node = NULL;
   /* explicit chaining (,) only allowed for keyword message: Console write: 3 factorial, write: 3 factorial is not possible otherwise. */
-  while (   t == CTR_TOKEN_REF
-        || (t == CTR_TOKEN_CHAIN && node && node->type == CTR_AST_NODE_KWMESSAGE && node->modifier != -2)
-	      || (t == callShorthand->value)
-        || (t == CTR_TOKEN_BLOCKOPEN)
-        )
+  while (t == CTR_TOKEN_REF
+	 || (t == CTR_TOKEN_CHAIN && node && node->type == CTR_AST_NODE_KWMESSAGE && node->modifier != -2)
+	 || (t == callShorthand->value) || (t == CTR_TOKEN_BLOCKOPEN))
     {
       if (t == CTR_TOKEN_CHAIN)
 	{
@@ -530,15 +538,15 @@ ctr_cparse_lit_esc (int opt)
       ctr_heap_free (r);	//this node is not needed, we remove the parens in the expression
       r = v;
       break;
-    case -2: // $[]
+    case -2:			// $[]
       ctr_transform_template_expr = 2;
       r = ctr_cparse_tuple (opt);
       ctr_transform_template_expr = texpr_res;
       break;
-    case -4: // $'()
+    case -4:			// $'()
       quote = 1;
       /* Fallthrough */
-    case -3: // $!
+    case -3:			// $!
       {
 	int t = ctr_clex_tok ();
 	ctr_clex_putback ();
@@ -733,91 +741,105 @@ ctr_cparse_popen ()
 }
 
 #if withInlineAsm
-ctr_tnode *ctr_cparse_intern_asm_block_() {
+ctr_tnode *
+ctr_cparse_intern_asm_block_ ()
+{
   /**
    *
    * {asm att|intel? (STRING)? _asm_}
    *
    */
-   asm_arg_info_t arginfo[64];
+  asm_arg_info_t arginfo[64];
 
-   int t = ctr_clex_tok();
-   int argidx = -1;
-   while (t == CTR_TOKEN_COLON) {
-     // arguments to asm _must_ be numbers,
-     // they must be used prepended with a colon
-     // in the output/input constraints
-     // no more than 4 arguments will be processed
-     t = ctr_clex_tok();
-     if (t != CTR_TOKEN_REF) {
-       ctr_cparse_emit_error_unexpected(t, "Expected an argument name\n");
-       return NULL;
-     }
-     int len = ctr_clex_tok_value_length();
-     char* val = ctr_clex_tok_value();
-     for(int i=0;i<len;i++)
-      if(!isalpha(val[i])) {
-        ctr_cparse_emit_error_unexpected(t, "asm block arguments must contain only alpha characters\n");
-        return NULL;
-      }
-     argidx++;
-     enum AsmArgType _ty = ASM_ARG_TY_DBL;
-     if (len == 3 && strncmp(val, "int", 3) == 0) _ty = ASM_ARG_TY_INT;
-     if (len == 3 && strncmp(val, "str", 3) == 0) _ty = ASM_ARG_TY_STR;
-     arginfo[argidx].ty = _ty;
-     t = ctr_clex_tok();
-   }
-   char* constraint = "\0";
-   int att = 1;
-   if (t == CTR_TOKEN_REF) {
-     int len = ctr_clex_tok_value_length();
-     char* tok = ctr_clex_tok_value();
-     if (len == 5 && strncasecmp(tok, "intel", 5) == 0)
-        att = 0;
-     else if (!(len == 4 && strncasecmp(tok, "at&t", 4) == 0 || len == 3 && strncasecmp(tok, "att", 3) == 0)) {
-       ctr_cparse_emit_error_unexpected(t, "Expected literal name att|at&t|intel\n");
-       return NULL;
-     }
-     t = ctr_clex_tok();
-   }
-   if (t == CTR_TOKEN_PAROPEN) {
-     char* begin = ctr_code;
-     char* end = ctr_clex_scan(')');
-     if (!end) {
-       ctr_cparse_emit_error_unexpected(t, "Expected a ')' to end the asm constraint block\n");
-       return NULL;
-     }
-     constraint = ctr_heap_allocate(end-begin+1);
-     memcpy(constraint, begin, end-begin);
-     constraint[end-begin] = 0;
-     ctr_code++;
-   }
-   char* asm_begin = ctr_code;
-   char* asm_end   = ctr_clex_scan('}');
-   ctr_clex_tok();
-   if (!asm_end) {
-     ctr_cparse_emit_error_unexpected(t, "Expected a '}' to end the native block\n");
-     return NULL;
-   }
-   void* fn = ctr_cparse_intern_asm_block(
-    /* start = */     asm_begin,
-    /* end = */       asm_end,
-    /* constraint= */ constraint,
-    /* offset = */    &((ctr_object*)NULL)->value.nvalue,
-    /* argc = */      argidx,
-    /* arginfo = */   &arginfo,
-    /* dialect = */   att
-   );
-   if (constraint[0]) ctr_heap_free(constraint);
-   if (!fn) {
-     ctr_cparse_emit_error_unexpected(t, "Invalid assembly\n");
-     return NULL;
-   }
-   ctr_tnode* node = ctr_cparse_create_node(CTR_AST_NODE);
-    node->type = CTR_AST_NODE_NATIVEFN;
-    node->value = (char*)fn;
-    node->vlen = 0;
-    return node;
+  int t = ctr_clex_tok ();
+  int argidx = -1;
+  while (t == CTR_TOKEN_COLON)
+    {
+      // arguments to asm _must_ be numbers,
+      // they must be used prepended with a colon
+      // in the output/input constraints
+      // no more than 4 arguments will be processed
+      t = ctr_clex_tok ();
+      if (t != CTR_TOKEN_REF)
+	{
+	  ctr_cparse_emit_error_unexpected (t, "Expected an argument name\n");
+	  return NULL;
+	}
+      int len = ctr_clex_tok_value_length ();
+      char *val = ctr_clex_tok_value ();
+      for (int i = 0; i < len; i++)
+	if (!isalpha (val[i]))
+	  {
+	    ctr_cparse_emit_error_unexpected (t, "asm block arguments must contain only alpha characters\n");
+	    return NULL;
+	  }
+      argidx++;
+      enum AsmArgType _ty = ASM_ARG_TY_DBL;
+      if (len == 3 && strncmp (val, "int", 3) == 0)
+	_ty = ASM_ARG_TY_INT;
+      if (len == 3 && strncmp (val, "str", 3) == 0)
+	_ty = ASM_ARG_TY_STR;
+      arginfo[argidx].ty = _ty;
+      t = ctr_clex_tok ();
+    }
+  char *constraint = "\0";
+  int att = 1;
+  if (t == CTR_TOKEN_REF)
+    {
+      int len = ctr_clex_tok_value_length ();
+      char *tok = ctr_clex_tok_value ();
+      if (len == 5 && strncasecmp (tok, "intel", 5) == 0)
+	att = 0;
+      else if (!(len == 4 && strncasecmp (tok, "at&t", 4) == 0 || len == 3 && strncasecmp (tok, "att", 3) == 0))
+	{
+	  ctr_cparse_emit_error_unexpected (t, "Expected literal name att|at&t|intel\n");
+	  return NULL;
+	}
+      t = ctr_clex_tok ();
+    }
+  if (t == CTR_TOKEN_PAROPEN)
+    {
+      char *begin = ctr_code;
+      char *end = ctr_clex_scan (')');
+      if (!end)
+	{
+	  ctr_cparse_emit_error_unexpected (t, "Expected a ')' to end the asm constraint block\n");
+	  return NULL;
+	}
+      constraint = ctr_heap_allocate (end - begin + 1);
+      memcpy (constraint, begin, end - begin);
+      constraint[end - begin] = 0;
+      ctr_code++;
+    }
+  char *asm_begin = ctr_code;
+  char *asm_end = ctr_clex_scan ('}');
+  ctr_clex_tok ();
+  if (!asm_end)
+    {
+      ctr_cparse_emit_error_unexpected (t, "Expected a '}' to end the native block\n");
+      return NULL;
+    }
+  void *fn = ctr_cparse_intern_asm_block (
+					   /* start = */ asm_begin,
+					   /* end = */ asm_end,
+					   /* constraint= */ constraint,
+					   /* offset = */ &((ctr_object *) NULL)->value.nvalue,
+					   /* argc = */ argidx,
+					   /* arginfo = */ &arginfo,
+					   /* dialect = */ att
+    );
+  if (constraint[0])
+    ctr_heap_free (constraint);
+  if (!fn)
+    {
+      ctr_cparse_emit_error_unexpected (t, "Invalid assembly\n");
+      return NULL;
+    }
+  ctr_tnode *node = ctr_cparse_create_node (CTR_AST_NODE);
+  node->type = CTR_AST_NODE_NATIVEFN;
+  node->value = (char *) fn;
+  node->vlen = 0;
+  return node;
 }
 #endif
 
@@ -858,13 +880,9 @@ ctr_cparse_block_ (int autocap)
   ctr_clex_tok ();
   t = ctr_clex_tok ();
 #if withInlineAsm
-  if (
-    (extensionsPra->value & CTR_EXT_ASM_BLOCK) == CTR_EXT_ASM_BLOCK &&
-    t == CTR_TOKEN_REF &&
-    ctr_clex_tok_value_length() == 3 &&
-    strncmp(ctr_clex_tok_value(), "asm", 3) == 0
-  )
-    return ctr_cparse_intern_asm_block_();
+  if ((extensionsPra->value & CTR_EXT_ASM_BLOCK) == CTR_EXT_ASM_BLOCK &&
+      t == CTR_TOKEN_REF && ctr_clex_tok_value_length () == 3 && strncmp (ctr_clex_tok_value (), "asm", 3) == 0)
+    return ctr_cparse_intern_asm_block_ ();
 #endif
   r = ctr_cparse_create_node (CTR_AST_NODE);
   r->type = CTR_AST_NODE_CODEBLOCK;
@@ -925,24 +943,24 @@ ctr_cparse_block_ (int autocap)
       codeListItem = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
       uses_paramlist_item = 0;
       innerNode = ctr_cparse_expr (0);	//parse a single expression
-      if (
-        (extensionsPra->value & CTR_EXT_PURE_FS) == CTR_EXT_PURE_FS &&
-        !uses_paramlist_item
-      ) {
-        codeNode = ctr_cparse_create_node(CTR_AST_NODE);
-        codeNode->type = CTR_AST_NODE_EXPRASSIGNMENT;
-        codeNode->nodes = ctr_heap_allocate(sizeof (ctr_tlistitem));
-        ctr_tnode* frozen_ref = ctr_heap_allocate(sizeof(ctr_tnode));
-        frozen_ref->value = NULL;
-        frozen_ref->vlen = 0;
-        frozen_ref->type = CTR_AST_NODE_REFERENCE;
-        frozen_ref->modifier = 5; /* static, ignore assignment, only evaluate result */
-        codeNode->nodes->node = frozen_ref;
-        codeNode->nodes->next = ctr_heap_allocate(sizeof(ctr_tlistitem));
-        codeNode->nodes->next->node = innerNode;
-      } else {
-        codeNode = innerNode;
-      }
+      if ((extensionsPra->value & CTR_EXT_PURE_FS) == CTR_EXT_PURE_FS && !uses_paramlist_item)
+	{
+	  codeNode = ctr_cparse_create_node (CTR_AST_NODE);
+	  codeNode->type = CTR_AST_NODE_EXPRASSIGNMENT;
+	  codeNode->nodes = ctr_heap_allocate (sizeof (ctr_tlistitem));
+	  ctr_tnode *frozen_ref = ctr_heap_allocate (sizeof (ctr_tnode));
+	  frozen_ref->value = NULL;
+	  frozen_ref->vlen = 0;
+	  frozen_ref->type = CTR_AST_NODE_REFERENCE;
+	  frozen_ref->modifier = 5;	/* static, ignore assignment, only evaluate result */
+	  codeNode->nodes->node = frozen_ref;
+	  codeNode->nodes->next = ctr_heap_allocate (sizeof (ctr_tlistitem));
+	  codeNode->nodes->next->node = innerNode;
+	}
+      else
+	{
+	  codeNode = innerNode;
+	}
       codeListItem->node = codeNode;
       codeList->nodes = codeListItem;
       previousCodeListItem = codeListItem;
@@ -1010,17 +1028,19 @@ ctr_cparse_ref ()
   ctr_tnode *r;
   char *tmp;
   ctr_clex_tok ();
-  if (ctr_clex_tok_value_length() == 4 && strncmp(ctr_clex_tok_value(), "pure", 4) == 0) {
-    // pure { ... }
-    int t = ctr_clex_tok();
-    if (t != CTR_TOKEN_BLOCKOPEN) {
-      ctr_clex_putback();
-      ctr_clex_putback();
-      goto the_else;
+  if (ctr_clex_tok_value_length () == 4 && strncmp (ctr_clex_tok_value (), "pure", 4) == 0)
+    {
+      // pure { ... }
+      int t = ctr_clex_tok ();
+      if (t != CTR_TOKEN_BLOCKOPEN)
+	{
+	  ctr_clex_putback ();
+	  ctr_clex_putback ();
+	  goto the_else;
+	}
+      return ctr_cparse_pure ();
     }
-    return ctr_cparse_pure();
-  }
-  the_else:;
+the_else:;
   r = ctr_cparse_create_node (CTR_AST_NODE);
   r->type = CTR_AST_NODE_REFERENCE;
   r->vlen = ctr_clex_tok_value_length ();
@@ -1062,10 +1082,11 @@ ctr_cparse_ref ()
     }
   if (strncmp (ctr_clex_keyword_static, tmp, ctr_clex_keyword_static_len) == 0 && r->vlen == ctr_clex_keyword_static_len)
     {
-      if ((extensionsPra->value & CTR_EXT_FROZEN_K) != CTR_EXT_FROZEN_K) {
-        ctr_cparse_emit_error_unexpected(CTR_TOKEN_REF, "XFrozen extension is required to use the `" CTR_DICT_STATIC "' modifier");
-        return NULL;
-      }
+      if ((extensionsPra->value & CTR_EXT_FROZEN_K) != CTR_EXT_FROZEN_K)
+	{
+	  ctr_cparse_emit_error_unexpected (CTR_TOKEN_REF, "XFrozen extension is required to use the `" CTR_DICT_STATIC "' modifier");
+	  return NULL;
+	}
       int t = ctr_clex_tok ();
       if (t != CTR_TOKEN_REF)
 	{
@@ -1075,12 +1096,12 @@ ctr_cparse_ref ()
       r->modifier = 4;
       r->vlen = ctr_clex_tok_value_length ();
       /* check precondition just in case */
-      t = ctr_clex_tok();
-      ctr_clex_putback();
+      t = ctr_clex_tok ();
+      ctr_clex_putback ();
       if (t != CTR_TOKEN_ASSIGNMENT)
-    {
-      ctr_cparse_emit_error_unexpected (t, "'" CTR_DICT_STATIC "' variable must be in an assignment");
-    }
+	{
+	  ctr_cparse_emit_error_unexpected (t, "'" CTR_DICT_STATIC "' variable must be in an assignment");
+	}
 
     }
 
@@ -1117,36 +1138,32 @@ ctr_cparse_string ()
  *
  * Generates a node to represent a simple range
  */
-ctr_tnode*
-ctr_cparse_create_generator_node_simple(ctr_tnode* from, ctr_tnode* to)
+ctr_tnode *
+ctr_cparse_create_generator_node_simple (ctr_tnode * from, ctr_tnode * to)
 {
   ctr_tnode
-    *root = ctr_cparse_create_node(CTR_AST_NODE),
-    *ref = ctr_cparse_create_node(CTR_AST_NODE),
-    *msg = ctr_cparse_create_node(CTR_AST_NODE);
+    * root = ctr_cparse_create_node (CTR_AST_NODE), *ref = ctr_cparse_create_node (CTR_AST_NODE), *msg = ctr_cparse_create_node (CTR_AST_NODE);
   ctr_tlistitem
-    *li = ctr_heap_allocate(sizeof(*li)), *li2,
-    *li3 = ctr_heap_allocate(sizeof(*li3)),
-    *msgli0 = ctr_heap_allocate(sizeof(*li3)),
-    *msgli1 = ctr_heap_allocate(sizeof(*li3));
+    * li = ctr_heap_allocate (sizeof (*li)), *li2,
+    *li3 = ctr_heap_allocate (sizeof (*li3)), *msgli0 = ctr_heap_allocate (sizeof (*li3)), *msgli1 = ctr_heap_allocate (sizeof (*li3));
   msgli0->node = from;
   msgli0->next = msgli1;
   msgli1->node = to;
   msgli1->next = NULL;
   li->node = ref;
-  li2 = li->next = ctr_heap_allocate(sizeof(*li));
+  li2 = li->next = ctr_heap_allocate (sizeof (*li));
   li2->node = msg;
   msg->nodes = li3;
   static char const *msgname = "from:to:", *refname = "Generator";
-  msg->vlen  = strlen(msgname);
-  msg->value = ctr_heap_allocate(msg->vlen);
-  memcpy(msg->value, msgname, msg->vlen);
+  msg->vlen = strlen (msgname);
+  msg->value = ctr_heap_allocate (msg->vlen);
+  memcpy (msg->value, msgname, msg->vlen);
   msg->nodes = msgli0;
   msg->type = CTR_AST_NODE_KWMESSAGE;
 
-  ref->vlen  = strlen(refname);
-  ref->value = ctr_heap_allocate(ref->vlen);
-  memcpy(ref->value, refname, ref->vlen);
+  ref->vlen = strlen (refname);
+  ref->value = ctr_heap_allocate (ref->vlen);
+  memcpy (ref->value, refname, ref->vlen);
   ref->type = CTR_AST_NODE_REFERENCE;
 
   root->type = CTR_AST_NODE_EXPRMESSAGE;
@@ -1159,19 +1176,15 @@ ctr_cparse_create_generator_node_simple(ctr_tnode* from, ctr_tnode* to)
  *
  * Generates a node to represent a range with a step
  */
-ctr_tnode*
-ctr_cparse_create_generator_node_step(ctr_tnode* from, ctr_tnode* step, ctr_tnode* to)
+ctr_tnode *
+ctr_cparse_create_generator_node_step (ctr_tnode * from, ctr_tnode * step, ctr_tnode * to)
 {
   ctr_tnode
-    *root = ctr_cparse_create_node(CTR_AST_NODE),
-    *ref = ctr_cparse_create_node(CTR_AST_NODE),
-    *msg = ctr_cparse_create_node(CTR_AST_NODE);
+    * root = ctr_cparse_create_node (CTR_AST_NODE), *ref = ctr_cparse_create_node (CTR_AST_NODE), *msg = ctr_cparse_create_node (CTR_AST_NODE);
   ctr_tlistitem
-    *li = ctr_heap_allocate(sizeof(*li)), *li2,
-    *li3 = ctr_heap_allocate(sizeof(*li3)),
-    *msgli0 = ctr_heap_allocate(sizeof(*li3)),
-    *msgli1 = ctr_heap_allocate(sizeof(*li3)),
-    *msgli2 = ctr_heap_allocate(sizeof(*li3));
+    * li = ctr_heap_allocate (sizeof (*li)), *li2,
+    *li3 = ctr_heap_allocate (sizeof (*li3)),
+    *msgli0 = ctr_heap_allocate (sizeof (*li3)), *msgli1 = ctr_heap_allocate (sizeof (*li3)), *msgli2 = ctr_heap_allocate (sizeof (*li3));
   msgli0->node = from;
   msgli0->next = msgli1;
   msgli1->node = to;
@@ -1179,18 +1192,18 @@ ctr_cparse_create_generator_node_step(ctr_tnode* from, ctr_tnode* step, ctr_tnod
   msgli2->node = step;
   msgli2->next = NULL;
   li->node = ref;
-  li2 = li->next = ctr_heap_allocate(sizeof(*li));
+  li2 = li->next = ctr_heap_allocate (sizeof (*li));
   li2->node = msg;
   msg->nodes = li3;
   static char const *msgname = "from:to:step:", *refname = "Generator";
-  msg->vlen  =strlen(msgname);
-  msg->value = ctr_heap_allocate(msg->vlen);
-  memcpy(msg->value, msgname, msg->vlen);
+  msg->vlen = strlen (msgname);
+  msg->value = ctr_heap_allocate (msg->vlen);
+  memcpy (msg->value, msgname, msg->vlen);
   msg->nodes = msgli0;
   msg->type = CTR_AST_NODE_KWMESSAGE;
-  ref->vlen  = strlen(refname);
-  ref->value = ctr_heap_allocate(ref->vlen);
-  memcpy(ref->value, refname, ref->vlen);
+  ref->vlen = strlen (refname);
+  ref->value = ctr_heap_allocate (ref->vlen);
+  memcpy (ref->value, refname, ref->vlen);
   ref->type = CTR_AST_NODE_REFERENCE;
   root->type = CTR_AST_NODE_EXPRMESSAGE;
   root->nodes = li;
@@ -1217,57 +1230,73 @@ ctr_cparse_number ()
   r->value = ctr_heap_allocate_tracked (sizeof (char) * l);
   memcpy (r->value, n, l);
   r->vlen = l;
-  int t = ctr_clex_tok();
-  if (t == CTR_TOKEN_DOT) {
-    // NUMBER DOT
-    t = ctr_clex_tok();
-    if (t == CTR_TOKEN_DOT) {
-      // NUMBER DOT DOT
-      t = ctr_clex_tok();
-      if (t == CTR_TOKEN_NUMBER) { //it's a range
-        // NUMBER DOT DOT NUMBER
-        char *ne;
-        ctr_tnode *re = ctr_cparse_create_node(CTR_AST_NODE);
-        long le;
-        ne = ctr_clex_tok_value();
-        le = ctr_clex_tok_value_length();
-        re->value = ctr_heap_allocate_tracked (sizeof (char) * le);
-        re->type = CTR_AST_NODE_LTRNUM;
-        memcpy (re->value, ne, le);
-        re->vlen = le;
-        t = ctr_clex_tok();
-        if (t == CTR_TOKEN_DOT) {
-          t = ctr_clex_tok();
-          if (t == CTR_TOKEN_DOT) {
-            t = ctr_clex_tok();
-            if (t == CTR_TOKEN_NUMBER) { //it's a range with a specific step
-              ctr_tnode *rs = re;
-              ne = ctr_clex_tok_value();
-              le = ctr_clex_tok_value_length();
-              re = ctr_cparse_create_node(CTR_AST_NODE);
-              re->value = ctr_heap_allocate_tracked (sizeof (char) * le);
-              re->type = CTR_AST_NODE_LTRNUM;
-              memcpy (re->value, ne, le);
-              re->vlen = le;
+  int t = ctr_clex_tok ();
+  if (t == CTR_TOKEN_DOT)
+    {
+      // NUMBER DOT
+      t = ctr_clex_tok ();
+      if (t == CTR_TOKEN_DOT)
+	{
+	  // NUMBER DOT DOT
+	  t = ctr_clex_tok ();
+	  if (t == CTR_TOKEN_NUMBER)
+	    {			//it's a range
+	      // NUMBER DOT DOT NUMBER
+	      char *ne;
+	      ctr_tnode *re = ctr_cparse_create_node (CTR_AST_NODE);
+	      long le;
+	      ne = ctr_clex_tok_value ();
+	      le = ctr_clex_tok_value_length ();
+	      re->value = ctr_heap_allocate_tracked (sizeof (char) * le);
+	      re->type = CTR_AST_NODE_LTRNUM;
+	      memcpy (re->value, ne, le);
+	      re->vlen = le;
+	      t = ctr_clex_tok ();
+	      if (t == CTR_TOKEN_DOT)
+		{
+		  t = ctr_clex_tok ();
+		  if (t == CTR_TOKEN_DOT)
+		    {
+		      t = ctr_clex_tok ();
+		      if (t == CTR_TOKEN_NUMBER)
+			{	//it's a range with a specific step
+			  ctr_tnode *rs = re;
+			  ne = ctr_clex_tok_value ();
+			  le = ctr_clex_tok_value_length ();
+			  re = ctr_cparse_create_node (CTR_AST_NODE);
+			  re->value = ctr_heap_allocate_tracked (sizeof (char) * le);
+			  re->type = CTR_AST_NODE_LTRNUM;
+			  memcpy (re->value, ne, le);
+			  re->vlen = le;
 
-              ctr_tnode *rv = ctr_cparse_create_generator_node_step(
-                /* from = */ r,
-                /* step = */ rs,
-                /* to   = */ re
-              );
-              return rv;
-            } else if (t != CTR_TOKEN_FIN) ctr_clex_putback();
-          } else if (t != CTR_TOKEN_FIN) ctr_clex_putback();
-        } else if (t != CTR_TOKEN_FIN) ctr_clex_putback();
-        ctr_tnode *rv = ctr_cparse_create_generator_node_simple(
-          /* from = */ r,
-          /* to   = */ re
-        );
-        return rv;
-      } else if (t != CTR_TOKEN_FIN) ctr_clex_putback();
-    } else if (t != CTR_TOKEN_FIN) ctr_clex_putback();
-  }
-  ctr_clex_putback();
+			  ctr_tnode *rv = ctr_cparse_create_generator_node_step (
+										  /* from = */ r,
+										  /* step = */ rs,
+										  /* to   = */ re
+			    );
+			  return rv;
+			}
+		      else if (t != CTR_TOKEN_FIN)
+			ctr_clex_putback ();
+		    }
+		  else if (t != CTR_TOKEN_FIN)
+		    ctr_clex_putback ();
+		}
+	      else if (t != CTR_TOKEN_FIN)
+		ctr_clex_putback ();
+	      ctr_tnode *rv = ctr_cparse_create_generator_node_simple (
+									/* from = */ r,
+									/* to   = */ re
+		);
+	      return rv;
+	    }
+	  else if (t != CTR_TOKEN_FIN)
+	    ctr_clex_putback ();
+	}
+      else if (t != CTR_TOKEN_FIN)
+	ctr_clex_putback ();
+    }
+  ctr_clex_putback ();
   return r;
 }
 
@@ -1439,8 +1468,8 @@ ctr_cparse_expr (int mode)
     }
   else if (t2 == CTR_TOKEN_PASSIGNMENT)
     {
-      if (r->type == CTR_AST_NODE_REFERENCE) // it's an alias for my REF is EXPR
-    r->modifier = 1;		//set private */
+      if (r->type == CTR_AST_NODE_REFERENCE)	// it's an alias for my REF is EXPR
+	r->modifier = 1;	//set private */
       e = ctr_cparse_assignment (r);	//go as usual
       /*r->nodes->node->type = CTR_AST_NODE_LTRSTRING;
          e = ctr_cparse_create_node(CTR_AST_NODE);
@@ -1467,79 +1496,85 @@ ctr_cparse_expr (int mode)
       e = ctr_cparse_create_node (CTR_AST_NODE);
       e->type = CTR_AST_NODE_EXPRMESSAGE;
       nodes = ctr_cparse_messages (r, mode);
-      int tv = ctr_clex_tok();
+      int tv = ctr_clex_tok ();
       int vtv = 0;
       while (tv == CTR_TOKEN_INV)
-    {
-      //arg0 `callee` arg1
-      //^    ^tv
-      //`- receiver
-      ctr_clex_tok();
-      ctr_tnode* receiver = ctr_cparse_create_node(CTR_AST_NODE);
-      receiver->type = CTR_AST_NODE_REFERENCE;
-      receiver->vlen = ctr_clex_tok_value_length()-1;
-      receiver->value = ctr_heap_allocate_tracked(receiver->vlen);
-      memcpy(receiver->value, ctr_clex_tok_value(), receiver->vlen);
-      fixity_lookup_rv fix = ctr_lookup_fix(receiver->value, receiver->vlen);
-      int mlen = fix.prec == 2 ? 10 : 9;
-      const char* mmsg = fix.prec == 2 ? "_ApplyAll:" : "applyAll:";
-      char* msg = ctr_heap_allocate_tracked(sizeof(char)*mlen);
-      memcpy(msg, mmsg, mlen);
-      int length = mlen;
-      ctr_tlistitem* li = ctr_heap_allocate_tracked(sizeof(*li));
-      li->node = ctr_heap_allocate_tracked(sizeof(*(li->node)));
-      li->node->type = CTR_AST_NODE_IMMUTABLE;
-      li->node->nodes = ctr_heap_allocate_tracked(sizeof(*li));
-      ctr_tlistitem* ll = li->node->nodes;
-      ll->node = ctr_heap_allocate_tracked(sizeof(*ll->node));
-      ll->node->nodes = ctr_heap_allocate_tracked(sizeof(*ll));
-      ll = ll->node->nodes;
-      ll->node = r;
-      char texpr_res = ctr_transform_template_expr;
-      if (fix.lazy) {
-        ll->node = ctr_cparse_create_node(CTR_AST_NODE);
-        ll->node->type = CTR_AST_NODE_RAW;
-        ll->node->modifier = 1;
-        ll->node->nodes = ctr_heap_allocate(sizeof(*ll));
-        ll->node->nodes->node = r;
-      }
-      ll->next = ctr_heap_allocate_tracked(sizeof(*ll));
-      if (fix.lazy) {
-        int t = ctr_clex_tok();
-        ctr_clex_putback();
-        if (t == CTR_TOKEN_TUPOPEN) {
-          ctr_transform_template_expr = 2;
-        } else {
-          ctr_transform_template_expr = 1;
-        }
-      }
-      ll->next->node = ctr_cparse_expr(fix.fix + fix.prec); //get next argument
-      if (ctr_transform_template_expr == 1) {
-        ctr_tnode* rv = ll->next->node;
-        ll->next->node = ctr_cparse_create_node(CTR_AST_NODE);
-        ll->next->node->type = CTR_AST_NODE_RAW;
-        ll->next->node->modifier = 1;
-        ll->next->node->nodes = ctr_heap_allocate(sizeof(*rv->nodes));
-        ll->next->node->nodes->node = rv;
-      }
-      ctr_transform_template_expr = texpr_res;
-      //arguments in li
-      ctr_tlistitem* rli = ctr_heap_allocate_tracked(sizeof(*rli));
-      rli->node = ctr_cparse_create_node(CTR_AST_NODE);
-      rli->node->type = CTR_AST_NODE_KWMESSAGE;
-      rli->node->value = msg;
-      rli->node->vlen = length;
-      rli->node->nodes = li;
-      r = ctr_cparse_create_node(CTR_AST_NODE);
-      r->type = CTR_AST_NODE_EXPRMESSAGE;
-      r->nodes = ctr_heap_allocate_tracked(sizeof(*rli));
-      r->nodes->node = receiver;
-      r->nodes->next = rli;
-      tv = ctr_clex_tok();
-    }
-      ctr_clex_putback();
+	{
+	  //arg0 `callee` arg1
+	  //^    ^tv
+	  //`- receiver
+	  ctr_clex_tok ();
+	  ctr_tnode *receiver = ctr_cparse_create_node (CTR_AST_NODE);
+	  receiver->type = CTR_AST_NODE_REFERENCE;
+	  receiver->vlen = ctr_clex_tok_value_length () - 1;
+	  receiver->value = ctr_heap_allocate_tracked (receiver->vlen);
+	  memcpy (receiver->value, ctr_clex_tok_value (), receiver->vlen);
+	  fixity_lookup_rv fix = ctr_lookup_fix (receiver->value, receiver->vlen);
+	  int mlen = fix.prec == 2 ? 10 : 9;
+	  const char *mmsg = fix.prec == 2 ? "_ApplyAll:" : "applyAll:";
+	  char *msg = ctr_heap_allocate_tracked (sizeof (char) * mlen);
+	  memcpy (msg, mmsg, mlen);
+	  int length = mlen;
+	  ctr_tlistitem *li = ctr_heap_allocate_tracked (sizeof (*li));
+	  li->node = ctr_heap_allocate_tracked (sizeof (*(li->node)));
+	  li->node->type = CTR_AST_NODE_IMMUTABLE;
+	  li->node->nodes = ctr_heap_allocate_tracked (sizeof (*li));
+	  ctr_tlistitem *ll = li->node->nodes;
+	  ll->node = ctr_heap_allocate_tracked (sizeof (*ll->node));
+	  ll->node->nodes = ctr_heap_allocate_tracked (sizeof (*ll));
+	  ll = ll->node->nodes;
+	  ll->node = r;
+	  char texpr_res = ctr_transform_template_expr;
+	  if (fix.lazy)
+	    {
+	      ll->node = ctr_cparse_create_node (CTR_AST_NODE);
+	      ll->node->type = CTR_AST_NODE_RAW;
+	      ll->node->modifier = 1;
+	      ll->node->nodes = ctr_heap_allocate (sizeof (*ll));
+	      ll->node->nodes->node = r;
+	    }
+	  ll->next = ctr_heap_allocate_tracked (sizeof (*ll));
+	  if (fix.lazy)
+	    {
+	      int t = ctr_clex_tok ();
+	      ctr_clex_putback ();
+	      if (t == CTR_TOKEN_TUPOPEN)
+		{
+		  ctr_transform_template_expr = 2;
+		}
+	      else
+		{
+		  ctr_transform_template_expr = 1;
+		}
+	    }
+	  ll->next->node = ctr_cparse_expr (fix.fix + fix.prec);	//get next argument
+	  if (ctr_transform_template_expr == 1)
+	    {
+	      ctr_tnode *rv = ll->next->node;
+	      ll->next->node = ctr_cparse_create_node (CTR_AST_NODE);
+	      ll->next->node->type = CTR_AST_NODE_RAW;
+	      ll->next->node->modifier = 1;
+	      ll->next->node->nodes = ctr_heap_allocate (sizeof (*rv->nodes));
+	      ll->next->node->nodes->node = rv;
+	    }
+	  ctr_transform_template_expr = texpr_res;
+	  //arguments in li
+	  ctr_tlistitem *rli = ctr_heap_allocate_tracked (sizeof (*rli));
+	  rli->node = ctr_cparse_create_node (CTR_AST_NODE);
+	  rli->node->type = CTR_AST_NODE_KWMESSAGE;
+	  rli->node->value = msg;
+	  rli->node->vlen = length;
+	  rli->node->nodes = li;
+	  r = ctr_cparse_create_node (CTR_AST_NODE);
+	  r->type = CTR_AST_NODE_EXPRMESSAGE;
+	  r->nodes = ctr_heap_allocate_tracked (sizeof (*rli));
+	  r->nodes->node = receiver;
+	  r->nodes->next = rli;
+	  tv = ctr_clex_tok ();
+	}
+      ctr_clex_putback ();
       if (vtv)
-        return r;
+	return r;
       if (nodes == NULL)
 	{
 	  return r;		/* no messages, then just return receiver (might be in case of argument). */
@@ -1602,15 +1637,16 @@ ctr_cparse_fin ()
 ctr_tnode *
 ctr_cparse_pure ()
 {
-  char* code_s = ctr_code;
-  char* end = ctr_clex_scan_balanced('}', '{');
-  if (end) {
-    char* code = ctr_heap_allocate(end-code_s+1);
-    memcpy(code, code_s, end-code_s);
-    code[end-code_s] = 0;
-    lambdaf_interpret(code);
-    ctr_clex_tok();
-  }
+  char *code_s = ctr_code;
+  char *end = ctr_clex_scan_balanced ('}', '{');
+  if (end)
+    {
+      char *code = ctr_heap_allocate (end - code_s + 1);
+      memcpy (code, code_s, end - code_s);
+      code[end - code_s] = 0;
+      lambdaf_interpret (code);
+      ctr_clex_tok ();
+    }
   ctr_tnode *r = ctr_cparse_create_node (CTR_AST_NODE);
   r->type = CTR_AST_NODE_LTRNIL;
   r->value = "Nil";

@@ -157,7 +157,7 @@ static Sym *sym_find(int v);
 static Sym *sym_push(int v, CType *type, int r, int c);
 
 /* type handling */
-static int type_size(CType *type, int *a);
+int type_size(CType *type, int *a);
 static inline CType *pointed_type(CType *type);
 static int pointed_size(CType *type);
 static int lvalue_type(int t);

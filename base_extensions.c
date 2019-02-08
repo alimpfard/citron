@@ -162,7 +162,7 @@ ctr_ast_instrcount (ctr_object * myself, ctr_argument * argumentList)
  * TODO
  */
 ctr_object *
-ctr_ast_get_block (ctr_object * myself, ctr_argument* argumentList)
+ctr_ast_get_block (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *ast = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
   ctr_set_link_all (ast, CtrStdAst);
@@ -271,6 +271,51 @@ ctr_ast_insert_nth (ctr_object * myself, ctr_argument * argumentList)
     }
   return myself;
 }
+
+
+/**
+ * [AST] insert: [AST]
+ *
+ * Inserts (emplace) the given AST node at the end
+ */
+ctr_object *
+ctr_ast_insert_end (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *tnodeobj = argumentList->object;
+  int nullast = 0, ip = 0;
+  if (myself == CtrStdAst)
+    return CtrStdNil;
+  if (!(myself->value.rvalue && myself->value.rvalue->ptr))
+    {
+      nullast = 1;
+    err:;
+      CtrStdFlow = ctr_build_string_from_cstring (ip ? "incorrect passed argument" : (nullast ? "Null ast node" : "count out of range"));
+      return CtrStdNil;
+    }
+  if (tnodeobj->value.rvalue->type != CTR_AST_TYPE)
+    {
+      ip = 1;
+      goto err;
+    }
+  ctr_tnode *insnode = tnodeobj->value.rvalue->ptr;
+  if (!insnode)
+    goto err;
+  ctr_tnode *node = myself->value.rvalue->ptr;
+  ctr_tlistitem *pitem = node->nodes, *oldpitem = pitem;
+  while (pitem)
+    {
+      oldpitem = pitem;
+      pitem = pitem->next;
+    }
+    ctr_tlistitem *insitem = ctr_heap_allocate (sizeof (ctr_tlistitem));
+    insitem->node = insnode;
+    if (oldpitem)
+      oldpitem->next = insitem;
+    else
+      node->nodes = insitem;
+  return myself;
+}
+
 
 /**
  * [AST] put: [AST] at: [Number]
@@ -554,10 +599,10 @@ ctr_ast_modifier_fstr (char *mod)
 ctr_object *
 ctr_ast_set_pragma (ctr_object * myself, ctr_argument * argumentList)
 {
-    char* pragma_d = ctr_heap_allocate_cstring(ctr_internal_cast2string(argumentList->object));
-    ctr_lex_parse_pragma(pragma_d);
-    ctr_heap_free(pragma_d);
-    return myself;
+  char *pragma_d = ctr_heap_allocate_cstring (ctr_internal_cast2string (argumentList->object));
+  ctr_lex_parse_pragma (pragma_d);
+  ctr_heap_free (pragma_d);
+  return myself;
 }
 
 /**
@@ -650,21 +695,25 @@ ctr_ast_set_value (ctr_object * myself, ctr_argument * argumentList)
     }
   char *cval = argumentList->object->value.svalue->value;
   size_t cvlen = argumentList->object->value.svalue->vlen;
-  if (argumentList->object->interfaces->link == CtrStdSymbol) { //we're setting a symbol
-    ctr_tnode *node = myself->value.rvalue->ptr;
-    if (node->type != CTR_AST_NODE_SYMBOL) {
-      CtrStdFlow = ctr_build_string_from_cstring("Can only set SYMBOL nodes to symbol values");
-      return myself;
+  if (argumentList->object->interfaces->link == CtrStdSymbol)
+    {				//we're setting a symbol
+      ctr_tnode *node = myself->value.rvalue->ptr;
+      if (node->type != CTR_AST_NODE_SYMBOL)
+	{
+	  CtrStdFlow = ctr_build_string_from_cstring ("Can only set SYMBOL nodes to symbol values");
+	  return myself;
+	}
+      node->value = (char *) argumentList->object;
     }
-    node->value = (char*) argumentList->object;
-  } else {
-    ctr_tnode *node = myself->value.rvalue->ptr;
-    if (likely (node->vlen < cvlen))
-      node->value = ctr_heap_reallocate (node->value, cvlen + 1);
-    node->vlen = cvlen;
-    memcpy (node->value, cval, cvlen);
-    *(node->value + cvlen) = '\0';
-  }
+  else
+    {
+      ctr_tnode *node = myself->value.rvalue->ptr;
+      if (likely (node->vlen < cvlen))
+	node->value = ctr_heap_reallocate (node->value, cvlen + 1);
+      node->vlen = cvlen;
+      memcpy (node->value, cval, cvlen);
+      *(node->value + cvlen) = '\0';
+    }
   return myself;
 }
 
@@ -678,7 +727,7 @@ ctr_ast_with_value (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_tnode *node = ctr_heap_allocate (sizeof (ctr_tnode));
   ctr_string *str = argumentList->object->value.svalue;
-  *node = *(ctr_tnode*)(myself->value.rvalue->ptr);
+  *node = *(ctr_tnode *) (myself->value.rvalue->ptr);
   node->value = str->value;
   node->vlen = str->vlen;
   ctr_object *ast = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
@@ -698,7 +747,7 @@ ctr_object *
 ctr_ast_copy (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_tnode *node = ctr_heap_allocate (sizeof (ctr_tnode));
-  *node = *(ctr_tnode*)(myself->value.rvalue->ptr);
+  *node = *(ctr_tnode *) (myself->value.rvalue->ptr);
   ctr_object *ast = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
   ctr_set_link_all (ast, CtrStdAst);
   ast->value.rvalue = ctr_heap_allocate (sizeof (ctr_resource));
@@ -771,14 +820,14 @@ ctr_ast_evaluate (ctr_object * myself, ctr_argument * argumentList)
       CtrStdFlow = ctr_build_string_from_cstring ("Null ast node");
       return CtrStdNil;
     }
-  ctr_object *ctx = ctr_contexts[ctr_context_id], *old_ctx=ctx;
+  ctr_object *ctx = ctr_contexts[ctr_context_id], *old_ctx = ctx;
   if (argumentList && argumentList->object)
     ctx = argumentList->object;
 
   ctr_tnode *node = myself->value.rvalue->ptr;
   char ir;
   ctr_contexts[ctr_context_id] = ctx;
-  ctr_object* res;
+  ctr_object *res;
   if (node->type == CTR_AST_NODE_PROGRAM)
     res = ctr_cwlk_run (node);
   else
@@ -842,7 +891,7 @@ ctr_ast_pure_stringify (ctr_tnode * node)
 	  int len = sprintf (buf, "%s is %s", rn, rv);
 	  ctr_heap_free (rn);
 	  ctr_heap_free (rv);
-	  ret = ctr_heap_allocate (sizeof (char) * (len+1));
+	  ret = ctr_heap_allocate (sizeof (char) * (len + 1));
 	  memcpy (ret, buf, len);
 	  break;
 	}
@@ -853,14 +902,14 @@ ctr_ast_pure_stringify (ctr_tnode * node)
 	  int len = sprintf (buf, "%s %s", rr, rm);
 	  ctr_heap_free (rr);
 	  ctr_heap_free (rm);
-	  ret = ctr_heap_allocate (sizeof (char) * (len+1));
+	  ret = ctr_heap_allocate (sizeof (char) * (len + 1));
 	  memcpy (ret, buf, len);
 	  break;
 	}
       case CTR_AST_NODE_UNAMESSAGE:
 	{
 	  size_t len = node->vlen;
-	  ret = ctr_heap_allocate (sizeof (char) * (len+1));
+	  ret = ctr_heap_allocate (sizeof (char) * (len + 1));
 	  memcpy (ret, node->value, len);
 	  break;
 	}
@@ -869,7 +918,7 @@ ctr_ast_pure_stringify (ctr_tnode * node)
 	  char *rr = ctr_ast_pure_stringify (node->nodes->node);
 	  int len = sprintf (buf, "%.*s %s", (int) (node->vlen), node->value, rr);
 	  ctr_heap_free (rr);
-	  ret = ctr_heap_allocate (sizeof (char) * (len+1));
+	  ret = ctr_heap_allocate (sizeof (char) * (len + 1));
 	  memcpy (ret, buf, len);
 	  break;
 	}
@@ -882,19 +931,19 @@ ctr_ast_pure_stringify (ctr_tnode * node)
 	  ctr_tlistitem *partnodes = node->nodes;
 	  char **parts = str_split (rm, ':', &msgpartc);
 	  int x = 0;
-    char* xbuf = buf;
+	  char *xbuf = buf;
 	  for (int i = 0; i < msgpartc - 1; i++)
 	    {
 	      char *rr = ctr_ast_pure_stringify (partnodes->node);
 	      x = sprintf (xbuf, "%s: %s ", parts[i], rr);
-        xbuf += x;
+	      xbuf += x;
 	      ctr_heap_free (rr);
 	      partnodes = partnodes->next;
 	    }
 	  free (parts);
 	  ctr_heap_free (rm);
 	  int len = strlen (buf);
-	  ret = ctr_heap_allocate (sizeof (char) * (len+1));
+	  ret = ctr_heap_allocate (sizeof (char) * (len + 1));
 	  memcpy (ret, buf, len);
 	  break;
 	}
@@ -914,28 +963,28 @@ ctr_ast_pure_stringify (ctr_tnode * node)
 	    {
 	    case 1:
 	      {
-		ret = ctr_heap_allocate (sizeof (char) * (strlen(CTR_DICT_MY) + 2 + node->vlen));
+		ret = ctr_heap_allocate (sizeof (char) * (strlen (CTR_DICT_MY) + 2 + node->vlen));
 		sprintf (ret, CTR_DICT_MY " %.*s", (int) (node->vlen), node->value);
 		break;
 	      }
 	    case 2:
 	      {
-		ret = ctr_heap_allocate (sizeof (char) * (strlen(CTR_DICT_VAR) + 2 + node->vlen));
+		ret = ctr_heap_allocate (sizeof (char) * (strlen (CTR_DICT_VAR) + 2 + node->vlen));
 		sprintf (ret, CTR_DICT_VAR " %.*s", (int) (node->vlen), node->value);
 		break;
 	      }
 	    case 3:
 	      {
-		ret = ctr_heap_allocate (sizeof (char) * (strlen(CTR_DICT_CONST) + 2 + node->vlen));
+		ret = ctr_heap_allocate (sizeof (char) * (strlen (CTR_DICT_CONST) + 2 + node->vlen));
 		sprintf (ret, CTR_DICT_CONST " %.*s", (int) (node->vlen), node->value);
 		break;
 	      }
-      case 4:
-        {
-    ret = ctr_heap_allocate(sizeof(char) * (strlen(CTR_DICT_STATIC) + 2 + node->vlen));
-    sprintf (ret, CTR_DICT_STATIC " %.*s", (int) (node->vlen), node->value);
-    break;
-        }
+	    case 4:
+	      {
+		ret = ctr_heap_allocate (sizeof (char) * (strlen (CTR_DICT_STATIC) + 2 + node->vlen));
+		sprintf (ret, CTR_DICT_STATIC " %.*s", (int) (node->vlen), node->value);
+		break;
+	      }
 	    default:
 	      {
 		ret = ctr_heap_allocate (sizeof (char) * (1 + node->vlen));
@@ -956,10 +1005,10 @@ ctr_ast_pure_stringify (ctr_tnode * node)
 	{
 	  char *rparams = ctr_ast_pure_stringify (node->nodes->node);
 	  char *rinstru = ctr_ast_pure_stringify (node->nodes->next->node);
-	  int len = sprintf (buf, "{%s%s\n%s}", (node->lexical?"\\":""), rparams, rinstru);
+	  int len = sprintf (buf, "{%s%s\n%s}", (node->lexical ? "\\" : ""), rparams, rinstru);
 	  ctr_heap_free (rparams);
 	  ctr_heap_free (rinstru);
-	  ret = ctr_heap_allocate (sizeof (char) * (len+1));
+	  ret = ctr_heap_allocate (sizeof (char) * (len + 1));
 	  memcpy (ret, buf, len);
 	  break;
 	}
@@ -1011,13 +1060,14 @@ ctr_ast_pure_stringify (ctr_tnode * node)
 		}
 	      partnodes = partnodes->next;
 	    }
-      if (x == 0) {
-        ret = ctr_heap_allocate(1);
-        ret[0] = 0;
-        break;
-      }
+	  if (x == 0)
+	    {
+	      ret = ctr_heap_allocate (1);
+	      ret[0] = 0;
+	      break;
+	    }
 	  int len = strlen (buf);
-	  ret = ctr_heap_allocate (sizeof (char) * (len+1));
+	  ret = ctr_heap_allocate (sizeof (char) * (len + 1));
 	  memcpy (ret, buf, len);
 	  break;
 	}
@@ -1032,14 +1082,15 @@ ctr_ast_pure_stringify (ctr_tnode * node)
 	      ctr_heap_free (rr);
 	      partnodes = partnodes->next;
 	    }
-      if (x == 0) {
-        ret = ctr_heap_allocate(1);
-        ret[0] = 0;
-        break;
-      }
+	  if (x == 0)
+	    {
+	      ret = ctr_heap_allocate (1);
+	      ret[0] = 0;
+	      break;
+	    }
 	  int len = strlen (buf);
-	  ret = ctr_heap_allocate (sizeof (char) * (len+1));
-	  memcpy (ret, buf, len+1);
+	  ret = ctr_heap_allocate (sizeof (char) * (len + 1));
+	  memcpy (ret, buf, len + 1);
 	  break;
 	}
       case CTR_AST_NODE_ENDOFPROGRAM:
@@ -1059,19 +1110,19 @@ ctr_ast_pure_stringify (ctr_tnode * node)
       case CTR_AST_NODE_NATIVEFN:
       case CTR_AST_NODE_RAW:
       case CTR_AST_NODE_EMBED:
-  {
-    CtrStdFlow = ctr_build_string_from_cstring("compiler intrinsics cannot be unparsed");
-    ret=ctr_heap_allocate(1);
-    *ret=0;
-    break;
-  }
+	{
+	  CtrStdFlow = ctr_build_string_from_cstring ("compiler intrinsics cannot be unparsed");
+	  ret = ctr_heap_allocate (1);
+	  *ret = 0;
+	  break;
+	}
       case CTR_AST_NODE_LTRBOOLFALSE:
       case CTR_AST_NODE_LTRNIL:
       case CTR_AST_NODE_LTRBOOLTRUE:
 	{
 	  char *rv = ctr_ast_pure_stringify (node->nodes->node);
 	  int len = strlen (rv);
-	  ret = ctr_heap_allocate (sizeof (char) * (len+1));
+	  ret = ctr_heap_allocate (sizeof (char) * (len + 1));
 	  memcpy (ret, rv, len);
 	  ctr_heap_free (rv);
 	  break;
@@ -1091,7 +1142,7 @@ ctr_ast_pure_stringify (ctr_tnode * node)
 	      partnodes = partnodes->next;
 	    }
 	  int len = strlen (buf);
-	  ret = ctr_heap_allocate (sizeof (char) * (len+1));
+	  ret = ctr_heap_allocate (sizeof (char) * (len + 1));
 	  memcpy (ret, buf, len);
 	  break;
 	}
@@ -1235,7 +1286,7 @@ ctr_ast_lextoken (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_ast_lexline (ctr_object * myself, ctr_argument * argumentList)
 {
-    return ctr_build_number_from_float(ctr_lex_line_number);
+  return ctr_build_number_from_float (ctr_lex_line_number);
 }
 
 /**
@@ -1359,17 +1410,19 @@ ctr_block_letast (ctr_object * myself, ctr_argument * argumentList)
 	  switch (defs->info.type)
 	    {
 	    case CTR_OBJECT_TYPE_OTARRAY:
-        defv = defs->value.avalue->elements[i];
-        if (ctr_ast_is_splice(defv)) {
-          defv = ctr_ast_evaluate(defv, NULL);
-        }
+	      defv = defs->value.avalue->elements[i];
+	      if (ctr_ast_is_splice (defv))
+		{
+		  defv = ctr_ast_evaluate (defv, NULL);
+		}
 	      ctr_assign_value_to_local (myself->value.avalue->elements[i], defv);
 	      break;
 	    default:
-        defv = defs;
-        if (ctr_ast_is_splice(defv)) {
-          defv = ctr_ast_evaluate(defv, NULL);
-        }
+	      defv = defs;
+	      if (ctr_ast_is_splice (defv))
+		{
+		  defv = ctr_ast_evaluate (defv, NULL);
+		}
 	      ctr_assign_value_to_local (myself->value.avalue->elements[i], defv);
 	      break;
 	    }
@@ -1380,9 +1433,10 @@ ctr_block_letast (ctr_object * myself, ctr_argument * argumentList)
     {
       myself = ctr_internal_cast2string (myself);
       defv = defs;
-      if (ctr_ast_is_splice(defv)) {
-        defv = ctr_ast_evaluate(defv, NULL);
-      }
+      if (ctr_ast_is_splice (defv))
+	{
+	  defv = ctr_ast_evaluate (defv, NULL);
+	}
       ctr_assign_value_to_local (myself, defv);
       result = ctr_block_run_here (block, NULL, block);
     }
@@ -1592,13 +1646,14 @@ ctr_object_inherit (ctr_object * myself, ctr_argument * argumentList)
 }
 
 ctr_object *
-ctr_object_inh_check (ctr_object * myself, ctr_argument * argumentList) {
+ctr_object_inh_check (ctr_object * myself, ctr_argument * argumentList)
+{
   ctr_argument arg0, arg1;
   arg0.next = &arg1;
   arg1.next = NULL;
   arg0.object = myself;
   arg1.object = argumentList->object;
-  return ctr_reflect_is_linked_to(CtrStdReflect, &arg0);
+  return ctr_reflect_is_linked_to (CtrStdReflect, &arg0);
 }
 
 ctr_object *
@@ -1608,11 +1663,12 @@ ctr_obj_intern_applyall (ctr_object * myself, ctr_argument * argumentList)
   ctr_argument *argList = ctr_array_to_argument_list (argArray, NULL);
 
   result = ctr_block_run_here (myself, argList, myself);
-  ctr_free_argumentList(argList);
+  ctr_free_argumentList (argList);
   return result;
 }
 
-typedef struct {
+typedef struct
+{
   // struct ctr_context_t ctx;
 #ifdef WITH_UCONTEXT
   ucontext_t ctx;
@@ -1620,22 +1676,21 @@ typedef struct {
 #else
   jmp_buf jmpbuf;
 #endif
-  ctr_object* result;
+  ctr_object *result;
   // more shit?
 } ctr_call_cc_t;
 
 ctr_object *
 ctr_call_cc_continue (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object *data = ctr_internal_object_find_property(myself, ctr_build_string_from_cstring("data"), 0),
-             *value= argumentList->object;
+  ctr_object *data = ctr_internal_object_find_property (myself, ctr_build_string_from_cstring ("data"), 0), *value = argumentList->object;
   ctr_call_cc_t *callcc = data->value.rvalue->ptr;
   callcc->result = value;
 #ifdef WITH_UCONTEXT
   callcc->returned = 1;
-  setcontext(&callcc->ctx);
+  setcontext (&callcc->ctx);
 #else
-  longjmp(&callcc->jmpbuf, 1);
+  longjmp (&callcc->jmpbuf, 1);
 #endif
   return myself;
 }
@@ -1647,38 +1702,39 @@ ctr_call_cc (ctr_object * myself, ctr_argument * argumentList)
 {
   // call/cc [Block <Block <result>>>]
   //               ^ save the entire stack arrangement
-  ctr_call_cc_t *callcc = ctr_heap_allocate(sizeof *callcc);
+  ctr_call_cc_t *callcc = ctr_heap_allocate (sizeof *callcc);
   // ctr_dump_context (&callcc->ctx);
-  #ifdef WITH_UCONTEXT
-    // printf("before getcontext = %p\n", callcc);
-    getcontext(&callcc->ctx);
-    // callcc->ctx.uc_stack.ss_size = 1024 * 1024 * 8;
-    // callcc->ctx.uc_stack.ss_sp = malloc(1024 * 1024 * 8);
-    // if (!callcc->ctx.uc_stack.ss_sp) {
-    //   perror("malloc");
-    //   exit(1);
-    // }
-    // printf("after getcontext = %p\n", callcc);
-    if (callcc->returned) {
+#ifdef WITH_UCONTEXT
+  // printf("before getcontext = %p\n", callcc);
+  getcontext (&callcc->ctx);
+  // callcc->ctx.uc_stack.ss_size = 1024 * 1024 * 8;
+  // callcc->ctx.uc_stack.ss_sp = malloc(1024 * 1024 * 8);
+  // if (!callcc->ctx.uc_stack.ss_sp) {
+  //   perror("malloc");
+  //   exit(1);
+  // }
+  // printf("after getcontext = %p\n", callcc);
+  if (callcc->returned)
+    {
       callcc->returned = 0;
       return callcc->result;
     }
-  #else
-    if (setjmp(&callcc->jmpbuf))
-      return callcc->result;
-  #endif
-  struct ctr_resource *res = ctr_heap_allocate(sizeof *res);
+#else
+  if (setjmp (&callcc->jmpbuf))
+    return callcc->result;
+#endif
+  struct ctr_resource *res = ctr_heap_allocate (sizeof *res);
   res->ptr = callcc;
   res->type = 0;
-  ctr_object *blk = ctr_string_eval(ctr_build_string_from_cstring("{:val ^val applyTo: my continuation.}"), NULL),
-             *contdata = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+  ctr_object *blk = ctr_string_eval (ctr_build_string_from_cstring ("{:val ^val applyTo: my continuation.}"), NULL),
+    *contdata = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
   contdata->value.rvalue = res;
-  ctr_object* cont= ctr_internal_create_object(CTR_OBJECT_TYPE_OTNATFUNC);
+  ctr_object *cont = ctr_internal_create_object (CTR_OBJECT_TYPE_OTNATFUNC);
   ctr_set_link_all (cont, CtrStdBlock);
   cont->value.fvalue = &ctr_call_cc_continue;
-  ctr_internal_object_set_property(blk, ctr_build_string_from_cstring("continuation"), cont, 0);
-  ctr_internal_object_set_property(cont, ctr_build_string_from_cstring("data"), contdata, 0);
-  return ctr_block_run(blk, argumentList, blk);
+  ctr_internal_object_set_property (blk, ctr_build_string_from_cstring ("continuation"), cont, 0);
+  ctr_internal_object_set_property (cont, ctr_build_string_from_cstring ("data"), contdata, 0);
+  return ctr_block_run (blk, argumentList, blk);
 }
 
 ctr_object *
@@ -1686,45 +1742,46 @@ ctr_call_cc_all (ctr_object * myself, ctr_argument * argumentList)
 {
   // call/cc [Block <Block <result>>>]
   //               ^ save the entire stack arrangement
-  ctr_call_cc_t *callcc = ctr_heap_allocate(sizeof *callcc);
+  ctr_call_cc_t *callcc = ctr_heap_allocate (sizeof *callcc);
   // ctr_dump_context (&callcc->ctx);
-  #ifdef WITH_UCONTEXT
-    // printf("before getcontext = %p\n", callcc);
-    getcontext(&callcc->ctx);
-    // callcc->ctx.uc_stack.ss_size = 1024 * 1024 * 8;
-    // callcc->ctx.uc_stack.ss_sp = malloc(1024 * 1024 * 8);
-    // if (!callcc->ctx.uc_stack.ss_sp) {
-    //   perror("malloc");
-    //   exit(1);
-    // }
-    // printf("after getcontext = %p\n", callcc);
-    if (callcc->returned) {
+#ifdef WITH_UCONTEXT
+  // printf("before getcontext = %p\n", callcc);
+  getcontext (&callcc->ctx);
+  // callcc->ctx.uc_stack.ss_size = 1024 * 1024 * 8;
+  // callcc->ctx.uc_stack.ss_sp = malloc(1024 * 1024 * 8);
+  // if (!callcc->ctx.uc_stack.ss_sp) {
+  //   perror("malloc");
+  //   exit(1);
+  // }
+  // printf("after getcontext = %p\n", callcc);
+  if (callcc->returned)
+    {
       callcc->returned = 0;
       return callcc->result;
     }
-  #else
-    if (setjmp(&callcc->jmpbuf))
-      return callcc->result;
-  #endif
-  struct ctr_resource *res = ctr_heap_allocate(sizeof *res);
+#else
+  if (setjmp (&callcc->jmpbuf))
+    return callcc->result;
+#endif
+  struct ctr_resource *res = ctr_heap_allocate (sizeof *res);
   res->ptr = callcc;
   res->type = 0;
-  ctr_object *blk = ctr_string_eval(ctr_build_string_from_cstring("{:val ^val applyTo: my continuation.}"), NULL),
-             *contdata = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+  ctr_object *blk = ctr_string_eval (ctr_build_string_from_cstring ("{:val ^val applyTo: my continuation.}"), NULL),
+    *contdata = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
   contdata->value.rvalue = res;
-  ctr_object* cont= ctr_internal_create_object(CTR_OBJECT_TYPE_OTNATFUNC);
+  ctr_object *cont = ctr_internal_create_object (CTR_OBJECT_TYPE_OTNATFUNC);
   ctr_set_link_all (cont, CtrStdBlock);
   cont->value.fvalue = &ctr_call_cc_continue;
-  ctr_internal_object_set_property(blk, ctr_build_string_from_cstring("continuation"), cont, 0);
-  ctr_internal_object_set_property(cont, ctr_build_string_from_cstring("data"), contdata, 0);
-  argumentList->object = ctr_array_head(argumentList->object, NULL);
-  return ctr_block_run(blk, argumentList, blk);
+  ctr_internal_object_set_property (blk, ctr_build_string_from_cstring ("continuation"), cont, 0);
+  ctr_internal_object_set_property (cont, ctr_build_string_from_cstring ("data"), contdata, 0);
+  argumentList->object = ctr_array_head (argumentList->object, NULL);
+  return ctr_block_run (blk, argumentList, blk);
 }
 
 void
 initiailize_base_extensions ()
 {
-  ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring("_ApplyAll:"), &ctr_obj_intern_applyall);
+  ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("_ApplyAll:"), &ctr_obj_intern_applyall);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("letEqual:in:"), &ctr_block_let);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("letEqualAst:in:"), &ctr_block_letast);
   ctr_internal_create_func (CtrStdBlock, ctr_build_string_from_cstring ("transferOwnershipOf:to:"), &ctr_reown_obj);
@@ -1735,6 +1792,7 @@ initiailize_base_extensions ()
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("parse:"), &ctr_ast_parse);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("at:"), &ctr_ast_nth);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("insert:at:"), &ctr_ast_insert_nth);
+  ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("insert:"), &ctr_ast_insert_end);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("put:at:"), &ctr_ast_set_nth);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("@"), &ctr_ast_nth);
   ctr_internal_create_func (CtrStdAst, ctr_build_string_from_cstring ("each:"), &ctr_ast_each);
@@ -1791,7 +1849,7 @@ initiailize_base_extensions ()
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("toSymbol"), &ctr_string_to_symbol);
   ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring ("Symbol"), CtrStdSymbol, 0);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("inheritFrom:"), &ctr_object_inherit);
-  ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring("isA:"), &ctr_object_inh_check);
+  ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("isA:"), &ctr_object_inh_check);
   ctr_std_generator = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
   ctr_set_link_all (ctr_std_generator, CtrStdObject);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("repeat:"), &ctr_generator_make_rept);
@@ -1813,11 +1871,11 @@ initiailize_base_extensions ()
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("foldl:accumulator:"), &ctr_generator_foldl);
   ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring ("Generator"), ctr_std_generator, 0);
 
-  ctr_object* callcc = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNATFUNC);
-  ctr_set_link_all(callcc, CtrStdBlock);
-  ctr_internal_create_func (callcc, ctr_build_string_from_cstring("applyTo:"), &ctr_call_cc);
-  ctr_internal_create_func (callcc, ctr_build_string_from_cstring("applyAll:"), &ctr_call_cc_all);
-  ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring("call/cc"), callcc, 0);
+  ctr_object *callcc = ctr_internal_create_object (CTR_OBJECT_TYPE_OTNATFUNC);
+  ctr_set_link_all (callcc, CtrStdBlock);
+  ctr_internal_create_func (callcc, ctr_build_string_from_cstring ("applyTo:"), &ctr_call_cc);
+  ctr_internal_create_func (callcc, ctr_build_string_from_cstring ("applyAll:"), &ctr_call_cc_all);
+  ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring ("call/cc"), callcc, 0);
 }
 
 int
@@ -1839,9 +1897,9 @@ ctr_load_required_native_modules ()
   sprintf (dir, "%s/basemods", ctr_file_stdext_path_raw ());
   if ((dfd = opendir (dir)) == NULL)
     {
-      #ifdef DEBUG_BUILD
+#ifdef DEBUG_BUILD
       perror ("Can't open basemods dir");
-      #endif
+#endif
       return;
     }
   char filename_qfd[1024];

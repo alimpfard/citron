@@ -169,7 +169,7 @@ ctr_inject_type_to_ctype (Sym * svv, CType * type)
     char fbuf[1024];
     char nbuf[1024];
     int tok;
-    tok = svv->v&~SYM_STRUCT;
+    tok = svv->v&~SYM_STRUCT&~SYM_FIELD;
     tok -= TOK_IDENT;
 	  TokenSym *token = table_ident[tok];
 	  sprintf (nbuf, "%.*s", token->len, token->str);
@@ -282,6 +282,11 @@ ctr_inject_type_to_ctype (Sym * svv, CType * type)
 	    }
 	  current_padinfo->pad = pad;
 	  ctr_inferred_ctype_type_t innerty = ctr_inject_type_to_ctype (s, &s->type);
+    if (innerty.kind == KIND_ARRAY) {
+      innerty.kind = 0;
+      ctr_heap_free(innerty.contained);
+      innerty.vtype = &ffi_type_pointer;
+    }
 	  if (!pad)
 	    {
 	      if (ctr_create_ffi_str_descriptor (innerty.vtype, NULL) > remaining_buf_len)
@@ -457,6 +462,11 @@ ctr_inject_generate_ctype (ctr_inferred_ctype_type_t ty)
     }
 }
 
+static ctr_object* yes = NULL;
+static ctr_object* ctr_true(ctr_object* a, ctr_argument* b) {
+  yes = yes ?: ctr_build_bool(1);
+  return yes;
+}
 
 ctr_object *
 ctr_inject_defined_functions (ctr_object * myself, ctr_argument * argumentList)
@@ -475,8 +485,7 @@ ctr_inject_defined_functions (ctr_object * myself, ctr_argument * argumentList)
   TCCState *state = ds->state;
   Sym *symbols = state->global_stack;
   ctr_object *type_map = ctr_map_new (CtrStdMap, NULL);
-  ctr_argument *map_put_arg = &(ctr_argument) {.next = &(ctr_argument) {}
-  };
+  ctr_argument *map_put_arg = &(ctr_argument) {.next = &(ctr_argument) {}};
 
   Sym *s;
   TokenSym *ts;
@@ -484,6 +493,7 @@ ctr_inject_defined_functions (ctr_object * myself, ctr_argument * argumentList)
 
   s = symbols;
   typeof(ctr_map_contains)* fn_all_contains_val =
+  !all ? &ctr_true :
     all->info.type == CTR_OBJECT_TYPE_OTARRAY ?
       &ctr_array_contains :
       &ctr_map_contains;

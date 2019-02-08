@@ -39,9 +39,17 @@ NamedStruct on: 'initWith:names:' do: {:self:struct:names
 NamedStruct on: 'newIns' do: {
   ^me sameFor: my struct new.
 }.
+NamedStruct on: 'initialize:' do: {:values
+  var offsets is my struct offsets.
+  var &struct is my struct.
+  offsets each: {:i:offset
+     struct put: values @ i at: offset.
+  }.
+}.
 NamedStruct on: 'struct' do: {^my struct.}.
 NamedStruct on: 'pack:' do: {:stuff my struct pack: stuff.}.
 NamedStruct on: 'unpack' do: {^my struct unpack.}.
+NamedStruct on: 'getSize' do: { ^my struct getSize. }.
 NamedStruct on: 'transformName:' do: {:name
   ^name split: '_', fmap: {:s ^s upper1st.}, sum.
 }.

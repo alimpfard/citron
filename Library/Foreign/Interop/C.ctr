@@ -1,3 +1,5 @@
+#:language XFrozen
+
 Inject on: 'importFunctionsOrTypes:fromHeaders:andLibraries:' do: {:funcs:headers:lib
   var fns is getFunctionsOrTypes: funcs fromHeaders: headers andLibraries: lib.
   fns each: {:key:value
@@ -21,44 +23,78 @@ Inject on: 'importFunctionsOrTypes:' do: {:funcs
 }.
 
 Inject on: 'getFunctionsOrTypes:fromHeaders:andLibraries:' do: {:self:funcs:headers:libs
-  ^newWithHeaders: headers andLibraries: libs, getFunctionsOrTypes: funcs.
+  var res is (var ctx is newWithHeaders: headers andLibraries: libs) getFunctionsOrTypes: funcs.
+  # ctx destruct.
+  ^res.
+}.
+
+Inject on: 'normalizeHeaderString:' do: {:str
+  str startsWith: '"', ifTrue: {
+    ^str.
+  } ifFalse: {
+    str startsWith: '<', ifTrue: {
+      ^str.
+    } ifFalse: {
+      ^'<${{str}}$>'.
+    }.
+  }.
 }.
 
 Inject on: 'newWithHeaders:andLibraries:' do: {:self:headers:lib
   var context is me new.
   me includePaths each_v: {:path context addIncludePath: path. }.
+  me libraryPaths each_v: {:path context addLibraryPath: path. }.
   lib isNil ifFalse: {
     lib each_v: {:lib
       context linkInLibrary: lib.
     }.
   }.
-  context compile: ((['#include <%s>\n' % [x],, (x: headers)]) join: '').
+  context compile: ((['#include %s\n' % [self normalizeHeaderString: x],, (x: headers)]) join: '').
   ^context.
 }.
 
+CIF on: 'toString' do: {
+  ^'<${{me isFunctionPointer either: 'Function pointer' or: 'Function'}}$ with ${{me argumentCount}}$ argument(s)>'.
+}.
+# CTypes on: 'toString' do: {:self
+#   ^'<CTypes type_id: ${{Reflect getProperty: ':cType' ofObject: me}}$>'.
+# }.
+
 Inject on: 'getFunctionsOrTypes:' do: {:self:funcs
   var &context is self.
+  funcs isA: Array, ifTrue: {
+    var fnvs is Map new.
+    funcs each_v: {:v fnvs put: v at: v. }.
+    funcs is fnvs.
+  }.
   #:declare lazyev if-then-else
   var if-then-else is \:cond:ift:iff cond evaluate ifTrue: { ^ift evaluate. } ifFalse: { ^iff evaluate. }.
   var cifs is context definedFunctions: funcs.
+  cifs each: {:k:v
+    Pen writeln: '${{k}}$ -> ${{v}}$'.
+  }.
   var str is 'void dummy' + (context id toString) + '() {return %:L;}' % [
-    '+',
-    ['((int)&%s)' % [xs],, (xs: (funcs filter_v: \:fn cifs @ fn isA: CIF))]
+    '+\n',
+    ['((int)&%s)' % [xs],, (xs: (funcs keys filter_v: \:fn cifs @ fn isA: CIF))]
   ].
+  # Pen writeln: str.
   context compile: str.
-  ^(funcs fmap:
-    \:x [
-      x,
-      if-then-else {
-        (cifs at: x, isA: CIF),
+  ^(funcs kvmap:
+    {:kv
+      var k is kv head.
+      var v is kv last.
+      # Pen writeln: '%40s = %40s %40s' % [k, v, context symbol: k].
+      ^[v,
+       if-then-else {
+        (cifs at: k, isA: CIF),
         (context
-          generateCFunctionWrapperFor: (context symbol: x)
-          withCIF: (cifs at: x)
-          andName: x),
-        (cifs at: x)
+          generateCFunctionWrapperFor: (context symbol: k)
+          withCIF: (cifs at: k)
+          andName: v),
+        (cifs at: k)
       }
-    ]
-  ) foldl: {:acc:x ^acc put: x @ 1 at: x @ 0.} accumulator: Map new.
+    ].
+  }).
 }.
 
 Inject on: 'generateCFunctionWrapperFor:withCIF:andName:' do: {:sym:cif:x
@@ -71,28 +107,32 @@ Inject on: 'generateCFunctionWrapperFor:withCIF:andName:' do: {:sym:cif:x
     ^name.
   }.
   # TODO add a way to deep-copy ASTs
-  var av0 is AST parse: '{:catch ^my cif call: my symbol withArgs: args. }.', at: 0.
+  var av0 is AST parse: '{:catch ^my cif call: my symbol run withArgs: args. }.', at: 0.
   var args is av0 at: 0.
-  var argvs is (var argfs is AST parse: '[0].', at: 0) at: 0.
+  var argvs is (var argfs is AST parse: '[].', at: 0) at: 0.
   cif argumentCount times: {:i
-    i = 0 ifTrue: {
-      argvs put: (var name is genName[i]) at: 0.
-    } ifFalse: {
-      argvs insert: (var name is genName[i]) at: 0.
-    }.
+    argvs insert: (var name is genName[i]) at: -1.
     args insert: name at: 0.
   }.
 #    instrs return  exprm  kwmesg  'args'
   av0 at: 1, at: 0, at: 0, at: 1, put: argfs at: 1.
+  # Pen writeln: ast2ctrcode[av0].
+  var pointer is CTypes pointer.
   ^($!av0)
     set: 'cif' value: cif,
-    set: 'symbol' value: sym.
+    set: 'symbol' value: (
+      cif isFunctionPointer not
+        either: {^{\ sym}.}
+        or: {^{\
+          sym derefAs: pointer.
+        }.}
+    ).
 }.
 
-Inject on: 'getDefines:fromHeaders:' do: {:defs:headers
+Inject on: 'getDefines:fromHeaders:' do: {:self:defs:headers
   var context is me new.
   me includePaths each_v: {:path context addIncludePath: path. }.
-  var sheader is ((['#include <%s>\n' % [x],, (x: headers)]) join: '').
+  var sheader is ((['#include %s\n' % [self normalizeHeaderString: x],, (x: headers)]) join: '').
   sheader +=: '#define CTR_INJECT_CAST_STR(x) CTR_INJECT_CAST_ST_STR(x)\n'.
   sheader +=: '#define CTR_INJECT_CAST_ST_STR(x) #x\n'.
   sheader +=: 'typedef struct { void* ptr; void* next; } ctr_argument;\n'.
@@ -103,14 +143,15 @@ Inject on: 'getDefines:fromHeaders:' do: {:defs:headers
   var ptr is CTypes pointer.
   var sbody is defs
     foldl: (\:&acc:&def 'ctr_array_push(${{acc}}$, &(ctr_argument*){ctr_build_string_from_cstring(CTR_INJECT_CAST_STR(${{def}}$))})')
-    accumulator: 'ctr_array_new(get_CtrStdArray(), 0)'.
-  var body is '$$sheader void* main() { return $$sbody ;}'.
+    accumulator: 'ptr'.
+  var body is '$$sheader void* main(void* ptr) { return $$sbody ;}'.
   # Pen writeln: body.
   var main is context compile: body, symbol: 'main'.
-  var values is CIF newByInferringTypes: [ptr], call: main withArgs: [], asObject.
-  Reflect link: values to: Array.
+  var values is Array new.
+  CIF newByInferringTypes: [ptr, ptr], call: main withArgs: [values], asObject.
   var ret is Map new.
   defs each: {:i:x ret put: (values at: i) at: x. }.
+  context destruct.
   ^ret.
 }.
 
@@ -121,7 +162,7 @@ Inject on: 'importDefines:fromHeaders:' do: {:defs:headers
       thisBlock error: 'Object $$key exists, I refuse to replace it'.
     }.
     Reflect addGlobalVariable: key.
-    Reflect set: key to: value.
+    Reflect set: key to: ({^value toNumber.} catch: {^value.}, run).
   }.
 }.
 
@@ -159,8 +200,10 @@ Inject on: 'struct' do: {:self
             strdsc +=: '$$typename ${{rest}}$; '.
           }.
           strdsc is 'struct ${{my name}}$ { $$strdsc };'.
-          # Pen writeln: strdsc.
+          Pen writeln: strdsc.
           my inject compile: strdsc, importFunctionsOrTypes: [my name].
+          my inject destruct.
+          ^ Nil.
         }.
       }.
     }.

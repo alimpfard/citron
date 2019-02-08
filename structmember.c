@@ -293,7 +293,7 @@ npdispatch (char *p, ctr_object * o, ffi_type * type)
       strncpy (p, &buf, sizeof (void *));
       return 0;
     }
-  if (type == &ffi_type_pointer && ctr_reflect_is_linked_to_(&(ctr_argument){o, &(ctr_argument){CtrStdCType}})) {
+  if (type == &ffi_type_pointer && ctr_reflect_is_linked_to_(&(ctr_argument){o, &(ctr_argument){CtrStdCType_pointer}})) {
     memcpy(p, &o->value.rvalue->ptr, sizeof(void*));
     return 0;
   }

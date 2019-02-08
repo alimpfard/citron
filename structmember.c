@@ -8,7 +8,7 @@ get_double (ctr_object * o, double *p)
 {				//TODO: Error handling
   double x;
   if (o->info.type != CTR_OBJECT_TYPE_OTNUMBER)
-    return -1;
+    o = ctr_send_message_variadic(o, "get", 3, 0);
   x = o->value.nvalue;
   *p = x;
   return 0;
@@ -293,6 +293,10 @@ npdispatch (char *p, ctr_object * o, ffi_type * type)
       strncpy (p, &buf, sizeof (void *));
       return 0;
     }
+  if (type == &ffi_type_pointer && ctr_reflect_is_linked_to_(&(ctr_argument){o, &(ctr_argument){CtrStdCType}})) {
+    memcpy(p, &o->value.rvalue->ptr, sizeof(void*));
+    return 0;
+  }
   int (*fn) (char *, ctr_object *) = get_pentry (type).fn;
   if (fn != NULL)
     {
@@ -581,8 +585,10 @@ npint32 (char *p, ctr_object * o)
 {
   int32_t y;
   double x;
-  if (get_double (o, &x) < 0)
+  if (get_double (o, &x) < 0) {
+    printf("AAAAAAAAAAAA\n");
     return -1;
+  }
 
   //#if (sizeof(double) > sizeof(int))
   if (x < (double) INT32_MIN || x > (double) INT32_MAX)
@@ -722,10 +728,10 @@ npfloat (char *p, ctr_object * o)
   double x;
   if (get_double (o, &x) < 0)
     return -1;
-  if (x < (double) FLT_MIN || x > (double) FLT_MAX)
+  if (x < (double) -FLT_MAX || x > (double) FLT_MAX)
     {
       char err[1024];
-      int errlen = sprintf (err, "uint requires [%d,%d] but value was %d", FLT_MIN, FLT_MAX, x);
+      int errlen = sprintf (err, "float requires [%f,%f] but value was %f", -FLT_MAX, FLT_MAX, x);
       CtrStdFlow = ctr_build_string (err, errlen);
       return -1;
     }

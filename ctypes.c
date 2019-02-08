@@ -1417,6 +1417,10 @@ ctr_ctypes_deref_pointer (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *meta = ctr_ctypes_get_first_meta (argumentList->object, CtrStdCType);
   ctr_object *new_obj = ctr_ctype_new_instance (meta);
   int isstruct = 0;
+  if (!new_obj) {
+    CtrStdFlow = ctr_build_string_from_cstring("Could not instantiate a CType");
+    return CtrStdNil;
+  }
   if (new_obj == (ctr_object *) 0x100)
     {
       isstruct = 1;
@@ -2079,6 +2083,7 @@ CTR_CT_FFI_BIND (cif_new)
   ctr_ctypes_set_type (cifobj, CTR_CTYPE_CIF);
   ctr_set_link_all (cifobj, CtrStdCType_ffi_cif);
   cifobj->value.rvalue->ptr = (void *) cif;
+  ctr_internal_object_set_property(cifobj, ctr_build_string_from_cstring(":cfnptr"), ctr_build_bool(0), 0);
   return cifobj;
 }
 
@@ -2179,6 +2184,17 @@ CTR_CT_FFI_BIND (cif_arg_count)
       return CtrStdNil;
     }
   return ctr_build_number_from_float (cif->nargs);
+}
+
+CTR_CT_FFI_BIND (cif_is_fnptr)
+{				//<cif; ^Bool
+  ffi_cif *cif = (ffi_cif *) (myself->value.rvalue->ptr);
+  if (!cif)
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("Invalid request, CIF does not exist");
+      return CtrStdNil;
+    }
+  return ctr_internal_object_find_property(myself, ctr_build_string_from_cstring(":cfnptr"), 0);
 }
 
 CTR_CT_FFI_BIND (cif_arg_at)

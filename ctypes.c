@@ -1412,6 +1412,8 @@ ctr_ctype_new_instance (ctr_object * type)
     return ctr_ctypes_make_slong (CtrStdCType_slong, NULL);
   else if (type == CtrStdCType_longdouble)
     return ctr_ctypes_make_longdouble (CtrStdCType_longdouble, NULL);
+  else if (type == CtrStdCType_pointer)
+    return ctr_ctypes_make_pointer (CtrStdCType_pointer, NULL);
   else if (type == CtrStdCType_struct)
     return (ctr_object *) 0x100;	//signal for struct
   else
@@ -1449,7 +1451,7 @@ ctr_ctypes_deref_pointer (ctr_object * myself, ctr_argument * argumentList)
   if (csize == -1)
     csize = ((ctr_ctypes_ffi_struct_value *) (argumentList->object->value.rvalue->ptr))->size;
   if (!isstruct)
-    memcpy (new_obj->value.rvalue->ptr, ptr, csize);
+    memcpy (&new_obj->value.rvalue->ptr, ptr, csize);
   else
     ((ctr_ctypes_ffi_struct_value *) (new_obj->value.rvalue->ptr))->value = ptr;
 
@@ -1570,7 +1572,7 @@ ctr_ctypes_pack_struct (ctr_object * myself, ctr_argument * argumentList)
   ctr_ctypes_ffi_struct_value *structptr = myself->value.rvalue->ptr;
   ffi_type *structtype = structptr->type;
   ffi_type **struct_fields = structtype->elements;
-  int member_count = structptr->member_count;
+  // int member_count = structptr->member_count;
   size_t size = structptr->size;
   ctr_object *data = argumentList->object;
   pad_info_node_t **padinfo = structptr->padinfo;
@@ -1915,7 +1917,8 @@ ctr_ctypes_ffi_convert_to_ffi_type (ctr_object * type)
   else if ((initial) == CtrStdCType_longdouble)
     return &ffi_type_longdouble;
   else if ((initial) == CtrStdCType_pointer ||
-	   initial == CtrStdCType_dynamic_lib || initial == CtrStdCType_string || initial == CtrStdCType_functionptr)
+	   initial == CtrStdCType_dynamic_lib || initial == CtrStdCType_string ||
+     initial == CtrStdCType_functionptr || initial == CtrStdCType_cont_pointer)
     return &ffi_type_pointer;
   else if (initial == CtrStdCType_struct)
     return ((ctr_ctypes_ffi_struct_value *) (type->value.rvalue->ptr))->type;

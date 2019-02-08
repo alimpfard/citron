@@ -1319,6 +1319,25 @@ ctr_ctypes_pointer_get_obj (ctr_object * myself, ctr_argument * argumentList)
 }
 
 ctr_object *
+ctr_ctypes_pointer_arith_add (ctr_object * myself, ctr_argument * argumentList)
+{
+  void* ptr = myself->value.rvalue->ptr;
+  ctr_object* newp = ctr_ctypes_make_pointer(NULL, NULL);
+  newp->value.rvalue->ptr = ptr + ((intptr_t)argumentList->object->value.nvalue);
+  return newp;
+}
+
+ctr_object *
+ctr_ctypes_pointer_arith_sub (ctr_object * myself, ctr_argument * argumentList)
+{
+  void* ptr = myself->value.rvalue->ptr;
+  ctr_object* newp = ctr_ctypes_make_pointer(NULL, NULL);
+  newp->value.rvalue->ptr = ptr - ((intptr_t)argumentList->object->value.nvalue);
+  return newp;
+}
+
+
+ctr_object *
 ctr_ctypes_to_bytes (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *ret = ctr_array_new (CtrStdArray, NULL);

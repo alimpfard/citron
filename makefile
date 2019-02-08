@@ -125,6 +125,9 @@ for f in *.c; do\
 done
 endef
 
+deps:
+	pkg install libffi libffi-dev libgc libgc-dev pcre pcre-dev
+
 format:
 	mkdir -p .bac
 	rm -rf .bac/*.c

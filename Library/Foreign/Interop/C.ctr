@@ -1,3 +1,5 @@
+import Library/Data/Map.
+
 #:language XFrozen
 
 Inject on: 'importFunctionsOrTypes:fromHeaders:andLibraries:' do: {:funcs:headers:lib
@@ -72,6 +74,12 @@ Inject on: 'getFunctionsOrTypes:' do: {:self:funcs
   var cifs is context definedFunctions: funcs.
   cifs each: {:k:v
     Pen writeln: '${{k}}$ -> ${{v}}$'.
+  }.
+  funcs isNil ifTrue: {
+    funcs is cifs keys.
+    var fnvs is Map new.
+    funcs each_v: {:v fnvs put: v at: v. }.
+    funcs is fnvs.
   }.
   var str is 'void dummy' + (context id toString) + '() {return %:L;}' % [
     '+\n',

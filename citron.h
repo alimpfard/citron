@@ -1272,10 +1272,13 @@ ctr_object *ctr_inject_run(ctr_object *myself, ctr_argument *argumentList);
 ctr_object *ctr_inject_run_named(ctr_object *myself, ctr_argument *argumentList);
 ctr_object *ctr_inject_add_inclp(ctr_object* myself, ctr_argument* argumentList);
 ctr_object *ctr_inject_get_inclp(ctr_object* myself, ctr_argument* argumentList);
+ctr_object *ctr_inject_add_libp(ctr_object* myself, ctr_argument* argumentList);
+ctr_object *ctr_inject_get_libp(ctr_object* myself, ctr_argument* argumentList);
 ctr_object *ctr_inject_export_f(ctr_object *myself, ctr_argument *argumentList);
 ctr_object *ctr_inject_add_lib(ctr_object* myself, ctr_argument* argumentList);
 ctr_object *ctr_inject_set_error_handler(ctr_object* myself, ctr_argument* argumentList);
 ctr_object *ctr_inject_generate_output(ctr_object *myself, ctr_argument *argumentList);
+ctr_object *ctr_inject_finish(ctr_object *myself, ctr_argument *argumentList);
 
 /** FFI **/
 #include "ctypes.h"

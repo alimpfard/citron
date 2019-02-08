@@ -2313,11 +2313,14 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdInject, ctr_build_string_from_cstring ("run:arguments:"), &ctr_inject_run);
   ctr_internal_create_func (CtrStdInject, ctr_build_string_from_cstring ("run:arguments:function:"), &ctr_inject_run_named);
   ctr_internal_create_func (CtrStdInject, ctr_build_string_from_cstring ("symbol:"), &ctr_inject_get_symbol);
+  ctr_internal_create_func (CtrStdInject, ctr_build_string_from_cstring ("addLibraryPath:"), &ctr_inject_add_libp);
+  ctr_internal_create_func (CtrStdInject, ctr_build_string_from_cstring ("libraryPaths"), &ctr_inject_get_libp);
   ctr_internal_create_func (CtrStdInject, ctr_build_string_from_cstring ("addIncludePath:"), &ctr_inject_add_inclp);
   ctr_internal_create_func (CtrStdInject, ctr_build_string_from_cstring ("includePaths"), &ctr_inject_get_inclp);
   ctr_internal_create_func (CtrStdInject, ctr_build_string_from_cstring ("linkInLibrary:"), &ctr_inject_add_lib);
   ctr_internal_create_func (CtrStdInject, ctr_build_string_from_cstring ("errorHandler:"), &ctr_inject_set_error_handler);
   ctr_internal_create_func (CtrStdInject, ctr_build_string_from_cstring ("outputTo:"), &ctr_inject_generate_output);
+  ctr_internal_create_func (CtrStdInject, ctr_build_string_from_cstring ("destruct"), &ctr_inject_finish);
 #endif // withInjectNative
 
   static ctr_object ctr_dummy_import;

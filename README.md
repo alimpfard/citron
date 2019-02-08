@@ -8,12 +8,18 @@ minimum required libraries:
 * `libpcre` -- for regular expressions
 * `libgc` -- for Garbage Collection
 
+##### Note that this is only targeted at Termux (any others, tests are welcome)
+
 ```sh
+# get stuff
+$ pkg install git make cmake perl clang
 # clone this branch
 $ git clone -b android --single-branch https://github.com/alimpfard/citron
 $ cd citron
+# get dependancies
+$ make deps
 # compile everything
-$ make all
+$ CFLAGS="-DwithInjectNative=1 -DwithCTypesNative=1" make all
 # put a helper script for the eval in usr/bin
 $ bash create_eval_link.sh
 ```

@@ -1,0 +1,183 @@
+Broom memoryLimit: 100 * 1024 * 1024.
+
+import _internal: \*.
+
+import
+  Library/Foreign/C/NamedStruct
+  Library/Foreign/C/PackedArray
+  Library/Foreign/C/Signal: 'Signal'.
+
+
+Inject new struct c_vertex {
+  float x_,
+  float y_,
+  float r_,
+  float g_,
+  float b_
+}.
+
+var mvertices is [
+  -0.6, -0.4, 1, 0, 0,
+   0.6, -0.4, 0, 1, 0,
+   0.0,  0.6, 0, 0, 1
+].
+
+var vertices is PackedArray new initWithType: 'float' count: mvertices count.
+
+mvertices each: {:i:v
+  Pen writeln: 'Index $$i -> $$v'.
+  vertices put: v at: i.
+}.
+
+# Pen writeln: vertices.
+
+var vertices_mem is vertices array getRawAddress.
+
+var arralloc is {:sz:len
+  ^CTypes allocateBytes: sz * len.
+}.
+
+var intoMem is {:str
+  ^CTypes fromString: str, getAddress.
+}.
+
+var errors is Map new
+  put: 'GL_INVALID_ENUM' at: GL_INVALID_ENUM,
+  put: 'GL_INVALID_VALUE' at: GL_INVALID_VALUE,
+  put: 'GL_INVALID_OPERATION' at: GL_INVALID_OPERATION.
+var safeGlExec is {:&cmd:*args
+  var eargs is [arg evaluate,, (arg: args)].
+  Pen write: 'Exec ${{ast2ctrcode[cmd]}}$(%L)' % [eargs].
+  var result is cmd evaluate applyAll: eargs.
+  Pen writeln: ' = $$result'.
+  var err is glGetError[].
+  err = 0 ifFalse: {
+    var descr is errors at: err.
+    thisBlock error: 'Execution of ${{ast2ctrcode[cmd]}}$ with arguments ${{args fmap: \:x ast2ctrcode[x], join: ', '}}$ failed with error: $$err :: $$descr'.
+  }.
+  ^result.
+}.
+
+var vertex_shader_text is intoMem[?>
+uniform mat4 MVP;
+attribute vec3 vCol;
+attribute vec2 vPos;
+varying vec3 color;
+void main() {
+  gl_Position = MVP * vec4(vPos, 0.0, 1.0);
+  color = (MVP * vec4(vCol, 1.0)).xyz;
+}
+<?].
+
+var vertex_fragment_text is intoMem[?>
+varying vec3 color;
+void main() {
+  gl_FragColor = vec4(color, 1.0);
+}
+<?].
+
+glfwInit[] ifFalse: {
+  thisBlock error: 'GLFW error'.
+}.
+
+glfwWindowHint[GLFW_CONTEXT_VERSION_MAJOR, 2].
+glfwWindowHint[GLFW_CONTEXT_VERSION_MINOR, 0].
+
+var window is glfwCreateWindow[640, 480, 'Example', nullptr, nullptr].
+window get ifFalse: {
+  glfwTerminate[].
+  thisBlock error: 'Window creation failed'.
+}.
+
+glfwMakeContextCurrent[window].
+glewInit[].
+glfwSwapInterval[1].
+
+var vertex_buffer is GLuint newIns.
+Pen writeln: vertex_buffer getRawAddress.
+
+glGenBuffers[1, vertex_buffer getRawAddress].
+# Signal kill: 10 PID: Program pid.
+
+glBindBuffer[GL_ARRAY_BUFFER, vertex_buffer].
+
+Pen write: 'Buffer $$vertex_buffer is a buffer? ', writeln: glIsBuffer[vertex_buffer] = GL_TRUE.
+var res is GLint newIns.
+glGetIntegerv[GL_ARRAY_BUFFER_BINDING, res].
+Pen writeln: 'Current buffer: ' + res get.
+res destruct.
+
+glBufferData[GL_ARRAY_BUFFER, 3 * c_vertex getSize, vertices_mem, GL_STATIC_DRAW].
+
+var shader_status is GLint newIns.
+var slen is GLsizei newIns.
+# var smem is arralloc[1, 10240].
+
+var vertex_shader is glCreateShader[GL_VERTEX_SHADER].
+glShaderSource[vertex_shader, 1, vertex_shader_text, nullptr].
+glCompileShader[vertex_shader].
+# glGetShaderiv[vertex_shader, GL_COMPILE_STATUS, shader_status].
+# Pen writeln: shader_status get = GL_TRUE.
+# glGetShaderInfoLog[vertex_shader, 10240, slen, smem].
+# Pen writeln: [slen get, smem readBytesAsString: slen get].
+
+var fragment_shader is glCreateShader[GL_FRAGMENT_SHADER].
+glShaderSource[fragment_shader, 1, vertex_fragment_text, nullptr].
+glCompileShader[fragment_shader].
+# glGetShaderiv[fragment_shader, GL_COMPILE_STATUS, shader_status].
+# Pen writeln: shader_status get = GL_TRUE.
+# glGetShaderInfoLog[fragment_shader, 10240, slen, smem].
+# Pen writeln: [slen get, smem readBytesAsString: slen get].
+
+var program is glCreateProgram[].
+glAttachShader[program, vertex_shader].
+glAttachShader[program, fragment_shader].
+glLinkProgram[program].
+# glGetProgramInfoLog[program, 10240, slen, smem].
+# Pen writeln: [slen get, smem readBytesAsString: slen get].
+#
+# CTypes free: smem.
+
+var mvp_location is  glGetUniformLocation[program, 'MVP'].
+var vpos_location is glGetAttribLocation[program, 'vPos'].
+var vcol_location is glGetAttribLocation[program, 'vCol'].
+
+Pen writeln: mvp_location.
+Pen writeln: vpos_location.
+Pen writeln: vcol_location.
+
+glEnableVertexAttribArray[vpos_location].
+glVertexAttribPointer[vpos_location, 2, GL_FLOAT, GL_FALSE, 20, nullptr].
+
+glEnableVertexAttribArray[vcol_location].
+glVertexAttribPointer[vcol_location, 3, GL_FLOAT, GL_FALSE, 20, nullptr + 8].
+
+var width is CTypes sint.
+var height is CTypes sint.
+var mat  is arralloc[4, 16].#mat4x4 newIns.
+var matp is arralloc[4, 16].#mat4x4 newIns.
+var mvp  is arralloc[4, 16].#mat4x4 newIns.
+
+{
+  var time is glfwGetTime[].
+  Pen writeln: time.
+
+  glfwGetFramebufferSize[window, width, height].
+  var ratio is width get / height get.
+
+  glViewport[0, 0, width, height].
+  glClear[GL_COLOR_BUFFER_BIT].
+
+  mat4x4_identity[mat].
+  mat4x4_rotate_Z[mat, mat, time].
+  mat4x4_rotate_Y[mat, mat, time].
+  mat4x4_ortho[matp, 0 - ratio, ratio, -1, 1, 1, -1].
+  mat4x4_mul[mvp, matp, mat].
+  mat4x4_print[mvp].
+
+  glUseProgram[program].
+  glUniformMatrix4fv[mvp_location, 1, GL_FALSE, mvp].
+  glDrawArrays[GL_TRIANGLES, 0, 3].
+
+  glfwSwapBuffers[window].
+} forever.

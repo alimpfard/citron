@@ -174,6 +174,8 @@ ctr_ctypes_set_type (ctr_object * object, ctr_ctype type)
       ctr_set_link_all (object, CtrStdCType_dynamic_lib);
       break;
     case CTR_CTYPE_STRUCT:
+      object->value.rvalue->ptr = ctr_heap_allocate(sizeof(ctr_ctypes_ffi_struct_value));
+      memset(object->value.rvalue->ptr, 0, sizeof(ctr_ctypes_ffi_struct_value));
       ctr_set_link_all (object, CtrStdCType_struct);
       break;
     case CTR_CTYPE_STRING:
@@ -183,6 +185,8 @@ ctr_ctypes_set_type (ctr_object * object, ctr_ctype type)
       ctr_set_link_all (object, CtrStdCType_functionptr);
       break;
     case CTR_CTYPE_CONTIGUOUS_ARRAY:
+      object->value.rvalue->ptr = ctr_heap_allocate(sizeof(ctr_ctypes_cont_array_t));
+      memset(object->value.rvalue->ptr, 0, sizeof(ctr_ctypes_cont_array_t));
       ctr_set_link_all (object, CtrStdCType_cont_pointer);
       break;
     default:
@@ -2713,6 +2717,7 @@ ctr_ffi_begin ()
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("structWithFormat:"), &ctr_ctypes_make_struct);
   ctr_internal_create_func (CtrStdCType_struct, ctr_build_string_from_cstring ("toString"), &ctr_ctypes_struct_to_string);
   ctr_internal_create_func (CtrStdCType_struct, ctr_build_string_from_cstring ("new"), &ctr_ctypes_struct_new);
+  ctr_internal_create_func (CtrStdCType_struct, ctr_build_string_from_cstring ("newIns"), &ctr_ctypes_struct_new);
   ctr_internal_create_func (CtrStdCType_struct, ctr_build_string_from_cstring ("getSize"), &ctr_ctypes_struct_get_size);
   ctr_internal_create_func (CtrStdCType_struct, ctr_build_string_from_cstring ("memberCount"), &ctr_ctypes_struct_get_member_count);
   ctr_internal_create_func (CtrStdCType_struct, ctr_build_string_from_cstring ("padInfo"), &ctr_ctypes_struct_get_padding_format);
@@ -2742,6 +2747,7 @@ ctr_ffi_begin ()
   ctr_internal_create_func (CtrStdCType_cont_pointer, ctr_build_string_from_cstring ("_type"), &ctr_ctypes_packed_type);
   ctr_internal_create_func (CtrStdCType_cont_pointer, ctr_build_string_from_cstring ("getSize"), &ctr_ctypes_packed_size);
   ctr_internal_create_func (CtrStdCType_cont_pointer, ctr_build_string_from_cstring ("new"), &ctr_ctypes_packed_from);
+  ctr_internal_create_func (CtrStdCType_cont_pointer, ctr_build_string_from_cstring ("newIns"), &ctr_ctypes_packed_from);
 
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("allocateBytes:"), &ctr_ctype_ffi_malloc);
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("copyTo:from:numBytes:"), &ctr_ctype_ffi_memcpy);

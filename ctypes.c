@@ -2351,6 +2351,16 @@ CTR_CT_FFI_BIND (malloc)
   return object;
 }
 
+
+CTR_CT_FFI_BIND (shmalloc)
+{
+  int size = ctr_internal_cast2number (argumentList->object)->value.nvalue;
+  void *resource = ctr_heap_allocate_shared (size);
+  ctr_object *object = ctr_ctypes_make_pointer (NULL, NULL);
+  object->value.rvalue->ptr = resource;
+  return object;
+}
+
 CTR_CT_FFI_BIND (memcpy)
 {				//dest, source, count
   void *r0 = argumentList->object->value.rvalue->ptr, *r1 = argumentList->next->object->value.rvalue->ptr;
@@ -2398,6 +2408,19 @@ CTR_CT_FFI_BIND (free)
       return CtrStdNil;
     }
   free (argumentList->object->value.rvalue->ptr);
+  argumentList->object->value.rvalue->ptr = NULL;
+  return myself;
+}
+
+
+CTR_CT_FFI_BIND (shfree)
+{
+  if ((argumentList->object->info.type) != CTR_OBJECT_TYPE_OTEX)
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("Can only free resources.");
+      return CtrStdNil;
+    }
+  ctr_heap_free_shared (argumentList->object->value.rvalue->ptr);
   argumentList->object->value.rvalue->ptr = NULL;
   return myself;
 }
@@ -2750,9 +2773,11 @@ ctr_ffi_begin ()
   ctr_internal_create_func (CtrStdCType_cont_pointer, ctr_build_string_from_cstring ("newIns"), &ctr_ctypes_packed_from);
 
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("allocateBytes:"), &ctr_ctype_ffi_malloc);
+  ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("allocateBytesShared:"), &ctr_ctype_ffi_shmalloc);
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("copyTo:from:numBytes:"), &ctr_ctype_ffi_memcpy);
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("fill:withString:"), &ctr_ctype_ffi_fill_buf);
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("free:"), &ctr_ctype_ffi_free);
+  ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("freeShared:"), &ctr_ctype_ffi_shfree);
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("fromString:"), &ctr_ctype_ffi_buf_from_str);
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("loadLibrary:"), &ctr_ctype_ffi_ll);
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("closureOf:withCIF:"), &ctr_ctype_ffi_closure_cif);

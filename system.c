@@ -2989,7 +2989,7 @@ typedef struct
   pthread_mutex_t *mutex;
   pthread_t *thread;
 } ctr_thread_t;
-static pthread_mutex_t GLOBAL_MUTEX = PTHREAD_MUTEX_INITIALIZER;
+// static pthread_mutex_t GLOBAL_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 void *
 ctr_run_thread_func (ctr_thread_t * threadt)
 {
@@ -2999,7 +2999,7 @@ ctr_run_thread_func (ctr_thread_t * threadt)
   sigset_t oset;
   ctr_thread_return_t *rv = ctr_heap_allocate (sizeof (ctr_thread_return_t));
   // ctr_object* ctx = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-  pthread_mutex_lock (&GLOBAL_MUTEX);
+  // pthread_mutex_lock (&GLOBAL_MUTEX);
   pthread_mutex_lock (threadt->mutex);
   // ctr_object* oct = ctr_contexts[ctr_context_id];
   int sets = pthread_sigmask (SIG_SETMASK, &set, &oset);
@@ -3016,7 +3016,7 @@ ctr_run_thread_func (ctr_thread_t * threadt)
   threadt->last_result = rv;
   sets = pthread_sigmask (SIG_SETMASK, &oset, NULL);
   pthread_mutex_unlock (threadt->mutex);
-  pthread_mutex_unlock (&GLOBAL_MUTEX);
+  // pthread_mutex_unlock (&GLOBAL_MUTEX);
   pthread_exit (rv);
 }
 
@@ -3194,9 +3194,9 @@ ctr_thread_run (ctr_object * myself, ctr_argument * argumentList)
       CtrStdFlow = ctr_build_string_from_cstring ("Attempt to run a thread without a target");
       return CtrStdFlow;
     }
-  if (!pthread_mutex_trylock (&GLOBAL_MUTEX))
+  // if (!pthread_mutex_trylock (&GLOBAL_MUTEX))
     {
-      pthread_mutex_unlock (&GLOBAL_MUTEX);
+      // pthread_mutex_unlock (&GLOBAL_MUTEX);
       pthread_mutex_unlock (((ctr_thread_t *) myself->value.rvalue->ptr)->mutex);
     }
   return myself;

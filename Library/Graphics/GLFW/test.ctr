@@ -11,15 +11,54 @@ import
 Inject new struct c_vertex {
   float x_,
   float y_,
+  float z_,
+
   float r_,
-  float g_,
-  float b_
+  float g_
 }.
 
 var mvertices is [
-  -0.6, -0.4, 1, 0, 0,
-   0.6, -0.4, 0, 1, 0,
-   0.0,  0.6, 0, 0, 1
+    -0.5, -0.5, -0.5,   0.0,  0.0,  0.2,
+     0.5, -0.5, -0.5,   1.0,  0.0,  0.0,
+     0.5,  0.5, -0.5,   1.0,  1.0,  0.8,
+     0.5,  0.5, -0.5,   1.0,  1.0,  0.9,
+    -0.5,  0.5, -0.5,   0.0,  1.0,  0.1,
+    -0.5, -0.5, -0.5,   0.0,  0.0,  0.0,
+
+    -0.5, -0.5,  0.5,   0.0,  0.0,  0.8,
+     0.5, -0.5,  0.5,   1.0,  0.0,  0.5,
+     0.5,  0.5,  0.5,   1.0,  1.0,  0.2,
+     0.5,  0.5,  0.5,   1.0,  1.0,  0.5,
+    -0.5,  0.5,  0.5,   0.0,  1.0,  0.4,
+    -0.5, -0.5,  0.5,   0.0,  0.0,  0.6,
+
+    -0.5,  0.5,  0.5,   1.0,  0.0,  0.4,
+    -0.5,  0.5, -0.5,   1.0,  1.0,  0.9,
+    -0.5, -0.5, -0.5,   0.0,  1.0,  0.9,
+    -0.5, -0.5, -0.5,   0.0,  1.0,  0.3,
+    -0.5, -0.5,  0.5,   0.0,  0.0,  0.1,
+    -0.5,  0.5,  0.5,   1.0,  0.0,  0.9,
+
+     0.5,  0.5,  0.5,   1.0,  0.0,  0.5,
+     0.5,  0.5, -0.5,   1.0,  1.0,  0.6,
+     0.5, -0.5, -0.5,   0.0,  1.0,  0.0,
+     0.5, -0.5, -0.5,   0.0,  1.0,  0.0,
+     0.5, -0.5,  0.5,   0.0,  0.0,  0.1,
+     0.5,  0.5,  0.5,   1.0,  0.0,  0.4,
+
+    -0.5, -0.5, -0.5,   0.0,  1.0,  0.5,
+     0.5, -0.5, -0.5,   1.0,  1.0,  0.4,
+     0.5, -0.5,  0.5,   1.0,  0.0,  0.5,
+     0.5, -0.5,  0.5,   1.0,  0.0,  0.8,
+    -0.5, -0.5,  0.5,   0.0,  0.0,  0.8,
+    -0.5, -0.5, -0.5,   0.0,  1.0,  0.2,
+
+    -0.5,  0.5, -0.5,   0.0,  1.0,  0.2,
+     0.5,  0.5, -0.5,   1.0,  1.0,  0.4,
+     0.5,  0.5,  0.5,   1.0,  0.0,  0.6,
+     0.5,  0.5,  0.5,   1.0,  0.0,  0.9,
+    -0.5,  0.5,  0.5,   0.0,  0.0,  0.8,
+    -0.5,  0.5, -0.5,   0.0,  1.0,  0.1
 ].
 
 var vertices is PackedArray new initWithType: 'float' count: mvertices count.
@@ -61,11 +100,11 @@ var safeGlExec is {:&cmd:*args
 var vertex_shader_text is intoMem[?>
 uniform mat4 MVP;
 attribute vec3 vCol;
-attribute vec2 vPos;
+attribute vec3 vPos;
 varying vec3 color;
 void main() {
-  gl_Position = MVP * vec4(vPos, 0.0, 1.0);
-  color = (MVP * vec4(vCol, 1.0)).xyz;
+  gl_Position = MVP * vec4(vPos, 1.0);
+  color = vCol;
 }
 <?].
 
@@ -107,7 +146,7 @@ glGetIntegerv[GL_ARRAY_BUFFER_BINDING, res].
 Pen writeln: 'Current buffer: ' + res get.
 res destruct.
 
-glBufferData[GL_ARRAY_BUFFER, 3 * c_vertex getSize, vertices_mem, GL_STATIC_DRAW].
+glBufferData[GL_ARRAY_BUFFER,  mvertices count * c_vertex getSize, vertices_mem, GL_STATIC_DRAW].
 
 var shader_status is GLint newIns.
 var slen is GLsizei newIns.
@@ -147,37 +186,71 @@ Pen writeln: vpos_location.
 Pen writeln: vcol_location.
 
 glEnableVertexAttribArray[vpos_location].
-glVertexAttribPointer[vpos_location, 2, GL_FLOAT, GL_FALSE, 20, nullptr].
+glVertexAttribPointer[vpos_location, 3, GL_FLOAT, GL_FALSE, 24, nullptr].
 
 glEnableVertexAttribArray[vcol_location].
-glVertexAttribPointer[vcol_location, 3, GL_FLOAT, GL_FALSE, 20, nullptr + 8].
+glVertexAttribPointer[vcol_location, 3, GL_FLOAT, GL_FALSE, 24, nullptr + 12].
 
-var width is CTypes sint.
+glEnable[GL_DEPTH_TEST].
+
+var width  is CTypes sint.
 var height is CTypes sint.
-var mat  is arralloc[4, 16].#mat4x4 newIns.
-var matp is arralloc[4, 16].#mat4x4 newIns.
-var mvp  is arralloc[4, 16].#mat4x4 newIns.
+var mat    is arralloc[4, 16].#mat4x4 newIns.
+var matp   is arralloc[4, 16].#mat4x4 newIns.
+var mvp    is arralloc[4, 16].#mat4x4 newIns.
+
+var _camp  is vec3 newIns.
+var _camf  is vec3 newIns.
+var _camt  is vec3 newIns.
+
+var camp   is PackedArray new initWithCType: _camp count: 3.
+var camf   is PackedArray new initWithCType: _camf count: 3.
+var camt   is PackedArray new initWithCType: _camt count: 3.
+camf put: 1 at: 1.
+
+var acamp  is _camp getRawAddress.
+var acamf  is _camf getRawAddress.
+var acamt  is _camt getRawAddress.
+var lastTime is 0.
 
 {
-  var time is glfwGetTime[].
-  Pen writeln: time.
+  Pen writeln: 'Whole frame took: ' + (Clock timeExecutionOf: {
+      var time is glfwGetTime[].
+      Pen writeln: 'time ${{1 / (time - lastTime)}}$'.
+      lastTime is time.
 
-  glfwGetFramebufferSize[window, width, height].
-  var ratio is width get / height get.
+      glfwGetFramebufferSize[window, width, height].
+      var ratio is width get / height get.
 
-  glViewport[0, 0, width, height].
-  glClear[GL_COLOR_BUFFER_BIT].
+      glViewport[0, 0, width, height].
+      glClear[GL_COLOR_BUFFER_BIT bitOr: GL_DEPTH_BUFFER_BIT].
+      Pen writeln: 'mat stuff took: ' + (Clock timeExecutionOf: {
+        mat4x4_identity[mat].
+        # mat4x4_rotate_Y[mat, mat, time].
+        # mat4x4_rotate_X[mat, mat, time].
+        camp
+          put: time sin * 5 at: 0,
+          # put: time sin * 10 at: 1,
+          put: time cos * 5 at: 2
+          .
+        camf
+          put: time sin * 5 at: 0
+        .
+        # camt
+          # put: time cos * 5 at: 1,
+          # put: time sin * 5 at: 2
+        # .
+        mat4x4_look_at[mat, acamp, acamt, acamf].
+        mat4x4_rotate_Z[mat, mat, time].
+        # mat4x4_ortho[matp, 0 - ratio, ratio, -1, 1, 1, -1].
+        mat4x4_perspective[matp, 0.785, ratio, 0.1, 100].
+        mat4x4_mul[mvp, matp, mat].
+        mat4x4_print[mvp].
+      }).
+      glUseProgram[program].
+      glUniformMatrix4fv[mvp_location, 1, GL_FALSE, mvp].
+      glDrawArrays[GL_TRIANGLES, 0, 36].
 
-  mat4x4_identity[mat].
-  mat4x4_rotate_Z[mat, mat, time].
-  mat4x4_rotate_Y[mat, mat, time].
-  mat4x4_ortho[matp, 0 - ratio, ratio, -1, 1, 1, -1].
-  mat4x4_mul[mvp, matp, mat].
-  mat4x4_print[mvp].
-
-  glUseProgram[program].
-  glUniformMatrix4fv[mvp_location, 1, GL_FALSE, mvp].
-  glDrawArrays[GL_TRIANGLES, 0, 3].
-
-  glfwSwapBuffers[window].
+      glfwSwapBuffers[window].
+  }).
 } forever.

@@ -16,6 +16,7 @@ var glfw_defines is [
   'GL_SCISSOR_TEST', 'GL_TEXTURE0', 'GL_STREAM_DRAW', 'GL_STATIC_DRAW',
   'GL_WRITE_ONLY', 'GL_TRIANGLES', 'GL_UNSIGNED_SHORT', 'GL_COLOR_BUFFER_BIT',
   'GL_INVALID_VALUE', 'GL_INVALID_OPERATION', 'GL_INVALID_ENUM', 'GL_ARRAY_BUFFER_BINDING',
+  'GL_UNSIGNED_INT', 'GL_DEPTH_TEST', 'GL_DEPTH_BUFFER_BIT',
   # glfw
   'GLFW_CONTEXT_VERSION_MAJOR', 'GLFW_CONTEXT_VERSION_MINOR'
 ].
@@ -37,7 +38,7 @@ var glfw_imports is [
   'glBufferData', 'glMapBuffer', 'glUnmapBuffer', 'glScissor', 'glDrawElements',
   'glDrawArrays', 'glViewport', 'glClear', 'glGetProgramInfoLog', 'glIsShader',
   'glGetError', 'glGetShaderInfoLog', 'glDebugMessageCallback', 'glIsBuffer',
-  'glGetIntegerv',
+  'glGetIntegerv', 'glEnable',
   # glfw
   'glfwInit', 'glfwGetWindowUserPointer', 'glfwTerminate', 'glfwCreateWindow',
   'glfwWindowHint', 'glfwDestroyWindow', 'glfwGetVersionString', 'glfwMakeContextCurrent',
@@ -50,6 +51,7 @@ var glfw_imports is [
   'mat4x4_rotate_Y', 'mat4x4_rotate_Z', 'mat4x4_row', 'mat4x4_scale', 'mat4x4_scale_aniso',
   'mat4x4_sub', 'mat4x4_translate', 'mat4x4_translate_in_place', 'mat4x4_transpose',
   'mat4x4o_mul_quat',
+  'vec3',
   'quat', 'quat_add', 'quat_conj', 'quat_from_mat4x4', 'quat_identity',
   'quat_inner_product', 'quat_mul', 'quat_mul_vec3', 'quat_norm', 'quat_rotate',
   'quat_scale', 'quat_sub', 'vec3_mul_cross', 'vec3_reflect', 'vec4_mul_cross',

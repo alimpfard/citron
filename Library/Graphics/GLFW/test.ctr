@@ -73,7 +73,7 @@ mvertices each: {:i:v
 var vertices_mem is vertices array getRawAddress.
 
 var arralloc is {:sz:len
-  ^CTypes allocateBytes: sz * len.
+  ^CTypes allocateBytesShared: sz * len.
 }.
 
 var intoMem is {:str
@@ -212,45 +212,25 @@ var acamp  is _camp getRawAddress.
 var acamf  is _camf getRawAddress.
 var acamt  is _camt getRawAddress.
 var lastTime is 0.
+var fv is File new: 'render.ctr'.
 
 {
+  var time is glfwGetTime[].
+  Pen writeln: 'time ${{1 / (time - lastTime)}}$'.
+  lastTime is time.
+
+  glfwGetFramebufferSize[window, width, height].
+  var ratio is width get / height get.
+
+  glViewport[0, 0, width, height].
+  glClear[GL_COLOR_BUFFER_BIT bitOr: GL_DEPTH_BUFFER_BIT].
+
   Pen writeln: 'Whole frame took: ' + (Clock timeExecutionOf: {
-      var time is glfwGetTime[].
-      Pen writeln: 'time ${{1 / (time - lastTime)}}$'.
-      lastTime is time.
+    Program new: { fv runHere. }, join.
 
-      glfwGetFramebufferSize[window, width, height].
-      var ratio is width get / height get.
-
-      glViewport[0, 0, width, height].
-      glClear[GL_COLOR_BUFFER_BIT bitOr: GL_DEPTH_BUFFER_BIT].
-      Pen writeln: 'mat stuff took: ' + (Clock timeExecutionOf: {
-        mat4x4_identity[mat].
-        # mat4x4_rotate_Y[mat, mat, time].
-        # mat4x4_rotate_X[mat, mat, time].
-        camp
-          put: time sin * 5 at: 0,
-          # put: time sin * 10 at: 1,
-          put: time cos * 5 at: 2
-          .
-        camf
-          put: time sin * 5 at: 0
-        .
-        # camt
-          # put: time cos * 5 at: 1,
-          # put: time sin * 5 at: 2
-        # .
-        mat4x4_look_at[mat, acamp, acamt, acamf].
-        mat4x4_rotate_Z[mat, mat, time].
-        # mat4x4_ortho[matp, 0 - ratio, ratio, -1, 1, 1, -1].
-        mat4x4_perspective[matp, 0.785, ratio, 0.1, 100].
-        mat4x4_mul[mvp, matp, mat].
-        mat4x4_print[mvp].
-      }).
-      glUseProgram[program].
-      glUniformMatrix4fv[mvp_location, 1, GL_FALSE, mvp].
-      glDrawArrays[GL_TRIANGLES, 0, 36].
-
-      glfwSwapBuffers[window].
+    glUseProgram[program].
+    glUniformMatrix4fv[mvp_location, 1, GL_FALSE, mvp].
+    glDrawArrays[GL_TRIANGLES, 0, 36].
+    glfwSwapBuffers[window].
   }).
 } forever.

@@ -376,8 +376,7 @@ ctr_object *
 ctr_gc_with_gc_disabled(ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_argument argm = {CtrStdNil};
-  ctr_block_runIt(argumentList->object, &argm);
-  return myself;
+  return ctr_block_runIt(argumentList->object, &argm);
 }
 
 /**

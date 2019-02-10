@@ -537,9 +537,14 @@ ctr_cwlk_run (ctr_tnode * program)
       /* Perform garbage collection cycle */
       if (((ctr_gc_mode & 1) && ctr_gc_alloc > (ctr_gc_memlimit * 0.8)) || ctr_gc_mode & 4)
 	{
+    #ifdef DEBUG_BUILD
 	  printf ("GC : %d bytes\n", ctr_gc_alloc);
-	  ctr_gc_internal_collect ();	//collect on limit mode
+    #endif
+	  // ctr_gc_internal_collect_a_little ();	//collect on limit mode
+    GC_collect_a_little();
+    #ifdef DEBUG_BUILD
 	  printf ("GC : %d bytes\n", ctr_gc_alloc);
+    #endif
 	}
       if (!li->next)
 	break;

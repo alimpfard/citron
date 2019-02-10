@@ -1036,6 +1036,7 @@ ctr_cparse_ref ()
 	{
 	  ctr_clex_putback ();
 	  ctr_clex_putback ();
+    ctr_clex_tok ();
 	  goto the_else;
 	}
       return ctr_cparse_pure ();

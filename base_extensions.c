@@ -1639,7 +1639,10 @@ ctr_object_inherit (ctr_object * myself, ctr_argument * argumentList)
     if (ifsp->ifs[i] == ifs)
       return myself;
   ifsp->count++;
-  ifsp->ifs = ctr_heap_reallocate (ifsp->ifs, sizeof (ctr_object *) * (ifsp->count + 1));
+  if(!ifsp->ifs)
+    ifsp->ifs = ctr_heap_allocate(sizeof(*ifsp->ifs) * 2);
+  else
+    ifsp->ifs = ctr_heap_reallocate (ifsp->ifs, sizeof (ctr_object *) * (ifsp->count + 1));
   ifsp->ifs[ifsp->count] = NULL;
   ifsp->ifs[ifsp->count - 1] = ifs;
   return myself;

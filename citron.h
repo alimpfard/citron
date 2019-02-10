@@ -1159,7 +1159,8 @@ ctr_object* ctr_gc_setmode(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gc_setautoalloc(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gc_setmemlimit(ctr_object* myself, ctr_argument* argumentList);
 void ctr_gc_sweep( int all );
-
+void ctr_gc_pin(void* alloc_ptr);
+void ctr_gc_unpin(void* alloc_ptr);
 
 /**
  * Language Reflection Interface

@@ -289,6 +289,75 @@ arc4random_uniform (u_int32_t upper_bound)
 #include "siphash.h"
 
 
+void** ctr_gc_pinned_objects = NULL;
+int ctr_gc_pinned_object_count = 1;
+
+static void dynarray_add(void ***ptab, int *nb_ptr, void *data)
+{
+    int nb, nb_alloc;
+    void **pp;
+
+    nb = *nb_ptr;
+    pp = *ptab;
+    if(!pp) {
+      if (*nb_ptr < 1)
+        *nb_ptr = 1;
+      *ptab = ctr_heap_allocate(sizeof(void *) * *nb_ptr);
+      pp = *ptab;
+    }
+    /* every power of two we double array size */
+    if ((nb & (nb - 1)) == 0) {
+        if (!nb)
+            nb_alloc = 1;
+        else
+            nb_alloc = nb * 2;
+        pp = ctr_heap_reallocate(pp, nb_alloc * sizeof(void *));
+        if (!pp) {
+            puts("memory full");
+            exit(1);
+        }
+        *ptab = pp;
+    }
+    pp[nb++] = data;
+    *nb_ptr = nb;
+}
+
+static void dynarray_reset(void *pp, int *n)
+{
+    void **p;
+    for (p = *(void***)pp; *n; ++p, --*n)
+        if (*p)
+            ctr_heap_free(*p);
+    ctr_heap_free(*(void**)pp);
+    *(void**)pp = NULL;
+}
+
+void
+ctr_gc_pin(void* alloc_ptr)
+{
+  if(ctr_gc_pinned_objects)
+  for(int i = 0; i<ctr_gc_pinned_object_count; i++) {
+    if(ctr_gc_pinned_objects[i] == alloc_ptr)
+      return;
+  }
+  dynarray_add(&ctr_gc_pinned_objects, &ctr_gc_pinned_object_count, alloc_ptr);
+}
+
+void
+ctr_gc_unpin(void* alloc_ptr)
+{
+  if(ctr_gc_pinned_objects)
+  for(int i = 0; i<ctr_gc_pinned_object_count; i++) {
+    if(ctr_gc_pinned_objects[i] == alloc_ptr) {
+      ctr_gc_pinned_objects--;
+      // move last pointer here
+      ctr_gc_pinned_objects[i] = ctr_gc_pinned_objects[ctr_gc_pinned_object_count];
+      // it'll get deallocated...eventually, if required
+      ctr_gc_pinned_objects[ctr_gc_pinned_object_count] = NULL;
+    }
+  }
+}
+
 #ifndef withBoehmGC
 
 #define CTR_GC_BACKLOG_MAX 32

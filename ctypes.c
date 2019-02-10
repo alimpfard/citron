@@ -2438,12 +2438,17 @@ ctr_ctype_ffi_closure_cif (ctr_object * myself, ctr_argument * argumentList)
     }
   void **bound_f = ctr_heap_allocate (sizeof (void *));
   ffi_closure *closure = ffi_closure_alloc (sizeof (ffi_closure), bound_f);
-  fun->info.sticky = 1;
+
   if (ffi_prep_closure_loc (closure, cif, ctr_run_function_ptr, fun, bound_f) != FFI_OK)
     {
       CtrStdFlow = ctr_build_string_from_cstring ("Could not create closure");
       return CtrStdNil;
     }
+    
+  ctr_gc_pin(fun);
+  ctr_gc_pin(cif);
+  ctr_gc_pin(bound_f);
+
   ctr_object *fn = ctr_ctypes_make_pointer (CtrStdCType_pointer, NULL);
   fn->value.rvalue->ptr = *bound_f;
   return fn;

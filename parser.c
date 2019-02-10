@@ -1638,6 +1638,7 @@ ctr_tnode *
 ctr_cparse_pure ()
 {
   char *code_s = ctr_code;
+  ctr_clex_putback();
   char *end = ctr_clex_scan_balanced ('}', '{');
   if (end)
     {

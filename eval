@@ -898,9 +898,11 @@ Eval break ifTrue: { Program exit. }.
 
   (Eval getFlag: 'processig') ifTrue: {
     import Library/Foreign/C/Signal: 'Signal'.
+    # This will blow up on libffi <3.3
+    # investigate (related to #8)
     Signal new
-      handle: 'SIGWINCH' with: winsize.
-      # handle: 'SIGINT'   with: stopexec.
+      handle: 'SIGWINCH' with: winsize,
+      handle: 'SIGINT'   with: stopexec.
   }.
 }.
 

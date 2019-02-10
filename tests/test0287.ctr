@@ -1,6 +1,7 @@
+# Issue #6
 import Library/Data/Generator.
 
 var f is Generator elementsOf: 'test1234'.
 var g is Generator elementsOf: 'test1234' reverse.
-f is [a + b,, f,g,, (a !=: b), ('13s' contains: b, not)].
+f is [a + b,, (a: f), (b: g),, (a !=: b), ('13s' contains: b, not)].
 Pen writeln: f toArray.

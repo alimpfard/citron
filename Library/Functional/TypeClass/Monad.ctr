@@ -20,13 +20,13 @@ var Monad is Object new
   on: 'join' do: {
     ^me bind: const identity.
   },
-  on: '>>=:' do: {:func
+  on: '>>=' do: {:func
     ^me bind: func.
   },
   on: '>' do: {:next
     ^me bind: \:_ next.
   },
-  on: '>>:' do: {:next
+  on: '>>' do: {:next
     ^me > next.
   }.
 

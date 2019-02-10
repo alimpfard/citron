@@ -256,6 +256,8 @@ Eval on: 'userDefs' do: {
   }.
 }.
 
+Eval genAccessors: 'nextInput'.
+
 Eval on: 'returnValue:' do: {:x my returnValue do pop push: x, done. }.
 Eval on: 'stepDebug:' do: {:x my stepDebug is x. }.
 Eval on: 'debug' do: { ^my debug. }.
@@ -277,6 +279,7 @@ Eval on: 'Commands' do: {
       + !m <expression> -- evaluates and shows the methods of expression.
       + !p <expression> -- evaluates and shows the properties of expression.
       + !f <[no-]flag> -- modifies flag
+      + last [(<nth>)] <query> -- sets the next input to the last (nth if provided) match in history 
       + hist [(<nth>)] <query> -- searches for entry in history, and returns it as a block
       + !hist [(<nth>)] <query> -- searches and executes (like hist but executes immediately)
       + set <(+|-)flag> -- alternative for !f with easier(?) syntax
@@ -360,6 +363,27 @@ Eval on: 'Commands' do: {
           ^{\ cmd eval. }.
         }.
       } at: 'hist',
+      put: {:argstr
+        var nth is -1.
+        var cmd is 'Nil.'.
+        argstr findPattern: ?>(?:\((\d+|\*)\))?\s*(.+)$<? do: {:groups
+          nth is groups at: 1.
+          nth = '*' ifTrue: { nth is -1. }, ifFalse: { nth is nth toNumber. }.
+          cmd is groups at: 2.
+        }.
+        cmd is Eval getHistory filter: {\:_:x x startsWith: cmd.}.
+        cmd count = 0 ifTrue: {
+          thisBlock error: 'No match found $$argstr'.
+        }.
+        nth is nth min: cmd count - 1.
+        ^nth = -1 either: {
+          Eval nextInput: cmd last.
+          ^''.
+        } or: {
+          Eval nextInput: cmd @ nth.
+          ^''.
+        }.
+      } at: 'last',
       put: {:argstr
         var nth is 0.
         var cmd is 'Nil.'.
@@ -978,19 +1002,23 @@ Eval on: 'read_eval_print:' do: ({:prompt
   var hindex is me getHistory count.
   var ncmessage is ' <- No completion'.
   var stdin is File special: 'stdin'.
-  inp is ''.
+  inp is Eval nextInput.
+  inp isNil ifTrue: {
+    inp is ''.
+  } ifFalse: {
+    Eval nextInput: Nil.
+  }.
   # break the repl when `end` is True.
   Eval break break.
   Eval display/cyan write: prompt, resetColor.
 
-  var inc is stdin readUTF8Bytes: 1.
   var last_was_comp is False.
   var last_comp_entry is ''.
   var last_comp_index is -1.
   var last_comp_rewind is 0.
   var last_toc is 'Object'.
   var done is False.
-  var cursor is 0.
+  var cursor is inp length.
   var multichar_in is Array new.
   inBlock is 0.
   Eval endBlock.
@@ -1004,6 +1032,8 @@ Eval on: 'read_eval_print:' do: ({:prompt
   var comp_set is HashSet new.
   var have_context is False.
   var last_comp_init is ''.
+  var inc is ''.
+
   {^done & (inBlock = 0).} whileFalse: {
     cmt is ''.
     inc = '\t' ifTrue: {#<Tab>
@@ -1013,7 +1043,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
           last_was_comp ifTrue: {
             inp is inp removeFrom: (cursor - last_comp_entry_len) to: cursor.
             cursor is (cursor - last_comp_entry_len) max: 0.
-            }.
+          }.
           var comps is Eval metaCompletion: (inp split: ' ' max: 1).
           comps count > 0 either: {
             comps count <=: ce_idx, ifTrue: { ce_idx is 0. }.

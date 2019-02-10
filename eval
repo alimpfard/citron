@@ -892,9 +892,15 @@ Eval break ifTrue: { Program exit. }.
   TerminalWidth is 85.
   Eval display/writeln: 'Terminal: %sx%s - %sx%s' % winsize run.
 
+  var stopexec is {
+    thisBlock error: 'Interrupted'.
+  }.
+
   (Eval getFlag: 'processig') ifTrue: {
     import Library/Foreign/C/Signal: 'Signal'.
-    Signal new handle: 'SIGWINCH' with: winsize.
+    Signal new
+      handle: 'SIGWINCH' with: winsize,
+      handle: 'SIGINT'   with: stopexec.
   }.
 }.
 

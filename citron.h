@@ -1149,6 +1149,7 @@ ctr_object* ctr_shell_respond_to_and(ctr_object* myself, ctr_argument* argumentL
  */
 CTR_H_DECLSPEC int CTR_LIMIT_MEM;
 ctr_object* ctr_gc_collect(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_gc_with_gc_disabled(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gc_dust(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gc_object_count(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gc_kept_count(ctr_object* myself, ctr_argument* argumentList);

@@ -899,8 +899,8 @@ Eval break ifTrue: { Program exit. }.
   (Eval getFlag: 'processig') ifTrue: {
     import Library/Foreign/C/Signal: 'Signal'.
     Signal new
-      handle: 'SIGWINCH' with: winsize,
-      handle: 'SIGINT'   with: stopexec.
+      handle: 'SIGWINCH' with: winsize.
+      # handle: 'SIGINT'   with: stopexec.
   }.
 }.
 

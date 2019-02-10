@@ -6,10 +6,26 @@ var includes is Shell
   split: '\n',
   fmap: \:x x trim.
 
+Shell
+  call: 'cc -v 2>&1',
+  findPattern: '--libdir=([^ ]+)' do: {:gs
+    Inject addLibraryPath: gs @ 1.
+  }.
+
 includes each_v: {:inc Inject addIncludePath: inc. }.
 
-Inject importFunctionsOrTypes: ['fmaxf', 'fminf'] fromHeaders: ['math.h'] andLibraries: ['m'].
+Inject
+  importFunctionsOrTypes: ['fmaxf', 'fminf', 'atof']
+  fromHeaders: ['math.h', 'stdlib.h']
+  andLibraries: ['m', 'c'].
+
+Inject
+  importDefines: ['FLT_MIN']
+  fromHeaders: ['float.h']
+.
+
+FLT_MIN is atof[FLT_MIN].
 
 var a is 123.
-var b is 234.5.
-Pen writeln: 'max: %d, min: %d' % [fmaxf[a, b], fminf[a, b]].
+var b is FLT_MIN.
+Pen writeln: 'max: %d, min: %.46f' % [fmaxf[a, b], fminf[a, b]].

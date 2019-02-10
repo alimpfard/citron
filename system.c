@@ -298,6 +298,20 @@ ctr_object *gc_checked[CTR_GC_BACKLOG_MAX];	//32 backward spanning last_checked 
 /**@I_OBJ_DEF Broom*/
 
 /**
+ * [Broom] noGC: [Block]
+ *
+ * Execute block with GC disabled
+ * Only guarantees nogc _inside_ the block
+ */
+ctr_object *
+ctr_gc_with_gc_disabled(ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_argument argm = {CtrStdNil};
+  ctr_block_runIt(argumentList->object, &argm);
+  return myself;
+}
+
+/**
  * @internal
  * GarbageCollector Marker
  *
@@ -588,6 +602,10 @@ ctr_gc_sweep_this (ctr_object * myself, ctr_argument * argumentList)
 }
 #else //withBoehmGC
 
+#include <gc/gc.h>
+#define ctr_nogc_decr GC_disable
+#define ctr_nogc_incr GC_enable
+
 void
 ctr_gc_sweep (int all)
 {
@@ -604,6 +622,22 @@ ctr_object *
 ctr_gc_collect (ctr_object * myself, ctr_argument * argumentList)
 {
   GC_gcollect ();
+  return myself;
+}
+
+/**
+ * [Broom] noGC: [Block]
+ *
+ * Execute block with GC disabled
+ * Only guarantees nogc _inside_ the block
+ */
+ctr_object *
+ctr_gc_with_gc_disabled(ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_argument argm = {CtrStdNil};
+  ctr_nogc_incr();
+  ctr_block_runIt(argumentList->object, &argm);
+  ctr_nogc_decr();
   return myself;
 }
 

@@ -31,6 +31,7 @@ args=(
     '--without-signals[Disable signal processing]'
     '--terminal-width[Set terminal width]:number:->number'
     '--without-history[Disable load/save of history]'
+    '--history-dir[Set history directory]:path->_files'
     )
 
 _arguments -C -s -S "$args[@]"

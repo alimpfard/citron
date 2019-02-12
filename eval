@@ -284,6 +284,7 @@ Eval on: 'Commands' do: {
       + last [(<nth>)] <query> -- sets the next input to the last (nth if provided) match in history
       + hist [(<nth>)] <query> -- searches for entry in history, and returns it as a block
       + !hist [(<nth>)] <query> -- searches and executes (like hist but executes immediately)
+      + !repeat [-<stride>] <count> -- execute the last count expressions starting at stride?0 items up
       + set <(+|-)flag> -- alternative for !f with easier(?) syntax
       + !def <name> <expression> -- create a metacommand
       + p <expression> -- prints the value of expression
@@ -405,6 +406,27 @@ Eval on: 'Commands' do: {
           ^Reflect run: {:cmd:nth ^cmd at: nth, eval. } inContextAsMain: Eval evalContext arguments: [cmd, nth].
         }.
       } at: '!hist',
+
+      put: {:argstr
+        var stride is 0.
+        var count is 0.
+        var args is argstr reSplit: '[^-\\d]+'.
+        args head startsWith: '-', ifTrue: {
+          stride is args shift toNumber.
+        }.
+        args count = 0 ifTrue: {
+          thisBlock error: 'Missing argument 0 (count) for !repeat'.
+        }.
+        count is args head toNumber.
+        var hist is Eval getHistory.
+        var chunk is hist from: hist count + stride - count length: count.
+        chunk count > 0 ifTrue: {
+          Pen writeln: 'Will now execute $$count expressions:\n\t%:L' % ['\n\t', (chunk fmap: \:x Highlight highlight: x)].
+          var res is chunk fmap: {:x ^Eval evaluate: x.}.
+          ^res.
+        }.
+        ^''.
+      } at: '!repeat',
       put: {:args
         var name is args reSplit: '\\s+'.
         ^Reflect run: {:name

@@ -174,6 +174,8 @@ ctr_ctypes_set_type (ctr_object * object, ctr_ctype type)
       ctr_set_link_all (object, CtrStdCType_dynamic_lib);
       break;
     case CTR_CTYPE_STRUCT:
+      object->value.rvalue->ptr = ctr_heap_allocate(sizeof(ctr_ctypes_ffi_struct_value));
+      memset(object->value.rvalue->ptr, 0, sizeof(ctr_ctypes_ffi_struct_value));
       ctr_set_link_all (object, CtrStdCType_struct);
       break;
     case CTR_CTYPE_STRING:
@@ -183,6 +185,8 @@ ctr_ctypes_set_type (ctr_object * object, ctr_ctype type)
       ctr_set_link_all (object, CtrStdCType_functionptr);
       break;
     case CTR_CTYPE_CONTIGUOUS_ARRAY:
+      object->value.rvalue->ptr = ctr_heap_allocate(sizeof(ctr_ctypes_cont_array_t));
+      memset(object->value.rvalue->ptr, 0, sizeof(ctr_ctypes_cont_array_t));
       ctr_set_link_all (object, CtrStdCType_cont_pointer);
       break;
     default:
@@ -214,10 +218,26 @@ ctr_ctypes_rtypeof (ctr_object * object)
   return CTR_CTYPE_INVALID;
 }
 
+ctr_object*
+ctr_ctype_generic_copy(ctr_object* myself, ctr_argument* argumentList)
+{
+  CTR_CREATE_CTOBJECT (object);
+  if (!myself->value.rvalue) {
+    CtrStdFlow = ctr_build_string_from_cstring("Cannon instantiate invalid CType object");
+  }
+  ctr_ctypes_set_type (object, myself->value.rvalue->type);
+  return object;
+}
+
 //Void
 CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE (void)
 {
   return myself;
+}
+
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR (void)
+{
+  return ctr_build_string_from_cstring("<CTypes void>");
 }
 
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE (void)
@@ -242,6 +262,13 @@ CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE (uint8)
   ctr_heap_free (myself->value.rvalue->ptr);	//Free our resource, leave the rest to the GC
   myself->value.rvalue->ptr = NULL;
   return myself;
+}
+
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR (uint8)
+{
+  char buf[1024];
+  sprintf(buf, "<CTypes uint8 at: %p value: %d>", myself->value.rvalue->ptr, *(uint8_t*)myself->value.rvalue->ptr);
+  return ctr_build_string_from_cstring(buf);
 }
 
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE (uint8)
@@ -271,6 +298,13 @@ CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE (sint8)
   return myself;
 }
 
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR (sint8)
+{
+  char buf[1024];
+  sprintf(buf, "<CTypes sint8 at: %p value: %d>", myself->value.rvalue->ptr, *(int8_t*)myself->value.rvalue->ptr);
+  return ctr_build_string_from_cstring(buf);
+}
+
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE (sint8)
 {
   CTR_CREATE_CTOBJECT (object);
@@ -295,6 +329,13 @@ CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE (uint16)
   ctr_heap_free (myself->value.rvalue->ptr);	//Free our resource, leave the rest to the GC
   myself->value.rvalue->ptr = NULL;
   return myself;
+}
+
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR (uint16)
+{
+  char buf[1024];
+  sprintf(buf, "<CTypes uint16 at: %p value: %d>", myself->value.rvalue->ptr, *(uint16_t*)myself->value.rvalue->ptr);
+  return ctr_build_string_from_cstring(buf);
 }
 
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE (uint16)
@@ -323,6 +364,13 @@ CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE (sint16)
   return myself;
 }
 
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR (sint16)
+{
+  char buf[1024];
+  sprintf(buf, "<CTypes sint16 at: %p value: %d>", myself->value.rvalue->ptr, *(int16_t*)myself->value.rvalue->ptr);
+  return ctr_build_string_from_cstring(buf);
+}
+
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE (sint16)
 {
   CTR_CREATE_CTOBJECT (object);
@@ -347,6 +395,14 @@ CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE (uint32)
   ctr_heap_free (myself->value.rvalue->ptr);	//Free our resource, leave the rest to the GC
   myself->value.rvalue->ptr = NULL;
   return myself;
+}
+
+
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR (uint32)
+{
+  char buf[1024];
+  sprintf(buf, "<CTypes uint32 at: %p value: %d>", myself->value.rvalue->ptr, *(uint32_t*)myself->value.rvalue->ptr);
+  return ctr_build_string_from_cstring(buf);
 }
 
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE (uint32)
@@ -382,6 +438,13 @@ CTR_CT_SIMPLE_TYPE_FUNC_MAKE (sint32)
   return object;
 }
 
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR (sint32)
+{
+  char buf[1024];
+  sprintf(buf, "<CTypes sint32 at: %p value: %d>", myself->value.rvalue->ptr, *(int32_t*)myself->value.rvalue->ptr);
+  return ctr_build_string_from_cstring(buf);
+}
+
 CTR_CT_SIMPLE_TYPE_FUNC_SET (sint32)
 {
   *(int32_t *) (myself->value.rvalue->ptr) = (int32_t) (ctr_internal_cast2number (argumentList->object)->value.nvalue);
@@ -399,6 +462,13 @@ CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE (uint64)
   ctr_heap_free (myself->value.rvalue->ptr);	//Free our resource, leave the rest to the GC
   myself->value.rvalue->ptr = NULL;
   return myself;
+}
+
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR (uint64)
+{
+  char buf[1024];
+  sprintf(buf, "<CTypes uint64 at: %p value: %d>", myself->value.rvalue->ptr, *(uint64_t*)myself->value.rvalue->ptr);
+  return ctr_build_string_from_cstring(buf);
 }
 
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE (uint64)
@@ -427,6 +497,13 @@ CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE (sint64)
   return myself;
 }
 
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR (sint64)
+{
+  char buf[1024];
+  sprintf(buf, "<CTypes sint64 at: %p value: %ld>", myself->value.rvalue->ptr, *(int64_t*)myself->value.rvalue->ptr);
+  return ctr_build_string_from_cstring(buf);
+}
+
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE (sint64)
 {
   CTR_CREATE_CTOBJECT (object);
@@ -451,6 +528,13 @@ CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE (float)
   ctr_heap_free (myself->value.rvalue->ptr);	//Free our resource, leave the rest to the GC
   myself->value.rvalue->ptr = NULL;
   return myself;
+}
+
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR (float)
+{
+  char buf[1024];
+  sprintf(buf, "<CTypes float at: %p value: %f>", myself->value.rvalue->ptr, *(float*)myself->value.rvalue->ptr);
+  return ctr_build_string_from_cstring(buf);
 }
 
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE (float)
@@ -479,6 +563,14 @@ CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE (double)
   return myself;
 }
 
+
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR (double)
+{
+  char buf[1024];
+  sprintf(buf, "<CTypes double at: %p value: %lf>", myself->value.rvalue->ptr, *(double*)myself->value.rvalue->ptr);
+  return ctr_build_string_from_cstring(buf);
+}
+
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE (double)
 {
   CTR_CREATE_CTOBJECT (object);
@@ -503,6 +595,14 @@ CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE (uchar)
   ctr_heap_free (myself->value.rvalue->ptr);	//Free our resource, leave the rest to the GC
   myself->value.rvalue->ptr = NULL;
   return myself;
+}
+
+
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR (uchar)
+{
+  char buf[1024];
+  sprintf(buf, "<CTypes uchar at: %p value: %ud>", myself->value.rvalue->ptr, *(uint8_t*)myself->value.rvalue->ptr);
+  return ctr_build_string_from_cstring(buf);
 }
 
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE (uchar)
@@ -538,6 +638,13 @@ CTR_CT_SIMPLE_TYPE_FUNC_MAKE (schar)
   return object;
 }
 
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR (schar)
+{
+  char buf[1024];
+  sprintf(buf, "<CTypes schar at: %p value: %d>", myself->value.rvalue->ptr, *(int8_t*)myself->value.rvalue->ptr);
+  return ctr_build_string_from_cstring(buf);
+}
+
 CTR_CT_SIMPLE_TYPE_FUNC_SET (schar)
 {
   *(char *) (myself->value.rvalue->ptr) = (char) (*(ctr_internal_cast2string (argumentList->object)->value.svalue->value));	//ONE char! lol
@@ -555,6 +662,13 @@ CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE (ushort)
   ctr_heap_free (myself->value.rvalue->ptr);	//Free our resource, leave the rest to the GC
   myself->value.rvalue->ptr = NULL;
   return myself;
+}
+
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR (ushort)
+{
+  char buf[1024];
+  sprintf(buf, "<CTypes ushort at: %p value: %ui>", myself->value.rvalue->ptr, *(ushort*)myself->value.rvalue->ptr);
+  return ctr_build_string_from_cstring(buf);
 }
 
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE (ushort)
@@ -583,6 +697,14 @@ CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE (sshort)
   return myself;
 }
 
+
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR (sshort)
+{
+  char buf[1024];
+  sprintf(buf, "<CTypes sshort at: %p value: %i>", myself->value.rvalue->ptr, *(short*)myself->value.rvalue->ptr);
+  return ctr_build_string_from_cstring(buf);
+}
+
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE (sshort)
 {
   CTR_CREATE_CTOBJECT (object);
@@ -607,6 +729,14 @@ CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE (uint)
   ctr_heap_free (myself->value.rvalue->ptr);	//Free our resource, leave the rest to the GC
   myself->value.rvalue->ptr = NULL;
   return myself;
+}
+
+
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR (uint)
+{
+  char buf[1024];
+  sprintf(buf, "<CTypes uint at: %p value: %ui>", myself->value.rvalue->ptr, *(uint*)myself->value.rvalue->ptr);
+  return ctr_build_string_from_cstring(buf);
 }
 
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE (uint)
@@ -635,6 +765,14 @@ CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE (sint)
   return myself;
 }
 
+
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR (sint)
+{
+  char buf[1024];
+  sprintf(buf, "<CTypes sint at: %p value: %i>", myself->value.rvalue->ptr, *(int*)myself->value.rvalue->ptr);
+  return ctr_build_string_from_cstring(buf);
+}
+
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE (sint)
 {
   CTR_CREATE_CTOBJECT (object);
@@ -659,6 +797,13 @@ CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE (ulong)
   ctr_heap_free (myself->value.rvalue->ptr);	//Free our resource, leave the rest to the GC
   myself->value.rvalue->ptr = NULL;
   return myself;
+}
+
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR (ulong)
+{
+  char buf[1024];
+  sprintf(buf, "<CTypes ulong at: %p value: %lu>", myself->value.rvalue->ptr, *(unsigned long*)myself->value.rvalue->ptr);
+  return ctr_build_string_from_cstring(buf);
 }
 
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE (ulong)
@@ -687,6 +832,13 @@ CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE (slong)
   return myself;
 }
 
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR (slong)
+{
+  char buf[1024];
+  sprintf(buf, "<CTypes slong at: %p value: %li>", myself->value.rvalue->ptr, *(long*)myself->value.rvalue->ptr);
+  return ctr_build_string_from_cstring(buf);
+}
+
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE (slong)
 {
   CTR_CREATE_CTOBJECT (object);
@@ -711,6 +863,13 @@ CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE (longdouble)
   ctr_heap_free (myself->value.rvalue->ptr);	//Free our resource, leave the rest to the GC
   myself->value.rvalue->ptr = NULL;
   return myself;
+}
+
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR (longdouble)
+{
+  char buf[1024];
+  sprintf(buf, "<CTypes ulong at: %p value: %Lf>", myself->value.rvalue->ptr, *(long double*)myself->value.rvalue->ptr);
+  return ctr_build_string_from_cstring(buf);
 }
 
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE (longdouble)
@@ -781,7 +940,13 @@ CTR_CT_SIMPLE_TYPE_FUNC_MAKE (cont_pointer)
   ctr_ctypes_set_type (object, CTR_CTYPE_CONTIGUOUS_ARRAY);
   return object;
 }
-
+CTR_CT_SIMPLE_TYPE_FUNC_TSTR (cont_pointer)
+{
+  char buf[1024];
+  ctr_ctypes_cont_array_t* arr = myself->value.rvalue->ptr;
+  sprintf(buf, "<CTypes contiguous pointer at: %p count: %zu>", arr->storage, arr->count);
+  return ctr_build_string_from_cstring(buf);
+}
 /*
 ffi_type_uint8
 ffi_type_sint8
@@ -1135,9 +1300,10 @@ ctr_ctypes_addr_of_raw (ctr_object * myself, ctr_argument * argumentList)
     }
   else
     {
+      ctr_object* meta = ctr_ctypes_get_first_meta (myself, CtrStdCType);
       ret->value.rvalue->ptr =
-	(ctr_ctypes_get_first_meta (myself, CtrStdCType) ==
-	 CtrStdCType_struct) ? ((ctr_ctypes_ffi_struct_value *) (myself->value.rvalue->ptr))->value : (myself->value.rvalue->ptr);
+	(meta == CtrStdCType_struct) ? ((ctr_ctypes_ffi_struct_value *) (myself->value.rvalue->ptr))->value :
+  (meta == CtrStdCType_cont_pointer) ? ((ctr_ctypes_cont_array_t *) (myself->value.rvalue->ptr))->storage : (myself->value.rvalue->ptr);
       return ret;
     }
 }
@@ -1155,6 +1321,25 @@ ctr_ctypes_pointer_get_obj (ctr_object * myself, ctr_argument * argumentList)
 {
   return myself->value.rvalue->ptr;
 }
+
+ctr_object *
+ctr_ctypes_pointer_arith_add (ctr_object * myself, ctr_argument * argumentList)
+{
+  void* ptr = myself->value.rvalue->ptr;
+  ctr_object* newp = ctr_ctypes_make_pointer(NULL, NULL);
+  newp->value.rvalue->ptr = ptr + ((intptr_t)argumentList->object->value.nvalue);
+  return newp;
+}
+
+ctr_object *
+ctr_ctypes_pointer_arith_sub (ctr_object * myself, ctr_argument * argumentList)
+{
+  void* ptr = myself->value.rvalue->ptr;
+  ctr_object* newp = ctr_ctypes_make_pointer(NULL, NULL);
+  newp->value.rvalue->ptr = ptr - ((intptr_t)argumentList->object->value.nvalue);
+  return newp;
+}
+
 
 ctr_object *
 ctr_ctypes_to_bytes (ctr_object * myself, ctr_argument * argumentList)
@@ -1231,6 +1416,8 @@ ctr_ctype_new_instance (ctr_object * type)
     return ctr_ctypes_make_slong (CtrStdCType_slong, NULL);
   else if (type == CtrStdCType_longdouble)
     return ctr_ctypes_make_longdouble (CtrStdCType_longdouble, NULL);
+  else if (type == CtrStdCType_pointer)
+    return ctr_ctypes_make_pointer (CtrStdCType_pointer, NULL);
   else if (type == CtrStdCType_struct)
     return (ctr_object *) 0x100;	//signal for struct
   else
@@ -1255,6 +1442,10 @@ ctr_ctypes_deref_pointer (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *meta = ctr_ctypes_get_first_meta (argumentList->object, CtrStdCType);
   ctr_object *new_obj = ctr_ctype_new_instance (meta);
   int isstruct = 0;
+  if (!new_obj) {
+    CtrStdFlow = ctr_build_string_from_cstring("Could not instantiate a CType");
+    return CtrStdNil;
+  }
   if (new_obj == (ctr_object *) 0x100)
     {
       isstruct = 1;
@@ -1264,7 +1455,7 @@ ctr_ctypes_deref_pointer (ctr_object * myself, ctr_argument * argumentList)
   if (csize == -1)
     csize = ((ctr_ctypes_ffi_struct_value *) (argumentList->object->value.rvalue->ptr))->size;
   if (!isstruct)
-    memcpy (new_obj->value.rvalue->ptr, ptr, csize);
+    memcpy (&new_obj->value.rvalue->ptr, ptr, csize);
   else
     ((ctr_ctypes_ffi_struct_value *) (new_obj->value.rvalue->ptr))->value = ptr;
 
@@ -1385,7 +1576,7 @@ ctr_ctypes_pack_struct (ctr_object * myself, ctr_argument * argumentList)
   ctr_ctypes_ffi_struct_value *structptr = myself->value.rvalue->ptr;
   ffi_type *structtype = structptr->type;
   ffi_type **struct_fields = structtype->elements;
-  int member_count = structptr->member_count;
+  // int member_count = structptr->member_count;
   size_t size = structptr->size;
   ctr_object *data = argumentList->object;
   pad_info_node_t **padinfo = structptr->padinfo;
@@ -1730,7 +1921,8 @@ ctr_ctypes_ffi_convert_to_ffi_type (ctr_object * type)
   else if ((initial) == CtrStdCType_longdouble)
     return &ffi_type_longdouble;
   else if ((initial) == CtrStdCType_pointer ||
-	   initial == CtrStdCType_dynamic_lib || initial == CtrStdCType_string || initial == CtrStdCType_functionptr)
+	   initial == CtrStdCType_dynamic_lib || initial == CtrStdCType_string ||
+     initial == CtrStdCType_functionptr || initial == CtrStdCType_cont_pointer)
     return &ffi_type_pointer;
   else if (initial == CtrStdCType_struct)
     return ((ctr_ctypes_ffi_struct_value *) (type->value.rvalue->ptr))->type;
@@ -1917,6 +2109,7 @@ CTR_CT_FFI_BIND (cif_new)
   ctr_ctypes_set_type (cifobj, CTR_CTYPE_CIF);
   ctr_set_link_all (cifobj, CtrStdCType_ffi_cif);
   cifobj->value.rvalue->ptr = (void *) cif;
+  ctr_internal_object_set_property(cifobj, ctr_build_string_from_cstring(":cfnptr"), ctr_build_bool(0), 0);
   return cifobj;
 }
 
@@ -2017,6 +2210,17 @@ CTR_CT_FFI_BIND (cif_arg_count)
       return CtrStdNil;
     }
   return ctr_build_number_from_float (cif->nargs);
+}
+
+CTR_CT_FFI_BIND (cif_is_fnptr)
+{				//<cif; ^Bool
+  ffi_cif *cif = (ffi_cif *) (myself->value.rvalue->ptr);
+  if (!cif)
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("Invalid request, CIF does not exist");
+      return CtrStdNil;
+    }
+  return ctr_internal_object_find_property(myself, ctr_build_string_from_cstring(":cfnptr"), 0);
 }
 
 CTR_CT_FFI_BIND (cif_arg_at)
@@ -2147,6 +2351,16 @@ CTR_CT_FFI_BIND (malloc)
   return object;
 }
 
+
+CTR_CT_FFI_BIND (shmalloc)
+{
+  int size = ctr_internal_cast2number (argumentList->object)->value.nvalue;
+  void *resource = ctr_heap_allocate_shared (size);
+  ctr_object *object = ctr_ctypes_make_pointer (NULL, NULL);
+  object->value.rvalue->ptr = resource;
+  return object;
+}
+
 CTR_CT_FFI_BIND (memcpy)
 {				//dest, source, count
   void *r0 = argumentList->object->value.rvalue->ptr, *r1 = argumentList->next->object->value.rvalue->ptr;
@@ -2198,6 +2412,19 @@ CTR_CT_FFI_BIND (free)
   return myself;
 }
 
+
+CTR_CT_FFI_BIND (shfree)
+{
+  if ((argumentList->object->info.type) != CTR_OBJECT_TYPE_OTEX)
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("Can only free resources.");
+      return CtrStdNil;
+    }
+  ctr_heap_free_shared (argumentList->object->value.rvalue->ptr);
+  argumentList->object->value.rvalue->ptr = NULL;
+  return myself;
+}
+
 //TODO Fix memory leak
 ctr_object *
 ctr_ctype_ffi_closure_cif (ctr_object * myself, ctr_argument * argumentList)
@@ -2211,12 +2438,17 @@ ctr_ctype_ffi_closure_cif (ctr_object * myself, ctr_argument * argumentList)
     }
   void **bound_f = ctr_heap_allocate (sizeof (void *));
   ffi_closure *closure = ffi_closure_alloc (sizeof (ffi_closure), bound_f);
-  fun->info.sticky = 1;
+
   if (ffi_prep_closure_loc (closure, cif, ctr_run_function_ptr, fun, bound_f) != FFI_OK)
     {
       CtrStdFlow = ctr_build_string_from_cstring ("Could not create closure");
       return CtrStdNil;
     }
+    
+  ctr_gc_pin(fun);
+  ctr_gc_pin(cif);
+  ctr_gc_pin(bound_f);
+
   ctr_object *fn = ctr_ctypes_make_pointer (CtrStdCType_pointer, NULL);
   fn->value.rvalue->ptr = *bound_f;
   return fn;
@@ -2335,129 +2567,149 @@ ctr_ffi_begin ()
   CtrStdCType_ffi_cif = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
   ctr_set_link_all (CtrStdCType_ffi_cif, CtrStdObject);
   CtrStdCType_ffi_cif->info.sticky = 1;
-
+  ctr_internal_create_func(CtrStdCType, ctr_build_string_from_cstring("newIns"), &ctr_ctype_generic_copy);
   //Void
-  CTR_CT_INTRODUCE_TYPE (void);
+  CTR_CT_INTRODUCE_TYPE(void);
+  CTR_CT_INTRODUCE_TSTR(void);
   CTR_CT_INTRODUCE_SET (void);
   CTR_CT_INTRODUCE_GET (void);
   CTR_CT_INTRODUCE_MAKE (void);
   CTR_CT_INTRODUCE_UNMAKE (void);
   //Unsigned Int 8
-  CTR_CT_INTRODUCE_TYPE (uint8);
+  CTR_CT_INTRODUCE_TYPE(uint8);
+  CTR_CT_INTRODUCE_TSTR(uint8);
   CTR_CT_INTRODUCE_SET (uint8);
   CTR_CT_INTRODUCE_GET (uint8);
   CTR_CT_INTRODUCE_MAKE (uint8);
   CTR_CT_INTRODUCE_UNMAKE (uint8);
   //Signed Int 8
-  CTR_CT_INTRODUCE_TYPE (sint8);
+  CTR_CT_INTRODUCE_TYPE(sint8);
+  CTR_CT_INTRODUCE_TSTR(sint8);
   CTR_CT_INTRODUCE_SET (sint8);
   CTR_CT_INTRODUCE_GET (sint8);
   CTR_CT_INTRODUCE_MAKE (sint8);
   CTR_CT_INTRODUCE_UNMAKE (sint8);
   //Unsigned Int 16
-  CTR_CT_INTRODUCE_TYPE (uint16);
+  CTR_CT_INTRODUCE_TYPE(uint16);
+  CTR_CT_INTRODUCE_TSTR(uint16);
   CTR_CT_INTRODUCE_SET (uint16);
   CTR_CT_INTRODUCE_GET (uint16);
   CTR_CT_INTRODUCE_MAKE (uint16);
   CTR_CT_INTRODUCE_UNMAKE (uint16);
   //Signed Int 16
-  CTR_CT_INTRODUCE_TYPE (sint16);
+  CTR_CT_INTRODUCE_TYPE(sint16);
+  CTR_CT_INTRODUCE_TSTR(sint16);
   CTR_CT_INTRODUCE_SET (sint16);
   CTR_CT_INTRODUCE_GET (sint16);
   CTR_CT_INTRODUCE_MAKE (sint16);
   CTR_CT_INTRODUCE_UNMAKE (sint16);
   //Unsigned Int 32
-  CTR_CT_INTRODUCE_TYPE (uint32);
+  CTR_CT_INTRODUCE_TYPE(uint32);
+  CTR_CT_INTRODUCE_TSTR(uint32);
   CTR_CT_INTRODUCE_SET (uint32);
   CTR_CT_INTRODUCE_GET (uint32);
   CTR_CT_INTRODUCE_MAKE (uint32);
   CTR_CT_INTRODUCE_UNMAKE (uint32);
   //Signed Int 32
-  CTR_CT_INTRODUCE_TYPE (sint32);
+  CTR_CT_INTRODUCE_TYPE(sint32);
+  CTR_CT_INTRODUCE_TSTR(sint32);
   CTR_CT_INTRODUCE_SET (sint32);
   CTR_CT_INTRODUCE_GET (sint32);
   CTR_CT_INTRODUCE_MAKE (sint32);
   CTR_CT_INTRODUCE_UNMAKE (sint32);
   //Unsigned Int 64
-  CTR_CT_INTRODUCE_TYPE (uint64);
+  CTR_CT_INTRODUCE_TYPE(uint64);
+  CTR_CT_INTRODUCE_TSTR(uint64);
   CTR_CT_INTRODUCE_SET (uint64);
   CTR_CT_INTRODUCE_GET (uint64);
   CTR_CT_INTRODUCE_MAKE (uint64);
   CTR_CT_INTRODUCE_UNMAKE (uint64);
   //Signed Int 64
-  CTR_CT_INTRODUCE_TYPE (sint64);
+  CTR_CT_INTRODUCE_TYPE(sint64);
+  CTR_CT_INTRODUCE_TSTR(sint64);
   CTR_CT_INTRODUCE_SET (sint64);
   CTR_CT_INTRODUCE_GET (sint64);
   CTR_CT_INTRODUCE_MAKE (sint64);
   CTR_CT_INTRODUCE_UNMAKE (sint64);
   //Float
-  CTR_CT_INTRODUCE_TYPE (float);
+  CTR_CT_INTRODUCE_TYPE(float);
+  CTR_CT_INTRODUCE_TSTR(float);
   CTR_CT_INTRODUCE_SET (float);
   CTR_CT_INTRODUCE_GET (float);
   CTR_CT_INTRODUCE_MAKE (float);
   CTR_CT_INTRODUCE_UNMAKE (float);
   //Double
-  CTR_CT_INTRODUCE_TYPE (double);
+  CTR_CT_INTRODUCE_TYPE(double);
+  CTR_CT_INTRODUCE_TSTR(double);
   CTR_CT_INTRODUCE_SET (double);
   CTR_CT_INTRODUCE_GET (double);
   CTR_CT_INTRODUCE_MAKE (double);
   CTR_CT_INTRODUCE_UNMAKE (double);
   //Signed Char
-  CTR_CT_INTRODUCE_TYPE (schar);
+  CTR_CT_INTRODUCE_TYPE(schar);
+  CTR_CT_INTRODUCE_TSTR(schar);
   CTR_CT_INTRODUCE_SET (schar);
   CTR_CT_INTRODUCE_GET (schar);
   CTR_CT_INTRODUCE_MAKE (schar);
   CTR_CT_INTRODUCE_UNMAKE (schar);
   //Unsigned Char
-  CTR_CT_INTRODUCE_TYPE (uchar);
+  CTR_CT_INTRODUCE_TYPE(uchar);
+  CTR_CT_INTRODUCE_TSTR(uchar);
   CTR_CT_INTRODUCE_SET (uchar);
   CTR_CT_INTRODUCE_GET (uchar);
   CTR_CT_INTRODUCE_MAKE (uchar);
   CTR_CT_INTRODUCE_UNMAKE (uchar);
   //Signed Short
-  CTR_CT_INTRODUCE_TYPE (sshort);
+  CTR_CT_INTRODUCE_TYPE(sshort);
+  CTR_CT_INTRODUCE_TSTR(sshort);
   CTR_CT_INTRODUCE_SET (sshort);
   CTR_CT_INTRODUCE_GET (sshort);
   CTR_CT_INTRODUCE_MAKE (sshort);
   CTR_CT_INTRODUCE_UNMAKE (sshort);
   //Unsigned Short
-  CTR_CT_INTRODUCE_TYPE (ushort);
+  CTR_CT_INTRODUCE_TYPE(ushort);
+  CTR_CT_INTRODUCE_TSTR(ushort);
   CTR_CT_INTRODUCE_SET (ushort);
   CTR_CT_INTRODUCE_GET (ushort);
   CTR_CT_INTRODUCE_MAKE (ushort);
   CTR_CT_INTRODUCE_UNMAKE (ushort);
   //Signed Int
-  CTR_CT_INTRODUCE_TYPE (sint);
+  CTR_CT_INTRODUCE_TYPE(sint);
+  CTR_CT_INTRODUCE_TSTR(sint);
   CTR_CT_INTRODUCE_SET (sint);
   CTR_CT_INTRODUCE_GET (sint);
   CTR_CT_INTRODUCE_MAKE (sint);
   CTR_CT_INTRODUCE_UNMAKE (sint);
   //Unsigned Int
-  CTR_CT_INTRODUCE_TYPE (uint);
+  CTR_CT_INTRODUCE_TYPE(uint);
+  CTR_CT_INTRODUCE_TSTR(uint);
   CTR_CT_INTRODUCE_SET (uint);
   CTR_CT_INTRODUCE_GET (uint);
   CTR_CT_INTRODUCE_MAKE (uint);
   CTR_CT_INTRODUCE_UNMAKE (uint);
   //Signed Long
-  CTR_CT_INTRODUCE_TYPE (slong);
+  CTR_CT_INTRODUCE_TYPE(slong);
+  CTR_CT_INTRODUCE_TSTR(slong);
   CTR_CT_INTRODUCE_SET (slong);
   CTR_CT_INTRODUCE_GET (slong);
   CTR_CT_INTRODUCE_MAKE (slong);
   CTR_CT_INTRODUCE_UNMAKE (slong);
   //Unsigned Long
-  CTR_CT_INTRODUCE_TYPE (ulong);
+  CTR_CT_INTRODUCE_TYPE(ulong);
+  CTR_CT_INTRODUCE_TSTR(ulong);
   CTR_CT_INTRODUCE_SET (ulong);
   CTR_CT_INTRODUCE_GET (ulong);
   CTR_CT_INTRODUCE_MAKE (ulong);
   CTR_CT_INTRODUCE_UNMAKE (ulong);
   //Long Double
-  CTR_CT_INTRODUCE_TYPE (longdouble);
+  CTR_CT_INTRODUCE_TYPE(longdouble);
+
   CTR_CT_INTRODUCE_SET (longdouble);
   CTR_CT_INTRODUCE_GET (longdouble);
   CTR_CT_INTRODUCE_MAKE (longdouble);
   CTR_CT_INTRODUCE_UNMAKE (longdouble);
   //Pointer
-  CTR_CT_INTRODUCE_TYPE (pointer);
+  CTR_CT_INTRODUCE_TYPE(pointer);
   CTR_CT_INTRODUCE_SET (pointer);
   CTR_CT_INTRODUCE_GET (pointer);
   ctr_internal_create_func (CtrStdCType_pointer, ctr_build_string_from_cstring ("toString"), &ctr_ctypes_str_pointer);
@@ -2470,27 +2722,30 @@ ctr_ffi_begin ()
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("getRawAddress"), &ctr_ctypes_addr_of_raw);
   ctr_internal_create_func (CtrStdCType_pointer, ctr_build_string_from_cstring ("addressOfObject:"), &ctr_ctypes_pointer_set_obj);
   ctr_internal_create_func (CtrStdCType_pointer, ctr_build_string_from_cstring ("asObject"), &ctr_ctypes_pointer_get_obj);
+  ctr_internal_create_func (CtrStdCType_pointer, ctr_build_string_from_cstring ("+"), &ctr_ctypes_pointer_arith_add);
+  ctr_internal_create_func (CtrStdCType_pointer, ctr_build_string_from_cstring ("-"), &ctr_ctypes_pointer_arith_sub);
   CTR_CT_INTRODUCE_MAKE (pointer);
   CTR_CT_INTRODUCE_UNMAKE (pointer);
 
-  CTR_CT_INTRODUCE_TYPE (string);
+  CTR_CT_INTRODUCE_TYPE(string);
   CTR_CT_INTRODUCE_SET (string);
   CTR_CT_INTRODUCE_GET (string);
   CTR_CT_INTRODUCE_MAKE (string);
   ctr_internal_create_func (CtrStdCType_string, ctr_build_string_from_cstring ("toString"), &ctr_ctypes_str_string);
 
   //Dynamic Library
-  CTR_CT_INTRODUCE_TYPE (dynamic_lib);
+  CTR_CT_INTRODUCE_TYPE(dynamic_lib);
   ctr_internal_create_func (CtrStdCType_dynamic_lib, ctr_build_string_from_cstring ("respondTo:"), &ctr_ctypes_get_dynamic_lib);
   ctr_internal_create_func (CtrStdCType_dynamic_lib, ctr_build_string_from_cstring ("toString"), &ctr_ctypes_str_dynamic_lib);
   CTR_CT_INTRODUCE_MAKE (dynamic_lib);
   CTR_CT_INTRODUCE_UNMAKE (dynamic_lib);
 
   //C Struct
-  CTR_CT_INTRODUCE_TYPE (struct);
+  CTR_CT_INTRODUCE_TYPE(struct);
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("structWithFormat:"), &ctr_ctypes_make_struct);
   ctr_internal_create_func (CtrStdCType_struct, ctr_build_string_from_cstring ("toString"), &ctr_ctypes_struct_to_string);
   ctr_internal_create_func (CtrStdCType_struct, ctr_build_string_from_cstring ("new"), &ctr_ctypes_struct_new);
+  ctr_internal_create_func (CtrStdCType_struct, ctr_build_string_from_cstring ("newIns"), &ctr_ctypes_struct_new);
   ctr_internal_create_func (CtrStdCType_struct, ctr_build_string_from_cstring ("getSize"), &ctr_ctypes_struct_get_size);
   ctr_internal_create_func (CtrStdCType_struct, ctr_build_string_from_cstring ("memberCount"), &ctr_ctypes_struct_get_member_count);
   ctr_internal_create_func (CtrStdCType_struct, ctr_build_string_from_cstring ("padInfo"), &ctr_ctypes_struct_get_padding_format);
@@ -2509,8 +2764,10 @@ ctr_ffi_begin ()
   ctr_internal_create_func (CtrStdCType_ffi_cif, ctr_build_string_from_cstring ("newByInferringTypes:"), &ctr_ctype_ffi_prep_cif_inferred);
   ctr_internal_create_func (CtrStdCType_ffi_cif, ctr_build_string_from_cstring ("call:withArgs:"), &ctr_ctype_ffi_call);
   ctr_internal_create_func (CtrStdCType_ffi_cif, ctr_build_string_from_cstring ("argumentCount"), &ctr_ctype_ffi_cif_arg_count);
+  ctr_internal_create_func (CtrStdCType_ffi_cif, ctr_build_string_from_cstring ("isFunctionPointer"), &ctr_ctype_ffi_cif_is_fnptr);
   ctr_internal_create_func (CtrStdCType_ffi_cif, ctr_build_string_from_cstring ("argumentTypeOfIdx:"), &ctr_ctype_ffi_cif_arg_at);
-  CTR_CT_INTRODUCE_TYPE (cont_pointer);
+  CTR_CT_INTRODUCE_TYPE(cont_pointer);
+  CTR_CT_INTRODUCE_TSTR(cont_pointer);
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("packed:count:"), &ctr_ctypes_make_packed);
   ctr_internal_create_func (CtrStdCType_cont_pointer, ctr_build_string_from_cstring ("at:"), &ctr_ctypes_packed_get);
   ctr_internal_create_func (CtrStdCType_cont_pointer, ctr_build_string_from_cstring ("put:at:"), &ctr_ctypes_packed_set);
@@ -2518,11 +2775,14 @@ ctr_ffi_begin ()
   ctr_internal_create_func (CtrStdCType_cont_pointer, ctr_build_string_from_cstring ("_type"), &ctr_ctypes_packed_type);
   ctr_internal_create_func (CtrStdCType_cont_pointer, ctr_build_string_from_cstring ("getSize"), &ctr_ctypes_packed_size);
   ctr_internal_create_func (CtrStdCType_cont_pointer, ctr_build_string_from_cstring ("new"), &ctr_ctypes_packed_from);
+  ctr_internal_create_func (CtrStdCType_cont_pointer, ctr_build_string_from_cstring ("newIns"), &ctr_ctypes_packed_from);
 
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("allocateBytes:"), &ctr_ctype_ffi_malloc);
+  ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("allocateBytesShared:"), &ctr_ctype_ffi_shmalloc);
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("copyTo:from:numBytes:"), &ctr_ctype_ffi_memcpy);
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("fill:withString:"), &ctr_ctype_ffi_fill_buf);
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("free:"), &ctr_ctype_ffi_free);
+  ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("freeShared:"), &ctr_ctype_ffi_shfree);
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("fromString:"), &ctr_ctype_ffi_buf_from_str);
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("loadLibrary:"), &ctr_ctype_ffi_ll);
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("closureOf:withCIF:"), &ctr_ctype_ffi_closure_cif);

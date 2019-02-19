@@ -139,7 +139,7 @@ void *ctr_heap_allocate(size_t size)
 		abort();
 		exit(1);
 	}
-
+	GC_register_displacement(q);
 	/* Store the width of the memory block in the slice itself so we can always find it */
 	block_width = (size_t *) slice_of_memory;
 	*(block_width) = size;

@@ -810,6 +810,7 @@ ctr_object* ctr_number_or(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_and(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_uint_binrep(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_to_string(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_number_to_string_base(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_to_boolean(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_between(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_to_step_do(ctr_object* myself, ctr_argument* argumentList);
@@ -939,7 +940,7 @@ ctr_object* ctr_array_put(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_from_length(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_skip(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_zip(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* ctr_array_internal_zip(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_internal_product(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_zip_with(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_head(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_tail(ctr_object* myself, ctr_argument* argumentList);
@@ -1148,6 +1149,7 @@ ctr_object* ctr_shell_respond_to_and(ctr_object* myself, ctr_argument* argumentL
  */
 CTR_H_DECLSPEC int CTR_LIMIT_MEM;
 ctr_object* ctr_gc_collect(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_gc_with_gc_disabled(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gc_dust(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gc_object_count(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gc_kept_count(ctr_object* myself, ctr_argument* argumentList);
@@ -1157,7 +1159,8 @@ ctr_object* ctr_gc_setmode(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gc_setautoalloc(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gc_setmemlimit(ctr_object* myself, ctr_argument* argumentList);
 void ctr_gc_sweep( int all );
-
+void ctr_gc_pin(void* alloc_ptr);
+void ctr_gc_unpin(void* alloc_ptr);
 
 /**
  * Language Reflection Interface
@@ -1224,6 +1227,7 @@ ctr_object* ctr_reflect_run_in_new_ctx(ctr_object * myself, ctr_argument * argum
 ctr_object* ctr_reflect_compilerinfo (ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_delegate_set_private_property(ctr_object* itself, ctr_argument* argumentList);
 ctr_object* ctr_reflect_set_ignore_file (ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_reflect_nat_type (ctr_object* myself, ctr_argument* argumentList);
 ctr_argument* ctr_array_to_argument_list (ctr_object * arr, ctr_argument * provided);
 int ctr_internal_has_own_responder(ctr_object* myself, ctr_object* meth);
 int ctr_internal_has_responder(ctr_object* myself, ctr_object* meth);
@@ -1270,10 +1274,13 @@ ctr_object *ctr_inject_run(ctr_object *myself, ctr_argument *argumentList);
 ctr_object *ctr_inject_run_named(ctr_object *myself, ctr_argument *argumentList);
 ctr_object *ctr_inject_add_inclp(ctr_object* myself, ctr_argument* argumentList);
 ctr_object *ctr_inject_get_inclp(ctr_object* myself, ctr_argument* argumentList);
+ctr_object *ctr_inject_add_libp(ctr_object* myself, ctr_argument* argumentList);
+ctr_object *ctr_inject_get_libp(ctr_object* myself, ctr_argument* argumentList);
 ctr_object *ctr_inject_export_f(ctr_object *myself, ctr_argument *argumentList);
 ctr_object *ctr_inject_add_lib(ctr_object* myself, ctr_argument* argumentList);
 ctr_object *ctr_inject_set_error_handler(ctr_object* myself, ctr_argument* argumentList);
 ctr_object *ctr_inject_generate_output(ctr_object *myself, ctr_argument *argumentList);
+ctr_object *ctr_inject_finish(ctr_object *myself, ctr_argument *argumentList);
 
 /** FFI **/
 #if 0

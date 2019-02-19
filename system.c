@@ -289,6 +289,75 @@ arc4random_uniform (u_int32_t upper_bound)
 #include "siphash.h"
 
 
+void** ctr_gc_pinned_objects = NULL;
+int ctr_gc_pinned_object_count = 1;
+
+static void dynarray_add(void ***ptab, int *nb_ptr, void *data)
+{
+    int nb, nb_alloc;
+    void **pp;
+
+    nb = *nb_ptr;
+    pp = *ptab;
+    if(!pp) {
+      if (*nb_ptr < 1)
+        *nb_ptr = 1;
+      *ptab = ctr_heap_allocate(sizeof(void *) * *nb_ptr);
+      pp = *ptab;
+    }
+    /* every power of two we double array size */
+    if ((nb & (nb - 1)) == 0) {
+        if (!nb)
+            nb_alloc = 1;
+        else
+            nb_alloc = nb * 2;
+        pp = ctr_heap_reallocate(pp, nb_alloc * sizeof(void *));
+        if (!pp) {
+            puts("memory full");
+            exit(1);
+        }
+        *ptab = pp;
+    }
+    pp[nb++] = data;
+    *nb_ptr = nb;
+}
+
+static void dynarray_reset(void *pp, int *n)
+{
+    void **p;
+    for (p = *(void***)pp; *n; ++p, --*n)
+        if (*p)
+            ctr_heap_free(*p);
+    ctr_heap_free(*(void**)pp);
+    *(void**)pp = NULL;
+}
+
+void
+ctr_gc_pin(void* alloc_ptr)
+{
+  if(ctr_gc_pinned_objects)
+  for(int i = 0; i<ctr_gc_pinned_object_count; i++) {
+    if(ctr_gc_pinned_objects[i] == alloc_ptr)
+      return;
+  }
+  dynarray_add(&ctr_gc_pinned_objects, &ctr_gc_pinned_object_count, alloc_ptr);
+}
+
+void
+ctr_gc_unpin(void* alloc_ptr)
+{
+  if(ctr_gc_pinned_objects)
+  for(int i = 0; i<ctr_gc_pinned_object_count; i++) {
+    if(ctr_gc_pinned_objects[i] == alloc_ptr) {
+      ctr_gc_pinned_objects--;
+      // move last pointer here
+      ctr_gc_pinned_objects[i] = ctr_gc_pinned_objects[ctr_gc_pinned_object_count];
+      // it'll get deallocated...eventually, if required
+      ctr_gc_pinned_objects[ctr_gc_pinned_object_count] = NULL;
+    }
+  }
+}
+
 #ifndef withBoehmGC
 
 #define CTR_GC_BACKLOG_MAX 32
@@ -296,6 +365,19 @@ arc4random_uniform (u_int32_t upper_bound)
 
 ctr_object *gc_checked[CTR_GC_BACKLOG_MAX];	//32 backward spanning last_checked pointers.
 /**@I_OBJ_DEF Broom*/
+
+/**
+ * [Broom] noGC: [Block]
+ *
+ * Execute block with GC disabled
+ * Only guarantees nogc _inside_ the block
+ */
+ctr_object *
+ctr_gc_with_gc_disabled(ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_argument argm = {CtrStdNil};
+  return ctr_block_runIt(argumentList->object, &argm);
+}
 
 /**
  * @internal
@@ -588,6 +670,10 @@ ctr_gc_sweep_this (ctr_object * myself, ctr_argument * argumentList)
 }
 #else //withBoehmGC
 
+#include <gc/gc.h>
+#define ctr_nogc_decr GC_disable
+#define ctr_nogc_incr GC_enable
+
 void
 ctr_gc_sweep (int all)
 {
@@ -605,6 +691,22 @@ ctr_gc_collect (ctr_object * myself, ctr_argument * argumentList)
 {
   GC_gcollect ();
   return myself;
+}
+
+/**
+ * [Broom] noGC: [Block]
+ *
+ * Execute block with GC disabled
+ * Only guarantees nogc _inside_ the block
+ */
+ctr_object *
+ctr_gc_with_gc_disabled(ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_argument argm = {CtrStdNil};
+  ctr_nogc_incr();
+  ctr_object* res = ctr_block_runIt(argumentList->object, &argm);
+  ctr_nogc_decr();
+  return res;
 }
 
 ctr_object *
@@ -2989,7 +3091,7 @@ typedef struct
   pthread_mutex_t *mutex;
   pthread_t *thread;
 } ctr_thread_t;
-static pthread_mutex_t GLOBAL_MUTEX = PTHREAD_MUTEX_INITIALIZER;
+// static pthread_mutex_t GLOBAL_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 void *
 ctr_run_thread_func (ctr_thread_t * threadt)
 {
@@ -2999,7 +3101,7 @@ ctr_run_thread_func (ctr_thread_t * threadt)
   sigset_t oset;
   ctr_thread_return_t *rv = ctr_heap_allocate (sizeof (ctr_thread_return_t));
   // ctr_object* ctx = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-  pthread_mutex_lock (&GLOBAL_MUTEX);
+  // pthread_mutex_lock (&GLOBAL_MUTEX);
   pthread_mutex_lock (threadt->mutex);
   // ctr_object* oct = ctr_contexts[ctr_context_id];
   int sets = pthread_sigmask (SIG_SETMASK, &set, &oset);
@@ -3016,7 +3118,7 @@ ctr_run_thread_func (ctr_thread_t * threadt)
   threadt->last_result = rv;
   sets = pthread_sigmask (SIG_SETMASK, &oset, NULL);
   pthread_mutex_unlock (threadt->mutex);
-  pthread_mutex_unlock (&GLOBAL_MUTEX);
+  // pthread_mutex_unlock (&GLOBAL_MUTEX);
   pthread_exit (rv);
 }
 
@@ -3194,9 +3296,9 @@ ctr_thread_run (ctr_object * myself, ctr_argument * argumentList)
       CtrStdFlow = ctr_build_string_from_cstring ("Attempt to run a thread without a target");
       return CtrStdFlow;
     }
-  if (!pthread_mutex_trylock (&GLOBAL_MUTEX))
+  // if (!pthread_mutex_trylock (&GLOBAL_MUTEX))
     {
-      pthread_mutex_unlock (&GLOBAL_MUTEX);
+      // pthread_mutex_unlock (&GLOBAL_MUTEX);
       pthread_mutex_unlock (((ctr_thread_t *) myself->value.rvalue->ptr)->mutex);
     }
   return myself;

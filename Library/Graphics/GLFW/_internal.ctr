@@ -1,0 +1,75 @@
+import Library/Foreign/Interop/C.
+import Library/Foreign/C/C_Types: { c_ptr_null => 'nullptr'. }.
+import Library/Control/Assert: 'assertFalse'.
+import Library/Data/Map.
+
+#
+var glfw_defines is [
+#   # Constants
+  'GL_TEXTURE_2D', 'GL_TEXTURE_MIN_FILTER', 'GL_LINEAR_MIPMAP_NEAREST',
+  'GL_TEXTURE_MAG_FILTER', 'GL_TEXTURE_WRAP_S', 'GL_TEXTURE_WRAP_T',
+  'GL_CLAMP_TO_EDGE', 'GL_RGBA8', 'GL_RGBA', 'GL_UNSIGNED_BYTE',
+  'GL_VERTEX_SHADER', 'GL_FRAGMENT_SHADER', 'GL_COMPILE_STATUS',
+  'GL_TRUE', 'GL_FALSE', 'GL_LINK_STATUS', 'GL_ARRAY_BUFFER',
+  'GL_ELEMENT_ARRAY_BUFFER', 'GL_FLOAT', 'GL_LINEAR', 'GL_BLEND', 'GL_FUNC_ADD',
+  'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA', 'GL_CULL_FACE', 'GL_DEPTH_TEST',
+  'GL_SCISSOR_TEST', 'GL_TEXTURE0', 'GL_STREAM_DRAW', 'GL_STATIC_DRAW',
+  'GL_WRITE_ONLY', 'GL_TRIANGLES', 'GL_UNSIGNED_SHORT', 'GL_COLOR_BUFFER_BIT',
+  'GL_INVALID_VALUE', 'GL_INVALID_OPERATION', 'GL_INVALID_ENUM', 'GL_ARRAY_BUFFER_BINDING',
+  'GL_UNSIGNED_INT', 'GL_DEPTH_TEST', 'GL_DEPTH_BUFFER_BIT',
+  # glfw
+  'GLFW_CONTEXT_VERSION_MAJOR', 'GLFW_CONTEXT_VERSION_MINOR'
+].
+Inject importDefines: glfw_defines fromHeaders: ['GL/glew.h', 'GLFW/glfw3.h'].
+
+var glfw_imports is [
+  # alias types
+  'GLuint', 'GLint', 'GLchar', 'GLsizei', 'GLfloat',
+  # functions
+  'glGenTextures', 'glBindTexture', 'glTexParameterf', 'glTexImage2D',
+  'glGenerateMipmap', 'glCreateProgram', 'glCreateShader', 'glShaderSource',
+  'glCompileShader', 'glGetShaderiv', 'glAttachShader', 'glLinkProgram',
+  'glGetProgramiv', 'glGetUniformLocation', 'glGetAttribLocation',
+  'glGenBuffers', 'glGenVertexArrays', 'glBindVertexArray', 'glBindBuffer',
+  'glEnableVertexAttribArray', 'glVertexAttribPointer', 'glTexParameteri',
+  'glDetachShader', 'glDeleteShader', 'glDeleteProgram', 'glDeleteTextures',
+  'glDeleteBuffers', 'glEnable', 'glBlendEquation', 'glBlendFunc', 'glDisable',
+  'glActiveTexture', 'glUseProgram', 'glUniformli', 'glUniformMatrix4fv',
+  'glBufferData', 'glMapBuffer', 'glUnmapBuffer', 'glScissor', 'glDrawElements',
+  'glDrawArrays', 'glViewport', 'glClear', 'glGetProgramInfoLog', 'glIsShader',
+  'glGetError', 'glGetShaderInfoLog', 'glDebugMessageCallback', 'glIsBuffer',
+  'glGetIntegerv', 'glEnable',
+  # glfw
+  'glfwInit', 'glfwGetWindowUserPointer', 'glfwTerminate', 'glfwCreateWindow',
+  'glfwWindowHint', 'glfwDestroyWindow', 'glfwGetVersionString', 'glfwMakeContextCurrent',
+  'glfwSwapInterval', 'glfwSwapBuffers', 'glfwGetFramebufferSize', 'glfwGetTime',
+  # linmath
+  'mat4x4', 'mat4x4_add', 'mat4x4_col', 'mat4x4_dup', 'mat4x4_from_quat',
+  'mat4x4_from_vec3_mul_outer', 'mat4x4_frustum', 'mat4x4_identity',
+  'mat4x4_invert', 'mat4x4_look_at', 'mat4x4_mul', 'mat4x4_mul_vec4', 'mat4x4_ortho',
+  'mat4x4_orthonormalize', 'mat4x4_perspective', 'mat4x4_rotate', 'mat4x4_rotate_X',
+  'mat4x4_rotate_Y', 'mat4x4_rotate_Z', 'mat4x4_row', 'mat4x4_scale', 'mat4x4_scale_aniso',
+  'mat4x4_sub', 'mat4x4_translate', 'mat4x4_translate_in_place', 'mat4x4_transpose',
+  'mat4x4o_mul_quat',
+  'vec3',
+  'quat', 'quat_add', 'quat_conj', 'quat_from_mat4x4', 'quat_identity',
+  'quat_inner_product', 'quat_mul', 'quat_mul_vec3', 'quat_norm', 'quat_rotate',
+  'quat_scale', 'quat_sub', 'vec3_mul_cross', 'vec3_reflect', 'vec4_mul_cross',
+  'vec4_reflect', 'mat4x4_print',
+  # glew
+  'glewInit'
+].
+
+# var glfw_imports is
+
+var resolved is Inject getDefines: glfw_imports fromHeaders: ['"linmath.h"', 'GL/glew.h', 'GLFW/glfw3.h'], flip.
+# Pen writeln: resolved.
+
+Inject addLibraryPath: '.'.
+var glfwInjectContext is Inject
+  newWithHeaders: ['"linmath.h"', 'GL/glew.h', 'GLFW/glfw3.h']
+  andLibraries: ['linmath', 'glfw', 'GLEW', 'GL']
+.
+glfwInjectContext importFunctionsOrTypes: resolved.
+
+# assertFalse{glGenBuffers isNil}.

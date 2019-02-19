@@ -17,6 +17,7 @@ args=(
     '-h[show help]'
     '-f[evaluate file]:filename:->ctr_files'
     '-F[enable/disable flag]:flag:->flags'
+    '--tidy[try to tidy up code]:filename:->ctr_files'
     '--Fs[show all flags]'
     '--meta[execute metacommand]'
     '-e[evaluate expression]'
@@ -30,6 +31,7 @@ args=(
     '--without-signals[Disable signal processing]'
     '--terminal-width[Set terminal width]:number:->number'
     '--without-history[Disable load/save of history]'
+    '--history-dir[Set history directory]:path->_files'
     )
 
 _arguments -C -s -S "$args[@]"

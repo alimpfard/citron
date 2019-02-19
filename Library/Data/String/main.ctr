@@ -66,6 +66,13 @@ String on: 'skipUntil:' do: {:str
   ^me from: (index + (str length)) to: (me length).
 }.
 
+String on: 'splitAt:' do: {:idx
+  ^[
+    (from: 0   to: idx),
+    (from: idx to: me length)
+  ].
+}.
+
 var toUnicode is \:i ('\'\\u{%s}\'' % [i]) eval.
 var asciiPrintables is (Array new fill: 0x7e - 0x20 with: \:i toUnicode[i + 0x20], join: '').
 var digits is '0123456789'.

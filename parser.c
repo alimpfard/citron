@@ -69,7 +69,7 @@ ctr_paramlist_has_name (char *namenode, size_t len)
 	while (name)
 	  {
 	    // printf("  -- %d %.*s\n", i, name->node->vlen, name->node->value);
-	    int vararg = name->node->value[0] == '*';
+	    int vararg = name->node->value[0] == '*' || name->node->value[0] == '&';
 	    if (unlikely (name->node->vlen == len || vararg))
 	      {
 		if (strncmp (name->node->value + vararg, namenode, len - vararg) == 0)
@@ -1036,6 +1036,7 @@ ctr_cparse_ref ()
 	{
 	  ctr_clex_putback ();
 	  ctr_clex_putback ();
+    ctr_clex_tok ();
 	  goto the_else;
 	}
       return ctr_cparse_pure ();
@@ -1638,6 +1639,7 @@ ctr_tnode *
 ctr_cparse_pure ()
 {
   char *code_s = ctr_code;
+  ctr_clex_putback();
   char *end = ctr_clex_scan_balanced ('}', '{');
   if (end)
     {

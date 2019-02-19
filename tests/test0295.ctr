@@ -1,0 +1,5 @@
+var fancy is \:u 'amazingly fancy ${{u evaluate}}$'.
+var string is 'what the fuck mate?'.
+var testStr is 'Here\'s some ${{fancy{'inner ${{'yo, $$string'}}$'}}}$! \u{1024}'.
+
+Pen writeln: testStr.

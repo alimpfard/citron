@@ -1380,6 +1380,16 @@ ctr_set (ctr_object * key, ctr_object * object)
   int i = ctr_context_id;
   ctr_object *context;
   ctr_object *foundObject = NULL;
+  if (key->value.svalue->value[0] == '&') { //we're setting a double-reference
+      key->value.svalue->value++;
+      key->value.svalue->vlen--;
+      foundObject = ctr_find(key);
+      if(foundObject)
+          *foundObject = *object;
+      key->value.svalue->value--;
+      key->value.svalue->vlen++;
+      return;
+  }
   if (ctr_contexts[ctr_context_id] == ctr_world_ptr)
     {
       ctr_internal_object_set_property (ctr_contexts[ctr_context_id], key, object, 0);
@@ -1779,6 +1789,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdNumber, ctr_build_string_from_cstring (CTR_DICT_POS), &ctr_number_positive);
   ctr_internal_create_func (CtrStdNumber, ctr_build_string_from_cstring (CTR_DICT_NEG), &ctr_number_negative);
   ctr_internal_create_func (CtrStdNumber, ctr_build_string_from_cstring (CTR_DICT_TOSTRING), &ctr_number_to_string);
+  ctr_internal_create_func (CtrStdNumber, ctr_build_string_from_cstring ("toStringInBase:"), &ctr_number_to_string_base);
   ctr_internal_create_func (CtrStdNumber, ctr_build_string_from_cstring (CTR_DICT_TOBOOL), &ctr_number_to_boolean);
   ctr_internal_create_func (CtrStdNumber, ctr_build_string_from_cstring (CTR_DICT_TONUMBER), &ctr_object_myself);
   ctr_internal_create_func (CtrStdNumber, ctr_build_string_from_cstring (CTR_DICT_BETWEEN), &ctr_number_between);
@@ -1937,7 +1948,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_FROM_LENGTH), &ctr_array_from_length);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("skip:"), &ctr_array_skip);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("zip"), &ctr_array_zip);
-  ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("internal-zip"), &ctr_array_internal_zip);
+  ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("internal-product"), &ctr_array_internal_product);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("zipWith:"), &ctr_array_zip_with);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_PLUS), &ctr_array_add);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("head"), &ctr_array_head);
@@ -2181,6 +2192,7 @@ ctr_initialize_world ()
 
   /* Broom */
   CtrStdGC = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
+  ctr_internal_create_func (CtrStdGC, ctr_build_string_from_cstring ("noGC:"), &ctr_gc_with_gc_disabled);
   ctr_internal_create_func (CtrStdGC, ctr_build_string_from_cstring (CTR_DICT_SWEEP), &ctr_gc_collect);
   ctr_internal_create_func (CtrStdGC, ctr_build_string_from_cstring (CTR_DICT_SWEEP ":"), &ctr_gc_sweep_this);
   ctr_internal_create_func (CtrStdGC, ctr_build_string_from_cstring (CTR_DICT_DUST), &ctr_gc_dust);
@@ -2201,6 +2213,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("addLocalVariable:"), &ctr_reflect_add_local);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("addPrivateVariable:"), &ctr_reflect_add_my);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("set:to:"), &ctr_reflect_set_to);
+  ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("getStrNativeTypeOf:"), &ctr_reflect_nat_type);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("getContext"), &ctr_reflect_dump_context);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("thisContext"), &ctr_reflect_this_context);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("getMethodsOf:"), &ctr_reflect_dump_context_spec);
@@ -2304,11 +2317,14 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdInject, ctr_build_string_from_cstring ("run:arguments:"), &ctr_inject_run);
   ctr_internal_create_func (CtrStdInject, ctr_build_string_from_cstring ("run:arguments:function:"), &ctr_inject_run_named);
   ctr_internal_create_func (CtrStdInject, ctr_build_string_from_cstring ("symbol:"), &ctr_inject_get_symbol);
+  ctr_internal_create_func (CtrStdInject, ctr_build_string_from_cstring ("addLibraryPath:"), &ctr_inject_add_libp);
+  ctr_internal_create_func (CtrStdInject, ctr_build_string_from_cstring ("libraryPaths"), &ctr_inject_get_libp);
   ctr_internal_create_func (CtrStdInject, ctr_build_string_from_cstring ("addIncludePath:"), &ctr_inject_add_inclp);
   ctr_internal_create_func (CtrStdInject, ctr_build_string_from_cstring ("includePaths"), &ctr_inject_get_inclp);
   ctr_internal_create_func (CtrStdInject, ctr_build_string_from_cstring ("linkInLibrary:"), &ctr_inject_add_lib);
   ctr_internal_create_func (CtrStdInject, ctr_build_string_from_cstring ("errorHandler:"), &ctr_inject_set_error_handler);
   ctr_internal_create_func (CtrStdInject, ctr_build_string_from_cstring ("outputTo:"), &ctr_inject_generate_output);
+  ctr_internal_create_func (CtrStdInject, ctr_build_string_from_cstring ("destruct"), &ctr_inject_finish);
 #endif // withInjectNative
 
   static ctr_object ctr_dummy_import;
@@ -2366,6 +2382,33 @@ ctr_initialize_world ()
 }
 
 ctr_object *
+ctr_internal_get_responder_from_interfaces(ctr_object* receiverObject, char* message, int vlen)
+{
+  ctr_object *methodObject = NULL;
+  #pragma omp parallel default(none), shared(receiverObject, vlen, message, methodObject)
+    {
+  int abort = 0;
+  #pragma omp for
+  for (int i = 0; i < receiverObject->interfaces->count; i++)
+  {
+    if (!abort)
+      {
+  // printf("interface %d of %p for message %.*s\n", i, receiverObject, vlen, message);
+  ctr_object *meth = ctr_get_responder (receiverObject->interfaces->ifs[i], message, vlen);
+  if (meth)
+    {
+  #pragma omp critical(methodObject)
+      methodObject = meth;
+      abort = 1;
+  #pragma omp flush (abort)
+    }
+      }
+  }
+    }
+  return methodObject;
+}
+
+ctr_object *
 ctr_get_responder (ctr_object * receiverObject, char *message, long vlen)
 {
   if (receiverObject->info.type == 0 && receiverObject->interfaces == NULL)
@@ -2407,29 +2450,21 @@ ctr_get_responder (ctr_object * receiverObject, char *message, long vlen)
 	break;
       searchObject = searchObject->interfaces->link;
     }
-  if (!methodObject)
-    {
-#pragma omp parallel default(none), shared(receiverObject, vlen, message, methodObject)
+  ctr_heap_free(msg);
+  if (!methodObject) {
+    searchObject = receiverObject;
+    while (!methodObject)
       {
-	int abort = 0;
-#pragma omp for
-	for (int i = 0; i < receiverObject->interfaces->count; i++)
-	  {
-	    if (!abort)
-	      {
-		//printf("%.*s", vlen, message);
-		ctr_object *meth = ctr_get_responder (receiverObject->interfaces->ifs[i], message, vlen);
-		if (meth)
-		  {
-#pragma omp critical(methodObject)
-		    methodObject = meth;
-		    abort = 1;
-#pragma omp flush (abort)
-		  }
-	      }
-	  }
+        if (!searchObject)
+  	break;
+    methodObject = ctr_internal_get_responder_from_interfaces(searchObject, message, vlen);
+        if (methodObject)
+  	break;
+        if (!searchObject->interfaces->link)
+  	break;
+        searchObject = searchObject->interfaces->link;
       }
-    }
+  }
   return methodObject;
 }
 
@@ -3186,10 +3221,13 @@ ctr_send_message_async (ctr_object * receiverObject, char *message, long vlen, c
 ctr_object *
 ctr_assign_value (ctr_object * key, ctr_object * o)
 {
-  ctr_object *object = NULL;
+  ctr_object *object = o;
   if (CtrStdFlow)
     return CtrStdNil;
   key->info.sticky = 0;
+  int byref = key->value.svalue->vlen > 1 && key->value.svalue->value[0] == '&';
+  if (byref) { key->value.svalue->value++; key->value.svalue->vlen--; }
+  else
   switch (o->info.type)
     {
     case CTR_OBJECT_TYPE_OTBOOL:
@@ -3240,11 +3278,14 @@ ctr_const_assign_value (ctr_object * key, ctr_object * o, ctr_object * context)
 ctr_object *
 ctr_assign_value_to_my (ctr_object * key, ctr_object * o)
 {
-  ctr_object *object = NULL;
+  ctr_object *object = o;
   ctr_object *my = ctr_find (&CTR_CLEX_KW_ME);
   if (CtrStdFlow)
     return CtrStdNil;
   key->info.sticky = 0;
+  int byref = key->value.svalue->vlen > 1 && key->value.svalue->value[0] == '&';
+  if (byref) { key->value.svalue->value++; key->value.svalue->vlen--; }
+  else
   switch (o->info.type)
     {
     case CTR_OBJECT_TYPE_OTBOOL:
@@ -3280,12 +3321,15 @@ ctr_assign_value_to_my (ctr_object * key, ctr_object * o)
 ctr_object *
 ctr_assign_value_to_local (ctr_object * key, ctr_object * o)
 {
-  ctr_object *object = NULL;
+  ctr_object *object = o;
   ctr_object *context;
   if (CtrStdFlow)
     return CtrStdNil;
   context = ctr_contexts[ctr_context_id];
   key->info.sticky = 0;
+  int byref = key->value.svalue->vlen > 1 && key->value.svalue->value[0] == '&';
+  if (byref) { key->value.svalue->value++; key->value.svalue->vlen--; }
+  else
   switch (o->info.type)
     {
     case CTR_OBJECT_TYPE_OTBOOL:
@@ -3357,6 +3401,8 @@ void
 ctr_set_link_all (ctr_object * what, ctr_object * to)
 {
   what->interfaces->link = to;
+  if (!what->interfaces->ifs)
+    return;
   int count = to->interfaces->count;
   what->interfaces->count = count;
   what->interfaces->ifs =

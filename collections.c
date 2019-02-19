@@ -1092,76 +1092,33 @@ ctr_array_skip (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_array_zip (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object *ret = ctr_array_new (CtrStdArray, NULL);
-  ctr_argument *argument0 = ctr_heap_allocate (sizeof (ctr_argument));
-  struct arr_element_t
-  {
-    ctr_object *elem;
-    int state;
-    int max;
-  };
-  struct arr_element_t *elem_indices = ctr_heap_allocate (sizeof (struct arr_element_t) * (myself->value.avalue->head - myself->value.avalue->tail));
-  ctr_size all_iter = 1;
-  ctr_size all_ind = myself->value.avalue->head - myself->value.avalue->tail;
-  for (ctr_size i = 0; i < myself->value.avalue->head - myself->value.avalue->tail; i++)
-    {
-      struct arr_element_t arredes = {
-	.elem = *(myself->value.avalue->elements + myself->value.avalue->tail + i),
-	.state = 0,
-      };
-      arredes.max =
-	arredes.elem->info.type == CTR_OBJECT_TYPE_OTARRAY ? (int) (arredes.elem->value.avalue->head - arredes.elem->value.avalue->tail) : -1;
-      all_iter *= (arredes.max > -1 ? arredes.max : 1);
-      elem_indices[i] = arredes;
+  ctr_object* res = ctr_array_new(CtrStdArray, NULL);
+  for (int i = 0;;i++) {
+    ctr_object* tarr = ctr_array_new(CtrStdArray, NULL);
+    for (int x = myself->value.avalue->tail; x < myself->value.avalue->head; x++) {
+      ctr_object* element = myself->value.avalue->elements[x];
+      if (element->info.type != CTR_OBJECT_TYPE_OTARRAY)
+        ctr_array_push(
+          tarr,
+          &(ctr_argument){
+            element,
+            NULL
+          }
+        );
+      else if (element->value.avalue->head - element->value.avalue->tail > i)
+        ctr_array_push(
+          tarr,
+          &(ctr_argument){
+            element->value.avalue->elements[i+element->value.avalue->tail],
+            NULL
+          }
+        );
+      else goto thatsenough;
     }
-  for (ctr_size lit = 0; lit < all_iter; lit++)
-    {
-      ctr_object *parr = ctr_array_new (CtrStdArray, NULL);
-      int did_shit = 0;
-      for (ctr_size i = 0; i < myself->value.avalue->head - myself->value.avalue->tail; i++)
-	{
-	  struct arr_element_t arrdes = elem_indices[i];
-	  ctr_object *elem = arrdes.elem;
-	  if (arrdes.max > -1)
-	    {
-	      elem = arrdes.elem->value.avalue->elements[arrdes.elem->value.avalue->tail + arrdes.state];
-	      if (!did_shit)
-		{
-		  arrdes.state++;
-		  did_shit = 1;
-		}
-	      if (arrdes.state == arrdes.max)
-		{
-		  arrdes.state = 0;
-		  ctr_size index = i;
-		  struct arr_element_t arrdesn = elem_indices[index];
-		  while (arrdesn.max == -1)
-		    {
-		      arrdesn = elem_indices[index];
-		      if (++index == all_ind)
-			{
-			  index = all_ind - 1;
-			  break;
-			}
-		    }
-		  if (arrdesn.max != -1)
-		    {
-		      arrdesn.state++;
-		      elem_indices[index] = arrdesn;
-		    }
-		  did_shit = 0;
-		}
-	      elem_indices[i] = arrdes;
-	    }
-	  argument0->object = elem;
-	  ctr_array_push (parr, argument0);
-	}
-      argument0->object = parr;
-      ctr_array_push (ret, argument0);
-    }
-  ctr_heap_free (argument0);
-  ctr_heap_free (elem_indices);
-  return ret;
+    ctr_array_push (res, &(ctr_argument){tarr});
+  }
+  thatsenough:;
+  return res;
 }
 
 /**
@@ -1177,77 +1134,33 @@ ctr_object *
 ctr_array_zip_with (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *blk = argumentList->object;
-  ctr_object *ret = ctr_array_new (CtrStdArray, NULL);
-  struct arr_element_t
-  {
-    ctr_object *elem;
-    int state;
-    int max;
-  };
-  struct arr_element_t *elem_indices = ctr_heap_allocate (sizeof (struct arr_element_t) * (myself->value.avalue->head - myself->value.avalue->tail));
-  int all_iter = 1;
-  int all_ind = myself->value.avalue->head - myself->value.avalue->tail;
-  for (ctr_size i = 0; i < myself->value.avalue->head - myself->value.avalue->tail; i++)
-    {
-      struct arr_element_t arredes = {
-	.elem = *(myself->value.avalue->elements + myself->value.avalue->tail + i),
-	.state = 0,
-      };
-      arredes.max = arredes.elem->info.type == CTR_OBJECT_TYPE_OTARRAY ? arredes.elem->value.avalue->head - arredes.elem->value.avalue->tail : -1;
-      all_iter *= (arredes.max > -1 ? arredes.max : 1);
-      elem_indices[i] = arredes;
+  ctr_object* res = ctr_array_new(CtrStdArray, NULL);
+  for (int i = 0;;i++) {
+    ctr_object* tarr = ctr_array_new(CtrStdArray, NULL);
+    for (int x = myself->value.avalue->tail; x < myself->value.avalue->head; x++) {
+      ctr_object* element = myself->value.avalue->elements[x];
+      if (element->info.type != CTR_OBJECT_TYPE_OTARRAY)
+        ctr_array_push(
+          tarr,
+          &(ctr_argument){
+            element,
+            NULL
+          }
+        );
+      else if (element->value.avalue->head - element->value.avalue->tail > i)
+        ctr_array_push(
+          tarr,
+          &(ctr_argument){
+            element->value.avalue->elements[i+element->value.avalue->tail],
+            NULL
+          }
+        );
+      else goto thatsenough;
     }
-  ctr_argument *argument0;
-  for (int lit = 0; lit < all_iter; lit++)
-    {
-      argument0 = ctr_heap_allocate (sizeof (ctr_argument));
-      ctr_argument *arg0 = argument0;
-      int did_shit = 0;
-      for (ctr_size i = 0; i < myself->value.avalue->head - myself->value.avalue->tail; i++)
-	{
-	  struct arr_element_t arrdes = elem_indices[i];
-	  ctr_object *elem = arrdes.elem;
-	  if (arrdes.max > -1)
-	    {
-	      elem = arrdes.elem->value.avalue->elements[arrdes.elem->value.avalue->tail + arrdes.state];
-	      if (!did_shit)
-		{
-		  arrdes.state++;
-		  did_shit = 1;
-		}
-	      if (arrdes.state == arrdes.max)
-		{
-		  arrdes.state = 0;
-		  ctr_size index = i;
-		  struct arr_element_t arrdesn = elem_indices[index];
-		  while (arrdesn.max == -1)
-		    {
-		      arrdesn = elem_indices[index];
-		      if (++index == all_ind)
-			{
-			  index = all_ind - 1;
-			  break;
-			}
-		    }
-		  if (arrdesn.max != -1)
-		    {
-		      arrdesn.state++;
-		      elem_indices[index] = arrdesn;
-		    }
-		  did_shit = 0;
-		}
-	      elem_indices[i] = arrdes;
-	    }
-	  arg0->object = elem;
-	  arg0->next = ctr_heap_allocate (sizeof (ctr_argument));
-	  arg0 = arg0->next;
-	}
-      argument0->object = ctr_block_run (blk, argument0, NULL);
-      ctr_array_push (ret, argument0);
-      ctr_free_argumentList (argument0);
-    }
-  ctr_heap_free (elem_indices);
-  return ret;
+    ctr_array_push (res, &(ctr_argument){ctr_block_runall(blk, &(ctr_argument){tarr})});
+  }
+  thatsenough:;
+  return res;
 }
 
 /**

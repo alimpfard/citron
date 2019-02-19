@@ -42,7 +42,7 @@ ctr_inject_make (ctr_object * myself, ctr_argument * argumentList)
   int imode = TCC_OUTPUT_MEMORY;
   if (argumentList && argumentList->object && argumentList->object->info.type != CTR_OBJECT_TYPE_OTNIL)
     {
-      const char *mode = ctr_heap_allocate_cstring (ctr_internal_cast2string (argumentList->object));
+      char *mode = ctr_heap_allocate_cstring (ctr_internal_cast2string (argumentList->object));
       if (strcasecmp (mode, "mem") == 0)
 	imode = TCC_OUTPUT_MEMORY;
       else if (strcasecmp (mode, "exe") == 0)
@@ -111,6 +111,7 @@ typedef struct ctr_inferred_ctype_type_t
 {
   int kind;
   int nb_args;
+  int fnptrq;
   union
   {
     ffi_type *return_type;
@@ -121,6 +122,7 @@ typedef struct ctr_inferred_ctype_type_t
   {
     struct ctr_inferred_ctype_type_t **arguments;
     struct_member_desc_complement_t struct_member_desc;
+    struct ctr_inferred_ctype_type_t *contained;
   };
 } ctr_inferred_ctype_type_t;
 extern TokenSym **table_ident;
@@ -129,9 +131,15 @@ enum ctr_inferred_ctype_type_kind
   KIND_BASIC,
   KIND_FUNCTION,
   KIND_STRUCT,
-  KIND_CONSTANT
+  KIND_CONSTANT,
+  KIND_ARRAY
 };
 extern int type_size (CType * type, int *a);
+static inline CType* pointed_type(CType *type) {
+  return &type->ref->type;
+}
+ctr_object *
+ctr_inject_generate_ctype (ctr_inferred_ctype_type_t ty);
 
 ctr_inferred_ctype_type_t
 ctr_inject_type_to_ctype (Sym * svv, CType * type)
@@ -152,6 +160,32 @@ ctr_inject_type_to_ctype (Sym * svv, CType * type)
     ;				// can't do anything to this
   if (t & VT_UNSIGNED)
     is_unsigned = 1;
+
+  if ((t & VT_ARRAY) && (bt == VT_PTR)) {
+    // it be an array?
+    s = type->ref;
+    long array_count = s->c;
+    void type_to_str(char*,int,CType*,char*);
+    char fbuf[1024];
+    char nbuf[1024];
+    int tok;
+    tok = svv->v&~SYM_STRUCT&~SYM_FIELD;
+    tok -= TOK_IDENT;
+	  TokenSym *token = table_ident[tok];
+	  sprintf (nbuf, "%.*s", token->len, token->str);
+    (void)type_to_str(fbuf, 1024, pointed_type(type), nbuf);
+    printf("%s[%lu]\n", fbuf, array_count);
+    ctr_inferred_ctype_type_t contained = ctr_inject_type_to_ctype (svv, pointed_type(type));
+    ctr_inferred_ctype_type_t *inner = ctr_heap_allocate(sizeof*inner);
+    memcpy(inner, &contained, sizeof*inner);
+
+    return (ctr_inferred_ctype_type_t) {
+      .kind = KIND_ARRAY,
+      .nb_args = array_count,
+      .contained = inner
+    };
+    // ctr_send_message_variadic (ns, "initWith:names:", 15, 2, cifobj, de.names);
+  }
 
   switch (bt)
     {
@@ -248,6 +282,11 @@ ctr_inject_type_to_ctype (Sym * svv, CType * type)
 	    }
 	  current_padinfo->pad = pad;
 	  ctr_inferred_ctype_type_t innerty = ctr_inject_type_to_ctype (s, &s->type);
+    if (innerty.kind == KIND_ARRAY) {
+      innerty.kind = 0;
+      ctr_heap_free(innerty.contained);
+      innerty.vtype = &ffi_type_pointer;
+    }
 	  if (!pad)
 	    {
 	      if (ctr_create_ffi_str_descriptor (innerty.vtype, NULL) > remaining_buf_len)
@@ -304,7 +343,15 @@ ctr_inject_type_to_ctype (Sym * svv, CType * type)
 	}
       return fntype;
     case VT_PTR:
-      // s = type->ref;
+      if ((type->ref->type.t & VT_TYPE & VT_BTYPE) == VT_FUNC) {
+        void type_to_str(char*,int,CType*,char*);
+        char fbuf[1024];
+        (void)type_to_str(fbuf, 1024, type, NULL);
+        // printf("Function pointer %s\n", fbuf);
+        ctr_inferred_ctype_type_t val =  ctr_inject_type_to_ctype(svv, &type->ref->type);
+        val.fnptrq = 1;
+        return val;
+      }
       // :shrug:
       return (ctr_inferred_ctype_type_t)
       {
@@ -329,6 +376,8 @@ ctr_inject_free_function_type (ctr_inferred_ctype_type_t ty)
 
 extern void ctr_ctypes_set_type (ctr_object * object, ctr_ctype type);
 extern ctr_ctype ctr_ctypes_ffi_convert_ffi_type_to_ctype (ffi_type * type);
+ffi_type *ctr_ctypes_ffi_convert_to_ffi_type (ctr_object * type);
+ssize_t ctr_ctype_get_c_size (ctr_object * obj);
 
 ctr_object *
 ctr_inject_generate_ctype (ctr_inferred_ctype_type_t ty)
@@ -354,6 +403,7 @@ ctr_inject_generate_ctype (ctr_inferred_ctype_type_t ty)
 					ctr_build_number_from_float (ctr_ctypes_ffi_convert_ffi_type_to_ctype (ty.vtype)), 0);
       ctr_ctypes_set_type (cifobj, CTR_CTYPE_CIF);
       ctr_set_link_all (cifobj, CtrStdCType_ffi_cif);
+      ctr_internal_object_set_property(cifobj, ctr_build_string_from_cstring(":cfnptr"), ctr_build_bool(ty.fnptrq), 0);
       cifobj->value.rvalue->ptr = (void *) cif_res;
       return cifobj;
     }
@@ -384,6 +434,25 @@ ctr_inject_generate_ctype (ctr_inferred_ctype_type_t ty)
     {
       return ty.const_value;
     }
+  else if (ty.kind == KIND_ARRAY)
+    {
+      int array_count = ty.nb_args;
+      // now go ahead and get the contained type
+      ctr_object* ctype = ctr_inject_generate_ctype(*ty.contained);
+      // ctr_send_message_variadic (ctr_find (ctr_build_string_from_cstring ("import")), "Library/Foreign/C/PackedArray", 29, 0);
+      // ctr_object *ns = ctr_find (ctr_build_string_from_cstring ("PackedArray"));
+      size_t size = ctr_ctype_get_c_size(ctype);
+      void *storage = ctr_heap_allocate(array_count * size);
+      ctr_ctypes_cont_array_t *arr = ctr_heap_allocate(sizeof (ctr_ctypes_cont_array_t));
+      arr->storage = storage;
+      arr->count = array_count;
+      arr->esize = size;
+      arr->etype = ctr_ctypes_ffi_convert_to_ffi_type(ctype);
+      ctr_object *obj = ctr_ctypes_make_cont_pointer (NULL, NULL);
+      obj->value.rvalue->ptr = arr;
+      // ns = ctr_send_message_variadic(ns, "initWithCType:count:", 20, 2, obj, ctr_build_number_from_float(array_count));
+      return obj;
+    }
   else
     {
       // just a normal value type
@@ -393,6 +462,11 @@ ctr_inject_generate_ctype (ctr_inferred_ctype_type_t ty)
     }
 }
 
+static ctr_object* yes = NULL;
+static ctr_object* ctr_true(ctr_object* a, ctr_argument* b) {
+  yes = yes ?: ctr_build_bool(1);
+  return yes;
+}
 
 ctr_object *
 ctr_inject_defined_functions (ctr_object * myself, ctr_argument * argumentList)
@@ -411,17 +485,20 @@ ctr_inject_defined_functions (ctr_object * myself, ctr_argument * argumentList)
   TCCState *state = ds->state;
   Sym *symbols = state->global_stack;
   ctr_object *type_map = ctr_map_new (CtrStdMap, NULL);
-  ctr_argument *map_put_arg = &(ctr_argument) {.next = &(ctr_argument) {}
-  };
+  ctr_argument *map_put_arg = &(ctr_argument) {.next = &(ctr_argument) {}};
 
-  Sym *s, *ss, **ps;
+  Sym *s;
   TokenSym *ts;
   int v;
 
   s = symbols;
+  typeof(ctr_map_contains)* fn_all_contains_val =
+  !all ? &ctr_true :
+    all->info.type == CTR_OBJECT_TYPE_OTARRAY ?
+      &ctr_array_contains :
+      &ctr_map_contains;
   while (s != NULL)
     {
-      ss = s->prev;
       v = s->v;
       /* remove symbol in token array */
       /* XXX: simplify */
@@ -429,28 +506,17 @@ ctr_inject_defined_functions (ctr_object * myself, ctr_argument * argumentList)
 	{
 	  ts = table_ident[(v & ~SYM_STRUCT) - TOK_IDENT];
 	  int tok;
-	  if (v & SYM_STRUCT)
-	    {
-	      // ps = &ts->sym_struct;
-	      // goto NOT_THIS_ONE;
-	      ps = &ts->sym_struct;
-	      tok = s->v & ~SYM_STRUCT;
-	    }
-	  else
-	    {
-	      ps = &ts->sym_identifier;
-	      tok = s->v;
-	    }
+    tok = v&~SYM_STRUCT;
 	  if (tok < TOK_IDENT)
 	    goto NOT_THIS_ONE;
 	  tok -= TOK_IDENT;
-	  TokenSym *tokdata = table_ident[tok];
+	  TokenSym *tokdata = ts; //table_ident[tok];
 
 	  ctr_object *svname = ctr_build_string (tokdata->str, tokdata->len);
 
 	  if (!all)
 	    goto go_on;
-	  if (!ctr_array_contains (all, &(ctr_argument)
+	  if (!fn_all_contains_val (all, &(ctr_argument)
 				   {
 				   .object = svname}
 	      )->value.bvalue)
@@ -462,7 +528,8 @@ ctr_inject_defined_functions (ctr_object * myself, ctr_argument * argumentList)
 	    {
 	      if (ty.kind == KIND_FUNCTION)
 		ctr_inject_free_function_type (ty);
-	      goto NOT_THIS_ONE;
+        if (ty.kind != KIND_ARRAY)
+	  goto NOT_THIS_ONE;
 	    }
 
 	  map_put_arg->object = ctr_inject_generate_ctype (ty);
@@ -471,10 +538,75 @@ ctr_inject_defined_functions (ctr_object * myself, ctr_argument * argumentList)
 	  ctr_map_put (type_map, map_put_arg);
 	}
     NOT_THIS_ONE:
-      s = ss;
+      s = s->prev;
     }
 
   return type_map;
+}
+
+ctr_object *
+ctr_inject_finish(ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_resource *r = myself->value.rvalue;
+  ctr_inject_data_t *ds;
+  if (!r || !(ds = r->ptr))
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("deinit request to uninitialized Inject object");
+      return CtrStdNil;
+    }
+    TCCState* s = ds->state;
+    tcc_delete(s);
+    ctr_heap_free(ds);
+    r->ptr = NULL;
+    return myself;
+}
+
+/**
+ * [Inject] addLibraryPath: [String]
+ *
+ */
+ctr_object *
+ctr_inject_add_libp (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_resource *r = myself->value.rvalue;
+  ctr_inject_data_t *ds;
+  if (!r || !(ds = r->ptr))
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("compile request to uninitialized Inject object");
+      return CtrStdNil;
+    }
+  ctr_object *l = argumentList->object;
+  CTR_ENSURE_TYPE_STRING (l);
+  char *ls = ctr_heap_allocate_cstring (l);
+  TCCState *s = ds->state;
+  int status = tcc_add_library_path (s, ls);
+  ctr_heap_free (ls);
+  return ctr_build_bool (status != -1);
+}
+
+/**
+ * [Inject] libraryPaths
+ *
+ */
+ctr_object *
+ctr_inject_get_libp (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_resource *r = myself->value.rvalue;
+  ctr_inject_data_t *ds;
+  if (!r || !(ds = r->ptr))
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("compile request to uninitialized Inject object");
+      return CtrStdNil;
+    }
+  TCCState *s = ds->state;
+  ctr_argument arg = { NULL, NULL };
+  ctr_object *res = ctr_array_new (CtrStdArray, NULL);
+  for (size_t i = 0; i < s->nb_library_paths; i++)
+    {
+      arg.object = ctr_build_string_from_cstring (s->library_paths[i]);
+      ctr_array_push (res, &arg);
+    }
+  return res;
 }
 
 /**

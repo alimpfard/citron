@@ -72,37 +72,5 @@ Number on: 'numberOfDigitsInBase:' do: {:self:base
 }.
 
 Number on: 'asStringInBase:length:zeroPadded:' do: {:self:base:minimumLength:padWithZeros
-  var str is ''.
-  var n is self.
-  var totalLength is 0.
-  self < 0 ifTrue: {
-    n is self negated.
-    totalLength is 1.
-  }.
-  var numberOfDigits is n numberOfDigitsInBase: base.
-  totalLength +=: numberOfDigits.
-  padWithZeros ifFalse: {
-    { ^totalLength < minimumLength. } whileTrue: {
-      str +=: ' '.
-      totalLength +=: 1.
-    }.
-  }.
-  self neg ifTrue: { str +=: '-'. }.
-  padWithZeros ifTrue: {
-    { ^totalLength < minimumLength. } whileTrue: {
-      str +=: '0'.
-      totalLength +=: 1.
-    }.
-  }.
-  var divisor is base pow: numberOfDigits.
-  n = divisor ifTrue: { ^'1' + ('0' * numberOfDigits). }.
-  { ^divisor > 0. } whileTrue: {
-    var digit is n // divisor.
-    str +=: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ' @ digit.
-    n -=: (digit * divisor).
-    divisor is divisor // base.
-  }.
-  ^str.
+  ^toStringInBase: base, paddingLeft: minimumLength, replace: ' ' with: (padWithZeros either: '0' or: ' ').
 }.
-
-Number on: 'asStringInBase:' do: {:base ^asStringInBase: base length: 0 zeroPadded: False. }.

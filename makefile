@@ -83,7 +83,7 @@ install:
 	echo -e "install directly from source not allowed.\nUse citron_autohell instead for installs"
 	exit 1;
 ctr:	$(OBJS) $(EXTRAOBJS)
-	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) ${CXXFLAGS}  -rdynamic -lm -ldl -lbsd -lpcre -l:libffi.so.7 -lpthread ${LEXTRACF} -o ctr
+	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) ${CXXFLAGS}  -rdynamic -lm -ldl -lbsd -lpcre -lffi -lpthread ${LEXTRACF} -o ctr
 
 libctr: CFLAGS := $(CFLAGS) -fPIC -DCITRON_LIBRARY
 libctr: symbol_cxx

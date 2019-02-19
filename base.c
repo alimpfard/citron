@@ -30,6 +30,7 @@
 #endif
 
 #include "generator.h"
+char* ctr_itoa(int value, char* buffer, int base);
 
 /**@I_OBJ_DEF Nil*/
 /**
@@ -1454,7 +1455,7 @@ ctr_object *
 ctr_build_number (char *n)
 {
   ctr_object *numberObject = ctr_internal_create_object (CTR_OBJECT_TYPE_OTNUMBER);
-  if (strncmp (n, "0x", 2) == 0)
+  if (strncasecmp (n, "0x", 2) == 0 || strncasecmp (n, "0b", 2) == 0)
     numberObject->value.nvalue = (double) strtol (n, NULL, 0);
   else
     numberObject->value.nvalue = atof (n);
@@ -1507,7 +1508,7 @@ ctr_build_number_from_string (char *str, ctr_size length)
   /* max length is 40 (and that's probably even too long... ) */
   numCStr = (char *) ctr_heap_allocate (41 * sizeof (char));
   memcpy (numCStr, str, stringNumberLength);
-  char *baseptr = NULL, bases[] = "xXcCoO";
+  char *baseptr = NULL, bases[] = "xXcCoObB";
   if (numCStr[0] == '0' && length > 1 && numCStr[1] != '.')
     {
       if (numCStr[1] == '0')
@@ -1530,6 +1531,11 @@ ctr_build_number_from_string (char *str, ctr_size length)
 	    baseptr = numCStr + 2;
 	    base = 16;
 	    break;
+    case 6:
+    case 7:
+      baseptr = numCStr + 2;
+      base = 2;
+      break;
 	  default:
 	    baseptr = numCStr;
 	    break;
@@ -2467,6 +2473,34 @@ ctr_number_uint_binrep (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
+ * [Number] toStringInBase: [Number]
+ *
+ * cast to number in the given base
+ */
+ctr_object *
+ctr_number_to_string_base (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *o = myself;
+  int slen;
+  char *s;
+  char *p;
+  char *buf;
+  int bufSize;
+  ctr_object *stringObject;
+  int base = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  s = ctr_heap_allocate (200 * sizeof (char));
+  bufSize = 2000 / 8 * sizeof (char);
+  buf = ctr_heap_allocate (bufSize);
+  ctr_itoa(o->value.nvalue, buf, base);
+  strncpy (s, buf, strlen (buf));
+  ctr_heap_free (buf);
+  slen = strlen (s);
+  stringObject = ctr_build_string (s, slen);
+  ctr_heap_free (s);
+  return stringObject;
+}
+
+/**
  *[Number] toString
  *
  * Wrapper for cast function.
@@ -2691,7 +2725,7 @@ ctr_build_empty_string ()
 ctr_object *
 ctr_string_escape_ascii (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_object *escape = argumentList && argumentList->object ? ctr_internal_cast2string (argumentList->object) : ctr_build_string_from_cstring ("\f\v\a\\");	// sensible default
+  ctr_object *escape = argumentList && argumentList->object && argumentList->object != CtrStdNil ? ctr_internal_cast2string (argumentList->object) : ctr_build_string_from_cstring ("\n\b\t\f\v\a\\");	// sensible default
   ctr_object *newString = NULL;
   char *str = myself->value.svalue->value;
   long len = myself->value.svalue->vlen;
@@ -3479,7 +3513,7 @@ ctr_string_at (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_string_byte_at (ctr_object * myself, ctr_argument * argumentList)
 {
-  char x;
+  unsigned char x;
   ctr_object *fromPos = ctr_internal_cast2number (argumentList->object);
   long a = (fromPos->value.nvalue);
   long len = myself->value.svalue->vlen;
@@ -3487,7 +3521,7 @@ ctr_string_byte_at (ctr_object * myself, ctr_argument * argumentList)
     return CtrStdNil;
   if (a < 0)
     return CtrStdNil;
-  x = (char) *(myself->value.svalue->value + a);
+  x = (unsigned char) *(myself->value.svalue->value + a);
   return ctr_build_number_from_float ((double) x);
 }
 
@@ -5271,7 +5305,7 @@ ctr_scan_free_refs (ctr_tnode * node)
 }
 
 ctr_object *
-ctr_array_internal_zip (ctr_object * myself, ctr_argument * argumentList)
+ctr_array_internal_product (ctr_object * myself, ctr_argument * argumentList)
 {
   int has_argl = ! !argumentList;
   if (!argumentList)
@@ -5440,7 +5474,7 @@ ctr_build_listcomp (ctr_tnode * node)
       ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("syms"), resolved_refs, 0);
       ctr_object *filter_sobj = argm->object;
       ctr_object *filter_sv = ctr_build_string_from_cstring ("{"
-							     "^(my names fmap: \\:__vname Reflect getObject: __vname) internal-zip fmap: my filter_s."
+							     "^(my names fmap: \\:__vname Reflect getObject: __vname) internal-product fmap: my filter_s."
 							     "}");
       ctr_object *filter_svobj;
       filter_svobj = ctr_string_eval (filter_sv, NULL);
@@ -5448,7 +5482,7 @@ ctr_build_listcomp (ctr_tnode * node)
       ctr_internal_object_add_property (filter_svobj, ctr_build_string_from_cstring ("filter_s"), filter_sobj, CTR_CATEGORY_PRIVATE_PROPERTY);
       // ctr_argument arg = {bindings, NULL};
       // ctr_console_writeln(CtrStdConsole, &arg);
-      // names letEqualAst: bindings in: { internal-zip[names-as-names] fmap: filter_s }, fmap: (main_expr $)
+      // names letEqualAst: bindings in: { internal-product[names-as-names] fmap: filter_s }, fmap: (main_expr $)
       ctr_object *bindingfns = ctr_send_message_variadic (resolved_refs, "letEqualAst:in:", 15, 2, bindings, filter_svobj);
       ctr_object *call_s = ctr_build_string_from_cstring ("{:blk ^blk applyTo: my main_expr.}");
       argm->object = ctr_string_eval (call_s, NULL);
@@ -5469,7 +5503,7 @@ ctr_build_listcomp (ctr_tnode * node)
   ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("filters"), predicates, 0);
   ctr_object *filter_sobj = argm->object;
   ctr_object *filter_sv = ctr_build_string_from_cstring ("{"
-							 "^(my names fmap: \\:__vname Reflect getObject: __vname) internal-zip fmap: my filter_s."
+							 "^(my names fmap: \\:__vname Reflect getObject: __vname) internal-product fmap: my filter_s."
 							 "}");
   ctr_object *filter_svobj;
   filter_svobj = ctr_string_eval (filter_sv, NULL);
@@ -5902,6 +5936,7 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
     }
   // overload end
   int is_tail_call = 0, id;
+  if (myself->value.block && myself->value.block->lexical)
   for (id = ctr_context_id; id > 0 && !is_tail_call && ctr_current_node_is_return; id--, is_tail_call = ctr_contexts[id] == myself);
   if (is_tail_call)
     {

@@ -36,14 +36,12 @@ import
   Library/Control/MethodResolve
   Library/Data/String
   Library/Data/IO/UTF-8/input
-  Library/Functional/LazyBoolean: ['&&', '||']
+  Library/Functional/LazyBoolean: ['and', 'or']
   Library/Prelude: \*
   Library/Data/Array/LRArray: 'LRArray'
   Library/Utils/CLIContextMenu: ['generate_context_menu', 'clear_next_line']
   Library/Data/IO/Pen: 'pPen'.
 
-#:declare lazyev ||
-#:declare lazyev &&
 #:declare lazyev or
 #:declare lazyev and
 
@@ -63,6 +61,7 @@ Eval on: 'init' do: {
   my allowedColors is ('red blue magenta cyan yellow green resetColor' split: ' ') join: '|'.
   my globalvars is False.
   my history is LRArray new init: 100.
+  my histdir is '~/.citron'.
   my hs_file is Nil.
   my commands is Nil.
   my command_comps is Nil.
@@ -73,6 +72,7 @@ Eval on: 'init' do: {
     put: False at: 'stats',
     put: True at: 'printvs',
     put: True at: 'highlight',
+    put: False at: 'paste',
     put: False at: 'equit',
     put: False at: 'jsonout',
     put: False at: 'intty',
@@ -94,8 +94,8 @@ Eval on: 'init' do: {
   ^me.
 }.
 Eval on: 'initHistory' do: {
-  (var hddir is File new: '~/.citron') exists ifFalse: { hddir mkdir. }.
-  my hs_file is File new: '~/.citron/ctrhist'.
+  (var hddir is File new: my histdir) exists ifFalse: { hddir mkdir. }.
+  my hs_file is File new: my histdir + '/ctrhist'.
   my hs_file exists ifFalse: { my hs_file write: ''. }.
   var history is my history.
   (my hs_file read split: '\n\n\n') each_v: \:x history push: x.
@@ -209,6 +209,7 @@ Eval on: 'modifyFlags:' do: {:flag
     me enableFlag: flag.
   }.
 }.
+Eval on: 'histdir:' do: {:q my histdir is q. }.
 Eval on: 'argCount' do: { ^(my args count). }.
 Eval on: 'onlyRelevantArgs' do: {
     my args do shift shift done.
@@ -257,6 +258,8 @@ Eval on: 'userDefs' do: {
   }.
 }.
 
+Eval genAccessors: 'nextInput'.
+
 Eval on: 'returnValue:' do: {:x my returnValue do pop push: x, done. }.
 Eval on: 'stepDebug:' do: {:x my stepDebug is x. }.
 Eval on: 'debug' do: { ^my debug. }.
@@ -278,8 +281,10 @@ Eval on: 'Commands' do: {
       + !m <expression> -- evaluates and shows the methods of expression.
       + !p <expression> -- evaluates and shows the properties of expression.
       + !f <[no-]flag> -- modifies flag
+      + last [(<nth>)] <query> -- sets the next input to the last (nth if provided) match in history
       + hist [(<nth>)] <query> -- searches for entry in history, and returns it as a block
       + !hist [(<nth>)] <query> -- searches and executes (like hist but executes immediately)
+      + !repeat [-<stride>] <count> -- execute the last count expressions starting at stride?0 items up
       + set <(+|-)flag> -- alternative for !f with easier(?) syntax
       + !def <name> <expression> -- create a metacommand
       + p <expression> -- prints the value of expression
@@ -362,6 +367,27 @@ Eval on: 'Commands' do: {
         }.
       } at: 'hist',
       put: {:argstr
+        var nth is -1.
+        var cmd is 'Nil.'.
+        argstr findPattern: ?>(?:\((\d+|\*)\))?\s*(.+)$<? do: {:groups
+          nth is groups at: 1.
+          nth = '*' ifTrue: { nth is -1. }, ifFalse: { nth is nth toNumber. }.
+          cmd is groups at: 2.
+        }.
+        cmd is Eval getHistory filter: {\:_:x x startsWith: cmd.}.
+        cmd count = 0 ifTrue: {
+          thisBlock error: 'No match found $$argstr'.
+        }.
+        nth is nth min: cmd count - 1.
+        ^nth = -1 either: {
+          Eval nextInput: cmd last.
+          ^''.
+        } or: {
+          Eval nextInput: cmd @ nth.
+          ^''.
+        }.
+      } at: 'last',
+      put: {:argstr
         var nth is 0.
         var cmd is 'Nil.'.
         argstr findPattern: ?>(?:\((\d+|\*)\))?\s*(.+)$<? do: {:groups
@@ -380,6 +406,27 @@ Eval on: 'Commands' do: {
           ^Reflect run: {:cmd:nth ^cmd at: nth, eval. } inContextAsMain: Eval evalContext arguments: [cmd, nth].
         }.
       } at: '!hist',
+
+      put: {:argstr
+        var stride is 0.
+        var count is 0.
+        var args is argstr reSplit: '[^-\\d]+'.
+        args head startsWith: '-', ifTrue: {
+          stride is args shift toNumber.
+        }.
+        args count = 0 ifTrue: {
+          thisBlock error: 'Missing argument 0 (count) for !repeat'.
+        }.
+        count is args head toNumber.
+        var hist is Eval getHistory.
+        var chunk is hist from: hist count + stride - count length: count.
+        chunk count > 0 ifTrue: {
+          Pen writeln: 'Will now execute $$count expressions:\n\t%:L' % ['\n\t', (chunk fmap: \:x Highlight highlight: x)].
+          var res is chunk fmap: {:x ^Eval evaluate: x.}.
+          ^res.
+        }.
+        ^''.
+      } at: '!repeat',
       put: {:args
         var name is args reSplit: '\\s+'.
         ^Reflect run: {:name
@@ -607,11 +654,11 @@ Eval on: 'allTheNames:' do: {:obj
           ^File list: dir path,
             filter_v: {:v
               ^ (['.', '..'] contains: v @ 'file', not)
-                  `&&`
+                  `and`
                 (v @ 'type' = 'folder')
-                  `||`
+                  `or`
                 ( (v @ 'type' = 'file')
-                    `&&`
+                    `and`
                   (v @ 'file' endsWith: '.ctr')
                 ). },
             fmap: {:value ^value at: 'file'. },
@@ -630,6 +677,7 @@ Eval on: 'allTheNames:' do: {:obj
 
 Eval on: 'togglePasteMode' do: {
   me toggleFlag: 'highlight'.
+  me toggleFlag: 'paste'.
 }.
 
 # parse arguments
@@ -680,6 +728,7 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '--terminal-width <int> : Set the perceived terminal width (this will be automatically determined unless --assume-non-tty is passed)\n',
           indent: 2 write: '--without-signals : Disable signal processing\n',
           indent: 2 write: '--without-history : Disable recording of history\n',
+          indent: 2 write: '--history-dir <dir> : Save the history in dir/ctrhist\n',
           indent: 2 write: '--clear-errors : show tips for some common errors\n',
           indent: 2 write: '--html-colors : output html for syntax highlighting\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
@@ -735,7 +784,7 @@ Eval on: 'togglePasteMode' do: {
     }, case: '--tidy' do: {
         args pop.
         var fname is Eval shiftArgs.
-        fname isNil ifTrue: { thisBlock error: '--cleanup requires an argument'. }.
+        fname isNil ifTrue: { thisBlock error: '--tidy requires an argument'. }.
         import Library/AST/ast2ctrcode: 'ast2ctrcode'.
         Pen writeln: '# File $$fname'.
         Pen writeln: ast2ctrcode[(AST parse: (File new: fname, read))].
@@ -745,12 +794,12 @@ Eval on: 'togglePasteMode' do: {
         var value is Eval shiftArgs rightTrim.
         (value isNil) ifTrue: { thisBlock error: '-e requires an argument.'. }.
         import Library/Utils/Shell: \*.
-        Reflect addGlobalVariable: '&0'.
-        &0 is value.
+        Reflect addGlobalVariable: '%0'.
+        %0 is value.
         { ^(Eval argCount > 0). } whileTrue: { args push: Eval shiftArgs. }. #consume all other arguments.
-        args imap: {:i:n Reflect addGlobalVariable: '&' + (i + 1). Reflect set: '&' + (i + 1) to: (Eval tryNumrify: n).}.
-        Reflect addGlobalVariable: '&_'.
-        &_ is args.
+        args imap: {:i:n Reflect addGlobalVariable: '%' + (i + 1). Reflect set: '%' + (i + 1) to: (Eval tryNumrify: n).}.
+        Reflect addGlobalVariable: '%_'.
+        %_ is args.
         value endsWith: '.', ifFalse: { value +=: '.'. }.
         value is '{ ^$$value }'.
         var val is (Eval evaluate: value) run.
@@ -764,12 +813,12 @@ Eval on: 'togglePasteMode' do: {
         args pop. #consume option..
         var value is Eval shiftArgs rightTrim.
         (value isNil) ifTrue: { thisBlock error: '--qe requires an argument.'. }.
-        Reflect addGlobalVariable: '&0'.
-        &0 is value.
+        Reflect addGlobalVariable: '%0'.
+        %0 is value.
         { ^(Eval argCount > 0). } whileTrue: { args push: Eval shiftArgs. }. #consume all other arguments.
-        args imap: {:i:n Reflect addGlobalVariable: '&' + (i + 1). Reflect set: '&' + (i + 1) to: (Eval tryNumrify: n).}.
-        Reflect addGlobalVariable: '&_'.
-        &_ is args.
+        args imap: {:i:n Reflect addGlobalVariable: '%' + (i + 1). Reflect set: '%' + (i + 1) to: (Eval tryNumrify: n).}.
+        Reflect addGlobalVariable: '%_'.
+        %_ is args.
         value endsWith: '.', ifFalse: { value +=: '.'. }.
         value is '{ $$value }'.
         (Eval evaluate: value) run.
@@ -853,6 +902,13 @@ Eval on: 'togglePasteMode' do: {
     }, case: '--without-history' do: {
       args pop.
       Eval disableFlag: 'history'.
+    }, case: '--history-dir' do: {
+      args pop.
+      var dir is Eval shiftArgs.
+      dir isNil ifTrue: {
+        thisBlock error: '--history-dir expects a directory argument'.
+      }.
+      Eval histdir: dir.
     }, case: '--clear-errors' do: {
       args pop.
       Eval enableFlag: 'clear_errors'.
@@ -892,9 +948,17 @@ Eval break ifTrue: { Program exit. }.
   TerminalWidth is 85.
   Eval display/writeln: 'Terminal: %sx%s - %sx%s' % winsize run.
 
+  var stopexec is {
+    thisBlock error: 'Interrupted'.
+  }.
+
   (Eval getFlag: 'processig') ifTrue: {
     import Library/Foreign/C/Signal: 'Signal'.
-    Signal new handle: 'SIGWINCH' with: winsize.
+    # This will blow up on libffi <3.3
+    # investigate (related to #8)
+    Signal new
+      handle: 'SIGWINCH' with: winsize,
+      handle: 'SIGINT'   with: stopexec.
   }.
 }.
 
@@ -970,19 +1034,23 @@ Eval on: 'read_eval_print:' do: ({:prompt
   var hindex is me getHistory count.
   var ncmessage is ' <- No completion'.
   var stdin is File special: 'stdin'.
-  inp is ''.
+  inp is Eval nextInput.
+  inp isNil ifTrue: {
+    inp is ''.
+  } ifFalse: {
+    Eval nextInput: Nil.
+  }.
   # break the repl when `end` is True.
   Eval break break.
   Eval display/cyan write: prompt, resetColor.
 
-  var inc is stdin readUTF8Bytes: 1.
   var last_was_comp is False.
   var last_comp_entry is ''.
   var last_comp_index is -1.
   var last_comp_rewind is 0.
   var last_toc is 'Object'.
   var done is False.
-  var cursor is 0.
+  var cursor is inp length.
   var multichar_in is Array new.
   inBlock is 0.
   Eval endBlock.
@@ -996,6 +1064,8 @@ Eval on: 'read_eval_print:' do: ({:prompt
   var comp_set is HashSet new.
   var have_context is False.
   var last_comp_init is ''.
+  var inc is ''.
+
   {^done & (inBlock = 0).} whileFalse: {
     cmt is ''.
     inc = '\t' ifTrue: {#<Tab>
@@ -1005,7 +1075,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
           last_was_comp ifTrue: {
             inp is inp removeFrom: (cursor - last_comp_entry_len) to: cursor.
             cursor is (cursor - last_comp_entry_len) max: 0.
-            }.
+          }.
           var comps is Eval metaCompletion: (inp split: ' ' max: 1).
           comps count > 0 either: {
             comps count <=: ce_idx, ifTrue: { ce_idx is 0. }.
@@ -1104,7 +1174,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
           }.
           last_was_comp is True.
         }.
-      } ifFalse: {
+    } ifFalse: {
         (frozen select_toplevel_inc is Object case: '\xd' do: {#<Enter>
           clear_next_line applyTo: linesp.
           have_context ifFalse: {
@@ -1147,7 +1217,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
             cursor -=: 1.
             Eval display/write: '\b \b'.
           }, else: { Eval display/write: '\a'. }.
-        }, case: '\x{7f}' do: {#<\b>
+        }, case: '\x7f' do: {#<\b>
           clear_next_line applyTo: linesp. have_context is False.
           cursor > 0 ifTrue: {
             inp is inp removeFrom: (cursor - 1) to: cursor.
@@ -1159,94 +1229,124 @@ Eval on: 'read_eval_print:' do: ({:prompt
           var recs is '%:L' % [' ', (Eval allTheNames filter: {:_:n ^n startsWith: toc.})].
           Eval display/cyan write: recs, resetColor.
           clear_next_line applyTo: linesp. have_context is False.
-
-        }, case: '\x1b' do: {
-          inc is stdin readUTF8Bytes: 2.
-          (frozen select_inlevel_q is case: '\x5b\x41' do: { #Up Arrow
-            hindex > 0 ifTrue: {
-              cursor is (inp is Eval getHistory at: (hindex is hindex - 1)) length.
-            }.
-            clear_next_line applyTo: linesp. have_context is False.
-          }, case: '\x5b\x42' do: { #Down Arrow
-            (hindex > 0) & (Eval getHistory count > 0) ifTrue: {
-              hindex +=: 1.
-              Eval display/write: '\b' * (inp length).
-              inp is Eval getHistory.
-              inp count <=: hindex, ifTrue: {hindex is inp count.}.
-              inp is inp at: hindex - 1.
-              cursor is inp length.
-            }, else: {
-              hindex is 0.
-              Eval display/write: '\b \b' * (inp length).
-              inp is ''.
-              cursor is 0.
-            }.
-            clear_next_line applyTo: linesp. have_context is False.
-          }, case: '\x5b\x43' do: { #Right Arrow
-            (cursor < inp length) ifTrue: {
-              cursor +=: 1.
-            }, else: {Eval display/write: '\a'.}.
-            clear_next_line applyTo: linesp. have_context is False.
-          }, case: '\x5b\x44' do: { #Left Arrow
-            (cursor > 0) ifTrue: {
-              cursor -=: 1.
-            }, else: {Eval display/write: '\a'.}.
-            clear_next_line applyTo: linesp. have_context is False.
-          }, case: '\x5b\x31' do: { #Supposedly <ctrl>
-            inc is stdin readUTF8Bytes: 3.
-              (inc = '\x3b\x35\x44') & (cursor > 0) ifTrue: { #^Left Arrow
-                var ct is inp from: 0 to: cursor.
-                var ct is ct trim.
-                ct at: ct length - 1, = ':' ifTrue: { ct is ct from: 0 to: ct length - 1. }.
-                ct is (ct reLastIndexOf: ?>\s|\'|(?<!^):\b|:$<?).
-                ct is ct equals: cursor - 1, either: ct - 1 or: ct.
-                cursor is ct + 1.
-              } ifFalse: {
-                (inc = '\x3b\x35\x43') ifTrue: { #^Right Arrow
-                  var ct is (var ix is inp from: cursor to: (inp length), rightTrim) reIndexOf: ?>\s|\'|(?<!^):\b|:$<?, - 1.
-                  ct is ct equals: 0, either: ct + 1 or: ct - 1.
-                  cursor is cursor + ct + ((inp length) - (ix length)).
-                }.#, else: { Eval display/red write: inc. }.
-              }.
-              clear_next_line applyTo: linesp. have_context is False.
-          }, case: '\x4f\x51' do: { #F2
-              clear_next_line applyTo: linesp. have_context is False.
-              Eval togglePasteMode.
-          }, default: {
-            Pen write: inc toByteArray.
-          }) switch: inc.
+        }, case: '\x1b' do: { #<esc>
+          # Eval redraw: inp at: cursor - 1 comment: '<escape>'.
+          inc is stdin readUTF8Bytes: 1.
+          (frozen select_inlevel_t is
+               case: '\x5b' do: {
+                 inc is stdin readUTF8Bytes: 1.
+                 (frozen select_inlevel_q is
+                     case: '\x41' do: { #Up Arrow
+                      hindex > 0 ifTrue: {
+                        cursor is (inp is Eval getHistory at: (hindex is hindex - 1)) length.
+                      }.
+                      clear_next_line applyTo: linesp. have_context is False.
+                  }, case: '\x42' do: { #Down Arrow
+                      (hindex > 0) & (Eval getHistory count > 0) ifTrue: {
+                        hindex +=: 1.
+                        Eval display/write: '\b' * (inp length).
+                        inp is Eval getHistory.
+                        inp count <=: hindex, ifTrue: {hindex is inp count.}.
+                        inp is inp at: hindex - 1.
+                        cursor is inp length.
+                      }, else: {
+                        hindex is 0.
+                        Eval display/write: '\b \b' * (inp length).
+                        inp is ''.
+                        cursor is 0.
+                      }.
+                      clear_next_line applyTo: linesp. have_context is False.
+                  }, case: '\x43' do: { #Right Arrow
+                    (cursor < inp length) ifTrue: {
+                      cursor +=: 1.
+                    }, else: {Eval display/write: '\a'.}.
+                    clear_next_line applyTo: linesp. have_context is False.
+                  }, case: '\x44' do: { #Left Arrow
+                    (cursor > 0) ifTrue: {
+                      cursor -=: 1.
+                    }, else: {Eval display/write: '\a'.}.
+                    clear_next_line applyTo: linesp. have_context is False.
+                  }, case: '\x31' do: { #Supposedly <ctrl>
+                    inc is stdin readUTF8Bytes: 3.
+                      (inc = '\x3b\x35\x44') & (cursor > 0) ifTrue: { #^Left Arrow
+                        var ct is inp from: 0 to: cursor.
+                        var ct is ct trim.
+                        ct at: ct length - 1, = ':' ifTrue: { ct is ct from: 0 to: ct length - 1. }.
+                        ct is (ct reLastIndexOf: ?>\s|\'|(?<!^):\b|:$<?).
+                        ct is ct equals: cursor - 1, either: ct - 1 or: ct.
+                        cursor is ct + 1.
+                      } ifFalse: {
+                        (inc = '\x3b\x35\x43') ifTrue: { #^Right Arrow
+                          var ct is (var ix is inp from: cursor to: (inp length), rightTrim) reIndexOf: ?>\s|\'|(?<!^):\b|:$<?, - 1.
+                          ct is ct equals: 0, either: ct + 1 or: ct - 1.
+                          cursor is cursor + ct + ((inp length) - (ix length)).
+                        }.#, else: { Eval display/red write: inc. }.
+                      }.
+                      clear_next_line applyTo: linesp. have_context is False.
+                  }, default: {
+                    Pen writeln: inc toByteArray.
+                  }) switch: inc.
+            }, case: '\x4f' do: {
+                inc is stdin readUTF8Bytes: 1.
+                (frozen select_inlevel_c is
+                     case: '\x51' do: { #F2
+                      clear_next_line applyTo: linesp. have_context is False.
+                      Eval togglePasteMode.
+                  }
+                ) switch: inc.
+            }, case: '\xd' do: { #<Enter>
+              inBlock +=: 1.
+              True continue.
+            }, case: '\x1b' do: { #<esc>
+              inBlock is 0 max: inBlock - 1.
+            }, default: {
+            }
+          ) switch: inc.
         }, default: {
           have_context ifTrue: { clear_next_line applyTo: linesp. have_context is False. }.
-          (inc
-            case: '\'' do: {
-                inString either: {
-                  lastEscape ifFalse: { inString is False. }.
-                } or: { inString is True. }.
-            },
-            case: '\\' do: {
-                lastEscape is lastEscape not.
-                justInEscape is True.
-            },
-            case: '#' do: {
-              inString ifFalse: {
-                cmt is Colors % ['comments are not allowed in eval', \red].
-                done is True.
-                inc is ''.
-              }.
-            },
-            case: '}' do: {
-              (inString not) & (inBlock > 0) ifTrue: {
-                inBlock -=: 1.
-              }.
-            },
-            default: { lastEscape & inString ifTrue: {lastEscape is False.}. }, switch).
-            justInEscape ifFalse: { lastEscape is False. }.
-          inp is inp insert: inc at: cursor.
-          cursor +=: inc length.
-          # Eval redraw: inp at: cursor comment: ''.
-        }) switch: inc.
-        last_was_comp is False.
-      }.
+          Eval getFlag: 'paste', ifTrue: {
+            inp is inp insert: inc at: cursor.
+            cursor +=: inc length.
+          }
+          ifFalse: {
+            (frozen str_select_q is
+              case: '\'' do: {
+                  inString either: {
+                    lastEscape ifFalse: { inString is False. }.
+                  } or: { inString is True. }.
+              },
+              case: '\\' do: {
+                inString ifTrue: {
+                  lastEscape is lastEscape not.
+                  justInEscape is True.
+                }.
+              },
+              case: '#' do: {
+                inString ifFalse: {
+                  cmt is Colors % ['comments are not allowed in eval', \red].
+                  inc is ''.
+                }.
+              },
+              case: '{' do: {
+                (inString not) ifTrue: {
+                  inBlock +=: 1.
+                }.
+              },
+              case: '}' do: {
+                (inString not) & (inBlock > 0) ifTrue: {
+                  inBlock -=: 1.
+                }.
+              },
+              default: { lastEscape & inString ifTrue: {lastEscape is False.}. }) switch: inc.
+              justInEscape ifFalse: { lastEscape is False. }.
+              inp is inp insert: inc at: cursor.
+              cursor +=: inc length.
+              # Eval redraw: inp at: cursor comment: ''.
+          }.
+        }
+      ) switch: inc.
+      last_was_comp is False.
+    }.
     Eval redraw: inp at: cursor - 1 comment: (inBlock either: '%s%d' % ['%{', inBlock] or: cmt).
     # Eval display/write: inc toByteArray.
     done is (done & (inBlock = 0)).

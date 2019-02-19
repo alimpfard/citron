@@ -1035,6 +1035,7 @@ ctr_cparse_ref ()
 	{
 	  ctr_clex_putback ();
 	  ctr_clex_putback ();
+    ctr_clex_tok ();
 	  goto the_else;
 	}
       return ctr_cparse_pure ();
@@ -1637,6 +1638,7 @@ ctr_tnode *
 ctr_cparse_pure ()
 {
   char *code_s = ctr_code;
+  ctr_clex_putback();
   char *end = ctr_clex_scan_balanced ('}', '{');
   if (end)
     {

@@ -174,6 +174,8 @@ ctr_ctypes_set_type (ctr_object * object, ctr_ctype type)
       ctr_set_link_all (object, CtrStdCType_dynamic_lib);
       break;
     case CTR_CTYPE_STRUCT:
+      object->value.rvalue->ptr = ctr_heap_allocate(sizeof(ctr_ctypes_ffi_struct_value));
+      memset(object->value.rvalue->ptr, 0, sizeof(ctr_ctypes_ffi_struct_value));
       ctr_set_link_all (object, CtrStdCType_struct);
       break;
     case CTR_CTYPE_STRING:
@@ -183,6 +185,8 @@ ctr_ctypes_set_type (ctr_object * object, ctr_ctype type)
       ctr_set_link_all (object, CtrStdCType_functionptr);
       break;
     case CTR_CTYPE_CONTIGUOUS_ARRAY:
+      object->value.rvalue->ptr = ctr_heap_allocate(sizeof(ctr_ctypes_cont_array_t));
+      memset(object->value.rvalue->ptr, 0, sizeof(ctr_ctypes_cont_array_t));
       ctr_set_link_all (object, CtrStdCType_cont_pointer);
       break;
     default:
@@ -2347,6 +2351,16 @@ CTR_CT_FFI_BIND (malloc)
   return object;
 }
 
+
+CTR_CT_FFI_BIND (shmalloc)
+{
+  int size = ctr_internal_cast2number (argumentList->object)->value.nvalue;
+  void *resource = ctr_heap_allocate_shared (size);
+  ctr_object *object = ctr_ctypes_make_pointer (NULL, NULL);
+  object->value.rvalue->ptr = resource;
+  return object;
+}
+
 CTR_CT_FFI_BIND (memcpy)
 {				//dest, source, count
   void *r0 = argumentList->object->value.rvalue->ptr, *r1 = argumentList->next->object->value.rvalue->ptr;
@@ -2398,6 +2412,19 @@ CTR_CT_FFI_BIND (free)
   return myself;
 }
 
+
+CTR_CT_FFI_BIND (shfree)
+{
+  if ((argumentList->object->info.type) != CTR_OBJECT_TYPE_OTEX)
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("Can only free resources.");
+      return CtrStdNil;
+    }
+  ctr_heap_free_shared (argumentList->object->value.rvalue->ptr);
+  argumentList->object->value.rvalue->ptr = NULL;
+  return myself;
+}
+
 //TODO Fix memory leak
 ctr_object *
 ctr_ctype_ffi_closure_cif (ctr_object * myself, ctr_argument * argumentList)
@@ -2411,12 +2438,17 @@ ctr_ctype_ffi_closure_cif (ctr_object * myself, ctr_argument * argumentList)
     }
   void **bound_f = ctr_heap_allocate (sizeof (void *));
   ffi_closure *closure = ffi_closure_alloc (sizeof (ffi_closure), bound_f);
-  fun->info.sticky = 1;
+
   if (ffi_prep_closure_loc (closure, cif, ctr_run_function_ptr, fun, bound_f) != FFI_OK)
     {
       CtrStdFlow = ctr_build_string_from_cstring ("Could not create closure");
       return CtrStdNil;
     }
+    
+  ctr_gc_pin(fun);
+  ctr_gc_pin(cif);
+  ctr_gc_pin(bound_f);
+
   ctr_object *fn = ctr_ctypes_make_pointer (CtrStdCType_pointer, NULL);
   fn->value.rvalue->ptr = *bound_f;
   return fn;
@@ -2713,6 +2745,7 @@ ctr_ffi_begin ()
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("structWithFormat:"), &ctr_ctypes_make_struct);
   ctr_internal_create_func (CtrStdCType_struct, ctr_build_string_from_cstring ("toString"), &ctr_ctypes_struct_to_string);
   ctr_internal_create_func (CtrStdCType_struct, ctr_build_string_from_cstring ("new"), &ctr_ctypes_struct_new);
+  ctr_internal_create_func (CtrStdCType_struct, ctr_build_string_from_cstring ("newIns"), &ctr_ctypes_struct_new);
   ctr_internal_create_func (CtrStdCType_struct, ctr_build_string_from_cstring ("getSize"), &ctr_ctypes_struct_get_size);
   ctr_internal_create_func (CtrStdCType_struct, ctr_build_string_from_cstring ("memberCount"), &ctr_ctypes_struct_get_member_count);
   ctr_internal_create_func (CtrStdCType_struct, ctr_build_string_from_cstring ("padInfo"), &ctr_ctypes_struct_get_padding_format);
@@ -2742,11 +2775,14 @@ ctr_ffi_begin ()
   ctr_internal_create_func (CtrStdCType_cont_pointer, ctr_build_string_from_cstring ("_type"), &ctr_ctypes_packed_type);
   ctr_internal_create_func (CtrStdCType_cont_pointer, ctr_build_string_from_cstring ("getSize"), &ctr_ctypes_packed_size);
   ctr_internal_create_func (CtrStdCType_cont_pointer, ctr_build_string_from_cstring ("new"), &ctr_ctypes_packed_from);
+  ctr_internal_create_func (CtrStdCType_cont_pointer, ctr_build_string_from_cstring ("newIns"), &ctr_ctypes_packed_from);
 
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("allocateBytes:"), &ctr_ctype_ffi_malloc);
+  ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("allocateBytesShared:"), &ctr_ctype_ffi_shmalloc);
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("copyTo:from:numBytes:"), &ctr_ctype_ffi_memcpy);
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("fill:withString:"), &ctr_ctype_ffi_fill_buf);
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("free:"), &ctr_ctype_ffi_free);
+  ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("freeShared:"), &ctr_ctype_ffi_shfree);
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("fromString:"), &ctr_ctype_ffi_buf_from_str);
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("loadLibrary:"), &ctr_ctype_ffi_ll);
   ctr_internal_create_func (CtrStdCType, ctr_build_string_from_cstring ("closureOf:withCIF:"), &ctr_ctype_ffi_closure_cif);

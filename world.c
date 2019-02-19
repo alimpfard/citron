@@ -2189,6 +2189,7 @@ ctr_initialize_world ()
 
   /* Broom */
   CtrStdGC = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
+  ctr_internal_create_func (CtrStdGC, ctr_build_string_from_cstring ("noGC:"), &ctr_gc_with_gc_disabled);
   ctr_internal_create_func (CtrStdGC, ctr_build_string_from_cstring (CTR_DICT_SWEEP), &ctr_gc_collect);
   ctr_internal_create_func (CtrStdGC, ctr_build_string_from_cstring (CTR_DICT_SWEEP ":"), &ctr_gc_sweep_this);
   ctr_internal_create_func (CtrStdGC, ctr_build_string_from_cstring (CTR_DICT_DUST), &ctr_gc_dust);
@@ -2378,6 +2379,33 @@ ctr_initialize_world ()
 }
 
 ctr_object *
+ctr_internal_get_responder_from_interfaces(ctr_object* receiverObject, char* message, int vlen)
+{
+  ctr_object *methodObject = NULL;
+  #pragma omp parallel default(none), shared(receiverObject, vlen, message, methodObject)
+    {
+  int abort = 0;
+  #pragma omp for
+  for (int i = 0; i < receiverObject->interfaces->count; i++)
+  {
+    if (!abort)
+      {
+  // printf("interface %d of %p for message %.*s\n", i, receiverObject, vlen, message);
+  ctr_object *meth = ctr_get_responder (receiverObject->interfaces->ifs[i], message, vlen);
+  if (meth)
+    {
+  #pragma omp critical(methodObject)
+      methodObject = meth;
+      abort = 1;
+  #pragma omp flush (abort)
+    }
+      }
+  }
+    }
+  return methodObject;
+}
+
+ctr_object *
 ctr_get_responder (ctr_object * receiverObject, char *message, long vlen)
 {
   if (receiverObject->info.type == 0 && receiverObject->interfaces == NULL)
@@ -2419,29 +2447,21 @@ ctr_get_responder (ctr_object * receiverObject, char *message, long vlen)
 	break;
       searchObject = searchObject->interfaces->link;
     }
-  if (!methodObject)
-    {
-#pragma omp parallel default(none), shared(receiverObject, vlen, message, methodObject)
+  ctr_heap_free(msg);
+  if (!methodObject) {
+    searchObject = receiverObject;
+    while (!methodObject)
       {
-	int abort = 0;
-#pragma omp for
-	for (int i = 0; i < receiverObject->interfaces->count; i++)
-	  {
-	    if (!abort)
-	      {
-		//printf("%.*s", vlen, message);
-		ctr_object *meth = ctr_get_responder (receiverObject->interfaces->ifs[i], message, vlen);
-		if (meth)
-		  {
-#pragma omp critical(methodObject)
-		    methodObject = meth;
-		    abort = 1;
-#pragma omp flush (abort)
-		  }
-	      }
-	  }
+        if (!searchObject)
+  	break;
+    methodObject = ctr_internal_get_responder_from_interfaces(searchObject, message, vlen);
+        if (methodObject)
+  	break;
+        if (!searchObject->interfaces->link)
+  	break;
+        searchObject = searchObject->interfaces->link;
       }
-    }
+  }
   return methodObject;
 }
 

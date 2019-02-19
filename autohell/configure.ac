@@ -69,7 +69,12 @@ AC_ARG_WITH([inlineasm],
               AS_HELP_STRING([--with-inline-asm], [Build with Inline assembly support (requires llvm)]),
               [want_inlineasm=yes],
               [])
-
+AS_IF([test "x$with_ffi" != "xyes"], [
+              lffi=$want_ffi
+])
+AS_IF([test "x$with_ffi" = "xyes"], [
+              lffi=ffi
+])
 AS_IF([test "x$enable_boehm_gc" = "xyes"], [
        CFLAGS+=" -DwithBoehmGC"
        AC_CHECK_LIB([gc], [GC_free])
@@ -87,7 +92,7 @@ AC_MSG_CHECKING(ffi)
 AS_IF([test "x$want_ffi" = "xyes"], [
        CFLAGS+=" -DwithCTypesNative=1"
        MAYBE_FFI=ffi
-       MAYBE_FFI_L=-lffi
+       MAYBE_FFI_L=-l$lffi
        CTR_MAYBE_FFI="ctypes.c reverse_sizes.h _struct.h structmember.h ctypes.h _struct.c structmember.c"
        ])
 AC_MSG_RESULT($want_ffi)

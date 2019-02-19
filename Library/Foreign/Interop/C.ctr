@@ -73,7 +73,7 @@ Inject on: 'getFunctionsOrTypes:' do: {:self:funcs
   var if-then-else is \:cond:ift:iff cond evaluate ifTrue: { ^ift evaluate. } ifFalse: { ^iff evaluate. }.
   var cifs is context definedFunctions: funcs.
   cifs each: {:k:v
-    Pen writeln: '${{k}}$ -> ${{v}}$'.
+    # Pen writeln: '${{k}}$ -> ${{v}}$'.
   }.
   funcs isNil ifTrue: {
     funcs is cifs keys.
@@ -208,7 +208,7 @@ Inject on: 'struct' do: {:self
             strdsc +=: '$$typename ${{rest}}$; '.
           }.
           strdsc is 'struct ${{my name}}$ { $$strdsc };'.
-          Pen writeln: strdsc.
+          # Pen writeln: strdsc.
           my inject compile: strdsc, importFunctionsOrTypes: [my name].
           my inject destruct.
           ^ Nil.

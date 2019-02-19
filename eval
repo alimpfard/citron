@@ -61,6 +61,7 @@ Eval on: 'init' do: {
   my allowedColors is ('red blue magenta cyan yellow green resetColor' split: ' ') join: '|'.
   my globalvars is False.
   my history is LRArray new init: 100.
+  my histdir is '~/.citron'.
   my hs_file is Nil.
   my commands is Nil.
   my command_comps is Nil.
@@ -93,8 +94,8 @@ Eval on: 'init' do: {
   ^me.
 }.
 Eval on: 'initHistory' do: {
-  (var hddir is File new: '~/.citron') exists ifFalse: { hddir mkdir. }.
-  my hs_file is File new: '~/.citron/ctrhist'.
+  (var hddir is File new: my histdir) exists ifFalse: { hddir mkdir. }.
+  my hs_file is File new: my histdir + '/ctrhist'.
   my hs_file exists ifFalse: { my hs_file write: ''. }.
   var history is my history.
   (my hs_file read split: '\n\n\n') each_v: \:x history push: x.
@@ -208,6 +209,7 @@ Eval on: 'modifyFlags:' do: {:flag
     me enableFlag: flag.
   }.
 }.
+Eval on: 'histdir:' do: {:q my histdir is q. }.
 Eval on: 'argCount' do: { ^(my args count). }.
 Eval on: 'onlyRelevantArgs' do: {
     my args do shift shift done.
@@ -256,6 +258,8 @@ Eval on: 'userDefs' do: {
   }.
 }.
 
+Eval genAccessors: 'nextInput'.
+
 Eval on: 'returnValue:' do: {:x my returnValue do pop push: x, done. }.
 Eval on: 'stepDebug:' do: {:x my stepDebug is x. }.
 Eval on: 'debug' do: { ^my debug. }.
@@ -277,8 +281,10 @@ Eval on: 'Commands' do: {
       + !m <expression> -- evaluates and shows the methods of expression.
       + !p <expression> -- evaluates and shows the properties of expression.
       + !f <[no-]flag> -- modifies flag
+      + last [(<nth>)] <query> -- sets the next input to the last (nth if provided) match in history
       + hist [(<nth>)] <query> -- searches for entry in history, and returns it as a block
       + !hist [(<nth>)] <query> -- searches and executes (like hist but executes immediately)
+      + !repeat [-<stride>] <count> -- execute the last count expressions starting at stride?0 items up
       + set <(+|-)flag> -- alternative for !f with easier(?) syntax
       + !def <name> <expression> -- create a metacommand
       + p <expression> -- prints the value of expression
@@ -361,6 +367,27 @@ Eval on: 'Commands' do: {
         }.
       } at: 'hist',
       put: {:argstr
+        var nth is -1.
+        var cmd is 'Nil.'.
+        argstr findPattern: ?>(?:\((\d+|\*)\))?\s*(.+)$<? do: {:groups
+          nth is groups at: 1.
+          nth = '*' ifTrue: { nth is -1. }, ifFalse: { nth is nth toNumber. }.
+          cmd is groups at: 2.
+        }.
+        cmd is Eval getHistory filter: {\:_:x x startsWith: cmd.}.
+        cmd count = 0 ifTrue: {
+          thisBlock error: 'No match found $$argstr'.
+        }.
+        nth is nth min: cmd count - 1.
+        ^nth = -1 either: {
+          Eval nextInput: cmd last.
+          ^''.
+        } or: {
+          Eval nextInput: cmd @ nth.
+          ^''.
+        }.
+      } at: 'last',
+      put: {:argstr
         var nth is 0.
         var cmd is 'Nil.'.
         argstr findPattern: ?>(?:\((\d+|\*)\))?\s*(.+)$<? do: {:groups
@@ -379,6 +406,27 @@ Eval on: 'Commands' do: {
           ^Reflect run: {:cmd:nth ^cmd at: nth, eval. } inContextAsMain: Eval evalContext arguments: [cmd, nth].
         }.
       } at: '!hist',
+
+      put: {:argstr
+        var stride is 0.
+        var count is 0.
+        var args is argstr reSplit: '[^-\\d]+'.
+        args head startsWith: '-', ifTrue: {
+          stride is args shift toNumber.
+        }.
+        args count = 0 ifTrue: {
+          thisBlock error: 'Missing argument 0 (count) for !repeat'.
+        }.
+        count is args head toNumber.
+        var hist is Eval getHistory.
+        var chunk is hist from: hist count + stride - count length: count.
+        chunk count > 0 ifTrue: {
+          Pen writeln: 'Will now execute $$count expressions:\n\t%:L' % ['\n\t', (chunk fmap: \:x Highlight highlight: x)].
+          var res is chunk fmap: {:x ^Eval evaluate: x.}.
+          ^res.
+        }.
+        ^''.
+      } at: '!repeat',
       put: {:args
         var name is args reSplit: '\\s+'.
         ^Reflect run: {:name
@@ -680,6 +728,7 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '--terminal-width <int> : Set the perceived terminal width (this will be automatically determined unless --assume-non-tty is passed)\n',
           indent: 2 write: '--without-signals : Disable signal processing\n',
           indent: 2 write: '--without-history : Disable recording of history\n',
+          indent: 2 write: '--history-dir <dir> : Save the history in dir/ctrhist\n',
           indent: 2 write: '--clear-errors : show tips for some common errors\n',
           indent: 2 write: '--html-colors : output html for syntax highlighting\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
@@ -853,6 +902,13 @@ Eval on: 'togglePasteMode' do: {
     }, case: '--without-history' do: {
       args pop.
       Eval disableFlag: 'history'.
+    }, case: '--history-dir' do: {
+      args pop.
+      var dir is Eval shiftArgs.
+      dir isNil ifTrue: {
+        thisBlock error: '--history-dir expects a directory argument'.
+      }.
+      Eval histdir: dir.
     }, case: '--clear-errors' do: {
       args pop.
       Eval enableFlag: 'clear_errors'.
@@ -892,9 +948,17 @@ Eval break ifTrue: { Program exit. }.
   TerminalWidth is 85.
   Eval display/writeln: 'Terminal: %sx%s - %sx%s' % winsize run.
 
+  var stopexec is {
+    thisBlock error: 'Interrupted'.
+  }.
+
   (Eval getFlag: 'processig') ifTrue: {
     import Library/Foreign/C/Signal: 'Signal'.
-    Signal new handle: 'SIGWINCH' with: winsize.
+    # This will blow up on libffi <3.3
+    # investigate (related to #8)
+    Signal new
+      handle: 'SIGWINCH' with: winsize,
+      handle: 'SIGINT'   with: stopexec.
   }.
 }.
 
@@ -970,19 +1034,23 @@ Eval on: 'read_eval_print:' do: ({:prompt
   var hindex is me getHistory count.
   var ncmessage is ' <- No completion'.
   var stdin is File special: 'stdin'.
-  inp is ''.
+  inp is Eval nextInput.
+  inp isNil ifTrue: {
+    inp is ''.
+  } ifFalse: {
+    Eval nextInput: Nil.
+  }.
   # break the repl when `end` is True.
   Eval break break.
   Eval display/cyan write: prompt, resetColor.
 
-  var inc is stdin readUTF8Bytes: 1.
   var last_was_comp is False.
   var last_comp_entry is ''.
   var last_comp_index is -1.
   var last_comp_rewind is 0.
   var last_toc is 'Object'.
   var done is False.
-  var cursor is 0.
+  var cursor is inp length.
   var multichar_in is Array new.
   inBlock is 0.
   Eval endBlock.
@@ -996,6 +1064,8 @@ Eval on: 'read_eval_print:' do: ({:prompt
   var comp_set is HashSet new.
   var have_context is False.
   var last_comp_init is ''.
+  var inc is ''.
+
   {^done & (inBlock = 0).} whileFalse: {
     cmt is ''.
     inc = '\t' ifTrue: {#<Tab>
@@ -1005,7 +1075,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
           last_was_comp ifTrue: {
             inp is inp removeFrom: (cursor - last_comp_entry_len) to: cursor.
             cursor is (cursor - last_comp_entry_len) max: 0.
-            }.
+          }.
           var comps is Eval metaCompletion: (inp split: ' ' max: 1).
           comps count > 0 either: {
             comps count <=: ce_idx, ifTrue: { ce_idx is 0. }.

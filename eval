@@ -78,7 +78,7 @@ Eval on: 'init' do: {
     put: True at: 'intty',
     put: True at: 'processig',
     put: False at: 'clear_errors',
-    put: True at: 'history',
+    put: False at: 'history',
     put: False at: 'html_colors'.
   me genReader: 'eServer'.
   my errd is False.

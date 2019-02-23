@@ -1900,6 +1900,7 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
 	      if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 		{
 		  CtrStdFlow = NULL;
+          a->object = ex;
 		  ctr_block_run_here (catchBlock, a, block);
 		}
 	      ctr_internal_object_delete_property (ex, exdata, 0);
@@ -5899,6 +5900,7 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
 	  if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 	    {
 	      CtrStdFlow = NULL;
+          a->object = ex;
 	      ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
 	      result = alternative;
 	    }
@@ -6085,12 +6087,15 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 	      ctr_internal_create_func (ex, ctr_build_string_from_cstring ("toString"), &ctr_string_to_string);
 	    }
 	  a->object = ex;
-	  a->next = ctr_heap_allocate (sizeof (ctr_argument));
-	  a->next->object = catch_type;
+      if (catch_type) {
+          a->next = ctr_heap_allocate (sizeof (ctr_argument));
+          a->next->object = catch_type;
+      }
 	  if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 	    {
 	      CtrStdFlow = NULL;
-	      ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
+          a->object = ex;
+          ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
 	      result = alternative;
 	    }
 	  ctr_internal_object_delete_property (ex, exdata, 0);
@@ -6245,6 +6250,7 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
 	  if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 	    {
 	      CtrStdFlow = NULL;
+          a->object = ex;
 	      ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
 	      result = alternative;
 	    }
@@ -6340,6 +6346,7 @@ ctr_block_while_true (ctr_object * myself, ctr_argument * argumentList)
 		if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 		  {
 		    CtrStdFlow = NULL;
+          a->object = ex;
 		    ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
 		    result = alternative;
 		  }
@@ -6464,6 +6471,7 @@ ctr_block_while_false (ctr_object * myself, ctr_argument * argumentList)
 		if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 		  {
 		    CtrStdFlow = NULL;
+          a->object = ex;
 		    ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
 		    result = alternative;
 		  }
@@ -7095,6 +7103,76 @@ ctr_print_stack_trace ()
 	}
     }
   putchar ('\n');
+}
+
+ctr_object*
+ctr_get_last_trace_stringified(ctr_object*m_, ctr_argument*a_)
+{
+  static char errorbufs[10240];
+  char* errorbuf = errorbufs;
+
+  int line;
+  char *currentProgram;
+  ctr_source_map *mapItem;
+  ctr_tnode *stackNode;
+  ctr_source_map *first = NULL, *lfirst = NULL;
+  char *first_p = NULL, *lfirst_p = NULL;
+  int first_ignore = 1;
+  int is_eval = -1;
+  for (int i = ctr_callstack_index; i > 0; i--)
+    {
+      errorbuf += sprintf (errorbuf, "#%d ", i);
+      stackNode = ctr_callstack[i - 1];
+      errorbuf += sprintf (errorbuf, "%.*s", sizeof (char) * stackNode->vlen, stackNode->value);
+      if (!first_p)
+	{
+	  first_p = ctr_heap_allocate (sizeof (char) * stackNode->vlen);
+	  memcpy (first_p, stackNode->value, stackNode->vlen);
+	}
+      mapItem = ctr_source_map_head;
+      line = -1;
+      while (mapItem)
+	{
+	  if (line > -1 && mapItem->node->type == CTR_AST_NODE_PROGRAM)
+	    {
+	      currentProgram = mapItem->node->value;
+	      int ignored = 0;
+	      for (int j = 0; j < trace_ignore_count; j++)
+		{
+		  char *s = ignore_in_trace[j];
+		  int l = strlen (s);
+		  if (l == mapItem->node->vlen && strncmp (mapItem->node->value, s, l) == 0)
+		    {
+		      ignored = 1;
+		      break;
+		    }
+		}
+	      if (ignored && first_ignore)
+		{
+		  lfirst = first;
+		  lfirst_p = first_p;
+		  first = NULL;
+		  first_p = NULL;
+		}
+	      else if (first_ignore)
+		{
+		  first_ignore = 0;
+		  is_eval = strncmp (mapItem->node->value, "<eval>", 6) == 0 ? i : -1;	/*first=lfirst; first_p=lfirst_p; */
+		}
+	      errorbuf += sprintf (errorbuf, " (%s: %d)%s", currentProgram, line + 1, ignored ? " [Ignored]" : "");
+	      break;
+	    }
+	  if (line == -1 && mapItem->node == stackNode)
+	    {
+	      line = mapItem->line;
+	      if (!first)
+		first = mapItem;
+	    }
+	  mapItem = mapItem->next;
+	}
+      errorbuf += sprintf (errorbuf, "\n");
+    }
+    return ctr_build_string_from_cstring(errorbufs);
 }
 
 /** [exception in catch block] exceptionInfo

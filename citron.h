@@ -613,6 +613,7 @@ void ctr_marshal_ast(ctr_tnode* rnode, char** stream, size_t* stream_len, size_t
  * Internal World functions
  */
 ctr_object* ctr_get_last_trace(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_get_last_trace_stringified(ctr_object* myself, ctr_argument* argumentList);
 void        ctr_initialize_world();
 void        ctr_initialize_world_minimal();
 void 		ctr_initialize_ex();

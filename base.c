@@ -6087,10 +6087,8 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 	      ctr_internal_create_func (ex, ctr_build_string_from_cstring ("toString"), &ctr_string_to_string);
 	    }
 	  a->object = ex;
-      if (catch_type) {
-          a->next = ctr_heap_allocate (sizeof (ctr_argument));
-          a->next->object = catch_type;
-      }
+    a->next = ctr_heap_allocate (sizeof (ctr_argument));
+    a->next->object = catch_type;
 	  if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 	    {
 	      CtrStdFlow = NULL;

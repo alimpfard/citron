@@ -1,0 +1,7 @@
+import main.
+var AssertionError is Error cnew: {
+    on: 'type' do: {\ 'AssertionError' }.
+    on: 'applyAll:' do: {:err ^cnew: { error => err head. }. }.
+    on: 'toString' do: {\ 'AssertionError: ${{my error}}$' }.
+}.
+import export: AssertionError as: 'AssertionError'.

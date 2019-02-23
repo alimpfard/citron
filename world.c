@@ -2256,6 +2256,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("&method:"), &ctr_reflect_object_delegate_get_responder);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("&responder:"), &ctr_reflect_object_get_responder);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("lastTrace"), &ctr_get_last_trace);
+  ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("stackTrace"), &ctr_get_last_trace_stringified);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("frame"), &ctr_get_frame);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("frame:"), &ctr_get_frame_with_id);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("frameId"), &ctr_get_frame_id);
@@ -2606,7 +2607,7 @@ ctr_object *ctr_coro_state (ctr_object *, ctr_argument *);
 ctr_object *ctr_coro_yield (ctr_object *, ctr_argument *);
 ctr_object *ctr_exception_getinfo (ctr_object *, ctr_argument *);
 ctr_object *ctr_get_last_trace (ctr_object *, ctr_argument *);
-ctr_object *ctr_get_stack_trace (ctr_object *, ctr_argument *);
+ctr_object *ctr_get_last_trace_stringified(ctr_object *, ctr_argument *);
 ctr_object *ctr_nil_assign (ctr_object *, ctr_argument *);
 ctr_object *ctr_nil_is_nil (ctr_object *, ctr_argument *);
 ctr_object *ctr_nil_to_boolean (ctr_object *, ctr_argument *);

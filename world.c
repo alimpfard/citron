@@ -1116,7 +1116,9 @@ ctr_internal_cast2string (ctr_object * o)
       printf ("wanted 3, got %d from %d\n", stringObject->info.type, o->info.type);
       CtrStdFlow = ctr_build_string_from_cstring ("toString must return a string.");
       ctr_print_stack_trace ();
+#ifdef DEBUG_BUILD
       sttrace_print (NULL);
+#endif
       return ctr_build_string_from_cstring ("?");
     }
   return stringObject;

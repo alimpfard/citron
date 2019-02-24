@@ -5472,12 +5472,12 @@ ctr_build_listcomp (ctr_tnode * node)
     }
   if (generators && !preds)
     {				//no filter: [e ,, gs@g+] -> [evaluate(e) ]
-      ctr_object *filter_s = ctr_build_string_from_cstring ("{:gen " "var syms is my syms. " "^{\\:blk " "syms letEqual: gen in: blk." "}." "}");
+      ctr_object *filter_s = ctr_build_string_from_cstring ("{:gen " "var syms is my syms. " "^{:blk " "^const syms letEqual: const gen in: blk." "}." "}");
       argm->object = ctr_string_eval (filter_s, NULL);
       ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("syms"), resolved_refs, 0);
       ctr_object *filter_sobj = argm->object;
       ctr_object *filter_sv = ctr_build_string_from_cstring ("{"
-							     "^(my names fmap: \\:__vname Reflect getObject: __vname) internal-product fmap: my filter_s."
+							     "^(my names fmap: {:__vname ^Reflect getObject: __vname.}) internal-product fmap: my filter_s."
 							     "}");
       ctr_object *filter_svobj;
       filter_svobj = ctr_string_eval (filter_sv, NULL);
@@ -5500,7 +5500,7 @@ ctr_build_listcomp (ctr_tnode * node)
     ("{:gen "
      "var syms is my syms."
      "my filters fmap: {:filter "
-     "^syms letEqualAst: gen in: filter." "}, all: {:x ^x.}, not continue. " "^\\:blk syms letEqualAst: gen in: blk." "}");
+     "^syms letEqualAst: gen in: filter." "}, all: {:x ^x.}, not continue. " "^{:blk ^const syms letEqualAst: const gen in: blk.}." "}");
   argm->object = ctr_string_eval (filter_s, NULL);
   ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("syms"), resolved_refs, 0);
   ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("filters"), predicates, 0);

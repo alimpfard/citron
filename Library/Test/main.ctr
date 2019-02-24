@@ -1,0 +1,149 @@
+import
+    Library/Control/Error/AssertionError
+    Library/Utils/Colors: 'Colors'.
+
+var describe is Slurp new.
+var It is Slurp new.
+It on: '~' do: {:msg me message: msg arguments: []. }.
+It on: 'should' do: { me respondTo: 'should'. }.
+
+var Let is Object cnew: {
+  on: 'applyAll:' do: {:&ctx
+    ^cnew: {
+      context => ctx head.
+    }.
+  }.
+
+  on: 'respondTo:' do: {:name
+    var context is my context.
+    ^{:expr
+      var context is const context.
+      expr evaluateInContext: context, unpack: const name toSymbol into: context.
+    }.
+  }.
+}.
+It on: 'do:' do: {:blk
+    var description is me obtain.
+    Pen write: ' - ' + description.
+    {
+      blk run.
+      Pen green writeln: ' (ok)', resetColor.
+    } catch: {:e
+        Pen red writeln: ' (fail)', resetColor.
+        Pen red writeln: '\t* Backtrace:', resetColor.
+        Pen writeln: (
+            Reflect stackTrace
+                split: '\n',
+                do shift shift shift shift done reverse
+                fmap: \:x '\t${{Colors red}}$|${{Colors default}}$ $$x',
+                join: '\n'
+        ).
+        Pen write: '\t${{Colors red}}$* ${{Colors magenta}}$$$e', resetColor brk.
+    } type: AssertionError, run.
+}.
+
+describe on: 'do:' do: {:blk
+    var description is me obtain.
+    Pen writeln: description.
+    blk[const It, const Let].
+}.
+
+var ComparisonAssertion is Object cnew: {
+    on: 'new:' do: {:actual
+        ^cnew: {
+            actual => actual.
+            negated => False.
+        }.
+    }.
+    on: 'beTrue' do: {
+      my actual ! my negated ifFalse: {
+        thisBlock error: AssertionError['Expected value to be ${{my negated not}}$ but got ${{my actual}}$'].
+      }.
+    }.
+    on: '=' do: {:expected
+      my negated ifTrue: {
+        my actual = expected ifTrue: {
+            thisBlock error: AssertionError['Expected value not to be equal to ${{expected}}$, but got ${{my actual}}$ anyway'].
+        }.
+      } ifFalse: {
+        my actual = expected ifFalse: {
+            thisBlock error: AssertionError['Expected ${{expected}}$ but got ${{my actual}}$'].
+        }.
+      }.
+    }.
+    on: 'raiseError:' do: {:error_type
+      var actual is my actual.
+      var okay is False.
+      my negated not ifTrue: {
+        {
+            {
+                actual run.
+            } catch: {
+                okay is True.
+            } type: error_type, run.
+
+        } catch: {:e
+            thisBlock error: AssertionError['Expected to see error ${{error_type type}}$, but got ${{e type}}$'].
+        }, run.
+        okay ifTrue: { ^Nil. }.
+
+        thisBlock error: AssertionError['Expected to see error ${{error_type type}}$, but got no errors'].
+      } ifFalse: {
+        okay is True.
+        var maybe_caught is Nil.
+        {
+            {
+                actual run.
+            } catch: {:err
+                okay is False.
+                maybe_caught is err.
+            } type: error_type, run.
+        } catch: {
+          # this is okay too
+        }, run.
+        okay ifFalse: {
+          thisBlock error: AssertionError['Expected not to see error ${{error_type type}}$(${{maybe_caught}}$), but got it anyway'].
+        }.
+      }.
+    }.
+
+    #TODO:
+    on: 'checkOutputs:toFile:' do: {:check:fs
+      var replace is File tempFileLike: '_run${{me id}}$_ivXXXXXX'.
+      var olddes is fs fileDescriptor.
+      var fssave is File duplicateDescriptor: olddes.
+      var newdes is replace open: 'r+', fileDescriptor.
+      fs flush.
+      File duplicateDescriptor: newdes toDescriptor: olddes.
+      my actual run.
+      fs flush.
+      File duplicateDescriptor: fssave toDescriptor: olddes.
+      replace seek: 0.
+      var res is replace read.
+      replace close delete.
+      my instead is res.
+      ^res = check.
+    }.
+    on: 'output:to:' do: {:what:where
+      my negated ifTrue: {
+        me checkOutputs: what toFile: where, ifTrue: {
+          thisBlock error: AssertionError['Expected \'${{what escapeAsciiControls}}$\' not to be printed, but it was'].
+        }.
+      } ifFalse: {
+        me checkOutputs: what toFile: where, ifFalse: {
+          thisBlock error: AssertionError['Expected \'${{what escapeAsciiControls}}$\' to be printed, instead \'${{my instead escapeAsciiControls}}$\' was'].
+        }.
+      }.
+    }.
+    on: 'output:' do: {:what
+      output: what to: (File special: 'stdout').
+    }.
+    on: 'not' do: {
+      negated => True.
+    }.
+}.
+
+Object on: 'should' do: {
+    ^const ComparisonAssertion new: me.
+}.
+Object learn: 'unpack:into:' means: 'unpack:'.

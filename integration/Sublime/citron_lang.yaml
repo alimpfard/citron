@@ -71,7 +71,7 @@ contexts:
       push: string
       captures:
         0: string.Citron
-    - match: '(?:(\\)((?:\:[^\s\d\x{003a}.\x{002c}\[\]\(\)\{\}\#][^\s\x{003a}.\x{002c}\[\]\(\)\{\}\#]*\s*)+))'
+    - match: '(?:(\\)((?:(?:\:[^\s\d\x{003a}.\x{002c}\[\]\(\)\{\}\#][^\s\x{003a}.\x{002c}\[\]\(\)\{\}\#]*\s*)|(?:\:\(.*\)))+))'
       captures:
         0: keyword.control.Citron
         1: keyword.other.unit.Citron
@@ -102,7 +102,7 @@ contexts:
         - match: '(.)'
           captures:
             0: text.Citron
-    - match: '(?:(\{)((?:\s*\:(?:[^\s\d\x{003a}.\x{002c}\[\]\(\)\{\}\#][^\s\x{003a}.\x{002c}\[\]\(\)\{\}\#]*))*))'
+    - match: '(?:(\{)((?:\s*\:(?:(?:[^\s\d\x{003a}.\x{002c}\[\]\(\)\{\}\#][^\s\x{003a}.\x{002c}\[\]\(\)\{\}\#]*)|(?:\(.*\))))*))'
       captures:
         0: entity.name.Citron
         1: keyword.other.unit.Citron

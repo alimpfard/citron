@@ -2034,6 +2034,13 @@ ctr_initialize_world ()
   CtrStdFile->value.rvalue = NULL;
   ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring (CTR_DICT_NEW_ARG), &ctr_file_new);
   ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring (CTR_DICT_PATH), &ctr_file_path);
+  ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring ("fileDescriptor"), &ctr_file_get_descriptor);
+  ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring ("memopen:mode:"), &ctr_file_memopen);
+  ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring ("duplicateDescriptor:"), &ctr_file_ddup);
+  ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring ("duplicateDescriptor:toDescriptor:"), &ctr_file_ddup);
+#ifdef forLinux
+  ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring ("duplicateDescriptor:toDescriptor:withFlags:"), &ctr_file_ddup);
+#endif
   ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring ("realPath"), &ctr_file_rpath);
   ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring ("expand:"), &ctr_file_expand);
   ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring (CTR_DICT_EXT_PATH), &ctr_file_stdext_path);

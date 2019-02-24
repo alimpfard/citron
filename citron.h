@@ -1012,6 +1012,9 @@ ctr_object* ctr_console_clear_line(ctr_object* myself, ctr_argument* argumentLis
  */
 ctr_object* ctr_file_new(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_special(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_file_get_descriptor(ctr_object * myself, ctr_argument * argumentList);
+ctr_object* ctr_file_ddup(ctr_object* myself, ctr_argument * argumentList);
+ctr_object* ctr_file_memopen (ctr_object * myself, ctr_argument * argumentList);
 ctr_object* ctr_file_path(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_rpath(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_expand(ctr_object* myself, ctr_argument* argumentList);

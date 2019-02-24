@@ -899,14 +899,22 @@ ctr_cparse_block_ (int autocap)
   first = 1;
   while (t == CTR_TOKEN_COLON)
     {
-      /* okay we have new parameter, load it */
+      /* okay we have a new parameter, load it */
       t = ctr_clex_tok ();
       ctr_tlistitem *paramListItem = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
-      ctr_tnode *paramItem = ctr_cparse_create_node (CTR_AST_NODE);
-      long l = ctr_clex_tok_value_length ();
-      paramItem->value = ctr_heap_allocate_tracked (sizeof (char) * l);
-      memcpy (paramItem->value, ctr_clex_tok_value (), l);
-      paramItem->vlen = l;
+      ctr_tnode *paramItem;
+      if (t == CTR_TOKEN_REF) {
+        paramItem = ctr_cparse_create_node (CTR_AST_NODE);
+        long l = ctr_clex_tok_value_length ();
+        paramItem->value = ctr_heap_allocate_tracked (sizeof (char) * l);
+        memcpy (paramItem->value, ctr_clex_tok_value (), l);
+        paramItem->vlen = l;
+      } else if (t == CTR_TOKEN_PAROPEN) {
+        ctr_clex_putback();
+        paramItem = ctr_cparse_popen();
+      } else {
+        paramItem = NULL;
+      }
       paramListItem->node = paramItem;
       if (first)
 	{

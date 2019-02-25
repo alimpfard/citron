@@ -52,6 +52,48 @@ ctr_tnode *ctr_cparse_tuple (int);
 ctr_tnode *ctr_cparse_create_generator_node_step (ctr_tnode *, ctr_tnode *, ctr_tnode *);
 ctr_tnode *ctr_cparse_create_generator_node_simple (ctr_tnode *, ctr_tnode *);
 
+int ctr_scan_inner_refs_for_(ctr_tnode* node, char* name, size_t len) {
+  switch (node->type)
+    {
+    case CTR_AST_NODE_REFERENCE:
+      {
+        int vararg = node->value[0] == '*' || node->value[0] == '&';
+        if (unlikely (node->vlen == len || vararg))
+          {
+      if (strncmp (node->value + vararg, name, len - vararg) == 0)
+        {
+          uses_paramlist_item = 1;
+          return 1;
+        }
+          }
+
+        return 1;
+      }
+    case CTR_AST_NODE_CODEBLOCK:
+      return ctr_scan_inner_refs_for_ (node->nodes->next->node, name, len);
+    case CTR_AST_NODE_EXPRMESSAGE:
+    case CTR_AST_NODE_EXPRASSIGNMENT:
+      return ctr_scan_inner_refs_for_ (node->nodes->node, name, len) ||
+        ctr_scan_inner_refs_for_ (node->nodes->next->node, name, len);
+    case CTR_AST_NODE_BINMESSAGE:
+    case CTR_AST_NODE_RAW:
+    case CTR_AST_NODE_NESTED:
+      return ctr_scan_inner_refs_for_ (node->nodes->node, name, len);
+    case CTR_AST_NODE_IMMUTABLE:
+    case CTR_AST_NODE_PROGRAM:
+      node = node->nodes->node;
+      /* Fallthrough */
+    case CTR_AST_NODE_KWMESSAGE:
+    case CTR_AST_NODE_INSTRLIST:
+      for (ctr_tlistitem * instr = node->nodes; instr; instr = instr->next)
+	if (ctr_scan_inner_refs_for_ (instr->node, name, len)) {
+      return 1;
+    }
+      // TODO X: handle listcomp
+    default:
+      break;
+    }
+}
 int
 ctr_paramlist_has_name (char *namenode, size_t len)
 {
@@ -69,15 +111,8 @@ ctr_paramlist_has_name (char *namenode, size_t len)
 	while (name)
 	  {
 	    // printf("  -- %d %.*s\n", i, name->node->vlen, name->node->value);
-	    int vararg = name->node->value[0] == '*' || name->node->value[0] == '&';
-	    if (unlikely (name->node->vlen == len || vararg))
-	      {
-		if (strncmp (name->node->value + vararg, namenode, len - vararg) == 0)
-		  {
-		    uses_paramlist_item = 1;
-		    return 1;
-		  }
-	      }
+      if (ctr_scan_inner_refs_for_(name->node, namenode, len))
+        return 1;
 	    name = name->next;
 	  }
       }
@@ -899,14 +934,22 @@ ctr_cparse_block_ (int autocap)
   first = 1;
   while (t == CTR_TOKEN_COLON)
     {
-      /* okay we have new parameter, load it */
+      /* okay we have a new parameter, load it */
       t = ctr_clex_tok ();
       ctr_tlistitem *paramListItem = (ctr_tlistitem *) ctr_heap_allocate_tracked (sizeof (ctr_tlistitem));
-      ctr_tnode *paramItem = ctr_cparse_create_node (CTR_AST_NODE);
-      long l = ctr_clex_tok_value_length ();
-      paramItem->value = ctr_heap_allocate_tracked (sizeof (char) * l);
-      memcpy (paramItem->value, ctr_clex_tok_value (), l);
-      paramItem->vlen = l;
+      ctr_tnode *paramItem;
+      if (t == CTR_TOKEN_REF) {
+        paramItem = ctr_cparse_create_node (CTR_AST_NODE);
+        long l = ctr_clex_tok_value_length ();
+        paramItem->value = ctr_heap_allocate_tracked (sizeof (char) * l);
+        memcpy (paramItem->value, ctr_clex_tok_value (), l);
+        paramItem->vlen = l;
+      } else if (t == CTR_TOKEN_PAROPEN) {
+        ctr_clex_putback();
+        paramItem = ctr_cparse_popen();
+      } else {
+        paramItem = NULL;
+      }
       paramListItem->node = paramItem;
       if (first)
 	{

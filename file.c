@@ -94,6 +94,118 @@ ctr_file_special (ctr_object * myself, ctr_argument * argumentList)
   return file;
 }
 
+/**
+ * [File] fileDescriptor
+ *
+ * returns the decsriptor of an opened File
+ */
+ctr_object *
+ctr_file_get_descriptor (ctr_object * myself, ctr_argument * argumentList)
+{
+  FILE* ptr;
+  if (!myself->value.rvalue || !(ptr=myself->value.rvalue->ptr))
+    return CtrStdNil;
+  int fd = fileno(ptr);
+  return ctr_build_number_from_float(fd);
+}
+
+/**
+ * [File] memopen: [String] mode: [Number]
+ *
+ * Opens a file backed by a string
+ */
+ctr_object *
+ctr_file_memopen (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_check_permission (CTR_SECPRO_NO_FILE_READ);
+  char* mode = ctr_heap_allocate_cstring(ctr_internal_cast2string(argumentList->next->object));
+  ctr_string* str = argumentList->object->value.svalue;
+  FILE* handle = fmemopen(str->value, str->vlen, mode);
+  ctr_heap_free(mode);
+  ctr_object *s = ctr_object_make (myself, argumentList);
+  s->info.type = CTR_OBJECT_TYPE_OTEX;	/* indicates resource for GC */
+  ctr_set_link_all (s, myself);
+  ctr_resource *rs = ctr_heap_allocate (sizeof (ctr_resource));
+  rs->type = 1;
+  rs->ptr = handle;
+  s->value.rvalue = rs;
+  return s;
+}
+
+/**
+ * [File] duplicateDescriptor: [Number]
+ *
+ * duplicates a file descriptor (dup)
+ */
+/**
+ * [File] duplicateDescriptor: [Number] toDescriptor: [Number]
+ *
+ * duplicates a file descriptor to a desired descriptor (dup2)
+ */
+/**
+ * [File] duplicateDescriptor: [Number] toDescriptor: [Number] withFlags: [Number]
+ *
+ * duplicates a file descriptor to a desired descriptor with specific flags (dup3)
+ * Note: only with forLinux
+ */
+ctr_object *
+ctr_file_ddup(ctr_object* myself, ctr_argument * argumentList)
+{
+  int oldfd = argumentList->object->value.nvalue;
+  if (argumentList->next && argumentList->next->object) {
+    int desiredfd = argumentList->next->object->value.nvalue;
+#if forLinux
+    if (argumentList->next->next && argumentList->next->next->object) {
+      int flags = argumentList->next->next->object->value.nvalue;
+      if (oldfd == desiredfd)
+        return ctr_build_number_from_float(oldfd);
+      int fd = dup3(oldfd, desiredfd, flags);
+      if (fd == -1) {
+        int err = errno;
+        switch(err) {
+          case EBADF: CtrStdFlow = ctr_format_str("E%d is not an open file descriptor, or is out of range", fd); break;
+          case EINTR: CtrStdFlow = ctr_format_str("EInterrupted"); break;
+          // case EINVAL:CtrStdFlow = ctr_format_str("E%d = %d? or the flags (%d) are invalid", fd, newfd, flags); break;
+          case EMFILE:CtrStdFlow = ctr_format_str("EThe max limit of open descriptors has been reached"); break;
+        }
+        return CtrStdNil;
+      }
+      return ctr_build_number_from_float(fd);
+    } else {
+#endif
+      if (oldfd == desiredfd)
+        return ctr_build_number_from_float(oldfd);
+      int fd = dup2(oldfd, desiredfd);
+      if (fd == -1) {
+        int err = errno;
+        switch(err) {
+          case EBADF: CtrStdFlow = ctr_format_str("E%d is not an open file descriptor, or is out of range", fd); break;
+          case EINTR: CtrStdFlow = ctr_format_str("EInterrupted"); break;
+          // case EINVAL:CtrStdFlow = ctr_format_str("E%d = %d? or the flags (%d) are invalid", fd, newfd, flags); break;
+          case EMFILE:CtrStdFlow = ctr_format_str("EThe max limit of open descriptors has been reached"); break;
+        }
+        return CtrStdNil;
+      }
+      return ctr_build_number_from_float(fd);
+#if forLinux
+    }
+#endif
+  } else {
+    int fd = dup(oldfd);
+    if (fd == -1) {
+      int err = errno;
+      switch(err) {
+        case EBADF: CtrStdFlow = ctr_format_str("E%d is not an open file descriptor, or is out of range", fd); break;
+        case EINTR: CtrStdFlow = ctr_format_str("EInterrupted"); break;
+        // case EINVAL:CtrStdFlow = ctr_format_str("E%d = %d? or the flags (%d) are invalid", fd, newfd, flags); break;
+        case EMFILE:CtrStdFlow = ctr_format_str("EThe max limit of open descriptors has been reached"); break;
+      }
+      return CtrStdNil;
+    }
+    return ctr_build_number_from_float(fd);
+  }
+}
+
 ctr_object *
 ctr_file_stdext_path (ctr_object * myself, ctr_argument * argumentList)
 {

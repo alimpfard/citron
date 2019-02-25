@@ -243,6 +243,18 @@ static int pcrs_parse_perl_options(const char *optstring, int *flags)
          case 'x': rc |= PCRE_EXTENDED; break;
          case 'U': rc |= PCRE_UNGREEDY; break;
          case 'T': *flags |= PCRS_TRIVIAL; break;
+                   // PCRE
+         case 'u': rc |= PCRE_UTF8; break;
+         case 'A': rc |= PCRE_ANCHORED; break;
+         case 'C': rc |= PCRE_AUTO_CALLOUT; break;
+         case 'E': rc |= PCRE_DOLLAR_ENDONLY; break;
+         case 'f': rc |= PCRE_FIRSTLINE; break;
+         case 'J': rc |= PCRE_DUPNAMES; break;
+         case 'N': rc |= PCRE_NO_AUTO_CAPTURE; break;
+         case 'O': rc |= PCRE_NO_AUTO_POSSESS; break;
+         case 'W': rc |= PCRE_UCP; break;
+         case 'X': rc |= PCRE_EXTRA; break;
+         case 'Y': rc |= PCRE_NO_START_OPTIMIZE; break;
          default: break;
       }
    }

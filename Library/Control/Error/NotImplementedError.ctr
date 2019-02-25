@@ -1,4 +1,6 @@
-var NotImplementedError is Object cnew: {
+import main.
+
+var NotImplementedError is Error cnew: {
   message => ''.
 }, on: '$' do: {:msg
   ^me cnew: {

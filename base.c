@@ -31,6 +31,8 @@
 
 #include "generator.h"
 char* ctr_itoa(int value, char* buffer, int base);
+static inline void
+ctr_assign_block_parameters(ctr_tlistitem*, ctr_argument*, ctr_object*);
 
 /**@I_OBJ_DEF Nil*/
 /**
@@ -1900,6 +1902,7 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
 	      if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 		{
 		  CtrStdFlow = NULL;
+          a->object = ex;
 		  ctr_block_run_here (catchBlock, a, block);
 		}
 	      ctr_internal_object_delete_property (ex, exdata, 0);
@@ -5469,12 +5472,12 @@ ctr_build_listcomp (ctr_tnode * node)
     }
   if (generators && !preds)
     {				//no filter: [e ,, gs@g+] -> [evaluate(e) ]
-      ctr_object *filter_s = ctr_build_string_from_cstring ("{:gen " "var syms is my syms. " "^{\\:blk " "syms letEqual: gen in: blk." "}." "}");
+      ctr_object *filter_s = ctr_build_string_from_cstring ("{:gen " "var syms is my syms. " "^{:blk " "^const syms letEqual: const gen in: blk." "}." "}");
       argm->object = ctr_string_eval (filter_s, NULL);
       ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("syms"), resolved_refs, 0);
       ctr_object *filter_sobj = argm->object;
       ctr_object *filter_sv = ctr_build_string_from_cstring ("{"
-							     "^(my names fmap: \\:__vname Reflect getObject: __vname) internal-product fmap: my filter_s."
+							     "^(my names fmap: {:__vname ^Reflect getObject: __vname.}) internal-product fmap: my filter_s."
 							     "}");
       ctr_object *filter_svobj;
       filter_svobj = ctr_string_eval (filter_sv, NULL);
@@ -5497,7 +5500,7 @@ ctr_build_listcomp (ctr_tnode * node)
     ("{:gen "
      "var syms is my syms."
      "my filters fmap: {:filter "
-     "^syms letEqualAst: gen in: filter." "}, all: {:x ^x.}, not continue. " "^\\:blk syms letEqualAst: gen in: blk." "}");
+     "^syms letEqualAst: gen in: filter." "}, all: {:x ^x.}, not continue. " "^{:blk ^const syms letEqualAst: const gen in: blk.}." "}");
   argm->object = ctr_string_eval (filter_s, NULL);
   ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("syms"), resolved_refs, 0);
   ctr_internal_object_add_property (argm->object, ctr_build_string_from_cstring ("filters"), predicates, 0);
@@ -5759,9 +5762,6 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
   ctr_tnode *codeBlockPart1 = codeBlockParts->node;
   ctr_tnode *codeBlockPart2 = codeBlockParts->next->node;
   ctr_tlistitem *parameterList = codeBlockPart1->nodes;
-  ctr_tnode *parameter;
-  ctr_object *a;
-  int was_vararg, noskip = 0;
   if (!is_tail_call)
     {
       if (myself->value.block->lexical && (!my || my == myself))
@@ -5769,86 +5769,7 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
       else
 	ctr_open_context ();
     }
-  if (parameterList && parameterList->node)
-    {
-      parameter = parameterList->node;
-      if (parameter->vlen == 4 && strncmp (parameter->value, "self", 4) == 0)
-	{
-	  //assign self selectively, skip that parameter
-	  ctr_assign_value_to_local_by_ref (ctr_build_string (parameter->value, parameter->vlen), my);
-	  parameterList = parameterList->next;
-	}
-    }
-  if (likely (parameterList && parameterList->node))
-    {
-      parameter = parameterList->node;
-      while (argList)
-	{
-	  __asm__ __volatile__ ("");
-	  if (parameter)
-	    {
-	      was_vararg = (strncmp (parameter->value, "*", 1) == 0);
-	      if (!argList->object)
-		{
-		  ctr_object *arr = was_vararg ? ctr_array_new (CtrStdArray,
-								NULL) : CtrStdNil;
-		  ctr_assign_value_to_local (ctr_build_string (parameter->value + was_vararg, parameter->vlen - was_vararg), arr);
-		  if (!argList || !argList->next)
-		    {
-		      noskip = 1;
-		      break;
-		    }
-		  argList = argList->next;
-		  if (!parameterList->next)
-		    break;
-		  parameterList = parameterList->next;
-		  parameter = parameterList->node;
-		  continue;
-		}
-	      if (parameterList->next)
-		{
-		  a = argList->object;
-		  ctr_assign_value_to_local (ctr_build_string (parameter->value, parameter->vlen), a);
-		}
-	      else if (!parameterList->next && was_vararg)
-		{
-		  ctr_object *arr = ctr_array_new (CtrStdArray, NULL);
-		  ctr_argument *arglist__ = ctr_heap_allocate (sizeof (ctr_argument));
-		  while (argList && argList->object)
-		    {
-		      arglist__->object = argList->object;
-		      ctr_array_push (arr, arglist__);
-		      argList = argList->next;
-		    }
-		  ctr_heap_free (arglist__);
-		  ctr_assign_value_to_local (ctr_build_string (parameter->value + 1, parameter->vlen - 1), arr);
-		}
-	      else if (unlikely (!was_vararg))
-		{
-		  a = argList->object;
-		  ctr_assign_value_to_local (ctr_build_string (parameter->value, parameter->vlen), a);
-		}
-	    }
-	  if (!argList || !argList->next)
-	    break;
-	  argList = argList->next;
-	  if (!parameterList->next)
-	    break;
-	  parameterList = parameterList->next;
-	  parameter = parameterList->node;
-	}
-      if (count)
-	parameterList = parameterList->next;
-      while (parameterList)
-	{
-	  was_vararg = (strncmp (parameterList->node->value, "*", 1) == 0);
-	  ctr_assign_value_to_local (ctr_build_string (parameterList->node->value + was_vararg, parameterList->node->vlen - was_vararg),
-				     was_vararg ? ctr_array_new (CtrStdArray, NULL) : CtrStdNil);
-	  if (!parameterList->next)
-	    break;
-	  parameterList = parameterList->next;
-	}
-    }
+  ctr_assign_block_parameters(parameterList, argList, my);
   if (my)
     ctr_assign_value_to_local_by_ref (&CTR_CLEX_KW_ME, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
   ctr_object *this_block = ctr_build_string ("thisBlock", 9);
@@ -5899,6 +5820,7 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
 	  if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 	    {
 	      CtrStdFlow = NULL;
+          a->object = ex;
 	      ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
 	      result = alternative;
 	    }
@@ -5917,54 +5839,19 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
   return result;
 }
 
-ctr_object *
-ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
-{
-  if (!myself)
-    return CtrStdNil;
-  if (myself->info.type == CTR_OBJECT_TYPE_OTNATFUNC)
-    {
-      ctr_object *result = myself->value.fvalue (my, argList);
-      return result;
-    }
-  // overload begin
-  if (myself->info.overloaded)
-    {
-      // find proper overload to run
-      if (myself->overloads)
-	myself = ctr_internal_find_overload (myself, argList);
-    }
-  // overload end
-  int is_tail_call = 0, id;
-  if (myself->value.block && myself->value.block->lexical)
-  for (id = ctr_context_id; id > 0 && !is_tail_call && ctr_current_node_is_return; id--, is_tail_call = ctr_contexts[id] == myself);
-  if (is_tail_call)
-    {
-#ifdef DEBUG_BUILD
-      // printf ("tailcall at %p (%d from %d)\n", myself, id, ctr_context_id);
-#endif
-      // ctr_context_id = id;
-    }
-  ctr_object *result;
-  ctr_tnode *node = myself->value.block;
-  ctr_tlistitem *codeBlockParts = node->nodes;
-  ctr_tnode *codeBlockPart1 = codeBlockParts->node;
-  ctr_tnode *codeBlockPart2 = codeBlockParts->next->node;
-  ctr_tlistitem *parameterList = codeBlockPart1->nodes;
+extern int ctr_cwlk_replace_refs;
+extern int ctr_cwlk_last_msg_level;
+extern int ctr_cwlk_msg_level;
+__attribute__((always_inline))
+static inline void ctr_assign_block_parameters(ctr_tlistitem* parameterList, ctr_argument* argList, ctr_object* my) {
   ctr_tnode *parameter;
   ctr_object *a;
   int was_vararg, noskip = 0;
-  if (!is_tail_call)
-    {
-      if (myself->value.block->lexical && (!my || my == myself))
-	ctr_contexts[++ctr_context_id] = myself;
-      else
-	ctr_open_context ();
-    }
   if (parameterList && parameterList->node)
     {
       parameter = parameterList->node;
-      if (parameter->vlen == 4 && strncmp (parameter->value, "self", 4) == 0)
+      if (likely(parameter->type != CTR_AST_NODE_NESTED))
+        if (parameter->vlen == 4 && strncmp (parameter->value, "self", 4) == 0)
 	{
 	  //assign self selectively, skip that parameter
 	  ctr_assign_value_to_local_by_ref (ctr_build_string (parameter->value, parameter->vlen), my);
@@ -5977,7 +5864,17 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
       while (argList)
 	{
 	  __asm__ __volatile__ ("");
-	  if (parameter)
+    if (!parameter)
+      goto noparam_;
+    if (unlikely(parameter->type == CTR_AST_NODE_NESTED)) {
+      int old_replace = ctr_cwlk_replace_refs;
+      ctr_cwlk_replace_refs = 1;
+      ctr_cwlk_last_msg_level = ctr_cwlk_msg_level;
+      ctr_object* pattern = ctr_cwlk_expr(parameter, "");
+      ctr_cwlk_replace_refs = old_replace;	//set back in case we didn't reset
+      ctr_send_message_variadic (argList->object, "unpack:", 7, 2, pattern, ctr_contexts[ctr_context_id]);	// hand the block the context
+    }
+	  else
 	    {
 	      was_vararg = (strncmp (parameter->value, "*", 1) == 0);
 	      if (!argList->object)
@@ -6021,6 +5918,7 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 		  ctr_assign_value_to_local (ctr_build_string (parameter->value, parameter->vlen), a);
 		}
 	    }
+    noparam_:;
 	  if (!argList || !argList->next)
 	    break;
 	  argList = argList->next;
@@ -6040,6 +5938,50 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 	  parameterList = parameterList->next;
 	}
     }
+}
+
+ctr_object *
+ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
+{
+  if (!myself)
+    return CtrStdNil;
+  if (myself->info.type == CTR_OBJECT_TYPE_OTNATFUNC)
+    {
+      ctr_object *result = myself->value.fvalue (my, argList);
+      return result;
+    }
+  // overload begin
+  if (myself->info.overloaded)
+    {
+      // find proper overload to run
+      if (myself->overloads)
+	myself = ctr_internal_find_overload (myself, argList);
+    }
+  // overload end
+  int is_tail_call = 0, id;
+  if (myself->value.block && myself->value.block->lexical)
+  for (id = ctr_context_id; id > 0 && !is_tail_call && ctr_current_node_is_return; id--, is_tail_call = ctr_contexts[id] == myself);
+  if (is_tail_call)
+    {
+#ifdef DEBUG_BUILD
+      // printf ("tailcall at %p (%d from %d)\n", myself, id, ctr_context_id);
+#endif
+      // ctr_context_id = id;
+    }
+  ctr_object *result;
+  ctr_tnode *node = myself->value.block;
+  ctr_tlistitem *codeBlockParts = node->nodes;
+  ctr_tnode *codeBlockPart1 = codeBlockParts->node;
+  ctr_tnode *codeBlockPart2 = codeBlockParts->next->node;
+  ctr_tlistitem *parameterList = codeBlockPart1->nodes;
+  if (!is_tail_call)
+    {
+      if (myself->value.block->lexical && (!my || my == myself))
+	ctr_contexts[++ctr_context_id] = myself;
+      else
+	ctr_open_context ();
+    }
+  ctr_assign_block_parameters(parameterList, argList, my);
   if (my)
     ctr_assign_value_to_local_by_ref (&CTR_CLEX_KW_ME, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
   ctr_object *this_block = ctr_build_string ("thisBlock", 9);
@@ -6085,12 +6027,13 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 	      ctr_internal_create_func (ex, ctr_build_string_from_cstring ("toString"), &ctr_string_to_string);
 	    }
 	  a->object = ex;
-	  a->next = ctr_heap_allocate (sizeof (ctr_argument));
-	  a->next->object = catch_type;
+    a->next = ctr_heap_allocate (sizeof (ctr_argument));
+    a->next->object = catch_type;
 	  if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 	    {
 	      CtrStdFlow = NULL;
-	      ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
+          a->object = ex;
+          ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
 	      result = alternative;
 	    }
 	  ctr_internal_object_delete_property (ex, exdata, 0);
@@ -6136,77 +6079,8 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
   ctr_tnode *codeBlockPart1 = codeBlockParts->node;
   ctr_tnode *codeBlockPart2 = codeBlockParts->next->node;
   ctr_tlistitem *parameterList = codeBlockPart1->nodes;
-  ctr_tnode *parameter;
-  ctr_object *a;
-  int was_vararg;
   // ctr_open_context();
-  if (parameterList && parameterList->node)
-    {
-      parameter = parameterList->node;
-      if (parameter->vlen == 4 && strncmp (parameter->value, "self", 4) == 0)
-	{
-	  //assign self selectively, skip that parameter
-	  ctr_assign_value_to_local_by_ref (ctr_build_string (parameter->value, parameter->vlen), my);
-	  parameterList = parameterList->next;
-	}
-    }
-  if (parameterList && parameterList->node)
-    {
-      parameter = parameterList->node;
-      while (argList)
-	{
-	  if (parameter && argList->object)
-	    {
-	      was_vararg = (strncmp (parameter->value, "*", 1) == 0);
-	      if (parameterList->next)
-		{
-		  a = argList->object;
-		  // if (a->info.raw)
-		  // ctr_assign_value_to_local_by_ref (ctr_build_string (parameter->value, parameter->vlen), a);
-		  // else
-		  ctr_assign_value_to_local (ctr_build_string (parameter->value, parameter->vlen), a);
-		}
-	      else if (!parameterList->next && was_vararg)
-		{
-		  ctr_object *arr = ctr_array_new (CtrStdArray, NULL);
-		  ctr_argument *arglist__ = ctr_heap_allocate (sizeof (ctr_argument *));
-		  while (argList->next)
-		    {
-		      arglist__->object = argList->object;
-		      ctr_array_push (arr, arglist__);
-		      argList = argList->next;
-		    }
-		  ctr_heap_free (arglist__);
-		  ctr_assign_value_to_local (ctr_build_string (parameter->value + 1, parameter->vlen - 1), arr);
-		}
-	      else if (!was_vararg)
-		{
-		  a = argList->object;
-		  // if (a->info.raw)
-		  // ctr_assign_value_to_local_by_ref (ctr_build_string (parameter->value, parameter->vlen), a);
-		  // else
-		  ctr_assign_value_to_local (ctr_build_string (parameter->value, parameter->vlen), a);
-		}
-	    }
-	  if (!argList->next)
-	    break;
-	  argList = argList->next;
-	  if (!parameterList->next)
-	    break;
-	  parameterList = parameterList->next;
-	  parameter = parameterList->node;
-	}
-      parameterList = parameterList->next;
-      while (parameterList)
-	{
-	  was_vararg = (strncmp (parameterList->node->value, "*", 1) == 0);
-	  ctr_assign_value_to_local (ctr_build_string (parameterList->node->value + was_vararg, parameterList->node->vlen - was_vararg),
-				     was_vararg ? ctr_array_new (CtrStdArray, NULL) : CtrStdNil);
-	  if (!parameterList->next)
-	    break;
-	  parameterList = parameterList->next;
-	}
-    }
+  ctr_assign_block_parameters(parameterList, argList, my);
   if (my)
     ctr_assign_value_to_local_by_ref (&CTR_CLEX_KW_ME, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
   ctr_assign_value_to_local (&CTR_CLEX_KW_THIS, myself);	/* otherwise running block may get gc'ed. */
@@ -6245,6 +6119,7 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
 	  if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 	    {
 	      CtrStdFlow = NULL;
+          a->object = ex;
 	      ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
 	      result = alternative;
 	    }
@@ -6340,6 +6215,7 @@ ctr_block_while_true (ctr_object * myself, ctr_argument * argumentList)
 		if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 		  {
 		    CtrStdFlow = NULL;
+          a->object = ex;
 		    ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
 		    result = alternative;
 		  }
@@ -6464,6 +6340,7 @@ ctr_block_while_false (ctr_object * myself, ctr_argument * argumentList)
 		if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 		  {
 		    CtrStdFlow = NULL;
+          a->object = ex;
 		    ctr_object *alternative = ctr_block_run_here (catchBlock, a, my);
 		    result = alternative;
 		  }
@@ -7095,6 +6972,76 @@ ctr_print_stack_trace ()
 	}
     }
   putchar ('\n');
+}
+
+ctr_object*
+ctr_get_last_trace_stringified(ctr_object*m_, ctr_argument*a_)
+{
+  static char errorbufs[10240];
+  char* errorbuf = errorbufs;
+
+  int line;
+  char *currentProgram;
+  ctr_source_map *mapItem;
+  ctr_tnode *stackNode;
+  ctr_source_map *first = NULL, *lfirst = NULL;
+  char *first_p = NULL, *lfirst_p = NULL;
+  int first_ignore = 1;
+  int is_eval = -1;
+  for (int i = ctr_callstack_index; i > 0; i--)
+    {
+      errorbuf += sprintf (errorbuf, "#%d ", i);
+      stackNode = ctr_callstack[i - 1];
+      errorbuf += sprintf (errorbuf, "%.*s", sizeof (char) * stackNode->vlen, stackNode->value);
+      if (!first_p)
+	{
+	  first_p = ctr_heap_allocate (sizeof (char) * stackNode->vlen);
+	  memcpy (first_p, stackNode->value, stackNode->vlen);
+	}
+      mapItem = ctr_source_map_head;
+      line = -1;
+      while (mapItem)
+	{
+	  if (line > -1 && mapItem->node->type == CTR_AST_NODE_PROGRAM)
+	    {
+	      currentProgram = mapItem->node->value;
+	      int ignored = 0;
+	      for (int j = 0; j < trace_ignore_count; j++)
+		{
+		  char *s = ignore_in_trace[j];
+		  int l = strlen (s);
+		  if (l == mapItem->node->vlen && strncmp (mapItem->node->value, s, l) == 0)
+		    {
+		      ignored = 1;
+		      break;
+		    }
+		}
+	      if (ignored && first_ignore)
+		{
+		  lfirst = first;
+		  lfirst_p = first_p;
+		  first = NULL;
+		  first_p = NULL;
+		}
+	      else if (first_ignore)
+		{
+		  first_ignore = 0;
+		  is_eval = strncmp (mapItem->node->value, "<eval>", 6) == 0 ? i : -1;	/*first=lfirst; first_p=lfirst_p; */
+		}
+	      errorbuf += sprintf (errorbuf, " (%s: %d)%s", currentProgram, line + 1, ignored ? " [Ignored]" : "");
+	      break;
+	    }
+	  if (line == -1 && mapItem->node == stackNode)
+	    {
+	      line = mapItem->line;
+	      if (!first)
+		first = mapItem;
+	    }
+	  mapItem = mapItem->next;
+	}
+      errorbuf += sprintf (errorbuf, "\n");
+    }
+    return ctr_build_string_from_cstring(errorbufs);
 }
 
 /** [exception in catch block] exceptionInfo

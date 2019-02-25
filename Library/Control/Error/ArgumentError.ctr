@@ -1,4 +1,6 @@
-var ArgumentError is Object cnew: {
+import main.
+
+var ArgumentError is Error cnew: {
   message => ''.
 }, on: '$' do: {:msg
   ^me cnew: {

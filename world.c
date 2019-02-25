@@ -1116,7 +1116,9 @@ ctr_internal_cast2string (ctr_object * o)
       printf ("wanted 3, got %d from %d\n", stringObject->info.type, o->info.type);
       CtrStdFlow = ctr_build_string_from_cstring ("toString must return a string.");
       ctr_print_stack_trace ();
+#ifdef DEBUG_BUILD
       sttrace_print (NULL);
+#endif
       return ctr_build_string_from_cstring ("?");
     }
   return stringObject;
@@ -2035,6 +2037,13 @@ ctr_initialize_world ()
   CtrStdFile->value.rvalue = NULL;
   ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring (CTR_DICT_NEW_ARG), &ctr_file_new);
   ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring (CTR_DICT_PATH), &ctr_file_path);
+  ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring ("fileDescriptor"), &ctr_file_get_descriptor);
+  ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring ("memopen:mode:"), &ctr_file_memopen);
+  ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring ("duplicateDescriptor:"), &ctr_file_ddup);
+  ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring ("duplicateDescriptor:toDescriptor:"), &ctr_file_ddup);
+#ifdef forLinux
+  ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring ("duplicateDescriptor:toDescriptor:withFlags:"), &ctr_file_ddup);
+#endif
   ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring ("realPath"), &ctr_file_rpath);
   ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring ("expand:"), &ctr_file_expand);
   ctr_internal_create_func (CtrStdFile, ctr_build_string_from_cstring (CTR_DICT_EXT_PATH), &ctr_file_stdext_path);
@@ -2259,6 +2268,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("&method:"), &ctr_reflect_object_delegate_get_responder);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring ("&responder:"), &ctr_reflect_object_get_responder);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("lastTrace"), &ctr_get_last_trace);
+  ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("stackTrace"), &ctr_get_last_trace_stringified);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("frame"), &ctr_get_frame);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("frame:"), &ctr_get_frame_with_id);
   ctr_internal_create_func (CtrStdReflect, ctr_build_string_from_cstring ("frameId"), &ctr_get_frame_id);
@@ -2609,7 +2619,7 @@ ctr_object *ctr_coro_state (ctr_object *, ctr_argument *);
 ctr_object *ctr_coro_yield (ctr_object *, ctr_argument *);
 ctr_object *ctr_exception_getinfo (ctr_object *, ctr_argument *);
 ctr_object *ctr_get_last_trace (ctr_object *, ctr_argument *);
-ctr_object *ctr_get_stack_trace (ctr_object *, ctr_argument *);
+ctr_object *ctr_get_last_trace_stringified(ctr_object *, ctr_argument *);
 ctr_object *ctr_nil_assign (ctr_object *, ctr_argument *);
 ctr_object *ctr_nil_is_nil (ctr_object *, ctr_argument *);
 ctr_object *ctr_nil_to_boolean (ctr_object *, ctr_argument *);

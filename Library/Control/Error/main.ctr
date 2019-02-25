@@ -1,0 +1,6 @@
+var Error is Object cnew: {
+    on: 'type' do: {\ 'Error' }.
+    on: 'toString' do: {\ 'Error' }.
+}.
+
+import export: Error as: 'Error'.

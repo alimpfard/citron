@@ -11,10 +11,10 @@ GCC_MAJOR=4
 HOST_CC=gcc
 AR=ar
 STRIP=strip -s -R .comment -R .note
-CFLAGS=-Wall -Wextra -Wno-unused-parameter -mtune=native -march=native -D withTermios -D forLinux -D CTR_STD_EXTENSION_PATH=\"`pwd`\" "-D withBoehmGC" -DwithCTypesNative=1 -DwithInjectNative=1 -DwithInlineAsm=1 -I/usr/include -march=x86-64 -mtune=generic -O2 -pipe -fstack-protector-strong -fno-plt -fPIC -Werror=date-time -Wall -Wextra -Wno-unused-parameter -Wwrite-strings -Wno-missing-field-initializers -pedantic -Wno-long-long -Wno-comment -fdiagnostics-color -ffunction-sections -fdata-sections -O3 -DNDEBUG -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -lLLVM-7 -DDEBUG_BUILD -DDEBUG_BUILD_VERSION="\"948\"" -Og -g3 -ggdb3 -Wno-unused-function
-LDFLAGS=-l:libffi.so.7 -l:libffi.so.7
+CFLAGS=-Wall -Wextra -Wno-unused-parameter -mtune=native -march=native -D withTermios -D forLinux -D CTR_STD_EXTENSION_PATH=\"`pwd`\" "-D withBoehmGC" -DwithCTypesNative=1 -DwithInjectNative=1 -DwithInlineAsm=1 -Wno-discarded-qualifiers -I/usr/include -march=x86-64 -mtune=generic -O2 -pipe -fstack-protector-strong -fno-plt -fPIC -Werror=date-time -Wall -Wextra -Wno-unused-parameter -Wwrite-strings -Wno-missing-field-initializers -pedantic -Wno-long-long -Wno-comment -fdiagnostics-color -ffunction-sections -fdata-sections -O3 -DNDEBUG -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -lLLVM-7 -DDEBUG_BUILD -DDEBUG_BUILD_VERSION="\"1084\"" -Og -g3 -ggdb3 -Wno-unused-function
+LDFLAGS=
 LIBSUF=.a
 EXESUF=
 ARCH=x86-64
 VERSION=0.9.25
-SRC_PATH=/home/ali/Documents/ProjectCitron/citron/tcc
+SRC_PATH=/home/Test/Documents/ProjectCitron/citron/tcc

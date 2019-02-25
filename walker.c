@@ -486,6 +486,15 @@ ctr_cwlk_expr (ctr_tnode * node, char *wasReturn)
 	      fwrite (CtrStdFlow->value.svalue->value, sizeof (char), CtrStdFlow->value.svalue->vlen, stdout);
 	      printf ("\n");
 	    }
+      else
+      {
+          ctr_object* error = CtrStdFlow;
+          CtrStdFlow = NULL;
+          error = ctr_internal_cast2string(error);
+	      fwrite (error->value.svalue->value, sizeof (char), error->value.svalue->vlen, stdout);
+	      printf ("\n");
+
+      }
 	  ctr_print_stack_trace ();
 	}
       result = ctr_build_nil ();

@@ -1,7 +1,9 @@
 import
     Library/Control/Error/AssertionError
-    Library/Utils/Colors: 'Colors'.
+    Library/Utils/Colors: 'Colors'
+    Library/Data/IO/Pen: 'pPen'.
 
+var errPen is pPen for: (File special: 'stderr').
 var describe is Slurp new.
 var It is Slurp new.
 It on: '~' do: {:msg me message: msg arguments: []. }.
@@ -24,27 +26,66 @@ var Let is Object cnew: {
 }.
 It on: 'do:' do: {:blk
     var description is me obtain.
-    Pen write: ' - ' + description.
+    var errstream is File special: 'stderr'.
+
+    var thisTest is Object cnew: {
+      progress => Nil.
+      end => Nil.
+      current_test => ''.
+      last_test => ''.
+      this_status => ''.
+      last_status => ''.
+
+      on: 'tests:' do: {:x current_test => ' ' + x. }.
+      on: 'progressesUpTo:' do: {:end end => end.}.
+      on: 'progress:' do: {:prg
+        my end isNil ifTrue: { ^Nil. }.
+        progress => prg.
+        this_status => ' (%d/%d - %d%%)' % [prg, my end, prg / my end * 100].
+      }.
+
+      on: 'show' do: {
+        errstream
+          write: '\b \b' * my last_status length,
+          write: '\b \b' * my last_test length,
+          write: '\x1b[34m' + my current_test + '\x1b[0m',
+          write: my this_status,
+          flush
+        .
+        my last_status is my this_status.
+        my last_test is my current_test.
+      }.
+      on: 'end' do: {
+        errstream
+          write: '\b \b' * my last_status length,
+          write: '\b \b' * my last_test length,
+          flush
+        .
+      }.
+    }.
+    const errPen write: ' - ' + description.
+    const errPen flush.
     {
-      blk run.
-      Pen green writeln: ' (ok)', resetColor.
+      blk applyTo: thisTest.
+      thisTest end.
+      const errPen green writeln: ' (ok)', resetColor.
     } catch: {:e
-        Pen red writeln: ' (fail)', resetColor.
-        Pen red writeln: '\t* Backtrace:', resetColor.
-        Pen writeln: (
+        const errPen red writeln: ' (fail)', resetColor.
+        const errPen red writeln: '\t* Backtrace:', resetColor.
+        const errPen writeln: (
             Reflect stackTrace
                 split: '\n',
                 do shift shift shift shift done reverse
                 fmap: \:x '\t${{Colors red}}$|${{Colors default}}$ $$x',
                 join: '\n'
         ).
-        Pen write: '\t${{Colors red}}$* ${{Colors magenta}}$$$e', resetColor brk.
+        const errPen write: '\t${{Colors red}}$* ${{Colors magenta}}$$$e', resetColor brk.
     } type: AssertionError, run.
 }.
 
 describe on: 'do:' do: {:blk
     var description is me obtain.
-    Pen writeln: description.
+    const errPen writeln: description.
     blk[const It, const Let].
 }.
 
@@ -107,7 +148,6 @@ var ComparisonAssertion is Object cnew: {
       }.
     }.
 
-    #TODO:
     on: 'checkOutputs:toFile:' do: {:check:fs
       var replace is File tempFileLike: '_run${{me id}}$_ivXXXXXX'.
       var olddes is fs fileDescriptor.

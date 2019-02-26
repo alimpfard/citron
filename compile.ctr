@@ -70,7 +70,8 @@ var return_now is False.
 var strmap is Map new.
 
 String on: 'literalEscape' do: {
-  ^(me ~ ?>s/\\/\\\\/g<?) escapeDoubleQuotes ~ 's/\n|\r|\t|\v|\a|\b|\f/\\\\n/g'.
+  ^ me escapeAsciiControls escape: '"'.
+  # ^(me ~ ?>s/\\/\\\\/g<?) escapeDoubleQuotes ~ 's/\n|\r|\t|\v|\a|\b|\f/\\\\n/g'.
 }.
 
 var make_or_get_str is {:s

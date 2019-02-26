@@ -150,7 +150,7 @@ ctr_ast_instrcount (ctr_object * myself, ctr_argument * argumentList)
   ctr_tlistitem *pitem = node->nodes;
   while (pitem)
     {
-      count += pitem->node->type != CTR_AST_NODE_ENDOFPROGRAM;
+      count += (pitem->node && pitem->node->type != CTR_AST_NODE_ENDOFPROGRAM) || !pitem->node;
       pitem = pitem->next;
     }
   return ctr_build_number_from_float (count);
@@ -199,6 +199,8 @@ ctr_ast_nth (ctr_object * myself, ctr_argument * argumentList)
       pitem = pitem->next;
     }
   if (!pitem)
+    goto err;
+  if (!pitem->node)
     goto err;
   if (pitem->node->type == CTR_AST_NODE_EMBED && pitem->node->modifier == 1)
     {

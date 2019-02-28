@@ -1,4 +1,4 @@
 @echo off
 setlocal
-    set CITRON_EXT_PATH=%~dp0&&ctr.exe %*
+    set CITRON_EXT_PATH=%~dp0 && %~dp0/ctr.exe %*
 endlocal

@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion enableextensions
 
 call :execute_citron package\prepare_install.ctr, "%SYSTEMDRIVE%\Program Files", Citron
-robocopy package/prepared "%SYSTEMDRIVE%\Program Files\Citron" /s /e
+robocopy "%~dp0/package/prepared" "%SYSTEMDRIVE%\Program Files\Citron" /s /e
 set "a=%SYSTEMDRIVE%\Program Files\Citron\"
 set "b=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Citron\Citron REPL.lnk"
 call :path_from_file linkf "!b!"
@@ -34,4 +34,5 @@ EXIT /B 0
 )
 
 :eof
+pause
 endlocal

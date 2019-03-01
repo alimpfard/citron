@@ -46,19 +46,29 @@ It on: 'do:' do: {:blk
     var errstream is File special: 'stderr'.
 
     var thisTest is Object cnew: {
-      progress => Nil.
-      end => Nil.
-      current_test => ''.
-      last_test => ''.
-      this_status => ''.
-      last_status => ''.
-
+      on: 'init' do: {
+        progress => Nil.
+        end => Nil.
+        current_test => ''.
+        last_test => ''.
+        this_status => ''.
+        last_status => ''.
+        last_esc => 0.
+        last_exe => 0.
+      }, init.
+      on: 'subTest' do: { ^me new init. }.
       on: 'tests:' do: {:x current_test => ' ' + x. }.
       on: 'progressesUpTo:' do: {:end end => end.}.
       on: 'progress:' do: {:prg
         my end isNil ifTrue: { ^Nil. }.
         progress => prg.
-        this_status => ' (%d/%d - %d%%)' % [prg, my end, prg / my end * 100].
+        var eskip is my end / 40.
+        var est is my last_esc - my last_exe * (my end - prg) / eskip.
+        prg mod: eskip, ifFalse: {
+            last_exe => my last_esc.
+            last_esc => Clock new time.
+        }.
+        this_status => ' (%d/%d - %.4f%% - %.4f sec)' % [prg, my end, prg / my end * 100, est].
       }.
 
       on: 'show' do: {
@@ -118,7 +128,12 @@ It on: 'do:' do: {:blk
 describe on: 'do:' do: {:blk
     var description is me obtain.
     const errPen writeln: description.
-    blk[const It, const Let].
+    var major is Clock new time.
+    var minor is Clock timeExecutionOf: {
+        blk[const It, const Let].
+    }.
+    major is Clock new time - major.
+    const errPen cyan write: '$$description took $$major seconds ( $$minor milliseconds )', resetColor brk.
 }.
 
 var ComparisonAssertion is Object cnew: {

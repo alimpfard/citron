@@ -67,7 +67,7 @@ int ctr_scan_inner_refs_for_(ctr_tnode* node, char* name, size_t len) {
         }
           }
 
-        return 1;
+        return 0;
       }
     case CTR_AST_NODE_CODEBLOCK:
       return ctr_scan_inner_refs_for_ (node->nodes->next->node, name, len);
@@ -91,8 +91,10 @@ int ctr_scan_inner_refs_for_(ctr_tnode* node, char* name, size_t len) {
     }
       // TODO X: handle listcomp
     default:
+      printf("Unhandled ref scan type %d\n", node->type);
       break;
     }
+  return 0;
 }
 int
 ctr_paramlist_has_name (char *namenode, size_t len)
@@ -103,20 +105,23 @@ ctr_paramlist_has_name (char *namenode, size_t len)
     return 0;
   else
     {
-      // for(int i=0; i<=ctr_cparse_calltime_name_id; i++)
-      int i = ctr_cparse_calltime_name_id;
+      for(int i=ctr_cparse_calltime_name_id; i>=0; i--)
       {
 	ctr_cparse_calltime_name = ctr_cparse_calltime_names[i];
+  // printf("checking call site %d:\n", ctr_cparse_calltime_name_id);
+  // ctr_internal_debug_tree(ctr_cparse_calltime_name, 1);
 	ctr_tlistitem *name = ctr_cparse_calltime_name->nodes;
 	while (name)
 	  {
-	    // printf("  -- %d %.*s\n", i, name->node->vlen, name->node->value);
-      if (ctr_scan_inner_refs_for_(name->node, namenode, len))
-        return 1;
+	    // printf("  -- %d %.*s in %.*s\n", i, len, namenode, name->node->vlen, name->node->value);
+      if (ctr_scan_inner_refs_for_(name->node, namenode, len)) {
+        // printf("  << %d %.*s in %.*s\n", i, len, namenode, name->node->vlen, name->node->value);
+        return i;
+      }
 	    name = name->next;
 	  }
       }
-      return 0;
+      return -1;
     }
 }
 
@@ -942,6 +947,7 @@ ctr_cparse_block_ (int autocap)
         paramItem = ctr_cparse_create_node (CTR_AST_NODE);
         long l = ctr_clex_tok_value_length ();
         paramItem->value = ctr_heap_allocate_tracked (sizeof (char) * l);
+        paramItem->type = CTR_AST_NODE_REFERENCE;
         memcpy (paramItem->value, ctr_clex_tok_value (), l);
         paramItem->vlen = l;
       } else if (t == CTR_TOKEN_PAROPEN) {
@@ -975,6 +981,8 @@ ctr_cparse_block_ (int autocap)
       do_compare_locals = autocap;
       oldcalltime = ctr_cparse_calltime_name_id;
       ctr_cparse_calltime_names[++ctr_cparse_calltime_name_id] = paramList;
+      // printf("call site %d:\n", ctr_cparse_calltime_name_id);
+      // ctr_internal_debug_tree(paramList, 1);
       all_plains_private = autocap;
     }
   if (ctr_transform_lambda_shorthand)
@@ -1089,8 +1097,18 @@ the_else:;
   r->type = CTR_AST_NODE_REFERENCE;
   r->vlen = ctr_clex_tok_value_length ();
   tmp = ctr_clex_tok_value ();
-  if (all_plains_private)
-    r->modifier = (do_compare_locals) ? (ctr_paramlist_has_name (tmp, r->vlen) ? 0 : 3) : 3;
+  int calltimeidv;
+  if (all_plains_private) {
+    if (!do_compare_locals)
+      r->modifier = 3;
+    else if ((calltimeidv = ctr_paramlist_has_name (tmp, r->vlen)) == ctr_cparse_calltime_name_id) {
+      r->modifier = 0;
+      // printf("call site %d has %.*s\n", calltimeidv, r->vlen, tmp);
+    } else {
+      r->modifier = 3;
+      // printf("call site %d has %.*s, not %d\n", calltimeidv, r->vlen, tmp, ctr_cparse_calltime_name_id);
+    }
+  }
   if (strncmp (ctr_clex_keyword_my, tmp, ctr_clex_keyword_my_len) == 0 && r->vlen == ctr_clex_keyword_my_len)
     {
       int t = ctr_clex_tok ();

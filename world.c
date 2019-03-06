@@ -1924,6 +1924,8 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_PUSH_SYMBOL), &ctr_array_push);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("fmap:"), &ctr_array_fmap);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("imap:"), &ctr_array_imap);
+  ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("fmap!:"), &ctr_array_fmap_inp);
+  ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("imap!:"), &ctr_array_imap_inp);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("foldl:accumulator:"), &ctr_array_foldl);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("filter:"), &ctr_array_filter);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("filter_v:"), &ctr_array_filter_v);
@@ -1995,6 +1997,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring (CTR_DICT_EACH), &ctr_map_each);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring (CTR_DICT_MAP), &ctr_map_each);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring ("fmap:"), &ctr_map_fmap);
+  ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring ("fmap!:"), &ctr_map_fmap_inp);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring ("kvmap:"), &ctr_map_kvmap);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring ("kvlist:"), &ctr_map_kvlist);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring ("contains:"), &ctr_map_contains);

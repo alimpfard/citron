@@ -1353,6 +1353,74 @@ ctr_array_imap (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
+ * Array fmap!: [Block]
+ *
+ * Maps a function over the block. this function should accept a single value.
+ * Modifies the collection inplace
+ *
+ * [1,2,3,4] fmap!: {:v ^v + 1.}. #=> [2,3,4,5]
+ */
+ctr_object *
+ctr_array_fmap_inp (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *func = argumentList->object;
+  CTR_ENSURE_TYPE_BLOCK (func);
+
+  ctr_argument varg, *arg = &varg;
+  ctr_size i;
+  ctr_object** elements = myself->value.avalue->elements;
+  for (i = 0; i < myself->value.avalue->head - myself->value.avalue->tail; i++)
+    {
+      arg->object = ctr_build_number_from_float ((ctr_number) i);
+      arg->object = ctr_array_get (myself, arg);
+      ctr_object* value = ctr_block_run (func, arg, func);
+      if (CtrStdFlow)
+	{
+	  if (CtrStdFlow == CtrStdContinue)
+	    {
+	      CtrStdFlow = NULL;
+	      continue;
+	    }
+	  if (CtrStdFlow == CtrStdBreak)
+	    CtrStdFlow = NULL;
+	  break;
+	}
+    elements[i + myself->value.avalue->tail] = value;
+    }
+  return myself;
+}
+
+/**
+ * Array imap!: [Block]
+ *
+ * Maps a function over the block. this function should accept an index and a value.
+ * Modifies the collection inplace
+ *
+ * [1,2,3,4] imap!: {:i:v ^v + i.}. #=> [1,3,5,7]
+ */
+ctr_object *
+ctr_array_imap_inp (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *func = argumentList->object;
+  CTR_ENSURE_TYPE_BLOCK (func);
+
+  ctr_argument parg, *pushArg = &parg, pargnext, earg, *elnumArg = &earg;
+  pushArg->next = &pargnext;
+  ctr_size i;
+  ctr_object** elements = myself->value.avalue->elements;
+  for (i = 0; i < myself->value.avalue->head - myself->value.avalue->tail; i++)
+    {
+      ctr_object *elnum = ctr_build_number_from_float ((ctr_number) i);
+      elnumArg->object = elnum;
+      pushArg->next->object = ctr_array_get (myself, elnumArg);
+      pushArg->object = elnumArg->object;
+      ctr_object* value = ctr_block_run (func, pushArg, func);
+      elements[i + myself->value.avalue->tail] = value;
+    }
+  return myself;
+}
+
+/**
  * Array foldl: [Block] accumulator: [Object]
  *
  * reduces an array according to a block (which takes an accumulator and the value, and returns the next acc) from the left (index 0)
@@ -1544,7 +1612,6 @@ ctr_array_select_from_if (ctr_object * myself, ctr_argument * argumentList)
     *ifexp = argumentList->next->next
     && argumentList->next->next->object ? argumentList->next->next->object : NULL, *result = ctr_array_new (CtrStdArray, NULL), *elem, *old_from;
   ctr_argument *argument = ctr_heap_allocate (sizeof (ctr_argument));
-restart:;
   if (from->info.type == CTR_OBJECT_TYPE_OTBLOCK)
     from = ctr_block_run (from, NULL, NULL);
   if (from->info.type == CTR_OBJECT_TYPE_OTARRAY)
@@ -2245,6 +2312,64 @@ ctr_map_fmap (ctr_object * myself, ctr_argument * argumentList)
   ctr_argument *arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   arguments->next = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   ctr_object *newmap = ctr_map_new (CtrStdMap, NULL);
+  while (m)
+    {
+      arguments->object = m->key;
+      arguments->next->object = m->value;
+      arguments->object = ctr_block_run (block, arguments, myself);
+      if (CtrStdFlow)
+	{
+	  if (CtrStdFlow == CtrStdContinue)
+	    {
+	      CtrStdFlow = NULL;
+	      m = m->next;
+	      continue;
+	    }
+	  if (CtrStdFlow == CtrStdBreak)
+	    CtrStdFlow = NULL;
+	  break;
+	}
+      if (arguments->object == block)
+	{
+	  arguments->object = m->key;
+	  arguments->next->object = m->value;
+	}
+      else
+	arguments->next->object = m->key;
+      ctr_map_put (newmap, arguments);
+      m = m->next;
+    }
+  ctr_heap_free (arguments->next);
+  ctr_heap_free (arguments);
+  block->info.mark = 0;
+  block->info.sticky = 0;
+  return newmap;
+}
+
+/**
+ * [Map] fmap!: [Block<key,value>]
+ *
+ * Iterates over the map, passing the key and the value to the function, and replacing the value with the result
+ * (Or itself if a value is not returned)
+ * Modifies the collection inplace
+ *
+ */
+ctr_object *
+ctr_map_fmap_inp (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *block = argumentList->object;
+  ctr_mapitem *m;
+  if (block->info.type != CTR_OBJECT_TYPE_OTBLOCK)
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("Expected a Block.");
+      CtrStdFlow->info.sticky = 1;
+      return myself;
+    }
+  block->info.sticky = 1;
+  m = myself->properties->head;
+  ctr_argument *arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+  arguments->next = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+  ctr_object *newmap = myself;
   while (m)
     {
       arguments->object = m->key;

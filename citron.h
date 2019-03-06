@@ -921,6 +921,8 @@ ctr_object* ctr_array_new_and_push(ctr_object* myself, ctr_argument* argumentLis
 ctr_object* ctr_array_type(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_fmap(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_imap(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_fmap_inp(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_imap_inp(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_foldl(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_filter(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_filter_v(ctr_object* myself, ctr_argument* argumentList);
@@ -982,6 +984,7 @@ ctr_object* ctr_map_get(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_count(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_each(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_fmap(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_map_fmap_inp(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_kvmap(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_kvlist(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_contains(ctr_object* myself, ctr_argument* argumentList);

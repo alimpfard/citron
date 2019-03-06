@@ -1156,19 +1156,26 @@ Eval on: 'read_eval_print:' do: ({:prompt
             linesp is generate_context_menu applyTo: uniq and: uid.
             cmt is (var iis is '[from %s]' % [last_toc]).
             last_comp_rewind is iis length.
-            toc length times: {:i
-              var pos is cursor - (toc length - i).
-              pos >=: inp length, ifTrue: {
-                inp +=: candidate @ i.
-              } ifFalse: {
-                inp put: candidate @ i at: pos.
+            toc length > cursor ifTrue: {
+                cmt is 'not enough space, make query bigger'.
+                last_comp_init is ''.
+                last_comp_entry is ''.
+                last_comp_entry_len is 0.
+            } ifFalse: {
+              toc length times: {:i
+                var pos is cursor - (toc length - i).
+                pos >=: inp length, ifTrue: {
+                  inp +=: candidate @ i.
+                } ifFalse: {
+                  inp put: candidate @ i at: pos.
+                }.
               }.
+              inp is inp insert: (candidate skip: toc length) at: cursor.
+              cursor +=: candidate length - toc length.
+              last_comp_init is toc.
+              last_comp_entry is candidate.
+              last_comp_entry_len is last_comp_entry length.
             }.
-            inp is inp insert: (candidate skip: toc length) at: cursor.
-            cursor +=: candidate length - toc length.
-            last_comp_init is toc.
-            last_comp_entry is candidate.
-            last_comp_entry_len is last_comp_entry length.
           } ifFalse: {
             cmt is ncmessage.
           }.

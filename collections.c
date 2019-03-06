@@ -1265,10 +1265,10 @@ ctr_array_fmap (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *newArray = ctr_array_new (CtrStdArray, NULL);
   ctr_argument varg, *arg = &varg;
   ctr_size i;
+  ctr_object** elems = myself->value.avalue->elements;
   for (i = 0; i < myself->value.avalue->head - myself->value.avalue->tail; i++)
     {
-      arg->object = ctr_build_number_from_float ((ctr_number) i);
-      arg->object = ctr_array_get (myself, arg);
+      arg->object = elems[i];
       arg->object = ctr_block_run (func, arg, func);
       if (CtrStdFlow)
 	{
@@ -1300,15 +1300,15 @@ ctr_array_imap (ctr_object * myself, ctr_argument * argumentList)
   CTR_ENSURE_TYPE_BLOCK (func);
 
   ctr_object *newArray = ctr_array_new (CtrStdArray, NULL);
-  ctr_argument parg, *pushArg = &parg, pnext, earg, *elnumArg = &earg;
+  ctr_argument parg, *pushArg = &parg, pnext;
   pushArg->next = &pnext;
   ctr_size i;
+  ctr_object** elements = myself->value.avalue->elements;
   for (i = 0; i < myself->value.avalue->head - myself->value.avalue->tail; i++)
     {
       ctr_object *elnum = ctr_build_number_from_float ((ctr_number) i);
-      elnumArg->object = elnum;
-      pushArg->next->object = ctr_array_get (myself, elnumArg);
-      pushArg->object = elnumArg->object;
+      pushArg->next->object = elements[i];
+      pushArg->object = elnum;
       pushArg->object = ctr_block_run (func, pushArg, func);
       ctr_array_push (newArray, pushArg);
     }
@@ -1334,8 +1334,7 @@ ctr_array_fmap_inp (ctr_object * myself, ctr_argument * argumentList)
   ctr_object** elements = myself->value.avalue->elements;
   for (i = 0; i < myself->value.avalue->head - myself->value.avalue->tail; i++)
     {
-      arg->object = ctr_build_number_from_float ((ctr_number) i);
-      arg->object = ctr_array_get (myself, arg);
+      arg->object = elements[i];
       ctr_object* value = ctr_block_run (func, arg, func);
       if (CtrStdFlow)
 	{

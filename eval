@@ -291,6 +291,7 @@ Eval on: 'Commands' do: {
       + c -- clear screen and history
       + break <obj> <msg> -- break on object\'s message
       + !enable <b[reak]> -- enable option
+      + % <...> -- line comment in REPL (ignores args)
       + h -- show this help
       - ! <cmd> -- execute shell command
       - :{\\n stmt* \\n:}\\n -- block expression'
@@ -307,6 +308,7 @@ Eval on: 'Commands' do: {
       put: {:args Eval display/clear. (var h is Eval getHistory) count times: { h pop. }. ^''.} at: 'c',
       put: {:args ^Reflect getMethodsOf: (Eval evaluate: args).} at: '!m',
       put: {:args AST pragma: args trim. ^''.} at: '!pragmaOnce',
+      put: {^''.} at: '%',
       put: {:args
         var msgs is args reSplit: '\\s+'.
         var obj is Eval evaluate: msgs head.

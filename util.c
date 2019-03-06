@@ -48,9 +48,11 @@ ctr_internal_debug_tree (ctr_tnode * ti, int indent)
   char *vbuf;
   ctr_tlistitem *li;
   ctr_tnode *t;
-  if (indent > 20)
-    exit (1);
+  // if (indent > 20)
+  //   exit (1);
   li = ti->nodes;
+  if (!li)
+    return;
   t = li->node;
   while (1)
     {

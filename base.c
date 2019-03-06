@@ -165,9 +165,8 @@ ctr_object_ctor (ctr_object * myself, ctr_argument * argumentList)
   objectInstance = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
   ctr_set_link_all (objectInstance, myself);
   CTR_ENSURE_TYPE_BLOCK (argumentList->object);
-  ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
+  ctr_argument vargs = {0}, *args = &vargs;
   ctr_block_run (argumentList->object, args, objectInstance);
-  ctr_heap_free (args);
   return objectInstance;
 }
 
@@ -187,8 +186,8 @@ ctr_object_attr_accessor (ctr_object * myself, ctr_argument * argumentList)
       if (property == NULL)
 	ctr_internal_object_set_property (myself, name, CtrStdNil, 0);
 
-      ctr_argument *arglist = ctr_heap_allocate (sizeof (ctr_argument));
-      arglist->next = ctr_heap_allocate (sizeof (ctr_argument));
+      ctr_argument varg = {0}, *arglist = &varg, vargn;
+      arglist->next = &vargn;
       char *mname = ctr_heap_allocate (sizeof (char) * 512);
       sprintf (mname, "{:x my %.*s is x.}", (int) name->value.svalue->vlen, name->value.svalue->value);
       arglist->object = ctr_build_string_from_cstring (":");
@@ -199,15 +198,13 @@ ctr_object_attr_accessor (ctr_object * myself, ctr_argument * argumentList)
       arglist->object = name;
       arglist->next->object = ctr_string_eval (ctr_build_string_from_cstring (mname), NULL);
       ctr_object_on_do (myself, arglist);
-      ctr_heap_free (arglist->next);
-      ctr_heap_free (arglist);
       ctr_heap_free (mname);
       return myself;
     }
   else
     {
-      ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
-      ctr_argument *elnumArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+      ctr_argument vargs = {0}, *args = &vargs;
+      ctr_argument earg = {0}, *elnumArg = &earg;
       ctr_size i;
       for (i = argumentList->object->value.avalue->tail; i < argumentList->object->value.avalue->head; i++)
 	{
@@ -215,8 +212,6 @@ ctr_object_attr_accessor (ctr_object * myself, ctr_argument * argumentList)
 	  args->object = ctr_array_get (argumentList->object, elnumArg);
 	  ctr_object_attr_accessor (myself, args);
 	}
-      ctr_heap_free (elnumArg);
-      ctr_heap_free (args);
       return myself;
     }
 }
@@ -236,23 +231,21 @@ ctr_object_attr_reader (ctr_object * myself, ctr_argument * argumentList)
       ctr_object *property = ctr_internal_object_find_property (myself, name, 0);
       if (property == NULL)
 	ctr_internal_object_set_property (myself, name, CtrStdNil, 0);
-      ctr_argument *arglist = ctr_heap_allocate (sizeof (ctr_argument));
-      arglist->next = ctr_heap_allocate (sizeof (ctr_argument));
+      ctr_argument varg = {0}, narg = {0}, *arglist = &varg;
+      arglist->next = &narg;
       char *mname = ctr_heap_allocate (sizeof (char) * 512);
       sprintf (mname, "{^my %.*s.}", name->value.svalue->vlen, name->value.svalue->value);
       arglist->object = ctr_build_string_from_cstring (":");
       arglist->object = ctr_string_concat (name, arglist);
       arglist->next->object = ctr_string_eval (ctr_build_string_from_cstring (mname), NULL);
       ctr_object_on_do (myself, arglist);
-      ctr_heap_free (arglist->next);
-      ctr_heap_free (arglist);
       ctr_heap_free (mname);
       return myself;
     }
   else
     {
-      ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
-      ctr_argument *elnumArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+      ctr_argument varg = {0}, *args = &varg;
+      ctr_argument earg = {0}, *elnumArg = &earg;
       ctr_size i;
       for (i = argumentList->object->value.avalue->tail; i < argumentList->object->value.avalue->head; i++)
 	{
@@ -260,8 +253,6 @@ ctr_object_attr_reader (ctr_object * myself, ctr_argument * argumentList)
 	  args->object = ctr_array_get (argumentList->object, elnumArg);
 	  ctr_object_attr_reader (myself, args);
 	}
-      ctr_heap_free (elnumArg);
-      ctr_heap_free (args);
       return myself;
     }
 }
@@ -278,22 +269,20 @@ ctr_object_attr_writer (ctr_object * myself, ctr_argument * argumentList)
   if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTARRAY)
     {
       ctr_object *name = ctr_internal_cast2string (argumentList->object);
-      ctr_argument *arglist = ctr_heap_allocate (sizeof (ctr_argument));
-      arglist->next = ctr_heap_allocate (sizeof (ctr_argument));
+      ctr_argument varg = {0}, narg = {0}, *arglist = &varg;
+      arglist->next = &narg;
       char *mname = ctr_heap_allocate (sizeof (char) * 512);
       sprintf (mname, "{:x my %.*s is x.}", name->value.svalue->vlen, name->value.svalue->value);
       arglist->object = name;
       arglist->next->object = ctr_string_eval (ctr_build_string_from_cstring (mname), NULL);
       ctr_object_on_do (myself, arglist);
-      ctr_heap_free (arglist->next);
-      ctr_heap_free (arglist);
       ctr_heap_free (mname);
       return myself;
     }
   else
     {
-      ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
-      ctr_argument *elnumArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+      ctr_argument varg = {0}, *args = &varg;
+      ctr_argument earg = {0}, *elnumArg = &earg;
       ctr_size i;
       for (i = argumentList->object->value.avalue->tail; i < argumentList->object->value.avalue->head; i++)
 	{
@@ -301,8 +290,6 @@ ctr_object_attr_writer (ctr_object * myself, ctr_argument * argumentList)
 	  args->object = ctr_array_get (argumentList->object, elnumArg);
 	  ctr_object_attr_writer (myself, args);
 	}
-      ctr_heap_free (elnumArg);
-      ctr_heap_free (args);
       return myself;
     }
 }
@@ -914,14 +901,12 @@ ctr_object_respond (ctr_object * myself, ctr_argument * argumentList)
     }
   ctr_object *arr;
   ctr_object *answer;
-  ctr_argument *newArgumentList;
+  ctr_argument argv = {0}, *newArgumentList = &argv;
   arr = ctr_array_new (CtrStdArray, argumentList);
-  newArgumentList = ctr_heap_allocate (sizeof (ctr_argument));
   newArgumentList->object = argumentList->object;
   ctr_array_push (arr, newArgumentList);
   newArgumentList->object = ctr_array_to_string (arr, NULL);
   answer = ctr_object_send2remote (myself, newArgumentList);
-  ctr_heap_free (newArgumentList);
   return answer;
 }
 
@@ -945,16 +930,14 @@ ctr_object_respond_and (ctr_object * myself, ctr_argument * argumentList)
     }
   ctr_object *arr;
   ctr_object *answer;
-  ctr_argument *newArgumentList;
+  ctr_argument varg = {0}, *newArgumentList = &varg;
   arr = ctr_array_new (CtrStdArray, argumentList);
-  newArgumentList = ctr_heap_allocate (sizeof (ctr_argument));
   newArgumentList->object = argumentList->object;
   ctr_array_push (arr, newArgumentList);
   newArgumentList->object = argumentList->next->object;
   ctr_array_push (arr, newArgumentList);
   newArgumentList->object = ctr_array_to_string (arr, NULL);
   answer = ctr_object_send2remote (myself, newArgumentList);
-  ctr_heap_free (newArgumentList);
   return answer;
 }
 
@@ -978,9 +961,8 @@ ctr_object_respond_and_and (ctr_object * myself, ctr_argument * argumentList)
     }
   ctr_object *arr;
   ctr_object *answer;
-  ctr_argument *newArgumentList;
+  ctr_argument varg = {0}, *newArgumentList = &varg;
   arr = ctr_array_new (CtrStdArray, argumentList);
-  newArgumentList = ctr_heap_allocate (sizeof (ctr_argument));
   newArgumentList->object = argumentList->object;
   ctr_array_push (arr, newArgumentList);
   newArgumentList->object = argumentList->next->object;
@@ -989,7 +971,6 @@ ctr_object_respond_and_and (ctr_object * myself, ctr_argument * argumentList)
   ctr_array_push (arr, newArgumentList);
   newArgumentList->object = ctr_array_to_string (arr, NULL);
   answer = ctr_object_send2remote (myself, newArgumentList);
-  ctr_heap_free (newArgumentList);
   return answer;
 }
 
@@ -1165,13 +1146,12 @@ ctr_object *
 ctr_bool_if_true (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *result;
+  ctr_argument arg = {0}, *arguments = &arg;
   if (myself->value.bvalue)
     {
       ctr_object *codeBlock = argumentList->object;
-      ctr_argument *arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
       arguments->object = myself;
       result = ctr_block_run (codeBlock, arguments, NULL);
-      ctr_heap_free (arguments);
       if (result != codeBlock)
 	{
 	  ctr_internal_next_return = 1;
@@ -1200,13 +1180,12 @@ ctr_object *
 ctr_bool_if_false (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *result;
+  ctr_argument arg = {0}, *arguments = &arg;
   if (!myself->value.bvalue)
     {
       ctr_object *codeBlock = argumentList->object;
-      ctr_argument *arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
       arguments->object = myself;
       result = ctr_block_run (codeBlock, arguments, NULL);
-      ctr_heap_free (arguments);
       if (result != codeBlock)
 	{
 	  ctr_internal_next_return = 1;
@@ -1226,13 +1205,12 @@ ctr_object *
 ctr_bool_if_tf (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *result;
+  ctr_argument arg = {0}, *arguments = &arg;
   if (myself->value.bvalue)
     {
       ctr_object *codeBlock = argumentList->object;
-      ctr_argument *arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
       arguments->object = myself;
       result = ctr_block_run_here (codeBlock, arguments, NULL);
-      ctr_heap_free (arguments);
       if (result != codeBlock)
 	{
 	  ctr_internal_next_return = 1;
@@ -1243,10 +1221,8 @@ ctr_bool_if_tf (ctr_object * myself, ctr_argument * argumentList)
   else
     {
       ctr_object *codeBlock = argumentList->next->object;
-      ctr_argument *arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
       arguments->object = myself;
       result = ctr_block_run_here (codeBlock, arguments, NULL);
-      ctr_heap_free (arguments);
       if (result != codeBlock)
 	{
 	  ctr_internal_next_return = 1;
@@ -1704,7 +1680,7 @@ ctr_number_even (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_number_add (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_argument *newArg;
+  ctr_argument varg = {0}, *newArg = &varg;
   ctr_object *otherNum = argumentList->object;
   ctr_object *result;
   ctr_number a;
@@ -1713,10 +1689,8 @@ ctr_number_add (ctr_object * myself, ctr_argument * argumentList)
   if (otherNum->info.type == CTR_OBJECT_TYPE_OTSTRING)
     {
       strObject = ctr_internal_cast2string (myself);
-      newArg = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
       newArg->object = otherNum;
       result = ctr_string_concat (strObject, newArg);
-      ctr_heap_free (newArg);
       return result;
     }
   else
@@ -1819,7 +1793,7 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *indexNumber;
   ctr_object *block = argumentList->object;
-  ctr_argument *arguments;
+  ctr_argument varg = {0}, *arguments = &varg;
   int t;
   int i;
   if (block->info.type != CTR_OBJECT_TYPE_OTBLOCK && block->info.type != CTR_OBJECT_TYPE_OTNATFUNC)
@@ -1829,7 +1803,6 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
     }
   block->info.sticky = 1;
   t = myself->value.nvalue;
-  arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
 
   if (block->info.type == CTR_OBJECT_TYPE_OTNATFUNC)
     {
@@ -1840,7 +1813,6 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
 	  block->value.fvalue (block, arguments);
 	}
       ctr_internal_delete_standalone_object (idx);
-      ctr_heap_free (arguments);
       ctr_close_context ();
       return myself;
     }
@@ -1884,7 +1856,7 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
 	  if (catchBlock != NULL)
 	    {
 	      ctr_object *catch_type = ctr_internal_object_find_property (catchBlock, ctr_build_string_from_cstring ("%catch"), 0);
-	      ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+	      ctr_argument av = {0}, avv = {0}, *a = &av;
 	      ctr_object *exdata = ctr_build_string_from_cstring (":exdata"),
 		*ex = CtrStdFlow, *getexinfo = ctr_build_string_from_cstring ("exceptionInfo");
 	      ctr_internal_object_set_property (ex, exdata, ctr_internal_ex_data (), 0);
@@ -1897,7 +1869,7 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
 		  ctr_internal_create_func (ex, ctr_build_string_from_cstring ("toString"), &ctr_string_to_string);
 		}
 	      a->object = ex;
-	      a->next = ctr_heap_allocate (sizeof (ctr_argument));
+	      a->next = &avv;
 	      a->next->object = catch_type;
 	      if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 		{
@@ -1909,8 +1881,6 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
 	      ctr_internal_object_delete_property (ex, getexinfo, 1);
 	      if (setstr)
 		ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
-	      ctr_heap_free (a->next);
-	      ctr_heap_free (a);
 	    }
 	}
       if (CtrStdFlow == CtrStdContinue)
@@ -1923,7 +1893,6 @@ ctr_number_times (ctr_object * myself, ctr_argument * argumentList)
   ctr_close_context ();
   // arguments->object = ctx;
   // ctr_gc_sweep_this(CtrStdGC, arguments);
-  ctr_heap_free (arguments);
   if (CtrStdFlow == CtrStdBreak)
     CtrStdFlow = NULL;		/* consume break */
   block->info.mark = 0;
@@ -2167,7 +2136,7 @@ ctr_number_to_step_do (ctr_object * myself, ctr_argument * argumentList)
   ctr_number incValue = ctr_internal_cast2number (argumentList->next->object)->value.nvalue;
   ctr_number curValue = startValue;
   ctr_object *codeBlock = argumentList->next->next->object;
-  ctr_argument *arguments;
+  ctr_argument argv = {0}, *arguments = &argv;
   int forward = 0;
   if (startValue == endValue)
     return myself;
@@ -2179,7 +2148,6 @@ ctr_number_to_step_do (ctr_object * myself, ctr_argument * argumentList)
     }
   if (!codeBlock->value.block->lexical)
     ctr_open_context ();
-  arguments = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   ctr_object *arg = ctr_internal_create_standalone_object (CTR_OBJECT_TYPE_OTNUMBER);
   arg->value.nvalue = curValue;
   while ((forward ? curValue < endValue : curValue > endValue) && !CtrStdFlow)
@@ -2191,7 +2159,6 @@ ctr_number_to_step_do (ctr_object * myself, ctr_argument * argumentList)
 	CtrStdFlow = NULL;	/* consume continue and go on */
       curValue += incValue;
     }
-  ctr_heap_free (arguments);
   if (!codeBlock->value.block->lexical)
     ctr_close_context ();
   if (CtrStdFlow == CtrStdBreak)
@@ -3077,7 +3044,7 @@ ctr_string_format (ctr_object * myself, ctr_argument * argumentList)
   char c = *fmt;
   int specnum = -1;
   int fmtct = 0;
-  ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
+  ctr_argument varg = {0}, *args = &varg;
   ctr_object *cp_delim_opt = ctr_build_string_from_cstring (", "), *cp_len_opt = NULL;
   /*
      0 - no opt
@@ -3225,7 +3192,6 @@ ctr_string_format (ctr_object * myself, ctr_argument * argumentList)
       ctr_string_append (buffer, args);
       fmtct = 0;
     }
-  ctr_heap_free (args);
   ctr_heap_free (buf);
   return buffer;
 }
@@ -3256,7 +3222,7 @@ ctr_string_format_map (ctr_object * myself, ctr_argument * argumentList)
   int in_spec = 0;
   int fmtct = 0;
   int interpolate = 0;
-  ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
+  ctr_argument vargs = {0}, *args = &vargs;
   for (int i = 0; i < len; i++, c = *(fmt + i))
     {
       //buf has already been cleared, and fmtct set to 0, so we'll use buf for spec
@@ -3311,7 +3277,6 @@ ctr_string_format_map (ctr_object * myself, ctr_argument * argumentList)
       ctr_string_append (buffer, args);
       fmtct = 0;
     }
-  ctr_heap_free (args);
   ctr_heap_free (buf);
   return buffer;
 }
@@ -3417,19 +3382,15 @@ ctr_string_from_length (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_string_skip (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_argument *argument1;
-  ctr_argument *argument2;
+  ctr_argument arg1 = {0}, *argument1 = &arg1;
+  ctr_argument arg2 = {0}, *argument2 = &arg2;
   ctr_object *result;
   if (myself->value.svalue->vlen < argumentList->object->value.nvalue)
     return ctr_build_empty_string ();
-  argument1 = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
-  argument2 = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   argument1->object = argumentList->object;
   argument1->next = argument2;
   argument2->object = ctr_build_number_from_float (myself->value.svalue->vlen - argumentList->object->value.nvalue);
   result = ctr_string_from_length (myself, argument1);
-  ctr_heap_free (argument1);
-  ctr_heap_free (argument2);
   return result;
 }
 
@@ -3452,17 +3413,14 @@ str_cut (char *str, int l, int begin, int len)
 ctr_object *
 ctr_string_slice (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_argument *argument;
+  ctr_argument arg = {0}, arg2 = {0}, *argument = &arg;
   ctr_object *result;
   if (myself->value.svalue->vlen < argumentList->object->value.nvalue)
     return ctr_build_empty_string ();
-  argument = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
   argument->object = argumentList->object;
-  argument->next = ctr_heap_allocate (sizeof (ctr_argument));
+  argument->next = &arg2;
   argument->next->object = argumentList->next->object;
   result = ctr_string_from_length (myself, argument);
-  ctr_heap_free (argument->next);
-  ctr_heap_free (argument);
   long a = getBytesUtf8 (myself->value.svalue->value, 0,
 			 argumentList->object->value.nvalue);
   long b = getBytesUtf8 (myself->value.svalue->value, a,
@@ -3902,13 +3860,10 @@ ctr_string_find_pattern_options_do (ctr_object * myself, ctr_argument * argument
   char *haystack = ctr_heap_allocate_cstring (myself);
   size_t offset = 0;
   ctr_object *newString = ctr_build_empty_string ();
-  ctr_argument *arg = ctr_heap_allocate (sizeof (ctr_argument));
-  ctr_argument *blockArguments;
-  ctr_argument *arrayConstructorArgument;
-  arrayConstructorArgument = ctr_heap_allocate (sizeof (ctr_argument));
-  blockArguments = ctr_heap_allocate (sizeof (ctr_argument));
-  ctr_argument *group;
-  group = ctr_heap_allocate (sizeof (ctr_argument));
+  ctr_argument varg = {0}, *arg = &varg;
+  ctr_argument argvb = {0}, *blockArguments = &argvb;
+  ctr_argument argva = {0}, *arrayConstructorArgument = &argva;
+  ctr_argument argvg = {0}, *group = &argvg;
   while (1)
     {
       regex_error = regexec (&pattern, haystack + offset, n, matches, 0);
@@ -3935,12 +3890,8 @@ ctr_string_find_pattern_options_do (ctr_object * myself, ctr_argument * argument
 	  offset += matches[0].rm_eo;
 	}
     }
-  ctr_heap_free (group);
-  ctr_heap_free (blockArguments);
-  ctr_heap_free (arrayConstructorArgument);
   arg->object = ctr_build_string (haystack + offset, strlen (haystack + offset));
   ctr_string_append (newString, arg);
-  ctr_heap_free (arg);
   ctr_heap_free (needle);
   ctr_heap_free (haystack);
   ctr_heap_free (options);
@@ -3999,11 +3950,9 @@ ctr_string_find_pattern_options_do (ctr_object * myself, ctr_argument * argument
   size_t offset = 0;
   size_t last_end = 0;
   ctr_object *newString = ctr_build_empty_string ();
-  ctr_argument *blockArguments;
-  ctr_argument *group;
-  blockArguments = ctr_heap_allocate (sizeof (ctr_argument));
-  ctr_argument *arg = ctr_heap_allocate (sizeof (ctr_argument));
-  group = ctr_heap_allocate (sizeof (ctr_argument));
+  ctr_argument argb = {0}, *blockArguments = &argb;
+  ctr_argument argg = {0}, *group = &argg;
+  ctr_argument arga = {0}, *arg = &arga;
   while ((regex_count > 0 || first) && !flagIgnore)
     {
       if (first)
@@ -4038,12 +3987,9 @@ ctr_string_find_pattern_options_do (ctr_object * myself, ctr_argument * argument
       else
 	break;
     }
-  ctr_heap_free (group);
-  ctr_heap_free (blockArguments);
   arg->object = ctr_build_string (haystack + offset, strlen (haystack + offset));
   ctr_string_append (newString, arg);
   // printf("-> %s\n", newString->value.svalue->value);
-  ctr_heap_free (arg);
   // ctr_heap_free( (void*)err );
   ctr_heap_free (needle);
   ctr_heap_free (haystack);
@@ -4062,11 +4008,9 @@ ctr_string_find_pattern_options_do (ctr_object * myself, ctr_argument * argument
 ctr_object *
 ctr_string_find_pattern_do (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_argument *no_options = ctr_heap_allocate (sizeof (ctr_argument));
   argumentList->next->next->object = ctr_build_empty_string ();
   ctr_object *answer;
   answer = ctr_string_find_pattern_options_do (myself, argumentList);
-  ctr_heap_free (no_options);
   return answer;
 }
 
@@ -4355,7 +4299,7 @@ ctr_string_padding (ctr_object * myself, ctr_argument * argumentList, int left)
   char *format;
   char *stringParam;
   ctr_size bufferSize;
-  ctr_argument *a;
+  ctr_argument arga = {0}, *a = &arga;
   ctr_object *answer;
   ctr_object *formatObj;
   if (left == 1)
@@ -4366,7 +4310,6 @@ ctr_string_padding (ctr_object * myself, ctr_argument * argumentList, int left)
     {
       formatObj = ctr_build_string_from_cstring ("%-");
     }
-  a = ctr_heap_allocate (sizeof (ctr_argument));
   padding = (uint16_t) ctr_internal_cast2number (argumentList->object)->value.nvalue;
   a->object = ctr_internal_cast2string (ctr_build_number_from_float ((ctr_number) padding));
   formatObj = ctr_string_concat (formatObj, a);
@@ -4381,7 +4324,6 @@ ctr_string_padding (ctr_object * myself, ctr_argument * argumentList, int left)
   ctr_heap_free (buffer);
   ctr_heap_free (stringParam);
   ctr_heap_free (format);
-  ctr_heap_free (a);
   return answer;
 }
 
@@ -4473,7 +4415,7 @@ ctr_string_split (ctr_object * myself, ctr_argument * argumentList)
       times = ctr_internal_cast2number (argumentList->next->object)->value.nvalue;
       p = 1;
     }
-  ctr_argument *arg;
+  ctr_argument earg = {0}, *arg = &earg;
   char *elem;
   ctr_object *arr = ctr_array_new (CtrStdArray, NULL);
   long i;
@@ -4487,10 +4429,8 @@ ctr_string_split (ctr_object * myself, ctr_argument * argumentList)
 	{
 	  elem = ctr_heap_allocate (sizeof (char) * (j - dlen));
 	  memcpy (elem, buffer, j - dlen);
-	  arg = ctr_heap_allocate (sizeof (ctr_argument));
 	  arg->object = ctr_build_string (elem, j - dlen);
 	  ctr_array_push (arr, arg);
-	  ctr_heap_free (arg);
 	  ctr_heap_free (elem);
 	  j = 0;
 	  times--;
@@ -4500,10 +4440,8 @@ ctr_string_split (ctr_object * myself, ctr_argument * argumentList)
     {
       elem = ctr_heap_allocate (sizeof (char) * j);
       memcpy (elem, buffer, j);
-      arg = ctr_heap_allocate (sizeof (ctr_argument));
       arg->object = ctr_build_string (elem, j);
       ctr_array_push (arr, arg);
-      ctr_heap_free (arg);
       ctr_heap_free (elem);
     }
   ctr_heap_free (buffer);
@@ -4559,9 +4497,8 @@ ctr_string_characters (ctr_object * myself, ctr_argument * argumentList)
   ctr_size i;
   int charSize;
   ctr_object *arr;
-  ctr_argument *newArgumentList;
+  ctr_argument narg = {0}, *newArgumentList = &narg;
   arr = ctr_array_new (CtrStdArray, NULL);
-  newArgumentList = ctr_heap_allocate (sizeof (ctr_argument));
   i = 0;
   while (i < myself->value.svalue->vlen)
     {
@@ -4572,7 +4509,6 @@ ctr_string_characters (ctr_object * myself, ctr_argument * argumentList)
       ctr_array_push (arr, newArgumentList);
       i += charSize;
     }
-  ctr_heap_free (newArgumentList);
   return arr;
 }
 
@@ -4586,9 +4522,8 @@ ctr_string_to_byte_array (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_size i;
   ctr_object *arr;
-  ctr_argument *newArgumentList;
+  ctr_argument narg = {0}, *newArgumentList = &narg;
   arr = ctr_array_new (CtrStdArray, NULL);
-  newArgumentList = ctr_heap_allocate (sizeof (ctr_argument));
   i = 0;
   while (i < myself->value.svalue->vlen)
     {
@@ -4596,7 +4531,6 @@ ctr_string_to_byte_array (ctr_object * myself, ctr_argument * argumentList)
       ctr_array_push (arr, newArgumentList);
       i++;
     }
-  ctr_heap_free (newArgumentList);
   return arr;
 }
 
@@ -4610,11 +4544,10 @@ ctr_string_fmap (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_size i;
   ctr_object *arr;
-  ctr_argument *newArgumentList;
+  ctr_argument narg = {0}, *newArgumentList = &narg;
   ctr_object *fmapb = argumentList->object;
   CTR_ENSURE_TYPE_BLOCK (fmapb);
   arr = ctr_array_new (CtrStdArray, NULL);
-  newArgumentList = ctr_heap_allocate (sizeof (ctr_argument));
   i = 0;
   while (i < ctr_string_length (myself, NULL)->value.nvalue)
     {
@@ -4626,7 +4559,6 @@ ctr_string_fmap (ctr_object * myself, ctr_argument * argumentList)
     }
   newArgumentList->object = ctr_build_empty_string ();
   arr = ctr_array_join (arr, newArgumentList);
-  ctr_heap_free (newArgumentList);
   return arr;
 }
 
@@ -4640,12 +4572,11 @@ ctr_string_imap (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_size i;
   ctr_object *arr;
-  ctr_argument *newArgumentList;
+  ctr_argument narg = {0}, nnext = {0}, *newArgumentList = &narg;
   ctr_object *fmapb = argumentList->object;
   CTR_ENSURE_TYPE_BLOCK (fmapb);
   arr = ctr_array_new (CtrStdArray, NULL);
-  newArgumentList = ctr_heap_allocate (sizeof (ctr_argument));
-  newArgumentList->next = ctr_heap_allocate (sizeof (ctr_argument));
+  newArgumentList->next = &nnext;
   i = 0;
   while (i < ctr_string_length (myself, NULL)->value.nvalue)
     {
@@ -4657,8 +4588,6 @@ ctr_string_imap (ctr_object * myself, ctr_argument * argumentList)
     }
   newArgumentList->object = ctr_build_empty_string ();
   arr = ctr_array_join (arr, newArgumentList);
-  ctr_heap_free (newArgumentList->next);
-  ctr_heap_free (newArgumentList);
   return arr;
 }
 
@@ -4672,12 +4601,11 @@ ctr_string_filter (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_size i;
   ctr_object *arr;
-  ctr_argument *newArgumentList;
+  ctr_argument narg = {0}, nnext = {0}, *newArgumentList = &narg;
   ctr_object *fmapb = argumentList->object;
   CTR_ENSURE_TYPE_BLOCK (fmapb);
   arr = ctr_array_new (CtrStdArray, NULL);
-  newArgumentList = ctr_heap_allocate (sizeof (ctr_argument));
-  newArgumentList->next = ctr_heap_allocate (sizeof (ctr_argument));
+  newArgumentList->next = &nnext;
   i = 0;
   while (i < ctr_string_length (myself, NULL)->value.nvalue)
     {
@@ -4692,8 +4620,6 @@ ctr_string_filter (ctr_object * myself, ctr_argument * argumentList)
     }
   newArgumentList->object = ctr_build_empty_string ();
   arr = ctr_array_join (arr, newArgumentList);
-  ctr_heap_free (newArgumentList->next);
-  ctr_heap_free (newArgumentList);
   return arr;
 }
 
@@ -4943,7 +4869,7 @@ ctr_string_eval (ctr_object * myself, ctr_argument * argumentList)
   pathString = ctr_heap_allocate_tracked (sizeof (char) * 5);
   memcpy (pathString, "<eval>\0", 7);
   /* add a return statement so we can catch result */
-  ctr_argument *newArgumentList = ctr_heap_allocate (sizeof (ctr_argument));
+  ctr_argument narg = {0}, *newArgumentList = &narg;
   newArgumentList->object = myself;
   code = ctr_string_append (ctr_build_string_from_cstring ("^\n"), newArgumentList);
   newArgumentList->object = ctr_build_string_from_cstring ("\n.");
@@ -4955,7 +4881,6 @@ ctr_string_eval (ctr_object * myself, ctr_argument * argumentList)
   ctr_cwlk_subprogram--;
   if (result == NULL)
     result = CtrStdNil;
-  ctr_heap_free (newArgumentList);
 
 #ifdef EVALSECURITY
   ctr_command_security_profile ^= CTR_SECPRO_EVAL;
@@ -5104,14 +5029,13 @@ ctr_string_reverse (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *newString = ctr_build_empty_string ();
   size_t i = ctr_string_length (myself, NULL)->value.nvalue;
-  ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
+  ctr_argument varg = {0}, *args = &varg;
   for (; i > 0; i--)
     {
       args->object = ctr_build_number_from_float (i - 1);
       args->object = ctr_string_at (myself, args);
       ctr_string_append (newString, args);
     }
-  ctr_heap_free (args);
   return newString;
 }
 
@@ -5141,10 +5065,10 @@ ctr_build_immutable (ctr_tnode * node)
   tupleobj->value.avalue->head = 0;
   tupleobj->value.avalue->tail = 0;
   ctr_object *result;
-  ctr_argument *args = ctr_heap_allocate (sizeof (ctr_argument));
+  ctr_argument varg = {0}, *args = &varg;
   ctr_tlistitem *items = node->nodes->node->nodes;
 
-  char *wasReturn = ctr_heap_allocate (sizeof (char));
+  char *wasReturn = "";
   while (items && items->node)
     {
       result = ctr_cwlk_expr (items->node, wasReturn);
@@ -5156,8 +5080,6 @@ ctr_build_immutable (ctr_tnode * node)
       items = items->next;
     }
   tupleobj->info.raw = 1;
-  ctr_heap_free (wasReturn);
-  ctr_heap_free (args);
   return tupleobj;
 }
 
@@ -5216,7 +5138,7 @@ ctr_object *
 ctr_scan_free_refs (ctr_tnode * node)
 {
   ctr_object *ret = ctr_map_new (CtrStdMap, NULL);
-  ctr_argument *argm = ctr_heap_allocate (sizeof (ctr_argument));
+  ctr_argument argmv = {0}, *argm = &argmv;
   ctr_tlistitem *li;
   ctr_tnode *t;
   // if (indent>20) exit(1);
@@ -5303,7 +5225,6 @@ ctr_scan_free_refs (ctr_tnode * node)
   //      li = li->next;
   //      t = li->node;
   // }
-  ctr_heap_free (argm);
   return ret;
 }
 
@@ -5311,8 +5232,9 @@ ctr_object *
 ctr_array_internal_product (ctr_object * myself, ctr_argument * argumentList)
 {
   int has_argl = ! !argumentList;
+  ctr_argument argl;
   if (!argumentList)
-    argumentList = ctr_heap_allocate (sizeof (ctr_argument));
+    argumentList = &argl;
   ctr_object *prod;
   ctr_object *el;
   ctr_size i = 0;
@@ -5336,8 +5258,6 @@ ctr_array_internal_product (ctr_object * myself, ctr_argument * argumentList)
 			argumentList->object = ctr_array_push (elarr, argumentList);
 			ctr_array_push (new_arr, argumentList);
 		      }
-		    if (!has_argl)
-		      ctr_heap_free (argumentList);
 		    return new_arr;
 		  }
 		default:
@@ -5349,8 +5269,6 @@ ctr_array_internal_product (ctr_object * myself, ctr_argument * argumentList)
 		    prod = ctr_send_message (el, "fmap:", 5, argumentList);
 		    if (prod->interfaces->link == ctr_std_generator)
 		      prod = ctr_generator_toarray (prod, argumentList);
-		    if (!has_argl)
-		      ctr_heap_free (argumentList);
 		    return prod;
 		  }
 		}
@@ -5361,8 +5279,6 @@ ctr_array_internal_product (ctr_object * myself, ctr_argument * argumentList)
       argumentList->object = el;
       prod = ctr_send_message (prod, "*", 1, argumentList);
     }
-  if (!has_argl)
-    ctr_heap_free (argumentList);
   return (prod);
 }
 
@@ -5802,7 +5718,7 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
       if (catchBlock != NULL)
 	{
 	  ctr_object *catch_type = ctr_internal_object_find_property (catchBlock, ctr_build_string_from_cstring ("%catch"), 0);
-	  ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+	  ctr_argument aa = {0}, ab = {0}, *a = &aa;
 	  ctr_object *exdata = ctr_build_string_from_cstring (":exdata"),
 	    *ex = CtrStdFlow, *getexinfo = ctr_build_string_from_cstring ("exceptionInfo");
 	  ctr_internal_object_set_property (ex, exdata, ctr_internal_ex_data (), 0);
@@ -5815,7 +5731,7 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
 	      ctr_internal_create_func (ex, ctr_build_string_from_cstring ("toString"), &ctr_string_to_string);
 	    }
 	  a->object = ex;
-	  a->next = ctr_heap_allocate (sizeof (ctr_argument));
+	  a->next = &ab;
 	  a->next->object = catch_type;
 	  if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 	    {
@@ -5828,8 +5744,6 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
 	  ctr_internal_object_delete_property (ex, getexinfo, 1);
 	  if (setstr)
 	    ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
-	  ctr_heap_free (a->next);
-	  ctr_heap_free (a);
 	}
     }
   if (!is_tail_call)
@@ -6014,7 +5928,7 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
       if (catchBlock != NULL)
 	{
 	  ctr_object *catch_type = ctr_internal_object_find_property (catchBlock, ctr_build_string_from_cstring ("%catch"), 0);
-	  ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+	  ctr_argument aa = {0}, ab = {0}, *a = &aa;
 	  ctr_object *exdata = ctr_build_string_from_cstring (":exdata"),
 	    *ex = CtrStdFlow, *getexinfo = ctr_build_string_from_cstring ("exceptionInfo"), *exd = ctr_internal_ex_data ();
 	  ctr_internal_object_add_property (ex, exdata, exd, 0);
@@ -6027,7 +5941,7 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 	      ctr_internal_create_func (ex, ctr_build_string_from_cstring ("toString"), &ctr_string_to_string);
 	    }
 	  a->object = ex;
-    a->next = ctr_heap_allocate (sizeof (ctr_argument));
+    a->next = &ab;
     a->next->object = catch_type;
 	  if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 	    {
@@ -6040,8 +5954,6 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
 	  ctr_internal_object_delete_property (ex, getexinfo, 1);
 	  if (setstr)
 	    ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
-	  ctr_heap_free (a->next);
-	  ctr_heap_free (a);
 	}
     }
   if (!is_tail_call)
@@ -6101,7 +6013,7 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
       if (catchBlock != NULL)
 	{
 	  ctr_object *catch_type = ctr_internal_object_find_property (catchBlock, ctr_build_string_from_cstring ("%catch"), 0);
-	  ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+	  ctr_argument aa = {0}, ab = {0}, *a = &aa;
 	  ctr_object *exdata = ctr_build_string_from_cstring (":exdata"),
 	    *ex = CtrStdFlow, *getexinfo = ctr_build_string_from_cstring ("exceptionInfo");
 	  ctr_internal_object_set_property (ex, exdata, ctr_internal_ex_data (), 0);
@@ -6114,7 +6026,7 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
 	      ctr_internal_create_func (ex, ctr_build_string_from_cstring ("toString"), &ctr_string_to_string);
 	    }
 	  a->object = ex;
-	  a->next = ctr_heap_allocate (sizeof (ctr_argument));
+	  a->next = &ab;
 	  a->next->object = catch_type;
 	  if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 	    {
@@ -6127,8 +6039,6 @@ ctr_block_run_here (ctr_object * myself, ctr_argument * argList, ctr_object * my
 	  ctr_internal_object_delete_property (ex, getexinfo, 1);
 	  if (setstr)
 	    ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
-	  ctr_heap_free (a->next);
-	  ctr_heap_free (a);
 	}
     }
   return result;
@@ -6197,7 +6107,7 @@ ctr_block_while_true (ctr_object * myself, ctr_argument * argumentList)
 	    if (catchBlock != NULL)
 	      {
 		ctr_object *catch_type = ctr_internal_object_find_property (catchBlock, ctr_build_string_from_cstring ("%catch"), 0);
-		ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+		ctr_argument aa = {0}, ab = {0}, *a = &aa;
 		ctr_object *exdata = ctr_build_string_from_cstring (":exdata"),
 		  *ex = CtrStdFlow, *getexinfo = ctr_build_string_from_cstring ("exceptionInfo");
 		ctr_internal_object_set_property (ex, exdata, ctr_internal_ex_data (), 0);
@@ -6210,7 +6120,7 @@ ctr_block_while_true (ctr_object * myself, ctr_argument * argumentList)
 		    ctr_internal_create_func (ex, ctr_build_string_from_cstring ("toString"), &ctr_string_to_string);
 		  }
 		a->object = ex;
-		a->next = ctr_heap_allocate (sizeof (ctr_argument));
+		a->next = &ab;
 		a->next->object = catch_type;
 		if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 		  {
@@ -6223,8 +6133,6 @@ ctr_block_while_true (ctr_object * myself, ctr_argument * argumentList)
 		ctr_internal_object_delete_property (ex, getexinfo, 1);
 		if (setstr)
 		  ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
-		ctr_heap_free (a->next);
-		ctr_heap_free (a);
 	      }
 	  }
       }
@@ -6322,7 +6230,7 @@ ctr_block_while_false (ctr_object * myself, ctr_argument * argumentList)
 	    if (catchBlock != NULL)
 	      {
 		ctr_object *catch_type = ctr_internal_object_find_property (catchBlock, ctr_build_string_from_cstring ("%catch"), 0);
-		ctr_argument *a = (ctr_argument *) ctr_heap_allocate (sizeof (ctr_argument));
+		ctr_argument aa = {0}, ab = {0}, *a = &aa;
 		ctr_object *exdata = ctr_build_string_from_cstring (":exdata"),
 		  *ex = CtrStdFlow, *getexinfo = ctr_build_string_from_cstring ("exceptionInfo");
 		ctr_internal_object_set_property (ex, exdata, ctr_internal_ex_data (), 0);
@@ -6335,7 +6243,7 @@ ctr_block_while_false (ctr_object * myself, ctr_argument * argumentList)
 		    ctr_internal_create_func (ex, ctr_build_string_from_cstring ("toString"), &ctr_string_to_string);
 		  }
 		a->object = ex;
-		a->next = ctr_heap_allocate (sizeof (ctr_argument));
+		a->next = &ab;
 		a->next->object = catch_type;
 		if (!catch_type || ctr_reflect_is_linked_to (CtrStdReflect, a)->value.bvalue)
 		  {
@@ -6348,8 +6256,6 @@ ctr_block_while_false (ctr_object * myself, ctr_argument * argumentList)
 		ctr_internal_object_delete_property (ex, getexinfo, 1);
 		if (setstr)
 		  ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
-		ctr_heap_free (a->next);
-		ctr_heap_free (a);
 	      }
 	  }
       }
@@ -6467,26 +6373,20 @@ ctr_block_run_variadic_my (ctr_object * myself, ctr_object * my, int count, ...)
 {
   if (count < 1)
     return ctr_block_run (myself, NULL, my);
-  ctr_argument *argumentList = ctr_heap_allocate (sizeof (ctr_argument));
+  ctr_argument argalloc[count]; // C99+
+  memset(argalloc, 0, count * sizeof(ctr_argument));
+  ctr_argument argv = {0}, *argumentList = &argv;
   ctr_argument *pass = argumentList;
   va_list ap;
   va_start (ap, count);
   for (size_t i = 0; i < count; i++)
     {
       pass->object = va_arg (ap, ctr_object *);
-      pass->next = ctr_heap_allocate (sizeof (ctr_argument));
+      pass->next = argalloc + i;
       pass = pass->next;
     }
   va_end (ap);
   ctr_object *result = ctr_block_run (myself, argumentList, my);
-  pass = argumentList;
-  while (pass->next != NULL)
-    {
-      ctr_argument *prev = pass;
-      pass = pass->next;
-      if (prev != NULL)
-	ctr_heap_free (prev);
-    }
   // ctr_heap_free(argumentList);
   return result;
 }
@@ -6496,26 +6396,20 @@ ctr_block_run_variadic (ctr_object * myself, int count, ...)
 {
   if (count < 1)
     return ctr_block_runIt (myself, NULL);
-  ctr_argument *argumentList = ctr_heap_allocate (sizeof (ctr_argument));
+  ctr_argument argalloc[count]; // C99+
+  memset(argalloc, 0, count * sizeof(ctr_argument));
+  ctr_argument argv = {0}, *argumentList = &argv;
   ctr_argument *pass = argumentList;
   va_list ap;
   va_start (ap, count);
   for (size_t i = 0; i < count; i++)
     {
       pass->object = va_arg (ap, ctr_object *);
-      pass->next = ctr_heap_allocate (sizeof (ctr_argument));
+      pass->next = argalloc + i;
       pass = pass->next;
     }
   va_end (ap);
   ctr_object *result = ctr_block_runIt (myself, argumentList);
-  pass = argumentList;
-  while (pass->next != NULL)
-    {
-      ctr_argument *prev = pass;
-      pass = pass->next;
-      if (prev != NULL)
-	ctr_heap_free (prev);
-    }
   // ctr_heap_free(argumentList);
   return result;
 }
@@ -6525,7 +6419,9 @@ ctr_send_message_variadic (ctr_object * myself, char *message, int msglen, int c
 {
   if (count < 1)
     return ctr_send_message (myself, message, msglen, NULL);
-  ctr_argument *argumentList = ctr_heap_allocate (sizeof (ctr_argument));
+  ctr_argument argalloc[count]; // C99+
+  memset(argalloc, 0, count * sizeof(ctr_argument));
+  ctr_argument argv = {0}, *argumentList = &argv;
   ctr_argument *pass = argumentList;
   va_list ap;
   va_start (ap, count);
@@ -6534,20 +6430,12 @@ ctr_send_message_variadic (ctr_object * myself, char *message, int msglen, int c
       pass->object = va_arg (ap, ctr_object *);
       if (i != count - 1)
 	{
-	  pass->next = ctr_heap_allocate (sizeof (ctr_argument));
+	  pass->next = argalloc + i;
 	  pass = pass->next;
 	}
     }
   va_end (ap);
   ctr_object *result = ctr_send_message (myself, message, msglen, argumentList);
-  pass = argumentList;
-  while (pass->next != NULL)
-    {
-      ctr_argument *prev = pass;
-      pass = pass->next;
-      if (prev != NULL)
-	ctr_heap_free (prev);
-    }
   // ctr_heap_free(argumentList);
   return result;
 }
@@ -6557,7 +6445,9 @@ ctr_invoke_variadic (ctr_object * myself, ctr_object * (*fun) (ctr_object *, ctr
 {
   if (count < 1)
     return fun (myself, NULL);
-  ctr_argument *argumentList = ctr_heap_allocate (sizeof (ctr_argument));
+  ctr_argument argalloc[count]; // C99+
+  memset(argalloc, 0, count * sizeof(ctr_argument));
+  ctr_argument argv = {0}, *argumentList = &argv;
   ctr_argument *pass = argumentList;
   va_list ap;
   va_start (ap, count);
@@ -6566,20 +6456,12 @@ ctr_invoke_variadic (ctr_object * myself, ctr_object * (*fun) (ctr_object *, ctr
       pass->object = va_arg (ap, ctr_object *);
       if (i != count - 1)
 	{
-	  pass->next = ctr_heap_allocate (sizeof (ctr_argument));
+	  pass->next = argalloc + i;
 	  pass = pass->next;
 	}
     }
   va_end (ap);
   ctr_object *result = fun (myself, argumentList);
-  pass = argumentList;
-  while (pass->next != NULL)
-    {
-      ctr_argument *prev = pass;
-      pass = pass->next;
-      if (prev != NULL)
-	ctr_heap_free (prev);
-    }
   // ctr_heap_free(argumentList);
   return result;
 }
@@ -7096,7 +6978,7 @@ ctr_get_last_trace (ctr_object * myself, ctr_argument * _)
   mapItem = ctr_source_map_head;
   line = -1;
   ctr_object *ret = ctr_array_new (CtrStdArray, NULL);
-  ctr_argument *arg = ctr_heap_allocate (sizeof (ctr_argument));
+  ctr_argument argv = {0}, *arg = &argv;
   for (int i = ctr_callstack_index; i > 0; i--)
     {
       stackNode = ctr_callstack[i - 1];

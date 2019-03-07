@@ -1927,6 +1927,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("fmap!:"), &ctr_array_fmap_inp);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("imap!:"), &ctr_array_imap_inp);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("foldl:accumulator:"), &ctr_array_foldl);
+  ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("foldl:"), &ctr_array_foldl0);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("filter:"), &ctr_array_filter);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("filter_v:"), &ctr_array_filter_v);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("fmap:from:"), &ctr_array_select_from_if);

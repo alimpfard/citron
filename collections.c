@@ -1413,6 +1413,40 @@ ctr_array_foldl (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
+ * Array foldl: [Block]
+ *
+ * reduces an array according to a block (which takes an accumulator and the value, and returns the next acc) from the left (index 0)
+ * Errors if there's no element in the array
+ *
+ * ([1,2,3,4]) foldl: {:acc:v ^acc + v.}. #=> Equivalent to ([1,2,3,4]) sum.
+ */
+ctr_object *
+ctr_array_foldl0 (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *func = argumentList->object;
+  CTR_ENSURE_TYPE_BLOCK (func);
+
+  ctr_size i = 0;
+  ctr_argument earg = {0}, *elnumArg = &earg;
+  ctr_object *elnum = ctr_build_number_from_float ((ctr_number) i);
+  elnumArg->object = elnum;
+  ctr_object *accumulator = ctr_array_get(myself, elnumArg);
+  if (CtrStdFlow)
+    return CtrStdNil;
+  ctr_argument aarg = {0}, *accArg = &aarg, anext = {0};
+  accArg->next = &anext;
+  accArg->object = accumulator;
+  for (i = 1; i < myself->value.avalue->head - myself->value.avalue->tail; i++)
+    {
+      elnumArg->object->value.nvalue = i;
+      accArg->next->object = ctr_array_get (myself, elnumArg);
+      accArg->object = ctr_block_run (func, accArg, func);
+    }
+  accumulator = accArg->object;
+  return accumulator;
+}
+
+/**
  * [Array] filter: [Block<i,v>]
  *
  * Include the element iff block returns True for the element

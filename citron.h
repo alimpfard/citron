@@ -924,6 +924,7 @@ ctr_object* ctr_array_imap(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_fmap_inp(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_imap_inp(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_foldl(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_foldl0(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_filter(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_filter_v(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_select_from_if(ctr_object* myself, ctr_argument* argumentList);

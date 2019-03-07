@@ -2343,12 +2343,12 @@ ctr_map_fmap_inp (ctr_object * myself, ctr_argument * argumentList)
   m = myself->properties->head;
   ctr_argument arg = {0}, *arguments = &arg, varg = {0};
   arguments->next = &varg;
-  ctr_object *newmap = myself;
+  ctr_object* value;
   while (m)
     {
       arguments->object = m->key;
       arguments->next->object = m->value;
-      arguments->object = ctr_block_run (block, arguments, myself);
+      value = ctr_block_run (block, arguments, myself);
       if (CtrStdFlow)
 	{
 	  if (CtrStdFlow == CtrStdContinue)
@@ -2361,19 +2361,16 @@ ctr_map_fmap_inp (ctr_object * myself, ctr_argument * argumentList)
 	    CtrStdFlow = NULL;
 	  break;
 	}
-      if (arguments->object == block)
+      if (value == block)
 	{
-	  arguments->object = m->key;
-	  arguments->next->object = m->value;
+	  value = m->value;
 	}
-      else
-	arguments->next->object = m->key;
-      ctr_map_put (newmap, arguments);
+      m->value = value;
       m = m->next;
     }
   block->info.mark = 0;
   block->info.sticky = 0;
-  return newmap;
+  return myself;
 }
 
 /**

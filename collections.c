@@ -61,7 +61,7 @@ ctr_object *
 ctr_array_copy (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *arr = ctr_array_new (CtrStdArray, NULL);
-  ctr_argument parg, *pushArg = &parg;
+  ctr_argument parg = {0}, *pushArg = &parg;
   for (ctr_size i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
     {
       pushArg->object = *(myself->value.avalue->elements + i);
@@ -372,7 +372,7 @@ ctr_array_multiply (ctr_object * myself, ctr_argument * argumentList)
 	{
 	  rep--;
 	  ctr_object *newArr = ctr_array_new (CtrStdArray, NULL);
-	  ctr_argument varg, *arg = &varg;
+	  ctr_argument varg = {0}, *arg = &varg;
 	  for (; rep >= 0; rep--)
 	    {
 	      arg->object = myself;
@@ -384,7 +384,7 @@ ctr_array_multiply (ctr_object * myself, ctr_argument * argumentList)
   if (mand->info.type == CTR_OBJECT_TYPE_OTARRAY)
     {
       ctr_object *newArr = ctr_array_new (CtrStdArray, NULL);
-      ctr_argument arg, *args = &arg;
+      ctr_argument arg = {0}, *args = &arg;
       for (ctr_size i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
 	{
 	  ctr_object *elem0 = *(myself->value.avalue->elements + i);
@@ -415,7 +415,7 @@ ctr_array_intersperse (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *newArr = ctr_array_new (CtrStdArray, NULL);
   ctr_size i = 0;
-  ctr_argument parg, *pushArg = &parg;
+  ctr_argument parg = {0}, *pushArg = &parg;
   for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
     {
       pushArg->object = *(myself->value.avalue->elements + i);
@@ -458,9 +458,9 @@ ctr_array_map (ctr_object * myself, ctr_argument * argumentList)
       return myself;
     }
   block->info.sticky = 1;
-  ctr_argument a0, *arguments = &a0;
-  ctr_argument a1, *argument2 = &a1;
-  ctr_argument a2, *argument3 = NULL;
+  ctr_argument a0 = {0}, *arguments = &a0;
+  ctr_argument a1 = {0}, *argument2 = &a1;
+  ctr_argument a2 = {0}, *argument3 = NULL;
 
   if (!myself->value.avalue->immutable)
     argument3 = &a2;
@@ -519,8 +519,8 @@ ctr_array_map_v (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *func = argumentList->object;
   CTR_ENSURE_TYPE_BLOCK (func);
 
-  ctr_argument parg, *pushArg = &parg;
-  ctr_argument earg, *elnumArg = &earg;
+  ctr_argument parg = {0}, *pushArg = &parg;
+  ctr_argument earg = {0}, *elnumArg = &earg;
   ctr_size i;
   for (i = 0; i < myself->value.avalue->head - myself->value.avalue->tail; i++)
     {
@@ -551,7 +551,7 @@ ctr_array_map_v (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_array_slice (ctr_object * myself, ctr_argument * argumentList)
 {
-  ctr_argument varg, *arg = &varg;
+  ctr_argument varg = {0}, *arg = &varg;
   ctr_object *elnum;
   ctr_object *startElement = ctr_internal_cast2number (argumentList->object);
   ctr_object *count = ctr_internal_cast2number (argumentList->next->object);
@@ -590,8 +590,8 @@ ctr_array_every_do_fill (ctr_object * myself, ctr_argument * argumentList)
   if (argumentList->next->next && argumentList->next->next->object)
     fill = argumentList->next->next->object;
   ctr_object *parr;		//= ctr_array_new(CtrStdArray, NULL);
-  ctr_argument varg, *args = &varg;
-  ctr_argument vcaa, *caa = &vcaa;
+  ctr_argument varg = {0}, *args = &varg;
+  ctr_argument vcaa = {0}, *caa = &vcaa;
   for (ctr_size s = ceil ((myself->value.avalue->head - myself->value.avalue->tail) / (double) icount), i = 0; i < s; i++)
     {
       args->object = ctr_build_number_from_float (i * icount);
@@ -626,8 +626,8 @@ ctr_array_chunks (ctr_object * myself, ctr_argument * argumentList)
     fill = argumentList->next->object;
   ctr_object *parr;		//= ctr_array_new(CtrStdArray, NULL);
   ctr_object *ret = ctr_array_new (CtrStdArray, NULL);
-  ctr_argument varg, *args = &varg;
-  ctr_argument vcaa, *caa = &vcaa;
+  ctr_argument varg = {0}, *args = &varg;
+  ctr_argument vcaa = {0}, *caa = &vcaa;
   for (ctr_size s = ceil ((myself->value.avalue->head - myself->value.avalue->tail) / (double) icount), i = 0; i < s; i++)
     {
       args->object = ctr_build_number_from_float (i * icount);
@@ -718,7 +718,7 @@ ctr_array_reverse (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *newArr = ctr_array_new (CtrStdArray, NULL);
   ctr_size i = ctr_array_count (myself, NULL)->value.nvalue;
-  ctr_argument varg, *args = &varg;
+  ctr_argument varg = {0}, *args = &varg;
   for (; i > 0; i--)
     {
       args->object = ctr_build_number_from_float (i - 1);
@@ -891,7 +891,7 @@ ctr_array_put (ctr_object * myself, ctr_argument * argumentList)
   ctr_size putIndexNumber;
   ctr_size head;
   ctr_size tail;
-  ctr_argument arg, *argument = &arg;
+  ctr_argument arg = {0}, *argument = &arg;
   if (putIndex->value.nvalue < 0)
     {
       CtrStdFlow = ctr_build_string_from_cstring ("Index out of bounds.");
@@ -1014,8 +1014,8 @@ ctr_array_from_length (ctr_object * myself, ctr_argument * argumentList)
   ctr_size len = (int) count->value.nvalue;
   ctr_size i = 0;
   ctr_object *newArray = ctr_array_new (CtrStdArray, NULL);
-  ctr_argument parg, *pushArg = &parg;
-  ctr_argument earg, *elnumArg = &earg;
+  ctr_argument parg = {0}, *pushArg = &parg;
+  ctr_argument earg = {0}, *elnumArg = &earg;
   for (i = start; i < start + len; i++)
     {
       elnum = ctr_build_number_from_float ((ctr_number) i);
@@ -1040,8 +1040,8 @@ ctr_array_skip (ctr_object * myself, ctr_argument * argumentList)
   ctr_size len = (int) myself->value.avalue->length - 1;
   ctr_size i = 0;
   ctr_object *newArray = ctr_array_new (CtrStdArray, NULL);
-  ctr_argument parg, *pushArg = &parg;
-  ctr_argument earg, *elnumArg = &earg;
+  ctr_argument parg = {0}, *pushArg = &parg;
+  ctr_argument earg = {0}, *elnumArg = &earg;
   for (i = start; i < start + len; i++)
     {
       elnum = ctr_build_number_from_float ((ctr_number) i);
@@ -1163,7 +1163,7 @@ ctr_array_tail (ctr_object * myself, ctr_argument * argumentList)
     return arr;
   else
     {
-      ctr_argument varg, *arg = &varg;
+      ctr_argument varg = {0}, *arg = &varg;
       for (ctr_size i = 1; i < myself->value.avalue->head - myself->value.avalue->tail; i++)
 	{
 	  arg->object = ctr_build_number_from_float (i);
@@ -1190,7 +1190,7 @@ ctr_array_init (ctr_object * myself, ctr_argument * argumentList)
     return arr;
   else
     {
-      ctr_argument varg, *arg = &varg;
+      ctr_argument varg = {0}, *arg = &varg;
       for (ctr_size i = 0; i < myself->value.avalue->head - myself->value.avalue->tail - 1; i++)
 	{
 	  arg->object = ctr_build_number_from_float (i);
@@ -1226,8 +1226,8 @@ ctr_array_add (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *otherArray = argumentList->object;
   ctr_object *newArray = ctr_array_new (CtrStdArray, NULL);
-  ctr_argument parg, *pushArg = &parg;
-  ctr_argument earg, *elnumArg = &earg;
+  ctr_argument parg = {0}, *pushArg = &parg;
+  ctr_argument earg = {0}, *elnumArg = &earg;
   ctr_size i;
   for (i = 0; i < myself->value.avalue->head - myself->value.avalue->tail; i++)
     {
@@ -1263,7 +1263,7 @@ ctr_array_fmap (ctr_object * myself, ctr_argument * argumentList)
   CTR_ENSURE_TYPE_BLOCK (func);
 
   ctr_object *newArray = ctr_array_new (CtrStdArray, NULL);
-  ctr_argument varg, *arg = &varg;
+  ctr_argument varg = {0}, *arg = &varg;
   ctr_size i;
   ctr_object** elems = myself->value.avalue->elements;
   for (i = 0; i < myself->value.avalue->head - myself->value.avalue->tail; i++)
@@ -1300,7 +1300,7 @@ ctr_array_imap (ctr_object * myself, ctr_argument * argumentList)
   CTR_ENSURE_TYPE_BLOCK (func);
 
   ctr_object *newArray = ctr_array_new (CtrStdArray, NULL);
-  ctr_argument parg, *pushArg = &parg, pnext;
+  ctr_argument parg = {0}, *pushArg = &parg, pnext = {0};
   pushArg->next = &pnext;
   ctr_size i;
   ctr_object** elements = myself->value.avalue->elements;
@@ -1329,7 +1329,7 @@ ctr_array_fmap_inp (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *func = argumentList->object;
   CTR_ENSURE_TYPE_BLOCK (func);
 
-  ctr_argument varg, *arg = &varg;
+  ctr_argument varg = {0}, *arg = &varg;
   ctr_size i;
   ctr_object** elements = myself->value.avalue->elements;
   for (i = 0; i < myself->value.avalue->head - myself->value.avalue->tail; i++)
@@ -1366,7 +1366,7 @@ ctr_array_imap_inp (ctr_object * myself, ctr_argument * argumentList)
   ctr_object *func = argumentList->object;
   CTR_ENSURE_TYPE_BLOCK (func);
 
-  ctr_argument parg, *pushArg = &parg, pargnext, earg, *elnumArg = &earg;
+  ctr_argument parg = {0}, *pushArg = &parg, pargnext = {0}, earg, *elnumArg = &earg;
   pushArg->next = &pargnext;
   ctr_size i;
   ctr_object** elements = myself->value.avalue->elements;
@@ -1396,8 +1396,8 @@ ctr_array_foldl (ctr_object * myself, ctr_argument * argumentList)
   CTR_ENSURE_TYPE_BLOCK (func);
 
   ctr_object *accumulator = argumentList->next->object;
-  ctr_argument earg, *elnumArg = &earg;
-  ctr_argument aarg, *accArg = &aarg, anext;
+  ctr_argument earg = {0}, *elnumArg = &earg;
+  ctr_argument aarg = {0}, *accArg = &aarg, anext = {0};
   accArg->next = &anext;
   accArg->object = accumulator;
   ctr_size i;
@@ -1424,8 +1424,8 @@ ctr_array_filter (ctr_object * myself, ctr_argument * argumentList)
   CTR_ENSURE_TYPE_BLOCK (block);
   ctr_size i = 0;
   block->info.sticky = 1;
-  ctr_argument args, *arguments = &args;
-  ctr_argument arg2, *argument2 = &arg2;
+  ctr_argument args = {0}, *arguments = &args;
+  ctr_argument arg2 = {0}, *argument2 = &arg2;
   arguments->next = argument2;
   ctr_object *newArr = ctr_array_new (CtrStdArray, NULL);
   ctr_object *current;
@@ -1464,7 +1464,7 @@ ctr_array_filter_v (ctr_object * myself, ctr_argument * argumentList)
   CTR_ENSURE_TYPE_BLOCK (block);
   ctr_size i = 0;
   block->info.sticky = 1;
-  ctr_argument args, *arguments = &args;
+  ctr_argument args = {0}, *arguments = &args;
   ctr_object *newArr = ctr_array_new (CtrStdArray, NULL);
   ctr_object *current;
   for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++)
@@ -1632,8 +1632,8 @@ ctr_array_assign (ctr_object * myself, ctr_argument * argumentList)
       return CtrStdNil;
     }
 
-  ctr_argument earg, *elnumArg = &earg;
-  ctr_argument aarg, *accArg = &aarg;
+  ctr_argument earg = {0}, *elnumArg = &earg;
+  ctr_argument aarg = {0}, *accArg = &aarg;
   accArg->next = argumentList->next;
   ctr_size i;
   if (to->info.type == CTR_OBJECT_TYPE_OTARRAY)
@@ -1704,8 +1704,8 @@ ctr_object *temp_sorter;
 int
 ctr_sort_cmp (const void *a, const void *b)
 {
-  ctr_argument earg, *arg1 = &earg;
-  ctr_argument aarg, *arg2 = &aarg;
+  ctr_argument earg = {0}, *arg1 = &earg;
+  ctr_argument aarg = {0}, *arg2 = &aarg;
   ctr_object *result;
   ctr_object *numResult;
   arg1->next = arg2;
@@ -1762,7 +1762,7 @@ ctr_array_to_string (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_size i;
   ctr_object *arrayElement;
-  ctr_argument narg, *newArgumentList;
+  ctr_argument narg = {0}, *newArgumentList;
   ctr_object *string = ctr_build_empty_string ();
   newArgumentList = &narg;
   if (myself->value.avalue->tail == myself->value.avalue->head)
@@ -1836,7 +1836,7 @@ ctr_array_fill (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_size n;
   ctr_size i;
-  ctr_argument narg, *newArgumentList = &narg;
+  ctr_argument narg = {0}, *newArgumentList = &narg;
   n = ctr_internal_cast2number (argumentList->object)->value.nvalue;
   ctr_collection *coll = myself->value.avalue;
   ctr_size empty = (coll->head - coll->tail);
@@ -1876,7 +1876,7 @@ ctr_array_column (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_size i;
   ctr_size n;
-  ctr_argument narg, *newArgumentList = &narg;
+  ctr_argument narg = {0}, *newArgumentList = &narg;
   ctr_object *newArray;
   ctr_object *element;
   newArray = ctr_array_new (CtrStdArray, NULL);
@@ -2028,7 +2028,7 @@ ctr_map_rm (ctr_object * myself, ctr_argument * argumentList)
 {
   char *key;
   ctr_object *putKey = argumentList->object;
-  ctr_argument earg, *emptyArgumentList = &earg;
+  ctr_argument earg = {0}, *emptyArgumentList = &earg;
   emptyArgumentList->next = NULL;
   emptyArgumentList->object = NULL;
   ctr_object *hasher = ctr_get_responder (putKey, "iHash", 5);
@@ -2151,9 +2151,9 @@ ctr_map_each (ctr_object * myself, ctr_argument * argumentList)
     }
   block->info.sticky = 1;
   m = myself->properties->head;
-  ctr_argument args, *arguments = &args;
-  ctr_argument arg2, *argument2 = &arg2;
-  ctr_argument arg3, *argument3 = &arg3;
+  ctr_argument args = {0}, *arguments = &args;
+  ctr_argument arg2 = {0}, *argument2 = &arg2;
+  ctr_argument arg3 = {0}, *argument3 = &arg3;
   while (m && !CtrStdFlow)
     {
       arguments->object = m->key;
@@ -2251,7 +2251,7 @@ ctr_map_fmap (ctr_object * myself, ctr_argument * argumentList)
     }
   block->info.sticky = 1;
   m = myself->properties->head;
-  ctr_argument arg, *arguments = &arg, varg;
+  ctr_argument arg = {0}, *arguments = &arg, varg = {0};
   arguments->next = &varg;
   ctr_object *newmap = ctr_map_new (CtrStdMap, NULL);
   while (m)
@@ -2307,7 +2307,7 @@ ctr_map_fmap_inp (ctr_object * myself, ctr_argument * argumentList)
     }
   block->info.sticky = 1;
   m = myself->properties->head;
-  ctr_argument arg, *arguments = &arg, varg;
+  ctr_argument arg = {0}, *arguments = &arg, varg = {0};
   arguments->next = &varg;
   ctr_object *newmap = myself;
   while (m)
@@ -2362,9 +2362,9 @@ ctr_map_kvmap (ctr_object * myself, ctr_argument * argumentList)
     }
   block->info.sticky = 1;
   m = myself->properties->head;
-  ctr_argument args, vargs, *arguments = &args;
+  ctr_argument args = {0}, vargs = {0}, *arguments = &args;
   arguments->next = &vargs;
-  ctr_argument largs, *larguments = &largs;
+  ctr_argument largs = {0}, *larguments = &largs;
   ctr_object *kvtup = ctr_array_new (CtrStdArray, NULL);
   ctr_object *newmap = ctr_map_new (CtrStdMap, NULL);
   while (m)
@@ -2426,9 +2426,9 @@ ctr_map_kvlist (ctr_object * myself, ctr_argument * argumentList)
     }
   block->info.sticky = 1;
   m = myself->properties->head;
-  ctr_argument args, vargs, *arguments = &args;
+  ctr_argument args = {0}, vargs = {0}, *arguments = &args;
   arguments->next = &vargs;
-  ctr_argument largs, *larguments = &largs;
+  ctr_argument largs = {0}, *larguments = &largs;
   ctr_object *kvtup = ctr_array_new (CtrStdArray, NULL);
   ctr_object *list = ctr_array_new (CtrStdArray, NULL);
   while (m)
@@ -2477,8 +2477,8 @@ ctr_map_flip (ctr_object * myself, ctr_argument * argumentList)
   ctr_mapitem *m;
   m = myself->properties->head;
   ctr_object *map_new = ctr_map_new (CtrStdMap, NULL);
-  ctr_argument args, *arguments = &args;
-  ctr_argument arg2, *argument2 = &arg2;
+  ctr_argument args = {0}, *arguments = &args;
+  ctr_argument arg2 = {0}, *argument2 = &arg2;
   while (m)
     {
       arguments->object = m->key;
@@ -2528,7 +2528,7 @@ ctr_map_to_string (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *string;
   ctr_mapitem *mapItem;
-  ctr_argument nargs, *newArgumentList = &nargs;
+  ctr_argument nargs = {0}, *newArgumentList = &nargs;
   string = ctr_build_string_from_cstring (CTR_DICT_CODEGEN_MAP_NEW);
   mapItem = myself->properties->head;
   while (mapItem)
@@ -2624,7 +2624,7 @@ ctr_map_assign (ctr_object * myself, ctr_argument * argumentList)
     }
 
   ctr_mapitem *mapItem;
-  ctr_argument narg, *newArgumentList = &narg;
+  ctr_argument narg = {0}, *newArgumentList = &narg;
   mapItem = myself->properties->head;
   newArgumentList->next = argumentList->next;
   while (mapItem)

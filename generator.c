@@ -1002,7 +1002,7 @@ ctr_generator_free (void *res_)
 /**
  * [Generator] foldl: [Block] accumulator: [Object]
  *
- * Folds this generator from the left (see Array::'foldl::accumulator:' for details)
+ * Folds this generator from the left (see Array::'foldl:accumulator:' for details)
  */
 ctr_object *
 ctr_generator_foldl (ctr_object * myself, ctr_argument * argumentList)
@@ -1053,4 +1053,66 @@ ctr_generator_foldl (ctr_object * myself, ctr_argument * argumentList)
   if (CtrStdFlow == CtrStdBreak)
     CtrStdFlow = NULL;
   return result;
+}
+
+/**
+ * [Generator] foldl: [Block]
+ *
+ * Folds this generator from the left (see Array::'foldl:' for details)
+ */
+ctr_object *
+ctr_generator_foldl0 (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_resource *res = myself->value.rvalue;
+  ctr_generator *genny = res->ptr;
+  int gtype = res->type;
+  if (!argumentList || !argumentList->object)
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("Expected an argument to Generator::'foldl:'");
+      return CtrStdNil;
+    }
+  ctr_object *folder = argumentList->object;
+  if (!genny)
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("::'next' on uninitialized generator");
+      return CtrStdNil;
+    }
+  ctr_object *result = NULL;
+  ctr_argument argm, argm2;
+  argm.next = &argm2;
+
+  while (1)
+    {
+      ctr_object *next = ctr_generator_internal_next (genny, gtype);
+      if (genny->finished)
+	break;
+      if (next == generator_end_marker)
+	continue;
+      if (!result) {
+        result = next;
+        continue;
+      }
+      argm.object = result;
+      argm.next->object = next;
+      result = ctr_block_run (folder, &argm, folder);
+      if (CtrStdFlow)
+	{
+	  if (CtrStdFlow == CtrStdContinue)
+	    {
+	      CtrStdFlow = NULL;
+	      continue;
+	    }
+	  if (CtrStdFlow == CtrStdBreak)
+	    {
+	      CtrStdFlow = NULL;
+	      genny->finished = 1;
+	    }
+	  break;
+	}
+    }
+  if (!result)
+    CtrStdFlow = ctr_build_string_from_cstring("Generator::'foldl:' called on empty generator");
+  if (CtrStdFlow == CtrStdBreak)
+    CtrStdFlow = NULL;
+  return result?:CtrStdNil;
 }

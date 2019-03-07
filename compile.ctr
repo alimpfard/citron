@@ -167,6 +167,7 @@ var compile_subprogram is {:*subs
 
 var compile is {:ast:receiver
   contexts push: ast.
+  # Pen writeln: contexts count.
     var ret is (frozen __ is
     case: 'LTRNUM' do: {
       ^'ctr_build_number_from_float(%d)' % [ast evaluate].
@@ -194,7 +195,7 @@ var compile is {:ast:receiver
       (rec type = 'REFERENCE') & (rec value = 'import') ifTrue: {
         import_intrinsic ifTrue: {
           # Treat import as a compiler intrinsic
-          ^compile_subprogram[(ast at: i),, (Generator from: 1 to: ast count - 1)].
+          ^compile_subprogram[(ast at: i),, (i: (Generator from: 1 to: ast count - 1))].
         }.
         ^'ctr_string_eval(%s, NULL)' % [make_or_get_str[ast2ctrcode[ast]]].
       }.
@@ -249,7 +250,7 @@ var compile is {:ast:receiver
         }) switch: ref modifier.
     },
     case: 'SYMBOL' do: {
-      var value is ast value.
+      var value is $!(ast) toString skip: 1.
       ^'ctr_get_or_create_symbol_table_entry("%s", %d)' % [value, value length].
     },
     case: 'NESTED' do: {
@@ -284,10 +285,14 @@ var compile is {:ast:receiver
         var old_vars is variables.
         variables is Array new.
         var instr is instrs @ x.
+        # Pen writeln: '-> ' + instr.
         var s is compile[instr].
         var i is generate_inits[' '].
         variables is old_vars.
-        var instr_u is ast2ctrcode[instr] replace: '\n' with: '<NL>'.
+        var code is ast2ctrcode[instr].
+        # Pen writeln: '< ' + code + ' >'.
+        var instr_u is code replace: '\n' with: '<NL>'.
+        # Pen writeln: '> ' + instr_u.
         ^'{/* $$instr_u */\n' + i + s + ';\n' + '}\n' + (dexceptions either: 'exc_check("%s");\n' % [instr_u escapeDoubleQuotes] or: '').
       }.
       ^res join: ''.
@@ -316,6 +321,7 @@ var compile is {:ast:receiver
       ^vname.
     },
     default: { errPen red writeln: '$$ast is not compilable at the moment', resetColor. }) switch: ast type.
+    # Pen writeln: 'done ' + contexts count.
     contexts pop.
     ^ret.
 }.

@@ -58,7 +58,7 @@ int ctr_scan_inner_refs_for_(ctr_tnode* node, char* name, size_t len) {
     case CTR_AST_NODE_REFERENCE:
       {
         int vararg = node->value[0] == '*' || node->value[0] == '&';
-        if (unlikely (node->vlen == len || vararg))
+        if (unlikely (node->vlen == len + vararg))
           {
       if (strncmp (node->value + vararg, name, len - vararg) == 0)
         {

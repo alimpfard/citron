@@ -87,7 +87,7 @@ var ast2ctrcode is {:self:ast:curindent:options
       ^_value length > 0 either: { ^'%s is %s' % [ref, _value]. } or: ref.
     },
     case: 'SYMBOL' do: {
-      ^'\\' + ast value.
+      ^$!ast.
     },
     case: 'NESTED' do: {
       var code is '('.

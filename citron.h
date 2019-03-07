@@ -870,6 +870,7 @@ ctr_object* ctr_string_to_upper1st(ctr_object* myself, ctr_argument* argumentLis
 ctr_object* ctr_string_find_pattern_do(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_find_pattern_options_do(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_reg_replace(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_reg_compile(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_is_regex_pcre(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_contains_pattern(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_contains(ctr_object* myself, ctr_argument* argumentList);

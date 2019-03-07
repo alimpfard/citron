@@ -1855,6 +1855,8 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_TOBOOL), &ctr_string_to_boolean);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_FIND_PATTERN_DO), &ctr_string_find_pattern_do);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_FIND_PATTERN_DO_OPTIONS), &ctr_string_find_pattern_options_do);
+  ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("compileRegex:substitute:options:"), &ctr_string_reg_compile);
+  ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("compileRegex:"), &ctr_string_reg_compile);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("regex:substitute:options:"), &ctr_string_reg_replace);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("regex:substitute:"), &ctr_string_reg_replace);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("~"), &ctr_string_reg_replace);

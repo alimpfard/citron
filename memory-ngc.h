@@ -136,6 +136,7 @@ void *ctr_heap_allocate(size_t size)
 		printf
 		    ("Out of memory. Failed to allocate %lu bytes (malloc failed). \n",
 		     size);
+			ctr_print_stack_trace();
 		abort();
 		exit(1);
 	}
@@ -187,7 +188,8 @@ void *ctr_heap_allocate_shared(size_t size)
 		printf
 		    ("Out of memory. Failed to allocate %lu bytes (mmap failed). \n",
 		     size);
-		 abort();
+		ctr_print_stack_trace();
+		abort();
 		exit(1);
 	}
 

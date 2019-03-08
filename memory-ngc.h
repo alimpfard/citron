@@ -274,6 +274,8 @@ void ctr_heap_free_rest()
  */
 void ctr_heap_free(void *ptr)
 {
+	if (!ptr)
+		return;
 	//struct memBlockCache_node* node = memBlockCache.node;
 	//struct memBlockCache_node* lnode = node;
 	//for(;node!=NULL;lnode=node,node=node->next)
@@ -307,6 +309,8 @@ void ctr_heap_free(void *ptr)
 
 void ctr_heap_free_shared(void *ptr)
 {
+	if (!ptr)
+		return;
 
 	size_t *block_width;
 	int q = sizeof(size_t);
@@ -331,6 +335,8 @@ void ctr_heap_free_shared(void *ptr)
  */
 void *ctr_heap_reallocate(void *oldptr, size_t size)
 {
+	if (!oldptr)
+		return ctr_heap_allocate(size);
 
 	char *nptr;
 	size_t old_size;

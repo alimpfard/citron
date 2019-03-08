@@ -381,6 +381,7 @@ CTR_H_DECLSPEC ctr_object* CtrStdConsole;        //!< Standard Object : Pen
 CTR_H_DECLSPEC ctr_object* CtrStdNil;            //!< Standard Object : Nil
 CTR_H_DECLSPEC ctr_object* CtrStdGC;             //!< Standard Object : Broom
 CTR_H_DECLSPEC ctr_object* CtrStdMap;            //!< Standard Object : Map
+CTR_H_DECLSPEC ctr_object* CtrStdHashMap;        //!< Standard Object : HashMap
 CTR_H_DECLSPEC ctr_object* CtrStdArray;          //!< Standard Object : Array
 CTR_H_DECLSPEC ctr_object* CtrStdIter;           //!< Standard Object : Iterator
 CTR_H_DECLSPEC ctr_object* CtrStdFile;           //!< Standard Object : File
@@ -423,6 +424,7 @@ ctr_object** get_CtrStdConsole();
 ctr_object** get_CtrStdNil();
 ctr_object** get_CtrStdGC();
 ctr_object** get_CtrStdMap();
+ctr_object** get_CtrStdHashMap();
 ctr_object** get_CtrStdArray();
 ctr_object** get_CtrStdIter();
 ctr_object** get_CtrStdFile();
@@ -976,6 +978,30 @@ ctr_object* ctr_build_immutable(ctr_tnode* node);
 
 /**
  * HashMap Interface
+ */
+ctr_object* ctr_hmap_new(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_type(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_merge(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_keys(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_values(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_put(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_rm(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_get(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_get_or_insert(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_count(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_empty(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_each(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_fmap(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_fmap_inp(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_kvmap(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_kvlist(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_contains(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_flip(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_assign(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_to_string(ctr_object* myself, ctr_argument* argumentList);
+
+/**
+ * Generic Map Interface
  */
 ctr_object* ctr_map_new(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_new_(ctr_object* myself, ctr_argument* argumentList);

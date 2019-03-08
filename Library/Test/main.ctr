@@ -4,6 +4,11 @@ import
     Library/Data/IO/Pen: 'pPen'.
 
 var errPen is pPen for: (File special: 'stderr').
+
+var cred is Colors red.
+var cmagenta is Colors magenta.
+var cdefault is Colors default.
+
 var stats is Map new.
 stats on: 'clear' do: {
     put: 0 at: 'tests_run',
@@ -107,10 +112,10 @@ It on: 'do:' do: {:blk
             Reflect stackTrace
                 split: '\n',
                 do shift shift shift shift done reverse
-                fmap: \:x '\t${{Colors red}}$|${{Colors default}}$ $$x',
+                fmap: \:x '\t${{const cred}}$|${{const cdefault}}$ $$x',
                 join: '\n'
         ).
-        const errPen write: '\t${{Colors red}}$* ${{Colors magenta}}$$$e', resetColor brk.
+        const errPen write: '\t${{const cred}}$* ${{const cmagenta}}$$$e', resetColor brk.
     } type: AssertionError, run.
     } catch: {:e
         stats at: 'tests_failed', +=: 1.
@@ -120,10 +125,10 @@ It on: 'do:' do: {:blk
             Reflect stackTrace
                 split: '\n',
                 do shift shift shift shift done reverse
-                fmap: \:x '\t${{Colors red}}$|${{Colors default}}$ $$x',
+                fmap: \:x '\t| $$x',
                 join: '\n'
         ).
-        const errPen write: '\t${{Colors red}}$* ${{Colors magenta}}$$$e', resetColor brk.
+        const errPen red write: '\t* ' + e, resetColor brk.
     } type: String, run.
 }.
 
@@ -135,7 +140,7 @@ describe on: 'do:' do: {:blk
         blk[const It, const Let].
     }.
     major is Clock new time - major.
-    const errPen cyan write: '$$description took $$major seconds ( $$minor milliseconds )', resetColor brk.
+    const errPen cyan write: '$$description took $$major seconds ( $$minor useconds )', resetColor brk.
 }.
 
 var ComparisonAssertion is Object cnew: {

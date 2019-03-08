@@ -2112,6 +2112,31 @@ ctr_initialize_world ()
   ctr_set_link_all (CtrStdMap, CtrStdObject);
   CtrStdMap->info.sticky = 1;
 
+  /* Map */
+  CtrStdHashMap = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_NEW), &ctr_hmap_new);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_TYPE), &ctr_hmap_type);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_PUT_AT), &ctr_hmap_put);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring ("deleteAt:"), &ctr_hmap_rm);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_AT), &ctr_hmap_get);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_AT_SYMBOL), &ctr_hmap_get);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring ("getOrInsert:"), &ctr_hmap_get_or_insert);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring ("@|"), &ctr_hmap_get_or_insert);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_COUNT), &ctr_hmap_count);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring ("empty"), &ctr_hmap_empty);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_EACH), &ctr_hmap_each);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_MAP), &ctr_hmap_each);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring ("fmap:"), &ctr_hmap_fmap);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring ("fmap!:"), &ctr_hmap_fmap_inp);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring ("contains:"), &ctr_hmap_contains);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_FLIP), &ctr_hmap_flip);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_UNPACK), &ctr_hmap_assign);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_TOSTRING), &ctr_hmap_to_string);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_SERIALIZE), &ctr_hmap_to_string);
+  ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring ("HashMap"), CtrStdHashMap, 0);
+  ctr_set_link_all (CtrStdHashMap, CtrStdObject);
+  CtrStdHashMap->info.sticky = 1;
+
   /* Console */
   CtrStdConsole = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
   ctr_internal_create_func (CtrStdConsole, ctr_build_string_from_cstring (CTR_DICT_WRITE), &ctr_console_write);

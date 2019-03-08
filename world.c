@@ -1909,6 +1909,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("escapeAsciiControls"), &ctr_string_escape_ascii);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_BYTES), &ctr_string_bytes);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_LENGTH), &ctr_string_length);
+  ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("empty"), &ctr_string_empty);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_FROM_TO), &ctr_string_fromto);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_FROM_LENGTH), &ctr_string_from_length);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_PLUS), &ctr_string_concat);
@@ -2035,6 +2036,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_UNSHIFT), &ctr_array_unshift);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_SHIFT), &ctr_array_shift);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_COUNT), &ctr_array_count);
+  ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("empty"), &ctr_array_empty);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_JOIN), &ctr_array_join);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_POP), &ctr_array_pop);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_POP ":"), &ctr_array_pop);
@@ -2094,6 +2096,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring ("getOrInsert:"), &ctr_map_get_or_insert);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring ("@|"), &ctr_map_get_or_insert);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring (CTR_DICT_COUNT), &ctr_map_count);
+  ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring ("empty"), &ctr_map_empty);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring (CTR_DICT_EACH), &ctr_map_each);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring (CTR_DICT_MAP), &ctr_map_each);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring ("fmap:"), &ctr_map_fmap);

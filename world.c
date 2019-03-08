@@ -515,6 +515,20 @@ ctr_internal_object_find_property (ctr_object * owner, ctr_object * key, int is_
   return ctr_internal_object_find_property_with_hash (owner, key, ctr_internal_index_hash (key), is_method);
 }
 
+
+/**
+ * @internal
+ *
+ * InternalObjectFindPropertyOrCreate
+ *
+ * Finds property in object, or adds a placeholder one.
+ */
+ctr_object *
+ctr_internal_object_find_property_or_create (ctr_object * owner, ctr_object * key, int is_method)
+{
+  return ctr_internal_object_find_property_or_create_with_hash (owner, key, ctr_internal_index_hash (key), is_method);
+}
+
 ctr_object *
 ctr_internal_object_find_property_ignore (ctr_object * owner, ctr_object * key, int is_method, int ignore)
 {
@@ -574,6 +588,87 @@ ctr_internal_object_find_property_with_hash (ctr_object * owner, ctr_object * ke
       head = head->next;
     }
   return NULL;
+}
+
+ctr_object *
+ctr_internal_object_find_property_or_create_with_hash (ctr_object * owner, ctr_object * key, uint64_t hashKey, int is_method)
+{
+  ctr_mapitem *head, *first_head, *last_head;
+  ctr_map *lookup;
+  if (is_method)
+    {
+      if (!owner->methods)
+	return NULL;
+      lookup = owner->methods;
+    }
+  else
+    lookup = owner->properties;
+  if (unlikely (lookup->size == 0)) {
+    ctr_object* repl = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNIL);
+    ctr_set_link_all(repl, CtrStdNil);
+    ctr_internal_object_add_property_with_hash(owner, key, hashKey, repl, is_method);
+    return repl;
+  }
+  if (unlikely (lookup->size == 1 && (head = lookup->head)->hashKey == hashKey))
+    {
+      if (likely (ctr_internal_object_is_equal (head->key, key)))
+	{
+	  head->hits++;
+	  return head->value;
+	}
+      lookup->size++;
+      ctr_mapitem *new_item = ctr_heap_allocate (sizeof (ctr_mapitem));
+      new_item->key = key;
+      new_item->hashKey = hashKey;
+      ctr_object* repl = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNIL);
+      ctr_set_link_all(repl, CtrStdNil);
+      new_item->value = repl;
+      new_item->next = NULL;
+      lookup->head->next = new_item;
+      new_item->prev = lookup->head;
+      return new_item->value;
+    }
+
+  head = lookup->head;
+  while (head)
+    {
+      if ((hashKey == head->hashKey) && ctr_internal_object_is_equal (head->key, key))
+	{
+	  ctr_object *val = head->value;
+	  first_head = head->prev;
+	  if (!first_head || first_head == head)
+	    return val;
+	  if (++head->hits > first_head->hits)
+	    {
+	      int fh = first_head->hits;
+	      void *fk = first_head->key, *fv = first_head->value;
+	      uint64_t fhk = first_head->hashKey;
+	      first_head->hits = head->hits;
+	      first_head->key = head->key;
+	      first_head->value = val;
+	      first_head->hashKey = hashKey;
+	      head->hits = fh;
+	      head->key = fk;
+	      head->value = fv;
+	      head->hashKey = fhk;
+	    }
+	  return val;
+	}
+      head->hits = 0;
+      last_head = head;
+      head = head->next;
+    }
+    lookup->size++;
+    ctr_mapitem *new_item = ctr_heap_allocate (sizeof (ctr_mapitem));
+    new_item->key = key;
+    new_item->hashKey = hashKey;
+    ctr_object* repl = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNIL);
+    ctr_set_link_all(repl, CtrStdNil);
+    new_item->value = repl;
+    new_item->next = NULL;
+    last_head->next = new_item;
+    new_item->prev = last_head;
+    return new_item->value;
 }
 
 /**
@@ -1996,6 +2091,8 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring ("deleteAt:"), &ctr_map_rm);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring (CTR_DICT_AT), &ctr_map_get);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring (CTR_DICT_AT_SYMBOL), &ctr_map_get);
+  ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring ("getOrInsert:"), &ctr_map_get_or_insert);
+  ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring ("@|"), &ctr_map_get_or_insert);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring (CTR_DICT_COUNT), &ctr_map_count);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring (CTR_DICT_EACH), &ctr_map_each);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring (CTR_DICT_MAP), &ctr_map_each);

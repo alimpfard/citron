@@ -2101,6 +2101,12 @@ ctr_map_rm (ctr_object * myself, ctr_argument * argumentList)
  *
  * Retrieves the value specified by the key from the map.
  */
+ /**
+  * [Map] @ [Key]
+  *
+  * Alias for [Map] at: [Key].
+  *
+  */
 ctr_object *
 ctr_map_get (ctr_object * myself, ctr_argument * argumentList)
 {
@@ -2150,11 +2156,61 @@ ctr_map_get (ctr_object * myself, ctr_argument * argumentList)
 }
 
 /**
- * [Map] @ [Key]
+ * [Map] getOrInsert: [Key]
  *
- * Alias for [Map] at: [Key].
+ * Gets a value at key, or returns a placeholder object (modified by &&val is ...)
  *
+ * var &val is Map new getOrInsert: 'a'.
+ * &&val is 123.
+ * #original map => Map put: 123 at: 'a'
  */
+ctr_object*
+ctr_map_get_or_insert(ctr_object* myself, ctr_argument* argumentList)
+{
+  ctr_object *searchKey;
+  ctr_object *foundObject;
+
+  searchKey = argumentList->object;
+  ctr_object *hasher = ctr_get_responder (searchKey, "iHash", 5);
+  /* Give developer a chance to define a key */
+  if (!hasher)
+    {
+      searchKey = ctr_send_message (searchKey, "toString", 8, NULL);
+
+      /* If developer returns something other than string (ouch, toString), then cast anyway */
+      if (searchKey->info.type != CTR_OBJECT_TYPE_OTSTRING)
+  {
+    searchKey = ctr_internal_cast2string (searchKey);
+  }
+
+      foundObject = ctr_internal_object_find_property_or_create (myself, searchKey, 0);
+      goto retv;
+    }
+  else
+    {
+      ctr_number hashk;
+      ctr_object *searchKeyHasho = ctr_send_message (searchKey, "iHash", 5, NULL);
+      if (searchKeyHasho->info.type != CTR_OBJECT_TYPE_OTNUMBER)
+  {
+    foundObject = ctr_internal_object_find_property (myself, searchKey, 0);
+  }
+      else
+  {
+    hashk = searchKeyHasho->value.nvalue;
+    foundObject = ctr_internal_object_find_property_or_create_with_hash (myself, searchKey, *(uint64_t *) & hashk, 0);
+  }
+    retv:
+      if (foundObject == NULL)
+  {
+    ctr_object *kvres = myself->value.defvalue;
+    if (kvres == CtrStdNil)
+      foundObject = kvres;
+    else
+      foundObject = ctr_block_run (kvres, argumentList, myself);
+  }
+      return foundObject;
+    }
+}
 
 /**
  * [Map] count

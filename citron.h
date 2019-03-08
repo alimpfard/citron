@@ -625,6 +625,7 @@ void        ctr_internal_object_delete_property(ctr_object* owner, ctr_object* k
 void        ctr_internal_object_delete_property_with_hash(ctr_object* owner, ctr_object* key, uint64_t hash, int is_method);
 ctr_object* ctr_internal_object_find_property(ctr_object* owner, ctr_object* key, int is_method);
 ctr_object* ctr_internal_object_find_property_with_hash(ctr_object* owner, ctr_object* key, uint64_t hash, int is_method);
+ctr_object* ctr_internal_object_find_property_or_create_with_hash (ctr_object * owner, ctr_object * key, uint64_t hashKey, int is_method);
 ctr_object* ctr_internal_object_find_property_ignore(ctr_object* owner, ctr_object* key, int is_method, int ignore);
 uint64_t    ctr_internal_index_hash(ctr_object* key);
 uint64_t    ctr_internal_alt_hash(ctr_object* key);
@@ -983,6 +984,7 @@ ctr_object* ctr_map_values(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_put(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_rm(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_get(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_map_get_or_insert(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_count(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_each(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_fmap(ctr_object* myself, ctr_argument* argumentList);

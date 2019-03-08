@@ -208,6 +208,8 @@ ctr_reflect_dump_context_spec (ctr_object * myself, ctr_argument * argumentList)
 int
 ctr_internal_has_responder (ctr_object * of, ctr_object * meth)
 {
+  if (!of->interfaces)
+    return 0;
   while (of->interfaces->link)
     {
       int m = of->methods->size - 1;

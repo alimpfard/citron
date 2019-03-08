@@ -11,6 +11,12 @@
 #include "citron.h"
 #include "siphash.h"
 #include "symbol.h"
+
+#define kcalloc(p,s) ctr_heap_allocate((p)*(s))
+#define kmalloc(p) ctr_heap_allocate(p)
+#define krealloc(p, s) ctr_heap_reallocate(p, s)
+#define kfree(p) ctr_heap_free(p)
+#include "khash.h"
 /**@I_OBJ_DEF Array*/
 
 /**
@@ -2814,4 +2820,208 @@ ctr_map_contains (ctr_object * myself, ctr_argument * argumentList)
 	}
       return ctr_build_bool (foundObject != NULL);
     }
+}
+
+/**@I_OBJ_DEF HashMap*/
+uint32_t ctr_internal_value_hash(ctr_object* searchKey) {
+  ctr_object *hasher = ctr_get_responder (searchKey, "iHash", 5);
+  /* Give developer a chance to define a key */
+  if (!hasher)
+    {
+      searchKey = ctr_send_message (searchKey, "toString", 8, NULL);
+      /* If developer returns something other than string (ouch, toString), then cast anyway */
+      if (searchKey->info.type != CTR_OBJECT_TYPE_OTSTRING)
+	     searchKey = ctr_internal_cast2string (searchKey);
+      return ctr_internal_index_hash(searchKey);
+    }
+  else
+    {
+      ctr_object *searchKeyHasho = ctr_send_message (searchKey, "iHash", 5, NULL);
+      if (searchKeyHasho->info.type != CTR_OBJECT_TYPE_OTNUMBER)
+        return ctr_internal_index_hash(searchKeyHasho);
+      else
+	  return searchKeyHasho->value.nvalue;
+    }
+}
+KHASH_INIT(ctr_hmap_t, ctr_object*, ctr_object*, 1, ctr_internal_value_hash, ctr_internal_object_is_equal);
+
+/**
+ * [HashMap] new
+ *
+ * Memory-efficient hash map
+ */
+#define ctr_hmap_throw_error() { CtrStdFlow = ctr_build_string_from_cstring((char*)__func__); return CtrStdNil; }
+ctr_object* ctr_hmap_wrap(void* ptr) {
+  ctr_object* obj = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+  ctr_set_link_all(obj, CtrStdHashMap);
+  ctr_resource* res = ctr_heap_allocate(sizeof(*res));
+  res->type = 1;
+  res->ptr = ptr;
+  obj->value.rvalue = res;
+  return obj;
+}
+void* ctr_hmap_unwrap(ctr_object* obj) {
+  ctr_resource* res = obj->value.rvalue;
+  if (!res)
+    return NULL;
+  return res->ptr;
+}
+ctr_object* ctr_hmap_new(ctr_object* myself, ctr_argument* argumentList) {
+  khash_t(ctr_hmap_t) *p = kh_init(ctr_hmap_t);
+  return ctr_hmap_wrap(p);
+}
+ctr_object* ctr_hmap_type(ctr_object* myself, ctr_argument* argumentList) {
+  return ctr_build_string_from_cstring("HashMap");
+}
+ctr_object* ctr_hmap_merge(ctr_object* myself, ctr_argument* argumentList) {
+  return myself;
+}
+ctr_object* ctr_hmap_keys(ctr_object* myself, ctr_argument* argumentList) {
+  khash_t(ctr_hmap_t)* map = ctr_hmap_unwrap(myself);
+  if(!map)
+    ctr_hmap_throw_error();
+  ctr_object* keys = ctr_array_new(CtrStdArray, NULL);
+  for (khiter_t k = kh_begin(h); k != kh_end(map); ++k)
+  	if (kh_exist(map, k))
+      ctr_array_push(keys, &(ctr_argument){kh_key(map, k), NULL});
+  return keys;
+}
+ctr_object* ctr_hmap_values(ctr_object* myself, ctr_argument* argumentList) {
+  khash_t(ctr_hmap_t)* map = ctr_hmap_unwrap(myself);
+  if(!map)
+    ctr_hmap_throw_error();
+  ctr_object* values = ctr_array_new(CtrStdArray, NULL);
+  for (khiter_t k = kh_begin(h); k != kh_end(map); ++k)
+    if (kh_exist(map, k))
+      ctr_array_push(values, &(ctr_argument){kh_value(map, k), NULL});
+  return values;
+}
+ctr_object* ctr_hmap_put(ctr_object* myself, ctr_argument* argumentList) {
+  khash_t(ctr_hmap_t)* map = ctr_hmap_unwrap(myself);
+  if(!map)
+    ctr_hmap_throw_error();
+  int ret;
+  khiter_t k = kh_put(ctr_hmap_t, map, argumentList->next->object, &ret);
+  kh_value(map, k) = argumentList->object;
+  return myself;
+}
+ctr_object* ctr_hmap_rm(ctr_object* myself, ctr_argument* argumentList) {
+  khash_t(ctr_hmap_t)* map = ctr_hmap_unwrap(myself);
+  if(!map)
+    ctr_hmap_throw_error();
+  khiter_t k = kh_get(ctr_hmap_t, map, argumentList->object);
+  if (k == kh_end(map))
+    return myself;
+  kh_del(ctr_hmap_t, map, k);
+  return myself;
+}
+ctr_object* ctr_hmap_get(ctr_object* myself, ctr_argument* argumentList) {
+  khash_t(ctr_hmap_t)* map = ctr_hmap_unwrap(myself);
+  if(!map)
+    ctr_hmap_throw_error();
+  khiter_t k = kh_get(ctr_hmap_t, map, argumentList->object);
+  if (k == kh_end(map))
+    return CtrStdNil;
+  return kh_value(map, k);
+}
+ctr_object* ctr_hmap_get_or_insert(ctr_object* myself, ctr_argument* argumentList) {
+  khash_t(ctr_hmap_t)* map = ctr_hmap_unwrap(myself);
+  if(!map)
+    ctr_hmap_throw_error();
+  int ret;
+  khiter_t k = kh_get(ctr_hmap_t, map, argumentList->object);
+  if (k == kh_end(map)) {
+    k = kh_put(ctr_hmap_t, map, argumentList->object, &ret);
+    ctr_object* nil = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNIL);
+    ctr_set_link_all(nil, CtrStdNil);
+    kh_value(map, k) = nil;
+  }
+  return kh_value(map, k);
+}
+ctr_object* ctr_hmap_count(ctr_object* myself, ctr_argument* argumentList) {
+  khash_t(ctr_hmap_t)* map = ctr_hmap_unwrap(myself);
+  if(!map)
+    ctr_hmap_throw_error();
+  return ctr_build_number_from_float(kh_size(map));
+}
+ctr_object* ctr_hmap_empty(ctr_object* myself, ctr_argument* argumentList) {
+  khash_t(ctr_hmap_t)* map = ctr_hmap_unwrap(myself);
+  if(!map)
+    ctr_hmap_throw_error();
+  return ctr_build_bool(kh_size(map) == 0);
+}
+ctr_object* ctr_hmap_each(ctr_object* myself, ctr_argument* argumentList) {
+  khash_t(ctr_hmap_t)* map = ctr_hmap_unwrap(myself);
+  if(!map)
+    ctr_hmap_throw_error();
+  ctr_object* blk = argumentList->object;
+  for (khiter_t k = kh_begin(h); k != kh_end(map); ++k) {
+    if (kh_exist(map, k)) {
+      ctr_block_run(blk, &(ctr_argument){kh_key(map, k), &(ctr_argument){kh_value(map, k), NULL}}, NULL);
+    }
+    if (CtrStdFlow) {
+      if (CtrStdFlow == CtrStdContinue)
+        {CtrStdFlow = NULL; continue;}
+      else if (CtrStdFlow == CtrStdBreak)
+        {CtrStdFlow = NULL; break;}
+      else break;
+    }
+  }
+  return myself;
+}
+ctr_object* ctr_hmap_fmap(ctr_object* myself, ctr_argument* argumentList) {
+  khash_t(ctr_hmap_t)* map = ctr_hmap_unwrap(myself);
+  if(!map)
+    ctr_hmap_throw_error();
+  ctr_object* blk = argumentList->object;
+  int ret;
+  khash_t(ctr_hmap_t) *p = kh_init(ctr_hmap_t);
+  for (khiter_t k = kh_begin(h); k != kh_end(map); ++k)
+    if (kh_exist(map, k)) {
+      ctr_object* val = ctr_block_run(blk, &(ctr_argument){kh_key(map, k), NULL}, NULL);
+      if (CtrStdFlow) {
+        if (CtrStdFlow == CtrStdContinue)
+          {CtrStdFlow = NULL; continue;}
+        else if (CtrStdFlow == CtrStdBreak)
+          {CtrStdFlow = NULL; break;}
+        else break;
+      }
+      khiter_t k = kh_put(ctr_hmap_t, p, argumentList->object, &ret);
+      kh_value(p, k) = val;
+    }
+  return ctr_hmap_wrap(p);
+}
+ctr_object* ctr_hmap_fmap_inp(ctr_object* myself, ctr_argument* argumentList) {
+  khash_t(ctr_hmap_t)* map = ctr_hmap_unwrap(myself);
+  if(!map)
+    ctr_hmap_throw_error();
+  ctr_object* blk = argumentList->object;
+  for (khiter_t k = kh_begin(h); k != kh_end(map); ++k)
+    if (kh_exist(map, k)) {
+      kh_value(map, k) = ctr_block_run(blk, &(ctr_argument){kh_key(map, k), NULL}, NULL);
+      if (CtrStdFlow) {
+        if (CtrStdFlow == CtrStdContinue)
+          {CtrStdFlow = NULL; continue;}
+        else if (CtrStdFlow == CtrStdBreak)
+          {CtrStdFlow = NULL; break;}
+        else break;
+      }
+    }
+  return myself;
+}
+ctr_object* ctr_hmap_kvmap(ctr_object* myself, ctr_argument* argumentList) { return myself; }
+ctr_object* ctr_hmap_kvlist(ctr_object* myself, ctr_argument* argumentList) { return myself; }
+ctr_object* ctr_hmap_contains(ctr_object* myself, ctr_argument* argumentList) {
+  khash_t(ctr_hmap_t)* map = ctr_hmap_unwrap(myself);
+  if(!map)
+    ctr_hmap_throw_error();
+  return ctr_build_bool(kh_get(ctr_hmap_t, map, argumentList->object) != kh_end(map));
+}
+ctr_object* ctr_hmap_flip(ctr_object* myself, ctr_argument* argumentList) { return myself; }
+ctr_object* ctr_hmap_assign(ctr_object* myself, ctr_argument* argumentList) { return myself; }
+ctr_object* ctr_hmap_to_string(ctr_object* myself, ctr_argument* argumentList) {
+  khash_t(ctr_hmap_t)* map = ctr_hmap_unwrap(myself);
+  if(!map)
+    ctr_hmap_throw_error();
+  return ctr_format_str("S[HashMap with %d elements]", kh_size(map));
 }

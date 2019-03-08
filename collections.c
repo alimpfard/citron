@@ -998,6 +998,19 @@ ctr_array_count (ctr_object * myself, ctr_argument * argumentList)
   return ctr_build_number_from_float ((ctr_number) d);
 }
 
+
+/**
+ * [Array] empty
+ *
+ * Returns whether the array is empty.
+ */
+ctr_object *
+ctr_array_empty (ctr_object * myself, ctr_argument * argumentList)
+{
+  int d = myself->value.avalue->head - myself->value.avalue->tail;
+  return ctr_build_bool(d == 0);
+}
+
 /**
  * [Array] from: [Begin] length: [End]
  *
@@ -2221,6 +2234,17 @@ ctr_object *
 ctr_map_count (ctr_object * myself, ctr_argument * argumentList)
 {
   return ctr_build_number_from_float (myself->properties->size);
+}
+
+/**
+ * [Map] empty
+ *
+ * Returns whether the map is empty.
+ */
+ctr_object *
+ctr_map_empty (ctr_object * myself, ctr_argument * argumentList)
+{
+  return ctr_build_bool (myself->properties->size == 0);
 }
 
 /**

@@ -2881,6 +2881,20 @@ ctr_string_length (ctr_object * myself, ctr_argument * argumentList)
   return ctr_build_number_from_float ((ctr_number) n);
 }
 
+
+/**
+ *[String] empty
+ *
+ * returns whether this string is empty
+ */
+ctr_object *
+ctr_string_empty (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_size n = ctr_getutf8len (myself->value.svalue->value,
+			       (ctr_size) myself->value.svalue->vlen);
+  return ctr_build_bool(n == 0);
+}
+
 /**
  *[String] + [other]
  *

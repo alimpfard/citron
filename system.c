@@ -1632,7 +1632,13 @@ ctr_command_fork (ctr_object * myself, ctr_argument * argumentList)
       rs->type = 3;
       ctr_object* res = ctr_block_runIt (argumentList->object, newArgumentList);
       ctr_argument arg = {0};
-      ctr_object* resv = ctr_send_message(res, "serialize", 9, &arg);
+      if (res == argumentList->object)
+          res = CtrStdNil;
+      ctr_object* resv;
+      if (ctr_internal_has_responder(res, ctr_build_string_from_cstring("serialize")))
+        resv = ctr_send_message(res, "serialize", 9, &arg);
+      else
+        resv = CtrStdNil;
       char* strres = ctr_heap_allocate_cstring(resv);
       size_t len = strlen(strres);
       fwrite(&len, 1, sizeof(len), *((FILE **) rs->ptr + 5));

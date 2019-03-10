@@ -39,11 +39,12 @@ Pen write: 'Continue times-loop, No ||| before 3.', brk.
 
 Pen brk.
 
+# issue 11
 #nothing should happen, no error
-{ True continue. Pen write: 'dont write this!', brk. } run.
+# { True continue. Pen write: 'dont write this!', brk. } run.
 
 #nothing should happen, no error
-{ True continue. Pen write: 'dont write this!', brk. } catch: { Pen write: 'Dont catch this!'. }, run.
+# { True continue. Pen write: 'dont write this!', brk. } catch: { Pen write: 'Dont catch this!'. }, run.
 
 #test each-loops
 Pen write: 'Test Array each-loop: 0, ... ,2', brk.
@@ -59,4 +60,3 @@ m each: { :k :v
 	(k !=: 'c') continue.
 	Pen write: 'iteration' + k + v, brk.
 }.
-

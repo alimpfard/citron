@@ -1287,7 +1287,7 @@ ctr_array_fmap (ctr_object * myself, ctr_argument * argumentList)
   ctr_object** elems = myself->value.avalue->elements;
   for (i = 0; i < myself->value.avalue->head - myself->value.avalue->tail; i++)
     {
-      arg->object = elems[i];
+      arg->object = elems[i + myself->value.avalue->tail];
       arg->object = ctr_block_run (func, arg, func);
       if (CtrStdFlow)
 	{

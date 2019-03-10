@@ -1,7 +1,7 @@
 #Child may not join.
 x is Program new: { :child
 	Pen write: 'hello1\n'.
-	child join.
+	# child join.
 	Pen write: 'hello2\n'.
 }.
 

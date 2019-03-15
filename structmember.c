@@ -7,6 +7,8 @@ static int
 get_double (ctr_object * o, double *p)
 {				//TODO: Error handling
   double x;
+  if (o->info.type == CTR_OBJECT_TYPE_OTNIL)
+    return (*p = 0);
   if (o->info.type != CTR_OBJECT_TYPE_OTNUMBER)
     o = ctr_send_message_variadic(o, "get", 3, 0);
   x = o->value.nvalue;
@@ -343,7 +345,7 @@ npbyte (char *p, ctr_object * o)
   if (x < -128 || x > 127)
     {
       char err[1024];
-      int errlen = sprintf (err, "Byte requires [-128,127] but value was %d", x);
+      int errlen = sprintf (err, "Byte requires [-128,127] but value was %f", x);
       CtrStdFlow = ctr_build_string (err, errlen);
       return -1;
     }
@@ -360,7 +362,7 @@ npubyte (char *p, ctr_object * o)
   if (x < 0 || x > 255)
     {
       char err[1024];
-      int errlen = sprintf (err, "unsigned byte requires [0,255] but value was %d", x);
+      int errlen = sprintf (err, "unsigned byte requires [0,255] but value was %f", x);
       CtrStdFlow = ctr_build_string (err, errlen);
       return -1;
     }
@@ -414,7 +416,7 @@ npshort (char *p, ctr_object * o)
   if (x < SHRT_MIN || x > SHRT_MAX)
     {
       char err[1024];
-      int errlen = sprintf (err, "short requires [%d,%d] but value was %d", SHRT_MIN, SHRT_MAX, x);
+      int errlen = sprintf (err, "short requires [%d,%d] but value was %f", SHRT_MIN, SHRT_MAX, x);
       CtrStdFlow = ctr_build_string (err, errlen);
       return -1;
     }
@@ -433,7 +435,7 @@ npushort (char *p, ctr_object * o)
   if (x < 0 || x > USHRT_MAX)
     {
       char err[1024];
-      int errlen = sprintf (err, "ushort requires [%d,%d] but value was %d", 0, USHRT_MAX, x);
+      int errlen = sprintf (err, "ushort requires [%d,%d] but value was %f", 0, USHRT_MAX, x);
       CtrStdFlow = ctr_build_string (err, errlen);
       return -1;
     }
@@ -454,7 +456,7 @@ npint (char *p, ctr_object * o)
   if (x < (double) INT_MIN || x > (double) INT_MAX)
     {
       char err[1024];
-      int errlen = sprintf (err, "int requires [%d,%d] but value was %d", INT_MIN, INT_MAX, x);
+      int errlen = sprintf (err, "int requires [%d,%d] but value was %f", INT_MIN, INT_MAX, x);
       CtrStdFlow = ctr_build_string (err, errlen);
       return -1;
     }
@@ -477,7 +479,7 @@ npuint (char *p, ctr_object * o)
   if (x < (double) 0 || x > (double) UINT8_MAX)
     {
       char err[1024];
-      int errlen = sprintf (err, "uint8 requires [%d,%d] but value was %d", 0, UINT8_MAX, x);
+      int errlen = sprintf (err, "uint8 requires [%d,%d] but value was %f", 0, UINT8_MAX, x);
       CtrStdFlow = ctr_build_string (err, errlen);
       return -1;
     }
@@ -500,7 +502,7 @@ npint8 (char *p, ctr_object * o)
   if (x < (double) INT8_MIN || x > (double) INT8_MAX)
     {
       char err[1024];
-      int errlen = sprintf (err, "int8 requires [%d,%d] but value was %d", INT8_MIN, INT8_MAX, x);
+      int errlen = sprintf (err, "int8 requires [%d,%d] but value was %f", INT8_MIN, INT8_MAX, x);
       CtrStdFlow = ctr_build_string (err, errlen);
       return -1;
     }
@@ -523,7 +525,7 @@ npuint8 (char *p, ctr_object * o)
   if (x < (double) 0 || x > (double) UINT8_MAX)
     {
       char err[1024];
-      int errlen = sprintf (err, "uint requires [%d,%d] but value was %d", 0, UINT8_MAX, x);
+      int errlen = sprintf (err, "uint requires [%d,%d] but value was %f", 0, UINT8_MAX, x);
       CtrStdFlow = ctr_build_string (err, errlen);
       return -1;
     }
@@ -546,7 +548,7 @@ npint16 (char *p, ctr_object * o)
   if (x < (double) INT16_MIN || x > (double) INT16_MAX)
     {
       char err[1024];
-      int errlen = sprintf (err, "int8 requires [%d,%d] but value was %d", INT16_MIN, INT16_MAX, x);
+      int errlen = sprintf (err, "int16 requires [%d,%d] but value was %f", INT16_MIN, INT16_MAX, x);
       CtrStdFlow = ctr_build_string (err, errlen);
       return -1;
     }
@@ -569,7 +571,7 @@ npuint16 (char *p, ctr_object * o)
   if (x < (double) 0 || x > (double) UINT8_MAX)
     {
       char err[1024];
-      int errlen = sprintf (err, "uint requires [%d,%d] but value was %d", 0, UINT16_MAX, x);
+      int errlen = sprintf (err, "uint requires [%d,%d] but value was %f", 0, UINT16_MAX, x);
       CtrStdFlow = ctr_build_string (err, errlen);
       return -1;
     }
@@ -591,10 +593,10 @@ npint32 (char *p, ctr_object * o)
   }
 
   //#if (sizeof(double) > sizeof(int))
-  if (x < (double) INT32_MIN || x > (double) INT32_MAX)
+  if (x < INT32_MIN || x > INT32_MAX)
     {
       char err[1024];
-      int errlen = sprintf (err, "int8 requires [%d,%d] but value was %d", INT32_MIN, INT32_MAX, x);
+      int errlen = sprintf (err, "int32 requires [%d,%d] but value was %f", INT32_MIN, INT32_MAX, x);
       CtrStdFlow = ctr_build_string (err, errlen);
       return -1;
     }
@@ -617,7 +619,7 @@ npuint32 (char *p, ctr_object * o)
   if (x < (double) 0 || x > (double) UINT8_MAX)
     {
       char err[1024];
-      int errlen = sprintf (err, "uint requires [%d,%d] but value was %d", 0, UINT32_MAX, x);
+      int errlen = sprintf (err, "uint requires [%d,%d] but value was %f", 0, UINT32_MAX, x);
       CtrStdFlow = ctr_build_string (err, errlen);
       return -1;
     }
@@ -640,7 +642,7 @@ npint64 (char *p, ctr_object * o)
   if (x < (double) INT64_MIN || x > (double) INT64_MAX)
     {
       char err[1024];
-      int errlen = sprintf (err, "int8 requires [%d,%d] but value was %d", INT64_MIN, INT64_MAX, x);
+      int errlen = sprintf (err, "int64 requires [%d,%d] but value was %f", INT64_MIN, INT64_MAX, x);
       CtrStdFlow = ctr_build_string (err, errlen);
       return -1;
     }
@@ -663,7 +665,7 @@ npuint64 (char *p, ctr_object * o)
   if (x < (double) 0 || x > (double) UINT64_MAX)
     {
       char err[1024];
-      int errlen = sprintf (err, "uint requires [%d,%d] but value was %d", 0, UINT8_MAX, x);
+      int errlen = sprintf (err, "uint requires [%d,%d] but value was %f", 0, UINT8_MAX, x);
       CtrStdFlow = ctr_build_string (err, errlen);
       return -1;
     }
@@ -684,7 +686,7 @@ nplong (char *p, ctr_object * o)
   if (x < (double) LONG_MIN || x > (double) LONG_MAX)
     {
       char err[1024];
-      int errlen = sprintf (err, "long requires [%d,%d] but value was %d", LONG_MIN, LONG_MAX, x);
+      int errlen = sprintf (err, "long requires [%d,%d] but value was %f", LONG_MIN, LONG_MAX, x);
       CtrStdFlow = ctr_build_string (err, errlen);
       return -1;
     }
@@ -703,7 +705,7 @@ nplonglong (char *p, ctr_object * o)
   if (x < (double) LLONG_MIN || x > (double) LLONG_MAX)
     {
       char err[1024];
-      int errlen = sprintf (err, "long long requires [%d,%d] but value was %d", LLONG_MIN, LLONG_MAX, x);
+      int errlen = sprintf (err, "long long requires [%d,%d] but value was %f", LLONG_MIN, LLONG_MAX, x);
       CtrStdFlow = ctr_build_string (err, errlen);
       return -1;
     }

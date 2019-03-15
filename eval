@@ -26,6 +26,7 @@ var __ is Nil.
 var it is Nil.
 var stderr is File special: 'stderr'.
 var inBlock is 0.
+var inBlockNew is 0.
 var enterRepeat is False.
 var TerminalWidth is 85.
 
@@ -1025,6 +1026,7 @@ Eval on: 'debugRepl:' do: {:self:stuff
   var errPen is Pen for: stderr.
   var enterRepeat is True.
   var inBlock is 0.
+  var inBlockNew is 0.
   enableDebugStuff.
   my returnValue push: stuff head.
   {^True.} whileTrue: { self read_eval_print: prompt. }.
@@ -1055,6 +1057,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
   var cursor is inp length.
   var multichar_in is Array new.
   inBlock is 0.
+  inBlockNew is 0.
   Eval endBlock.
   var lastEscape is False.
   var justInEscape is False.
@@ -1186,6 +1189,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
     } ifFalse: {
         (frozen select_toplevel_inc is Object case: '\xd' do: {#<Enter>
           clear_next_line applyTo: linesp.
+          inBlock is inBlockNew.
           have_context ifFalse: {
             inp is inp findPattern: ?>(?:^\s*((?::{)+)|((?::}\s*)+)\s*$)<? do: {:groups
               var s is groups at: 0, replace: ':' with: ''.
@@ -1212,6 +1216,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
           inp is ''.
           cursor is 0.
           inBlock is 0.
+          inBlockNew is 0.
           cmt is '<Broke block>'.
           # Pen red writeln: 'Interrupted', resetColor.
           # done is True.
@@ -1304,10 +1309,10 @@ Eval on: 'read_eval_print:' do: ({:prompt
                   }
                 ) switch: inc.
             }, case: '\xd' do: { #<Enter>
-              inBlock +=: 1.
+              inBlockNew +=: 1.
               True continue.
             }, case: '\x1b' do: { #<esc>
-              inBlock is 0 max: inBlock - 1.
+              inBlockNew is 0 max: inBlockNew - 1.
             }, default: {
             }
           ) switch: inc.
@@ -1338,12 +1343,12 @@ Eval on: 'read_eval_print:' do: ({:prompt
               },
               case: '{' do: {
                 (inString not) ifTrue: {
-                  inBlock +=: 1.
+                  inBlockNew +=: 1.
                 }.
               },
               case: '}' do: {
-                (inString not) & (inBlock > 0) ifTrue: {
-                  inBlock -=: 1.
+                (inString not) & (inBlockNew > 0) ifTrue: {
+                  inBlockNew -=: 1.
                 }.
               },
               default: { lastEscape & inString ifTrue: {lastEscape is False.}. }) switch: inc.

@@ -40,6 +40,7 @@ ctr_tnode *ctr_cparse_number ();
 ctr_tnode *ctr_cparse_parse ();
 ctr_tnode *ctr_cparse_popen ();
 ctr_tnode *ctr_cparse_pure ();
+ctr_tnode *ctr_cparse_comptime ();
 ctr_tnode *ctr_cparse_receiver ();
 ctr_tnode *ctr_cparse_program ();
 ctr_tnode *ctr_cparse_ref ();
@@ -830,7 +831,7 @@ ctr_cparse_intern_asm_block_ ()
       char *tok = ctr_clex_tok_value ();
       if (len == 5 && strncasecmp (tok, "intel", 5) == 0)
 	att = 0;
-      else if (!(len == 4 && strncasecmp (tok, "at&t", 4) == 0 || len == 3 && strncasecmp (tok, "att", 3) == 0))
+      else if (!((len == 4 && strncasecmp (tok, "at&t", 4) == 0) || (len == 3 && strncasecmp (tok, "att", 3) == 0)))
 	{
 	  ctr_cparse_emit_error_unexpected (t, "Expected literal name att|at&t|intel\n");
 	  return NULL;
@@ -863,7 +864,7 @@ ctr_cparse_intern_asm_block_ ()
 					   /* start = */ asm_begin,
 					   /* end = */ asm_end,
 					   /* constraint= */ constraint,
-					   /* offset = */ &((ctr_object *) NULL)->value.nvalue,
+					   /* offset = */ (int)&((ctr_object *) NULL)->value.nvalue,
 					   /* argc = */ argidx,
 					   /* arginfo = */ &arginfo,
 					   /* dialect = */ att
@@ -891,6 +892,7 @@ ctr_cparse_intern_asm_block_ ()
  */
 
 ctr_tnode *ctr_cparse_block_ (int autocap);
+ctr_tnode *ctr_cparse_block_pv (int autocap, int error);
 // __attribute__ ((always_inline))
 ctr_tnode *
 ctr_cparse_block ()
@@ -905,8 +907,15 @@ ctr_cparse_block_capture ()
   return ctr_cparse_block_ (1);
 }
 
+
 ctr_tnode *
 ctr_cparse_block_ (int autocap)
+{
+  return ctr_cparse_block_pv(autocap, 0);
+}
+
+ctr_tnode *
+ctr_cparse_block_pv (int autocap, int error)
 {
   ctr_tnode *r;
   ctr_tlistitem *codeBlockPart1;
@@ -1092,6 +1101,8 @@ ctr_cparse_ref ()
 	}
       return ctr_cparse_pure ();
     }
+  if (ctr_clex_tok_value_length () == 9 && strncmp (ctr_clex_tok_value(), "@comptime", 9) == 0)
+    return ctr_cparse_comptime ();
 the_else:;
   r = ctr_cparse_create_node (CTR_AST_NODE);
   r->type = CTR_AST_NODE_REFERENCE;
@@ -1715,6 +1726,44 @@ ctr_cparse_pure ()
   r->value = "Nil";
   r->vlen = 3;
   return r;
+}
+
+ctr_tnode *
+ctr_cparse_comptime ()
+{
+  char ret = 0;
+  int discard = 0;
+  int t = ctr_clex_tok();
+  if (t == CTR_TOKEN_TUPOPEN) {
+    while ((t = ctr_clex_tok()) != CTR_TOKEN_TUPCLOSE) {
+      if (t == CTR_TOKEN_REF) {
+        if (ctr_clex_tok_value_length () == 7 && strncmp (ctr_clex_tok_value(), "discard", 7) == 0)
+          discard = 1;
+        else
+          printf("@comptime warning: unknown attribute %.*s ignored\n", ctr_clex_tok_value_length(), ctr_clex_tok_value());
+      } else {
+        printf("@comptime warning: invalid attribute type %d ignored\n", t);
+      }
+    }
+  } else
+    ctr_clex_putback();
+  ctr_tnode* node = ctr_cparse_expr(0);
+  // printf("@comptime node (%p):\n", node);
+  // ctr_internal_debug_tree(node, 1);
+  ctr_object* val = ctr_cwlk_expr(node, &ret);
+  if (discard) {
+    ctr_clex_putback();
+    return ctr_cparse_nil();
+  }
+  if (!ctr_ast_is_splice(val)) {
+    ctr_cparse_emit_error_unexpected(CTR_TOKEN_INV, "Expected an AST splice as a return value from a comptime expression");
+    return NULL;
+  }
+  if (!val->value.rvalue || !val->value.rvalue->ptr) {
+    ctr_cparse_emit_error_unexpected(CTR_TOKEN_INV, "Expected a valid AST splice as a return value from a comptime expression");
+    return NULL;
+  }
+  return val->value.rvalue->ptr;
 }
 
 /**

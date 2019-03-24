@@ -6,14 +6,26 @@ file_extensions: [ ctr ]
 
 contexts:
   main:
+    - match: '(?:(@comptime)\b)'
+      captures:
+        0: markup.deleted.Citron
+      push:
+        - match: '(\s*)'
+          pop: true
+          captures:
+            0: entity.name.Citron
+        - match: '(.)'
+          captures:
+            0: entity.name.Citron
     - match: '\b(var|my|const|frozen)\b'
       captures:
         0: keyword.other.unit.Citron
       push:
-        - match: '([^\s\d\x{003a}.\x{002c}\[\]\(\)\{\}\#][^\s\x{003a}.\x{002c}\[\]\(\)\{\}\#]*)'
+        - match: '(?:(&&|&)?([^\s\d\x{003a}.\x{002c}\[\]\(\)\{\}\#][^\s\x{003a}.\x{002c}\[\]\(\)\{\}\#]*))'
           pop: true
           captures:
-            0: variable.Citron
+            0: constant.character.escape.Citron
+            1: variable.Citron
         - match: '(.)'
           captures:
             0: variable.Citron

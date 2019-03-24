@@ -28,6 +28,30 @@
       <array>
         <dict>
           <key>begin</key>
+          <string>(?:(@comptime)\b)</string>
+          <key>beginCaptures</key>
+          <dict>
+            <key>1</key>
+            <dict>
+              <key>name</key>
+              <string>markup.deleted.Citron</string>
+            </dict>
+          </dict>
+          <key>contentName</key>
+          <string>entity.name.Citron</string>
+          <key>end</key>
+          <string>(\s*)</string>
+          <key>endCaptures</key>
+          <dict>
+            <key>1</key>
+            <dict>
+              <key>name</key>
+              <string>entity.name.Citron</string>
+            </dict>
+          </dict>
+        </dict>
+        <dict>
+          <key>begin</key>
           <string>\b(var|my|const|frozen)\b</string>
           <key>beginCaptures</key>
           <dict>
@@ -40,10 +64,15 @@
           <key>contentName</key>
           <string>variable.Citron</string>
           <key>end</key>
-          <string>([^\s\d\x{003a}.\x{002c}\[\]\(\)\{\}\#][^\s\x{003a}.\x{002c}\[\]\(\)\{\}\#]*)</string>
+          <string>(?:(&amp;&amp;|&amp;)?([^\s\d\x{003a}.\x{002c}\[\]\(\)\{\}\#][^\s\x{003a}.\x{002c}\[\]\(\)\{\}\#]*))</string>
           <key>endCaptures</key>
           <dict>
             <key>1</key>
+            <dict>
+              <key>name</key>
+              <string>constant.character.escape.Citron</string>
+            </dict>
+            <key>2</key>
             <dict>
               <key>name</key>
               <string>variable.Citron</string>
@@ -70,7 +99,7 @@
           <array>
             <dict>
               <key>include</key>
-              <string>#main__2</string>
+              <string>#main__3</string>
             </dict>
            </array>
           <key>end</key>
@@ -139,7 +168,7 @@
           <array>
             <dict>
               <key>include</key>
-              <string>#main__3</string>
+              <string>#main__4</string>
             </dict>
            </array>
           <key>end</key>
@@ -252,7 +281,7 @@
           <array>
             <dict>
               <key>include</key>
-              <string>#main__5</string>
+              <string>#main__6</string>
             </dict>
            </array>
           <key>end</key>
@@ -1161,7 +1190,19 @@
       <array>
        </array>
     </dict>
+    <key>main__13</key>
+    <dict>
+      <key>patterns</key>
+      <array>
+       </array>
+    </dict>
     <key>main__2</key>
+    <dict>
+      <key>patterns</key>
+      <array>
+       </array>
+    </dict>
+    <key>main__3</key>
     <dict>
       <key>patterns</key>
       <array>
@@ -1173,7 +1214,7 @@
         </dict>
        </array>
     </dict>
-    <key>main__3</key>
+    <key>main__4</key>
     <dict>
       <key>patterns</key>
       <array>
@@ -1185,13 +1226,13 @@
         </dict>
        </array>
     </dict>
-    <key>main__4</key>
+    <key>main__5</key>
     <dict>
       <key>patterns</key>
       <array>
        </array>
     </dict>
-    <key>main__5</key>
+    <key>main__6</key>
     <dict>
       <key>patterns</key>
       <array>
@@ -1224,12 +1265,6 @@
             </dict>
           </dict>
         </dict>
-       </array>
-    </dict>
-    <key>main__6</key>
-    <dict>
-      <key>patterns</key>
-      <array>
        </array>
     </dict>
     <key>main__7</key>

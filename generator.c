@@ -1022,7 +1022,7 @@ ctr_generator_foldl (ctr_object * myself, ctr_argument * argumentList)
       CtrStdFlow = ctr_build_string_from_cstring ("::'next' on uninitialized generator");
       return CtrStdNil;
     }
-  ctr_argument argm, argm2;
+  ctr_argument argm = {0}, argm2 = {0};
   argm.next = &argm2;
 
   while (1)
@@ -1078,7 +1078,7 @@ ctr_generator_foldl0 (ctr_object * myself, ctr_argument * argumentList)
       return CtrStdNil;
     }
   ctr_object *result = NULL;
-  ctr_argument argm, argm2;
+  ctr_argument argm = {0}, argm2 = {0};
   argm.next = &argm2;
 
   while (1)

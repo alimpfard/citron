@@ -1761,9 +1761,18 @@ ctr_initialize_world ()
   CtrStdString = ctr_internal_create_object (CTR_OBJECT_TYPE_OTSTRING);
   CtrStdSymbol = ctr_internal_create_object (CTR_OBJECT_TYPE_OTMISC);
   CtrStdBlock = ctr_internal_create_object (CTR_OBJECT_TYPE_OTBLOCK);
+  ctr_object* CtrStdOpaque = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
+  ctr_internal_create_func (CtrStdOpaque, ctr_build_string_from_cstring (CTR_DICT_NEW), &ctr_object_make);
+  ctr_internal_create_func (CtrStdOpaque, ctr_build_string_from_cstring (CTR_DICT_CTOR_NEW), &ctr_object_ctor);
+  ctr_internal_create_func (CtrStdOpaque, ctr_build_string_from_cstring (CTR_DICT_ONDO), &ctr_object_on_do);
+  ctr_internal_create_func (CtrStdOpaque, ctr_build_string_from_cstring (CTR_DICT_RESPOND_TO), &ctr_object_respond);
+  ctr_internal_create_func (CtrStdOpaque, ctr_build_string_from_cstring (CTR_DICT_RESPOND_TO_AND), &ctr_object_respond_and);
+  ctr_internal_create_func (CtrStdOpaque, ctr_build_string_from_cstring (CTR_DICT_RESPOND_TO_AND_AND), &ctr_object_respond_and_and);
+  ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Opaque"), CtrStdOpaque, 0);
   ctr_set_link_all (CtrStdString, CtrStdObject);
   ctr_set_link_all (CtrStdSymbol, CtrStdString);
   ctr_set_link_all (CtrStdBlock, CtrStdObject);
+  
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring (CTR_DICT_NEW), &ctr_object_make);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring (CTR_DICT_CTOR_NEW), &ctr_object_ctor);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring (CTR_DICT_GENACC), &ctr_object_attr_accessor);

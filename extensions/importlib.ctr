@@ -27,12 +27,18 @@ import on: '__resolve_request:internally:' do: {:name:itn
   var file is Nil.
   var path is Nil.
   var is_dir is False.
+  var abs is False.
+  name startsWith: '/', ifTrue: {
+    name is name skip: 1.
+    abs is True.
+    my absoluteSearchPath is Array < ''.
+    my searchPaths swapRefs: my absoluteSearchPath.
+  }.
   var xc_path is name split: '/'.
   name is xc_path last.
   var ext_path is xc_path init join: '/'.
   var full_path is Nil.
   my searchPaths each: {:i:v
-  # Pen write: v, brk.
     file isNil not break.
     v is v + '/' + ext_path.
     v is File new: v, realPath.
@@ -51,6 +57,9 @@ import on: '__resolve_request:internally:' do: {:name:itn
         is_dir is True.
       }.
     }.
+  }.
+  abs ifTrue: {
+    my searchPaths swapRefs: my absoluteSearchPath.
   }.
   file isNil & itn not ifTrue: {
     ^name = 'name' either: Nil or: {

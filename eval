@@ -533,15 +533,23 @@ Eval on: 'doMeta:' do: {:str:ptr
   var args is ''.
   str trim findPattern: '(\\W?\\w+|\\W)(\\s+(.*))?' do: {:parts cmd is parts @ 1. args is parts count > 2 either: {^parts @ 3.} or: ''.}.
   var cmds is Eval Commands.
-  ^cmds get: cmd, or: {
-    ^cmd = '!'
-      either: { ^(\:x Shell call: x). }
-      or: {
-        ^{^'Invalid meta-command \':%s\'.\n' % [cmd] + (cmds at: 'h', run).}.
-      }.
-  }, applyTo: args.
+  var unknownMetaCommandHandler is my unknownMetaCommandHandler.
+  ^{
+    ^cmds get: cmd, or: {
+      ^cmd = '!'
+        either: { ^(\:x Shell call: x). }
+        or: {
+          ^unknownMetaCommandHandler[cmd, args].
+        }.
+    }, applyTo: args.
+  } catch: {:e
+    ^'Exception was thrown while evaluating `${{str}}$\': $$e'.
+  }, run.
 }.
-
+Eval on: 'unknownMetaCommandHandler:' do: {:hnd my unknownMetaCommandHandler is hnd. }.
+Eval unknownMetaCommandHandler: {:cmd
+  ^'Invalid meta-command \':%s\'.\n' % [cmd] + (Eval doMeta: 'h').
+}.
 Eval on: 'metaCompletion:' do: {:m
   var meta is m head.
   var argstrs is m tail.

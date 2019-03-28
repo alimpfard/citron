@@ -70,7 +70,7 @@ Eval on: 'init' do: {
   my continuation is '⠒⠂'.
   genAccessors: ['evaluatorObject', 'completerObject'].
   my evaluatorObject is me. # self-ref for ::'evaluate:'
-  my completerObject is me. # self-ref for ::'complete'
+  my completerObject is me. # self-ref for ::'complete:withToc:'
   my flags is Map new
     put: False at: 'ptype',
     put: False at: 'stats',
@@ -95,6 +95,7 @@ Eval on: 'init' do: {
   my evaluationContext is Map new
     on: 'toString' do: {^'[GlobalEvalContext]'.}.
   my displayObject is Pen. #override from commandline, maybe?
+  my printObject   is Pen.
   ^me.
 }.
 Eval on: 'initHistory' do: {
@@ -103,6 +104,12 @@ Eval on: 'initHistory' do: {
   my hs_file exists ifFalse: { my hs_file write: ''. }.
   var history is my history.
   (my hs_file read split: '\n\n\n') each_v: \:x history push: x.
+}.
+Eval on: 'print' do: {
+  ^my printObject.
+}.
+Eval on: 'print:' do: {:x
+  my printObject is x.
 }.
 Eval on: 'display' do: {
   ^my displayObject.
@@ -119,6 +126,16 @@ Eval on: 'display:' do: {:x
      ^my displayObject message: const v arguments: args.
    }.
 }.
+['clear', 'green', 'cyan', 'magenta',
+ 'purple', 'blue', 'yellow', 'resetColor',
+ 'red', 'brk', 'clearLine', 'write:',
+ 'writeln:']
+ each_v: {:v
+   Eval on: 'print/$$v' do: {:*args
+     ^my printObject message: const v arguments: args.
+   }.
+}.
+
 Eval on: 'disambiguateError:' do: {:e
   getFlag: 'clear_errors', ifFalse: { ^[e, '']. }.
   e isA: String, ifFalse: { ^e. }.
@@ -730,6 +747,7 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '--pid <pidfile>: set the pid file. value is ignored unless [-s <port>] comes after\n',
           indent: 2 write: '--no-logo : don\'t display the ascii logo, use normal text instead\n',
           indent: 2 write: '--interactive-print : Use this object instead of `Pen\' to print values\n',
+          indent: 2 write: '--interactive-output : Use this object instead of `Pen\' to print output\n',
           indent: 2 write: '--evaluator-object <symbol> : use this object\'s ::\'evaluate:\' responder to eval things\n',
           indent: 2 write: '--completer-object <symbol> : use this object\'s ::\'complete\' responder to complete things\n',
           indent: 2 write: '--highlight-file <file|-> : highlight the file (or stdin) and quit\n',
@@ -876,6 +894,11 @@ Eval on: 'togglePasteMode' do: {
       var obj is Eval shiftArgs.
       obj is Eval evaluatorObject evaluate: obj, or: \:_ thisBlock error: '--interactive-print requires an argument'.
       Eval display: obj.
+    }, case: '--interactive-output' do: {
+      args pop.
+      var obj is Eval shiftArgs.
+      obj is Eval evaluatorObject evaluate: obj, or: \:_ thisBlock error: '--interactive-output requires an argument'.
+      Eval print: obj.
     }, case: '--evaluator-object' do: {
       args pop.
       var obj is Eval shiftArgs.
@@ -888,8 +911,8 @@ Eval on: 'togglePasteMode' do: {
       args pop.
       var obj is Eval shiftArgs.
       obj is Eval evaluate: obj, or: \:_ thisBlock error: '--completer-object requires an argument'.
-      Reflect object: obj hasOwnResponder: 'complete', ifFalse: {
-        thisBlock error: 'argument to --completer-object must respond to \'complete\' ($$obj does not)'.
+      Reflect object: obj hasOwnResponder: 'complete:withToc:', ifFalse: {
+        thisBlock error: 'argument to --completer-object must respond to \'complete:withToc:\' ($$obj does not)'.
       }.
       Eval completerObject: obj.
     }, case: '-F' do: {
@@ -1063,6 +1086,27 @@ Eval on: 'debugRepl:' do: {:self:stuff
   ^my returnValue pop.
 }.
 
+Eval on: 'complete:withToc:' do: {:last_toc:toc
+  var candidates is Eval allTheNames: (
+    {
+      ^Reflect getObject: (
+        ['my', 'var'] contains: last_toc,
+          either: Nil
+          or: last_toc).
+    } catch: {
+      ^Nil.
+    }, run).
+  var resolver is Nil.
+  var skipthis is False.
+  candidates head = \import ifTrue: {
+    resolver is candidates @ 1.
+  } ifFalse: {
+    resolver is {:toc ^candidates @ 1 filter: {:_:i ^i lower startsWith: toc lower.}. }.
+    skipthis is candidates head = \object.
+  }.
+  ^resolver[toc].
+}.
+
 Eval on: 'complete' do: {
   var candidate is 'Nil'.
   var toc is inp trim reSplit: '\\s+|\\b|(?=[\\]})])'.
@@ -1105,24 +1149,7 @@ Eval on: 'complete' do: {
   last_toc containsPattern: ?>(\'|\?>)$<?, ifTrue: { last_toc is 'String'. }.
   last_toc containsPattern: ?>\]\s*$<?, ifTrue: { last_toc is 'Array'. }.
   last_toc containsPattern: ?>\}\s*$<?, ifTrue: { last_toc is 'CodeBlock'. }.
-  var candidates is Eval allTheNames: (
-    {
-      ^Reflect getObject: (
-        ['my', 'var'] contains: last_toc,
-          either: Nil
-          or: last_toc).
-    } catch: {
-      ^Nil.
-    }, run).
-  var resolver is Nil.
-  var skipthis is False.
-  candidates head = \import ifTrue: {
-    resolver is candidates @ 1.
-  } ifFalse: {
-    resolver is {:toc ^candidates @ 1 filter: {:_:i ^i lower startsWith: toc lower.}. }.
-    skipthis is candidates head = \object.
-  }.
-  candidates is resolver[toc].
+  var candidates is Eval completerObject complete: last_toc withToc: toc.
   candidates count !=: 0, ifTrue: {
     have_context is True.
     candidate is candidates @ (last_comp_index is (last_comp_index +=: 1) >=: (candidates count), either: 0 or: last_comp_index).
@@ -1217,7 +1244,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
             last_was_comp is True.
           } or: { cmt is '<- No completion'. }.
         } or: {
-          Eval completerObject complete.
+          Eval complete.
         }.
     } ifFalse: {
         (frozen select_toplevel_inc is Object case: '\xd' do: {#<Enter>
@@ -1427,16 +1454,19 @@ Eval on: 'read_eval_print:' do: ({:prompt
   _ is Eval __eval_ret.
   Eval errored? not ifTrue: {
     var printed is False.
-    Eval getFlag: 'printvs', ifTrue: { Pen message: Eval color arguments: [], write: var str is Eval __eval_ret toString. printed is str length > 0. }.
-    Eval display/resetColor.
+    Eval getFlag: 'printvs', ifTrue: {
+      Eval print message: Eval color arguments: [], write: var str is Eval __eval_ret toString.
+      printed is str length > 0.
+    }.
+    Eval print/resetColor.
     Eval getFlag: 'ptype', ifTrue: {
-      Eval display/yellow write: '%s=> (%s)%s' % [(printed either: ' ' or: ''), (Reflect strTypeOf: Eval __eval_ret, ~ 's/\\\\?\\\'//g'), (printed either: '' or: '\n')].
-      Eval display/resetColor.
+      Eval print/yellow write: '%s=> (%s)%s' % [(printed either: ' ' or: ''), (Reflect strTypeOf: Eval __eval_ret, ~ 's/\\\\?\\\'//g'), (printed either: '' or: '\n')].
+      Eval print/resetColor.
     }.
     Eval getFlag: 'stats', ifTrue: {
       var str is '%s(%s seconds (%d cycles), %s bytes)' % [(printed either: '\n' or: ''), Eval exectime / (Clock ticksPerSecond), Eval exectime, ((Eval statsa - Eval statsb) toString reverse reSplit: '(?<=\\G...)', join: ',', reverse)].
-      Eval display/write: Colors % [str, GREEN_COLOR, ITALIC_EFFECT].
-      printed ifFalse: { Eval display/brk. }.
+      Eval print/write: Colors % [str, GREEN_COLOR, ITALIC_EFFECT].
+      printed ifFalse: { Eval print/brk. }.
     }.
     it is _.
     #Broom sweep. #Keep the darn pointers in memory

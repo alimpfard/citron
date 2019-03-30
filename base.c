@@ -2529,7 +2529,7 @@ ctr_number_to_boolean (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_build_string (char *stringValue, long size)
 {
-  ctr_object *stringObject = ctr_internal_create_standalone_object (CTR_OBJECT_TYPE_OTSTRING);
+  ctr_object *stringObject = ctr_internal_create_object (CTR_OBJECT_TYPE_OTSTRING);
   if (size != 0)
     {
       stringObject->value.svalue->value = ctr_heap_allocate (size * sizeof (char));
@@ -4167,8 +4167,6 @@ ctr_string_reg_replace (ctr_object * myself, ctr_argument * argumentList)
 	  CtrStdFlow = ctr_build_string_from_cstring ((char *) pcrs_strerror (err));
 	  return CtrStdNil;
 	}
-      ctr_heap_free (c);
-      ctr_heap_free (input);
       return ctr_build_string (result, rlen);
     }
 }

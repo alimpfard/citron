@@ -100,7 +100,10 @@ ctr_internal_debug_tree (ctr_tnode * ti, int indent)
 	case CTR_AST_NODE_INSTRLIST:
 	  str = "INSTRS";
 	  break;
-	case CTR_AST_NODE_ENDOFPROGRAM:
+    case CTR_AST_NODE_SYMBOL:
+      str = "SYMBOL";
+      break;
+    case CTR_AST_NODE_ENDOFPROGRAM:
 	  str = "EOPROG";
 	  break;
 	case CTR_AST_NODE_NESTED:
@@ -135,8 +138,12 @@ ctr_internal_debug_tree (ctr_tnode * ti, int indent)
 	  break;
 	}
       vbuf = ctr_heap_allocate (sizeof (char) * (t->vlen + 1));
-      strncpy (vbuf, t->value, t->vlen);
+      if (t->type == CTR_AST_NODE_SYMBOL)
+          strncpy(vbuf, "<Symbol>", 8);
+      else
+        strncpy (vbuf, t->value, t->vlen);
       printf ("%s %s (%p)\n", str, vbuf, (void *) t);
+      ctr_heap_free(vbuf);
       if (t->nodes && t->type != CTR_AST_NODE_EMBED)
 	ctr_internal_debug_tree (t, indent + 1);
     next:;

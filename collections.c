@@ -2986,8 +2986,8 @@ ctr_object* ctr_hmap_fmap(ctr_object* myself, ctr_argument* argumentList) {
           {CtrStdFlow = NULL; break;}
         else break;
       }
-      khiter_t k = kh_put(ctr_hmap_t, p, argumentList->object, &ret);
-      kh_value(p, k) = val;
+      khiter_t k1 = kh_put(ctr_hmap_t, p, kh_key(map, k), &ret);
+      kh_value(p, k1) = val;
     }
   return ctr_hmap_wrap(p);
 }

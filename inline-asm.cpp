@@ -33,9 +33,13 @@ private:
   std::shared_ptr<SymbolResolver> Resolver;
   std::unique_ptr<TargetMachine> TM;
   const DataLayout DL;
+#if LLVM_VERSION_MAJOR >= 8
+  LegacyRTDyldObjectLinkingLayer ObjectLayer;
+  LegacyIRCompileLayer<decltype(ObjectLayer), SimpleCompiler> CompileLayer;
+#else
   RTDyldObjectLinkingLayer ObjectLayer;
   IRCompileLayer<decltype(ObjectLayer), SimpleCompiler> CompileLayer;
-
+#endif
 public:
   KaleidoscopeJIT()
       : nativeTarget(NativeLlvmTarget::Create()),
@@ -55,7 +59,11 @@ public:
         TM(EngineBuilder().setErrorStr(&errorStr).selectTarget()?:(puts(errorStr.c_str()), nullptr)), DL(TM->createDataLayout()),
         ObjectLayer(ES,
                     [this](VModuleKey) {
+#if LLVM_VERSION_MAJOR >= 8
+                      return LegacyRTDyldObjectLinkingLayer::Resources{
+#else
                       return RTDyldObjectLinkingLayer::Resources{
+#endif
                           std::make_shared<SectionMemoryManager>(), Resolver};
                     }),
         CompileLayer(ObjectLayer, SimpleCompiler(*TM)) {

@@ -19,6 +19,7 @@ ctr_object* ctr_generator_toarray(ctr_object*, ctr_argument*);
 ctr_object* ctr_generator_foldl(ctr_object*, ctr_argument*);
 ctr_object* ctr_generator_foldl0(ctr_object*, ctr_argument*);
 ctr_object* ctr_generator_filter(ctr_object*, ctr_argument*);
+ctr_object* ctr_generator_underlaying(ctr_object*, ctr_argument*);
 void* ctr_generator_free(void*);
 
 #endif /* end of include guard: CTR_GENERATOR */

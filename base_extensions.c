@@ -1875,6 +1875,7 @@ initiailize_base_extensions ()
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("toArray"), &ctr_generator_toarray);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("foldl:accumulator:"), &ctr_generator_foldl);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("foldl:"), &ctr_generator_foldl0);
+  ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("underlaying"), &ctr_generator_underlaying);
   ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring ("Generator"), ctr_std_generator, 0);
 
   ctr_object *callcc = ctr_internal_create_object (CTR_OBJECT_TYPE_OTNATFUNC);

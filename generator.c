@@ -1116,3 +1116,34 @@ ctr_generator_foldl0 (ctr_object * myself, ctr_argument * argumentList)
     CtrStdFlow = NULL;
   return result?:CtrStdNil;
 }
+
+/**
+ * [Generator] underlaying
+ *
+ * returns the underlaying generator of a given mapping generator
+ */
+ctr_object * ctr_generator_underlaying(ctr_object* myself, ctr_argument* argumentList)
+{
+  ctr_resource *res = myself->value.rvalue;
+  ctr_generator *genny = res->ptr;
+  if (!genny) {
+    CtrStdFlow = ctr_build_string_from_cstring ("::'underlaying' on uninitialized generator");
+    return CtrStdNil;
+  }
+  int gtype = res->type;
+  if (gtype != CTR_FN_OF_GENNY && gtype != CTR_IFN_OF_GENNY && gtype != CTR_XFN_OF_GENNY) {
+    CtrStdFlow = ctr_build_string_from_cstring ("::'underlaying' is defined only on mapping generators");
+    return CtrStdNil;
+  }
+  ctr_mapping_generator *mgen = genny->sequence;
+	ctr_generator *igen = mgen->genny;
+	int igen_type = mgen->i_type;
+  ctr_object *inst = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
+  ctr_set_link_all (inst, ctr_std_generator);
+  inst->release_hook = ctr_generator_free;
+  inst->value.rvalue = ctr_heap_allocate (sizeof (ctr_resource));
+  ctr_resource *resv = inst->value.rvalue;
+  resv->type = igen_type;
+  resv->ptr = igen;
+  return inst;
+}

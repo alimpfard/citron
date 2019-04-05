@@ -135,6 +135,146 @@ ctr_object *pcre_split(char *pattern, char *string) {
 	return sarr;
 }
 
+typedef struct {
+	char* str;
+	char const* alloc;
+	pcre* re;
+	int flags;
+} ctr_pcre_split_hidden;
+
+extern ctr_object* generator_end_marker;
+static ctr_object* pcre_split_next(ctr_object* myself, ctr_argument* argumentList) {
+	ctr_pcre_split_hidden* val = argumentList->object->value.rvalue->ptr; // todo: error check
+	split_t_internal *si;
+
+	pcre *re = val->re;
+	char *s  = val->str;
+	int flag = val->flags;
+
+	char *match;
+	ctr_object* res = NULL;
+	do {
+	  /* Return first occurence of match of RegEx */
+	  si = pcre_split_internal(re, s, flag);
+
+	  /* Copy pointer of match */
+	  match = si->match;
+	  if (!match) {
+			if (*s == 0) {
+				// free and return
+				pcre_free(val->re);
+				ctr_heap_free((void*)val->alloc);
+				ctr_heap_free(val);
+
+				CtrStdFlow = CtrStdBreak; // signal end of sequence
+				return generator_end_marker;
+			} else { //no match, return rest of string
+				int sl=1;
+				char* sv=s;
+				while(*++sv) sl++;
+				res = ctr_build_string(s, sl);
+				s=sv;
+				break;
+			}
+		}
+
+	  if(si->offset) {
+	  	res = ctr_build_string(s, si->offset);
+	  }
+	  /* Increment string pointer to skip previous match */
+	  s += si->offset + si->length;
+
+	  if (!si->length)
+	  	// we already got an empty match, skip past it
+	  	flag |= PCRE_NOTEMPTY_ATSTART;
+	  else
+	  	flag &= ~PCRE_NOTEMPTY_ATSTART; // 🤷
+  } while (!res);
+	val->str = s;
+	val->flags = flag;
+	ctr_heap_free(si);
+	return res;
+}
+/* Initialise the RegEx */
+extern ctr_object* ctr_std_generator;
+extern voidptrfn_t ctr_generator_free;
+typedef struct
+{
+  ctr_size seq_index;
+  void *data;
+  void *sequence;
+  ctr_object *current;
+  int finished;
+} ctr_generator;
+
+typedef struct
+{
+  ctr_number current, end, step;
+} ctr_step_generator;
+
+typedef struct
+{
+  unsigned int i_type;
+  ctr_generator *genny;
+  ctr_object *fn;
+} ctr_mapping_generator;
+
+#define CTR_REPEAT_GENNY 2
+#define CTR_IFN_OF_GENNY 7
+
+ctr_object *pcre_split_gen(char *pattern, char *string) {
+	const char *error;
+	int erroffset;
+	/**
+	 * repeat_genny : number :: struct { str; reg; }
+	 * fn_of_genny  : pcre_split_next
+	 */
+	pcre* re = pcre_compile(pattern, 0, &error, &erroffset, NULL);
+	/*
+	  Check if compilation was successful
+	*/
+	if(re == NULL) {
+    char serror[1079];
+    size_t len = sprintf(serror, "Error: PCRE compilation failed at offset %d: %s\n", erroffset, error);
+		CtrStdFlow = ctr_build_string(serror, len);
+		return NULL;
+	}
+	ctr_object *inst  = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
+	ctr_set_link_all (inst, ctr_std_generator);
+	inst->value.rvalue = ctr_heap_allocate (sizeof (ctr_resource));
+	ctr_resource *res = inst->value.rvalue;
+	res->type = CTR_IFN_OF_GENNY;
+	ctr_generator *gen = ctr_heap_allocate (sizeof (*gen));
+	ctr_mapping_generator *genny = ctr_heap_allocate (sizeof (*genny));
+	gen->finished = 0;
+	genny->i_type = CTR_REPEAT_GENNY;
+	ctr_object *methodObject = ctr_internal_create_object (CTR_OBJECT_TYPE_OTNATFUNC);
+  ctr_set_link_all (methodObject, CtrStdBlock);
+  methodObject->value.fvalue = pcre_split_next;
+	genny->fn = methodObject;
+	gen->sequence = genny;
+	gen->data = ctr_heap_allocate(sizeof(ctr_argument));
+	res->ptr = gen;
+	inst->release_hook = ctr_generator_free;
+
+	ctr_object *rpt_v = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
+	rpt_v->value.rvalue = ctr_heap_allocate (sizeof (ctr_resource));
+	ctr_resource *resv = rpt_v->value.rvalue;
+	ctr_set_link_all (rpt_v, CtrStdObject);
+	ctr_generator *rptgen = ctr_heap_allocate (sizeof (*gen));
+	rptgen->finished = 0;
+	rptgen->sequence = rpt_v;
+	ctr_pcre_split_hidden* alloc = ctr_heap_allocate(sizeof(*alloc));
+	alloc->str = string;
+	alloc->alloc = string;
+	alloc->re  = re;
+	alloc->flags=0;
+	resv->ptr = alloc;
+	genny->genny = rptgen;
+	return inst;
+}
+
+
 split_t_internal *pcre_split_internal(pcre *re, char *string, int flags)
 {
 

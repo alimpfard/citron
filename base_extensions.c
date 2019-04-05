@@ -1868,7 +1868,9 @@ initiailize_base_extensions ()
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("next"), &ctr_generator_next);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("inext"), &ctr_generator_inext);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("each:"), &ctr_generator_each);
+  ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("each_v:"), &ctr_generator_eachv);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("ieach:"), &ctr_generator_ieach);
+  ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("ieach_v:"), &ctr_generator_ieachv);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("copy"), &ctr_generator_copy);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("finished"), &ctr_generator_isfin);
   ctr_internal_create_func (ctr_std_generator, ctr_build_string_from_cstring ("toString"), &ctr_generator_tostr);

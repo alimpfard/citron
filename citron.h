@@ -48,9 +48,9 @@ extern "C" {
 #endif
 
 #ifdef withBoehmGC
-#define CTR_VERSION "0.0.9.0-boehm-gc" IS_DEBUG_STRING
+#define CTR_VERSION "0.0.9.1-boehm-gc" IS_DEBUG_STRING
 #else
-#define CTR_VERSION "0.0.9.0" IS_DEBUG_STRING
+#define CTR_VERSION "0.0.9.1" IS_DEBUG_STRING
 #endif
 
 #define CTR_LOG_WARNINGS 2//2 to enable
@@ -864,6 +864,7 @@ ctr_object* ctr_string_re_last_index_of(ctr_object* myself, ctr_argument* argume
 ctr_object* ctr_string_replace_with(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_split(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_split_re(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_split_re_gen(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_to_number(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_to_boolean(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_to_lower(ctr_object* myself, ctr_argument* argumentList);

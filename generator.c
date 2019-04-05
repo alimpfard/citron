@@ -694,6 +694,56 @@ ctr_generator_each (ctr_object * myself, ctr_argument * argumentList)
     }
   if (CtrStdFlow == CtrStdBreak)
     CtrStdFlow = NULL;
+
+  ctr_heap_free (argm->next);
+  ctr_heap_free (argm);
+  return myself;
+}
+
+/**
+ * [Generator] each_v: [Block]
+ *
+ * Runs the block for each element in the generator
+ */
+ctr_object *
+ctr_generator_eachv (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *blk = argumentList->object;
+  ctr_resource *res = myself->value.rvalue;
+  ctr_generator *genny = res->ptr;
+  int gtype = res->type;
+  if (!genny)
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("#next on uninitialized generator");
+      return CtrStdNil;
+    }
+  ctr_argument *argm = ctr_heap_allocate (sizeof (*argm));
+  while (1)
+    {
+      ctr_object *next = ctr_generator_internal_next (genny, gtype);
+      if (genny->finished)
+	break;
+      if (next == generator_end_marker)
+	continue;
+      argm->object = next;
+      ctr_block_run (blk, argm, blk);
+      if (CtrStdFlow)
+	{
+	  if (CtrStdFlow == CtrStdContinue)
+	    {
+	      CtrStdFlow = NULL;
+	      continue;
+	    }
+	  if (CtrStdFlow == CtrStdBreak)
+	    {
+	      CtrStdFlow = NULL;
+	      genny->finished = 1;
+	    }
+	  break;
+	}
+    }
+  if (CtrStdFlow == CtrStdBreak)
+    CtrStdFlow = NULL;
   ctr_heap_free (argm);
   return myself;
 }
@@ -728,6 +778,58 @@ ctr_generator_ieach (ctr_object * myself, ctr_argument * argumentList)
 	continue;
       argm->object = ctr_build_number_from_float (genny->seq_index - 1);
       argm->next->object = next;
+      ctr_block_run (blk, argm, blk);
+      if (CtrStdFlow)
+	{
+	  if (CtrStdFlow == CtrStdContinue)
+	    {
+	      CtrStdFlow = NULL;
+	      continue;
+	    }
+	  if (CtrStdFlow == CtrStdBreak)
+	    {
+	      CtrStdFlow = NULL;
+	      genny->finished = 1;
+	    }
+	  break;
+	}
+    }
+  if (CtrStdFlow == CtrStdBreak)
+    CtrStdFlow = NULL;
+    ctr_heap_free (argm->next);
+    ctr_heap_free (argm);
+  return myself;
+}
+
+/**
+ * [Generator] ieach_v: [Block]
+ *
+ * Runs the block for each element in the generator;
+ * should the generator yield another generator, it will be depleted, and its elements
+ * unpacked recursively
+ */
+ctr_object *
+ctr_generator_ieachv (ctr_object * myself, ctr_argument * argumentList)
+{
+  ctr_object *blk = argumentList->object;
+  ctr_resource *res = myself->value.rvalue;
+  ctr_generator *genny = res->ptr;
+  int gtype = res->type;
+  if (!genny)
+    {
+      CtrStdFlow = ctr_build_string_from_cstring ("#inext on uninitialized generator");
+      return CtrStdNil;
+    }
+  ctr_argument *argm = ctr_heap_allocate (sizeof (*argm));
+  argm->next = NULL;
+  while (1)
+    {
+      ctr_object *next = ctr_generator_internal_inext (genny, gtype, NULL, 0);
+      if (genny->finished)
+	break;
+      if (next == generator_end_marker)
+	continue;
+      argm->object = next;
       ctr_block_run (blk, argm, blk);
       if (CtrStdFlow)
 	{

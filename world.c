@@ -1772,7 +1772,7 @@ ctr_initialize_world ()
   ctr_set_link_all (CtrStdString, CtrStdObject);
   ctr_set_link_all (CtrStdSymbol, CtrStdString);
   ctr_set_link_all (CtrStdBlock, CtrStdObject);
-  
+
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring (CTR_DICT_NEW), &ctr_object_make);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring (CTR_DICT_CTOR_NEW), &ctr_object_ctor);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring (CTR_DICT_GENACC), &ctr_object_attr_accessor);
@@ -1947,6 +1947,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_SPLIT), &ctr_string_split);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_SPLIT "max:"), &ctr_string_split);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("reSplit:"), &ctr_string_split_re);
+  ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("reSplitGen:"), &ctr_string_split_re_gen);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_ASCII_UPPER_CASE), &ctr_string_to_upper);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_ASCII_LOWER_CASE), &ctr_string_to_lower);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_ASCII_UPPER_CASE_1), &ctr_string_to_upper1st);

@@ -1,4 +1,4 @@
-DEBUG_VERSION := 1209
+DEBUG_VERSION := 1221
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
 location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
@@ -56,6 +56,7 @@ ifneq ($(findstring withInlineAsm=1,${CFLAGS}),)
 EXTRAOBJS := ${EXTRAOBJS} inline-asm.o
 CFLAGS := ${CFLAGS} $(shell llvm-config --cflags --system-libs --libs core orcjit native)
 CXXFLAGS := $(shell llvm-config --cxxflags --system-libs --libs core orcjit native) ${CXXFLAGS} -fexceptions
+LEXTRACF := ${LEXTRACF} -lLLVMOrcJIT -lLLVMRuntimeDyld
 endif
 
 ifneq ($(findstring withInjectNative=1,${CFLAGS}),)

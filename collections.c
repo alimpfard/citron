@@ -2843,7 +2843,17 @@ uint32_t ctr_internal_value_hash(ctr_object* searchKey) {
 	  return searchKeyHasho->value.nvalue;
     }
 }
-KHASH_INIT(ctr_hmap_t, ctr_object*, ctr_object*, 1, ctr_internal_value_hash, ctr_internal_object_is_equal);
+uint32_t ctr_internal_string_hash(ctr_object* key) {
+  if (likely(key->info.type == CTR_OBJECT_TYPE_OTNUMBER))
+    return key->value.nvalue;
+
+  if (unlikely(key->info.type != CTR_OBJECT_TYPE_OTSTRING)) {
+    CtrStdFlow = ctr_build_string_from_cstring("Only Strings allowed as HashMap keys");
+    return 0xdead;
+  }
+  return siphash24(key->value.svalue->value, key->value.svalue->vlen, CtrHashKey);
+}
+KHASH_INIT(ctr_hmap_t, ctr_object*, ctr_object*, 1, ctr_internal_string_hash, ctr_internal_object_is_equal);
 
 /**
  * [HashMap] new

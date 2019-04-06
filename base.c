@@ -1612,7 +1612,9 @@ ctr_number_lowerEqThan (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_number_eq (ctr_object * myself, ctr_argument * argumentList)
 {
-  CTR_ENSURE_TYPE_NUMBER (argumentList->object);
+  // CTR_ENSURE_TYPE_NUMBER (argumentList->object);
+  if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTNUMBER)
+    return ctr_build_bool(0);
   ctr_object *otherNum = ctr_internal_cast2number (argumentList->object);
   return ctr_build_bool (myself->value.nvalue == otherNum->value.nvalue);
 }
@@ -1625,7 +1627,8 @@ ctr_number_eq (ctr_object * myself, ctr_argument * argumentList)
 ctr_object *
 ctr_number_neq (ctr_object * myself, ctr_argument * argumentList)
 {
-  CTR_ENSURE_TYPE_NUMBER (argumentList->object);
+  if (argumentList->object->info.type != CTR_OBJECT_TYPE_OTNUMBER)
+    return ctr_build_bool(1);
   ctr_object *otherNum = ctr_internal_cast2number (argumentList->object);
   return ctr_build_bool (myself->value.nvalue != otherNum->value.nvalue);
 }

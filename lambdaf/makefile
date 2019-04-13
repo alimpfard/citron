@@ -9,3 +9,6 @@ install:
 
 uninstall:
 	echo "Noooooooooooooooooooooooooooooooo!"
+
+distclean:
+	echo "ok"

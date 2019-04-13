@@ -11,3 +11,6 @@ install:
 
 uninstall:
 	# make -C libsocket/build uninstall
+
+distclean:
+	make -C libsocket/build distclean || true

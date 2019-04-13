@@ -56,7 +56,6 @@ ifneq ($(findstring withInlineAsm=1,${CFLAGS}),)
 EXTRAOBJS := ${EXTRAOBJS} inline-asm.o
 CFLAGS := ${CFLAGS} $(shell llvm-config --cflags --system-libs --libs core orcjit native)
 CXXFLAGS := $(shell llvm-config --cxxflags --system-libs --libs core orcjit native) ${CXXFLAGS} -fexceptions
-LEXTRACF := ${LEXTRACF} -lLLVMOrcJIT -lLLVMRuntimeDyld
 endif
 
 ifneq ($(findstring withInjectNative=1,${CFLAGS}),)

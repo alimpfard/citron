@@ -292,7 +292,7 @@ npdispatch (char *p, ctr_object * o, ffi_type * type)
   if (type == &ffi_type_pointer && o->info.type == CTR_OBJECT_TYPE_OTSTRING)
     {
       char *buf = ctr_heap_allocate_cstring (o);
-      strncpy (p, &buf, sizeof (void *));
+      memcpy (p, (const void*)&buf, sizeof (void *));
       return 0;
     }
   if (type == &ffi_type_pointer && ctr_reflect_is_linked_to_(&(ctr_argument){o, &(ctr_argument){CtrStdCType_pointer}})) {

@@ -1,7 +1,7 @@
 #Nil error should not be caught.
 {
 	Pen write: 'Block 1.\n'.
-	True break.
+	#True break.
 	Pen write: 'No'.
 } catch: {
 	Pen write: 'You should not see me\n'.

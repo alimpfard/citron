@@ -1,3 +1,6 @@
 import
   Shell: \*
   Symbolic: \*.
+
+import
+  Library/Functional/Alias.

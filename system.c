@@ -1588,12 +1588,12 @@ ctr_command_fork (ctr_object * myself, ctr_argument * argumentList)
   newArgumentList = ctr_heap_allocate (sizeof (ctr_argument));
   child = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
   ctr_set_link_all (child, myself);
-  ps = ctr_heap_allocate (sizeof (int) * 4);
+  ps = ctr_heap_allocate (sizeof (int) * 6);
   pipes = ctr_heap_allocate_tracked (
 #ifndef forLinux
-				      216 * 2
+				      216 * 6
 #else
-				      sizeof (FILE) * 2
+				      sizeof (FILE) * 6
 #endif
     );
   rs = ctr_heap_allocate_tracked (sizeof (ctr_resource));
@@ -1603,7 +1603,8 @@ ctr_command_fork (ctr_object * myself, ctr_argument * argumentList)
   newArgumentList->object = child;
   pipe (ps);
   pipe (ps + 2);
-  for (int i = 0; i < 4; i++)
+  pipe (ps + 4);
+  for (int i = 0; i < 6; i++)
     {
       // set the descriptors not to block
       int flags = fcntl (ps[i], F_GETFL, 0);
@@ -1621,14 +1622,30 @@ ctr_command_fork (ctr_object * myself, ctr_argument * argumentList)
     {
       close (*(ps + 0));
       close (*(ps + 3));
+      close (*(ps + 4));
       *((FILE **) rs->ptr + 1) = fdopen (*(ps + 1), "wb");
       *((FILE **) rs->ptr + 2) = fdopen (*(ps + 2), "rb");
+      *((FILE **) rs->ptr + 5) = fdopen (*(ps + 5), "wb");
       setvbuf (*((FILE **) rs->ptr + 1), NULL, _IONBF, 0);
       setvbuf (*((FILE **) rs->ptr + 2), NULL, _IONBF, 0);
+      setvbuf (*((FILE **) rs->ptr + 5), NULL, _IONBF, 0);
       rs->type = 3;
-      ctr_block_runIt (argumentList->object, newArgumentList);
+      ctr_object* res = ctr_block_runIt (argumentList->object, newArgumentList);
+      ctr_argument arg = {0};
+      if (res == argumentList->object)
+          res = CtrStdNil;
+      ctr_object* resv;
+      if (ctr_internal_has_responder(res, ctr_build_string_from_cstring("serialize")))
+        resv = ctr_send_message(res, "serialize", 9, &arg);
+      else
+        resv = CtrStdNil;
+      char* strres = ctr_heap_allocate_cstring(resv);
+      size_t len = strlen(strres);
+      fwrite(&len, 1, sizeof(len), *((FILE **) rs->ptr + 5));
+      fwrite(strres, 1, len, *((FILE **) rs->ptr + 5));
       fclose (*((FILE **) rs->ptr + 1));
       fclose (*((FILE **) rs->ptr + 2));
+      fclose (*((FILE **) rs->ptr + 5));
       ctr_heap_free (newArgumentList);
       ctr_heap_free (ps);
       if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
@@ -1642,8 +1659,11 @@ ctr_command_fork (ctr_object * myself, ctr_argument * argumentList)
 					("pid"), ctr_build_number_from_float ((ctr_number) p), CTR_CATEGORY_PRIVATE_PROPERTY);
       close (*(ps + 1));
       close (*(ps + 2));
+      close (*(ps + 5));
+      *((FILE **) rs->ptr + 4) = fdopen (*(ps + 4), "rb");
       *((FILE **) rs->ptr + 3) = fdopen (*(ps + 3), "wb");
       *((FILE **) rs->ptr + 0) = fdopen (*(ps + 0), "rb");
+      setvbuf (*((FILE **) rs->ptr + 4), NULL, _IONBF, 0);
       setvbuf (*((FILE **) rs->ptr + 3), NULL, _IONBF, 0);
       setvbuf (*((FILE **) rs->ptr + 0), NULL, _IONBF, 0);
       ctr_heap_free (newArgumentList);
@@ -1853,7 +1873,7 @@ ctr_command_join (ctr_object * myself, ctr_argument * argumentList)
   size_t sz = 0;
   char *blob = ctr_heap_allocate (sizeof (size_t));
   char *blobptr = blob;
-  FILE *rfp = *((FILE **) rs->ptr + 0);
+  FILE *rfp = *((FILE **) rs->ptr + 4);
   ssize_t iret = read (fileno (rfp), &sz, sizeof (size_t));
   if (iret == -1 || iret == 0)
     goto end_close;
@@ -1861,7 +1881,7 @@ ctr_command_join (ctr_object * myself, ctr_argument * argumentList)
   iret = read (fileno (rfp), blobptr, sz);	//this program won't write anything else
   if (iret < sz)
     goto end_close;
-  retval = ctr_build_string (blob, sz);
+  retval = ctr_string_eval(ctr_build_string (blob, sz), NULL);
 end_close:
   ctr_heap_free (blob);
   fclose (rfp);

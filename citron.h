@@ -48,9 +48,9 @@ extern "C" {
 #endif
 
 #ifdef withBoehmGC
-#define CTR_VERSION "0.0.8.9-boehm-gc" IS_DEBUG_STRING
+#define CTR_VERSION "0.0.9.1-boehm-gc" IS_DEBUG_STRING
 #else
-#define CTR_VERSION "0.0.8.9" IS_DEBUG_STRING
+#define CTR_VERSION "0.0.9.1" IS_DEBUG_STRING
 #endif
 
 #define CTR_LOG_WARNINGS 2//2 to enable
@@ -381,6 +381,7 @@ CTR_H_DECLSPEC ctr_object* CtrStdConsole;        //!< Standard Object : Pen
 CTR_H_DECLSPEC ctr_object* CtrStdNil;            //!< Standard Object : Nil
 CTR_H_DECLSPEC ctr_object* CtrStdGC;             //!< Standard Object : Broom
 CTR_H_DECLSPEC ctr_object* CtrStdMap;            //!< Standard Object : Map
+CTR_H_DECLSPEC ctr_object* CtrStdHashMap;        //!< Standard Object : HashMap
 CTR_H_DECLSPEC ctr_object* CtrStdArray;          //!< Standard Object : Array
 CTR_H_DECLSPEC ctr_object* CtrStdIter;           //!< Standard Object : Iterator
 CTR_H_DECLSPEC ctr_object* CtrStdFile;           //!< Standard Object : File
@@ -423,6 +424,7 @@ ctr_object** get_CtrStdConsole();
 ctr_object** get_CtrStdNil();
 ctr_object** get_CtrStdGC();
 ctr_object** get_CtrStdMap();
+ctr_object** get_CtrStdHashMap();
 ctr_object** get_CtrStdArray();
 ctr_object** get_CtrStdIter();
 ctr_object** get_CtrStdFile();
@@ -625,6 +627,7 @@ void        ctr_internal_object_delete_property(ctr_object* owner, ctr_object* k
 void        ctr_internal_object_delete_property_with_hash(ctr_object* owner, ctr_object* key, uint64_t hash, int is_method);
 ctr_object* ctr_internal_object_find_property(ctr_object* owner, ctr_object* key, int is_method);
 ctr_object* ctr_internal_object_find_property_with_hash(ctr_object* owner, ctr_object* key, uint64_t hash, int is_method);
+ctr_object* ctr_internal_object_find_property_or_create_with_hash (ctr_object * owner, ctr_object * key, uint64_t hashKey, int is_method);
 ctr_object* ctr_internal_object_find_property_ignore(ctr_object* owner, ctr_object* key, int is_method, int ignore);
 uint64_t    ctr_internal_index_hash(ctr_object* key);
 uint64_t    ctr_internal_alt_hash(ctr_object* key);
@@ -829,6 +832,7 @@ ctr_object *ctr_number_negate(ctr_object * myself, ctr_argument * argumentList);
 ctr_object* ctr_string_escape_ascii(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_bytes(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_length(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_empty(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_fromto(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_from_length(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_concat(ctr_object* myself, ctr_argument* argumentList);
@@ -860,6 +864,7 @@ ctr_object* ctr_string_re_last_index_of(ctr_object* myself, ctr_argument* argume
 ctr_object* ctr_string_replace_with(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_split(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_split_re(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_split_re_gen(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_to_number(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_to_boolean(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_to_lower(ctr_object* myself, ctr_argument* argumentList);
@@ -870,6 +875,7 @@ ctr_object* ctr_string_to_upper1st(ctr_object* myself, ctr_argument* argumentLis
 ctr_object* ctr_string_find_pattern_do(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_find_pattern_options_do(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_reg_replace(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_reg_compile(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_is_regex_pcre(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_contains_pattern(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_contains(ctr_object* myself, ctr_argument* argumentList);
@@ -921,7 +927,10 @@ ctr_object* ctr_array_new_and_push(ctr_object* myself, ctr_argument* argumentLis
 ctr_object* ctr_array_type(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_fmap(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_imap(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_fmap_inp(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_imap_inp(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_foldl(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_foldl0(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_filter(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_filter_v(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_select_from_if(ctr_object* myself, ctr_argument* argumentList);
@@ -931,6 +940,7 @@ ctr_object* ctr_array_reverse(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_unshift(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_shift(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_count(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_empty(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_join(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_pop(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_index(ctr_object* myself, ctr_argument* argumentList);
@@ -970,6 +980,30 @@ ctr_object* ctr_build_immutable(ctr_tnode* node);
 /**
  * HashMap Interface
  */
+ctr_object* ctr_hmap_new(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_type(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_merge(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_keys(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_values(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_put(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_rm(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_get(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_get_or_insert(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_count(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_empty(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_each(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_fmap(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_fmap_inp(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_kvmap(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_kvlist(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_contains(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_flip(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_assign(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_hmap_to_string(ctr_object* myself, ctr_argument* argumentList);
+
+/**
+ * Generic Map Interface
+ */
 ctr_object* ctr_map_new(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_new_(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_type(ctr_object* myself, ctr_argument* argumentList);
@@ -979,9 +1013,12 @@ ctr_object* ctr_map_values(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_put(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_rm(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_get(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_map_get_or_insert(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_count(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_map_empty(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_each(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_fmap(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_map_fmap_inp(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_kvmap(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_kvlist(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_map_contains(ctr_object* myself, ctr_argument* argumentList);

@@ -4,8 +4,9 @@ import Library/Data/SwitchCase.
 
 var ast2ctrcode is {:self:ast:curindent:options
   options is options or: Map.
-  var max_line_length is options at: 'max_line_length', or: 80.
-  var indent_s      is ' ' * (options at: 'indent_length', or: 2).
+  var max_line_length is options at: 'max_line_length', or: 40.
+  var indent_s        is ' ' * (options at: 'indent_length', or: 2).
+  var pkwmsgs         is options at: 'parenthesize_kwmsgs', or: False.
   curindent is curindent or: 0.
   ^(frozen __ is
     case: 'LTRNUM' do: {
@@ -13,7 +14,7 @@ var ast2ctrcode is {:self:ast:curindent:options
     },
     case: 'LTRSTRING' do: {
       var value is ast value.
-      ^'\'%s\'' % [value escape: '\n\t\f\v\b\a\''].
+      ^'\'%s\'' % [value escapeAsciiControls escape: '\''].
     },
     case: 'LTRNIL' do: {
       ^'Nil'.
@@ -45,7 +46,17 @@ var ast2ctrcode is {:self:ast:curindent:options
           }.
         }.
         rec +=: rv.
-        i !=: ct - 2, & (s type = 'KWMESSAGE') ifTrue: { rec +=: ','. }.
+        i !=: ct - 2, & (s type = 'KWMESSAGE') ifTrue: {
+          pkwmsgs ifTrue: {
+            &&rec is '(${{rec}}$)'.
+          } ifFalse: {
+            rec +=: ','.
+          }.
+        } ifFalse: {
+          pkwmsgs ifTrue: {
+            &&rec is '(${{rec}}$)'.
+          }.
+        }.
       }.
       ^rec.
     },
@@ -76,7 +87,7 @@ var ast2ctrcode is {:self:ast:curindent:options
       ^_value length > 0 either: { ^'%s is %s' % [ref, _value]. } or: ref.
     },
     case: 'SYMBOL' do: {
-      ^'\\' + ast value.
+      ^$!ast.
     },
     case: 'NESTED' do: {
       var code is '('.
@@ -129,6 +140,51 @@ var ast2ctrcode is {:self:ast:curindent:options
     case: 'EMBED' do: {
       var qq is ast at: 0.
       ^'$`(' + self[qq, curindent, options] + ')'.
+    },
+    case: 'LISTCOMP' do: {
+      var expr is ast at: 0.
+      var generator is ast at: 1.
+      var noptions is options copy put: True at: 'parenthesize_kwmsgs'.
+      var gencode is ''.
+      {
+        var pcount is generator count.
+        (Array new fill: pcount with: \:i self[generator @ i, curindent, noptions]) each_v: {:gen
+          var tgencode is gencode + gen + ', '.
+          tgencode split: '\n', last length > max_line_length ifTrue: { tgencode is gencode + '\n' + (indent_s * (curindent + 1)) + gen + ', '. }.
+          gencode is tgencode.
+        }.
+        pcount > 0 ifTrue: { gencode is gencode from: 0 to: gencode length - 2. }.
+        gencode split: '\n', last length > max_line_length ifTrue: { gencode +=: '\n'. }.
+      } catch: {}, run.
+      var predcode is ''.
+      {
+        var predicate is ast at: 2.
+        var pcount is predicate count.
+        (Array new fill: pcount with: \:i self[predicate @ i, curindent, noptions]) each_v: {:gen
+          var tpredcode is predcode + gen + ', '.
+          tpredcode split: '\n', last length > max_line_length ifTrue: { tpredcode is predcode + '\n' + (indent_s * (curindent + 1)) + gen + ', '. }.
+          predcode is tpredcode.
+        }.
+        pcount > 0 ifTrue: { predcode is predcode from: 0 to: predcode length - 2. }.
+        predcode split: '\n', last length > max_line_length ifTrue: { predcode +=: '\n'. }.
+      } catch: { }, run.
+      var exprv is '[${{self[expr, curindent, options]}}$'.
+      gencode = '' ifFalse: {
+        var exprvb is exprv + ''.
+        exprv +=: ',, ' + gencode.
+        exprv split: '\n', last length > max_line_length ifTrue: {
+          exprv is '${{exprvb}}$,,\n${{indent_s * (curindent + 1)}}$$$gencode'.
+        }.
+      }.
+      predcode = '' ifFalse: {
+        var exprvb is exprv + ''.
+        exprv +=: ',, ' + predcode.
+        exprv split: '\n', last length > max_line_length ifTrue: {
+          exprv is '${{exprvb}}$,,\n${{indent_s * (curindent + 1)}}$$$predcode'.
+        }.
+      }.
+      exprv +=: ']'.
+      ^exprv.
     },
     default: { errPen red writeln: '$$ast is not unparsable at the moment ( because of $$value )', resetColor. }) switch: ast type.
 }.

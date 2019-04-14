@@ -515,6 +515,20 @@ ctr_internal_object_find_property (ctr_object * owner, ctr_object * key, int is_
   return ctr_internal_object_find_property_with_hash (owner, key, ctr_internal_index_hash (key), is_method);
 }
 
+
+/**
+ * @internal
+ *
+ * InternalObjectFindPropertyOrCreate
+ *
+ * Finds property in object, or adds a placeholder one.
+ */
+ctr_object *
+ctr_internal_object_find_property_or_create (ctr_object * owner, ctr_object * key, int is_method)
+{
+  return ctr_internal_object_find_property_or_create_with_hash (owner, key, ctr_internal_index_hash (key), is_method);
+}
+
 ctr_object *
 ctr_internal_object_find_property_ignore (ctr_object * owner, ctr_object * key, int is_method, int ignore)
 {
@@ -574,6 +588,87 @@ ctr_internal_object_find_property_with_hash (ctr_object * owner, ctr_object * ke
       head = head->next;
     }
   return NULL;
+}
+
+ctr_object *
+ctr_internal_object_find_property_or_create_with_hash (ctr_object * owner, ctr_object * key, uint64_t hashKey, int is_method)
+{
+  ctr_mapitem *head, *first_head, *last_head;
+  ctr_map *lookup;
+  if (is_method)
+    {
+      if (!owner->methods)
+	return NULL;
+      lookup = owner->methods;
+    }
+  else
+    lookup = owner->properties;
+  if (unlikely (lookup->size == 0)) {
+    ctr_object* repl = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNIL);
+    ctr_set_link_all(repl, CtrStdNil);
+    ctr_internal_object_add_property_with_hash(owner, key, hashKey, repl, is_method);
+    return repl;
+  }
+  if (unlikely (lookup->size == 1 && (head = lookup->head)->hashKey == hashKey))
+    {
+      if (likely (ctr_internal_object_is_equal (head->key, key)))
+	{
+	  head->hits++;
+	  return head->value;
+	}
+      lookup->size++;
+      ctr_mapitem *new_item = ctr_heap_allocate (sizeof (ctr_mapitem));
+      new_item->key = key;
+      new_item->hashKey = hashKey;
+      ctr_object* repl = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNIL);
+      ctr_set_link_all(repl, CtrStdNil);
+      new_item->value = repl;
+      new_item->next = NULL;
+      lookup->head->next = new_item;
+      new_item->prev = lookup->head;
+      return new_item->value;
+    }
+
+  head = lookup->head;
+  while (head)
+    {
+      if ((hashKey == head->hashKey) && ctr_internal_object_is_equal (head->key, key))
+	{
+	  ctr_object *val = head->value;
+	  first_head = head->prev;
+	  if (!first_head || first_head == head)
+	    return val;
+	  if (++head->hits > first_head->hits)
+	    {
+	      int fh = first_head->hits;
+	      void *fk = first_head->key, *fv = first_head->value;
+	      uint64_t fhk = first_head->hashKey;
+	      first_head->hits = head->hits;
+	      first_head->key = head->key;
+	      first_head->value = val;
+	      first_head->hashKey = hashKey;
+	      head->hits = fh;
+	      head->key = fk;
+	      head->value = fv;
+	      head->hashKey = fhk;
+	    }
+	  return val;
+	}
+      head->hits = 0;
+      last_head = head;
+      head = head->next;
+    }
+    lookup->size++;
+    ctr_mapitem *new_item = ctr_heap_allocate (sizeof (ctr_mapitem));
+    new_item->key = key;
+    new_item->hashKey = hashKey;
+    ctr_object* repl = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNIL);
+    ctr_set_link_all(repl, CtrStdNil);
+    new_item->value = repl;
+    new_item->next = NULL;
+    last_head->next = new_item;
+    new_item->prev = last_head;
+    return new_item->value;
 }
 
 /**
@@ -1669,9 +1764,18 @@ ctr_initialize_world ()
   CtrStdString = ctr_internal_create_object (CTR_OBJECT_TYPE_OTSTRING);
   CtrStdSymbol = ctr_internal_create_object (CTR_OBJECT_TYPE_OTMISC);
   CtrStdBlock = ctr_internal_create_object (CTR_OBJECT_TYPE_OTBLOCK);
+  ctr_object* CtrStdOpaque = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
+  ctr_internal_create_func (CtrStdOpaque, ctr_build_string_from_cstring (CTR_DICT_NEW), &ctr_object_make);
+  ctr_internal_create_func (CtrStdOpaque, ctr_build_string_from_cstring (CTR_DICT_CTOR_NEW), &ctr_object_ctor);
+  ctr_internal_create_func (CtrStdOpaque, ctr_build_string_from_cstring (CTR_DICT_ONDO), &ctr_object_on_do);
+  ctr_internal_create_func (CtrStdOpaque, ctr_build_string_from_cstring (CTR_DICT_RESPOND_TO), &ctr_object_respond);
+  ctr_internal_create_func (CtrStdOpaque, ctr_build_string_from_cstring (CTR_DICT_RESPOND_TO_AND), &ctr_object_respond_and);
+  ctr_internal_create_func (CtrStdOpaque, ctr_build_string_from_cstring (CTR_DICT_RESPOND_TO_AND_AND), &ctr_object_respond_and_and);
+  ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("Opaque"), CtrStdOpaque, 0);
   ctr_set_link_all (CtrStdString, CtrStdObject);
   ctr_set_link_all (CtrStdSymbol, CtrStdString);
   ctr_set_link_all (CtrStdBlock, CtrStdObject);
+
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring (CTR_DICT_NEW), &ctr_object_make);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring (CTR_DICT_CTOR_NEW), &ctr_object_ctor);
   ctr_internal_create_func (CtrStdObject, ctr_build_string_from_cstring (CTR_DICT_GENACC), &ctr_object_attr_accessor);
@@ -1817,6 +1921,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("escapeAsciiControls"), &ctr_string_escape_ascii);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_BYTES), &ctr_string_bytes);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_LENGTH), &ctr_string_length);
+  ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("empty"), &ctr_string_empty);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_FROM_TO), &ctr_string_fromto);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_FROM_LENGTH), &ctr_string_from_length);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_PLUS), &ctr_string_concat);
@@ -1845,6 +1950,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_SPLIT), &ctr_string_split);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_SPLIT "max:"), &ctr_string_split);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("reSplit:"), &ctr_string_split_re);
+  ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("reSplitGen:"), &ctr_string_split_re_gen);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_ASCII_UPPER_CASE), &ctr_string_to_upper);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_ASCII_LOWER_CASE), &ctr_string_to_lower);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_ASCII_UPPER_CASE_1), &ctr_string_to_upper1st);
@@ -1858,6 +1964,8 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_TOBOOL), &ctr_string_to_boolean);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_FIND_PATTERN_DO), &ctr_string_find_pattern_do);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring (CTR_DICT_FIND_PATTERN_DO_OPTIONS), &ctr_string_find_pattern_options_do);
+  ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("compileRegex:substitute:options:"), &ctr_string_reg_compile);
+  ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("compileRegex:"), &ctr_string_reg_compile);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("regex:substitute:options:"), &ctr_string_reg_replace);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("regex:substitute:"), &ctr_string_reg_replace);
   ctr_internal_create_func (CtrStdString, ctr_build_string_from_cstring ("~"), &ctr_string_reg_replace);
@@ -1927,7 +2035,10 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_PUSH_SYMBOL), &ctr_array_push);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("fmap:"), &ctr_array_fmap);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("imap:"), &ctr_array_imap);
+  ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("fmap!:"), &ctr_array_fmap_inp);
+  ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("imap!:"), &ctr_array_imap_inp);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("foldl:accumulator:"), &ctr_array_foldl);
+  ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("foldl:"), &ctr_array_foldl0);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("filter:"), &ctr_array_filter);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("filter_v:"), &ctr_array_filter_v);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("fmap:from:"), &ctr_array_select_from_if);
@@ -1938,6 +2049,7 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_UNSHIFT), &ctr_array_unshift);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_SHIFT), &ctr_array_shift);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_COUNT), &ctr_array_count);
+  ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring ("empty"), &ctr_array_empty);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_JOIN), &ctr_array_join);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_POP), &ctr_array_pop);
   ctr_internal_create_func (CtrStdArray, ctr_build_string_from_cstring (CTR_DICT_POP ":"), &ctr_array_pop);
@@ -1994,10 +2106,14 @@ ctr_initialize_world ()
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring ("deleteAt:"), &ctr_map_rm);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring (CTR_DICT_AT), &ctr_map_get);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring (CTR_DICT_AT_SYMBOL), &ctr_map_get);
+  ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring ("getOrInsert:"), &ctr_map_get_or_insert);
+  ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring ("@|"), &ctr_map_get_or_insert);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring (CTR_DICT_COUNT), &ctr_map_count);
+  ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring ("empty"), &ctr_map_empty);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring (CTR_DICT_EACH), &ctr_map_each);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring (CTR_DICT_MAP), &ctr_map_each);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring ("fmap:"), &ctr_map_fmap);
+  ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring ("fmap!:"), &ctr_map_fmap_inp);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring ("kvmap:"), &ctr_map_kvmap);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring ("kvlist:"), &ctr_map_kvlist);
   ctr_internal_create_func (CtrStdMap, ctr_build_string_from_cstring ("contains:"), &ctr_map_contains);
@@ -2008,6 +2124,31 @@ ctr_initialize_world ()
   ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring (CTR_DICT_MAP_OBJECT), CtrStdMap, 0);
   ctr_set_link_all (CtrStdMap, CtrStdObject);
   CtrStdMap->info.sticky = 1;
+
+  /* Map */
+  CtrStdHashMap = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_NEW), &ctr_hmap_new);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_TYPE), &ctr_hmap_type);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_PUT_AT), &ctr_hmap_put);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring ("deleteAt:"), &ctr_hmap_rm);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_AT), &ctr_hmap_get);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_AT_SYMBOL), &ctr_hmap_get);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring ("getOrInsert:"), &ctr_hmap_get_or_insert);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring ("@|"), &ctr_hmap_get_or_insert);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_COUNT), &ctr_hmap_count);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring ("empty"), &ctr_hmap_empty);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_EACH), &ctr_hmap_each);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_MAP), &ctr_hmap_each);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring ("fmap:"), &ctr_hmap_fmap);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring ("fmap!:"), &ctr_hmap_fmap_inp);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring ("contains:"), &ctr_hmap_contains);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_FLIP), &ctr_hmap_flip);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_UNPACK), &ctr_hmap_assign);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_TOSTRING), &ctr_hmap_to_string);
+  ctr_internal_create_func (CtrStdHashMap, ctr_build_string_from_cstring (CTR_DICT_SERIALIZE), &ctr_hmap_to_string);
+  ctr_internal_object_add_property (CtrStdWorld, ctr_build_string_from_cstring ("HashMap"), CtrStdHashMap, 0);
+  ctr_set_link_all (CtrStdHashMap, CtrStdObject);
+  CtrStdHashMap->info.sticky = 1;
 
   /* Console */
   CtrStdConsole = ctr_internal_create_object (CTR_OBJECT_TYPE_OTOBJECT);

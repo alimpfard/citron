@@ -33,12 +33,12 @@ Pen write: 'Break times loop, 1-4.', brk.
 }.
 
 #nothing should happen, no error
-Pen write: 'Break block, dont print line.', brk.
-{ True break. Pen write: 'dont write this!', brk. } run.
+# Pen write: 'Break block, dont print line.', brk.
+# { True break. Pen write: 'dont write this!', brk. } run.
 
 #nothing should happen, no error
-Pen write: 'Break block, dont fire catch...', brk.
-{ True break. Pen write: 'dont write this!', brk. } catch: { Pen write: 'Dont catch this!'. }, run.
+# Pen write: 'Break block, dont fire catch...', brk.
+# { True break. Pen write: 'dont write this!', brk. } catch: { Pen write: 'Dont catch this!'. }, run.
 
 #test each-loops
 Pen write: 'Test Array each-loop: 0,1', brk.
@@ -55,3 +55,10 @@ m each: { :k :v
 	True break.
 }.
 
+Pen write: 'Test HashMap each-loop', brk.
+hm is HashMap new.
+hm put: 'other thing' at: 'b', put: 'nothing' at: 'c', put: 'something' at: 'a'.
+hm each: {:k
+    Pen write: 'element in hm: ' + k, brk.
+    # True break.
+}.

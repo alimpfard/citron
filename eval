@@ -26,6 +26,7 @@ var __ is Nil.
 var it is Nil.
 var stderr is File special: 'stderr'.
 var inBlock is 0.
+var inBlockNew is 0.
 var enterRepeat is False.
 var TerminalWidth is 85.
 
@@ -67,6 +68,9 @@ Eval on: 'init' do: {
   my command_comps is Nil.
   my userDefs is Nil.
   my continuation is '⠒⠂'.
+  genAccessors: ['evaluatorObject', 'completerObject'].
+  my evaluatorObject is me. # self-ref for ::'evaluate:'
+  my completerObject is me. # self-ref for ::'complete:withToc:'
   my flags is Map new
     put: False at: 'ptype',
     put: False at: 'stats',
@@ -91,6 +95,7 @@ Eval on: 'init' do: {
   my evaluationContext is Map new
     on: 'toString' do: {^'[GlobalEvalContext]'.}.
   my displayObject is Pen. #override from commandline, maybe?
+  my printObject   is Pen.
   ^me.
 }.
 Eval on: 'initHistory' do: {
@@ -99,6 +104,12 @@ Eval on: 'initHistory' do: {
   my hs_file exists ifFalse: { my hs_file write: ''. }.
   var history is my history.
   (my hs_file read split: '\n\n\n') each_v: \:x history push: x.
+}.
+Eval on: 'print' do: {
+  ^my printObject.
+}.
+Eval on: 'print:' do: {:x
+  my printObject is x.
 }.
 Eval on: 'display' do: {
   ^my displayObject.
@@ -115,6 +126,16 @@ Eval on: 'display:' do: {:x
      ^my displayObject message: const v arguments: args.
    }.
 }.
+['clear', 'green', 'cyan', 'magenta',
+ 'purple', 'blue', 'yellow', 'resetColor',
+ 'red', 'brk', 'clearLine', 'write:',
+ 'writeln:']
+ each_v: {:v
+   Eval on: 'print/$$v' do: {:*args
+     ^my printObject message: const v arguments: args.
+   }.
+}.
+
 Eval on: 'disambiguateError:' do: {:e
   getFlag: 'clear_errors', ifFalse: { ^[e, '']. }.
   e isA: String, ifFalse: { ^e. }.
@@ -270,8 +291,8 @@ Eval on: 'Commands' do: {
       put: {:args Eval end. ^''.} at: 'q',
       put: {:args Eval modifyFlags: args. ^''.} at: '!f',
       put: {:args Eval modifyFlags: args ~ ?>s/^-/no-/g<? ~ ?>s/^\+//g<?. ^''.} at: 'set',
-      put: {:args ^Reflect strTypeOf: (Eval evaluate: args).} at: 't',
-      put: {:args ^(args trim = '') either: {^Eval startEvalServer.} or: {^Eval startEvalServerOnPort: (Eval evaluate: args).}.} at: 'server',
+      put: {:args ^Reflect strTypeOf: (Eval evaluatorObject evaluate: args).} at: 't',
+      put: {:args ^(args trim = '') either: {^Eval startEvalServer.} or: {^Eval startEvalServerOnPort: (Eval evaluatorObject evaluate: args).}.} at: 'server',
       put: {:args ('#:declare %s %d %s\n\n0' % (args reSplit: '\\s+')) eval. ^''.} at: '!fix',
       put: {:args ^'Interpreter metacommands help:
       + q -- Quit
@@ -291,6 +312,7 @@ Eval on: 'Commands' do: {
       + c -- clear screen and history
       + break <obj> <msg> -- break on object\'s message
       + !enable <b[reak]> -- enable option
+      + % <...> -- line comment in REPL (ignores args)
       + h -- show this help
       - ! <cmd> -- execute shell command
       - :{\\n stmt* \\n:}\\n -- block expression'
@@ -302,14 +324,15 @@ Eval on: 'Commands' do: {
       + '\nUser-defined commands:
       ' + (Eval userDefs fmap: \:k:v '+ %s -- %s' % [k, v], values join: '\n', or: '-None-').} at: 'h',
       put: {^Eval stopEvalServer.} at: '!server',
-      put: {:args ^Reflect getPropertiesOf: (Eval evaluate: args).} at: '!p',
-      put: {:args Eval display/writeln: (Eval evaluate: args). ^''.} at: 'p',
+      put: {:args ^Reflect getPropertiesOf: (Eval evaluatorObject evaluate: args).} at: '!p',
+      put: {:args Eval display/writeln: (Eval evaluatorObject evaluate: args). ^''.} at: 'p',
       put: {:args Eval display/clear. (var h is Eval getHistory) count times: { h pop. }. ^''.} at: 'c',
-      put: {:args ^Reflect getMethodsOf: (Eval evaluate: args).} at: '!m',
+      put: {:args ^Reflect getMethodsOf: (Eval evaluatorObject evaluate: args).} at: '!m',
       put: {:args AST pragma: args trim. ^''.} at: '!pragmaOnce',
+      put: {^''.} at: '%',
       put: {:args
         var msgs is args reSplit: '\\s+'.
-        var obj is Eval evaluate: msgs head.
+        var obj is Eval evaluatorObject evaluate: msgs head.
         msgs tail each_v: \:msg Eval breakFor: obj message: msg.
         ^'will break on messages %L' % [msgs].
       } at: 'break',
@@ -323,7 +346,7 @@ Eval on: 'Commands' do: {
       } at: '!enable',
       put: {:args
         Eval debug ifTrue: {
-          Eval returnValue: (Eval evaluate: args).
+          Eval returnValue: (Eval evaluatorObject evaluate: args).
           Eval end.
         }.
         ^''.
@@ -422,7 +445,7 @@ Eval on: 'Commands' do: {
         var chunk is hist from: hist count + stride - count length: count.
         chunk count > 0 ifTrue: {
           Pen writeln: 'Will now execute $$count expressions:\n\t%:L' % ['\n\t', (chunk fmap: \:x Highlight highlight: x)].
-          var res is chunk fmap: {:x ^Eval evaluate: x.}.
+          var res is chunk fmap: {:x ^Eval evaluatorObject evaluate: x.}.
           ^res.
         }.
         ^''.
@@ -451,7 +474,7 @@ Eval on: 'Commands' do: {
       put: {:args
         [name, fn] is args split: ' ' max: 1.
         Eval addUserDef: name definition: fn.
-        Eval addMetaCommand: name function: (Eval evaluate: fn).
+        Eval addMetaCommand: name function: (Eval evaluatorObject evaluate: fn).
         ^'+def %s %s' % [name, fn].
       } at: '!def'.
     c on: 'get:' do: {:self:cmd
@@ -510,15 +533,23 @@ Eval on: 'doMeta:' do: {:str:ptr
   var args is ''.
   str trim findPattern: '(\\W?\\w+|\\W)(\\s+(.*))?' do: {:parts cmd is parts @ 1. args is parts count > 2 either: {^parts @ 3.} or: ''.}.
   var cmds is Eval Commands.
-  ^cmds get: cmd, or: {
-    ^cmd = '!'
-      either: { ^(\:x Shell call: x). }
-      or: {
-        ^{^'Invalid meta-command \':%s\'.\n' % [cmd] + (cmds at: 'h', run).}.
-      }.
-  }, applyTo: args.
+  var unknownMetaCommandHandler is my unknownMetaCommandHandler.
+  ^{
+    ^cmds get: cmd, or: {
+      ^cmd = '!'
+        either: { ^(\:x Shell call: x). }
+        or: {
+          ^unknownMetaCommandHandler[cmd, args].
+        }.
+    }, applyTo: args.
+  } catch: {:e
+    ^'Exception was thrown while evaluating `${{str}}$\': $$e'.
+  }, run.
 }.
-
+Eval on: 'unknownMetaCommandHandler:' do: {:hnd my unknownMetaCommandHandler is hnd. }.
+Eval unknownMetaCommandHandler: {:cmd
+  ^'Invalid meta-command \':%s\'.\n' % [cmd] + (Eval doMeta: 'h').
+}.
 Eval on: 'metaCompletion:' do: {:m
   var meta is m head.
   var argstrs is m tail.
@@ -720,9 +751,13 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '--tidy : [Experimental] try to tidy up the given file and write it back out to stdout\n',
           indent: 2 write: '-s <port>: start a evaluation server on the specified port (Forked and the current process will be killed. pidfile at ~/.ctrpid.pid)\n',
           indent: 2 write: '-m <executable module> <modu_arg>* : Execute an executable module (at Library/Executable)\n',
+          indent: 2 write: '--import <module_names_colon_sep> : preload modules separated by colons\n',
           indent: 2 write: '--pid <pidfile>: set the pid file. value is ignored unless [-s <port>] comes after\n',
           indent: 2 write: '--no-logo : don\'t display the ascii logo, use normal text instead\n',
           indent: 2 write: '--interactive-print : Use this object instead of `Pen\' to print values\n',
+          indent: 2 write: '--interactive-output : Use this object instead of `Pen\' to print output\n',
+          indent: 2 write: '--evaluator-object <symbol> : use this object\'s ::\'evaluate:\' responder to eval things\n',
+          indent: 2 write: '--completer-object <symbol> : use this object\'s ::\'complete\' responder to complete things\n',
           indent: 2 write: '--highlight-file <file|-> : highlight the file (or stdin) and quit\n',
           indent: 2 write: '--assume-non-tty : Assume the terminal is not a tty\n',
           indent: 2 write: '--terminal-width <int> : Set the perceived terminal width (this will be automatically determined unless --assume-non-tty is passed)\n',
@@ -802,7 +837,7 @@ Eval on: 'togglePasteMode' do: {
         %_ is args.
         value endsWith: '.', ifFalse: { value +=: '.'. }.
         value is '{ ^$$value }'.
-        var val is (Eval evaluate: value) run.
+        var val is (Eval evaluatorObject evaluate: value) run.
         val isA: Array, ifTrue: {
           Eval display/write: val join. # convert to lines
         } ifFalse: {
@@ -821,7 +856,7 @@ Eval on: 'togglePasteMode' do: {
         %_ is args.
         value endsWith: '.', ifFalse: { value +=: '.'. }.
         value is '{ $$value }'.
-        (Eval evaluate: value) run.
+        (Eval evaluatorObject evaluate: value) run.
         Program exit.
     }, case: '-v' do: {
         Eval display/writeln: 'Citron Version ' + Reflect version.
@@ -852,14 +887,42 @@ Eval on: 'togglePasteMode' do: {
       import respondTo: 'Library/Executable/%s:' % [mod] and: ['Main'].
       { Main applyTo: args. } catch: {:e Eval display/red writeln: e, resetColor.}, run.
       Program exit.
+    }, case: '--import' do: {
+      args pop.
+      var mod is Eval shiftArgs.
+      (mod isNil) ifTrue: { thisBlock error: 'Expected to get a list of fully qualified module names for --import'. }.
+      mod split: ':', each_v: {:mod
+        import respondTo: mod.
+      }.
     }, case: '--no-logo' do: {
       args pop.
       display_logo is False.
     }, case: '--interactive-print' do: {
       args pop.
       var obj is Eval shiftArgs.
-      obj is Eval evaluate: obj, or: \:_ thisBlock error: '--interactive-print requires an argument'.
+      obj is Eval evaluatorObject evaluate: obj, or: \:_ thisBlock error: '--interactive-print requires an argument'.
       Eval display: obj.
+    }, case: '--interactive-output' do: {
+      args pop.
+      var obj is Eval shiftArgs.
+      obj is Eval evaluatorObject evaluate: obj, or: \:_ thisBlock error: '--interactive-output requires an argument'.
+      Eval print: obj.
+    }, case: '--evaluator-object' do: {
+      args pop.
+      var obj is Eval shiftArgs.
+      obj is Eval evaluate: obj, or: \:_ thisBlock error: '--evaluator-object requires an argument'.
+      Reflect object: obj hasOwnResponder: 'evaluate:', ifFalse: {
+        thisBlock error: 'argument to --evaluator-object must respond to \'evaluate:\' ($$obj does not)'.
+      }.
+      Eval evaluatorObject: obj.
+    }, case: '--completer-object' do: {
+      args pop.
+      var obj is Eval shiftArgs.
+      obj is Eval evaluate: obj, or: \:_ thisBlock error: '--completer-object requires an argument'.
+      Reflect object: obj hasOwnResponder: 'complete:withToc:', ifFalse: {
+        thisBlock error: 'argument to --completer-object must respond to \'complete:withToc:\' ($$obj does not)'.
+      }.
+      Eval completerObject: obj.
     }, case: '-F' do: {
       args pop.
       var opts is Eval shiftArgs or: '', reSplit: '(,|/)(\\s*)'.
@@ -1023,11 +1086,111 @@ Eval on: 'debugRepl:' do: {:self:stuff
   var errPen is Pen for: stderr.
   var enterRepeat is True.
   var inBlock is 0.
+  var inBlockNew is 0.
   enableDebugStuff.
   my returnValue push: stuff head.
   {^True.} whileTrue: { self read_eval_print: prompt. }.
   disableDebugStuff.
   ^my returnValue pop.
+}.
+
+Eval on: 'complete:withToc:' do: {:last_toc:toc
+  var candidates is Eval allTheNames: (
+    {
+      ^Reflect getObject: (
+        ['my', 'var'] contains: last_toc,
+          either: Nil
+          or: last_toc).
+    } catch: {
+      ^Nil.
+    }, run).
+  var resolver is Nil.
+  var skipthis is False.
+  candidates head = \import ifTrue: {
+    resolver is candidates @ 1.
+  } ifFalse: {
+    resolver is {:toc ^candidates @ 1 filter: {:_:i ^i lower startsWith: toc lower.}. }.
+    skipthis is candidates head = \object.
+  }.
+  ^resolver[toc].
+}.
+
+Eval on: 'complete' do: {
+  var candidate is 'Nil'.
+  var toc is inp trim reSplit: '\\s+|\\b|(?=[\\]})])'.
+  toc is toc count = 0 either: '' or: { ^toc last. }.
+
+  last_was_comp ifTrue: {
+    # Pen writeln: [last_comp_entry, '\n'].
+    var toremove is last_comp_entry length - last_comp_init length.
+    Pen write: '\b \b' * toremove.
+    inp is inp removeFrom: (cursor - toremove) to: cursor.
+    cursor is (cursor - toremove) max: 0.
+  }.
+  # toc is last_was_comp either: last_comp_entry or: toc.
+  last_comp_entry_len is last_comp_entry length.
+
+  var flipper is OneGateFlipper new.
+  last_toc is inp trim
+    or: 'Nil',
+    reSplit: '\\s+',
+    filter: {:_:v
+      (v endsWith: ':')
+        ifTrue: {
+          flipper set.
+          ^False.
+        }.
+      ^(
+        (v endsWith: ':') | (flipper get)
+      ) not |
+        (v containsPattern: ?>(-?(0[xXcC])?[\d]+(\.[\d]+)?)|(\'$)|(\]|\})$<?).
+    }.
+  last_toc is (last_toc count) >=: 2, either: {
+    toc is last_toc last.
+    ^last_toc init last.
+  } or: {
+    ^last_toc count = 0 either: 'Nil' or: {
+      ^last_toc head.
+    }.
+  }.
+  last_toc containsPattern: ?>^(-?(0[xXcC])?[\d]+(\.[\d]+)?)$<?, ifTrue: { last_toc is 'Number'. }.
+  last_toc containsPattern: ?>(\'|\?>)$<?, ifTrue: { last_toc is 'String'. }.
+  last_toc containsPattern: ?>\]\s*$<?, ifTrue: { last_toc is 'Array'. }.
+  last_toc containsPattern: ?>\}\s*$<?, ifTrue: { last_toc is 'CodeBlock'. }.
+  var candidates is Eval completerObject complete: last_toc withToc: toc.
+  candidates count !=: 0, ifTrue: {
+    have_context is True.
+    candidate is candidates @ (last_comp_index is (last_comp_index +=: 1) >=: (candidates count), either: 0 or: last_comp_index).
+    var uniq is comp_set addAll: candidates, toArray.
+    uniq each_v: {:k comp_set remove: k. }.
+    var uid is uniq indexOf: candidate.
+    linesp is generate_context_menu applyTo: uniq and: uid.
+    cmt is (var iis is '[from %s]' % [last_toc]).
+    last_comp_rewind is iis length.
+    toc length > cursor ifTrue: {
+        cmt is 'not enough space, make query bigger'.
+        last_comp_init is ''.
+        last_comp_entry is ''.
+        last_comp_entry_len is 0.
+    } ifFalse: {
+      toc length times: {:i
+        var pos is cursor - (toc length - i).
+        pos >=: inp length, ifTrue: {
+          inp +=: candidate @ i.
+        } ifFalse: {
+          inp put: candidate @ i at: pos.
+        }.
+      }.
+      inp is inp insert: (candidate skip: toc length) at: cursor.
+      cursor +=: candidate length - toc length.
+      last_comp_init is toc.
+      last_comp_entry is candidate.
+      last_comp_entry_len is last_comp_entry length.
+    }.
+  } ifFalse: {
+    cmt is ncmessage.
+  }.
+  last_was_comp is True.
 }.
 
 Eval on: 'read_eval_print:' do: ({:prompt
@@ -1053,6 +1216,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
   var cursor is inp length.
   var multichar_in is Array new.
   inBlock is 0.
+  inBlockNew is 0.
   Eval endBlock.
   var lastEscape is False.
   var justInEscape is False.
@@ -1088,95 +1252,12 @@ Eval on: 'read_eval_print:' do: ({:prompt
             last_was_comp is True.
           } or: { cmt is '<- No completion'. }.
         } or: {
-          var candidate is 'Nil'.
-          var toc is inp trim reSplit: '\\s+|\\b|(?=[\\]})])'.
-          toc is toc count = 0 either: '' or: { ^toc last. }.
-
-          last_was_comp ifTrue: {
-            # Pen writeln: [last_comp_entry, '\n'].
-            var toremove is last_comp_entry length - last_comp_init length.
-            Pen write: '\b \b' * toremove.
-            inp is inp removeFrom: (cursor - toremove) to: cursor.
-            cursor is (cursor - toremove) max: 0.
-          }.
-          # toc is last_was_comp either: last_comp_entry or: toc.
-          last_comp_entry_len is last_comp_entry length.
-
-          var flipper is OneGateFlipper new.
-          last_toc is inp trim
-            or: 'Nil',
-            reSplit: '\\s+',
-            filter: {:_:v
-              (v endsWith: ':')
-                ifTrue: {
-                  flipper set.
-                  ^False.
-                }.
-              ^(
-                (v endsWith: ':') | (flipper get)
-              ) not |
-                (v containsPattern: ?>(-?(0[xXcC])?[\d]+(\.[\d]+)?)|(\'$)|(\]|\})$<?).
-            }.
-          last_toc is (last_toc count) >=: 2, either: {
-            toc is last_toc last.
-            ^last_toc init last.
-          } or: {
-            ^last_toc count = 0 either: 'Nil' or: {
-              ^last_toc head.
-            }.
-          }.
-          last_toc containsPattern: ?>^(-?(0[xXcC])?[\d]+(\.[\d]+)?)$<?, ifTrue: { last_toc is 'Number'. }.
-          last_toc containsPattern: ?>(\'|\?>)$<?, ifTrue: { last_toc is 'String'. }.
-          last_toc containsPattern: ?>\]\s*$<?, ifTrue: { last_toc is 'Array'. }.
-          last_toc containsPattern: ?>\}\s*$<?, ifTrue: { last_toc is 'CodeBlock'. }.
-          var candidates is Eval allTheNames: (
-            {
-              ^Reflect getObject: (
-                ['my', 'var'] contains: last_toc,
-                  either: Nil
-                  or: last_toc).
-            } catch: {
-              ^Nil.
-            }, run).
-          var resolver is Nil.
-          var skipthis is False.
-          candidates head = \import ifTrue: {
-            resolver is candidates @ 1.
-          } ifFalse: {
-            resolver is {:toc ^candidates @ 1 filter: {:_:i ^i lower startsWith: toc lower.}. }.
-            skipthis is candidates head = \object.
-          }.
-          candidates is resolver[toc].
-          candidates count !=: 0, ifTrue: {
-            have_context is True.
-            candidate is candidates @ (last_comp_index is (last_comp_index +=: 1) >=: (candidates count), either: 0 or: last_comp_index).
-            var uniq is comp_set addAll: candidates, toArray.
-            uniq each_v: {:k comp_set remove: k. }.
-            var uid is uniq indexOf: candidate.
-            linesp is generate_context_menu applyTo: uniq and: uid.
-            cmt is (var iis is '[from %s]' % [last_toc]).
-            last_comp_rewind is iis length.
-            toc length times: {:i
-              var pos is cursor - (toc length - i).
-              pos >=: inp length, ifTrue: {
-                inp +=: candidate @ i.
-              } ifFalse: {
-                inp put: candidate @ i at: pos.
-              }.
-            }.
-            inp is inp insert: (candidate skip: toc length) at: cursor.
-            cursor +=: candidate length - toc length.
-            last_comp_init is toc.
-            last_comp_entry is candidate.
-            last_comp_entry_len is last_comp_entry length.
-          } ifFalse: {
-            cmt is ncmessage.
-          }.
-          last_was_comp is True.
+          Eval complete.
         }.
     } ifFalse: {
         (frozen select_toplevel_inc is Object case: '\xd' do: {#<Enter>
           clear_next_line applyTo: linesp.
+          inBlock is inBlockNew.
           have_context ifFalse: {
             inp is inp findPattern: ?>(?:^\s*((?::{)+)|((?::}\s*)+)\s*$)<? do: {:groups
               var s is groups at: 0, replace: ':' with: ''.
@@ -1203,6 +1284,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
           inp is ''.
           cursor is 0.
           inBlock is 0.
+          inBlockNew is 0.
           cmt is '<Broke block>'.
           # Pen red writeln: 'Interrupted', resetColor.
           # done is True.
@@ -1295,10 +1377,10 @@ Eval on: 'read_eval_print:' do: ({:prompt
                   }
                 ) switch: inc.
             }, case: '\xd' do: { #<Enter>
-              inBlock +=: 1.
+              inBlockNew +=: 1.
               True continue.
             }, case: '\x1b' do: { #<esc>
-              inBlock is 0 max: inBlock - 1.
+              inBlockNew is 0 max: inBlockNew - 1.
             }, default: {
             }
           ) switch: inc.
@@ -1329,12 +1411,12 @@ Eval on: 'read_eval_print:' do: ({:prompt
               },
               case: '{' do: {
                 (inString not) ifTrue: {
-                  inBlock +=: 1.
+                  inBlockNew +=: 1.
                 }.
               },
               case: '}' do: {
-                (inString not) & (inBlock > 0) ifTrue: {
-                  inBlock -=: 1.
+                (inString not) & (inBlockNew > 0) ifTrue: {
+                  inBlockNew -=: 1.
                 }.
               },
               default: { lastEscape & inString ifTrue: {lastEscape is False.}. }) switch: inc.
@@ -1369,27 +1451,30 @@ Eval on: 'read_eval_print:' do: ({:prompt
   Eval statsb: 0, statsa: 0, exectime: 0.
   Eval getFlag: 'stats', either: {
     Eval statsb: Broom keptAlloc.
-    Eval exectime: (Clock timeExecutionOf: { Eval __eval_ret: (Eval evaluate: inp). }).
+    Eval exectime: (Clock timeExecutionOf: { Eval __eval_ret: (Eval evaluatorObject evaluate: inp). }).
     Eval statsa: Broom keptAlloc.
   }
   or: {
-    Eval __eval_ret: (Eval evaluate: inp).
+    Eval __eval_ret: (Eval evaluatorObject evaluate: inp).
   }.
   Eval pushHist: inp.
   __ is _.
   _ is Eval __eval_ret.
   Eval errored? not ifTrue: {
     var printed is False.
-    Eval getFlag: 'printvs', ifTrue: { Pen message: Eval color arguments: [], write: var str is Eval __eval_ret toString. printed is str length > 0. }.
-    Eval display/resetColor.
+    Eval getFlag: 'printvs', ifTrue: {
+      Eval print message: Eval color arguments: [], write: var str is Eval __eval_ret toString.
+      printed is str length > 0.
+    }.
+    Eval print/resetColor.
     Eval getFlag: 'ptype', ifTrue: {
-      Eval display/yellow write: '%s=> (%s)%s' % [(printed either: ' ' or: ''), (Reflect strTypeOf: Eval __eval_ret, ~ 's/\\\\?\\\'//g'), (printed either: '' or: '\n')].
-      Eval display/resetColor.
+      Eval print/yellow write: '%s=> (%s)%s' % [(printed either: ' ' or: ''), (Reflect strTypeOf: Eval __eval_ret, ~ 's/\\\\?\\\'//g'), (printed either: '' or: '\n')].
+      Eval print/resetColor.
     }.
     Eval getFlag: 'stats', ifTrue: {
       var str is '%s(%s seconds (%d cycles), %s bytes)' % [(printed either: '\n' or: ''), Eval exectime / (Clock ticksPerSecond), Eval exectime, ((Eval statsa - Eval statsb) toString reverse reSplit: '(?<=\\G...)', join: ',', reverse)].
-      Eval display/write: Colors % [str, GREEN_COLOR, ITALIC_EFFECT].
-      printed ifFalse: { Eval display/brk. }.
+      Eval print/write: Colors % [str, GREEN_COLOR, ITALIC_EFFECT].
+      printed ifFalse: { Eval print/brk. }.
     }.
     it is _.
     #Broom sweep. #Keep the darn pointers in memory

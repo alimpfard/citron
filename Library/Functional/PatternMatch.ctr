@@ -20,7 +20,12 @@ Object on: 'match:' do: {:self:ast
         cblk error: 'guard fail'.
       }.
       ^Reflect runHere: {^$!(__PMATCH_V0 last).} forObject: self arguments: [].
-    } catch: {:e done is False. }, run.
+    } catch: {:e
+      e !=: 'Invalid bind', ifTrue: {
+        thisBlock error: e.
+      }.
+      done is False.
+    }, run.
     done break.
   }.
   done ifFalse: { cblk error: 'non-exhaustive pattern match'. }.

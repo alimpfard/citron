@@ -4,6 +4,17 @@ import
     Library/Data/IO/Pen: 'pPen'.
 
 var errPen is pPen for: (File special: 'stderr').
+
+var cred is Colors red.
+var cmagenta is Colors magenta.
+var cdefault is Colors default.
+
+var stats is Map new.
+stats on: 'clear' do: {
+    put: 0 at: 'tests_run',
+    put: 0 at: 'tests_passed',
+    put: 0 at: 'tests_failed'.
+}.
 var describe is Slurp new.
 var It is Slurp new.
 It on: '~' do: {:msg me message: msg arguments: []. }.
@@ -25,23 +36,46 @@ var Let is Object cnew: {
   }.
 }.
 It on: 'do:' do: {:blk
+    var stats is const stats.
+    stats contains: 'tests_run', ifFalse: {
+        stats put: 0 at: 'tests_run'.
+    }.
+    stats contains: 'tests_passed', ifFalse: {
+        stats put: 0 at: 'tests_passed'.
+    }.
+    stats contains: 'tests_failed', ifFalse: {
+        stats put: 0 at: 'tests_failed'.
+    }.
+    stats at: 'tests_run', +=: 1.
     var description is me obtain.
     var errstream is File special: 'stderr'.
 
     var thisTest is Object cnew: {
-      progress => Nil.
-      end => Nil.
-      current_test => ''.
-      last_test => ''.
-      this_status => ''.
-      last_status => ''.
-
+      on: 'init' do: {
+        progress => Nil.
+        end => Nil.
+        current_test => ''.
+        last_test => ''.
+        this_status => ''.
+        last_status => ''.
+        last_esc => 0.
+        last_exe => Clock new time.
+        divisor => 100.
+      }, init.
+      on: 'subTest' do: { ^me new init. }.
       on: 'tests:' do: {:x current_test => ' ' + x. }.
       on: 'progressesUpTo:' do: {:end end => end.}.
       on: 'progress:' do: {:prg
         my end isNil ifTrue: { ^Nil. }.
         progress => prg.
-        this_status => ' (%d/%d - %d%%)' % [prg, my end, prg / my end * 100].
+        var eskip is my end / my divisor.
+        var est is my last_esc - my last_exe * (my end - prg) / eskip.
+        prg mod: eskip, ifFalse: {
+            last_exe => my last_esc.
+            last_esc => Clock new time.
+            est = 0 ifTrue: { my divisor /=: 1.2. }.
+        }.
+        this_status => ' (%d/%d - %.4f%% - %.4f sec)' % [prg, my end, prg / my end * 100, est].
       }.
 
       on: 'show' do: {
@@ -65,28 +99,48 @@ It on: 'do:' do: {:blk
     }.
     const errPen write: ' - ' + description.
     const errPen flush.
-    {
+    {{
       blk applyTo: thisTest.
       thisTest end.
+      stats at: 'tests_passed', +=: 1.
       const errPen green writeln: ' (ok)', resetColor.
     } catch: {:e
+        stats at: 'tests_failed', +=: 1.
         const errPen red writeln: ' (fail)', resetColor.
         const errPen red writeln: '\t* Backtrace:', resetColor.
         const errPen writeln: (
             Reflect stackTrace
                 split: '\n',
                 do shift shift shift shift done reverse
-                fmap: \:x '\t${{Colors red}}$|${{Colors default}}$ $$x',
+                fmap: \:x '\t${{const cred}}$|${{const cdefault}}$ $$x',
                 join: '\n'
         ).
-        const errPen write: '\t${{Colors red}}$* ${{Colors magenta}}$$$e', resetColor brk.
+        const errPen write: '\t${{const cred}}$* ${{const cmagenta}}$$$e', resetColor brk.
     } type: AssertionError, run.
+    } catch: {:e
+        stats at: 'tests_failed', +=: 1.
+        const errPen red writeln: ' (fail)', resetColor.
+        const errPen red writeln: '\t* Backtrace:', resetColor.
+        const errPen writeln: (
+            Reflect stackTrace
+                split: '\n',
+                do shift shift shift shift done reverse
+                fmap: \:x '\t| $$x',
+                join: '\n'
+        ).
+        const errPen red write: '\t* ' + e, resetColor brk.
+    } type: String, run.
 }.
 
 describe on: 'do:' do: {:blk
     var description is me obtain.
     const errPen writeln: description.
-    blk[const It, const Let].
+    var major is Clock new time.
+    var minor is Clock timeExecutionOf: {
+        blk[const It, const Let].
+    }.
+    major is Clock new time - major.
+    const errPen cyan write: '$$description took $$major seconds ( $$minor useconds )', resetColor brk.
 }.
 
 var ComparisonAssertion is Object cnew: {

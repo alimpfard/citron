@@ -19,6 +19,7 @@ args=(
     '-F[enable/disable flag]:flag:->flags'
     '--tidy[try to tidy up code]:filename:->ctr_files'
     '--Fs[show all flags]'
+    '--Fsel[select flags at startup]'
     '--meta[execute metacommand]'
     '-e[evaluate expression]'
     '-v[version information]'

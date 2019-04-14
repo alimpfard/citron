@@ -1,7 +1,11 @@
-import require-parent.
+# import require-parent.
+import Library/Functional/Category/Block.
 
-CodeBlock learn: '$' means: 'apply:'.
+CodeBlock learn: '$' means: 'applyAll:'.
 CodeBlock learn: ';' means: 'compose:'.
+CodeBlock on: '|' do: {:self:other
+  ^other compose: self.
+}.
 
 import export: {:b:a ^a + b.} as: '+'.
 import export: {:b:a ^a - b.} as: '-'.

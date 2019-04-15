@@ -234,7 +234,7 @@ ctr_object_attr_reader (ctr_object * myself, ctr_argument * argumentList)
       ctr_argument varg = {0}, narg = {0}, *arglist = &varg;
       arglist->next = &narg;
       char *mname = ctr_heap_allocate (sizeof (char) * 512);
-      sprintf (mname, "{^my %.*s.}", name->value.svalue->vlen, name->value.svalue->value);
+      sprintf (mname, "{^my %.*s.}", (int)name->value.svalue->vlen, name->value.svalue->value);
       arglist->object = ctr_build_string_from_cstring (":");
       arglist->object = ctr_string_concat (name, arglist);
       arglist->next->object = ctr_string_eval (ctr_build_string_from_cstring (mname), NULL);
@@ -272,7 +272,7 @@ ctr_object_attr_writer (ctr_object * myself, ctr_argument * argumentList)
       ctr_argument varg = {0}, narg = {0}, *arglist = &varg;
       arglist->next = &narg;
       char *mname = ctr_heap_allocate (sizeof (char) * 512);
-      sprintf (mname, "{:x my %.*s is x.}", name->value.svalue->vlen, name->value.svalue->value);
+      sprintf (mname, "{:x my %.*s is x.}", (int)name->value.svalue->vlen, name->value.svalue->value);
       arglist->object = name;
       arglist->next->object = ctr_string_eval (ctr_build_string_from_cstring (mname), NULL);
       ctr_object_on_do (myself, arglist);
@@ -2428,8 +2428,7 @@ char *
 bitrep (unsigned int v, int s)
 {
   char *buf = ctr_heap_allocate (sizeof (char) * (s + 1));
-  int i;			// for C89 compatability
-  for (i = s; i >= 0; i--)
+  for (int i = s; i >= 0; i--)
     *(buf + i) = ('0' + ((v >> i) & 1));
   return buf;
 }
@@ -5755,10 +5754,10 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
 {
   ctr_object *result;
   ctr_argument *argList = ctr_array_to_argument_list (argArray, NULL);
-  int count = ctr_array_count (argArray, NULL)->value.nvalue;
   if (myself->info.type == CTR_OBJECT_TYPE_OTNATFUNC)
     {
       ctr_object *result = myself->value.fvalue (my, argList);
+      ctr_deallocate_argument_list(argList);
       return result;
     }
   // overload begin
@@ -5796,6 +5795,7 @@ ctr_block_run_array (ctr_object * myself, ctr_object * argArray, ctr_object * my
     ctr_assign_value_to_local_by_ref (&CTR_CLEX_KW_ME, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
   ctr_object *this_block = ctr_build_string ("thisBlock", 9);
   ctr_assign_value_to_local (this_block, myself);	/* otherwise running block may get gc'ed. */
+  // ctr_heap_free(this_block);
   int p = myself->properties->size - 1;
   struct ctr_mapitem *head;
   head = myself->properties->head;
@@ -5874,7 +5874,8 @@ static inline void ctr_assign_block_parameters(ctr_tlistitem* parameterList, ctr
         if (parameter->vlen == 4 && strncmp (parameter->value, "self", 4) == 0)
 	{
 	  //assign self selectively, skip that parameter
-	  ctr_assign_value_to_local_by_ref (ctr_build_string (parameter->value, parameter->vlen), my);
+    ctr_object* name = ctr_build_string (parameter->value, parameter->vlen);
+	  ctr_assign_value_to_local_by_ref (name, my);
 	  parameterList = parameterList->next;
 	}
     }
@@ -5892,7 +5893,7 @@ static inline void ctr_assign_block_parameters(ctr_tlistitem* parameterList, ctr
       ctr_cwlk_last_msg_level = ctr_cwlk_msg_level;
       ctr_object* pattern = ctr_cwlk_expr(parameter, "");
       ctr_cwlk_replace_refs = old_replace;	//set back in case we didn't reset
-      ctr_send_message_variadic (argList->object, "unpack:", 7, 2, pattern, ctr_contexts[ctr_context_id]);	// hand the block the context
+      ctr_send_message (argList->object, "unpack:", 7, &(ctr_argument){pattern, &(ctr_argument){ctr_contexts[ctr_context_id], NULL}});	// hand the block the context
     }
 	  else
 	    {
@@ -5901,7 +5902,9 @@ static inline void ctr_assign_block_parameters(ctr_tlistitem* parameterList, ctr
 		{
 		  ctr_object *arr = was_vararg ? ctr_array_new (CtrStdArray,
 								NULL) : CtrStdNil;
-		  ctr_assign_value_to_local (ctr_build_string (parameter->value + was_vararg, parameter->vlen - was_vararg), arr);
+      ctr_object* name = ctr_build_string (parameter->value + was_vararg, parameter->vlen - was_vararg);
+		  ctr_assign_value_to_local (name, arr);
+      // ctr_heap_free(name);
 		  if (!argList || !argList->next)
 		    {
 		      noskip = 1;
@@ -5917,25 +5920,31 @@ static inline void ctr_assign_block_parameters(ctr_tlistitem* parameterList, ctr
 	      if (parameterList->next)
 		{
 		  a = argList->object;
-		  ctr_assign_value_to_local (ctr_build_string (parameter->value, parameter->vlen), a);
+      ctr_object* name = ctr_build_string (parameter->value, parameter->vlen);
+		  ctr_assign_value_to_local (name, a);
+      // ctr_heap_free(name);
 		}
 	      else if (!parameterList->next && was_vararg)
 		{
 		  ctr_object *arr = ctr_array_new (CtrStdArray, NULL);
-		  ctr_argument *arglist__ = ctr_heap_allocate (sizeof (ctr_argument));
+		  ctr_argument arglist__;
 		  while (argList && argList->object)
 		    {
-		      arglist__->object = argList->object;
-		      ctr_array_push (arr, arglist__);
+		      arglist__.object = argList->object;
+		      ctr_array_push (arr, &arglist__);
 		      argList = argList->next;
 		    }
-		  ctr_heap_free (arglist__);
-		  ctr_assign_value_to_local (ctr_build_string (parameter->value + 1, parameter->vlen - 1), arr);
+      ctr_object* name = ctr_build_string (parameter->value + 1, parameter->vlen - 1);
+		  ctr_assign_value_to_local (name, arr);
+      // ctr_heap_free(name);
+      // ctr_heap_free(arr);
 		}
 	      else if (unlikely (!was_vararg))
 		{
 		  a = argList->object;
-		  ctr_assign_value_to_local (ctr_build_string (parameter->value, parameter->vlen), a);
+      ctr_object* name = ctr_build_string (parameter->value, parameter->vlen);
+		  ctr_assign_value_to_local (name, a);
+      // ctr_heap_free(name);
 		}
 	    }
     noparam_:;
@@ -5951,8 +5960,9 @@ static inline void ctr_assign_block_parameters(ctr_tlistitem* parameterList, ctr
       while (parameterList)
 	{
 	  was_vararg = (strncmp (parameterList->node->value, "*", 1) == 0);
-	  ctr_assign_value_to_local (ctr_build_string (parameterList->node->value + was_vararg, parameterList->node->vlen - was_vararg),
-				     was_vararg ? ctr_array_new (CtrStdArray, NULL) : CtrStdNil);
+    ctr_object* name = ctr_build_string (parameterList->node->value + was_vararg, parameterList->node->vlen - was_vararg);
+	  ctr_assign_value_to_local (name, was_vararg ? ctr_array_new (CtrStdArray, NULL) : CtrStdNil);
+    // ctr_heap_free(name);
 	  if (!parameterList->next)
 	    break;
 	  parameterList = parameterList->next;
@@ -6006,6 +6016,7 @@ ctr_block_run (ctr_object * myself, ctr_argument * argList, ctr_object * my)
     ctr_assign_value_to_local_by_ref (&CTR_CLEX_KW_ME, my);	/* me should always point to object, otherwise you have to store me in self and can't use in if */
   ctr_object *this_block = ctr_build_string ("thisBlock", 9);
   ctr_assign_value_to_local (this_block, myself);	/* otherwise running block may get gc'ed. */
+  // ctr_heap_free(this_block);
   int p = myself->properties->size - 1;
   struct ctr_mapitem *head;
   head = myself->properties->head;
@@ -6405,7 +6416,9 @@ ctr_block_forever (ctr_object * myself, ctr_argument * argumentList)
   if (params && params->node && params->node->vlen == 4 && strncmp (params->node->value, "self", 4) == 0)
     {
       //assign self selectively, skip that parameter
-      ctr_assign_value_to_local_by_ref (ctr_build_string (params->node->value, params->node->vlen), myself);
+      ctr_object* name = ctr_build_string (params->node->value, params->node->vlen);
+      ctr_assign_value_to_local_by_ref (name, myself);
+      // ctr_heap_free(name);
     }
   ctr_object *catch = ctr_internal_object_find_property (myself,
 							 ctr_build_string_from_cstring ("catch"),
@@ -6493,7 +6506,7 @@ ctr_block_run_variadic_my (ctr_object * myself, ctr_object * my, int count, ...)
     }
   va_end (ap);
   ctr_object *result = ctr_block_run (myself, argumentList, my);
-  // ctr_heap_free(argumentList);
+  ctr_heap_free(argumentList);
   return result;
 }
 
@@ -6689,8 +6702,10 @@ ctr_object *
 ctr_block_catch (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *catchBlock = argumentList->object;
-  ctr_internal_object_delete_property (myself, ctr_build_string_from_cstring ("catch"), 0);
-  ctr_internal_object_add_property (myself, ctr_build_string_from_cstring ("catch"), catchBlock, 0);
+  ctr_object *cname = ctr_build_string_from_cstring ("catch");
+  ctr_internal_object_delete_property (myself, cname, 0);
+  ctr_internal_object_add_property (myself, cname, catchBlock, 0);
+  // ctr_heap_free(cname);
   return myself;
 }
 
@@ -6714,9 +6729,12 @@ ctr_object *
 ctr_block_catch_type (ctr_object * myself, ctr_argument * argumentList)
 {
   ctr_object *catchBlock = argumentList->object;
-  ctr_internal_object_add_property (catchBlock, ctr_build_string_from_cstring ("%catch"), argumentList->next->object, 0);
-  ctr_internal_object_delete_property (myself, ctr_build_string_from_cstring ("catch"), 0);
-  ctr_internal_object_add_property (myself, ctr_build_string_from_cstring ("catch"), catchBlock, 0);
+  ctr_object* cname = ctr_build_string_from_cstring ("catch");
+  ctr_object* pcname = ctr_build_string_from_cstring ("%catch");
+  ctr_internal_object_add_property (catchBlock, pcname, argumentList->next->object, 0);
+  ctr_internal_object_set_property (myself, cname, catchBlock, 0);
+  // ctr_heap_free(cname);
+  // ctr_heap_free(pcname);
   return myself;
 }
 

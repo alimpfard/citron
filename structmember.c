@@ -3,6 +3,9 @@
 
 #warning "Inner structs are not fully available, they are ignored in unpacks"
 
+extern int ctr_reflect_is_linked_to_(ctr_argument*);
+extern void sttrace_print(void*);
+
 static int get_double(ctr_object *o, double *p) { // TODO: Error handling
   double x;
   if (o->info.type == CTR_OBJECT_TYPE_OTNIL)
@@ -21,7 +24,7 @@ ctr_object *nuchar(char *p) { return ctr_build_string(p, 1); }
 
 ctr_object *nuuchar(char *p) {
   unsigned char c = *(unsigned char *)p;
-  return ctr_build_string(&c, 1);
+  return ctr_build_string((char*) &c, 1);
 }
 
 ctr_object *nubyte(char *p) {
@@ -291,7 +294,8 @@ int npchar(char *p, ctr_object *o) {
     int errlen = sprintf(
         err,
         "char requires string of length 1 but we were passed %.*s (%d chars)",
-        o->value.svalue->vlen, o->value.svalue->value, o->value.svalue->vlen);
+        (int) o->value.svalue->vlen, o->value.svalue->value,
+        (int) o->value.svalue->vlen);
     CtrStdFlow = ctr_build_string(err, errlen);
     return -1;
   }
@@ -307,7 +311,8 @@ int npuchar(char *p, ctr_object *o) {
     int errlen = sprintf(
         err,
         "uchar requires string of length 1 but we were passed %.*s (%d chars)",
-        o->value.svalue->vlen, o->value.svalue->value, o->value.svalue->vlen);
+        (int) o->value.svalue->vlen, o->value.svalue->value,
+        (int) o->value.svalue->vlen);
     CtrStdFlow = ctr_build_string(err, errlen);
     return -1;
   }
@@ -528,7 +533,7 @@ int npint64(char *p, ctr_object *o) {
   //#if (sizeof(double) > sizeof(int))
   if (x < (double)INT64_MIN || x > (double)INT64_MAX) {
     char err[1024];
-    int errlen = sprintf(err, "int64 requires [%d,%d] but value was %f",
+    int errlen = sprintf(err, "int64 requires [%zd,%zd] but value was %f",
                          INT64_MIN, INT64_MAX, x);
     CtrStdFlow = ctr_build_string(err, errlen);
     return -1;
@@ -568,7 +573,7 @@ int nplong(char *p, ctr_object *o) {
     return -1;
   if (x < (double)LONG_MIN || x > (double)LONG_MAX) {
     char err[1024];
-    int errlen = sprintf(err, "long requires [%d,%d] but value was %f",
+    int errlen = sprintf(err, "long requires [%ld,%ld] but value was %f",
                          LONG_MIN, LONG_MAX, x);
     CtrStdFlow = ctr_build_string(err, errlen);
     return -1;
@@ -585,7 +590,7 @@ int nplonglong(char *p, ctr_object *o) {
     return -1;
   if (x < (double)LLONG_MIN || x > (double)LLONG_MAX) {
     char err[1024];
-    int errlen = sprintf(err, "long long requires [%d,%d] but value was %f",
+    int errlen = sprintf(err, "long long requires [%lld,%lld] but value was %f",
                          LLONG_MIN, LLONG_MAX, x);
     CtrStdFlow = ctr_build_string(err, errlen);
     return -1;

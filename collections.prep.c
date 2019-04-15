@@ -422,7 +422,7 @@ struct __pthread_rwlock_arch_t {
   unsigned long int __pad2;
 
   unsigned int __flags;
-// # 99 "/usr/include/bits/pthreadtypes-arch.h" 3 4
+  // # 99 "/usr/include/bits/pthreadtypes-arch.h" 3 4
 };
 // # 78 "/usr/include/bits/thread-shared-types.h" 2 3 4
 
@@ -443,7 +443,7 @@ struct __pthread_mutex_s {
   short __spins;
   short __elision;
   __pthread_list_t __list;
-// # 145 "/usr/include/bits/thread-shared-types.h" 3 4
+  // # 145 "/usr/include/bits/thread-shared-types.h" 3 4
 };
 
 struct __pthread_cond_s {
@@ -4810,7 +4810,7 @@ typedef unsigned long ffi_arg;
 typedef signed long ffi_sarg;
 
 typedef enum ffi_abi {
-// # 93 "/usr/local/include/ffitarget.h" 3
+  // # 93 "/usr/local/include/ffitarget.h" 3
   FFI_FIRST_ABI = 1,
   FFI_UNIX64,
   FFI_WIN64,
@@ -4818,7 +4818,7 @@ typedef enum ffi_abi {
   FFI_GNUW64,
   FFI_LAST_ABI,
   FFI_DEFAULT_ABI = FFI_UNIX64
-// # 124 "/usr/local/include/ffitarget.h" 3
+  // # 124 "/usr/local/include/ffitarget.h" 3
 } ffi_abi;
 // # 59 "/usr/local/include/ffi.h" 2 3
 
@@ -4830,7 +4830,7 @@ typedef struct {
   long long __max_align_ll __attribute__((__aligned__(__alignof__(long long))));
   long double __max_align_ld
       __attribute__((__aligned__(__alignof__(long double))));
-// # 437 "/usr/lib/gcc/x86_64-pc-linux-gnu/8.2.1/include/stddef.h" 3 4
+  // # 437 "/usr/lib/gcc/x86_64-pc-linux-gnu/8.2.1/include/stddef.h" 3 4
 } max_align_t;
 // # 67 "/usr/local/include/ffi.h" 2 3
 // # 1 "/usr/lib/gcc/x86_64-pc-linux-gnu/8.2.1/include-fixed/limits.h" 1 3 4
@@ -5068,9 +5068,9 @@ typedef struct {
 } st_size_t;
 typedef struct {
   char c;
-// # 15 "_struct.h" 3 4
+  // # 15 "_struct.h" 3 4
   _Bool
-// # 15 "_struct.h"
+      // # 15 "_struct.h"
       x;
 } st_bool;
 // # 26 "_struct.h"
@@ -5125,68 +5125,67 @@ static struct reverse_ffi_type_size_map_item reverse_ffi_type_size_map[] = {
     {&ffi_type_float, sizeof(float)},
     {&ffi_type_double, sizeof(double)},
     {&
-// # 25 "reverse_sizes.h" 3
+     // # 25 "reverse_sizes.h" 3
      ffi_type_uint8
-// # 25 "reverse_sizes.h"
+     // # 25 "reverse_sizes.h"
      ,
      sizeof(unsigned char)},
     {&
-// # 26 "reverse_sizes.h" 3
+     // # 26 "reverse_sizes.h" 3
      ffi_type_sint8
-// # 26 "reverse_sizes.h"
+     // # 26 "reverse_sizes.h"
      ,
      sizeof(char)},
     {&
-// # 27 "reverse_sizes.h" 3
+     // # 27 "reverse_sizes.h" 3
      ffi_type_uint16
-// # 27 "reverse_sizes.h"
+     // # 27 "reverse_sizes.h"
      ,
      sizeof(unsigned short)},
     {&
-// # 28 "reverse_sizes.h" 3
+     // # 28 "reverse_sizes.h" 3
      ffi_type_sint16
-// # 28 "reverse_sizes.h"
+     // # 28 "reverse_sizes.h"
      ,
      sizeof(short)},
     {&
-// # 29 "reverse_sizes.h" 3
+     // # 29 "reverse_sizes.h" 3
      ffi_type_uint32
-// # 29 "reverse_sizes.h"
+     // # 29 "reverse_sizes.h"
      ,
      sizeof(unsigned int)},
     {&
-// # 30 "reverse_sizes.h" 3
+     // # 30 "reverse_sizes.h" 3
      ffi_type_sint32
-// # 30 "reverse_sizes.h"
+     // # 30 "reverse_sizes.h"
      ,
      sizeof(int)},
     {&
-// # 31 "reverse_sizes.h" 3
+     // # 31 "reverse_sizes.h" 3
      ffi_type_uint64
-// # 31 "reverse_sizes.h"
+     // # 31 "reverse_sizes.h"
      ,
      sizeof(unsigned long)},
     {&
-// # 32 "reverse_sizes.h" 3
+     // # 32 "reverse_sizes.h" 3
      ffi_type_sint64
-// # 32 "reverse_sizes.h"
+     // # 32 "reverse_sizes.h"
      ,
      sizeof(long)},
     {&ffi_type_longdouble, sizeof(long double)},
     {&ffi_type_pointer, sizeof(void *)},
-    {
-// # 35 "reverse_sizes.h" 3 4
-        ((void *)0)
-// # 35 "reverse_sizes.h"
-            ,
-        0}};
+    {// # 35 "reverse_sizes.h" 3 4
+     ((void *)0)
+     // # 35 "reverse_sizes.h"
+     ,
+     0}};
 
 static size_t reverse_ffi_type_size_map_lookup(ffi_type *type) {
   int i = 0;
   while (reverse_ffi_type_size_map[i].type !=
-// # 40 "reverse_sizes.h" 3 4
+         // # 40 "reverse_sizes.h" 3 4
          ((void *)0)
-// # 40 "reverse_sizes.h"
+         // # 40 "reverse_sizes.h"
   ) {
     if (reverse_ffi_type_size_map[i].type == type)
       return reverse_ffi_type_size_map[i].size;
@@ -5620,14 +5619,14 @@ static inline ctr_object *ctr_can_cast_to_string(ctr_object *object) {
   ctr_object *out = ctr_internal_cast2string(object);
   if (CtrStdFlow) {
     CtrStdFlow =
-// # 28 "citron_ensure.h" 3 4
+        // # 28 "citron_ensure.h" 3 4
         ((void *)0)
-// # 28 "citron_ensure.h"
+        // # 28 "citron_ensure.h"
         ;
     out =
-// # 29 "citron_ensure.h" 3 4
+        // # 29 "citron_ensure.h" 3 4
         ((void *)0)
-// # 29 "citron_ensure.h"
+        // # 29 "citron_ensure.h"
         ;
   }
   return out;
@@ -5636,14 +5635,14 @@ static inline ctr_object *ctr_can_cast_to_number(ctr_object *object) {
   ctr_object *out = ctr_internal_cast2number(object);
   if (CtrStdFlow) {
     CtrStdFlow =
-// # 36 "citron_ensure.h" 3 4
+        // # 36 "citron_ensure.h" 3 4
         ((void *)0)
-// # 36 "citron_ensure.h"
+        // # 36 "citron_ensure.h"
         ;
     out =
-// # 37 "citron_ensure.h" 3 4
+        // # 37 "citron_ensure.h" 3 4
         ((void *)0)
-// # 37 "citron_ensure.h"
+        // # 37 "citron_ensure.h"
         ;
   }
   return out;
@@ -5652,14 +5651,14 @@ static inline ctr_object *ctr_can_cast_to_bool(ctr_object *object) {
   ctr_object *out = ctr_internal_cast2bool(object);
   if (CtrStdFlow) {
     CtrStdFlow =
-// # 44 "citron_ensure.h" 3 4
+        // # 44 "citron_ensure.h" 3 4
         ((void *)0)
-// # 44 "citron_ensure.h"
+        // # 44 "citron_ensure.h"
         ;
     out =
-// # 45 "citron_ensure.h" 3 4
+        // # 45 "citron_ensure.h" 3 4
         ((void *)0)
-// # 45 "citron_ensure.h"
+        // # 45 "citron_ensure.h"
         ;
   }
   return out;
@@ -5755,9 +5754,9 @@ ctr_object *ctr_array_new(ctr_object *myclass, ctr_argument *argumentList) {
 
 ctr_object *ctr_array_copy(ctr_object *myself, ctr_argument *argumentList) {
   ctr_object *arr = ctr_array_new(CtrStdArray,
-// # 69 "collections.c" 3 4
+                                  // # 69 "collections.c" 3 4
                                   ((void *)0)
-// # 69 "collections.c"
+                                  // # 69 "collections.c"
   );
   ctr_argument parg = {0}, *pushArg = &parg;
   for (ctr_size i = myself->value.avalue->tail; i < myself->value.avalue->head;
@@ -5932,18 +5931,18 @@ ctr_object *ctr_array_multiply(ctr_object *myself, ctr_argument *argumentList) {
     int rep = (int)mand->value.nvalue;
     if (rep == 0)
       return ctr_array_new(CtrStdArray,
-// # 374 "collections.c" 3 4
+                           // # 374 "collections.c" 3 4
                            ((void *)0)
-// # 374 "collections.c"
+                           // # 374 "collections.c"
       );
     else if (rep == 1)
       return myself;
     else {
       rep--;
       ctr_object *newArr = ctr_array_new(CtrStdArray,
-// # 380 "collections.c" 3 4
+                                         // # 380 "collections.c" 3 4
                                          ((void *)0)
-// # 380 "collections.c"
+                                         // # 380 "collections.c"
       );
       ctr_argument varg = {0}, *arg = &varg;
       for (; rep >= 0; rep--) {
@@ -5955,9 +5954,9 @@ ctr_object *ctr_array_multiply(ctr_object *myself, ctr_argument *argumentList) {
   }
   if (mand->info.type == 7) {
     ctr_object *newArr = ctr_array_new(CtrStdArray,
-// # 392 "collections.c" 3 4
+                                       // # 392 "collections.c" 3 4
                                        ((void *)0)
-// # 392 "collections.c"
+                                       // # 392 "collections.c"
     );
     ctr_argument arg = {0}, *args = &arg;
     for (ctr_size i = myself->value.avalue->tail;
@@ -5966,9 +5965,9 @@ ctr_object *ctr_array_multiply(ctr_object *myself, ctr_argument *argumentList) {
       for (ctr_size j = mand->value.avalue->tail; j < mand->value.avalue->head;
            j++) {
         ctr_object *lst = ctr_array_new(CtrStdArray,
-// # 399 "collections.c" 3 4
+                                        // # 399 "collections.c" 3 4
                                         ((void *)0)
-// # 399 "collections.c"
+                                        // # 399 "collections.c"
         );
         args->object = elem0;
         ctr_array_push(lst, args);
@@ -5986,9 +5985,9 @@ ctr_object *ctr_array_multiply(ctr_object *myself, ctr_argument *argumentList) {
 ctr_object *ctr_array_intersperse(ctr_object *myself,
                                   ctr_argument *argumentList) {
   ctr_object *newArr = ctr_array_new(CtrStdArray,
-// # 422 "collections.c" 3 4
+                                     // # 422 "collections.c" 3 4
                                      ((void *)0)
-// # 422 "collections.c"
+                                     // # 422 "collections.c"
   );
   ctr_size i = 0;
   ctr_argument parg = {0}, *pushArg = &parg;
@@ -6015,9 +6014,9 @@ ctr_object *ctr_array_map(ctr_object *myself, ctr_argument *argumentList) {
   ctr_argument a0 = {0}, *arguments = &a0;
   ctr_argument a1 = {0}, *argument2 = &a1;
   ctr_argument a2 = {0}, *argument3 =
-// # 469 "collections.c" 3 4
-                             ((void *)0)
-// # 469 "collections.c"
+                             // # 469 "collections.c" 3 4
+                         ((void *)0)
+      // # 469 "collections.c"
       ;
 
   if (!myself->value.avalue->immutable)
@@ -6032,24 +6031,24 @@ ctr_object *ctr_array_map(ctr_object *myself, ctr_argument *argumentList) {
     if (!myself->value.avalue->immutable)
       argument2->next = argument3;
     ctr_block_run(block, arguments,
-// # 483 "collections.c" 3 4
+                  // # 483 "collections.c" 3 4
                   ((void *)0)
-// # 483 "collections.c"
+                  // # 483 "collections.c"
     );
     if (CtrStdFlow == CtrStdContinue)
       CtrStdFlow =
-// # 485 "collections.c" 3 4
+          // # 485 "collections.c" 3 4
           ((void *)0)
-// # 485 "collections.c"
+          // # 485 "collections.c"
           ;
     if (CtrStdFlow)
       break;
   }
   if (CtrStdFlow == CtrStdBreak)
     CtrStdFlow =
-// # 490 "collections.c" 3 4
+        // # 490 "collections.c" 3 4
         ((void *)0)
-// # 490 "collections.c"
+        // # 490 "collections.c"
         ;
   block->info.mark = 0;
   block->info.sticky = 0;
@@ -6061,9 +6060,9 @@ ctr_object *ctr_array_map_v(ctr_object *myself, ctr_argument *argumentList) {
   do {
     do {
       if (func ==
-// # 526 "collections.c" 3 4
+          // # 526 "collections.c" 3 4
           ((void *)0)
-// # 526 "collections.c"
+          // # 526 "collections.c"
       ) {
         CtrStdFlow = ctr_build_string_from_cstring(
             "Object was null when we expected nonnull.");
@@ -6093,9 +6092,9 @@ ctr_object *ctr_array_map_v(ctr_object *myself, ctr_argument *argumentList) {
     ctr_block_run(func, pushArg, func);
     if (CtrStdFlow == CtrStdContinue) {
       CtrStdFlow =
-// # 539 "collections.c" 3 4
+          // # 539 "collections.c" 3 4
           ((void *)0)
-// # 539 "collections.c"
+          // # 539 "collections.c"
           ;
       continue;
     }
@@ -6104,9 +6103,9 @@ ctr_object *ctr_array_map_v(ctr_object *myself, ctr_argument *argumentList) {
   }
   if (CtrStdFlow == CtrStdBreak)
     CtrStdFlow =
-// # 546 "collections.c" 3 4
+        // # 546 "collections.c" 3 4
         ((void *)0)
-// # 546 "collections.c"
+        // # 546 "collections.c"
         ;
   return myself;
 }
@@ -6119,18 +6118,18 @@ ctr_object *ctr_array_slice(ctr_object *myself, ctr_argument *argumentList) {
   ctr_size start = (ctr_size)startElement->value.nvalue;
   if (start >= myself->value.avalue->head - myself->value.avalue->tail)
     return ctr_array_new(CtrStdArray,
-// # 566 "collections.c" 3 4
+                         // # 566 "collections.c" 3 4
                          ((void *)0)
-// # 566 "collections.c"
+                         // # 566 "collections.c"
     );
   ctr_size len = (ctr_size)count->value.nvalue;
   len = fmin(myself->value.avalue->head - myself->value.avalue->tail - start,
              len);
   ctr_size i = 0;
   ctr_object *newArray = ctr_array_new(CtrStdArray,
-// # 570 "collections.c" 3 4
+                                       // # 570 "collections.c" 3 4
                                        ((void *)0)
-// # 570 "collections.c"
+                                       // # 570 "collections.c"
   );
   for (i = start; i < start + len; i++) {
     elnum = ctr_build_number_from_float((ctr_number)i);
@@ -6149,9 +6148,9 @@ ctr_object *ctr_array_every_do_fill(ctr_object *myself,
   do {
     do {
       if (func ==
-// # 594 "collections.c" 3 4
+          // # 594 "collections.c" 3 4
           ((void *)0)
-// # 594 "collections.c"
+          // # 594 "collections.c"
       ) {
         CtrStdFlow = ctr_build_string_from_cstring(
             "Object was null when we expected nonnull.");
@@ -6190,9 +6189,9 @@ ctr_object *ctr_array_every_do_fill(ctr_object *myself,
     }
     args->object = parr;
     args->next =
-// # 613 "collections.c" 3 4
+        // # 613 "collections.c" 3 4
         ((void *)0)
-// # 613 "collections.c"
+        // # 613 "collections.c"
         ;
     ctr_block_run(func, args, parr);
   }
@@ -6207,9 +6206,9 @@ ctr_object *ctr_array_chunks(ctr_object *myself, ctr_argument *argumentList) {
     fill = argumentList->next->object;
   ctr_object *parr;
   ctr_object *ret = ctr_array_new(CtrStdArray,
-// # 634 "collections.c" 3 4
+                                  // # 634 "collections.c" 3 4
                                   ((void *)0)
-// # 634 "collections.c"
+                                  // # 634 "collections.c"
   );
   ctr_argument varg = {0}, *args = &varg;
   ctr_argument vcaa = {0}, *caa = &vcaa;
@@ -6228,9 +6227,9 @@ ctr_object *ctr_array_chunks(ctr_object *myself, ctr_argument *argumentList) {
     }
     args->object = parr;
     args->next =
-// # 649 "collections.c" 3 4
+        // # 649 "collections.c" 3 4
         ((void *)0)
-// # 649 "collections.c"
+        // # 649 "collections.c"
         ;
     ctr_array_push(ret, args);
   }
@@ -6240,9 +6239,9 @@ ctr_object *ctr_array_chunks(ctr_object *myself, ctr_argument *argumentList) {
 ctr_object *ctr_array_new_and_push(ctr_object *myclass,
                                    ctr_argument *argumentList) {
   ctr_object *s = ctr_array_new(myclass,
-// # 675 "collections.c" 3 4
+                                // # 675 "collections.c" 3 4
                                 ((void *)0)
-// # 675 "collections.c"
+                                // # 675 "collections.c"
   );
   return ctr_array_push(s, argumentList);
 }
@@ -6273,15 +6272,15 @@ ctr_object *ctr_array_unshift(ctr_object *myself, ctr_argument *argumentList) {
 
 ctr_object *ctr_array_reverse(ctr_object *myself, ctr_argument *argumentList) {
   ctr_object *newArr = ctr_array_new(CtrStdArray,
-// # 725 "collections.c" 3 4
+                                     // # 725 "collections.c" 3 4
                                      ((void *)0)
-// # 725 "collections.c"
+                                     // # 725 "collections.c"
   );
   ctr_size i = ctr_array_count(myself,
-// # 726 "collections.c" 3 4
+                               // # 726 "collections.c" 3 4
                                ((void *)0)
-// # 726 "collections.c"
-                                   )
+                               // # 726 "collections.c"
+                               )
                    ->value.nvalue;
   ctr_argument varg = {0}, *args = &varg;
   for (; i > 0; i--) {
@@ -6329,12 +6328,12 @@ ctr_object *ctr_array_get(ctr_object *myself, ctr_argument *argumentList) {
   if (getIndex->info.type != 2) {
 
     char buf[1024];
-    char *typename_ = ctr_heap_allocate_cstring(
-             ctr_internal_cast2string(ctr_send_message(getIndex, "type", 4,
-// # 809 "collections.c" 3 4
-                                                       ((void *)0)
-// # 809 "collections.c"
-                                                           ))),
+    char *typename_ = ctr_heap_allocate_cstring(ctr_internal_cast2string(
+             ctr_send_message(getIndex, "type", 4,
+                              // # 809 "collections.c" 3 4
+                              ((void *)0)
+                              // # 809 "collections.c"
+                              ))),
          *value = ctr_heap_allocate_cstring(ctr_internal_cast2string(getIndex));
     sprintf(buf, "Array index must be a number (not %s type %d(%s)).", value,
             getIndex->info.type, typename_);
@@ -6481,9 +6480,9 @@ ctr_object *ctr_array_from_length(ctr_object *myself,
   ctr_size len = (int)count->value.nvalue;
   ctr_size i = 0;
   ctr_object *newArray = ctr_array_new(CtrStdArray,
-// # 1035 "collections.c" 3 4
+                                       // # 1035 "collections.c" 3 4
                                        ((void *)0)
-// # 1035 "collections.c"
+                                       // # 1035 "collections.c"
   );
   ctr_argument parg = {0}, *pushArg = &parg;
   ctr_argument earg = {0}, *elnumArg = &earg;
@@ -6503,9 +6502,9 @@ ctr_object *ctr_array_skip(ctr_object *myself, ctr_argument *argumentList) {
   ctr_size len = (int)myself->value.avalue->length - 1;
   ctr_size i = 0;
   ctr_object *newArray = ctr_array_new(CtrStdArray,
-// # 1061 "collections.c" 3 4
+                                       // # 1061 "collections.c" 3 4
                                        ((void *)0)
-// # 1061 "collections.c"
+                                       // # 1061 "collections.c"
   );
   ctr_argument parg = {0}, *pushArg = &parg;
   ctr_argument earg = {0}, *elnumArg = &earg;
@@ -6520,38 +6519,39 @@ ctr_object *ctr_array_skip(ctr_object *myself, ctr_argument *argumentList) {
 // # 1083 "collections.c"
 ctr_object *ctr_array_zip(ctr_object *myself, ctr_argument *argumentList) {
   ctr_object *res = ctr_array_new(CtrStdArray,
-// # 1086 "collections.c" 3 4
+                                  // # 1086 "collections.c" 3 4
                                   ((void *)0)
-// # 1086 "collections.c"
+                                  // # 1086 "collections.c"
   );
   for (int i = 0;; i++) {
     ctr_object *tarr = ctr_array_new(CtrStdArray,
-// # 1088 "collections.c" 3 4
+                                     // # 1088 "collections.c" 3 4
                                      ((void *)0)
-// # 1088 "collections.c"
+                                     // # 1088 "collections.c"
     );
     for (int x = myself->value.avalue->tail; x < myself->value.avalue->head;
          x++) {
       ctr_object *element = myself->value.avalue->elements[x];
       if (element->info.type != 7)
-        ctr_array_push(tarr, &(ctr_argument){element,
+        ctr_array_push(tarr, &(ctr_argument){
+                                 element,
 
-// # 1096 "collections.c" 3 4
-                                             ((void *)0)
+                                 // # 1096 "collections.c" 3 4
+                                 ((void *)0)
 
-// # 1097 "collections.c"
+                                 // # 1097 "collections.c"
                              });
       else if (element->value.avalue->head - element->value.avalue->tail > i)
-        ctr_array_push(
-            tarr,
-            &(ctr_argument){element->value.avalue
-                                ->elements[i + element->value.avalue->tail],
+        ctr_array_push(tarr,
+                       &(ctr_argument){
+                           element->value.avalue
+                               ->elements[i + element->value.avalue->tail],
 
-// # 1104 "collections.c" 3 4
-                            ((void *)0)
+                           // # 1104 "collections.c" 3 4
+                           ((void *)0)
 
-// # 1105 "collections.c"
-            });
+                           // # 1105 "collections.c"
+                       });
       else
         goto thatsenough;
     }
@@ -6564,38 +6564,39 @@ thatsenough:;
 ctr_object *ctr_array_zip_with(ctr_object *myself, ctr_argument *argumentList) {
   ctr_object *blk = argumentList->object;
   ctr_object *res = ctr_array_new(CtrStdArray,
-// # 1128 "collections.c" 3 4
+                                  // # 1128 "collections.c" 3 4
                                   ((void *)0)
-// # 1128 "collections.c"
+                                  // # 1128 "collections.c"
   );
   for (int i = 0;; i++) {
     ctr_object *tarr = ctr_array_new(CtrStdArray,
-// # 1130 "collections.c" 3 4
+                                     // # 1130 "collections.c" 3 4
                                      ((void *)0)
-// # 1130 "collections.c"
+                                     // # 1130 "collections.c"
     );
     for (int x = myself->value.avalue->tail; x < myself->value.avalue->head;
          x++) {
       ctr_object *element = myself->value.avalue->elements[x];
       if (element->info.type != 7)
-        ctr_array_push(tarr, &(ctr_argument){element,
+        ctr_array_push(tarr, &(ctr_argument){
+                                 element,
 
-// # 1138 "collections.c" 3 4
-                                             ((void *)0)
+                                 // # 1138 "collections.c" 3 4
+                                 ((void *)0)
 
-// # 1139 "collections.c"
+                                 // # 1139 "collections.c"
                              });
       else if (element->value.avalue->head - element->value.avalue->tail > i)
-        ctr_array_push(
-            tarr,
-            &(ctr_argument){element->value.avalue
-                                ->elements[i + element->value.avalue->tail],
+        ctr_array_push(tarr,
+                       &(ctr_argument){
+                           element->value.avalue
+                               ->elements[i + element->value.avalue->tail],
 
-// # 1146 "collections.c" 3 4
-                            ((void *)0)
+                           // # 1146 "collections.c" 3 4
+                           ((void *)0)
 
-// # 1147 "collections.c"
-            });
+                           // # 1147 "collections.c"
+                       });
       else
         goto thatsenough;
     }
@@ -6613,9 +6614,9 @@ ctr_object *ctr_array_head(ctr_object *myself, ctr_argument *argumentList) {
 // # 1177 "collections.c"
 ctr_object *ctr_array_tail(ctr_object *myself, ctr_argument *argumentList) {
   ctr_object *arr = ctr_array_new(CtrStdArray,
-// # 1180 "collections.c" 3 4
+                                  // # 1180 "collections.c" 3 4
                                   ((void *)0)
-// # 1180 "collections.c"
+                                  // # 1180 "collections.c"
   );
   if (myself->value.avalue->head == myself->value.avalue->tail)
     return arr;
@@ -6634,9 +6635,9 @@ ctr_object *ctr_array_tail(ctr_object *myself, ctr_argument *argumentList) {
 // # 1204 "collections.c"
 ctr_object *ctr_array_init(ctr_object *myself, ctr_argument *argumentList) {
   ctr_object *arr = ctr_array_new(CtrStdArray,
-// # 1207 "collections.c" 3 4
+                                  // # 1207 "collections.c" 3 4
                                   ((void *)0)
-// # 1207 "collections.c"
+                                  // # 1207 "collections.c"
   );
   if (myself->value.avalue->head == myself->value.avalue->tail)
     return arr;
@@ -6663,9 +6664,9 @@ ctr_object *ctr_array_last(ctr_object *myself, ctr_argument *argumentList) {
 ctr_object *ctr_array_add(ctr_object *myself, ctr_argument *argumentList) {
   ctr_object *otherArray = argumentList->object;
   ctr_object *newArray = ctr_array_new(CtrStdArray,
-// # 1247 "collections.c" 3 4
+                                       // # 1247 "collections.c" 3 4
                                        ((void *)0)
-// # 1247 "collections.c"
+                                       // # 1247 "collections.c"
   );
   ctr_argument parg = {0}, *pushArg = &parg;
   ctr_argument earg = {0}, *elnumArg = &earg;
@@ -6694,9 +6695,9 @@ ctr_object *ctr_array_fmap(ctr_object *myself, ctr_argument *argumentList) {
   do {
     do {
       if (func ==
-// # 1282 "collections.c" 3 4
+          // # 1282 "collections.c" 3 4
           ((void *)0)
-// # 1282 "collections.c"
+          // # 1282 "collections.c"
       ) {
         CtrStdFlow = ctr_build_string_from_cstring(
             "Object was null when we expected nonnull.");
@@ -6716,9 +6717,9 @@ ctr_object *ctr_array_fmap(ctr_object *myself, ctr_argument *argumentList) {
   } while (0);
 
   ctr_object *newArray = ctr_array_new(CtrStdArray,
-// # 1284 "collections.c" 3 4
+                                       // # 1284 "collections.c" 3 4
                                        ((void *)0)
-// # 1284 "collections.c"
+                                       // # 1284 "collections.c"
   );
   ctr_argument varg = {0}, *arg = &varg;
   ctr_size i;
@@ -6730,17 +6731,17 @@ ctr_object *ctr_array_fmap(ctr_object *myself, ctr_argument *argumentList) {
     if (CtrStdFlow) {
       if (CtrStdFlow == CtrStdContinue) {
         CtrStdFlow =
-// # 1296 "collections.c" 3 4
+            // # 1296 "collections.c" 3 4
             ((void *)0)
-// # 1296 "collections.c"
+            // # 1296 "collections.c"
             ;
         continue;
       }
       if (CtrStdFlow == CtrStdBreak)
         CtrStdFlow =
-// # 1300 "collections.c" 3 4
+            // # 1300 "collections.c" 3 4
             ((void *)0)
-// # 1300 "collections.c"
+            // # 1300 "collections.c"
             ;
       break;
     }
@@ -6754,9 +6755,9 @@ ctr_object *ctr_array_imap(ctr_object *myself, ctr_argument *argumentList) {
   do {
     do {
       if (func ==
-// # 1319 "collections.c" 3 4
+          // # 1319 "collections.c" 3 4
           ((void *)0)
-// # 1319 "collections.c"
+          // # 1319 "collections.c"
       ) {
         CtrStdFlow = ctr_build_string_from_cstring(
             "Object was null when we expected nonnull.");
@@ -6776,9 +6777,9 @@ ctr_object *ctr_array_imap(ctr_object *myself, ctr_argument *argumentList) {
   } while (0);
 
   ctr_object *newArray = ctr_array_new(CtrStdArray,
-// # 1321 "collections.c" 3 4
+                                       // # 1321 "collections.c" 3 4
                                        ((void *)0)
-// # 1321 "collections.c"
+                                       // # 1321 "collections.c"
   );
   ctr_argument parg = {0}, *pushArg = &parg, pnext = {0};
   pushArg->next = &pnext;
@@ -6800,9 +6801,9 @@ ctr_object *ctr_array_fmap_inp(ctr_object *myself, ctr_argument *argumentList) {
   do {
     do {
       if (func ==
-// # 1349 "collections.c" 3 4
+          // # 1349 "collections.c" 3 4
           ((void *)0)
-// # 1349 "collections.c"
+          // # 1349 "collections.c"
       ) {
         CtrStdFlow = ctr_build_string_from_cstring(
             "Object was null when we expected nonnull.");
@@ -6831,17 +6832,17 @@ ctr_object *ctr_array_fmap_inp(ctr_object *myself, ctr_argument *argumentList) {
     if (CtrStdFlow) {
       if (CtrStdFlow == CtrStdContinue) {
         CtrStdFlow =
-// # 1362 "collections.c" 3 4
+            // # 1362 "collections.c" 3 4
             ((void *)0)
-// # 1362 "collections.c"
+            // # 1362 "collections.c"
             ;
         continue;
       }
       if (CtrStdFlow == CtrStdBreak)
         CtrStdFlow =
-// # 1366 "collections.c" 3 4
+            // # 1366 "collections.c" 3 4
             ((void *)0)
-// # 1366 "collections.c"
+            // # 1366 "collections.c"
             ;
       break;
     }
@@ -6855,9 +6856,9 @@ ctr_object *ctr_array_imap_inp(ctr_object *myself, ctr_argument *argumentList) {
   do {
     do {
       if (func ==
-// # 1386 "collections.c" 3 4
+          // # 1386 "collections.c" 3 4
           ((void *)0)
-// # 1386 "collections.c"
+          // # 1386 "collections.c"
       ) {
         CtrStdFlow = ctr_build_string_from_cstring(
             "Object was null when we expected nonnull.");
@@ -6898,9 +6899,9 @@ ctr_object *ctr_array_foldl(ctr_object *myself, ctr_argument *argumentList) {
   do {
     do {
       if (func ==
-// # 1415 "collections.c" 3 4
+          // # 1415 "collections.c" 3 4
           ((void *)0)
-// # 1415 "collections.c"
+          // # 1415 "collections.c"
       ) {
         CtrStdFlow = ctr_build_string_from_cstring(
             "Object was null when we expected nonnull.");
@@ -6941,9 +6942,9 @@ ctr_object *ctr_array_foldl0(ctr_object *myself, ctr_argument *argumentList) {
   do {
     do {
       if (func ==
-// # 1446 "collections.c" 3 4
+          // # 1446 "collections.c" 3 4
           ((void *)0)
-// # 1446 "collections.c"
+          // # 1446 "collections.c"
       ) {
         CtrStdFlow = ctr_build_string_from_cstring(
             "Object was null when we expected nonnull.");
@@ -6987,9 +6988,9 @@ ctr_object *ctr_array_filter(ctr_object *myself, ctr_argument *argumentList) {
   do {
     do {
       if (block ==
-// # 1477 "collections.c" 3 4
+          // # 1477 "collections.c" 3 4
           ((void *)0)
-// # 1477 "collections.c"
+          // # 1477 "collections.c"
       ) {
         CtrStdFlow = ctr_build_string_from_cstring(
             "Object was null when we expected nonnull.");
@@ -7013,9 +7014,9 @@ ctr_object *ctr_array_filter(ctr_object *myself, ctr_argument *argumentList) {
   ctr_argument arg2 = {0}, *argument2 = &arg2;
   arguments->next = argument2;
   ctr_object *newArr = ctr_array_new(CtrStdArray,
-// # 1483 "collections.c" 3 4
+                                     // # 1483 "collections.c" 3 4
                                      ((void *)0)
-// # 1483 "collections.c"
+                                     // # 1483 "collections.c"
   );
   ctr_object *current;
   for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++) {
@@ -7029,18 +7030,18 @@ ctr_object *ctr_array_filter(ctr_object *myself, ctr_argument *argumentList) {
     }
     if (CtrStdFlow == CtrStdContinue)
       CtrStdFlow =
-// # 1497 "collections.c" 3 4
+          // # 1497 "collections.c" 3 4
           ((void *)0)
-// # 1497 "collections.c"
+          // # 1497 "collections.c"
           ;
     if (CtrStdFlow)
       break;
   }
   if (CtrStdFlow == CtrStdBreak)
     CtrStdFlow =
-// # 1502 "collections.c" 3 4
+        // # 1502 "collections.c" 3 4
         ((void *)0)
-// # 1502 "collections.c"
+        // # 1502 "collections.c"
         ;
   block->info.mark = 0;
   block->info.sticky = 0;
@@ -7052,9 +7053,9 @@ ctr_object *ctr_array_filter_v(ctr_object *myself, ctr_argument *argumentList) {
   do {
     do {
       if (block ==
-// # 1517 "collections.c" 3 4
+          // # 1517 "collections.c" 3 4
           ((void *)0)
-// # 1517 "collections.c"
+          // # 1517 "collections.c"
       ) {
         CtrStdFlow = ctr_build_string_from_cstring(
             "Object was null when we expected nonnull.");
@@ -7076,9 +7077,9 @@ ctr_object *ctr_array_filter_v(ctr_object *myself, ctr_argument *argumentList) {
   block->info.sticky = 1;
   ctr_argument args = {0}, *arguments = &args;
   ctr_object *newArr = ctr_array_new(CtrStdArray,
-// # 1521 "collections.c" 3 4
+                                     // # 1521 "collections.c" 3 4
                                      ((void *)0)
-// # 1521 "collections.c"
+                                     // # 1521 "collections.c"
   );
   ctr_object *current;
   for (i = myself->value.avalue->tail; i < myself->value.avalue->head; i++) {
@@ -7091,18 +7092,18 @@ ctr_object *ctr_array_filter_v(ctr_object *myself, ctr_argument *argumentList) {
     }
     if (CtrStdFlow == CtrStdContinue)
       CtrStdFlow =
-// # 1534 "collections.c" 3 4
+          // # 1534 "collections.c" 3 4
           ((void *)0)
-// # 1534 "collections.c"
+          // # 1534 "collections.c"
           ;
     if (CtrStdFlow)
       break;
   }
   if (CtrStdFlow == CtrStdBreak)
     CtrStdFlow =
-// # 1539 "collections.c" 3 4
+        // # 1539 "collections.c" 3 4
         ((void *)0)
-// # 1539 "collections.c"
+        // # 1539 "collections.c"
         ;
   block->info.mark = 0;
   block->info.sticky = 0;
@@ -7113,10 +7114,10 @@ ctr_argument *ctr_array_to_argument_list(ctr_object *arr,
                                          ctr_argument *provided) {
   if (!arr)
     return
-// # 1555 "collections.c" 3 4
+        // # 1555 "collections.c" 3 4
         ((void *)0)
-// # 1555 "collections.c"
-            ;
+        // # 1555 "collections.c"
+        ;
   ctr_size i = arr->value.avalue->tail,
            arr_max_len = arr->value.avalue->head - arr->value.avalue->tail;
   if (arr_max_len == 0)
@@ -7129,9 +7130,9 @@ ctr_argument *ctr_array_to_argument_list(ctr_object *arr,
       break;
     if (i >= arr_max_len)
       provided->object =
-// # 1567 "collections.c" 3 4
+          // # 1567 "collections.c" 3 4
           ((void *)0)
-// # 1567 "collections.c"
+          // # 1567 "collections.c"
           ;
     else
       provided->object = arr->value.avalue->elements[i];
@@ -7142,9 +7143,9 @@ ctr_argument *ctr_array_to_argument_list(ctr_object *arr,
     provided->object = arr->value.avalue->elements[i++];
     if (__builtin_expect(!!(i == arr_max_len), 1)) {
       provided->next =
-// # 1578 "collections.c" 3 4
+          // # 1578 "collections.c" 3 4
           ((void *)0)
-// # 1578 "collections.c"
+          // # 1578 "collections.c"
           ;
       break;
     }
@@ -7168,9 +7169,9 @@ void ctr_nullify_argument_list(ctr_argument *argumentList) {
   while (argumentList) {
     arg = argumentList->next;
     argumentList->object =
-// # 1606 "collections.c" 3 4
+        // # 1606 "collections.c" 3 4
         ((void *)0)
-// # 1606 "collections.c"
+        // # 1606 "collections.c"
         ;
     argumentList = arg;
   }
@@ -7184,26 +7185,26 @@ ctr_object *ctr_array_select_from_if(ctr_object *myself,
                  argumentList->next->next && argumentList->next->next->object
                      ? argumentList->next->next->object
                      :
-// # 1622 "collections.c" 3 4
+                     // # 1622 "collections.c" 3 4
                      ((void *)0)
-// # 1622 "collections.c"
-                 ,
+      // # 1622 "collections.c"
+      ,
              *result = ctr_array_new(CtrStdArray,
-// # 1622 "collections.c" 3 4
+                                     // # 1622 "collections.c" 3 4
                                      ((void *)0)
-// # 1622 "collections.c"
-                                         ),
+                                     // # 1622 "collections.c"
+                                     ),
              *elem, *old_from;
   ctr_argument *argument = ctr_heap_allocate(sizeof(ctr_argument));
   if (from->info.type == 4)
     from = ctr_block_run(from,
-// # 1625 "collections.c" 3 4
+                         // # 1625 "collections.c" 3 4
                          ((void *)0)
-// # 1625 "collections.c"
-                             ,
-// # 1625 "collections.c" 3 4
+                         // # 1625 "collections.c"
+                         ,
+                         // # 1625 "collections.c" 3 4
                          ((void *)0)
-// # 1625 "collections.c"
+                         // # 1625 "collections.c"
     );
   if (from->info.type == 7) {
     printf("%p\n", from);
@@ -7231,9 +7232,9 @@ ctr_object *ctr_array_select_from_if(ctr_object *myself,
   } else if (ctr_internal_has_responder(
                  from, ctr_build_string_from_cstring("items"))) {
     from = ctr_send_message(from, "items", 5,
-// # 1655 "collections.c" 3 4
+                            // # 1655 "collections.c" 3 4
                             ((void *)0)
-// # 1655 "collections.c"
+                            // # 1655 "collections.c"
     );
     if (from->info.type != 7) {
       ctr_deallocate_argument_list(argument);
@@ -7289,9 +7290,9 @@ ctr_object *ctr_array_assign(ctr_object *myself, ctr_argument *argumentList) {
             accArg->object->value.svalue->vlen - 1);
         int g_skip = m_count - other - 1;
         to_elem = ctr_array_new(CtrStdArray,
-// # 1720 "collections.c" 3 4
+                                // # 1720 "collections.c" 3 4
                                 ((void *)0)
-// # 1720 "collections.c"
+                                // # 1720 "collections.c"
         );
         if (other - to->value.avalue->tail <=
             myself->value.avalue->head - myself->value.avalue->tail)
@@ -7334,9 +7335,9 @@ int ctr_sort_cmp(const void *a, const void *b) {
   arg1->object = *((ctr_object **)a);
   arg2->object = *((ctr_object **)b);
   result = ctr_block_run(temp_sorter, arg1,
-// # 1767 "collections.c" 3 4
+                         // # 1767 "collections.c" 3 4
                          ((void *)0)
-// # 1767 "collections.c"
+                         // # 1767 "collections.c"
   );
   numResult = ctr_internal_cast2number(result);
   return (int)numResult->value.nvalue;
@@ -7432,9 +7433,9 @@ ctr_object *ctr_array_fill(ctr_object *myself, ctr_argument *argumentList) {
   }
   ctr_object *memb = argumentList->next->object;
   ctr_object *res =
-// # 1902 "collections.c" 3 4
+      // # 1902 "collections.c" 3 4
       ((void *)0)
-// # 1902 "collections.c"
+      // # 1902 "collections.c"
       ;
   if (memb->info.type == 4 || memb->info.type == 6) {
     ctr_object *_i = ctr_internal_create_standalone_object(2);
@@ -7462,9 +7463,9 @@ ctr_object *ctr_array_column(ctr_object *myself, ctr_argument *argumentList) {
   ctr_object *newArray;
   ctr_object *element;
   newArray = ctr_array_new(CtrStdArray,
-// # 1935 "collections.c" 3 4
+                           // # 1935 "collections.c" 3 4
                            ((void *)0)
-// # 1935 "collections.c"
+                           // # 1935 "collections.c"
   );
   n = ctr_internal_cast2number(argumentList->object)->value.nvalue;
   if (n <= 0) {
@@ -7503,10 +7504,10 @@ ctr_object *ctr_map_new_(ctr_object *myclass, ctr_argument *argumentList) {
       CtrStdFlow =
           ctr_format_str("EMap::'new:' expects a block, not %s",
                          ctr_send_message(argumentList->object, "type", 4,
-// # 1997 "collections.c" 3 4
+                                          // # 1997 "collections.c" 3 4
                                           ((void *)0)
-// # 1997 "collections.c"
-                                              ));
+                                          // # 1997 "collections.c"
+                                          ));
     }
   }
   s->value.defvalue = defaultv;
@@ -7527,9 +7528,9 @@ ctr_object *ctr_map_put(ctr_object *myself, ctr_argument *argumentList) {
   if (!hasher) {
     ctr_object *putKey;
     putKey = ctr_send_message(nextArgument->object, "toString", 8,
-// # 2037 "collections.c" 3 4
+                              // # 2037 "collections.c" 3 4
                               ((void *)0)
-// # 2037 "collections.c"
+                              // # 2037 "collections.c"
     );
 
     if (putKey->info.type != 3) {
@@ -7547,9 +7548,9 @@ ctr_object *ctr_map_put(ctr_object *myself, ctr_argument *argumentList) {
   } else {
     ctr_object *putKeyHash;
     putKeyHash = ctr_send_message(nextArgument->object, "iHash", 5,
-// # 2055 "collections.c" 3 4
+                                  // # 2055 "collections.c" 3 4
                                   ((void *)0)
-// # 2055 "collections.c"
+                                  // # 2055 "collections.c"
     );
 
     ctr_number hashk;
@@ -7571,14 +7572,14 @@ ctr_object *ctr_map_rm(ctr_object *myself, ctr_argument *argumentList) {
   ctr_object *putKey = argumentList->object;
   ctr_argument earg = {0}, *emptyArgumentList = &earg;
   emptyArgumentList->next =
-// # 2085 "collections.c" 3 4
+      // # 2085 "collections.c" 3 4
       ((void *)0)
-// # 2085 "collections.c"
+      // # 2085 "collections.c"
       ;
   emptyArgumentList->object =
-// # 2086 "collections.c" 3 4
+      // # 2086 "collections.c" 3 4
       ((void *)0)
-// # 2086 "collections.c"
+      // # 2086 "collections.c"
       ;
   ctr_object *hasher = ctr_get_responder(putKey, "iHash", 5);
   if (!hasher) {
@@ -7596,9 +7597,9 @@ ctr_object *ctr_map_rm(ctr_object *myself, ctr_argument *argumentList) {
   } else {
     ctr_number hashk;
     ctr_object *putKeyHash = ctr_send_message(putKey, "iHash", 5,
-// # 2106 "collections.c" 3 4
+                                              // # 2106 "collections.c" 3 4
                                               ((void *)0)
-// # 2106 "collections.c"
+                                              // # 2106 "collections.c"
     );
 
     if (putKeyHash->info.type != 2)
@@ -7620,9 +7621,9 @@ ctr_object *ctr_map_get(ctr_object *myself, ctr_argument *argumentList) {
 
   if (!hasher) {
     searchKey = ctr_send_message(searchKey, "toString", 8,
-// # 2140 "collections.c" 3 4
+                                 // # 2140 "collections.c" 3 4
                                  ((void *)0)
-// # 2140 "collections.c"
+                                 // # 2140 "collections.c"
     );
 
     if (searchKey->info.type != 3) {
@@ -7634,9 +7635,9 @@ ctr_object *ctr_map_get(ctr_object *myself, ctr_argument *argumentList) {
   } else {
     ctr_number hashk;
     ctr_object *searchKeyHasho = ctr_send_message(searchKey, "iHash", 5,
-// # 2154 "collections.c" 3 4
+                                                  // # 2154 "collections.c" 3 4
                                                   ((void *)0)
-// # 2154 "collections.c"
+                                                  // # 2154 "collections.c"
     );
     if (searchKeyHasho->info.type != 2) {
       foundObject = ctr_internal_object_find_property(myself, searchKey, 0);
@@ -7647,9 +7648,9 @@ ctr_object *ctr_map_get(ctr_object *myself, ctr_argument *argumentList) {
     }
   retv:
     if (foundObject ==
-// # 2165 "collections.c" 3 4
+        // # 2165 "collections.c" 3 4
         ((void *)0)
-// # 2165 "collections.c"
+        // # 2165 "collections.c"
     ) {
       ctr_object *kvres = myself->value.defvalue;
       if (kvres == CtrStdNil)
@@ -7671,9 +7672,9 @@ ctr_object *ctr_map_get_or_insert(ctr_object *myself,
 
   if (!hasher) {
     searchKey = ctr_send_message(searchKey, "toString", 8,
-// # 2197 "collections.c" 3 4
+                                 // # 2197 "collections.c" 3 4
                                  ((void *)0)
-// # 2197 "collections.c"
+                                 // # 2197 "collections.c"
     );
 
     if (searchKey->info.type != 3) {
@@ -7686,9 +7687,9 @@ ctr_object *ctr_map_get_or_insert(ctr_object *myself,
   } else {
     ctr_number hashk;
     ctr_object *searchKeyHasho = ctr_send_message(searchKey, "iHash", 5,
-// # 2211 "collections.c" 3 4
+                                                  // # 2211 "collections.c" 3 4
                                                   ((void *)0)
-// # 2211 "collections.c"
+                                                  // # 2211 "collections.c"
     );
     if (searchKeyHasho->info.type != 2) {
       foundObject = ctr_internal_object_find_property(myself, searchKey, 0);
@@ -7699,9 +7700,9 @@ ctr_object *ctr_map_get_or_insert(ctr_object *myself,
     }
   retv:
     if (foundObject ==
-// # 2222 "collections.c" 3 4
+        // # 2222 "collections.c" 3 4
         ((void *)0)
-// # 2222 "collections.c"
+        // # 2222 "collections.c"
     ) {
       ctr_object *kvres = myself->value.defvalue;
       if (kvres == CtrStdNil)
@@ -7740,23 +7741,23 @@ ctr_object *ctr_map_each(ctr_object *myself, ctr_argument *argumentList) {
     arguments->next = argument2;
     argument2->next = argument3;
     ctr_block_run(block, arguments,
-// # 2284 "collections.c" 3 4
+                  // # 2284 "collections.c" 3 4
                   ((void *)0)
-// # 2284 "collections.c"
+                  // # 2284 "collections.c"
     );
     if (CtrStdFlow == CtrStdContinue)
       CtrStdFlow =
-// # 2286 "collections.c" 3 4
+          // # 2286 "collections.c" 3 4
           ((void *)0)
-// # 2286 "collections.c"
+          // # 2286 "collections.c"
           ;
     m = m->next;
   }
   if (CtrStdFlow == CtrStdBreak)
     CtrStdFlow =
-// # 2290 "collections.c" 3 4
+        // # 2290 "collections.c" 3 4
         ((void *)0)
-// # 2290 "collections.c"
+        // # 2290 "collections.c"
         ;
   block->info.mark = 0;
   block->info.sticky = 0;
@@ -7793,20 +7794,20 @@ error_invalid_input:
 
 ctr_object *ctr_map_keys(ctr_object *myself, ctr_argument *argumentList) {
   ctr_object *keys = ctr_array_new(CtrStdArray,
-// # 2325 "collections.c" 3 4
+                                   // # 2325 "collections.c" 3 4
                                    ((void *)0)
-// # 2325 "collections.c"
+                                   // # 2325 "collections.c"
   );
   ctr_mapitem *s = myself->properties->head;
   ctr_size sl = myself->properties->size;
   ctr_argument arg = {
-// # 2328 "collections.c" 3 4
+      // # 2328 "collections.c" 3 4
       ((void *)0)
-// # 2328 "collections.c"
-          ,
-// # 2328 "collections.c" 3 4
+      // # 2328 "collections.c"
+      ,
+      // # 2328 "collections.c" 3 4
       ((void *)0)
-// # 2328 "collections.c"
+      // # 2328 "collections.c"
   };
   for (; sl--;) {
     arg.object = s->key;
@@ -7818,20 +7819,20 @@ ctr_object *ctr_map_keys(ctr_object *myself, ctr_argument *argumentList) {
 
 ctr_object *ctr_map_values(ctr_object *myself, ctr_argument *argumentList) {
   ctr_object *values = ctr_array_new(CtrStdArray,
-// # 2341 "collections.c" 3 4
+                                     // # 2341 "collections.c" 3 4
                                      ((void *)0)
-// # 2341 "collections.c"
+                                     // # 2341 "collections.c"
   );
   ctr_mapitem *s = myself->properties->head;
   ctr_size sl = myself->properties->size;
   ctr_argument arg = {
-// # 2344 "collections.c" 3 4
+      // # 2344 "collections.c" 3 4
       ((void *)0)
-// # 2344 "collections.c"
-          ,
-// # 2344 "collections.c" 3 4
+      // # 2344 "collections.c"
+      ,
+      // # 2344 "collections.c" 3 4
       ((void *)0)
-// # 2344 "collections.c"
+      // # 2344 "collections.c"
   };
   for (; sl--;) {
     arg.object = s->value;
@@ -7854,9 +7855,9 @@ ctr_object *ctr_map_fmap(ctr_object *myself, ctr_argument *argumentList) {
   ctr_argument arg = {0}, *arguments = &arg, varg = {0};
   arguments->next = &varg;
   ctr_object *newmap = ctr_map_new(CtrStdMap,
-// # 2376 "collections.c" 3 4
+                                   // # 2376 "collections.c" 3 4
                                    ((void *)0)
-// # 2376 "collections.c"
+                                   // # 2376 "collections.c"
   );
   while (m) {
     arguments->object = m->key;
@@ -7865,18 +7866,18 @@ ctr_object *ctr_map_fmap(ctr_object *myself, ctr_argument *argumentList) {
     if (CtrStdFlow) {
       if (CtrStdFlow == CtrStdContinue) {
         CtrStdFlow =
-// # 2386 "collections.c" 3 4
+            // # 2386 "collections.c" 3 4
             ((void *)0)
-// # 2386 "collections.c"
+            // # 2386 "collections.c"
             ;
         m = m->next;
         continue;
       }
       if (CtrStdFlow == CtrStdBreak)
         CtrStdFlow =
-// # 2391 "collections.c" 3 4
+            // # 2391 "collections.c" 3 4
             ((void *)0)
-// # 2391 "collections.c"
+            // # 2391 "collections.c"
             ;
       break;
     }
@@ -7913,18 +7914,18 @@ ctr_object *ctr_map_fmap_inp(ctr_object *myself, ctr_argument *argumentList) {
     if (CtrStdFlow) {
       if (CtrStdFlow == CtrStdContinue) {
         CtrStdFlow =
-// # 2442 "collections.c" 3 4
+            // # 2442 "collections.c" 3 4
             ((void *)0)
-// # 2442 "collections.c"
+            // # 2442 "collections.c"
             ;
         m = m->next;
         continue;
       }
       if (CtrStdFlow == CtrStdBreak)
         CtrStdFlow =
-// # 2447 "collections.c" 3 4
+            // # 2447 "collections.c" 3 4
             ((void *)0)
-// # 2447 "collections.c"
+            // # 2447 "collections.c"
             ;
       break;
     }
@@ -7953,14 +7954,14 @@ ctr_object *ctr_map_kvmap(ctr_object *myself, ctr_argument *argumentList) {
   arguments->next = &vargs;
   ctr_argument largs = {0}, *larguments = &largs;
   ctr_object *kvtup = ctr_array_new(CtrStdArray,
-// # 2485 "collections.c" 3 4
+                                    // # 2485 "collections.c" 3 4
                                     ((void *)0)
-// # 2485 "collections.c"
+                                    // # 2485 "collections.c"
   );
   ctr_object *newmap = ctr_map_new(CtrStdMap,
-// # 2486 "collections.c" 3 4
+                                   // # 2486 "collections.c" 3 4
                                    ((void *)0)
-// # 2486 "collections.c"
+                                   // # 2486 "collections.c"
   );
   while (m) {
     arguments->object = m->key;
@@ -8011,14 +8012,14 @@ ctr_object *ctr_map_kvlist(ctr_object *myself, ctr_argument *argumentList) {
   arguments->next = &vargs;
   ctr_argument largs = {0}, *larguments = &largs;
   ctr_object *kvtup = ctr_array_new(CtrStdArray,
-// # 2549 "collections.c" 3 4
+                                    // # 2549 "collections.c" 3 4
                                     ((void *)0)
-// # 2549 "collections.c"
+                                    // # 2549 "collections.c"
   );
   ctr_object *list = ctr_array_new(CtrStdArray,
-// # 2550 "collections.c" 3 4
+                                   // # 2550 "collections.c" 3 4
                                    ((void *)0)
-// # 2550 "collections.c"
+                                   // # 2550 "collections.c"
   );
   while (m) {
     arguments->object = m->key;
@@ -8034,9 +8035,9 @@ ctr_object *ctr_map_kvlist(ctr_object *myself, ctr_argument *argumentList) {
 
     if (arguments->object == block) {
       ctr_object *lst = ctr_array_new(CtrStdArray,
-// # 2570 "collections.c" 3 4
+                                      // # 2570 "collections.c" 3 4
                                       ((void *)0)
-// # 2570 "collections.c"
+                                      // # 2570 "collections.c"
       );
       arguments->object = m->key;
       ctr_array_push(lst, arguments);
@@ -8057,9 +8058,9 @@ ctr_object *ctr_map_flip(ctr_object *myself, ctr_argument *argumentList) {
   ctr_mapitem *m;
   m = myself->properties->head;
   ctr_object *map_new = ctr_map_new(CtrStdMap,
-// # 2596 "collections.c" 3 4
+                                    // # 2596 "collections.c" 3 4
                                     ((void *)0)
-// # 2596 "collections.c"
+                                    // # 2596 "collections.c"
   );
   ctr_argument args = {0}, *arguments = &args;
   ctr_argument arg2 = {0}, *argument2 = &arg2;
@@ -8187,9 +8188,9 @@ ctr_object *ctr_map_contains(ctr_object *myself, ctr_argument *argumentList) {
 
   if (!hasher) {
     searchKey = ctr_send_message(searchKey, "toString", 8,
-// # 2797 "collections.c" 3 4
+                                 // # 2797 "collections.c" 3 4
                                  ((void *)0)
-// # 2797 "collections.c"
+                                 // # 2797 "collections.c"
     );
 
     if (searchKey->info.type != 3) {
@@ -8198,16 +8199,16 @@ ctr_object *ctr_map_contains(ctr_object *myself, ctr_argument *argumentList) {
 
     foundObject = ctr_internal_object_find_property(myself, searchKey, 0);
     return ctr_build_bool(foundObject !=
-// # 2806 "collections.c" 3 4
+                          // # 2806 "collections.c" 3 4
                           ((void *)0)
-// # 2806 "collections.c"
+                          // # 2806 "collections.c"
     );
   } else {
     ctr_number hashk;
     ctr_object *searchKeyHasho = ctr_send_message(searchKey, "iHash", 5,
-// # 2811 "collections.c" 3 4
+                                                  // # 2811 "collections.c" 3 4
                                                   ((void *)0)
-// # 2811 "collections.c"
+                                                  // # 2811 "collections.c"
     );
     if (searchKeyHasho->info.type != 2) {
       foundObject = ctr_internal_object_find_property(myself, searchKey, 0);
@@ -8217,9 +8218,9 @@ ctr_object *ctr_map_contains(ctr_object *myself, ctr_argument *argumentList) {
           myself, searchKey, *(uint64_t *)&hashk, 0);
     }
     return ctr_build_bool(foundObject !=
-// # 2821 "collections.c" 3 4
+                          // # 2821 "collections.c" 3 4
                           ((void *)0)
-// # 2821 "collections.c"
+                          // # 2821 "collections.c"
     );
   }
 }
@@ -8229,9 +8230,9 @@ uint32_t ctr_internal_value_hash(ctr_object *searchKey) {
 
   if (!hasher) {
     searchKey = ctr_send_message(searchKey, "toString", 8,
-// # 2831 "collections.c" 3 4
+                                 // # 2831 "collections.c" 3 4
                                  ((void *)0)
-// # 2831 "collections.c"
+                                 // # 2831 "collections.c"
     );
 
     if (searchKey->info.type != 3)
@@ -8239,9 +8240,9 @@ uint32_t ctr_internal_value_hash(ctr_object *searchKey) {
     return ctr_internal_index_hash(searchKey);
   } else {
     ctr_object *searchKeyHasho = ctr_send_message(searchKey, "iHash", 5,
-// # 2839 "collections.c" 3 4
+                                                  // # 2839 "collections.c" 3 4
                                                   ((void *)0)
-// # 2839 "collections.c"
+                                                  // # 2839 "collections.c"
     );
     if (searchKeyHasho->info.type != 2)
       return ctr_internal_index_hash(searchKeyHasho);
@@ -8471,10 +8472,10 @@ void *ctr_hmap_unwrap(ctr_object *obj) {
   ctr_resource *res = obj->value.rvalue;
   if (!res)
     return
-// # 2866 "collections.c" 3 4
+        // # 2866 "collections.c" 3 4
         ((void *)0)
-// # 2866 "collections.c"
-            ;
+        // # 2866 "collections.c"
+        ;
   return res->ptr;
 }
 ctr_object *ctr_hmap_new(ctr_object *myself, ctr_argument *argumentList) {
@@ -8494,16 +8495,17 @@ ctr_object *ctr_hmap_keys(ctr_object *myself, ctr_argument *argumentList) {
     return CtrStdNil;
   };
   ctr_object *keys = ctr_array_new(CtrStdArray,
-// # 2883 "collections.c" 3 4
+                                   // # 2883 "collections.c" 3 4
                                    ((void *)0)
-// # 2883 "collections.c"
+                                   // # 2883 "collections.c"
   );
   for (khiter_t k = (khint_t)(0); k != ((map)->n_buckets); ++k)
     if ((!(((map)->flags[(k) >> 4] >> (((k)&0xfU) << 1)) & 3)))
-      ctr_array_push(keys, &(ctr_argument){((map)->keys[k]),
-// # 2886 "collections.c" 3 4
-                                           ((void *)0)
-// # 2886 "collections.c"
+      ctr_array_push(keys, &(ctr_argument){
+                               ((map)->keys[k]),
+                               // # 2886 "collections.c" 3 4
+                               ((void *)0)
+                               // # 2886 "collections.c"
                            });
   return keys;
 }
@@ -8514,16 +8516,17 @@ ctr_object *ctr_hmap_values(ctr_object *myself, ctr_argument *argumentList) {
     return CtrStdNil;
   };
   ctr_object *values = ctr_array_new(CtrStdArray,
-// # 2893 "collections.c" 3 4
+                                     // # 2893 "collections.c" 3 4
                                      ((void *)0)
-// # 2893 "collections.c"
+                                     // # 2893 "collections.c"
   );
   for (khiter_t k = (khint_t)(0); k != ((map)->n_buckets); ++k)
     if ((!(((map)->flags[(k) >> 4] >> (((k)&0xfU) << 1)) & 3)))
-      ctr_array_push(values, &(ctr_argument){((map)->vals[k]),
-// # 2896 "collections.c" 3 4
-                                             ((void *)0)
-// # 2896 "collections.c"
+      ctr_array_push(values, &(ctr_argument){
+                                 ((map)->vals[k]),
+                                 // # 2896 "collections.c" 3 4
+                                 ((void *)0)
+                                 // # 2896 "collections.c"
                              });
   return values;
 }
@@ -8604,14 +8607,15 @@ ctr_object *ctr_hmap_each(ctr_object *myself, ctr_argument *argumentList) {
   for (khiter_t k = (khint_t)(0); k != ((map)->n_buckets); ++k)
     if ((!(((map)->flags[(k) >> 4] >> (((k)&0xfU) << 1)) & 3))) {
       ctr_block_run(blk,
-                    &(ctr_argument){((map)->keys[k]),
-// # 2960 "collections.c" 3 4
-                                    ((void *)0)
-// # 2960 "collections.c"
+                    &(ctr_argument){
+                        ((map)->keys[k]),
+                        // # 2960 "collections.c" 3 4
+                        ((void *)0)
+                        // # 2960 "collections.c"
                     },
-// # 2960 "collections.c" 3 4
+                    // # 2960 "collections.c" 3 4
                     ((void *)0)
-// # 2960 "collections.c"
+                    // # 2960 "collections.c"
       );
     }
   return myself;
@@ -8628,14 +8632,15 @@ ctr_object *ctr_hmap_fmap(ctr_object *myself, ctr_argument *argumentList) {
   for (khiter_t k = (khint_t)(0); k != ((map)->n_buckets); ++k)
     if ((!(((map)->flags[(k) >> 4] >> (((k)&0xfU) << 1)) & 3))) {
       ctr_object *val = ctr_block_run(blk,
-                                      &(ctr_argument){((map)->keys[k]),
-// # 2973 "collections.c" 3 4
-                                                      ((void *)0)
-// # 2973 "collections.c"
+                                      &(ctr_argument){
+                                          ((map)->keys[k]),
+                                          // # 2973 "collections.c" 3 4
+                                          ((void *)0)
+                                          // # 2973 "collections.c"
                                       },
-// # 2973 "collections.c" 3 4
+                                      // # 2973 "collections.c" 3 4
                                       ((void *)0)
-// # 2973 "collections.c"
+                                      // # 2973 "collections.c"
       );
       khiter_t k = kh_put_ctr_hmap_t(p, argumentList->object, &ret);
       ((p)->vals[k]) = val;
@@ -8652,14 +8657,15 @@ ctr_object *ctr_hmap_fmap_inp(ctr_object *myself, ctr_argument *argumentList) {
   for (khiter_t k = (khint_t)(0); k != ((map)->n_buckets); ++k)
     if ((!(((map)->flags[(k) >> 4] >> (((k)&0xfU) << 1)) & 3))) {
       ((map)->vals[k]) = ctr_block_run(blk,
-                                       &(ctr_argument){((map)->keys[k]),
-// # 2986 "collections.c" 3 4
-                                                       ((void *)0)
-// # 2986 "collections.c"
+                                       &(ctr_argument){
+                                           ((map)->keys[k]),
+                                           // # 2986 "collections.c" 3 4
+                                           ((void *)0)
+                                           // # 2986 "collections.c"
                                        },
-// # 2986 "collections.c" 3 4
+                                       // # 2986 "collections.c" 3 4
                                        ((void *)0)
-// # 2986 "collections.c"
+                                       // # 2986 "collections.c"
       );
     }
   return myself;

@@ -1,6 +1,5 @@
 #include <stdio.h>
 
-
 int cflags = 0;
 int ldflags = 0;
 
@@ -27,19 +26,16 @@ int ldflags = 0;
 #endif
 #define LDFLAGS "-lcitron " TCC_L " -lpcre -ldl -lm -pthread " FFI_L BSD_L GC_L
 
-
-int
-main (int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   for (int i = 0; i < argc; i++)
-    if (strcmp (argv[i], "--cflags") == 0)
+    if (strcmp(argv[i], "--cflags") == 0)
       cflags = 1;
-    else if (strcmp (argv[i], "--ldflags") == 0)
+    else if (strcmp(argv[i], "--ldflags") == 0)
       ldflags = 1;
   if (cflags)
-    printf ("%s ", CFLAGS);
+    printf("%s ", CFLAGS);
   if (ldflags)
-    printf ("%s", LDFLAGS);
-  putc ('\n', stdout);
+    printf("%s", LDFLAGS);
+  putc('\n', stdout);
   return 0;
 }

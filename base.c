@@ -3696,9 +3696,9 @@ ctr_object *ctr_string_find_pattern_options_do(
         *argumentList) { // pattern, blk, options: {!=Ignore, n=newline, i=CI}
   pcre *pattern;
   int regex_error_offset = 0;
-  size_t regex_count = 0;
+  int regex_count = 0;
   size_t n = 511;
-  size_t i = 0;
+  int i = 0;
   int first = 1;
   int matches[511];
   char *needle = ctr_heap_allocate_cstring(argumentList->object);
@@ -3750,7 +3750,7 @@ ctr_object *ctr_string_find_pattern_options_do(
       break;
     blockArguments->object = ctr_array_new(CtrStdArray, NULL);
     for (i = 0; i < regex_count; i++) {
-      size_t len = (matches[2 * i + 1] - matches[2 * i]);
+      int len = (matches[2 * i + 1] - matches[2 * i]);
       char *tmp = ctr_heap_allocate(len + 1);
       memcpy(tmp, haystack + offset + matches[2 * i], len);
       group->object = ctr_build_string_from_cstring(tmp);

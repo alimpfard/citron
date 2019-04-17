@@ -1,4 +1,5 @@
 all:
+	rm -rf libsocket/build
 	mkdir libsocket/build
 	cd libsocket/build && cmake .. && make
 	cp -r libsocket/build/C/libsocket.so .

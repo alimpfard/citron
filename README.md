@@ -4,21 +4,33 @@
 A binary release (x86_64 ELF) is available (see [Default Module Resolution](#default-module-resolution) for dynamic modules)
 
 ### Build guide
-minimum required libraries:
+required libraries:
 * `libdl`   -- for dynamic loading of modules
 * `libbsd`  -- for utility functions (compile without forLinux defined to get rid of this dependency)
 * `libpcre` -- for regular expressions
 * `libpthread` -- for threading support
 * `libgc` -- for Garbage Collection
+* `libsparsehash` -- Symbol storage
+* `llvm` -- (>= 7) for inline asm (if you're on a braindead distro that adds version numbers to these, add an alias for `llvm-config`)
 
-Basic steps to build and install:
+build-time tools:
+* autotools -- configure and such
+* cmake -- for libsocket
+
+#### for the braindead distros (don't kill me)
+```sh
+$ sudo apt install build-essential automake libtool cmake libbsd-dev libpcre3-dev libgc-dev libsparsehash-dev llvm-8 llvm-8-dev
+```
+
+#### Basic steps to build and install:
 
 clone this repository
 
 ```sh
+$ git submodule update --init
 $ cd citron/autohell
 $ autoreconf
-$ ./configure --with-ffi
+$ CFLAGS="-O3" CXXFLAGS="-O3" ./configure --with-inject --with-ffi --with-inlineasm
 $ make
 $ make install
 ```

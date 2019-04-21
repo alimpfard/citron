@@ -1,20 +1,21 @@
-#include <ctype.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <math.h>
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
+#include <ctype.h>
+#include <stdarg.h>
+#include <math.h>
+#include <unistd.h>
+#include <stdint.h>
+#include <time.h>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <time.h>
-#include <unistd.h>
+#include <errno.h>
+#include <fcntl.h>
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
+#include <dirent.h>
 #include "citron.h"
 #include "siphash.h"
 #include "wordexp.h"
@@ -29,7 +30,6 @@
 
 #include <termios.h>
 static struct termios oldTermios, newTermios;
-
 /**@I_OBJ_DEF File*/
 
 /**
@@ -358,7 +358,6 @@ ctr_object *ctr_file_rpath(ctr_object *myself, ctr_argument *argumentList) {
 	  return path;
 	}
     }
-  }
   path = ctr_build_string_from_cstring(rpath);
   ctr_heap_free(cpath);
   return path;

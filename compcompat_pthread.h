@@ -6,6 +6,7 @@
 #if __has_include(<sys/prctl.h>)
 
 #include <sys/prctl.h>
+#include <unistd.h>
 
 int pthread_getname_np(pthread_t pth, char* buf, size_t len) {
     return prctl(PR_GET_NAME, buf);

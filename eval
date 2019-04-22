@@ -828,7 +828,10 @@ Eval on: 'togglePasteMode' do: {
         args pop. #consume option..
         var value is Eval shiftArgs rightTrim.
         (value isNil) ifTrue: { thisBlock error: '-e requires an argument.'. }.
-        import Library/Utils/Shell: \*.
+        import
+            Library/Utils/Shell: \*
+            Library/Control/MethodResolve: \*
+        .
         Reflect addGlobalVariable: '%0'.
         %0 is value.
         { ^(Eval argCount > 0). } whileTrue: { args push: Eval shiftArgs. }. #consume all other arguments.

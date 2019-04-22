@@ -70,6 +70,15 @@ var sendBinMsg is {\:msg
     }.
 }.
 
+var formula is {\:fm
+    ^{:arg
+        var value is arg.
+        ^const fm evaluateInContext: Reflect thisContext.
+    }.
+}.
+
+var ~ is formula.
+
 var ! is Opaque cnew: {:self
     on: 'toString' do: { ^'<Opaque Wrapper>'. }.
     on: 'respondTo:' do: {\:msg:*args

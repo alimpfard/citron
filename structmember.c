@@ -3,8 +3,8 @@
 
 #warning "Inner structs are not fully available, they are ignored in unpacks"
 
-extern int ctr_reflect_is_linked_to_(ctr_argument*);
-extern void sttrace_print(void*);
+extern int ctr_reflect_is_linked_to_(ctr_argument *);
+extern void sttrace_print(void *);
 
 static int get_double(ctr_object *o, double *p) { // TODO: Error handling
   double x;
@@ -24,7 +24,7 @@ ctr_object *nuchar(char *p) { return ctr_build_string(p, 1); }
 
 ctr_object *nuuchar(char *p) {
   unsigned char c = *(unsigned char *)p;
-  return ctr_build_string((char*) &c, 1);
+  return ctr_build_string((char *)&c, 1);
 }
 
 ctr_object *nubyte(char *p) {
@@ -215,17 +215,32 @@ struct npdt_t get_pentry(ffi_type *type) {
   return ret;
 }
 
-int npdispatch(char *p, ctr_object *o, ffi_type *type) {
-  if (type == &ffi_type_pointer && o->info.type == CTR_OBJECT_TYPE_OTSTRING) {
-    char *buf = ctr_heap_allocate_cstring(o);
-    memcpy(p, (const void *)&buf, sizeof(void *));
-    return 0;
-  }
-  if (type == &ffi_type_pointer &&
-      ctr_reflect_is_linked_to_(
-          &(ctr_argument){o, &(ctr_argument){CtrStdCType_pointer}})) {
-    memcpy(p, &o->value.rvalue->ptr, sizeof(void *));
-    return 0;
+int npdispatch(char *p, ctr_object *__restrict__ o, ffi_type *type) {
+  if (type == &ffi_type_pointer) {
+    switch (o->info.type) {
+    case CTR_OBJECT_TYPE_OTSTRING: {
+      char *buf = ctr_heap_allocate_cstring(o);
+      memcpy(p, (const void *)&buf, sizeof(void *));
+      return 0;
+    }
+    case CTR_OBJECT_TYPE_OTARRAY: { // treat all arrays as arrays of ints XXX TODO: Fix
+      size_t count = o->value.avalue->head - o->value.avalue->tail;
+      double *buf = ctr_heap_allocate(sizeof(double) * count);
+      for (size_t i = 0; i < count; i++)
+        npdispatch((char *)(buf + i),
+                   o->value.avalue->elements[o->value.avalue->tail + i],
+                   &ffi_type_sint);
+      memcpy(p, (const void *)&buf, sizeof(void *));
+      return 0;
+    }
+    default:
+      break;
+    }
+    if (ctr_reflect_is_linked_to_(
+            &(ctr_argument){o, &(ctr_argument){CtrStdCType_pointer, NULL}})) {
+      memcpy(p, &o->value.rvalue->ptr, sizeof(void *));
+      return 0;
+    }
   }
   int (*fn)(char *, ctr_object *) = get_pentry(type).fn;
   if (fn != NULL) {
@@ -294,8 +309,8 @@ int npchar(char *p, ctr_object *o) {
     int errlen = sprintf(
         err,
         "char requires string of length 1 but we were passed %.*s (%d chars)",
-        (int) o->value.svalue->vlen, o->value.svalue->value,
-        (int) o->value.svalue->vlen);
+        (int)o->value.svalue->vlen, o->value.svalue->value,
+        (int)o->value.svalue->vlen);
     CtrStdFlow = ctr_build_string(err, errlen);
     return -1;
   }
@@ -311,8 +326,8 @@ int npuchar(char *p, ctr_object *o) {
     int errlen = sprintf(
         err,
         "uchar requires string of length 1 but we were passed %.*s (%d chars)",
-        (int) o->value.svalue->vlen, o->value.svalue->value,
-        (int) o->value.svalue->vlen);
+        (int)o->value.svalue->vlen, o->value.svalue->value,
+        (int)o->value.svalue->vlen);
     CtrStdFlow = ctr_build_string(err, errlen);
     return -1;
   }

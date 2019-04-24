@@ -4,7 +4,7 @@ import Library/Data/SwitchCase.
 
 var ast2ctrcode is {:self:ast:curindent:options
   options is options or: Map.
-  var max_line_length is options at: 'max_line_length', or: 40.
+  var max_line_length is options at: 'max_line_length', or: 80.
   var indent_s        is ' ' * (options at: 'indent_length', or: 2).
   var pkwmsgs         is options at: 'parenthesize_kwmsgs', or: False.
   curindent is curindent or: 0.
@@ -14,7 +14,7 @@ var ast2ctrcode is {:self:ast:curindent:options
     },
     case: 'LTRSTRING' do: {
       var value is ast value.
-      ^'\'%s\'' % [value escapeAsciiControls escape: '\''].
+      ^'\'%s\'' % [value escapeAsciiControls escape: '\'\n'].
     },
     case: 'LTRNIL' do: {
       ^'Nil'.
@@ -68,18 +68,18 @@ var ast2ctrcode is {:self:ast:curindent:options
     },
     case: 'KWMESSAGE' do: {
       var value is ast value split: ':'.
-      var code is ''.
+      var code is Array < ''.
       value each: {:i:x
-        var tc is '%s: %s ' % [x, self[ast @ i, curindent, options]].
-        (code length > max_line_length) ifTrue: {
-          (code split: '\n', last) length + tc length > max_line_length ifTrue: {
-            code +=: '\n'.
-          }.
+        var tc is '%s: %s ' % [x, self[ast @ i, curindent + 1, options]].
+        var tchead is tc split: '\n', head.
+        (code last length + tchead length > max_line_length) ifTrue: { # ...\n <code> <tc>
+          code push: ''.
         }.
-        code +=: tc.
+        code last +=: tc.
       }.
-      code is code from: 0 to: code length - 1.
-      ^code.
+      var indent is indent_s * (curindent + 1).
+      code is (code join: '\n' + indent).
+      ^code rightTrim.
     },
     case: 'EXPRASSIGNMENT' do: {
       var ref is self[(ast at: 0), curindent, options].
@@ -116,17 +116,27 @@ var ast2ctrcode is {:self:ast:curindent:options
     case: 'ENDOFPROGRAM' do: { ^''. },
     case: 'RETURNFROMBLOCK' do: { ^'^' + self[ast @ 0, curindent, options]. },
     case: 'IMMUTABLE' do: {
-      var code is '['.
+      var code is Array < '['.
       var ps is ast at: 0.
       var pcount is ps count.
+      var newlined is False.
       (Array new fill: pcount with: \:i self[ps @ i, curindent, options]) each_v: {:gen
-        var tcode is code + gen + ', '.
-        tcode split: '\n', last length > max_line_length ifTrue: { tcode is code + '\n' + (indent_s * (curindent + 1)) + gen + ', '. }.
-        code is tcode.
+        var tcode is code last + gen + ', '.
+        tcode split: '\n', last length > max_line_length ifTrue: {
+          code unshift: (indent_s * (curindent + 1)) + (code shift skip: 1).
+          code unshift: '['.
+          code push: (indent_s * (curindent + 1)) + gen + ', '.
+          newlined is True.
+        } ifFalse: { code last +=: gen + ', '. }.
       }.
-      pcount > 0 ifTrue: { code is code from: 0 to: code length - 2. }.
-      code split: '\n', last length > max_line_length ifTrue: { code +=: '\n'. }.
-      ^code + ']'.
+      pcount > 0 ifTrue: { code put: (code last from: 0 to: code last length - 2) at: code count - 1. }.
+      code last split: '\n', last length > max_line_length ifTrue: { code push: ''. }.
+      newlined ifTrue: {
+        code push: (indent_s * curindent) + ']'.
+      } ifFalse: {
+        code last +=: ']'.
+      }.
+      ^code filter_v: \:x x trim length, join: '\n'.
     },
     case: 'RAW' do: {
       ^((frozen _ is

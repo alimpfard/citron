@@ -1,0 +1,11 @@
+# Tests patterns as block args
+
+var first is \:([a, *_]) a.
+var second is \:([a, b, *_]) b.
+var tail is \:([a, *xs]) xs.
+var init is \:([*xs, y]) xs.
+
+var weird is [[1], [2, 3], [4]].
+Pen writeln: first[second[weird]].
+
+Pen writeln: first[tail[init['test' characters]]].

@@ -58,5 +58,40 @@ var asBlock is {:msg:active
 
 var sendMsg is {\:msg:*arg0s
     var msgv is asBlock[msg, arg0s count].
-    ^\:obj:*args Reflect run: msgv forObject: obj arguments: arg0s + args.
+    ^{\:obj:*args
+        Reflect run: msgv forObject: obj arguments: arg0s + args.
+    }.
+}.
+
+var sendBinMsg is {\:msg
+    var msgv is asBlock[msg, 0].
+    ^{\:obj:*args
+        Reflect run: msgv forObject: obj arguments: args.
+    }.
+}.
+
+var formula is {\:fm
+    ^{:arg
+        var value is arg.
+        ^const fm evaluateInContext: Reflect thisContext.
+    }.
+}.
+
+var ~ is formula.
+
+var ! is Opaque cnew: {:self
+    on: 'toString' do: { ^'<Opaque Wrapper>'. }.
+    on: 'respondTo:' do: {\:msg:*args
+        var sendMsg is const sendMsg.
+        var sendBinMsg is const sendBinMsg.
+        msg startsWith: 'binary', ifTrue: {
+            args head = Nil ifTrue: {
+                ^sendBinMsg[(msg skip: 6)].
+            }.
+        }.
+        ^sendMsg applyAll: [msg] + args.
+    }.
+    1 to: 6 step: 1 do: {:i
+        self on: 'respondTo:' + ('and:' * i) do: sendMsg.
+    }.
 }.

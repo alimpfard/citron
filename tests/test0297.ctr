@@ -1,0 +1,13 @@
+# Test @comptime compliance
+
+@comptime[discard] var your-shitty-macro is {:rept:expr
+  var blk is $({} run).
+  var ins is blk at: 0, at: 1.
+  ([expr] * rept) foldl: {\:acc:x
+    acc insert: x at: -1.
+    ^acc.
+  } accumulator: ins.
+  ^blk.
+}.
+
+@comptime your-shitty-macro[10, $(Pen writeln: 'test')].

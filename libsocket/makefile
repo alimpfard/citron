@@ -1,4 +1,5 @@
 all:
+	rm -rf libsocket/build
 	mkdir libsocket/build
 	cd libsocket/build && cmake .. && make
 	cp -r libsocket/build/C/libsocket.so .
@@ -11,3 +12,6 @@ install:
 
 uninstall:
 	# make -C libsocket/build uninstall
+
+distclean:
+	make -C libsocket/build distclean || true

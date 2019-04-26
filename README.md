@@ -5,8 +5,13 @@ No binary release is available for android.
 
 ### Build guide
 minimum required libraries:
+required libraries:
+* `libdl`   -- for dynamic loading of modules
+* `libbsd`  -- for utility functions (compile without forLinux defined to get rid of this dependency)
 * `libpcre` -- for regular expressions
 * `libgc` -- for Garbage Collection
+* `libsparsehash` -- Symbol storage
+* `llvm` -- (>= 7) for inline asm (if you're on a braindead distro that adds version numbers to these, add an alias for `llvm-config`)
 
 ##### Note that this is only targeted at Termux (any others, tests are welcome)
 
@@ -37,9 +42,10 @@ Basic steps to build and install:
 clone this repository
 
 ```sh
+$ git submodule update --init
 $ cd citron/autohell
 $ autoreconf
-$ ./configure --with-ffi
+$ CFLAGS="-O3" CXXFLAGS="-O3" ./configure --with-inject --with-ffi --with-inlineasm
 $ make
 $ make install
 ```

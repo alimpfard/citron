@@ -1,13 +1,1 @@
-hello1
-Uncaught error has occurred.
-a child process can not join.
-#3 join (tests/test0257.ctr: 4)
-#2 new: (tests/test0257.ctr: 2)
-#1 x (tests/test0257.ctr: 2)
-------------------------------------
-The probable cause of the exception: 
-2 | 
-3 | 	Pen write: 'hello1\n'.
-4 | 	child join.
-~~~~~~~~~~~~~^
-5 | 	Pen write: 'hello2\n'.
+

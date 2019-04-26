@@ -1,0 +1,142 @@
+import Library/Functional/PatternMatch: 'match'.
+import Library/Data/Array.
+import Library/Utils/Colors: 'Colors'.
+
+#:declare lazyev match
+
+var transpose is {\:arr
+    ^arr imap: \:i arr fmap: \:x x @ i.
+}.
+
+Array on: '~' do: {:elem
+    ^me + [elem].
+}.
+Array on: 'drop:' do: {:count
+    ^me from: count length: me count - count.
+}.
+var slideRow is {:self:row
+  row count < 2 ifTrue: { ^row. }.
+  var x is row @ 0.
+  var y is row @ 1.
+
+  x = 0 ifTrue: { ^self[row drop: 1] ~ 0. }.
+  y = 0 ifTrue: { ^self[[x] + (row drop: 2)] ~ 0. }.
+  x = y ifTrue: { ^[x + x] + self[(row drop: 2)] ~ 0. }.
+  ^[x] + self[row drop: 1].
+}.
+
+var reverseP is {:arr
+  ^arr fmap: \:x x reverse.
+}.
+
+var slideLeft is {\:board
+    board fmap: slideRow.
+}.
+
+var slide is {:direction:board
+    var res is direction `match` {
+        'up'    => transpose[slideLeft[transpose[board]]].
+        'right' => reverseP[slideLeft[reverseP[board]]].
+        'down'  => transpose[reverseP[slideLeft[reverseP[transpose[board]]]]].
+        'left'  => slideLeft[board].
+         _      => board.
+    }.
+    ^res.
+}.
+
+var completed is {\:b
+    b any: \:x x contains: 2048.
+}.
+
+var noNeighbors is {:self:r
+    r count < 2 ifTrue: { ^True. }.
+    var x is r @ 0.
+    var y is r @ 1.
+
+    x = y ifTrue: { ^False. }.
+    ^self[r drop: 1].
+}.
+var stalledP is {\:row
+    (row contains: 0, not) & noNeighbors[row].
+}.
+var stalled is {\:b
+    (b all: stalledP) & (transpose[b] all: stalledP).
+}.
+
+var emptyTiles is {\:b
+    (b imap: \:i:x x imap: {:j:y y = 0 ifTrue: { ^[i, j]. } ifFalse: { ^[-1, -1 ]. }.}) fmap!: \:xs xs filter_v: \:x (x = [-1, -1 ]) not.
+}.
+
+var updateIndex is {\:fn:i
+  {\:list (list take: i) ~ fn[list drop: i, head] + (list drop: i, tail).}.
+}.
+var updateTile is {\:pos:val
+  updateIndex[updateIndex[{\ val }, pos last], pos head].
+}.
+
+var addTile is {:board
+    var tiles is emptyTiles[board] sum.
+    var newPoint is tiles at: (Dice rollWithSides: tiles count).
+    var newValue is (\:x x = 1 either: 4 or: 2)[Dice rollWithSides: 10].
+    ^updateTile[newPoint, newValue][board].
+}.
+
+var gameLoop is {:b
+    {
+        Pen clear.
+        Pen writeln: boardToString[b].
+        stalled[b] ifTrue: {
+            Pen writeln: 'Game over :('.
+            True break.
+        } ifFalse: {
+            completed[b] ifTrue: {
+                Pen writeln: 'You won :)'.
+                True break.
+            } ifFalse: {
+                var input is Shell call: 'xmessage -print -buttons left,down,up,right "What do?"', trim.
+                var b1 is slide[input, b].
+                b1 = b ifFalse: {
+                    b is addTile[b1].
+                }.
+            }.
+        }.
+    } forever.
+}.
+
+var boardToString is {:board
+    ^board fmap: \:x vertical[x fmap: \:x pad[showSpecial[x]]], join: '\n'.
+}.
+
+var colour-map is Map new: {\:x {^''.}.},
+  put: {\:x ''} at: 0,
+  put: {\:x Colors % [x, (\green)            ]} at: 2,
+  put: {\:x Colors % [x, (\yellow)           ]} at: 4,
+  put: {\:x Colors % [x, (\green)            ]} at: 8,
+  put: {\:x Colors % [x, (\cyan)             ]} at: 16,
+  put: {\:x Colors % [x, (\magenta)          ]} at: 32,
+  put: {\:x Colors % [x, (\blue)             ]} at: 64,
+  put: {\:x Colors % [x, (\red)              ]} at: 128,
+  put: {\:x Colors % [x, (\green), (\yellow) ]} at: 256,
+  put: {\:x Colors % [x, (\green), (\cyan)   ]} at: 512,
+  put: {\:x Colors % [x, (\green), (\magenta)]} at: 1024,
+  put: {\:x Colors % [x, (\green), (\red)    ]} at: 2048.
+
+var colour is {:x
+  var cc is colour-map at: x.
+  ^[x toString, cc applyTo: x toString].
+}.
+var vertical is \:x '|%:L|' % ['|', x].
+var showSpecial is {:x
+    ^x = 0 either: [''] * 2 or: colour[x].
+}.
+var pad is \:s s head paddingLeft: 4, replace: s head with: s last.
+
+var board is [
+  [0,0,16,0],
+  [0,0,0,0],
+  [0,1024,0,0],
+  [0,0,0,0]
+].
+var b1 is addTile[addTile[board]].
+
+gameLoop[b1].

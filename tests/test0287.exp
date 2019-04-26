@@ -1,15 +1,15 @@
 Uncaught error has occurred.
 Key not found: a
-#6 a (tests/test0287.ctr: 5)
+#6 a (tests/test0287.ctr: 6)
 #5 letEqualAst:in: (<eval>: 2)
 #4 fmap: (<eval>: 2)
-#3 toArray (tests/test0287.ctr: 6)
-#2 writeln: (tests/test0287.ctr: 6)
-#1 Library/Data/Generator (tests/test0287.ctr: 1)
+#3 toArray (tests/test0287.ctr: 7)
+#2 writeln: (tests/test0287.ctr: 7)
+#1 Library/Data/Generator (tests/test0287.ctr: 2)
 ------------------------------------
 The probable cause of the exception: 
-3 | 
-4 | var g is Generator elementsOf: 'test1234' reverse.
-5 | f is [a + b,, (a: f), (b: g),, (a !=: b), ('13s' contains: b, not)].
+4 | 
+5 | var g is Generator elementsOf: 'test1234' reverse.
+6 | f is [a + b,, (a: f), (b: g),, (a !=: b), ('13s' contains: b, not)].
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
-6 | Pen writeln: f toArray.
+7 | Pen writeln: f toArray.

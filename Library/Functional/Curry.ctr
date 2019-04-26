@@ -1,0 +1,17 @@
+var curry_ is {:self:blk:args
+    var argc is (Reflect argumentListOf: blk, count).
+    ^{:*argvs
+        var argsv is const args + argvs.
+        argsv count = const argc ifTrue: {
+            ^const blk applyAll: argsv.
+        }.
+        argsv count > const argc ifTrue: {
+            var xs is splitAt[argsv, const argc].
+            ^const blk applyAll: xs @ 0, applyAll: xs @ 1.
+        }.
+        ^const self[const blk, argsv].
+    }.
+}.
+
+var curry is \:blk curry_[blk, []].
+

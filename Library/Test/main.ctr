@@ -1,0 +1,243 @@
+import
+    Library/Control/Error/AssertionError
+    Library/Utils/Colors: 'Colors'
+    Library/Data/IO/Pen: 'pPen'.
+
+var errPen is pPen for: (File special: 'stderr').
+
+var cred is Colors red.
+var cmagenta is Colors magenta.
+var cdefault is Colors default.
+
+var stats is Map new.
+stats on: 'clear' do: {
+    put: 0 at: 'tests_run',
+    put: 0 at: 'tests_passed',
+    put: 0 at: 'tests_failed'.
+}.
+var describe is Slurp new.
+var It is Slurp new.
+It on: '~' do: {:msg me message: msg arguments: []. }.
+It on: 'should' do: { me respondTo: 'should'. }.
+
+var Let is Object cnew: {
+  on: 'applyAll:' do: {:&ctx
+    ^cnew: {
+      context => ctx head.
+    }.
+  }.
+
+  on: 'respondTo:' do: {:name
+    var context is my context.
+    ^{:expr
+      var context is const context.
+      expr evaluateInContext: context, unpack: const name toSymbol into: context.
+    }.
+  }.
+}.
+It on: 'do:' do: {:blk
+    var stats is const stats.
+    stats contains: 'tests_run', ifFalse: {
+        stats put: 0 at: 'tests_run'.
+    }.
+    stats contains: 'tests_passed', ifFalse: {
+        stats put: 0 at: 'tests_passed'.
+    }.
+    stats contains: 'tests_failed', ifFalse: {
+        stats put: 0 at: 'tests_failed'.
+    }.
+    stats at: 'tests_run', +=: 1.
+    var description is me obtain.
+    var errstream is File special: 'stderr'.
+
+    var thisTest is Object cnew: {
+      on: 'init' do: {
+        progress => Nil.
+        end => Nil.
+        current_test => ''.
+        last_test => ''.
+        this_status => ''.
+        last_status => ''.
+        last_esc => 0.
+        last_exe => Clock new time.
+        divisor => 100.
+      }, init.
+      on: 'subTest' do: { ^me new init. }.
+      on: 'tests:' do: {:x current_test => ' ' + x. }.
+      on: 'progressesUpTo:' do: {:end end => end.}.
+      on: 'progress:' do: {:prg
+        my end isNil ifTrue: { ^Nil. }.
+        progress => prg.
+        var eskip is my end / my divisor.
+        var est is my last_esc - my last_exe * (my end - prg) / eskip.
+        prg mod: eskip, ifFalse: {
+            last_exe => my last_esc.
+            last_esc => Clock new time.
+            est = 0 ifTrue: { my divisor /=: 1.2. }.
+        }.
+        this_status => ' (%d/%d - %.4f%% - %.4f sec)' % [prg, my end, prg / my end * 100, est].
+      }.
+
+      on: 'show' do: {
+        errstream
+          write: '\b \b' * my last_status length,
+          write: '\b \b' * my last_test length,
+          write: '\x1b[34m' + my current_test + '\x1b[0m',
+          write: my this_status,
+          flush
+        .
+        my last_status is my this_status.
+        my last_test is my current_test.
+      }.
+      on: 'end' do: {
+        errstream
+          write: '\b \b' * my last_status length,
+          write: '\b \b' * my last_test length,
+          flush
+        .
+      }.
+    }.
+    const errPen write: ' - ' + description.
+    const errPen flush.
+    {{
+      blk applyTo: thisTest.
+      thisTest end.
+      stats at: 'tests_passed', +=: 1.
+      const errPen green writeln: ' (ok)', resetColor.
+    } catch: {:e
+        stats at: 'tests_failed', +=: 1.
+        const errPen red writeln: ' (fail)', resetColor.
+        const errPen red writeln: '\t* Backtrace:', resetColor.
+        const errPen writeln: (
+            Reflect stackTrace
+                split: '\n',
+                do shift shift shift shift done reverse
+                fmap: \:x '\t${{const cred}}$|${{const cdefault}}$ $$x',
+                join: '\n'
+        ).
+        const errPen write: '\t${{const cred}}$* ${{const cmagenta}}$$$e', resetColor brk.
+    } type: AssertionError, run.
+    } catch: {:e
+        stats at: 'tests_failed', +=: 1.
+        const errPen red writeln: ' (fail)', resetColor.
+        const errPen red writeln: '\t* Backtrace:', resetColor.
+        const errPen writeln: (
+            Reflect stackTrace
+                split: '\n',
+                do shift shift shift shift done reverse
+                fmap: \:x '\t| $$x',
+                join: '\n'
+        ).
+        const errPen red write: '\t* ' + e, resetColor brk.
+    } type: String, run.
+}.
+
+describe on: 'do:' do: {:blk
+    var description is me obtain.
+    const errPen writeln: description.
+    var major is Clock new time.
+    var minor is Clock timeExecutionOf: {
+        blk[const It, const Let].
+    }.
+    major is Clock new time - major.
+    const errPen cyan write: '$$description took $$major seconds ( $$minor useconds )', resetColor brk.
+}.
+
+var ComparisonAssertion is Object cnew: {
+    on: 'new:' do: {:actual
+        ^cnew: {
+            actual => actual.
+            negated => False.
+        }.
+    }.
+    on: 'beTrue' do: {
+      my actual ! my negated ifFalse: {
+        thisBlock error: AssertionError['Expected value to be ${{my negated not}}$ but got ${{my actual}}$'].
+      }.
+    }.
+    on: '=' do: {:expected
+      my negated ifTrue: {
+        my actual = expected ifTrue: {
+            thisBlock error: AssertionError['Expected value not to be equal to ${{expected}}$, but got ${{my actual}}$ anyway'].
+        }.
+      } ifFalse: {
+        my actual = expected ifFalse: {
+            thisBlock error: AssertionError['Expected ${{expected}}$ but got ${{my actual}}$'].
+        }.
+      }.
+    }.
+    on: 'raiseError:' do: {:error_type
+      var actual is my actual.
+      var okay is False.
+      my negated not ifTrue: {
+        {
+            {
+                actual run.
+            } catch: {
+                okay is True.
+            } type: error_type, run.
+
+        } catch: {:e
+            thisBlock error: AssertionError['Expected to see error ${{error_type type}}$, but got ${{e type}}$'].
+        }, run.
+        okay ifTrue: { ^Nil. }.
+
+        thisBlock error: AssertionError['Expected to see error ${{error_type type}}$, but got no errors'].
+      } ifFalse: {
+        okay is True.
+        var maybe_caught is Nil.
+        {
+            {
+                actual run.
+            } catch: {:err
+                okay is False.
+                maybe_caught is err.
+            } type: error_type, run.
+        } catch: {
+          # this is okay too
+        }, run.
+        okay ifFalse: {
+          thisBlock error: AssertionError['Expected not to see error ${{error_type type}}$(${{maybe_caught}}$), but got it anyway'].
+        }.
+      }.
+    }.
+
+    on: 'checkOutputs:toFile:' do: {:check:fs
+      var replace is File tempFileLike: '_run${{me id}}$_ivXXXXXX'.
+      var olddes is fs fileDescriptor.
+      var fssave is File duplicateDescriptor: olddes.
+      var newdes is replace open: 'r+', fileDescriptor.
+      fs flush.
+      File duplicateDescriptor: newdes toDescriptor: olddes.
+      my actual run.
+      fs flush.
+      File duplicateDescriptor: fssave toDescriptor: olddes.
+      replace seek: 0.
+      var res is replace read.
+      replace close delete.
+      my instead is res.
+      ^res = check.
+    }.
+    on: 'output:to:' do: {:what:where
+      my negated ifTrue: {
+        me checkOutputs: what toFile: where, ifTrue: {
+          thisBlock error: AssertionError['Expected \'${{what escapeAsciiControls}}$\' not to be printed, but it was'].
+        }.
+      } ifFalse: {
+        me checkOutputs: what toFile: where, ifFalse: {
+          thisBlock error: AssertionError['Expected \'${{what escapeAsciiControls}}$\' to be printed, instead \'${{my instead escapeAsciiControls}}$\' was'].
+        }.
+      }.
+    }.
+    on: 'output:' do: {:what
+      output: what to: (File special: 'stdout').
+    }.
+    on: 'not' do: {
+      negated => True.
+    }.
+}.
+
+Object on: 'should' do: {
+    ^const ComparisonAssertion new: me.
+}.
+Object learn: 'unpack:into:' means: 'unpack:'.

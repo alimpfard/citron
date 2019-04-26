@@ -59,7 +59,7 @@ build() {
         rm -f $FOBJECTS &&
         echo &&
         echo "BUILD SUCCESSFUL:" &&
-        ls -gG "$OUT" || (rm -f $FOBJECTS ; false)
+        ls -g "$OUT" || (rm -f $FOBJECTS ; false)
         return
     fi
     echo "$OUT up-to-date"

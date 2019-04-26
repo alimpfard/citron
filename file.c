@@ -18,6 +18,7 @@
 #include "citron.h"
 #include "siphash.h"
 #include "wordexp.h"
+#include <dirent.h>
 
 #ifndef WORDEXP_READY
 #define WORDEXP_READY 1
@@ -358,7 +359,6 @@ ctr_object *ctr_file_rpath(ctr_object *myself, ctr_argument *argumentList) {
 	  return path;
 	}
     }
-  }
   path = ctr_build_string_from_cstring(rpath);
   ctr_heap_free(cpath);
   return path;

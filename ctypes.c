@@ -644,7 +644,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(ushort) {
 CTR_CT_SIMPLE_TYPE_FUNC_TSTR(ushort) {
   char buf[1024];
   sprintf(buf, "<CTypes ushort at: %p value: %ui>", myself->value.rvalue->ptr,
-          *(ushort *)myself->value.rvalue->ptr);
+          *(unsigned short *)myself->value.rvalue->ptr);
   return ctr_build_string_from_cstring(buf);
 }
 

@@ -3076,7 +3076,7 @@ ctr_object *ctr_thread_join(ctr_object *myself, ctr_argument *argumentList) {
     CtrStdFlow = ctr_build_string_from_cstring("Thread could not join");
     return CtrStdNil;
   }
-  if (retval == PTHREAD_CANCELED || !retval) {
+  if (!retval) {
     ctr_heap_free(retval);
     return CtrStdNil;
   } else {
@@ -3089,7 +3089,8 @@ ctr_object *ctr_thread_join(ctr_object *myself, ctr_argument *argumentList) {
     {
       ctr_heap_free (retval);
       return CtrStdNil;
-    return rvt;
+    }
+    return retval;
   }
 }
 

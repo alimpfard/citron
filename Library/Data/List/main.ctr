@@ -2,34 +2,30 @@ var List is Array new.
 List on: 'type' do: {^'List'.}.
 List on: 'toString' do: {
   var count is me count.
-  ^('Array of: [' + (me count > 0 either: {^('%s, ' * (count - 1)) + '%s'.} or: '') + ']') formatObjects: me.
+  ^('List of: [' + (me count > 0 either: {^('%s, ' * (count - 1)) + '%s'.} or: '') + ']') formatObjects: me.
 }.
 
 List on: 'of:' do: {:p
   ^me new pushAll: p.
 }.
 
-List on: 'pushAll:' do: {:p
-  p each_v: (Reflect closure: 'push:' of: me).
+List on: 'pushAll:' do: {:self:p
+  p each_v: {:x self push: x. }.
 }.
 
 List on: 'uncons' do: {
-  ^Array of: [(me head), (me tail)].
+  ^ of: [me head, me tail].
 }.
 
 List on: 'null' do: {
   ^(me count > 0) not.
 }.
 
-List on: 'length' do: {
-  ^me count.
-}.
-
 List on: 'map:' do: {:function
   ^(me fmap: function).
 }.
 
-List on: 'intercalate:' do: {:elem ^me intersperse: elem, join: ''.}.
+List on: 'intercalate:' do: {:elem ^me intersperse: elem, concat.}.
 
 List on: 'flatten' do: {
   ^me foldl: {:acc:x ^acc + x.} accumulator: (Array new).
@@ -49,9 +45,9 @@ List on: 'permutations' do: {
   #TODO: Later
 }.
 
-List on: 'concat' do: {
-  (me length = 0) ifTrue: {thisBlock error: 'Concat on empty list'.}.
-  ^(me skip: 1) foldl: {:acc:x ^acc + x.} accumulator: (me at: 0).
+Array on: 'concat' do: {
+  (me count  = 0) ifTrue: {thisBlock error: 'Concat on empty list'.}.
+  ^foldl: {:acc:x ^acc + x.}.
 }.
 
 List on: 'concatMap:' do: {:func
@@ -69,5 +65,5 @@ List on: '-' do: {:opt
     }.
 }.
 
-Array is List.
+# Array is List.
 # import export: List as: 'List'.

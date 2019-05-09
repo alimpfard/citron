@@ -321,6 +321,11 @@ ctr_tnode *ctr_cparse_message(int mode) {
     msgReplacement = "process:";
     msgReplacementLen = 8;
     goto callShorthand;
+  } else if (t == CTR_TOKEN_QUOTE) {
+    replacement = CTR_TOKEN_QUOTE;
+    msgReplacement = "process:";
+    msgReplacementLen = 8;
+    goto callShorthand;
   } else if (t == callShorthand->value) {
   callShorthand:;
     ctr_clex_putback();
@@ -347,6 +352,8 @@ ctr_tnode *ctr_cparse_message(int mode) {
       ctr_transform_template_expr = 0;
       if (replacement == CTR_TOKEN_FANCY_QUOT_CLOS)
         li->node = ctr_cparse_fancy_string();
+      if (replacement == CTR_TOKEN_QUOTE)
+        li->node = ctr_cparse_string();
       else
         li->node = ctr_cparse_tuple(replacement ?: callShorthand->value_e);
       ctr_transform_template_expr = texpr_res;
@@ -384,7 +391,7 @@ ctr_tlistitem *ctr_cparse_messages(ctr_tnode *r, int mode) {
          (t == CTR_TOKEN_CHAIN && node &&
           node->type == CTR_AST_NODE_KWMESSAGE && node->modifier != -2) ||
          (t == callShorthand->value) || (t == CTR_TOKEN_BLOCKOPEN) ||
-         (t == CTR_TOKEN_FANCY_QUOT_OPEN)) {
+         (t == CTR_TOKEN_FANCY_QUOT_OPEN) || (t == CTR_TOKEN_QUOTE)) {
     if (t == CTR_TOKEN_CHAIN) {
       t = ctr_clex_tok();
       if (t != CTR_TOKEN_REF) {

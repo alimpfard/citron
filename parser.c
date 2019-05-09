@@ -49,6 +49,7 @@ ctr_tnode *ctr_cparse_ref();
 ctr_tnode *ctr_cparse_ret();
 ctr_tlistitem *ctr_cparse_statement();
 ctr_tnode *ctr_cparse_string();
+ctr_tnode *ctr_cparse_fancy_string();
 ctr_tnode *ctr_cparse_symbol();
 ctr_tnode *ctr_cparse_true();
 ctr_tnode *ctr_cparse_tuple(int);
@@ -214,11 +215,16 @@ ctr_tnode *ctr_cparse_message(int mode) {
   int t;
   char *s;
   char *msg;
+  // char *lookAheadVal;
   ctr_tlistitem *li;
   ctr_tlistitem *curlistitem;
   int lookAhead;
+  // int lookAheadLen = 0;
   int isBin;
   int first;
+
+  char const* msgReplacement = "applyAll:";
+  int msgReplacementLen = 9;
   t = ctr_clex_tok();
   msgpartlen = ctr_clex_tok_value_length();
   if ((msgpartlen) > 255) {
@@ -230,6 +236,8 @@ ctr_tnode *ctr_cparse_message(int mode) {
   msg = ctr_heap_allocate_tracked(255 * sizeof(char));
   memcpy(msg, s, msgpartlen);
   lookAhead = ctr_clex_tok();
+  // lookAheadVal = ctr_clex_tok_value();
+  // lookAheadLen = ctr_clex_tok_value_length();
   ctr_clex_putback();
   isBin = lookAhead != CTR_TOKEN_COLON &&
           (ctr_utf8_is_one_cluster(msg, msgpartlen) ||
@@ -285,6 +293,8 @@ ctr_tnode *ctr_cparse_message(int mode) {
         break;
       if (t == CTR_TOKEN_BLOCKCLOSE)
         break;
+      // if (t == CTR_TOKEN_FANCY_QUOT_CLOS)
+      //   break;
       if (t == CTR_TOKEN_REF) {
         long l = ctr_clex_tok_value_length();
         if ((msgpartlen + l) > 255) {
@@ -306,13 +316,18 @@ ctr_tnode *ctr_cparse_message(int mode) {
   } else if (t == CTR_TOKEN_BLOCKOPEN) {
     replacement = CTR_TOKEN_BLOCKCLOSE;
     goto callShorthand;
+  } else if (t == CTR_TOKEN_FANCY_QUOT_OPEN) {
+    replacement = CTR_TOKEN_FANCY_QUOT_CLOS;
+    msgReplacement = "process:";
+    msgReplacementLen = 8;
+    goto callShorthand;
   } else if (t == callShorthand->value) {
   callShorthand:;
     ctr_clex_putback();
-    memcpy(msg, "applyAll:", 9);
-    msgpartlen = 9;
+    memcpy(msg, msgReplacement, msgReplacementLen);
+    msgpartlen = msgReplacementLen;
     li = ctr_heap_allocate_tracked(sizeof(*li));
-    if (nextCallLazy->value == 1 || replacement) {
+    if (nextCallLazy->value == 1 || replacement == CTR_TOKEN_BLOCKCLOSE) {
       if (!replacement)
         nextCallLazy->value--;
       if (ctr_clex_inject_token(CTR_TOKEN_INV, DOLLAR_SIGN, -2, 1)) {
@@ -330,7 +345,10 @@ ctr_tnode *ctr_cparse_message(int mode) {
     } else {
       int texpr_res = ctr_transform_template_expr;
       ctr_transform_template_expr = 0;
-      li->node = ctr_cparse_tuple(replacement ?: callShorthand->value_e);
+      if (replacement == CTR_TOKEN_FANCY_QUOT_CLOS)
+        li->node = ctr_cparse_fancy_string();
+      else
+        li->node = ctr_cparse_tuple(replacement ?: callShorthand->value_e);
       ctr_transform_template_expr = texpr_res;
     }
     replacement = 0;
@@ -365,7 +383,8 @@ ctr_tlistitem *ctr_cparse_messages(ctr_tnode *r, int mode) {
   while (t == CTR_TOKEN_REF ||
          (t == CTR_TOKEN_CHAIN && node &&
           node->type == CTR_AST_NODE_KWMESSAGE && node->modifier != -2) ||
-         (t == callShorthand->value) || (t == CTR_TOKEN_BLOCKOPEN)) {
+         (t == callShorthand->value) || (t == CTR_TOKEN_BLOCKOPEN) ||
+         (t == CTR_TOKEN_FANCY_QUOT_OPEN)) {
     if (t == CTR_TOKEN_CHAIN) {
       t = ctr_clex_tok();
       if (t != CTR_TOKEN_REF) {
@@ -1103,6 +1122,21 @@ ctr_tnode *ctr_cparse_string() {
   return r;
 }
 
+ctr_tnode *ctr_cparse_fancy_string() {
+  ctr_tnode *r;
+  char *n;
+  ctr_size vlen;
+  ctr_clex_tok();
+  r = ctr_cparse_create_node(CTR_AST_NODE);
+  r->type = CTR_AST_NODE_LTRSTRING;
+  n = ctr_clex_readfstr();
+  vlen = ctr_clex_tok_value_length();
+  r->value = ctr_heap_allocate_tracked(sizeof(char) * vlen);
+  memcpy(r->value, n, vlen);
+  r->vlen = vlen;
+  ctr_clex_tok(); /* eat trailing quote. */
+  return r;
+}
 /**
  * CTRParserCreateSimpleRangeGenerator
  *
@@ -1326,6 +1360,8 @@ ctr_tnode *ctr_cparse_receiver() {
     return ctr_cparse_number();
   case CTR_TOKEN_QUOTE:
     return ctr_cparse_string();
+  case CTR_TOKEN_FANCY_QUOT_OPEN:
+    return ctr_cparse_fancy_string();
   case CTR_TOKEN_REF:
     return ctr_cparse_ref();
   case CTR_TOKEN_BLOCKOPEN:
@@ -1435,7 +1471,8 @@ ctr_tnode *ctr_cparse_expr(int mode) {
        ctr_heap_allocate(sizeof(ctr_tlistitem));
        e->nodes->next->node->nodes->next->node = r->nodes->next->node; */
   } else if (t2 != CTR_TOKEN_DOT && t2 != CTR_TOKEN_PARCLOSE &&
-             t2 != CTR_TOKEN_CHAIN && t2 != CTR_TOKEN_TUPCLOSE) {
+             t2 != CTR_TOKEN_CHAIN && t2 != CTR_TOKEN_TUPCLOSE &&
+             t2 != CTR_TOKEN_FANCY_QUOT_CLOS) {
     e = ctr_cparse_create_node(CTR_AST_NODE);
     e->type = CTR_AST_NODE_EXPRMESSAGE;
     nodes = ctr_cparse_messages(r, mode);

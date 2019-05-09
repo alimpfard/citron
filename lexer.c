@@ -27,7 +27,7 @@ uintptr_t ctr_clex_verbatim_mode_insert_quote =
     0; /* pointer to 'overlay' the 'fake quote' for verbatim mode */
 int ctr_clex_old_line_number = 0;
 int ctr_transform_lambda_shorthand =
-    0; /* flag: indicated whether lexer has seen a shorthand lambda (\(:arg)+
+    0; /* flag: indicates whether lexer has seen a shorthand lambda (\(:arg)+
           expr) */
 
 char *ctr_clex_desc_tok_ref = "reference";
@@ -1153,7 +1153,7 @@ char *ctr_clex_readstr() {
     if (!ctr_clex_verbatim_mode && !escape && c == '$') {
       /* expression interpolation ( ${{some expr}}$ ) */
       if (((ctr_code + 1) < ctr_eofcode) && *(ctr_code + 1) == '{' &&
-          ((ctr_code + 2) < ctr_eofcode) && *(ctr_code + 1) == '{') {
+          ((ctr_code + 2) < ctr_eofcode) && *(ctr_code + 2) == '{') {
         // transform the source _in place_
         char *end = ctr_clex_read_balanced('}', '{', &ctr_clex_line_number);
         if (!end) {

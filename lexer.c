@@ -55,6 +55,8 @@ char *ctr_clex_desc_tok_lit_esc = "$";
 char *ctr_clex_desc_tok_ret_unicode = "↑";
 char *ctr_clex_desc_tok_fin = "end of program";
 char *ctr_clex_desc_tok_inv = "`";
+char *ctr_clex_desc_tok_fancy_quot_open = "‹";
+char *ctr_clex_desc_tok_fancy_quot_clos = "›";
 char *ctr_clex_desc_tok_unknown = "(unknown token)";
 
 int ctr_string_interpolation = 0;
@@ -490,6 +492,12 @@ char *ctr_clex_tok_describe(int token) {
   case CTR_TOKEN_INV:
     description = ctr_clex_desc_tok_inv;
     break;
+  case CTR_TOKEN_FANCY_QUOT_OPEN:
+    description = ctr_clex_desc_tok_fancy_quot_open;
+    break;
+  case CTR_TOKEN_FANCY_QUOT_CLOS:
+    description = ctr_clex_desc_tok_fancy_quot_clos;
+    break;
   default:
     description = ctr_clex_desc_tok_unknown;
   }
@@ -918,6 +926,16 @@ int ctr_clex_tok() {
     ctr_code += 3;
     return CTR_TOKEN_RET;
   }
+  if (c == -30) {
+    // ‹›
+    if (((ctr_code + 1) < ctr_eofcode) && *(ctr_code + 1) == -128) {
+      if (((ctr_code + 2) < ctr_eofcode) && *(ctr_code + 2) == -71)
+        return CTR_TOKEN_FANCY_QUOT_OPEN;
+      if (((ctr_code + 2) < ctr_eofcode) && *(ctr_code + 2) == -72)
+        return CTR_TOKEN_FANCY_QUOT_CLOS;
+    }
+
+  }
   if (c == '\'') {
     ctr_code++;
     return CTR_TOKEN_QUOTE;
@@ -1113,6 +1131,53 @@ int ctr_clex_utf8_encode(char *out, uint32_t utf) {
     out[3] = 0;
     return 0;
   }
+}
+
+char *ctr_clex_readfstr() {
+  char *strbuff;
+  char c;
+  long memblock = 1;
+  long page = 64;
+  char *beginbuff;
+  size_t tracking_id;
+
+  ctr_clex_tokvlen = 0;
+  strbuff = ctr_heap_allocate_tracked(memblock);
+  tracking_id = ctr_heap_get_latest_tracking_id();
+  c = *(ctr_code+=3);
+  beginbuff = strbuff;
+  while (1) {
+    if (c == 0)
+     break;
+    if (c == '\n')
+      ctr_clex_line_number++;
+    if (c == -30) {
+      if (((ctr_code + 1) < ctr_eofcode) && *(ctr_code + 1) == -128 &&
+          ((ctr_code + 2) < ctr_eofcode) && *(ctr_code + 2) == -70) {
+            break;
+      }
+    }
+    ctr_clex_tokvlen++;
+    if (ctr_clex_tokvlen >= memblock) {
+      memblock += page;
+      beginbuff = (char *)ctr_heap_reallocate_tracked(tracking_id, memblock);
+      if (beginbuff == NULL) {
+        ctr_clex_emit_error("Out of memory");
+      }
+      /* reset pointer, memory location might have been changed */
+      strbuff = beginbuff + (ctr_clex_tokvlen - 1);
+    }
+    *(strbuff++) = c;
+    ctr_code++;
+    if (ctr_code < ctr_eofcode)
+      c = *ctr_code;
+    else {
+      ctr_clex_emit_error("Expected closing quote");
+      c = '\'';
+    }
+  }
+
+  return beginbuff;
 }
 
 /**

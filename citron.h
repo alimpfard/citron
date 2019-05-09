@@ -79,6 +79,8 @@ extern "C" {
 #define CTR_TOKEN_SYMBOL 21
 #define CTR_TOKEN_LITERAL_ESC 22
 #define CTR_TOKEN_INV 23
+#define CTR_TOKEN_FANCY_QUOT_OPEN 25
+#define CTR_TOKEN_FANCY_QUOT_CLOS 36
 #define CTR_TOKEN_FIN 99
 //
 //
@@ -512,6 +514,7 @@ char* 	ctr_clex_tok_value();
 long    ctr_clex_tok_value_length();
 void 	ctr_clex_putback();
 char*	ctr_clex_readstr();
+char*	ctr_clex_readfstr();
 char* ctr_clex_scan(char c);
 char* ctr_clex_scan_balanced(char c, char d);
 char*   ctr_clex_tok_describe( int token );

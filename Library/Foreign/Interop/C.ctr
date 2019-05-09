@@ -217,3 +217,16 @@ Inject on: 'struct' do: {:self
     }.
   }.
 }.
+
+var C is Object cnew: {
+    on: 'process:' do: {:st
+        var ff is Inject compile: st.
+        ^Object cnew: {
+            ff => ff.
+            on: 'process:' do: {:sym
+                my ff importFunctionsOrTypes: [sym].
+            }.
+            learn: 'respondTo:' means: 'process:'.
+        }.
+    }.
+}.

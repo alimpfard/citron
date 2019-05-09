@@ -13,6 +13,7 @@ class CitronLexer(RegexLexer):
 
     tokens = {
         'root' : [
+            (u'(?:([^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*)(\\s+)(\u2039)([^\u203a\\n\\r]*?)(\u203a))', bygroups(Keyword.Pseudo, Name, String, String.Regex, String)),
             (u'(?:(@comptime)\\b)', bygroups(Generic.Deleted), 'main__1'),
             (u'\\b(var|my|const|frozen)\\b', bygroups(Keyword.Pseudo), 'main__2'),
             (u'(?:(pure)(\\s*\\{))', bygroups(Keyword.Pseudo, Name), 'main__3'),
@@ -22,6 +23,7 @@ class CitronLexer(RegexLexer):
             (u'(?:(\\s*)(\\bis\\b|\\:\\=|\\=\\>)(\\s*))', bygroups(Generic, Keyword.Reserved, Generic)),
             (u'(?:(\\?>))', bygroups(String.Regex), 'main__4'),
             (u'(0[xX][0-9a-fA-F]+|0[cC][0-7]+|0[bB][01]+|\\d+\\.\\d+|\\d+)', bygroups(Number)),
+            (u'(\u2039)', bygroups(String), 'fstring'),
             (u'(\')', bygroups(String), 'string'),
             (u'(?:(\\\\)((?:(?:\\:[^\\s\\d:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r][^\\s:.,\\[\\]\\(\\)\\{\\}\\#\\n\\r]*\\s*)|(?:\\:\\(.*\\)))+))', bygroups(Keyword.Reserved, Keyword.Pseudo), 'main__5'),
             (u'(?:(\\{)(asm)(\\s*(?:\\:)\\s*(?:\\w+))*(\\s*(?:intel|att|at\\&t))?(\\s*\\(.*\\)\\s*))', bygroups(Name, Generic.Deleted, Keyword.Pseudo, Generic.Deleted, Generic.Deleted), 'main__6'),
@@ -114,6 +116,11 @@ class CitronLexer(RegexLexer):
         'expr_interpolation__9' : [
             ('(\n|\r|\r\n)', String),
             ('.', Keyword.Reserved),
+        ],
+        'fstring' : [
+            (u'(.)', bygroups(String)),
+            ('(\n|\r|\r\n)', String),
+            ('.', String),
         ],
         'main__1' : [
             ('(\n|\r|\r\n)', String),

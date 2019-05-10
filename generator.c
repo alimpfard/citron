@@ -2,36 +2,8 @@
 #include "citron.h"
 #include <stdlib.h>
 
-#define CTR_STEP_GENNY 1
-#define CTR_REPEAT_GENNY 2
-#define CTR_E_OF_S_GENNY 3
-#define CTR_E_OF_A_GENNY 4
-#define CTR_E_OF_M_GENNY 5
-#define CTR_FN_OF_GENNY 6
-#define CTR_IFN_OF_GENNY 7
-#define CTR_XFN_OF_GENNY 8
-#define CTR_FIL_OF_GENNY 9
-
 const static ctr_object generator_end_marker_o;
 ctr_object *generator_end_marker = (ctr_object *)&generator_end_marker_o;
-
-typedef struct {
-  ctr_size seq_index;
-  void *data;
-  void *sequence;
-  ctr_object *current;
-  int finished;
-} ctr_generator;
-
-typedef struct {
-  ctr_number current, end, step;
-} ctr_step_generator;
-
-typedef struct {
-  unsigned int i_type;
-  ctr_generator *genny;
-  ctr_object *fn;
-} ctr_mapping_generator;
 
 void ctr_condense_generator(ctr_generator *, int);
 ctr_mapping_generator *ctr_combine_generators(ctr_mapping_generator *,
@@ -445,7 +417,7 @@ ctr_object *ctr_generator_internal_next(ctr_generator *genny, int gtype) {
     do {
       argm->next->object = ctr_generator_internal_next(igen, igen_type);
     } while ((argm->next->object == generator_end_marker && !igen->finished) ||
-             !ctr_block_run(fn, argm, fn)->value.bvalue);
+             (argm->next->object != generator_end_marker && !ctr_block_run(fn, argm, fn)->value.bvalue));
     genny->finished = genny->finished || igen->finished;
     if (argm->next->object == generator_end_marker)
       return argm->next->object;

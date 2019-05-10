@@ -12,12 +12,28 @@ var readLines is {:file
   ^file read split.
 }.
 
+var streamLines is {:file
+  file is file isNil either: {
+    ^File special: 'stdin'.
+  } or: file.
+  ^file generateLines.
+}.
+
+var stream is \:_ streamLines run.
+var streamFile is \:f streamLines[File new: f].
+
 # write array or str to stdout
 var putLines is {:lines
   lines isA: Array, ifTrue: {
     lines each: {:_:line Pen writeln: line. }.
   } ifFalse: {
-    Pen writeln: lines.
+    lines isA: Generator, ifTrue: {
+      lines each: {:_:v
+        Pen writeln: v.
+      }.
+    } ifFalse: {
+      Pen writeln: lines.
+    }.
   }.
   ^ ''.
 }.

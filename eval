@@ -844,7 +844,13 @@ Eval on: 'togglePasteMode' do: {
         val isA: Array, ifTrue: {
           Eval display/write: val join. # convert to lines
         } ifFalse: {
-          Eval display/write: val.
+          val isA: Generator, ifTrue: {
+            val each_v: {:v
+              Eval display/write: v.
+            }.
+          } ifFalse: {
+            Eval display/write: val.
+          }.
         }.
         Program exit.
     }, case: '--qe' do: {

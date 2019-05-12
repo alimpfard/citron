@@ -31,6 +31,8 @@
 #include <termios.h>
 static struct termios oldTermios, newTermios;
 
+#include "generator.h"
+
 /**@I_OBJ_DEF File*/
 
 /**
@@ -228,6 +230,141 @@ ctr_object *ctr_file_stdext_path(ctr_object *myself,
   ctr_object *path =
       ctr_build_string_from_cstring((char *)ctr_file_stdext_path_raw());
   return path;
+}
+
+struct ctr_file_gen {
+  ctr_object* fp;
+  FILE *FILEp;
+  ctr_object *next;
+  int vopen  ;
+  int block  ;
+  int noblock;
+  int finished;
+};
+
+extern ctr_object* generator_end_marker;
+static ctr_object *ctr_file_generate_lines_next(ctr_object *myself, ctr_argument *argumentList) {
+	struct ctr_file_gen* val = argumentList->object->value.rvalue->ptr; // todo: error check
+  if (val->finished) {
+    CtrStdFlow = CtrStdBreak;
+    return generator_end_marker;
+  }
+  if (val->vopen) {
+    if (!val->fp->value.rvalue->ptr) {
+      val->vopen = 0;
+      CtrStdFlow = CtrStdBreak; // signal end of sequence
+      return val->next ?: CtrStdNil;
+    }
+    nowopen:;
+    FILE *f = val->FILEp;
+    size_t lineBufLen = 0;
+    char *lineptr = NULL;
+    ssize_t len = getline(&lineptr, &lineBufLen, f);
+    if (len == 0 || len == -1) {
+      if (val->block) {
+        while(len<=0)
+          len = getline(&lineptr, &lineBufLen, f);
+      } else if (val->noblock) {
+        free(lineptr);
+        return CtrStdNil;
+      } else {
+        if (f == stdin) {
+          // no touching stdin
+        } else {
+          val->vopen = 0;
+          fclose(f);
+          ctr_resource *res = val->fp->value.rvalue;
+          if (f == res->ptr)
+            res->ptr = 0;
+        }
+        free(lineptr);
+				CtrStdFlow = CtrStdBreak; // signal end of sequence
+        return val->next ?: CtrStdNil;
+      }
+    }
+    ctr_object *prev = val->next;
+    if (!prev) {
+      prev = val->next = ctr_build_string(lineptr, len);
+      goto nowopen;
+    }
+    val->next = ctr_build_string(lineptr, len);
+    free(lineptr);
+    return prev;
+  } else {
+    if (val->fp->value.rvalue && val->fp->value.rvalue->ptr == stdin) {
+      val->vopen = 1;
+      val->FILEp = stdin;
+      goto nowopen;
+    }
+    ctr_object *path = ctr_file_rpath(val->fp, NULL);
+    ctr_size vlen;
+    char *pathString;
+    FILE *f;
+    if (!path->value.svalue) {
+        CtrStdFlow = ctr_build_string_from_cstring("invalid file.");
+        return generator_end_marker;
+    }
+    vlen = path->value.svalue->vlen;
+    pathString = ctr_heap_allocate(sizeof(char) * (vlen + 1));
+    memcpy(pathString, path->value.svalue->value, vlen);
+    memcpy(pathString + vlen, "\0", 1);
+    f = fopen(pathString, "rb");
+    ctr_heap_free(pathString);
+    if (!f) {
+      CtrStdFlow = ctr_build_string_from_cstring("Unable to open file.");
+      return generator_end_marker;
+    }
+    ctr_resource *rv = ctr_heap_allocate(sizeof(*rv));
+    rv->ptr = f;
+    rv->type = 1;
+    val->fp->value.rvalue = rv;
+    val->vopen = 1;
+    val->FILEp = f;
+    goto nowopen;
+  }
+}
+ctr_object *ctr_file_generate_lines(ctr_object *myself,
+                                    ctr_argument *argumentList) {
+  ctr_object *inst  = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
+  ctr_set_link_all (inst, ctr_std_generator);
+  inst->value.rvalue = ctr_heap_allocate (sizeof (ctr_resource));
+  ctr_resource *res = inst->value.rvalue;
+  res->type = CTR_IFN_OF_GENNY;
+  ctr_generator *gen = ctr_heap_allocate (sizeof (*gen));
+  ctr_mapping_generator *genny = ctr_heap_allocate (sizeof (*genny));
+  gen->finished = 0;
+  genny->i_type = CTR_REPEAT_GENNY;
+  ctr_object *methodObject = ctr_internal_create_object (CTR_OBJECT_TYPE_OTNATFUNC);
+  ctr_set_link_all (methodObject, CtrStdBlock);
+  methodObject->value.fvalue = ctr_file_generate_lines_next;
+  genny->fn = methodObject;
+  gen->sequence = genny;
+  gen->data = ctr_heap_allocate(sizeof(ctr_argument));
+  res->ptr = gen;
+  inst->release_hook = ctr_generator_free;
+
+  ctr_object *rpt_v = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
+  rpt_v->value.rvalue = ctr_heap_allocate (sizeof (ctr_resource));
+  ctr_resource *resv = rpt_v->value.rvalue;
+  ctr_set_link_all (rpt_v, CtrStdObject);
+  ctr_generator *rptgen = ctr_heap_allocate (sizeof (*gen));
+  rptgen->finished = 0;
+  rptgen->sequence = rpt_v;
+  struct ctr_file_gen* alloc = ctr_heap_allocate(sizeof(*alloc));
+  alloc->fp = myself;
+  alloc->vopen = 0;
+  if (myself->value.rvalue && myself->value.rvalue->ptr) {
+    alloc->FILEp = myself->value.rvalue->ptr;
+    alloc->vopen = 1;
+  }
+
+  alloc->block   = /* block */ argumentList->object ? ctr_internal_cast2bool(argumentList->object)->value.bvalue : 0;
+  alloc->noblock = /* noblock */ 0;
+
+  resv->ptr = alloc;
+  genny->genny = rptgen;
+  return inst;
+
 }
 
 /**

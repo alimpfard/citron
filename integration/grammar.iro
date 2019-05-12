@@ -92,13 +92,30 @@ styles[] {
 
 contexts[] {
    main : context {
+      : pattern {
+         regex      \= (?:([^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*)(\s+)(‹)([^›]*?)(›))
+         styles []   = .sl_defn, .punctuation, .sl_string, .sl_rawstring, .sl_string;
+      }
+      : inline_push {
+         regex            \= (?:(@comptime)\b)
+         styles []         = .sl_pragma;
+         default_style     = .punctuation
+         : pop {
+
+            regex      \= (\s*)
+
+            styles []   = .punctuation;
+
+         }
+
+      }
       : inline_push {
          regex      \= \b(var|my|const|frozen)\b
          styles []   = .sl_defn;
          default_style     = .variable
          : pop {
-            regex      \= ([^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*)
-            styles []   = .variable;
+            regex      \= (?:(&&|&)?([^\s\d:.,\[\]\(\)\{\}\#][^\s:.,\[\]\(\)\{\}\#]*))
+            styles []   = .sl_strescape, .variable;
          }
 
       }
@@ -174,6 +191,12 @@ contexts[] {
       : pattern {
          regex      \= (0[xX][0-9a-fA-F]+|0[cC][0-7]+|0[bB][01]+|\d+\.\d+|\d+)
          styles []   = .sl_number;
+      }
+
+      : push {
+         regex      \= (‹)
+         styles []   = .sl_string;
+         context []  = fstring;
       }
 
       : push {
@@ -309,7 +332,18 @@ contexts[] {
          styles []   = .sl_string;
       }
    }
+   fstring : context {
+      : pop {
+         regex      \= (›)
+         styles []   = .sl_string;
+      }
 
+      : pattern {
+         regex      \= (.)
+         styles []   = .sl_string;
+      }
+
+   }
    expr_interpolation: context {
       : pop {
          regex      \= (\}\}\$)

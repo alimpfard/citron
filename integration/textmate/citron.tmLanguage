@@ -27,6 +27,38 @@
       <key>patterns</key>
       <array>
         <dict>
+          <key>match</key>
+          <string>(?:([^\s\d\x{003a}.\x{002c}\[\]\(\)\{\}\#][^\s\x{003a}.\x{002c}\[\]\(\)\{\}\#]*)(\s+)(‹)([^\x{203a}]*?)(›))</string>
+          <key>captures</key>
+          <dict>
+            <key>1</key>
+            <dict>
+              <key>name</key>
+              <string>keyword.other.unit.Citron</string>
+            </dict>
+            <key>2</key>
+            <dict>
+              <key>name</key>
+              <string>entity.name.Citron</string>
+            </dict>
+            <key>3</key>
+            <dict>
+              <key>name</key>
+              <string>string.Citron</string>
+            </dict>
+            <key>4</key>
+            <dict>
+              <key>name</key>
+              <string>string.regexp.Citron</string>
+            </dict>
+            <key>5</key>
+            <dict>
+              <key>name</key>
+              <string>string.Citron</string>
+            </dict>
+          </dict>
+        </dict>
+        <dict>
           <key>begin</key>
           <string>(?:(@comptime)\b)</string>
           <key>beginCaptures</key>
@@ -187,6 +219,35 @@
           <string>(0[xX][0-9a-fA-F]+|0[cC][0-7]+|0[bB][01]+|\d+\.\d+|\d+)</string>
           <key>name</key>
           <string>constant.numeric.Citron</string>
+        </dict>
+        <dict>
+          <key>begin</key>
+          <string>(‹)</string>
+          <key>beginCaptures</key>
+          <dict>
+            <key>1</key>
+            <dict>
+              <key>name</key>
+              <string>string.Citron</string>
+            </dict>
+          </dict>
+          <key>patterns</key>
+          <array>
+            <dict>
+              <key>include</key>
+              <string>#fstring</string>
+            </dict>
+           </array>
+          <key>end</key>
+          <string>(›)</string>
+          <key>endCaptures</key>
+          <dict>
+            <key>1</key>
+            <dict>
+              <key>name</key>
+              <string>string.Citron</string>
+            </dict>
+          </dict>
         </dict>
         <dict>
           <key>begin</key>
@@ -1164,6 +1225,18 @@
     <dict>
       <key>patterns</key>
       <array>
+       </array>
+    </dict>
+    <key>fstring</key>
+    <dict>
+      <key>patterns</key>
+      <array>
+        <dict>
+          <key>match</key>
+          <string>(.)</string>
+          <key>name</key>
+          <string>string.Citron</string>
+        </dict>
        </array>
     </dict>
     <key>main__1</key>

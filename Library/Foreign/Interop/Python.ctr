@@ -1,0 +1,41 @@
+import Library/Data/Map.
+
+var _Python is Python init.
+
+var Python is Object cnew: {:self
+  interp => _Python.
+
+  on: 'import:' do: {:module
+    my interp compile: 'import $$module', exec.
+  }.
+  on: 'import:as:' do: {:module:name
+    my interp compile: 'import $$module as $$name', exec.
+  }.
+  on: 'from:import:' do: {:package:mod
+    my interp compile: 'from $$package import $$mod', exec.
+  }.
+  on: 'from:import:as:' do: {:package:mod:name
+    my interp compile: 'from $$package import $$mod as $$name', exec.
+  }.
+  on: 'eval:' do: {:expr
+    ^my interp eval: expr.
+  }.
+  on: 'exec:' do: {:stmt
+    my interp compile: stmt, exec.
+  }.
+  on: 'toPyObject:' do: {:obj
+    ^my interp asPyObject: obj.
+  }.
+  on: 'respondTo:' do: {:msg
+    ^my interp eval: msg ~ 's/;/./g'.
+  }.
+  (1..5) each: {:_:s
+    self on: 'respondTo:' + ('and:' * s) do: {:self:msg:*args
+      # model a call, with the successive args being kwargs
+      var mnames is (msg ~ 's/;/./g') split: ':'. # replace ';' with '.', a thing python doesn't allow in id's but we do!
+      var fn is my interp eval: mnames head.
+      var kwargs is (Map fromArray: (mnames tail imap: {:i:x ^[x, (self toPyObject: args @ (i + 1))].})).
+      ^fn applyAll: [kwargs, (self toPyObject: args head)].
+    }.
+  }.
+}.

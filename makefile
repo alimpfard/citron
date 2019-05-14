@@ -107,6 +107,9 @@ cxx:
 
 tcc/%.a:
 	cd tcc && ./configure --prefix=`realpath build` && $(MAKE) $<
+=======
+	cd tcc && ./configure --prefix=$(realpath build) && $(MAKE) $<
+>>>>>>> master
 
 # %.o: %.c
 # 	echo "$<"

@@ -2710,6 +2710,14 @@ void ctr_initialize_world() {
                            &ctr_file_stdext_path);
   ctr_internal_create_func(
       CtrStdFile, ctr_build_string_from_cstring(CTR_DICT_READ), &ctr_file_read);
+  ctr_internal_create_func(
+      CtrStdFile, ctr_build_string_from_cstring("generateLines"), &ctr_file_generate_lines);
+
+  ctr_internal_create_func(
+      CtrStdFile, ctr_build_string_from_cstring("generateLinesBlocking:"), &ctr_file_generate_lines);
+
+  // ctr_internal_create_func(
+  //     CtrStdFile, ctr_build_string_from_cstring("generateLinesNonblocking"), &ctr_file_generate_lines);
   ctr_internal_create_func(CtrStdFile,
                            ctr_build_string_from_cstring(CTR_DICT_WRITE),
                            &ctr_file_write);

@@ -1,0 +1,21 @@
+Pen write: ?><html>
+<?.
+x is ''.
+end is 'end'.
+a is False.
+dblock is False.
+{ a is (x = end). ^a. } whileFalse: {
+  x is Program waitForInput.
+  (x = 'do') ifTrue: {Pen write: '<ul>', brk. dblock is True.}.
+  (x = 'done') ifTrue: {Pen write: '</ul>', brk. dblock is False.}.
+  (x = 'end' & x !=: 'do' & x !=: 'done') ifFalse: {
+    dblock ifFalse: {
+      Pen write: '<p> $$x </p>', brk.
+    }, ifTrue: {
+      Pen write: '<li> $$x </li>', brk.
+    }.
+    }.
+}.
+
+Pen write: ?></html>
+<?.

@@ -70,7 +70,6 @@ ctr_size ctr_getutf8clustercount(char *strval, ctr_size max) {
 }
 
 #else
-#include "grapheme_break.c"
 
 #include <unicode/ubrk.h>
 #include <unicode/uchar.h>

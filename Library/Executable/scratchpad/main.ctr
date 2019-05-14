@@ -53,7 +53,7 @@ var __eval_context is Object cnew: {
         fgcolor => 'red'.
         cursorcolor => 'black'.
         selectioncolor => 'lightgray'.
-        font => 'Courier New'.
+        font => 'DejaVu Sans Mono'.
         fontsize => Nil.
         palette => Map new
           put: 'black'  at: 'black', put: 'red'     at: 'red',

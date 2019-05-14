@@ -1,0 +1,13 @@
+var rb is {:depth:one:two:three:zero
+  var tree is Array < zero.
+  depth - 2 times: {:i
+    tree push: (three + (two * i) + one + (two * i) + three).
+  }.
+  tree push: (three * (depth - 2) + one + (three * (depth - 2))).
+  tree push: one.
+  ^tree.
+}.
+depth is Program argument: 2, or: 20, toNumber.
+var rc is rb applyTo: depth and: '│' and: '█' and: '🟑' and: '★', fmap: {:arr var str is arr join: ''. ^' ' * (((depth * 2 - 1) - (str length)) / 2 ceil) + str.}, join: '\n'.
+
+Pen write: rc, brk.

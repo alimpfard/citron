@@ -1,0 +1,5 @@
+var *** is Pen.
+*** on: '****:' do: {:s me `write: s.}.
+*** on: '*****' do: {me `brk.}.
+var ****** is {:*** *** ****: **, *****. }.
+****** applyTo: 'lol'.

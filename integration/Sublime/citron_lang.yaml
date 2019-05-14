@@ -6,6 +6,13 @@ file_extensions: [ ctr ]
 
 contexts:
   main:
+    - match: '(?:([^\s\d\x{003a}.\x{002c}\[\]\(\)\{\}\#][^\s\x{003a}.\x{002c}\[\]\(\)\{\}\#]*)(\s+)(‹)([^\x{203a}]*?)(›))'
+      captures:
+        0: keyword.other.unit.Citron
+        1: entity.name.Citron
+        2: string.Citron
+        3: string.regexp.Citron
+        4: string.Citron
     - match: '(?:(@comptime)\b)'
       captures:
         0: markup.deleted.Citron
@@ -79,6 +86,10 @@ contexts:
     - match: '(0[xX][0-9a-fA-F]+|0[cC][0-7]+|0[bB][01]+|\d+\.\d+|\d+)'
       captures:
         0: constant.numeric.Citron
+    - match: '(‹)'
+      push: fstring
+      captures:
+        0: string.Citron
     - match: '('')'
       push: string
       captures:
@@ -234,6 +245,17 @@ contexts:
       push: expr_interpolation
       captures:
         0: constant.character.escape.Citron
+    - match: '(.)'
+      captures:
+        0: string.Citron
+    - match: '(.)'
+      captures:
+        0: text.Citron
+  fstring:
+    - match: '(›)'
+      pop: true
+      captures:
+        0: string.Citron
     - match: '(.)'
       captures:
         0: string.Citron

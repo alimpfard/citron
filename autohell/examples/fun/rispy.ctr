@@ -1,0 +1,152 @@
+Broom memoryLimit: 1024 * 1024 * 1024.
+
+import Library/Data/SwitchCase.
+
+
+var Env is Object new
+  on: 'toString' do: {
+    ^my map toString + ' < ' + my outer.
+  },
+  on: '_new:' do: {:keys:vals:outer
+    ^me cnew: {
+      outer => outer.
+      map => var map is Map new.
+      keys each: {:i:k map put: (vals @ i) at: k.}.
+    }.
+  },
+  on: 'new:' do: {:args
+    ^Reflect closure: '_new:' of: me, applyAll: args.
+  },
+  on: 'at:' do: {:key
+    var outer is my outer.
+    var v is my map at: key.
+    ^v isNil either: {^outer at: key.} or: {^v.}.
+  },
+  on: 'put:at:' do: {:v:k
+    var map is my map.# or: Map new.
+    var outer is my outer.
+
+    (my outer isNil)
+    either: { map put: v at: k. }
+    or: {
+      (map at: k, isNil)
+        either: { outer put: v at: k. }
+        or: { map put: v at: k. }.
+    }.
+  },
+  on: 'set:at:' do: {:v:k
+    my map put: v at: k.
+  }.
+
+Object on: '==:' do: {:other
+  ^me = other.
+}.
+
+var add_globals is {:env
+  var ops is ['+', '-', '*', '/', '<', '>', '>=', '<=', '=='].
+  ops each_v: {:op
+    (op toString length >=: 2)
+      either: {
+        env put: (\:a:b a message: op + ':' arguments: [b]) at: op.
+      }
+      or: {
+        env put: (\:a:b a message: op arguments: [b]) at: op.
+      }.
+  }.
+  ^env
+    put: (\:x x count) at: ('length'),
+    put: (\:x:y [x] + y) at: ('cons'),
+    put: (\:x x head) at: ('car'),
+    put: (\:x x tail) at: ('cdr'),
+    put: (\:x:y x + y) at: ('append'),
+    put: (\:*xs xs) at: ('list'),
+    put: (\:x Reflect isObject: x linkedTo: Array) at: ('list?'),
+    put: (\:x x isNil) at: ('null?'),
+    put: (\:x Reflect isObject: x linkedTo: String) at: ('symbol?'),
+    put: (\:x x not) at: ('not'),
+    put: (\:x [(Pen writeln: x), Nil] last) at: ('display'),
+    put: True at: '#t',
+    put: False at: '#f'.
+}.
+
+var memoized is Map new.
+
+
+var eval is {:x:env
+  var p is Nil.
+  ^(Reflect isObject: x linkedTo: String) either: {
+      ^env at: x.
+   }
+  or: {
+    ^(Reflect isObject: x linkedTo: Array, not) either: {
+      ^x.
+    }
+    or: {
+      ^(x head)
+           case: ('and') do: {
+          ^(x tail head either: x last or: False) toBoolean.
+        }, case: ('or') do: {
+          ^((p is x tail head) either: p or: x last) toBoolean.
+        }, case: ('quote') do: {
+          ^x tail.
+        }, case: ('if') do: {
+          ^eval applyTo: (eval applyTo: x @ 1 and: env, either: {^x @ 2.} or: {^x @ 3.}) and: env.
+        }, case: ('set!') do: {
+          env set: (var res is eval applyTo: x @ 2 and: env) at: x @ 1.
+          ^res.
+        }, case: ('define') do: {
+          env put: (var res is eval applyTo: x @ 2 and: env) at: x @ 1.
+          ^res.
+        }, case: ('lambda') do: {
+          ^\:*args (eval applyTo: (const x @ 2) copy and: (Env new: [const x @ 1, args, const env])).
+        }, case: ('begin') do: {
+          ^x tail foldl: (\:val_env:exp [(eval applyTo: exp and: val_env @ 1), val_env @ 1]) accumulator: [Nil, env], head.
+        }, case: ('ctr') do: {
+          ^x tail join: ' ', eval toString.
+        }, default: {
+          var exps is x fmap: \:exp eval applyTo: exp and: env.
+          p is memoized at: exps.
+          p isNil ifTrue: {
+            p is exps count = 1 either: {^exps head.} or: {^exps head applyAll: exps tail.}.
+            memoized put: p at: exps.
+          }.
+          ^p.
+        }, switch.
+    }.
+  }.
+}.
+
+var atom is {:s
+  ^s case: '(' do: { ^'['. },
+     case: ')' do: { ^']'. },
+     default: {
+       ^(s containsPattern: ?>^(-?\d+)|(-?\d*\.\d+)$<?) either: s or: '(\'%s\')' % [s].
+     }, switch.
+}.
+
+var parse is {:src
+  var tokens is (src ~ ?>s/\(/ ( /g<? ~ ?>s/\)/ ) /g<?) reSplit: '\\s+', filter: \:_:x x trim !=: ''.
+  var ps is '[' + (tokens fmap: (\:s atom applyTo: s), join: ' ', ~ ?>s/ ]/]/g<? ~ ?>s/([^\[']) /$1, /g<?) + ']'.
+  ^ps eval.
+}.
+
+var repl is {:env
+  var inp is ''.
+  var ivps is 0.
+  {^True.} whileTrue: {
+    Pen cyan write: '>>> ' + ('( ' * ivps), resetColor.
+    inp +=: Program waitForInput trim + ' '.
+    (ivps is (inp countOf: '(') - (inp countOf: ')')) !=: 0, continue.
+    (inp = '.exit') either: {  True break. } or: {
+      Pen writeln: ({^eval applyTo: (parse applyTo: inp) and: env.} catch: {:e ^'Nil'.}, run).
+      inp is ''.
+    }.
+  }.
+}.
+
+# Program argCount > 2 either: {
+#   var src is File new: (Program argument: 2), read.
+#   Pen writeln: (eval applyTo: (parse applyTo: src) and: (add_globals applyTo: (Env new: [[], [], Nil]))).
+# } or: {
+  repl applyTo: (add_globals applyTo: (Env new: [[], [], Nil])).
+# }.

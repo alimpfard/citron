@@ -38,6 +38,8 @@ ffi_type *ctr_ctype_citron_object_try_infer_type(ctr_object *object) {
       return &ffi_type_sint64;
     return &ffi_type_double;
   }
+  case CTR_OBJECT_TYPE_OTARRAY: // if an array, pass array
+    return &ffi_type_pointer;   // only doubles for now
   case CTR_OBJECT_TYPE_OTSTRING:
     return &ffi_type_pointer;
   case CTR_OBJECT_TYPE_OTEX:

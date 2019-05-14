@@ -1,0 +1,7 @@
+#:oneLineExpressions
+Pen on: 'test' do: { Pen write: 'test\n'. ^me. }
+Pen test
+#:oneLineExpressions
+
+Pen do test done.
+

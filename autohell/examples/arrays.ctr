@@ -1,0 +1,11 @@
+File new: 'extensions/collections.ctr', include.
+
+var t is Array < 2 ; 1 ; 3 ; 4.
+
+var l is [1,2].
+
+Pen write: l, brk.
+
+l is l filter: {:i:v ^0 !=: (v - 1).}.
+
+Pen write: l, brk.

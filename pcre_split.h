@@ -8,6 +8,7 @@
 #include <string.h>
 #include <pcre.h>
 #include "citron.h"
+#include "generator.h"
 
 ctr_object *pcre_split(char *, char *);
 ssize_t pcre_indexof_internal(pcre* re, char* string);
@@ -198,29 +199,6 @@ static ctr_object* pcre_split_next(ctr_object* myself, ctr_argument* argumentLis
 /* Initialise the RegEx */
 extern ctr_object* ctr_std_generator;
 extern voidptrfn_t ctr_generator_free;
-typedef struct
-{
-  ctr_size seq_index;
-  void *data;
-  void *sequence;
-  ctr_object *current;
-  int finished;
-} ctr_generator;
-
-typedef struct
-{
-  ctr_number current, end, step;
-} ctr_step_generator;
-
-typedef struct
-{
-  unsigned int i_type;
-  ctr_generator *genny;
-  ctr_object *fn;
-} ctr_mapping_generator;
-
-#define CTR_REPEAT_GENNY 2
-#define CTR_IFN_OF_GENNY 7
 
 ctr_object *pcre_split_gen(char *pattern, char *string) {
 	const char *error;

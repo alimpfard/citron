@@ -1,0 +1,53 @@
+Slurp ls dick lol: 'test'.
+Pen write: (Slurp obtain), brk.
+
+var dick is Object new.
+
+dick on: 'new:' do: { :size
+  me is dick new.
+  my size is size.
+  ^me.
+}.
+
+dick on: 'grow' do: {
+  my size is my size + 20.
+}.
+
+dick on: 'shrink' do: {
+  my size is my size - 20.
+}.
+
+dick on: 'getSize' do: {
+  ^my size.
+}.
+
+var SomeonesDick is dick new: 10.
+Pen write: (SomeonesDick getSize), write: '\n'.
+SomeonesDick grow.
+Pen write: (SomeonesDick getSize) toString, write: '\n'.
+SomeonesDick shrink.
+Pen write: (SomeonesDick getSize) toString, write: '\n'.
+
+var newDick is SomeonesDick new: 0.
+newDick on: 'construct:' do: { :s
+  ^newDick new: s.
+}
+
+newDick init: 5.
+Pen cyan.
+Pen write: ((newDick construct: 5) grow getSize) toString, write: '\n'.
+Pen red.
+Broom sweep.
+Pen write: 'Collected ' + Broom dust toString + ' Objects', brk.
+Pen green.
+
+child is Program new: { :program
+  newDick grow.
+  Pen write: 'child :: newDick`s size after growing in child: ', write: newDick getSize, brk.
+  {^True.} whileTrue: {program listen: {:m Pen write: m, brk. (m = 'End') ifTrue: {break.}.}.}.
+}.
+child message: 'Hello'.
+child message: 'lol'.
+child message: 'End'.
+child join.
+Pen write: 'Newdick\'s size in parent: ', write: newDick getSize, brk.

@@ -1,0 +1,82 @@
+language: c
+compiler: gcc
+dist: bionic
+matrix:
+  include:
+    - name: "Coverage Tests"
+      env: TEST=YES
+      install:
+        - CC='gcc-8 -fuse-ld=gold' CXX='g++-8 -fuse-ld=gold' CFLAGS='-DwithCTypesNative=1 -DwithInjectNative=1 -DwithInlineAsm=1 -fprofile-arcs -ftest-coverage' LDFLAGS="-lgcov --coverage" make all
+      script:
+        - bash ./runtests.sh
+      after_success:
+        - curl -s https://codecov.io/bash -o codecov.sh
+        - bash codecov.sh -x gcov-8 >/dev/null 2>&1
+    - name: "Build Artifacts"
+      env: TEST=NO
+
+before_install:
+    - wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+    - echo "deb [trusted=yes] http://apt.llvm.org/xenial/ llvm-toolchain-xenial-7 main" | sudo tee -a /etc/apt/sources.list.d/llvm.list
+    - echo "deb-src [trusted=yes] http://apt.llvm.org/xenial/ llvm-toolchain-xenial-7 main" | sudo tee -a /etc/apt/sources.list.d/llvm.list
+    - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    - sudo apt-get update
+    - sudo apt-get install -y --allow-unauthenticated libllvm-7-ocaml-dev libllvm7 llvm-7 llvm-7-dev llvm-7-runtime
+    - sudo apt-get install -y --allow-unauthenticated libc++-7-dev libc++abi-7-dev
+    - sudo apt-get install -y libffi-dev libbsd-dev libpcre3-dev libgc-dev realpath curl libcurl4-openssl-dev libsparsehash-dev tcl tcl-dev
+    - sudo apt-get install -y --allow-unauthenticated gcc-8 g++-8
+    - echo =====================================================================
+    - /usr/lib/llvm-7/bin/llvm-config --ldflags --cxxflags --libs core orcjit native
+    - /usr/lib/llvm-7/bin/llvm-config --ldflags --cflags --libs core orcjit native
+    - echo =====================================================================
+    - /usr/lib/llvm-7/bin/llvm-config --version
+    - echo =====================================================================
+    - export PATH=/usr/lib/llvm-7/bin:$PATH
+
+install:
+  - cd autohell && aclocal && libtoolize && autoconf && automake --add-missing
+  - mkdir -p build && mkdir -p basemods && export BUILD_DIR_INT=$(realpath build)
+  - export LD_LIBRARY_PATH=/usr/local/lib
+  - cd src/tcc && ./configure && make && sudo make install && cd ../..
+  - ./configure CFLAGS='-L/usr/local/lib' CXXFLAGS='-L/usr/local/lib' CC='gcc-8 -fuse-ld=gold' CXX='g++-8 -fuse-ld=gold' --prefix=$BUILD_DIR_INT --with-ffi --with-inject && llvmconfig=/usr/lib/llvm-7/bin/llvm-config make
+  - cd .. && CFLAGS="-I/usr/include/tcl8.6 -L/usr/lib/tcl8.6" bash ./makeplugs.sh
+  - chown -R travis mods
+  - echo "Built these" && ls mods
+  - cd autohell
+  - sudo llvmconfig=/usr/lib/llvm-7/bin/llvm-config make install
+  - ls build
+  - ls build/share/Citron
+  - cd ..
+
+script:
+  - export VERSION=$(git rev-parse --short HEAD)
+
+after_success:
+  - wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
+  - chmod a+x linuxdeployqt-continuous-x86_64.AppImage
+  - mkdir -p appimage/AppDir/usr && cp -r autohell/build/* appimage/AppDir/usr
+  - mkdir -p appimage/AppDir/usr/share/application
+  - mkdir -p appimage/AppDir/usr/share/icons/hicolor/256x256
+  - cp image/citron.png appimage/AppDir/usr/share/icons/hicolor/256x256/
+  - echo "[Desktop Entry]" > appimage/AppDir/usr/share/application/citron.desktop
+  - echo "Type=Application" >> appimage/AppDir/usr/share/application/citron.desktop
+  - echo "Name=Citron" >> appimage/AppDir/usr/share/application/citron.desktop
+  - echo "Comment=Citron Interp" >> appimage/AppDir/usr/share/application/citron.desktop
+  - echo "Exec=ctr" >> appimage/AppDir/usr/share/application/citron.desktop
+  - echo "Icon=citron" >> appimage/AppDir/usr/share/application/citron.desktop
+  - echo "Categories=Development;" >> appimage/AppDir/usr/share/application/citron.desktop
+  - echo "Terminal=true" >> appimage/AppDir/usr/share/application/citron.desktop # Needed for CLI tools
+  - ./linuxdeployqt-continuous-x86_64.AppImage appimage/AppDir/usr/share/application/citron.desktop -appimage -unsupported-allow-new-glibc
+  - sudo cp -rf Citron*.AppImage autohell/build/bin/ctr
+  - ls -lh autohell/build/*
+  - ls -alh autohell/build/share/Citron/mods
+  - ls -lh *.AppImage
+  - tar cvjf release.tar.bz2 -C autohell/build .
+  - (cd autohell/build && zip -r - .) > release.zip
+  - wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
+  - bash upload.sh release.tar.bz2 release.zip Citron*.AppImage*
+
+branches:
+  except:
+    - # Do not build tags that we create when we upload to GitHub Releases
+    - /^(?i:continuous.*)$/

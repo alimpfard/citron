@@ -207,9 +207,16 @@ release:
 	  wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
 		export UPLOADTOOL_SUFFIX="windows"
 		export REPO_SLUG="alimpfard/citron"
-		./upload.sh citron-i686-release.tar citron-release.tar
+	  if [ "x$$BUILD_I686" = "xYES" ]; then \
+	  	./upload.sh citron-i686-release.tar citron-release.tar; \
+	  else \
+	  	./upload.sh citron-release.tar; \
+	  fi
+
 
 distribute: all package clean
 distribute:
-	PATH="$$PATH:/mingw32/bin" make -f makefile.32 distribute
+	if [ "x$$BUILD_I686" = "xYES" ]; then \
+		PATH="$$PATH:/mingw32/bin" make -f makefile.32 distribute; \
+	fi
 	make -f makefile release

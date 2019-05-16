@@ -20,7 +20,7 @@ AR=ar
 # note: -Wswitch-enum looks helpful, but doesn't allow default case
 # to catch multiple cases, which we are using
 CC_FLAGS="-c -std=c99 -pedantic -pedantic-errors -Ilambdaf/ \
--Werror -Wfatal-errors -Wall -Wextra -Wshadow -Winit-self -Wwrite-strings \
+-Wshadow -Winit-self -Wwrite-strings \
 -Wconversion -Wcast-qual -Wredundant-decls -fpic \
 -fno-ident -fno-stack-protector -fno-asynchronous-unwind-tables"
 

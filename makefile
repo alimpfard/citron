@@ -213,7 +213,7 @@ release:
 		export REPO_SLUG="alimpfard/citron"
 		./upload.sh citron-i686-release.tar citron-release.tar
 
-distribute: all package all32 package release
+distribute: all package clean all32 package release
 
 
 

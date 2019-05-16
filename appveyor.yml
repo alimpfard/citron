@@ -42,7 +42,7 @@ environment:
     secure: yFpDwb0WUOt3DSroBeI3vHzs+leUiIZPxCn80XUSVzdK22RgzqwQFQbADIvyTSNJ
   matrix:
     - prepare_mode: NO
-      BUILD_I686: NO
+      BUILD_I686: YES
       COMPILER: msys2
       PLATFORM: x86
       MSYS2_ARCH: x86

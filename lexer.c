@@ -533,6 +533,7 @@ int check_next_line_empty() {
   case 0: {
     return *(ctr_code + 1) != '\n';
   }
+#ifdef POSIXRE
   case 1: {
     regex_t pattern;
     if (regcomp(&pattern, "^$", 0))
@@ -542,6 +543,7 @@ int check_next_line_empty() {
     regfree(&pattern);
     return x;
   }
+#endif
   }
   return 0;
 }

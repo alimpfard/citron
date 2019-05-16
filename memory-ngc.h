@@ -5,7 +5,7 @@
 #include <stdarg.h>
 #include <math.h>
 #include <stdint.h>
-#include <sys/mman.h>
+#include "mman.h"
 #include "citron.h"
 #include <gc/gc.h>
 #include <gc/gc_typed.h>

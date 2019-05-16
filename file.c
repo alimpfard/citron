@@ -105,6 +105,25 @@ ctr_object *ctr_file_get_descriptor(ctr_object *myself,
   return ctr_build_number_from_float(fd);
 }
 
+#ifdef DWIN32
+FILE *fmemopen(void *buf, size_t size, const char *mode) {
+	char temppath[MAX_PATH - 13];
+	if (GetTempPath(sizeof(temppath), temppath) == 0)
+		return NULL;
+	char filename[MAX_PATH + 1];
+	if (GetTempFileName(temppath, "CC", 0, filename) == 0)
+		return NULL;
+	FILE *f = fopen(filename, "wb");
+	if (f == NULL)
+		return NULL;
+
+	fwrite(buf, size, 1, f);
+	fclose(f);
+
+	return fopen(filename, mode);
+}
+#endif
+
 /**
  * [File] memopen: [String] mode: [Number]
  *

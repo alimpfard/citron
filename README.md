@@ -3,6 +3,7 @@
 
 ### Release
 A binary package is available (x86_64 PE) for windows.
+And an extremely stripped off binary is available for win32 (i686).
 
 ### Build guide
 this is to be built on Msys2 (mingw)
@@ -30,7 +31,6 @@ All operations are done through sending and receiving messages between objects.
 `receiver keyword: 'string' messages: 1, can be: 'chained', like so.`
 
 there are some examples in the `examples` directory.
-
 
 ### Default Module Resolution
 A default module resolution path is assigned at build-time, which normally points to the data directory of the install;

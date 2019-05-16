@@ -10,7 +10,7 @@ echo MSYS2 system: %MSYSTEM%
 if %COMPILER%==msys2 (
     @echo on
     SET "PATH=C:\%MSYS2_DIR%\usr\bin;%PATH%"
-    pacman -S --noconfirm gcc pcre pcre-devel
+    pacman -S --noconfirm gcc pcre pcre-devel mingw-w64-i686-gcc mingw-w64-i686-g++
     SET "CC=gcc.exe"
     make distribute
 )

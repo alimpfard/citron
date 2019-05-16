@@ -448,7 +448,15 @@ ctr_object *ctr_file_rpath(ctr_object *myself, ctr_argument *argumentList) {
     return CtrStdNil;
   char *cpath = ctr_heap_allocate_cstring(path);
   char rpath[PATH_MAX + 1];
+#ifdef DWIN32
+  if (!_fullpath (rpath, cpath, PATH_MAX)) {
+    CtrStdFlow = ctr_build_string_from_cstring("_fullpath fail");
+    return CtrStdNil;
+  }
+  ret = rpath;
+#else
   char *ret = realpath (cpath, rpath);
+#endif
   if (!ret)
     {
       if (WORDEXP_READY)
@@ -1256,7 +1264,7 @@ ctr_object *ctr_file_list(ctr_object *myself, ctr_argument *argumentList) {
 	    CtrStdFlow = ctr_format_str("Estat failed: %d", errno);
 	    return CtrStdNil;
     }
-    switch (eStat.st_mode) {
+    switch (eStat.st_mode & _S_IFMT) {
     case _S_IFDIR:
       putArgumentList->object = ctr_build_string_from_cstring("folder");
       break;
@@ -1329,6 +1337,26 @@ ctr_object *ctr_file_type(ctr_object *myself, ctr_argument *argumentList) {
   char *path = ctr_heap_allocate_cstring(argumentList->object);
   struct stat stats;
   char *value;
+#ifdef DWIN32
+    if(stat(path, &stats) == 0)
+    switch (eStat.st_mode & _S_IFMT) {
+    case _S_IFDIR:
+      value = "folder";
+      goto ret;
+    case _S_IFCHR:
+      value = "character device";
+      goto ret;
+    case _S_IFIFO:
+      value = "pipe";
+      goto ret;
+    case _S_IFREG:
+      value = "file";
+      goto ret;
+    default:
+      value = "other";
+      goto ret;
+    }
+#else
   if (lstat(path, &stats) == 0) {
     switch (stats.st_mode & S_IFMT) {
     case S_IFSOCK:
@@ -1357,6 +1385,7 @@ ctr_object *ctr_file_type(ctr_object *myself, ctr_argument *argumentList) {
       goto ret;
     }
   }
+#endif
   ctr_heap_free(path);
   return CtrStdNil;
 ret:
@@ -1381,7 +1410,11 @@ ctr_object *ctr_file_mkdir(ctr_object *myself, ctr_argument *argumentList) {
   if (argumentList->object &&
       argumentList->object->interfaces->link == CtrStdNumber)
     mode = argumentList->object->value.nvalue;
+#ifdef DWIN32
+  if (mkdir(path) != 0) {
+#else
   if (mkdir(path, mode) != 0) {
+#endif
     CtrStdFlow = ctr_build_string_from_cstring(strerror(errno));
     ctr_heap_free(path);
     return CtrStdNil;

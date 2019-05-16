@@ -107,10 +107,10 @@ ctr_object *ctr_file_get_descriptor(ctr_object *myself,
 
 #ifdef DWIN32
 FILE *fmemopen(void *buf, size_t size, const char *mode) {
-	char temppath[MAX_PATH - 13];
+	char temppath[PATH_MAX - 13];
 	if (GetTempPath(sizeof(temppath), temppath) == 0)
 		return NULL;
-	char filename[MAX_PATH + 1];
+	char filename[PATH_MAX + 1];
 	if (GetTempFileName(temppath, "CC", 0, filename) == 0)
 		return NULL;
 	FILE *f = fopen(filename, "wb");

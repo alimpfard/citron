@@ -157,8 +157,8 @@ clean:
 	make -C libsocket clean
 bwgc:
 	rm -rf bdwgc
-	git clone https://github.com/ivmai/bdwgc bwgc
-	cd bwgc && \
+	git clone https://github.com/ivmai/bdwgc
+	cd bdwgc && \
 	./autogen.sh && \
 	CC=$(CC) CXX=$(CXX) ./configure --prefix=`realpath ../bwgc` && \
 	make && \

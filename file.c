@@ -28,8 +28,11 @@
 #define WORDEXP_READY 1
 #endif
 
+#ifdef withTermios
 #include <termios.h>
 static struct termios oldTermios, newTermios;
+#endif
+
 #include "generator.h"
 
 /**@I_OBJ_DEF File*/

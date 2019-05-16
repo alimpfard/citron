@@ -14,11 +14,10 @@ shell_cflags := ${CFLAGS}
 shell_ldflags := ${LDFLAGS}
 
 ifeq ($(strip ${WITH_ICU}),)
-	CFLAGS = -Wall -Wextra -Wno-unused-parameter -D withTermios \
+	CFLAGS = -Wall -Wextra -Wno-unused-parameter \
               -D CTR_STD_EXTENSION_PATH=\"`pwd`\"
 else
 	CFLAGS = -Wall -Wextra -Wno-unused-parameter \
-			  -D withTermios \
 			 -D CTR_STD_EXTENSION_PATH=\"`pwd`\" -D withICU
 LEXTRACF := ${LEXTRACF} -L/usr/lib -licui18n -licuuc -licudata
 endif

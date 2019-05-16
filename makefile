@@ -71,7 +71,7 @@ deps:
 	# This is just a hacky way of getting bdwgc "libgc" from MSYS2,
 	# Do not expect it to work anywhere else
 	# TODO: Find a better solution
-	pacman --noconfirm -S libgc-devel libgc mingw-w64-i686-dlfcn mingw-w64-x86_64-dlfcn mingw-w64-x86_64-pcre mingw-w64-i686-pcre
+	pacman --noconfirm -S libgc-devel libgc mingw-w64-i686-dlfcn mingw-w64-x86_64-dlfcn mingw-w64-x86_64-pcre mingw-w64-i686-pcre git
 
 all: CFALGS := $(CFLAGS) -O2
 all: deps modules cxx
@@ -151,6 +151,9 @@ clean:
 	rm -rf ${OBJS} ctr
 	./make-lambdaf.sh clean
 	make -C libsocket clean
+	# tell me what you will, but why not?
+	git add citron-release.tar || echo "nothing was built (x86_64)"
+	git clean -xffd
 
 cclean:
 	rm -rf ${COBJS} ctrc

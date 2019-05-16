@@ -1095,8 +1095,13 @@ ctr_object *ctr_command_chdir(ctr_object *myself, ctr_argument *argumentList) {
   ctr_did_side_effect = 1;
   CTR_ENSURE_TYPE_STRING(argumentList->object);
   char *path = ctr_heap_allocate_cstring(argumentList->object);
+#ifdef DWIN32
+  char curpath[PATH_MAX + 1];
+  if (!_fullpath(".", curpath)) {
+#else
   char *curpath = realpath(".", NULL);
   if (!curpath) {
+#endif
     CtrStdFlow = ctr_build_string_from_cstring(
         "Could not extends real path of current directory");
     return CtrStdNil;
@@ -1230,6 +1235,9 @@ void ctr_int_handler(int isig) {
     if (CtrStdFlow)
       CtrStdFlow = CtrStdExit; // exit on exception in interrupt handler
   } else {
+#ifdef DWIN32
+    exit(isig);
+#else
     switch (isig) {
     case SIGINT:
       // if (CtrStdFlow) {
@@ -1246,6 +1254,7 @@ void ctr_int_handler(int isig) {
     default:
       return;
     }
+#endif
   }
 }
 
@@ -1762,10 +1771,12 @@ ctr_object *ctr_command_sig(ctr_object *myself, ctr_argument *argumentList) {
   }
   int pid = pid_o->value.nvalue;
   ctr_did_side_effect = 1;
+#ifdef DWIN32
   if (kill(pid, sig) != 0) {
     CtrStdFlow = ctr_build_string_from_cstring(strerror(errno));
     return myself;
   }
+#endif
   return myself;
 }
 
@@ -1788,6 +1799,13 @@ ctr_object *ctr_command_log_generic(ctr_object *myself,
   ctr_heap_free(message);
   return myself;
 }
+
+#ifdef DWIN32
+#define LOG_NOTICE 0
+#define LOG_WARNING 1
+#define LOG_ERR 2
+#define LOG_EMERG 3
+#endif
 
 ctr_object *ctr_command_log(ctr_object *myself, ctr_argument *argumentList) {
   return ctr_command_log_generic(myself, argumentList, LOG_NOTICE);
@@ -2888,15 +2906,19 @@ typedef struct {
 // static pthread_mutex_t GLOBAL_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 void *ctr_run_thread_func(ctr_thread_t *threadt) {
   ctr_did_side_effect = 1;
+#ifndef DWIN32
   sigset_t set;
   sigfillset(&set);
   sigset_t oset;
+#endif
   ctr_thread_return_t *rv = ctr_heap_allocate(sizeof(ctr_thread_return_t));
   // ctr_object* ctx = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
   // pthread_mutex_lock (&GLOBAL_MUTEX);
   pthread_mutex_lock(threadt->mutex);
   // ctr_object* oct = ctr_contexts[ctr_context_id];
+#ifndef DWIN32
   int sets = pthread_sigmask(SIG_SETMASK, &set, &oset);
+#endif
   // ctr_switch_context(ctx);
 
   ctr_argument *args = ctr_heap_allocate(sizeof(ctr_argument));
@@ -2909,7 +2931,9 @@ void *ctr_run_thread_func(ctr_thread_t *threadt) {
   rv->retval = result;
   rv->stdFlow = CtrStdFlow;
   threadt->last_result = rv;
+#ifndef DWIN32
   sets = pthread_sigmask(SIG_SETMASK, &oset, NULL);
+#endif
   pthread_mutex_unlock(threadt->mutex);
   // pthread_mutex_unlock (&GLOBAL_MUTEX);
   pthread_exit(rv);

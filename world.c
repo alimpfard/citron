@@ -141,10 +141,13 @@ static const int all_signals[] = {
 #ifdef SIGWINCH
     SIGWINCH,
 #endif
+#ifndef DWIN32
     SIGKILL, // last one. must exist
+#endif
 };
 
 static void register_signal_handlers() {
+#ifndef DWIN32
   struct sigaction act;
   int i = 0;
   memset(&act, 0, sizeof act);
@@ -155,6 +158,7 @@ static void register_signal_handlers() {
       fprintf(stderr, "Could not install signal %d handler: %s (Ignoring)\n",
               all_signals[i], strerror(errno));
   } while (all_signals[++i] != SIGKILL);
+#endif
 }
 
 /**

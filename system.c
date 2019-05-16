@@ -21,7 +21,9 @@
 
 #ifdef withBoehmGC
 #include <gc/gc.h>
+#ifndef DWIN32
 #define pthread_create GC_pthread_create
+#endif
 #endif
 
 #ifdef withTermios
@@ -30,6 +32,29 @@ static struct termios oldTermios, newTermios;
 #endif
 
 #include "compcompat_pthread.h"
+
+#ifdef DWIN32
+// setenv because :sigh:
+//
+int setenv(const char* name, const char* value, int overwrite) {
+	if (!name) {
+		errno = EINVAL;
+		return -1;
+	}
+	if (_getenv(name) && !overwrite) 
+		return 0;
+#ifdef malloc
+#pragma push_macro("malloc") // I hate my life
+#undef malloc
+	char *pv = malloc(strlen(name) + strlen(value) + 2);
+#pragma pop_macro("malloc")
+#else
+	char *pv = malloc(strlen(name) + strlen(value) + 2);
+#endif
+	sprintf(pv, "%s=%s", name, value);
+	return _putenv(pv);
+}
+#endif
 
 #ifdef forLinux
 #include <bsd/stdlib.h>
@@ -1824,7 +1849,7 @@ ctr_object *ctr_command_sig(ctr_object *myself, ctr_argument *argumentList) {
   }
   int pid = pid_o->value.nvalue;
   ctr_did_side_effect = 1;
-#ifdef DWIN32
+#ifndef DWIN32
   if (kill(pid, sig) != 0) {
     CtrStdFlow = ctr_build_string_from_cstring(strerror(errno));
     return myself;

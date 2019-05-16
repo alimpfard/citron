@@ -182,7 +182,11 @@ void *ctr_internal_plugin_find(ctr_object *key) {
   char *modName;
   char *modNameLow;
   plugin_init_func init_plugin;
+#ifdef DWIN32
+  static char realPathModName[PATH_MAX+1];
+#else
   char *realPathModName = NULL;
+#endif
   modName = ctr_heap_allocate_cstring(modNameObject);
   modNameLow = modName;
   char const *extPath = ctr_file_stdext_path_raw();
@@ -191,7 +195,11 @@ void *ctr_internal_plugin_find(ctr_object *key) {
   snprintf(pathNameMod, 1024, ("%s/mods/%s/libctr%s.so"), extPath, modName,
            modName);
   ctr_heap_free(modName);
+#ifdef DWIN32
+  _fullpath(pathNameMod, realPathModName, PATH_MAX);
+#else
   realPathModName = realpath(pathNameMod, NULL);
+#endif
   if (access(realPathModName, F_OK) == -1)
     return NULL;
   handle = dlopen(realPathModName, RTLD_NOW);
@@ -211,10 +219,18 @@ void *ctr_internal_plugin_find_base(char const *modName) {
   void *handle;
   char pathNameMod[1024];
   plugin_init_func init_plugin;
+#ifdef DWIN32
+  static char realPathModName[PATH_MAX+1];
+#else
   char *realPathModName = NULL;
+#endif
   snprintf(pathNameMod, 1024, ("%s/basemods/%s/libctr%s.so"), extPath, modName,
            modName);
+#ifdef DWIN32
+  _fullpath(pathNameMod, realPathModName, PATH_MAX);
+#else
   realPathModName = realpath(pathNameMod, NULL);
+#endif
   if (access(realPathModName, F_OK) == -1) {
     printf("Error: %s\n", strerror(errno));
     return NULL;

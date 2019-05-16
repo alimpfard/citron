@@ -4849,7 +4849,7 @@ ctr_object *ctr_string_randomize_bytes(ctr_object *myself,
   buffer = ctr_heap_allocate_cstring(myself);
   newBuffer = (char *)ctr_heap_allocate(len);
   for (i = 0; i < len; i++) {
-    j = (ctr_size)((random() % (plen)));
+    j = (ctr_size)((rand() % (plen)));
     newBuffer[i] = buffer[j];
   }
   answer = ctr_build_string_from_cstring(newBuffer);

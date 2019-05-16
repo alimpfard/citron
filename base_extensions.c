@@ -13,6 +13,21 @@
 #endif
 #include <unistd.h>
 
+#ifdef DWIN32
+char* strsep(char **stringp, const char *delim) {
+	char *start = *stringp;
+	char *p;
+	p = (start != NULL) ? strpbrk(start, delim) : NULL;
+	if (!p)
+		*stringp = NULL;
+	else {
+		*p = 0;
+		*stringp = p+1;
+	}
+	return start;
+}
+#endif
+
 extern int ctr_lex_line_number;
 /**
  * [Array|String] letEqual: [Array|Object] in: [Block]

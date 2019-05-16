@@ -106,6 +106,9 @@ ctr_object *ctr_file_get_descriptor(ctr_object *myself,
 }
 
 #ifdef DWIN32
+#define GetTempPath GetTempPathA
+#define GetTempFileName GetTempFileNameA
+
 FILE *fmemopen(void *buf, size_t size, const char *mode) {
 	char temppath[PATH_MAX - 13];
 	if (GetTempPath(sizeof(temppath), temppath) == 0)

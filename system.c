@@ -1,8 +1,6 @@
-#include <arpa/inet.h>
 #include <ctype.h>
 #include <errno.h>
 #include <math.h>
-#include <netinet/in.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -12,7 +10,11 @@
 #include <string.h>
 #include <sys/fcntl.h>
 #include <sys/ioctl.h>
+#ifndef DWIN32
+#include <arpa/inet.h>
+#include <netinet/in.h>
 #include <sys/socket.h>
+#endif
 #include <sys/wait.h>
 #include <syslog.h>
 #include <time.h>
@@ -1858,6 +1860,10 @@ ctr_object *ctr_command_accept_number(ctr_object *myself,
  * and send messages to it.
  */
 ctr_object *ctr_command_accept(ctr_object *myself, ctr_argument *argumentList) {
+#ifdef DWIN32
+  CtrStdFlow = ctr_build_string_from_cstring("No sockets available for win32 yet");
+  return CtrStdNil;
+#else
   int listenfd = 0, connfd = 0;
   ctr_object *responder;
   ctr_object *answerObj;
@@ -1932,6 +1938,7 @@ ctr_object *ctr_command_accept(ctr_object *myself, ctr_argument *argumentList) {
   shutdown(listenfd, SHUT_RDWR);
   close(listenfd);
   return 0;
+#endif
 }
 
 /**
@@ -1942,6 +1949,10 @@ ctr_object *ctr_command_accept(ctr_object *myself, ctr_argument *argumentList) {
  */
 ctr_object *ctr_command_accepti4(ctr_object *myself,
                                  ctr_argument *argumentList) {
+#ifdef DWIN32
+  CtrStdFlow = ctr_build_string_from_cstring("No sockets available for win32 yet");
+  return CtrStdNil;
+#else
   int listenfd = 0, connfd = 0;
   ctr_object *responder;
   ctr_object *answerObj;
@@ -2015,6 +2026,7 @@ ctr_object *ctr_command_accepti4(ctr_object *myself,
   shutdown(listenfd, SHUT_RDWR);
   close(listenfd);
   return 0;
+#endif
 }
 
 /**@I_OBJ_DEF Dice*/

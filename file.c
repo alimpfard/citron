@@ -110,7 +110,7 @@ ctr_object *ctr_file_get_descriptor(ctr_object *myself,
 #define GetTempFileName GetTempFileNameA
 
 FILE *fmemopen(void *buf, size_t size, const char *mode) {
-	char temppath[PATH_MAX - 13];
+/*	char temppath[PATH_MAX - 13];
 	if (GetTempPath(sizeof(temppath), temppath) == 0)
 		return NULL;
 	char filename[PATH_MAX + 1];
@@ -124,6 +124,8 @@ FILE *fmemopen(void *buf, size_t size, const char *mode) {
 	fclose(f);
 
 	return fopen(filename, mode);
+*/
+	return NULL; // TODO figure out how to use GetTempPath/GetTempFileName
 }
 #endif
 

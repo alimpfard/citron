@@ -118,7 +118,7 @@ tcc/%.a:
 # 	$(CC) $(CFLAHS) -c $< -o $@ >/dev/null 2>&1
 
 lambdaf.a:
-	./make-lambdaf.sh
+	CC="${CC}" CXX="${CXX}" CFLAGS="${CFLAGS}" ./make-lambdaf.sh
 
 libsocket.so:
 	make -C libsocket

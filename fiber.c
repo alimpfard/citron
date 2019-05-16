@@ -50,7 +50,9 @@ extern int waitForAllFibers();
 /* <HEADER */
 
 #include <malloc.h>
+#ifndef DWIN32
 #include <ucontext.h>
+#endif
 
 ctr_object *FIBER_YIELDED = NULL; // to pass values around
 
@@ -58,7 +60,9 @@ ctr_object *FIBER_YIELDED = NULL; // to pass values around
  *  Contains the information about individual fibers.
  */
 typedef struct {
+#ifndef DWIN32
   ucontext_t context; // Stores the current context
+#endif
   ctr_object *ctr_context;
   int active : 1; // A boolean flag, 0 if it is not active, 1 if it is
 } fiber;
@@ -75,7 +79,9 @@ static int inFiber = 0;
 static int numFibers = 0;
 
 // The "main" execution context
+#ifndef DWIN32
 static ucontext_t mainContext;
+#endif
 
 // Sets all the fibers to be initially inactive
 void initFibers() {

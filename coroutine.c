@@ -9,7 +9,11 @@
 #if __APPLE__ && __MACH__
 #include <sys/ucontext.h>
 #else
+#ifdef DWIN32
+typedef int ucontext_t;
+#else
 #include <ucontext.h>
+#endif
 #endif
 
 #define STACK_SIZE (1024 * 1024)
@@ -125,9 +129,11 @@ void coroutine_resume(struct schedule *S, int id) {
     {
     case COROUTINE_READY:
       //getcontext (&C->ctx);
+#ifndef DWIN32
       C->ctx.uc_stack.ss_sp = S->stack;
       C->ctx.uc_stack.ss_size = STACK_SIZE;
       C->ctx.uc_link = &S->main;
+#endif
       S->running = id;
       C->status = COROUTINE_RUNNING;
       uintptr_t ptr = (uintptr_t) S;

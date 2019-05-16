@@ -472,7 +472,7 @@ ctr_object *ctr_file_rpath(ctr_object *myself, ctr_argument *argumentList) {
     CtrStdFlow = ctr_build_string_from_cstring("_fullpath fail");
     return CtrStdNil;
   }
-  ret = rpath;
+  char *ret = rpath;
 #else
   char *ret = realpath (cpath, rpath);
 #endif
@@ -1358,7 +1358,7 @@ ctr_object *ctr_file_type(ctr_object *myself, ctr_argument *argumentList) {
   char *value;
 #ifdef DWIN32
     if(stat(path, &stats) == 0)
-    switch (eStat.st_mode & _S_IFMT) {
+    switch (stats.st_mode & _S_IFMT) {
     case _S_IFDIR:
       value = "folder";
       goto ret;

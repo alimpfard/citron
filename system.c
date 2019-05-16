@@ -14,8 +14,8 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
-#endif
 #include <syslog.h>
+#endif
 #include <time.h>
 #include <unistd.h>
 
@@ -1780,7 +1780,11 @@ ctr_object *ctr_command_log_generic(ctr_object *myself,
   ctr_did_side_effect = 1;
   message =
       ctr_heap_allocate_cstring(ctr_internal_cast2string(argumentList->object));
+#ifndef DWIN32
   syslog(level, "%s", message);
+#else
+  fprintf(stderr, "[level %d] %s\n", level, message);
+#endif
   ctr_heap_free(message);
   return myself;
 }

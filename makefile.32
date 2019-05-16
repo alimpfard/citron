@@ -78,7 +78,8 @@ all: CC := "i686-w64-mingw32-gcc"
 all: CXX := "i686-w64-mingw32-g++"
 all: OUTF := citron-i686-release.tar
 all: TARGET:=32
-all: all
+all: deps modules cxx
+all: ctr ctrconfig
 
 ctrconfig:
 	$(CC) ctrconfig.c -o ctrconfig

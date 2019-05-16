@@ -77,13 +77,6 @@ all: CFALGS := $(CFLAGS) -O2
 all: deps modules cxx
 all: ctr ctrconfig
 
-all32: CFLAGS := $(CFLAGS) -O2 -L lib
-all32: CC := "i686-w64-mingw32-gcc"
-all32: CXX := "i686-w64-mingw32-g++"
-all32: OUTF := citron-i686-release.tar
-all32: TARGET:=32
-all32: all
-
 ctrconfig:
 	$(CC) ctrconfig.c -o ctrconfig
 

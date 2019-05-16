@@ -41,7 +41,7 @@ int setenv(const char* name, const char* value, int overwrite) {
 		errno = EINVAL;
 		return -1;
 	}
-	if (_getenv(name) && !overwrite) 
+	if (getenv(name) && !overwrite) 
 		return 0;
 #ifdef malloc
 #pragma push_macro("malloc") // I hate my life

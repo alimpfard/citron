@@ -62,6 +62,8 @@ OBJS := ${OBJS} inject.o tcc/libtcc1.a tcc/libtcc.a
 endif
 
 COBJS = ${OBJS} compiler.o
+OUTF = citron-release.tar
+TARGET = 64
 
 # .SUFFIXES:	.o .c
 
@@ -69,11 +71,18 @@ deps:
 	# This is just a hacky way of getting bdwgc "libgc" from MSYS2,
 	# Do not expect it to work anywhere else
 	# TODO: Find a better solution
-	pacman --noconfirm -S libgc-devel libgc
+	pacman --noconfirm -S libgc-devel libgc mingw-w64-i686-dlfcn mingw-w64-x86_64-dlfcn mingw-w64-x86_64-pcre mingw-w64-i686-pcre
 
 all: CFALGS := $(CFLAGS) -O2
 all: deps modules cxx
 all: ctr ctrconfig
+
+all32: CFLAGS := $(CFLAGS) -O2 -L lib
+all32: CC := "i686-w64-mingw32-gcc"
+all32: CXX := "i686-w64-mingw32-g++"
+all32: OUTF := citron-i686-release.tar
+all32: TARGET:=32
+all32: all
 
 ctrconfig:
 	$(CC) ctrconfig.c -o ctrconfig
@@ -195,13 +204,16 @@ package:
 	cp dist_windows package/prepared/ctr.bat
 	cp misc/prepare_install.ctr package/prepare_install.ctr
 	cp misc/install.bat install.bat
-	tar cf citron-release.tar package install.bat
+	tar cf $(OUTF) package install.bat
 	rm -rf package install.bat
 
 release:
 	  wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
 		export UPLOADTOOL_SUFFIX="windows"
 		export REPO_SLUG="alimpfard/citron"
-		./upload.sh citron-release.tar
+		./upload.sh citron-i686-release.tar citron-release.tar
 
-distribute: all package release
+distribute: all package all32 package release
+
+
+

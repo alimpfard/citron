@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#define WITH_UCONTEXT
 #ifdef WITH_UCONTEXT
 #include <ucontext.h>
 #else

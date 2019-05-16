@@ -10,7 +10,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifndef DWIN32
 #include <syslog.h>
+#endif
 #include <unistd.h>
 
 #define DO_PROFILE 0
@@ -211,7 +213,9 @@ int main(int argc, char *argv[]) {
   ctr_argv = argv;
   ctr_cli_read_args(argc, argv);
   ctr_initialize_ex();
+#ifndef DWIN32
   openlog(argv[0], LOG_PID | LOG_CONS, LOG_USER);
+#endif
 #if (DO_PROFILE)
   ProfilerStart("citron.log");
 #endif
@@ -247,7 +251,9 @@ int main(int argc, char *argv[]) {
     // ctr_initialize_world ();
     // ctr_ccomp_run (program);
 
+#ifndef DWIN32
     closelog();
+#endif
     exit(0);
 #endif
     if (debug)
@@ -262,7 +268,9 @@ int main(int argc, char *argv[]) {
           "[WARNING] Citron has detected an internal memory leak of: %" PRIu64
           " bytes.\n",
           ctr_gc_alloc);
+#ifndef DWIN32
       closelog();
+#endif
       exit(1);
     }
     // exit(0);

@@ -211,5 +211,5 @@ release:
 
 distribute: all package clean
 distribute:
-	make -f makefile.32 distribute
+	PATH="$$PATH:/mingw32/bin" make -f makefile.32 distribute
 	make -f makefile release

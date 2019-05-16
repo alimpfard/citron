@@ -74,7 +74,7 @@ deps: bwgc
 	pacman --noconfirm -S libgc-devel libgc mingw-w64-i686-dlfcn mingw-w64-x86_64-dlfcn mingw-w64-x86_64-pcre mingw-w64-i686-pcre
 
 all: CFLAGS := $(CFLAGS) -O2 -L lib
-all: CC := "i686-w64-mingw32-bwgcc"
+all: CC := "i686-w64-mingw32-gcc"
 all: CXX := "i686-w64-mingw32-g++"
 all: OUTF := citron-i686-release.tar
 all: TARGET:=32

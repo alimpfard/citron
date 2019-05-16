@@ -5,7 +5,7 @@ o_cflags := -I/mingw64/include
 #$(shell pkg-config --cflags tcl)
 o_ldflags := -L/mingw64/lib -ltcl8.6 -ldl -lz -lpthread -lz
 #$(shell pkg-config --libs tcl)
-CFLAGS := ${CFLAGS} ${o_cflags} -I/usr/include
+CFLAGS := ${CFLAGS} ${o_cflags} -I/usr/include -Igc/include
 LEXTRACF := ${LEXTRACF} ${o_ldflags} -flto -lstdc++ -static-libgcc -static-libstdc++
 location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 WHERE_ART_THOU := $(location)
@@ -73,16 +73,12 @@ deps:
 	# TODO: Find a better solution
 	pacman --noconfirm -S libgc-devel libgc mingw-w64-i686-dlfcn mingw-w64-x86_64-dlfcn mingw-w64-x86_64-pcre mingw-w64-i686-pcre
 
-all: CFALGS := $(CFLAGS) -O2
-all: deps modules cxx
-all: ctr ctrconfig
-
-all32: CFLAGS := $(CFLAGS) -O2 -L lib
-all32: CC := "i686-w64-mingw32-gcc"
-all32: CXX := "i686-w64-mingw32-g++"
-all32: OUTF := citron-i686-release.tar
-all32: TARGET:=32
-all32: all
+all: CFLAGS := $(CFLAGS) -O2 -L lib
+all: CC := "i686-w64-mingw32-gcc"
+all: CXX := "i686-w64-mingw32-g++"
+all: OUTF := citron-i686-release.tar
+all: TARGET:=32
+all: all
 
 ctrconfig:
 	$(CC) ctrconfig.c -o ctrconfig
@@ -98,7 +94,7 @@ install:
 	echo -e "install directly from source not allowed.\nUse citron_autohell instead for installs"
 	exit 1;
 ctr:	$(OBJS) $(EXTRAOBJS)
-	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) ${CXXFLAGS}  -rdynamic -lm -ldl -lpcre -lpthread /usr/lib/libgc.dll.a ${LEXTRACF} -o ctr
+	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) ${CXXFLAGS}  -rdynamic -lm -ldl -lpcre -lpthread gc/lib/libgc.dll.a ${LEXTRACF} -o ctr
 
 libctr: CFLAGS := $(CFLAGS) -fPIC -DCITRON_LIBRARY
 libctr: deps
@@ -158,6 +154,14 @@ clean:
 	rm -rf ${OBJS} ctr
 	./make-lambdaf.sh clean
 	make -C libsocket clean
+gc:
+	rm -rf bdwgc
+	git clone https://github.com/ivmai/bdwgc gc
+	cd gc && \
+	./autogen.sh && \
+	CC=$(CC) CXX=$(CXX) ./configure --prefix=`realpath ../gc` && \
+	make && \
+	make install
 
 cclean:
 	rm -rf ${COBJS} ctrc
@@ -170,21 +174,22 @@ war:
 
 modules:
 	# tcl
-	pacman -S --overwrite '*' --noconfirm mingw64/mingw-w64-x86_64-tcl mingw64/mingw-w64-x86_64-tk
+	pacman -S --overwrite '*' --noconfirm mingw-w64-i686-tcl mingw-w64-i686-tk
 	# fuckin windows shit
 	# create a symlink so ld will be happy
 	mkdir -p /usr/lib/
+	rm -rf /usr/lib/libtcl*
 	# assumptions are bad, apparently
-	ln -s `pacman -Ql mingw-w64-x86_64-tcl | grep 'libtcl86.dll.a' | cut -d' ' -f2` /usr/lib/libtcl8.6.a
+	ln -s `pacman -Ql mingw-w64-i686-tcl | grep 'libtcl86.dll.a' | cut -d' ' -f2` /usr/lib/libtcl8.6.a
 	#grab lib/tcl86 and tk
 	mkdir -p lib
-	cp -r `pacman -Ql mingw-w64-x86_64-tcl | grep 'lib/tcl8.6/$$' | cut -d' ' -f2` lib
-	cp -r `pacman -Ql mingw-w64-x86_64-tk | grep 'lib/tk8.6/$$' | cut -d' ' -f2` lib
+	cp -r `pacman -Ql mingw-w64-i686-tcl | grep 'lib/tcl8.6/$$' | cut -d' ' -f2` lib
+	cp -r `pacman -Ql mingw-w64-i686-tk | grep 'lib/tk8.6/$$' | cut -d' ' -f2` lib
 	$(CC) -fopenmp $(CFLAGS) -static -c modules.c -o modules.o
-	cp /mingw64/bin/tcl86.dll tcl86.dll
+	cp /mingw32/bin/tcl86.dll tcl86.dll
 	mkdir bin
-	cp /mingw64/bin/tk86.dll bin/tk86.dll
-	cp /mingw64/bin/zlib1.dll zlib1.dll
+	cp /mingw32/bin/tk86.dll bin/tk86.dll
+	cp /mingw32/bin/zlib1.dll zlib1.dll
 	# TODO: the rest of the modules
 
 package:
@@ -204,16 +209,7 @@ package:
 	cp dist_windows package/prepared/ctr.bat
 	cp misc/prepare_install.ctr package/prepare_install.ctr
 	cp misc/install.bat install.bat
-	tar cf $(OUTF) package install.bat
+	tar cf citron-i686-release.tar package install.bat
 	rm -rf package install.bat
 
-release:
-	  wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
-		export UPLOADTOOL_SUFFIX="windows"
-		export REPO_SLUG="alimpfard/citron"
-		./upload.sh citron-i686-release.tar citron-release.tar
-
-distribute: all package clean
-distribute:
-	make -f makefile.32 distribute
-distribute: release
+distribute: all package

@@ -1159,6 +1159,12 @@ ctr_object *ctr_file_seek_end(ctr_object *myself, ctr_argument *argumentList) {
   return myself;
 }
 
+#ifdef DWIN32
+#define LOCK_UN 0
+#define LOCK_EX 0
+#define LOCK_NB 0
+#endif
+
 ctr_object *ctr_file_lock_generic(ctr_object *myself,
                                   ctr_argument *argumentList, int lock) {
   int b;
@@ -1183,7 +1189,11 @@ ctr_object *ctr_file_lock_generic(ctr_object *myself,
   } else {
     fd = (int)fdObj->value.nvalue;
   }
+#ifndef DWIN32
   b = flock(fd, lock);
+#else
+  b = 1; // TODO: bring flock (XXX win32)
+#endif
   if (b != 0) {
     close(fd);
     answer = ctr_build_bool(0);
@@ -1226,12 +1236,41 @@ ctr_object *ctr_file_list(ctr_object *myself, ctr_argument *argumentList) {
   putArgumentList = ctr_heap_allocate(sizeof(ctr_argument));
   addArgumentList = ctr_heap_allocate(sizeof(ctr_argument));
   putArgumentList->next = ctr_heap_allocate(sizeof(ctr_argument));
+  // workaround no d_type in struct dirent
+#ifdef DWIN32
+  struct stat eStat;
+  int statRes;
+#endif
   while ((entry = readdir(d))) {
     fileListItem = ctr_map_new(CtrStdMap, NULL);
     putArgumentList->next->object = ctr_build_string_from_cstring("file");
     putArgumentList->object = ctr_build_string_from_cstring(entry->d_name);
     ctr_map_put(fileListItem, putArgumentList);
     putArgumentList->next->object = ctr_build_string_from_cstring("type");
+    // now here's the real doozy, mingw32 doesn't have d_type 
+    // in struct dirent, so we have to call stat() 
+    // _per every fucking file_
+ #ifdef DWIN32
+    if(stat(entry->d_name, &eStat)) {
+	    // TODO handle error
+	    CtrStdFlow = ctr_format_str("Estat failed: %d", errno);
+	    return CtrStdNil;
+    }
+    switch (eStat.st_mode) {
+    case _S_IFDIR:
+      putArgumentList->object = ctr_build_string_from_cstring("folder");
+      break;
+    case _S_IFCHR:
+      putArgumentList->object = ctr_build_string_from_cstring("character device");
+      break;
+    case _S_IFIFO:
+      putArgumentList->object = ctr_build_string_from_cstring("pipe");
+      break;
+    case _S_IFREG:
+      putArgumentList->object = ctr_build_string_from_cstring("file");
+      break;
+    }
+#else
     switch (entry->d_type) {
     case DT_REG:
       putArgumentList->object = ctr_build_string_from_cstring("file");
@@ -1259,6 +1298,7 @@ ctr_object *ctr_file_list(ctr_object *myself, ctr_argument *argumentList) {
       putArgumentList->object = ctr_build_string_from_cstring("other");
       break;
     }
+#endif
     ctr_map_put(fileListItem, putArgumentList);
     addArgumentList->object = fileListItem;
     ctr_array_push(fileList, addArgumentList);

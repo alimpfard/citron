@@ -1,9 +1,9 @@
 DEBUG_VERSION := 1222
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
-o_cflags := -I/mingw64/include
+o_cflags := -I/mingw32/include
 #it ain't so easy
 #$(shell pkg-config --cflags tcl)
-o_ldflags := -L/mingw64/lib -ltcl8.6 -ldl -lz -lpthread -lz
+o_ldflags := -L/mingw32/lib -ltcl8.6 -ldl -lz -lpthread -lz
 #$(shell pkg-config --libs tcl)
 CFLAGS := ${CFLAGS} ${o_cflags} -I/usr/include -Igc/include
 LEXTRACF := ${LEXTRACF} ${o_ldflags} -flto -lstdc++ -static-libgcc -static-libstdc++
@@ -67,7 +67,7 @@ TARGET = 64
 
 # .SUFFIXES:	.o .c
 
-deps:
+deps: gc
 	# This is just a hacky way of getting bdwgc "libgc" from MSYS2,
 	# Do not expect it to work anywhere else
 	# TODO: Find a better solution

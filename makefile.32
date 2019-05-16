@@ -6,7 +6,7 @@ o_cflags := -DNOSOCKET -DDWIN32 -I/mingw32/include
 o_ldflags := -L/mingw32/lib -ltcl8.6 -ldl -lz -lpthread -lz -l
 #$(shell pkg-config --libs tcl)
 CFLAGS := ${CFLAGS} ${o_cflags} -Ibwgc/include
-LEXTRACF := ${LEXTRACF} ${o_ldflags} -flto -lstdc++ -static-libgcc -static-libstdc++
+LEXTRACF := ${LEXTRACF} ${o_ldflags} -lstdc++ -static-libgcc -static-libstdc++
 location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 WHERE_ART_THOU := $(location)
 new_makefile_l1 := $(shell perl -ne '/((DEBUG_VERSION := )(\d+))/ && print (sprintf("%s%s", "$$2", "$$3"+1));' $(WHERE_ART_THOU))
@@ -38,7 +38,7 @@ CFLAGS := ${CFLAGS} -pthread -fsigned-char
 
 CFLAGS += ${shell_cflags}
 LDFLAGS += ${shell_ldflags}
-LEXTRACF := ${LDFLAGS} ${LEXTRACF} -flto -lstdc++
+LEXTRACF := ${LDFLAGS} ${LEXTRACF} -lstdc++
 
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o\
 		lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o\

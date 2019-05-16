@@ -13,8 +13,8 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-#endif
 #include <sys/wait.h>
+#endif
 #include <syslog.h>
 #include <time.h>
 #include <unistd.h>
@@ -1432,6 +1432,7 @@ ctr_object *ctr_command_flush(ctr_object *myself,
  * Pen write: 'Parent'.
  */
 ctr_object *ctr_command_fork(ctr_object *myself, ctr_argument *argumentList) {
+#ifndef DWIN32
   int p;
   int *ps;
   FILE *pipes;
@@ -1524,6 +1525,10 @@ ctr_object *ctr_command_fork(ctr_object *myself, ctr_argument *argumentList) {
     ctr_heap_free(ps);
   }
   return child;
+#else // DWIN32
+  CtrStdFlow = ctr_build_string_from_cstring("no fork() available under win32");
+  return CtrStdNil;
+#endif // DWIN32
 }
 
 /**
@@ -1696,6 +1701,7 @@ process_anyway:;
  * for the child program to end.
  */
 ctr_object *ctr_command_join(ctr_object *myself, ctr_argument *argumentList) {
+#ifndef DWIN32
   int pid;
   ctr_resource *rs = myself->value.rvalue;
   if (rs == NULL)
@@ -1729,6 +1735,10 @@ end_close:
   ctr_heap_free(blob);
   fclose(rfp);
   return retval;
+#else 
+  CtrStdFlow = ctr_build_string_from_cstring("no waitpid for win32");
+  return CtrStdNil;
+#endif
 }
 
 ctr_object *ctr_command_pid(ctr_object *myself, ctr_argument *argumentList) {

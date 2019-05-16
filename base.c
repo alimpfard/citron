@@ -16,10 +16,12 @@
 #endif
 #include <errno.h>
 
+#ifndef NOSOCKET
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#endif
 
 #include "citron.h"
 #include "siphash.h"
@@ -683,21 +685,26 @@ ctr_object *ctr_object_on_do(ctr_object *myself, ctr_argument *argumentList) {
 }
 
 ctr_object *ctr_sock_error(int fd, int want2close) {
+#ifndef NOSOCKET
   CtrStdFlow = ctr_format_str("Socket error: %s", strerror(errno));
   if (want2close) {
     shutdown(fd, SHUT_RDWR);
     close(fd);
   }
+  #endif
   return CtrStdNil;
 }
 
+#ifndef NOSOCKET
 union ctr_socket_addr_inet {
   struct sockaddr_in serv_addr;
   struct sockaddr_in6 serv_addr6;
 };
+#endif
 
 ctr_object *ctr_object_send2remote(ctr_object *myself,
                                    ctr_argument *argumentList) {
+#ifndef NOSOCKET
   char *ip;
   int sockfd = 0, n = 0;
   char *responseBuff;
@@ -797,6 +804,9 @@ ctr_object *ctr_object_send2remote(ctr_object *myself,
   ctr_heap_free(ip);
   ctr_heap_free(responseBuff);
   return answer;
+#else
+  return CtrStdNil;
+#endif
 }
 
 /**

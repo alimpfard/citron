@@ -3,7 +3,7 @@ DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 o_cflags := -DNOSOCKET -DDWIN32 -I/mingw32/include
 #it ain't so easy
 #$(shell pkg-config --cflags tcl)
-o_ldflags := -L/mingw32/lib -ltcl8.6 -ldl -lz -lpthread -lz -l
+o_ldflags := -L/mingw32/lib -ltcl8.6 -ldl -lz -lpthread -lz 
 #$(shell pkg-config --libs tcl)
 CFLAGS := ${CFLAGS} ${o_cflags} -Ibwgc/include
 LEXTRACF := ${LEXTRACF} ${o_ldflags} -flto -lstdc++ -static-libgcc -static-libstdc++

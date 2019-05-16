@@ -19,7 +19,7 @@ ifeq ($(strip ${WITH_ICU}),)
 else
 	CFLAGS = -Wall -Wextra -Wno-unused-parameter \
 			 -D CTR_STD_EXTENSION_PATH=\"`pwd`\" -D withICU
-LEXTRACF := ${LEXTRACF} -L/usr/lib -licui18n -licuuc -licudata
+LEXTRACF := ${LEXTRACF} -L/mingw32/lib -licui18n -licuuc -licudata
 endif
 
 CFALGS := ${CFLAGS}
@@ -177,10 +177,10 @@ modules:
 	pacman -S --overwrite '*' --noconfirm mingw-w64-i686-tcl mingw-w64-i686-tk
 	# fuckin windows shit
 	# create a symlink so ld will be happy
-	mkdir -p /usr/lib/
-	rm -rf /usr/lib/libtcl*
+	mkdir -p /mingw32/lib/
+	rm -rf /mingw32/lib/libtcl8.6.a
 	# assumptions are bad, apparently
-	ln -s `pacman -Ql mingw-w64-i686-tcl | grep 'libtcl86.dll.a' | cut -d' ' -f2` /usr/lib/libtcl8.6.a
+	ln -s `pacman -Ql mingw-w64-i686-tcl | grep 'libtcl86.dll.a' | cut -d' ' -f2` /mingw32/lib/libtcl8.6.a
 	#grab lib/tcl86 and tk
 	mkdir -p lib
 	cp -r `pacman -Ql mingw-w64-i686-tcl | grep 'lib/tcl8.6/$$' | cut -d' ' -f2` lib

@@ -216,4 +216,4 @@ release:
 distribute: all package clean
 distribute:
 	make -f makefile.32 distribute
-distribute: release
+	make -f makefile release

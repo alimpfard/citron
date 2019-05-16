@@ -5,8 +5,8 @@ o_cflags := -I/mingw32/include
 #$(shell pkg-config --cflags tcl)
 o_ldflags := -L/mingw32/lib -ltcl8.6 -ldl -lz -lpthread -lz
 #$(shell pkg-config --libs tcl)
-CFLAGS := ${CFLAGS} ${o_cflags} -Igc/include
-LEXTRACF := ${LEXTRACF} ${o_ldflags} -flto -lstdc++ -static-libgcc -static-libstdc++
+CFLAGS := ${CFLAGS} ${o_cflags} -Ibgc/include
+LEXTRACF := ${LEXTRACF} ${o_ldflags} -flto -lstdc++ -static-libbgcc -static-libstdc++
 location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 WHERE_ART_THOU := $(location)
 new_makefile_l1 := $(shell perl -ne '/((DEBUG_VERSION := )(\d+))/ && print (sprintf("%s%s", "$$2", "$$3"+1));' $(WHERE_ART_THOU))
@@ -67,14 +67,14 @@ TARGET = 64
 
 # .SUFFIXES:	.o .c
 
-deps: gc
-	# This is just a hacky way of getting bdwgc "libgc" from MSYS2,
+deps: bgc
+	# This is just a hacky way of getting bdwbgc "libbgc" from MSYS2,
 	# Do not expect it to work anywhere else
 	# TODO: Find a better solution
-	pacman --noconfirm -S libgc-devel libgc mingw-w64-i686-dlfcn mingw-w64-x86_64-dlfcn mingw-w64-x86_64-pcre mingw-w64-i686-pcre
+	pacman --noconfirm -S libbgc-devel libbgc mingw-w64-i686-dlfcn mingw-w64-x86_64-dlfcn mingw-w64-x86_64-pcre mingw-w64-i686-pcre
 
 all: CFLAGS := $(CFLAGS) -O2 -L lib
-all: CC := "i686-w64-mingw32-gcc"
+all: CC := "i686-w64-mingw32-bgcc"
 all: CXX := "i686-w64-mingw32-g++"
 all: OUTF := citron-i686-release.tar
 all: TARGET:=32
@@ -95,19 +95,19 @@ install:
 	echo -e "install directly from source not allowed.\nUse citron_autohell instead for installs"
 	exit 1;
 ctr:	$(OBJS) $(EXTRAOBJS)
-	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) ${CXXFLAGS}  -rdynamic -lm -ldl -lpcre -lpthread gc/lib/libgc.dll.a ${LEXTRACF} -o ctr
+	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) ${CXXFLAGS}  -rdynamic -lm -ldl -lpcre -lpthread bgc/lib/libbgc.dll.a ${LEXTRACF} -o ctr
 
 libctr: CFLAGS := $(CFLAGS) -fPIC -DCITRON_LIBRARY
 libctr: deps
 libctr: symbol_cxx
 libctr: $(OBJS)
-	$(CC) $(OBJS) -shared -export-dynamic -ldl -lpcre -lpthread /usr/lib/libgc.dll.a -o libctr.so
+	$(CC) $(OBJS) -shared -export-dynamic -ldl -lpcre -lpthread /usr/lib/libbgc.dll.a -o libctr.so
 
 compiler: CFLAGS := $(CFLAGS) -D comp=1
 compiler: deps
 compiler: cxx
 compiler: $(COBJS)
-	$(CC) $(COBJS) -rdynamic -lm -ldl -lpcre -lpthread /usr/lib/libgc.dll.a ${LEXTRACF} -o ctrc
+	$(CC) $(COBJS) -rdynamic -lm -ldl -lpcre -lpthread /usr/lib/libbgc.dll.a ${LEXTRACF} -o ctrc
 cxx:
 	echo "blah"
 
@@ -155,12 +155,12 @@ clean:
 	rm -rf ${OBJS} ctr
 	./make-lambdaf.sh clean
 	make -C libsocket clean
-gc:
-	rm -rf bdwgc
-	git clone https://github.com/ivmai/bdwgc gc
-	cd gc && \
+bgc:
+	rm -rf bdwbgc
+	git clone https://github.com/ivmai/bdwbgc bgc
+	cd bgc && \
 	./autogen.sh && \
-	CC=$(CC) CXX=$(CXX) ./configure --prefix=`realpath ../gc` && \
+	CC=$(CC) CXX=$(CXX) ./configure --prefix=`realpath ../bgc` && \
 	make && \
 	make install
 

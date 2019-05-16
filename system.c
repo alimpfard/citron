@@ -40,13 +40,13 @@ static struct termios oldTermios, newTermios;
 #include <fcntl.h>
 #include <stdlib.h>
 #include <sys/time.h>
-#include <sys/types.h>
+#include <stdint.h>
 #include <unistd.h>
 
 struct arc4_stream {
-  u_int8_t i;
-  u_int8_t j;
-  u_int8_t s[256];
+  uint8_t i;
+  uint8_t j;
+  uint8_t s[256];
 };
 
 #define RANDOMDEV "/dev/urandom"
@@ -66,7 +66,7 @@ static int rs_initialized;
 static int rs_stired;
 static int arc4_count;
 
-static inline u_int8_t arc4_getbyte(void);
+static inline uint8_t arc4_getbyte(void);
 static void arc4_stir(void);
 
 static inline void arc4_init(void) {
@@ -78,9 +78,9 @@ static inline void arc4_init(void) {
   rs.j = 0;
 }
 
-static inline void arc4_addrandom(u_char *dat, int datlen) {
+static inline void arc4_addrandom(unsigned char *dat, int datlen) {
   int n;
-  u_int8_t si;
+  uint8_t si;
 
   rs.i--;
   for (n = 0; n < 256; n++) {
@@ -98,7 +98,7 @@ static void arc4_stir(void) {
   struct {
     struct timeval tv;
     pid_t pid;
-    u_int8_t rnd[KEYSIZE];
+    uint8_t rnd[KEYSIZE];
   } rdat;
 
   fd = open(RANDOMDEV, O_RDONLY, 0);
@@ -114,7 +114,7 @@ static void arc4_stir(void) {
     /* We'll just take whatever was on the stack too... */
   }
 
-  arc4_addrandom((u_char *)&rdat, KEYSIZE);
+  arc4_addrandom((unsigned char *)&rdat, KEYSIZE);
 
   /*
    * Throw away the first N bytes of output, as suggested in the
@@ -128,8 +128,8 @@ static void arc4_stir(void) {
   arc4_count = 1600000;
 }
 
-static inline u_int8_t arc4_getbyte(void) {
-  u_int8_t si, sj;
+static inline uint8_t arc4_getbyte(void) {
+  uint8_t si, sj;
 
   rs.i = (rs.i + 1);
   si = rs.s[rs.i];
@@ -141,8 +141,8 @@ static inline u_int8_t arc4_getbyte(void) {
   return (rs.s[(si + sj) & 0xff]);
 }
 
-static inline u_int32_t arc4_getword(void) {
-  u_int32_t val;
+static inline uint32_t arc4_getword(void) {
+  uint32_t val;
 
   val = arc4_getbyte() << 24;
   val |= arc4_getbyte() << 16;
@@ -174,7 +174,7 @@ void arc4random_stir(void) {
   THREAD_UNLOCK();
 }
 
-void arc4random_addrandom(u_char *dat, int datlen) {
+void arc4random_addrandom(unsigned char *dat, int datlen) {
   THREAD_LOCK();
   arc4_check_init();
   arc4_check_stir();
@@ -182,8 +182,8 @@ void arc4random_addrandom(u_char *dat, int datlen) {
   THREAD_UNLOCK();
 }
 
-u_int32_t arc4random(void) {
-  u_int32_t rnd;
+uint32_t arc4random(void) {
+  uint32_t rnd;
 
   THREAD_LOCK();
   arc4_check_init();
@@ -196,7 +196,7 @@ u_int32_t arc4random(void) {
 }
 
 void arc4random_buf(void *_buf, size_t n) {
-  u_char *buf = (u_char *)_buf;
+  unsigned char *buf = (unsigned char *)_buf;
 
   THREAD_LOCK();
   arc4_check_init();
@@ -218,8 +218,8 @@ void arc4random_buf(void *_buf, size_t n) {
  * [2**32 % upper_bound, 2**32) which maps back to [0, upper_bound)
  * after reduction modulo upper_bound.
  */
-u_int32_t arc4random_uniform(u_int32_t upper_bound) {
-  u_int32_t r, min;
+uint32_t arc4random_uniform(uint32_t upper_bound) {
+  uint32_t r, min;
 
   if (upper_bound < 2)
     return (0);

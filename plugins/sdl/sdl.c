@@ -120,6 +120,8 @@ ctr_object* ctr_sdl_event_wheel_(ctr_object* myself);
 ctr_object* ctr_sdl_ttf_make(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_sdl_ttf_open(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_sdl_ttf_render_solid(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_sdl_ttf_size(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_sdl_ttf_size_utf8(ctr_object* myself, ctr_argument* argumentList);
 /*
  * SDL_gfx Primitives interface
  */
@@ -1134,7 +1136,42 @@ ctr_object* ctr_sdl_ttf_renderu_shaded(ctr_object* myself, ctr_argument* argumen
   instance->value.rvalue->ptr = srf;
   return instance;
 }
-
+ctr_object* ctr_sdl_ttf_size(ctr_object* myself, ctr_argument* argumentList) { // ([Font] text) -> [w, h]
+  TTF_Font* font = myself->value.rvalue->ptr;
+  ctr_object* str = ctr_internal_cast2string(argumentList->object);
+  char* text = ctr_heap_allocate_cstring(str);
+  int w,h;
+  int res = TTF_SizeText(font, text, &w, &h);
+  ctr_heap_free(text);
+  if (res) {
+    // something is wrong
+      (*get_CtrStdFlow()) = sdl_error("Couldn't render text: ", TTF_GetError());
+      return CtrStdNil;
+  }
+  ctr_object* tup = ctr_array_new(get_CtrStdArray(), NULL);
+  ctr_array_push(tup, ctr_build_number_from_float(w));
+  ctr_array_push(tup, ctr_build_number_from_float(h));
+  tup->value.avalue->immutable = 1;
+  return tup;
+}
+ctr_object* ctr_sdl_ttf_size_utf8(ctr_object* myself, ctr_argument* argumentList) { // ([Font] text) -> [w, h]
+  TTF_Font* font = myself->value.rvalue->ptr;
+  ctr_object* str = ctr_internal_cast2string(argumentList->object);
+  char* text = ctr_heap_allocate_cstring(str);
+  int w,h;
+  int res = TTF_SizeUTF8(font, text, &w, &h);
+  ctr_heap_free(text);
+  if (res) {
+    // something is wrong
+      (*get_CtrStdFlow()) = sdl_error("Couldn't render text: ", TTF_GetError());
+      return CtrStdNil;
+  }
+  ctr_object* tup = ctr_array_new(get_CtrStdArray(), NULL);
+  ctr_array_push(tup, ctr_build_number_from_float(w));
+  ctr_array_push(tup, ctr_build_number_from_float(h));
+  tup->value.avalue->immutable = 1;
+  return tup;
+}
 ctr_object* ctr_sdl_gfx_hlineColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, Uint32 color);
   SDL_Surface* dst = get_sdl_surface_ptr(myself);
   ctr_object* color_obj;
@@ -1472,6 +1509,9 @@ void begin() {
   //--
   ctr_internal_create_func(CtrStdSdl_font, ctr_build_string_from_cstring("renderShaded:fore:back:"), &ctr_sdl_ttf_render_shaded);
   ctr_internal_create_func(CtrStdSdl_font, ctr_build_string_from_cstring("renderShadedUnicode:fore:back:"), &ctr_sdl_ttf_renderu_shaded);
+  //--
+  ctr_internal_create_func(CtrStdSdl_font, ctr_build_string_from_cstring("textSize:"), &ctr_sdl_ttf_size);
+  ctr_internal_create_func(CtrStdSdl_font, ctr_build_string_from_cstring("textSizeUnicode:"), &ctr_sdl_ttf_size_utf8);
   //Color
   ctr_internal_create_func(CtrStdColor, ctr_build_string_from_cstring( "red:green:blue:alpha:" ), &ctr_sdl_color_make);
   ctr_internal_create_func(CtrStdColor, ctr_build_string_from_cstring( "rgba:" ), &ctr_sdl_color_make_rgba);

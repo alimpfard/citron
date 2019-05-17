@@ -41,8 +41,8 @@ ctr_object *ctr_array_new(ctr_object *myclass, ctr_argument *argumentList) {
   ctr_object *s = ctr_internal_create_object(CTR_OBJECT_TYPE_OTARRAY);
   ctr_set_link_all(s, myclass);
   int initial_length = 2;
-  if (argumentList && argumentList->object) {
-    int len = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  if (argumentList && argumentList->object && argumentList->object->info.type == CTR_OBJECT_TYPE_OTNUMBER) {
+    int len = argumentList->object->value.nvalue;
     if (len > 1)
       initial_length = len;
   }

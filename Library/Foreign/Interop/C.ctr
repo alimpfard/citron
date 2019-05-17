@@ -147,8 +147,8 @@ Inject on: 'getDefines:fromHeaders:' do: {:self:defs:headers
   sheader +=: 'typedef struct { void* ptr; void* next; } ctr_argument;\n'.
   sheader +=: 'extern void* ctr_array_push(void*,void*);\n'.
   sheader +=: 'extern void* ctr_build_string_from_cstring(char*);\n'.
+  sheader +=: 'extern void* ctr_build_number_from_float(double);\n'.
   sheader +=: 'extern void* get_CtrStdArray();\n'.
-  sheader +=: 'extern void* ctr_array_new(void*,void*);\n'.
   var ptr is CTypes pointer.
   var sbody is defs
     foldl: (\:&acc:&def '${{acc}}$

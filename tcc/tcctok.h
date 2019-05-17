@@ -36,7 +36,7 @@
      DEF(TOK_RESTRICT2, "__restrict")
      DEF(TOK_RESTRICT3, "__restrict__")
      DEF(TOK_EXTENSION, "__extension__") /* gcc keyword */
-     
+
      DEF(TOK_FLOAT, "float")
      DEF(TOK_DOUBLE, "double")
      DEF(TOK_BOOL, "_Bool")
@@ -70,6 +70,7 @@
      DEF(TOK_ELIF, "elif")
      DEF(TOK_ENDIF, "endif")
      DEF(TOK_DEFINED, "defined")
+     DEF(TOK_ISNUMERIC, "isnumeric")
      DEF(TOK_UNDEF, "undef")
      DEF(TOK_ERROR, "error")
      DEF(TOK_WARNING, "warning")
@@ -81,10 +82,10 @@
      DEF(TOK___TIME__, "__TIME__")
      DEF(TOK___FUNCTION__, "__FUNCTION__")
      DEF(TOK___VA_ARGS__, "__VA_ARGS__")
-     
+
 /* special identifiers */
      DEF(TOK___FUNC__, "__func__")
-     
+
 /* attribute identifiers */
 /* XXX: handle all tokens generically since speed is not critical */
      DEF(TOK_SECTION1, "section")
@@ -390,19 +391,19 @@
  DEF_ASM(movsbl)
  DEF_ASM(movswl)
 
- DEF_WL(lea) 
+ DEF_WL(lea)
 
- DEF_ASM(les) 
- DEF_ASM(lds) 
- DEF_ASM(lss) 
- DEF_ASM(lfs) 
- DEF_ASM(lgs) 
+ DEF_ASM(les)
+ DEF_ASM(lds)
+ DEF_ASM(lss)
+ DEF_ASM(lfs)
+ DEF_ASM(lgs)
 
  DEF_ASM(call)
  DEF_ASM(jmp)
  DEF_ASM(lcall)
  DEF_ASM(ljmp)
- 
+
  DEF_ASMTEST(j)
 
  DEF_ASMTEST(set)

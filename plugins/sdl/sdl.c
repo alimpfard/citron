@@ -1149,9 +1149,8 @@ ctr_object* ctr_sdl_ttf_size(ctr_object* myself, ctr_argument* argumentList) { /
       return CtrStdNil;
   }
   ctr_object* tup = ctr_array_new(get_CtrStdArray(), NULL);
-  ctr_array_push(tup, ctr_build_number_from_float(w));
-  ctr_array_push(tup, ctr_build_number_from_float(h));
-  tup->value.avalue->immutable = 1;
+  ctr_array_push(tup, &(ctr_argument){ctr_build_number_from_float(w)});
+  ctr_array_push(tup, &(ctr_argument){ctr_build_number_from_float(h)});
   return tup;
 }
 ctr_object* ctr_sdl_ttf_size_utf8(ctr_object* myself, ctr_argument* argumentList) { // ([Font] text) -> [w, h]
@@ -1167,9 +1166,8 @@ ctr_object* ctr_sdl_ttf_size_utf8(ctr_object* myself, ctr_argument* argumentList
       return CtrStdNil;
   }
   ctr_object* tup = ctr_array_new(get_CtrStdArray(), NULL);
-  ctr_array_push(tup, ctr_build_number_from_float(w));
-  ctr_array_push(tup, ctr_build_number_from_float(h));
-  tup->value.avalue->immutable = 1;
+  ctr_array_push(tup, &(ctr_argument){ctr_build_number_from_float(w)});
+  ctr_array_push(tup, &(ctr_argument){ctr_build_number_from_float(h)});
   return tup;
 }
 ctr_object* ctr_sdl_gfx_hlineColor(ctr_object* myself, ctr_argument* argumentList) { //(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, Uint32 color);

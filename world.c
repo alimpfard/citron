@@ -536,6 +536,8 @@ ctr_object *ctr_internal_object_find_property_with_hash(ctr_object *owner,
     lookup = owner->methods;
   } else
     lookup = owner->properties;
+  if (unlikely(!lookup))
+      return NULL;
   if (unlikely(lookup->size == 1 &&
                (head = lookup->head)->hashKey == hashKey)) {
     if (likely(ctr_internal_object_is_equal(head->key, key))) {
@@ -584,6 +586,8 @@ ctr_object *ctr_internal_object_find_property_or_create_with_hash(
     lookup = owner->methods;
   } else
     lookup = owner->properties;
+  if (unlikely(!lookup))
+      return NULL;
   if (unlikely(lookup->size == 0)) {
     ctr_object *repl = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNIL);
     ctr_set_link_all(repl, CtrStdNil);
@@ -685,6 +689,8 @@ void ctr_internal_object_delete_property_with_hash(ctr_object *owner,
     // return;
     head = owner->methods->head;
   } else {
+    if (!owner->properties)
+        return;
     if (owner->properties->size == 0) {
       return;
     }
@@ -3324,8 +3330,12 @@ void ctr_initialize_world() {
                            &ctr_thread_set_target);
   ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("run"),
                            &ctr_thread_run);
+  ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("finished"),
+                           &ctr_thread_finished);
   ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("join"),
                            &ctr_thread_join);
+  ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("detach"),
+                           &ctr_thread_detach);
   ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("id"),
                            &ctr_thread_id);
   ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("name:"),

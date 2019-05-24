@@ -696,6 +696,9 @@ union ctr_socket_addr_inet {
   struct sockaddr_in6 serv_addr6;
 };
 
+#ifndef h_addr
+#define h_addr h_addr_list[0]
+#endif
 ctr_object *ctr_object_send2remote(ctr_object *myself,
                                    ctr_argument *argumentList) {
   char *ip;
@@ -743,9 +746,17 @@ ctr_object *ctr_object_send2remote(ctr_object *myself,
   printf("socketfd %d\n", sockfd);
   memset(&serv_addr, '0', sizeof(serv_addr));
   if (inet_family_is_v6)
+#ifdef __DEFAULT_SOURCE
     server = gethostbyname2(ip, AF_INET6);
+#else
+    server = gethostbyname(ip);
+#endif
   else
+#ifdef __DEFAULT_SOURCE
     server = gethostbyname2(ip, AF_INET);
+#else
+    server = gethostbyname(ip);
+#endif
   if (server == NULL) {
     CtrStdFlow = ctr_format_str("ERROR : No such host %s found.", ip);
     return CtrStdFlow;

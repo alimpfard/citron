@@ -6,7 +6,7 @@ matrix:
     - name: "Coverage Tests"
       env: TEST=YES
       install:
-        - CC='gcc-8 -fuse-ld=gold' CXX='g++-8 -fuse-ld=gold' CFLAGS='-DwithCTypesNative=1 -DwithInjectNative=1 -DwithInlineAsm=1 -fprofile-arcs -ftest-coverage' LDFLAGS="-lgcov --coverage" make all
+        - CC='gcc-8 -fuse-ld=gold -std=c11' CXX='g++-8 -fuse-ld=gold' CFLAGS='-DwithCTypesNative=1 -DwithInjectNative=1 -DwithInlineAsm=1 -fprofile-arcs -ftest-coverage' LDFLAGS="-lgcov --coverage" make all
       script:
         - bash ./runtests.sh
       after_success:
@@ -38,7 +38,7 @@ install:
   - mkdir -p build && mkdir -p basemods && export BUILD_DIR_INT=$(realpath build)
   - export LD_LIBRARY_PATH=/usr/local/lib
   - cd src/tcc && ./configure && make && sudo make install && cd ../..
-  - ./configure CFLAGS='-L/usr/local/lib' CXXFLAGS='-L/usr/local/lib' CC='gcc-8 -fuse-ld=gold' CXX='g++-8 -fuse-ld=gold' --prefix=$BUILD_DIR_INT --with-ffi --with-inject && llvmconfig=/usr/lib/llvm-7/bin/llvm-config make
+  - ./configure CFLAGS='-L/usr/local/lib' CXXFLAGS='-L/usr/local/lib' CC='gcc-8 -fuse-ld=gold -std=c11' CXX='g++-8 -fuse-ld=gold' --prefix=$BUILD_DIR_INT --with-ffi --with-inject && llvmconfig=/usr/lib/llvm-7/bin/llvm-config make
   - cd .. && CFLAGS="-I/usr/include/tcl8.6 -L/usr/lib/tcl8.6" bash ./makeplugs.sh
   - chown -R travis mods
   - echo "Built these" && ls mods

@@ -701,14 +701,14 @@ struct ctr_context_t {
 CTR_H_DECLSPEC void ctr_dump_context(struct ctr_context_t*);
 CTR_H_DECLSPEC void ctr_load_context(struct ctr_context_t);
 #ifndef CTR_GLOBALS_DEFINE
-__thread extern ctr_tnode* ctr_callstack[CTR_CONTEXT_VECTOR_DEPTH]; //That should be enough... right?
-__thread extern uint8_t ctr_callstack_index;
-__thread extern CTR_H_DECLSPEC int ctr_context_id;
+extern __thread ctr_tnode* ctr_callstack[CTR_CONTEXT_VECTOR_DEPTH]; //That should be enough... right?
+extern __thread uint8_t ctr_callstack_index;
+extern __thread int ctr_context_id;
 // __thread extern ctr_object* ctr_contexts[CTR_CONTEXT_VECTOR_DEPTH];
 #else
-__thread CTR_H_DECLSPEC ctr_tnode* ctr_callstack[CTR_CONTEXT_VECTOR_DEPTH]; //That should be enough... right?
-__thread CTR_H_DECLSPEC uint8_t ctr_callstack_index;
-__thread CTR_H_DECLSPEC int ctr_context_id;
+CTR_H_DECLSPEC __thread ctr_tnode* ctr_callstack[CTR_CONTEXT_VECTOR_DEPTH]; //That should be enough... right?
+CTR_H_DECLSPEC __thread uint8_t ctr_callstack_index;
+CTR_H_DECLSPEC __thread int ctr_context_id;
 // __thread CTR_H_DECLSPEC ctr_object* ctr_contexts[CTR_CONTEXT_VECTOR_DEPTH];
 #endif
 CTR_H_DECLSPEC ctr_object* ctr_contexts[CTR_CONTEXT_VECTOR_DEPTH];

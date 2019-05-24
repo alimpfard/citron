@@ -6,7 +6,7 @@ matrix:
     - name: "Coverage Tests"
       env: TEST=YES
       install:
-        - CC='gcc-8 -fuse-ld=gold -std=c11' CXX='g++-8 -fuse-ld=gold' CFLAGS='-DwithCTypesNative=1 -DwithInjectNative=1 -DwithInlineAsm=1 -fprofile-arcs -ftest-coverage' LDFLAGS="-lgcov --coverage" make all
+        - CC='gcc-8 -fuse-ld=gold' CXX='g++-8 -fuse-ld=gold' CFLAGS='-DwithCTypesNative=1 -DwithInjectNative=1 -DwithInlineAsm=1 -fprofile-arcs -ftest-coverage' LDFLAGS="-lgcov --coverage" make all
       script:
         - bash ./runtests.sh
       after_success:

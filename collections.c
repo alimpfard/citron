@@ -57,6 +57,24 @@ ctr_object *ctr_array_new(ctr_object *myclass, ctr_argument *argumentList) {
 }
 
 /**
+ * [Array] newFill: [count] with: [Object]
+ *
+ * creates a prefilled array with the gived object copied into it
+ */
+ctr_object *ctr_array_alloc(ctr_object *myclass, ctr_argument *argumentList) {
+    ctr_object *s = ctr_internal_create_object(CTR_OBJECT_TYPE_OTARRAY);
+    ctr_set_link_all(s, myclass);
+    int len = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+    s->value.avalue = ctr_heap_allocate(sizeof(ctr_collection));
+    s->value.avalue->length = len;
+    s->value.avalue->head = len - 1;
+    s->value.avalue->elements = ctr_heap_allocate(sizeof(ctr_object*) * len);
+    for(len--;len--;)
+        s->value.avalue->elements[len] = argumentList->next->object;
+    return s;
+}
+
+/**
  * [Array] copy
  *
  * shallow copy of the array

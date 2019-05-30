@@ -98,8 +98,12 @@ var generate_func_param_load is {:ps:_self
     s +=: '/* param "%s" */\n' % [param].
     param = 'self' either: {
       s +=: 'ctr_assign_value_to_local_by_ref(%s, self);\n' % [make_or_get_str[param]].
+      locals put: 'self' at: 'self'.
     } or: {
+      var fname is 'param_$$param'.
+      s +=: 'ctr_object* $$fname = b__->object;\n'.
       s +=: 'ctr_assign_value_to_local_by_ref(%s, b__->object);\nb__ = b__->next;\n' % [make_or_get_str[param]].
+      locals put: fname at: param.
     }.
   }.
   ^s.
@@ -165,6 +169,8 @@ var compile_subprogram is {:*subs
   ^parts join: '\n'. #fmap: \:x '{ $$x }', join: '\n'.
 }.
 
+var locals is Map new.
+
 var compile is {:ast:receiver
   contexts push: ast.
   # Pen writeln: contexts count.
@@ -187,8 +193,13 @@ var compile is {:ast:receiver
     },
     case: 'REFERENCE' do: {
       var value is ast value.
-      #^'(ctr_find_(%s, 1) ?: CtrStdNil)' % [make_or_get_str[value]].
-      ^'ctr_find_(%s, 0)' % [make_or_get_str[value]].
+      var cached is locals at: value.
+      cached isNil ifTrue: {
+        #^'(ctr_find_(%s, 1) ?: CtrStdNil)' % [make_or_get_str[value]].
+        ^'ctr_find_(%s, 0)' % [make_or_get_str[value]].
+      } ifFalse: {
+        ^cached.
+      }.
     },
     case: 'EXPRMESSAGE' do: {
       var rec is ast at: 0.
@@ -224,18 +235,31 @@ var compile is {:ast:receiver
     case: 'EXPRASSIGNMENT' do: {
       var ref is ast at: 0.
       var _value is ast at: 1.
+      var name is ref value.
+      locals at: name, isNil ifFalse: {
+          # has previous value
+          var res is compile[_value].
+          locals put: res at: name.
+          ^res.
+      }.
+      var compiled is compile[_value]. 
+      var arg is generate_single_arg_t[compiled]. 
+      global_variables push: [arg @ 0, arg @ 1, 'NULL'].
+      variables push: ['', arg @ 1, arg @ 2].
+      locals put: arg @ 1 at: name.
+
       ^(frozen __ is
         case: 0 do: {
-          ^'ctr_assign_value(%s, %s)' % [make_or_get_str[ref value], (compile[_value])].
+          ^'ctr_assign_value(%s, %s)' % [make_or_get_str[ref value], arg @ 1].
         },
         case: 1 do: {
-          ^'ctr_assign_value_to_my(%s, %s)' % [make_or_get_str[ref value], (compile[_value])].
+          ^'ctr_assign_value_to_my(%s, %s)' % [make_or_get_str[ref value], arg @ 1].
         },
         case: 2 do: {
-          ^'ctr_assign_value_to_local(%s, %s)' % [make_or_get_str[ref value], (compile[_value])].
+          ^'ctr_assign_value_to_local(%s, %s)' % [make_or_get_str[ref value], arg @ 1].
         },
         case: 3 do: {
-          ^'ctr_assign_value(%s, %s)' % [make_or_get_str[ref value], (compile[_value])].
+          ^'ctr_assign_value(%s, %s)' % [make_or_get_str[ref value], arg @ 1].
         },
         case: 4 do: {
           thisBlock error: 'modifier 4 not supported in assignments'.
@@ -246,7 +270,7 @@ var compile is {:ast:receiver
           ^'ctr_assign_value'.
         },
         default: {
-          ^'ctr_assign_value(%s, %s)' % [make_or_get_str[ref value], (compile[_value])].
+          ^'ctr_assign_value(%s, %s)' % [make_or_get_str[ref value], arg @ 1].
         }) switch: ref modifier.
     },
     case: 'SYMBOL' do: {
@@ -264,6 +288,10 @@ var compile is {:ast:receiver
       var funname is 'ctr_function_$$fun_id'.
       variables is Array new.
       var_id is 0.
+      var old_locals is locals.
+      locals is Map new.
+      var funcodeargs is generate_func_param_load[ast @ 0, receiver] + '\n'.
+
       var funcode is '  ctr_object* result = (%:L);\n' % [', ', (
         (Array new fill: instrs count with: {:x
           ^compile[instrs @ x].
@@ -272,8 +300,9 @@ var compile is {:ast:receiver
       )].
       # ast modifier = 'My', ifTrue: {
         funcode is funcode + '  if (result == NULL) result = self;\n'.
+        funcode is funcodeargs + generate_inits['  '] + funcode + 'return result;\n'.
       # }.
-      funcode is generate_func_param_load[ast @ 0, receiver] + '\n' + generate_inits['  '] + funcode + 'return result;\n'.
+      locals is old_locals.
       variables is oldvs.
       var_id is oldvarid.
       functions put: funcode at: funname.
@@ -404,7 +433,7 @@ var generate_defines is {
     'void exc_check_(char const* file, char const* func, int line, const char* s) {
         if (CtrStdFlow) {
             ctr_object* err = CtrStdFlow; CtrStdFlow = NULL;
-            printf("in file %s, function %s (line %d) [program subsection \\"%s\\"] threw: ", file, func, line, s);
+            printf("in file %s, function %s (line %d) [program subsection \\"%s\\"] threw: ", file, func, line-1, s);
             ctr_send_message_variadic(CtrStdConsole, "writeln:", 8, 1, err);
             exit(1);
         }

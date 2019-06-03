@@ -127,6 +127,7 @@ Inject on: 'generateCFunctionWrapperFor:withCIF:andName:' do: {:sym:cif:x
   # Pen writeln: ast2ctrcode[av0].
   var pointer is CTypes pointer.
   ^($!av0)
+    on: 'cPtr' do: { ^my symbol run. },
     set: 'cif' value: cif,
     set: 'symbol' value: (
       cif isFunctionPointer not

@@ -4,7 +4,7 @@ Broom memoryLimit: 1024 * 1024 * 1024.
 
 var ths is (0..100) fmap: {:i
     ^Thread new: {:x
-        Clock wait: (300 + x) ms.
+        Clock wait: (x * 4 + 600) ms.
         Pen writeln: x.
     } args: [i].
 }, toArray fmap!: \:x x run.

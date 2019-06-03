@@ -1,7 +1,23 @@
 # Issue #6
 import Library/Data/Generator.
 
+var a is (1..10).
+var b is (1..2..10).
+var c is Generator elementsOf: [1,2,3].
+var d is Generator elementsOf: (Map new put: 1 at: 2, put: 3 at: 4).
+
+a is a filter: \:idx:val idx = val.
+b is b imap: \:i:v i + v.
+c is c fmap: \:x [x].
+b each: {:i:v
+    c is c push: [i, v].
+}.
+
+Pen writeln: c toArray.
+Pen writeln: [a, b].
+
 var f is Generator elementsOf: 'test1234'.
 var g is Generator elementsOf: 'test1234' reverse.
-f is [a + b,, (a: f), (b: g),, (a !=: b), ('13s' contains: b, not)].
+# issue #6
+# f is [a + b,, (a: f), (b: g),, (a !=: b), ('13s' contains: b, not)].
 Pen writeln: f toArray.

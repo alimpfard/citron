@@ -19,6 +19,7 @@
 #include <unistd.h>
 
 #ifdef withBoehmGC
+#define GC_THREAD
 #include <gc/gc.h>
 #define pthread_create GC_pthread_create
 #endif
@@ -2853,6 +2854,11 @@ typedef struct {
   ctr_object *stdFlow;
 } ctr_thread_return_t;
 
+// this is a pretty ugly hack, but the only way to help the GC
+// get around the TLS issues
+static ctr_thread_workaround_double_list_t ctr_thread_workaround_double_list_t_sentinel = {0,0,0};
+ctr_thread_workaround_double_list_t *ctr_thread_workaround_double_list = &ctr_thread_workaround_double_list_t_sentinel;
+
 typedef struct {
   volatile int waiting_for_join;
   int detached;
@@ -2883,6 +2889,14 @@ void *ctr_run_thread_func(ctr_thread_t *threadt) {
   ctr_argument *args = ctr_heap_allocate(sizeof(ctr_argument));
   (void)ctr_array_to_argument_list(threadt->args, args);
   ctr_load_context(*threadt->starting_context);
+
+  // copy our context to the global dlist
+  volatile ctr_thread_workaround_double_list_t* tw = ctr_heap_allocate(sizeof(*tw));
+  tw->next = NULL;
+  tw->prev = ctr_thread_workaround_double_list;
+  tw->context = ctr_contexts;
+  ctr_thread_workaround_double_list = tw;
+
   ctr_object *result =
       ctr_block_run(threadt->target, args, threadt->target);
   ctr_deallocate_argument_list(args);
@@ -2893,6 +2907,13 @@ void *ctr_run_thread_func(ctr_thread_t *threadt) {
   threadt->last_result = rv;
   sets = pthread_sigmask(SIG_SETMASK, &oset, NULL);
   threadt->waiting_for_join = 1;
+  // remove our context
+  if (tw->prev)
+    tw->prev->next = tw->next;
+  if (tw->next)
+    tw->next->prev = tw->prev;
+  ctr_heap_free(tw);
+
   if (!threadt->detached) {
     pthread_mutex_unlock(threadt->mutex);
     // pthread_mutex_unlock (&GLOBAL_MUTEX);

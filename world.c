@@ -17,15 +17,6 @@
 
 #include "siphash.h"
 
-#ifdef withBoehmGC
-#include <gc/gc.h>
-#endif
-#ifdef withBoehmGC_P
-#define ctr_heap_allocate_typed_(s, t) ctr_heap_allocate_typed(s, t)
-#else
-#define ctr_heap_allocate_typed_(s, t) ctr_heap_allocate(s)
-#endif
-
 static int ctr_world_initialized = 0;
 extern ctr_object *generator_end_marker;
 
@@ -40,6 +31,17 @@ static pthread_mutex_t ctr_message_mutex = {{PTHREAD_MUTEX_RECURSIVE}};
 #define CTR_THREAD_LOCK()
 #define CTR_THREAD_UNLOCK()
 #endif
+
+#ifdef withBoehmGC
+#define GC_THREAD
+#include <gc/gc.h>
+#endif
+#ifdef withBoehmGC_P
+#define ctr_heap_allocate_typed_(s, t) ctr_heap_allocate_typed(s, t)
+#else
+#define ctr_heap_allocate_typed_(s, t) ctr_heap_allocate(s)
+#endif
+
 
 #include "promise.h"
 
@@ -1471,6 +1473,13 @@ ctr_object *ctr_frame_present(ctr_object *myself, ctr_argument *argumentList) {
 void ctr_initialize_world_minimal() {
   if (ctr_world_initialized)
     return;
+
+  volatile ctr_thread_workaround_double_list_t* tw = ctr_heap_allocate_tracked(sizeof(*tw));
+  tw->next = NULL;
+  tw->prev = ctr_thread_workaround_double_list;
+  tw->context = ctr_contexts;
+  ctr_thread_workaround_double_list = (ctr_thread_workaround_double_list_t*) tw;
+
   trace_ignore_count = 0;
   ctr_world_initialized = 1;
   // register_signal_handlers ();
@@ -1567,6 +1576,12 @@ void ctr_initialize_world_minimal() {
 void ctr_initialize_world() {
   if (ctr_world_initialized)
     return;
+  volatile ctr_thread_workaround_double_list_t* tw = ctr_heap_allocate_tracked(sizeof(*tw));
+  tw->next = NULL;
+  tw->prev = ctr_thread_workaround_double_list;
+  tw->context = ctr_contexts;
+  ctr_thread_workaround_double_list = (ctr_thread_workaround_double_list_t*) tw;
+
   trace_ignore_count = 0;
   ctr_world_initialized = 1;
   // register_signal_handlers ();

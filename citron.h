@@ -26,6 +26,17 @@ extern "C" {
 #include <string.h>
 #include <stdio.h>
 
+#ifdef NO_TLS
+#define X__THREAD__
+#define THREAD_STRING "-notls"
+#else
+#define THREAD_STRING ""
+#endif
+
+#ifndef X__THREAD__
+#define X__THREAD__ __thread
+#endif
+
 #ifdef DEBUG_BUILD
 #define VALUE_TO_STRING(x) #x
 #define VALUE(x) VALUE_TO_STRING(x)
@@ -48,9 +59,9 @@ extern "C" {
 #endif
 
 #ifdef withBoehmGC
-#define CTR_VERSION "0.0.9.1-boehm-gc" IS_DEBUG_STRING
+#define CTR_VERSION "0.0.9.2-boehm-gc" IS_DEBUG_STRING THREAD_STRING
 #else
-#define CTR_VERSION "0.0.9.1" IS_DEBUG_STRING
+#define CTR_VERSION "0.0.9.2" IS_DEBUG_STRING THREAD_STRING
 #endif
 
 #define CTR_LOG_WARNINGS 2//2 to enable
@@ -704,14 +715,21 @@ CTR_H_DECLSPEC void ctr_load_context(struct ctr_context_t);
 extern __thread ctr_tnode* ctr_callstack[CTR_CONTEXT_VECTOR_DEPTH]; //That should be enough... right?
 extern __thread uint8_t ctr_callstack_index;
 extern __thread int ctr_context_id;
-extern __thread ctr_object* ctr_contexts[CTR_CONTEXT_VECTOR_DEPTH];
+extern X__THREAD__ ctr_object* ctr_contexts[CTR_CONTEXT_VECTOR_DEPTH];
 #else
 CTR_H_DECLSPEC __thread ctr_tnode* ctr_callstack[CTR_CONTEXT_VECTOR_DEPTH]; //That should be enough... right?
 CTR_H_DECLSPEC __thread uint8_t ctr_callstack_index;
 CTR_H_DECLSPEC __thread int ctr_context_id;
-__thread CTR_H_DECLSPEC ctr_object* ctr_contexts[CTR_CONTEXT_VECTOR_DEPTH];
+CTR_H_DECLSPEC X__THREAD__ ctr_object* ctr_contexts[CTR_CONTEXT_VECTOR_DEPTH];
 #endif
 // CTR_H_DECLSPEC ctr_object* ctr_contexts[CTR_CONTEXT_VECTOR_DEPTH];
+
+typedef struct ctr_thread_workaround_double_list_t {
+  struct ctr_thread_workaround_double_list_t *prev, *next;
+  ctr_object *context;
+} ctr_thread_workaround_double_list_t;
+
+extern ctr_thread_workaround_double_list_t *ctr_thread_workaround_double_list;
 
 /**
  * Nil Interface

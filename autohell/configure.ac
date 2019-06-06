@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.69])
 AC_INIT([Citron], [0.0.9], [devanothertest@gmail.com])
-AM_INIT_AUTOMAKE(Citron, 0.0.8)
+AM_INIT_AUTOMAKE(Citron, 0.0.9)
 AC_OUTPUT(Makefile src/Makefile doc/Makefile examples/Makefile man/Makefile scripts/Makefile)
 AC_CONFIG_SRCDIR([src/base.c])
 AC_CONFIG_HEADERS([config.h])
@@ -66,9 +66,16 @@ AC_ARG_WITH([ffi],
               [want_ffi=yes],
               [])
 AC_ARG_WITH([inlineasm],
-              AS_HELP_STRING([--with-inline-asm], [Build with Inline assembly support (requires llvm)]),
+              AS_HELP_STRING([--with-inlineasm], [Build with Inline assembly support (requires llvm)]),
               [want_inlineasm=yes],
               [])
+AC_ARG_WITH([no-tls],
+              AS_HELP_STRING([--with-no-tls], [Build without threadlocal storage (fucks up threads)]),
+              [no_tls=yes],
+              [])
+AS_IF([test "x$no_tls" = "xyes"], [
+              CFLAGS+=' -DNO_TLS'
+])
 AS_IF([test "x$with_ffi" != "xyes"], [
               lffi=$want_ffi
 ])

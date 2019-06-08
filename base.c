@@ -5476,10 +5476,11 @@ int ctr_args_eq(ctr_argument *arg0, ctr_argument *arg1) {
 ctr_object *ctr_block_run_array(ctr_object *myself, ctr_object *argArray,
                                 ctr_object *my) {
   ctr_object *result;
-  ctr_argument *argList = ctr_array_to_argument_list(argArray, NULL);
+  ctr_argument *argList = ctr_array_to_argument_list(argArray, NULL),   
+               *arglistc = argList;
   if (myself->info.type == CTR_OBJECT_TYPE_OTNATFUNC) {
     ctr_object *result = myself->value.fvalue(my, argList);
-    ctr_deallocate_argument_list(argList);
+    ctr_deallocate_argument_list(arglistc);
     return result;
   }
   // overload begin

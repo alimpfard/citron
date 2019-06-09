@@ -1457,7 +1457,7 @@ ctr_argument *ctr_array_to_argument_list(ctr_object *arr,
   return arg;
 }
 
-void ctr_deallocate_argument_list(ctr_argument *argumentList) {
+void ctr_deallocate_argument_list(const ctr_argument *argumentList) {
   ctr_argument *arg;
   while (argumentList) {
     arg = argumentList->next;

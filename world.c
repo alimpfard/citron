@@ -4019,7 +4019,6 @@ no_instrum:;
   ctr_object *result;
   ctr_object *(*funct)(ctr_object * receiverObject,
                        ctr_argument * argumentList);
-  ctr_object *msg = ctr_build_string(message, vlen);
   int argCount;
   if (CtrStdFlow != NULL) {
     msgName__ = message;
@@ -4068,7 +4067,6 @@ no_instrum:;
     returnValue = ctr_send_message_blocking(receiverObject, catch_all,
                                             catch_all_v, mesgArgument);
     ctr_heap_free(mesgArgument);
-    msg->info.sticky = 0;
     msgName__ = message;
     msgLen__ = vlen;
     if (receiverObject->info.chainMode == 1)
@@ -4087,6 +4085,7 @@ no_instrum:;
         }
       }
       if (!messageApproved) {
+        ctr_object *msg = ctr_build_string(message, vlen);
         printf("Native message not allowed in eval %s.\n",
                msg->value.svalue->value);
         ctr_print_stack_trace();
@@ -4117,8 +4116,6 @@ no_instrum:;
 #endif
     result = ctr_block_run(methodObject, argumentList, receiverObject);
   }
-  if (msg)
-    msg->info.sticky = 0;
   msgName__ = message;
   msgLen__ = vlen;
   if (receiverObject->info.chainMode == 1)

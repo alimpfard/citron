@@ -1422,7 +1422,7 @@ CTR_H_DECLSPEC int ctr_current_node_is_return;
 
 static inline void ctr_linkstr();
 void ctr_set_link_all(ctr_object*, ctr_object*);
-void ctr_deallocate_argument_list(ctr_argument*);
+void ctr_deallocate_argument_list(const ctr_argument*);
 int ctr_internal_object_is_equal(ctr_object*, ctr_object*);
 int ctr_internal_object_is_constructible_(ctr_object*, ctr_object*, int);
 

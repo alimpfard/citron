@@ -526,7 +526,7 @@ parse_predicates:;
   }
   if (t != CTR_TOKEN_TUPCLOSE) {
     // bitch about it
-    ctr_cparse_emit_error_unexpected(t, "Expected a ']'");
+    ctr_cparse_emit_error_unexpected(t, "Expected a ']'\n");
   }
   return r;
 }
@@ -597,7 +597,7 @@ ctr_tnode *ctr_cparse_lit_esc(int opt) {
   }
   default:
     ctr_cparse_emit_error_unexpected(
-        ctr_clex_tok(), "Expected any of '(', '[', '!', '`', '\''");
+        ctr_clex_tok(), "Expected any of '(', '[', '!', '`', '\''\n");
     return NULL;
   }
   v = ctr_cparse_create_node(CTR_AST_NODE);
@@ -660,7 +660,7 @@ ctr_tnode *ctr_cparse_tuple(int ending_tok) {
   // try for a list comprehension: expect ,,
   t = ctr_clex_tok();
   if (t != CTR_TOKEN_CHAIN && t != ending_tok) { // common element
-    ctr_cparse_emit_error_unexpected(t, "Expected a ',' or a ']'");
+    ctr_cparse_emit_error_unexpected(t, "Expected a ',' or a ']'\n");
     return r;
   }
   if (t == ending_tok) {
@@ -689,7 +689,7 @@ ctr_tnode *ctr_cparse_tuple(int ending_tok) {
     previousListItem = paramListItem;
   }
   if (t != ending_tok)
-    ctr_cparse_emit_error_unexpected(t, "Expected ].");
+    ctr_cparse_emit_error_unexpected(t, "Expected a ']'.");
   return r;
 }
 
@@ -732,7 +732,7 @@ ctr_tnode *ctr_cparse_popen() {
   li->node = ctr_cparse_expr(0);
   t = ctr_clex_tok();
   if (t != CTR_TOKEN_PARCLOSE) {
-    ctr_cparse_emit_error_unexpected(t, "Expected ).\n");
+    ctr_cparse_emit_error_unexpected(t, "Expected a ')'.\n");
   }
   return r;
 }

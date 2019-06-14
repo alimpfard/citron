@@ -23,6 +23,7 @@ static int ctr_transform_template_expr; /* flag: indicates whether the parser is
                                            supposed to parse a templated expr */
 static int uses_paramlist_item = 0; /* flag: indicates whether a lambda is using
                                        any parameters from its param list */
+int speculative_parse = 0; /* flag: should we try to fix errors */
 
 ctr_tnode *ctr_cparse_assignment();
 ctr_tnode *ctr_cparse_block();
@@ -134,7 +135,7 @@ int ctr_paramlist_has_name(char *namenode, size_t len) {
 void ctr_cparse_emit_error_unexpected(int t, char *hint) {
   char buf[1024];
   char *message = ctr_clex_tok_describe(t);
-  sprintf(buf, "Parse error, unexpected %s ( %s: %d )\n", message,
+  sprintf(buf, "Parse %s, unexpected %s ( %s: %d )\n", speculative_parse?"warning":"error", message,
           ctr_cparse_current_program, ctr_clex_line_number + 1);
   if (ctr_cparse_quiet)
     return;
@@ -146,10 +147,15 @@ void ctr_cparse_emit_error_unexpected(int t, char *hint) {
   }
   exit(1);
 #else
-  CtrStdFlow =
-      ctr_format_str("EParser error, unexpected %s ( %s: %d)\n%s%s", message,
+  if (!speculative_parse) // TODO: get an option
+    CtrStdFlow =
+      ctr_format_str("EParser %s, unexpected %s ( %s: %d)\n%s%s", speculative_parse?"warning":"error", message,
                      ctr_cparse_current_program, ctr_clex_line_number + 1,
                      hint ? "-> " : "", hint ? hint : "");
+  else
+    printf("Parser %s, unexpected %s ( %s: %d)\n%s%s", speculative_parse?"warning":"error", message,
+                 ctr_cparse_current_program, ctr_clex_line_number + 1,
+                 hint ? "-> " : "", hint ? hint : "");
 #endif
 }
 
@@ -307,6 +313,7 @@ ctr_tnode *ctr_cparse_message(int mode) {
         t = ctr_clex_tok();
         if (t != CTR_TOKEN_COLON) {
           ctr_cparse_emit_error_unexpected(t, "Expected a colon.\n");
+          ctr_clex_putback();
         }
       }
     }
@@ -396,6 +403,11 @@ ctr_tlistitem *ctr_cparse_messages(ctr_tnode *r, int mode) {
       t = ctr_clex_tok();
       if (t != CTR_TOKEN_REF) {
         ctr_cparse_emit_error_unexpected(t, "Expected message.\n");
+      if (speculative_parse)
+        if (ctr_clex_inject_token(CTR_TOKEN_REF, ctr_clex_tok_value() ?: "unknown-ref", ctr_clex_tok_value_length() ?: 11, 11)) {
+          ctr_cparse_emit_error_unexpected(t, "Speculative parsing failed, not enough vector space\n");
+          return NULL;
+        }
       }
     }
     li = (ctr_tlistitem *)ctr_heap_allocate_tracked(sizeof(ctr_tlistitem));
@@ -756,7 +768,7 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
     t = ctr_clex_tok();
     if (t != CTR_TOKEN_REF) {
       ctr_cparse_emit_error_unexpected(t, "Expected an argument name\n");
-      return NULL;
+      return speculative_parse ? ctr_cparse_nil() : NULL;
     }
     int len = ctr_clex_tok_value_length();
     char *val = ctr_clex_tok_value();
@@ -764,7 +776,7 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
       if (!isalpha(val[i])) {
         ctr_cparse_emit_error_unexpected(
             t, "asm block arguments must contain only alpha characters\n");
-        return NULL;
+        return speculative_parse ? ctr_cparse_nil() : NULL;
       }
     argidx++;
     enum AsmArgType _ty = ASM_ARG_TY_DBL;
@@ -786,7 +798,7 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
                (len == 3 && strncasecmp(tok, "att", 3) == 0))) {
       ctr_cparse_emit_error_unexpected(
           t, "Expected literal name att|at&t|intel\n");
-      return NULL;
+      return speculative_parse ? ctr_cparse_nil() : NULL;
     }
     t = ctr_clex_tok();
   }
@@ -796,7 +808,7 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
     if (!end) {
       ctr_cparse_emit_error_unexpected(
           t, "Expected a ')' to end the asm constraint block\n");
-      return NULL;
+      return speculative_parse ? ctr_cparse_nil() : NULL;
     }
     constraint = ctr_heap_allocate(end - begin + 1);
     memcpy(constraint, begin, end - begin);
@@ -809,7 +821,7 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
   if (!asm_end) {
     ctr_cparse_emit_error_unexpected(
         t, "Expected a '}' to end the native block\n");
-    return NULL;
+    return speculative_parse ? ctr_cparse_nil() : NULL;
   }
   void *fn = ctr_cparse_intern_asm_block(
       /* start = */ asm_begin,
@@ -1048,6 +1060,11 @@ the_else:;
     if (t != CTR_TOKEN_REF) {
       ctr_cparse_emit_error_unexpected(
           t, "'My' should always be followed by a property name!\n");
+      if (speculative_parse)
+      if (ctr_clex_inject_token(CTR_TOKEN_REF, ctr_clex_tok_value(), ctr_clex_tok_value_length(), ctr_clex_tok_value_length())) {
+        ctr_cparse_emit_error_unexpected(t, "Speculative parsing failed, not enough vector space\n");
+        return NULL;
+      }
     }
     tmp = ctr_clex_tok_value();
     r->modifier = 1;
@@ -1058,7 +1075,13 @@ the_else:;
     int t = ctr_clex_tok();
     if (t != CTR_TOKEN_REF) {
       ctr_cparse_emit_error_unexpected(
-          t, "'var' should always be followed by a property name!\n");
+          t, "'var' should always be follwed by a property name!\n");
+      if (speculative_parse)
+      if (ctr_clex_inject_token(CTR_TOKEN_REF, ctr_clex_tok_value(), ctr_clex_tok_value_length(), ctr_clex_tok_value_length())) {
+        ctr_cparse_emit_error_unexpected(t, "Speculative parsing failed, not enough vector space\n");
+        return NULL;
+      }
+
     }
     tmp = ctr_clex_tok_value();
     r->modifier = 2;
@@ -1071,6 +1094,11 @@ the_else:;
       ctr_cparse_emit_error_unexpected(
           t,
           "'const' must always be followed by a single reference/property\n");
+      if (speculative_parse)
+      if (ctr_clex_inject_token(CTR_TOKEN_REF, ctr_clex_tok_value(), ctr_clex_tok_value_length(), ctr_clex_tok_value_length())) {
+        ctr_cparse_emit_error_unexpected(t, "Speculative parsing failed, not enough vector space\n");
+        return NULL;
+      }
     }
     tmp = ctr_clex_tok_value();
     r->modifier = 3;
@@ -1090,6 +1118,11 @@ the_else:;
       ctr_cparse_emit_error_unexpected(
           t, "'" CTR_DICT_STATIC
              "' must always be followed by a single property name\n");
+      if (speculative_parse)
+      if (ctr_clex_inject_token(CTR_TOKEN_REF, ctr_clex_tok_value(), ctr_clex_tok_value_length(), ctr_clex_tok_value_length())) {
+        ctr_cparse_emit_error_unexpected(t, "Speculative parsing failed, not enough vector space\n");
+        return NULL;
+      }
     }
     tmp = ctr_clex_tok_value();
     r->modifier = 4;
@@ -1100,6 +1133,11 @@ the_else:;
     if (t != CTR_TOKEN_ASSIGNMENT) {
       ctr_cparse_emit_error_unexpected(
           t, "'" CTR_DICT_STATIC "' variable must be in an assignment");
+      if (speculative_parse)
+      if (ctr_clex_inject_token(CTR_TOKEN_ASSIGNMENT, "is", 2, 2)) {
+        ctr_cparse_emit_error_unexpected(t, "Speculative parsing failed, not enough vector space\n");
+        return NULL;
+      }
     }
   }
 
@@ -1390,7 +1428,7 @@ ctr_tnode *ctr_cparse_receiver() {
   default:
     /* This function always exits, so return a dummy value. */
     ctr_cparse_emit_error_unexpected(t, "Expected a message recipient.\n");
-    return NULL;
+    return speculative_parse ? ctr_cparse_nil() : NULL;
   }
 }
 
@@ -1657,13 +1695,13 @@ ctr_tnode *ctr_cparse_comptime() {
     ctr_cparse_emit_error_unexpected(
         CTR_TOKEN_INV,
         "Expected an AST splice as a return value from a comptime expression");
-    return NULL;
+    return speculative_parse ? ctr_cparse_nil() : NULL;
   }
   if (!val->value.rvalue || !val->value.rvalue->ptr) {
     ctr_cparse_emit_error_unexpected(CTR_TOKEN_INV,
                                      "Expected a valid AST splice as a return "
                                      "value from a comptime expression");
-    return NULL;
+    return speculative_parse ? ctr_cparse_nil() : NULL;
   }
   return val->value.rvalue->ptr;
 }
@@ -1688,8 +1726,28 @@ ctr_tlistitem *ctr_cparse_statement() {
   }
   t = ctr_clex_tok();
   if (t != CTR_TOKEN_DOT) {
-    ctr_cparse_emit_error_unexpected(t, "Expected a dot (.).\n");
-    li->node = ctr_cparse_fin();
+    if (t == CTR_TOKEN_QUOTE || t == CTR_TOKEN_FANCY_QUOT_OPEN) {
+      ctr_cparse_emit_error_unexpected(t, "Expected a closing quote.\n");
+      if (speculative_parse)
+      if (ctr_clex_inject_token(t == CTR_TOKEN_QUOTE ? t : CTR_TOKEN_FANCY_QUOT_CLOS, "'", 1, 1)) {
+        ctr_cparse_emit_error_unexpected(t, "Speculative parsing failed, not enough vector space\n");
+        return NULL;
+      }
+    } else {
+      if (t != CTR_TOKEN_FIN) {
+        ctr_cparse_emit_error_unexpected(t, "Expected a dot (.).\n");
+        if (speculative_parse) {
+        ctr_clex_putback();
+        if (ctr_clex_inject_token(CTR_TOKEN_DOT, ".", 1, 1)) {
+          ctr_cparse_emit_error_unexpected(t, "Speculative parsing failed, not enough vector space\n");
+          return NULL;
+        }
+      }
+      }
+    }
+    if (!li->node)
+      li->node = ctr_cparse_nil();
+    // li->node = ctr_cparse_fin();
   }
   return li;
 }

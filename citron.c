@@ -26,6 +26,8 @@ static int compile_and_quit = 0;
 static int debug = 0;
 static int from_stdin = 0;
 int with_stdlib = 1;
+static int parse_only = 0;
+extern int speculative_parse;
 
 char *SystemTZ;
 
@@ -129,6 +131,10 @@ void ctr_cli_read_args(int argc, char *argv[]) {
     else if (strcmp(argv[0], "-fc") == 0 ||
              strcmp(argv[0], "--from-compiled") == 0)
       compile_and_quit = 2;
+    else if (strcmp(argv[0], "-p") == 0)
+      parse_only = 1;
+    else if (strcmp(argv[0], "-s") == 0)
+      speculative_parse = 1;
     else if (strcmp(argv[0], "-d") == 0)
       debug = 1;
     else if (strcmp(argv[0], "--") == 0)
@@ -252,7 +258,8 @@ int main(int argc, char *argv[]) {
 #endif
     if (debug)
       ctr_internal_debug_tree(program, 1); /*-- for debugging */
-    ctr_cwlk_run(program);
+    if (!parse_only)
+      ctr_cwlk_run(program);
     ctr_gc_sweep(1);
     ctr_heap_free(prg);
     ctr_heap_free_rest();

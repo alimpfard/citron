@@ -1,0 +1,3 @@
+@comptime[discard] AST setSpeculative: True.
+
+Pen writeln: 1 + .

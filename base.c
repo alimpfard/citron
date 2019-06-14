@@ -29,6 +29,8 @@
 #include "pcre_split.h"
 #endif
 
+int more_exception_data = 1;
+
 #include "generator.h"
 char *ctr_itoa(int value, char *buffer, int base);
 static inline void ctr_assign_block_parameters(ctr_tlistitem *, ctr_argument *,
@@ -6522,6 +6524,7 @@ ctr_object *ctr_get_stack_trace() {
   return ctr_build_string_from_cstring(trace);
 }
 
+extern int more_exception_data; /* flag: should we display more data for exceptions? */
 void ctr_print_stack_trace() {
   int line;
   char *currentProgram;
@@ -6565,8 +6568,13 @@ void ctr_print_stack_trace() {
                         ? i
                         : -1; /*first=lfirst; first_p=lfirst_p; */
         }
+        if (!more_exception_data) {
+          char* fCurrentProgram = strrchr(currentProgram, '/');
+          if (fCurrentProgram)
+            currentProgram = fCurrentProgram + 1;
+        }
         printf(" (%s: %d)%s", currentProgram, line + 1,
-               ignored ? CTR_ANSI_COLOR_CYAN " [Ignored]" CTR_ANSI_COLOR_RESET
+               ignored && more_exception_data ? CTR_ANSI_COLOR_CYAN " [Ignored]" CTR_ANSI_COLOR_RESET
                        : "");
         break;
       }
@@ -6583,6 +6591,8 @@ void ctr_print_stack_trace() {
     return;
   char *ptr = first->p_ptr, *bptr = ptr, *here = ptr;
   if (!ptr)
+    return;
+  if (!more_exception_data)
     return;
   int p_tty = isatty(fileno(stdout));
   char *red = "", *reset = "", *magenta = "";

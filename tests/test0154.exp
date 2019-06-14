@@ -1,10 +1,4 @@
 1 444
 Uncaught error has occurred.
 Unknown method Nil::'keyword:' was called
-#1 keyword: (tests/test0154.ctr: 5)
-------------------------------------
-The probable cause of the exception: 
-3 | 
-4 | }.
-5 | Nil keyword: 1 message { 123 + 321 }.
-~~~~~~~~~~~~~^
+#1 keyword: (test0154.ctr: 5)

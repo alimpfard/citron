@@ -21,7 +21,7 @@ for i in $(find tests -maxdepth 1 -name 'test*.ctr' | sort --version-sort); do
     fi
     fitem=$i
 	echo -n "$fitem interpret";
-	result=`echo "$useless_input" | timeout 15 ${pre_c}/ctr ${fitem}`
+	result=`echo "$useless_input" | timeout 15 ${pre_c}/ctr --compact ${fitem}`
     rv=$?
     if [ $rv -ne 0 ] && [ $rv -ne 1 ]; then
         echo " [Failed with result $rv]"

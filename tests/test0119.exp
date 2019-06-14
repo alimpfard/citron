@@ -1,12 +1,5 @@
 search=table&restaurant=pizzaria&menu=spaghetti&menu=macaroni&course[main]=canneloni&course[dessert]=tiramisu
 Uncaught error has occurred.
 Key not found: Request
-#2 Request (tests/test0119.ctr: 5)
-#1 s (tests/test0119.ctr: 5)
-------------------------------------
-The probable cause of the exception: 
-3 | 
-4 | Pen write: (Program env: 'QUERY_STRING'), brk.
-5 | s is Request get: 'search'.
-~~~~~~~~~~~~~~^
-6 | Pen write: 'I was looking for a free ' + s.
+#2 Request (test0119.ctr: 5)
+#1 s (test0119.ctr: 5)

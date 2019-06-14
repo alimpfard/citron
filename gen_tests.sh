@@ -16,7 +16,7 @@ fi
 for i in $fnames; do
     dest=${i%%.ctr}.exp
     echo "Generating results for $i > $dest"
-    res=$(echo $dummy_input | timeout 5 ${pre_c}/ctr $i 2>&1)
+    res=$(echo $dummy_input | timeout 5 ${pre_c}/ctr --compact $i 2>&1)
     err=$?
     if [ $err -ne 0 ] && [ $err -ne 1 ]; then
         echo "Test case $res failed to run (status $err)"

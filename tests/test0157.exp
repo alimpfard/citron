@@ -1,9 +1,3 @@
 Uncaught error has occurred.
 Unknown method Object::'blah' was called
-#1 blah (tests/test0157.ctr: 11)
-------------------------------------
-The probable cause of the exception: 
-9 | 
-10 | f is Object new.
-11 | f blah.
-~~~~~~~~~^
+#1 blah (test0157.ctr: 11)

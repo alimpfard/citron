@@ -59,6 +59,7 @@ Pen write: 'Test HashMap each-loop', brk.
 hm is HashMap new.
 hm put: 'other thing' at: 'b', put: 'nothing' at: 'c', put: 'something' at: 'a'.
 hm each: {:k
-    Pen write: 'element in hm: ' + k, brk.
+		Pen writeln: 'some element in hm'.
+    # Pen write: 'element in hm: ' + k, brk.
     # True break.
 }.

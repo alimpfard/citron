@@ -4,15 +4,15 @@
 
 #Broom mode 4 is now deprecated
 #Broom mode: 4.
-Broom memoryLimit: 1024 * 1024 * 1024 * 3.
-j is 1.
-
-func is {
-
-	Pen write: 'Nested call #' + j, brk.
-	j +=: 1.
-
-	func run.
-}.
-
-func run.
+# Broom memoryLimit: 1024 * 1024 * 1024 * 3.
+# j is 1.
+# 
+# func is {
+# 
+	# Pen write: 'Nested call #' + j, brk.
+	# j +=: 1.
+# 
+	# func run.
+# }.
+# 
+# func run.

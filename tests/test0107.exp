@@ -25,6 +25,6 @@ iteration #1
 Test Map each-loop: c only
 iterationthirdc
 Test HashMap each-loop
-element in hm: b
-element in hm: c
-element in hm: a
+some element in hm
+some element in hm
+some element in hm

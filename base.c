@@ -5223,7 +5223,7 @@ ctr_object *ctr_build_listcomp(ctr_tnode *node) {
     ctr_object *filter_sobj = argm->object;
     ctr_object *filter_sv = ctr_build_string_from_cstring(
         "{"
-        "^(my names fmap: {:__vname ^Reflect getObject: __vname.}) "
+        "^(my names fmap: \\:__vname gen-handler applyTo: (Reflect getObject: __vname)) "
         "internal-product fmap: my filter_s."
         "}");
     ctr_object *filter_svobj;

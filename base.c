@@ -5173,6 +5173,16 @@ ctr_object *ctr_build_listcomp(ctr_tnode *node) {
         fs);
     return CtrStdNil;
   }
+  ctr_object* gen_handler_s = ctr_build_string_from_cstring(
+    "{:obj "
+      "obj isA: Generator, ifTrue: {"
+        "^obj toArray."
+      "} ifFalse: {"
+        "^obj."
+      "}."
+    "}"
+  );
+  ctr_object *gen_handler = ctr_string_eval(gen_handler_s, NULL);
   //(pred*) -> [{^pred}*]
   if (preds) {
     ctr_tlistitem *predicate = preds->nodes;
@@ -5246,7 +5256,9 @@ ctr_object *ctr_build_listcomp(ctr_tnode *node) {
       "my filters fmap: {:filter "
       "^syms letEqualAst: gen in: filter."
       "}, all: {:x ^x.}, not continue. "
-      "^{:blk ^const syms letEqualAst: const gen in: blk.}."
+      "^{:blk"
+        "^const syms letEqualAst: const gen in: blk."
+      "}."
       "}");
   argm->object = ctr_string_eval(filter_s, NULL);
   ctr_internal_object_add_property(
@@ -5256,11 +5268,15 @@ ctr_object *ctr_build_listcomp(ctr_tnode *node) {
   ctr_object *filter_sobj = argm->object;
   ctr_object *filter_sv = ctr_build_string_from_cstring(
       "{"
-      "^(my names fmap: \\:__vname Reflect getObject: __vname) "
-      "internal-product fmap: my filter_s."
+      "var gen-handler is my gen-handler."
+      "var nvs is (my names fmap: \\:__vname gen-handler applyTo: (Reflect getObject: __vname))."
+      "^nvs internal-product fmap: my filter_s."
       "}");
   ctr_object *filter_svobj;
   filter_svobj = ctr_string_eval(filter_sv, NULL);
+  ctr_internal_object_add_property(
+      filter_svobj, ctr_build_string_from_cstring("gen-handler"), gen_handler,
+      CTR_CATEGORY_PRIVATE_PROPERTY);
   ctr_internal_object_add_property(
       filter_svobj, ctr_build_string_from_cstring("names"), resolved_refs,
       CTR_CATEGORY_PRIVATE_PROPERTY);

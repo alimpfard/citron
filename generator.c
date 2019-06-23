@@ -447,6 +447,7 @@ ctr_object *ctr_generator_internal_inext(ctr_generator *genny, int gtype,
   int fail = 0;
   if ((isnext = !current))
     current = ctr_generator_internal_next(genny, gtype);
+
   while (current == generator_end_marker && !genny->finished) {
     current = ctr_generator_internal_next(genny, gtype);
   }
@@ -459,8 +460,8 @@ ctr_object *ctr_generator_internal_inext(ctr_generator *genny, int gtype,
     if (!gen->finished) {
       ctr_object *res = ctr_generator_internal_inext(gen, gty, genny, gtype);
       if (res == generator_end_marker) {
-        ctr_generator_internal_next(gen, gty);
-        return ctr_generator_internal_inext(gen, gty, genny, gtype);
+        ctr_generator_internal_next(genny, gtype);
+        return ctr_generator_internal_inext(genny, gtype, NULL, 0);
       } else
         return res;
     }

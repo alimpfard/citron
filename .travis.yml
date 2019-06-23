@@ -23,7 +23,7 @@ before_install:
     - sudo apt-get update
     - sudo apt-get install -y --allow-unauthenticated libllvm-7-ocaml-dev libllvm7 llvm-7 llvm-7-dev llvm-7-runtime
     - sudo apt-get install -y --allow-unauthenticated libc++-7-dev libc++abi-7-dev
-    - sudo apt-get install -y libffi-dev libbsd-dev libpcre3-dev libgc-dev realpath curl libcurl4-openssl-dev libsparsehash-dev tcl tcl-dev
+    - sudo apt-get install -y libffi-dev libbsd-dev libpcre3-dev libgc-dev coreutils curl libcurl4-openssl-dev libsparsehash-dev tcl tcl-dev
     - sudo apt-get install -y --allow-unauthenticated gcc-8 g++-8
     - echo =====================================================================
     - /usr/lib/llvm-7/bin/llvm-config --ldflags --cxxflags --libs core orcjit native

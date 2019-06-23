@@ -3,6 +3,7 @@
 
 ### Release
 A binary package is available (x86_64 PE) for windows.
+And an extremely stripped off binary is available for win32 (i686).
 
 ### Build guide
 this is to be built on Msys2 (mingw)
@@ -31,8 +32,7 @@ All operations are done through sending and receiving messages between objects.
 
 there are some examples in the `examples` directory.
 
-
 ### Default Module Resolution
 A default module resolution path is assigned at build-time, which normally points to the data directory of the install;
 However, this can always be overridden by specifying an environment variable (`CITRON_EXT_PATH` by default).
-Due to the rather pecular rules in windows about dynamic libraries, native modules are not supported.
+Due to the rather peculiar rules in windows about dynamic libraries, native modules are not supported.

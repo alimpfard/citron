@@ -31,6 +31,8 @@
 #include "pcre_split.h"
 #endif
 
+int more_exception_data = 1;
+
 #include "generator.h"
 char *ctr_itoa(int value, char *buffer, int base);
 static inline void ctr_assign_block_parameters(ctr_tlistitem *, ctr_argument *,
@@ -702,6 +704,9 @@ union ctr_socket_addr_inet {
 };
 #endif
 
+#ifndef h_addr
+#define h_addr h_addr_list[0]
+#endif
 ctr_object *ctr_object_send2remote(ctr_object *myself,
                                    ctr_argument *argumentList) {
 #ifndef NOSOCKET
@@ -750,9 +755,17 @@ ctr_object *ctr_object_send2remote(ctr_object *myself,
   printf("socketfd %d\n", sockfd);
   memset(&serv_addr, '0', sizeof(serv_addr));
   if (inet_family_is_v6)
+#ifdef __DEFAULT_SOURCE
     server = gethostbyname2(ip, AF_INET6);
+#else
+    server = gethostbyname(ip);
+#endif
   else
+#ifdef __DEFAULT_SOURCE
     server = gethostbyname2(ip, AF_INET);
+#else
+    server = gethostbyname(ip);
+#endif
   if (server == NULL) {
     CtrStdFlow = ctr_format_str("ERROR : No such host %s found.", ip);
     return CtrStdFlow;
@@ -5170,6 +5183,16 @@ ctr_object *ctr_build_listcomp(ctr_tnode *node) {
         fs);
     return CtrStdNil;
   }
+  ctr_object* gen_handler_s = ctr_build_string_from_cstring(
+    "{:obj "
+      "obj isA: Generator, ifTrue: {"
+        "^obj toArray."
+      "} ifFalse: {"
+        "^obj."
+      "}."
+    "}"
+  );
+  ctr_object *gen_handler = ctr_string_eval(gen_handler_s, NULL);
   //(pred*) -> [{^pred}*]
   if (preds) {
     ctr_tlistitem *predicate = preds->nodes;
@@ -5210,7 +5233,7 @@ ctr_object *ctr_build_listcomp(ctr_tnode *node) {
     ctr_object *filter_sobj = argm->object;
     ctr_object *filter_sv = ctr_build_string_from_cstring(
         "{"
-        "^(my names fmap: {:__vname ^Reflect getObject: __vname.}) "
+        "^(my names fmap: \\:__vname gen-handler applyTo: (Reflect getObject: __vname)) "
         "internal-product fmap: my filter_s."
         "}");
     ctr_object *filter_svobj;
@@ -5243,7 +5266,9 @@ ctr_object *ctr_build_listcomp(ctr_tnode *node) {
       "my filters fmap: {:filter "
       "^syms letEqualAst: gen in: filter."
       "}, all: {:x ^x.}, not continue. "
-      "^{:blk ^const syms letEqualAst: const gen in: blk.}."
+      "^{:blk"
+        "^const syms letEqualAst: const gen in: blk."
+      "}."
       "}");
   argm->object = ctr_string_eval(filter_s, NULL);
   ctr_internal_object_add_property(
@@ -5253,11 +5278,15 @@ ctr_object *ctr_build_listcomp(ctr_tnode *node) {
   ctr_object *filter_sobj = argm->object;
   ctr_object *filter_sv = ctr_build_string_from_cstring(
       "{"
-      "^(my names fmap: \\:__vname Reflect getObject: __vname) "
-      "internal-product fmap: my filter_s."
+      "var gen-handler is my gen-handler."
+      "var nvs is (my names fmap: \\:__vname gen-handler applyTo: (Reflect getObject: __vname))."
+      "^nvs internal-product fmap: my filter_s."
       "}");
   ctr_object *filter_svobj;
   filter_svobj = ctr_string_eval(filter_sv, NULL);
+  ctr_internal_object_add_property(
+      filter_svobj, ctr_build_string_from_cstring("gen-handler"), gen_handler,
+      CTR_CATEGORY_PRIVATE_PROPERTY);
   ctr_internal_object_add_property(
       filter_svobj, ctr_build_string_from_cstring("names"), resolved_refs,
       CTR_CATEGORY_PRIVATE_PROPERTY);
@@ -5478,7 +5507,7 @@ ctr_object *ctr_block_run_array(ctr_object *myself, ctr_object *argArray,
   ctr_argument *argList = ctr_array_to_argument_list(argArray, NULL);
   if (myself->info.type == CTR_OBJECT_TYPE_OTNATFUNC) {
     ctr_object *result = myself->value.fvalue(my, argList);
-    ctr_deallocate_argument_list(argList);
+    // ctr_deallocate_argument_list(arglistc);
     return result;
   }
   // overload begin
@@ -6521,6 +6550,7 @@ ctr_object *ctr_get_stack_trace() {
   return ctr_build_string_from_cstring(trace);
 }
 
+extern int more_exception_data; /* flag: should we display more data for exceptions? */
 void ctr_print_stack_trace() {
   int line;
   char *currentProgram;
@@ -6564,8 +6594,13 @@ void ctr_print_stack_trace() {
                         ? i
                         : -1; /*first=lfirst; first_p=lfirst_p; */
         }
+        if (!more_exception_data) {
+          char* fCurrentProgram = strrchr(currentProgram, '/');
+          if (fCurrentProgram)
+            currentProgram = fCurrentProgram + 1;
+        }
         printf(" (%s: %d)%s", currentProgram, line + 1,
-               ignored ? CTR_ANSI_COLOR_CYAN " [Ignored]" CTR_ANSI_COLOR_RESET
+               ignored && more_exception_data ? CTR_ANSI_COLOR_CYAN " [Ignored]" CTR_ANSI_COLOR_RESET
                        : "");
         break;
       }
@@ -6582,6 +6617,8 @@ void ctr_print_stack_trace() {
     return;
   char *ptr = first->p_ptr, *bptr = ptr, *here = ptr;
   if (!ptr)
+    return;
+  if (!more_exception_data)
     return;
   int p_tty = isatty(fileno(stdout));
   char *red = "", *reset = "", *magenta = "";

@@ -1,8 +1,3 @@
 Uncaught error has occurred.
 Boolean cannot be constructed by (null)
-#1 Nil (tests/test0202.ctr: 2)
-------------------------------------
-The probable cause of the exception: 
-1 | #Test invalid left hand assignment with Nil (No-op)
-2 | Nil is True.
-~~~~~^
+#1 Nil (test0202.ctr: 2)

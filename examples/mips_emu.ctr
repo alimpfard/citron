@@ -34,20 +34,27 @@ var RegFile is Map new put: (ConstantReg new init: 0) at: 0.
 RegFile put: (Register new init) at: 32. #program counter
 RegFile put: Register new init at: 33. # hi (for MULT)
 RegFile put: Register new init at: 34. # lo (for MULT)
+RegFile put: (RegFile @ 0) at: '0'.
+RegFile put: (RegFile @ 32) at: '32'.
+RegFile put: (RegFile @ 33) at: '33'.
+RegFile put: (RegFile @ 34) at: '34'.
 
 31 times: {:i
-  RegFile put: (Register new init) at: (i + 1).
+  var reg is Register new init.
+  RegFile put: reg at: (i + 1), put: reg at: (i + 1) toString.
 }.
 'zero|at|v0|v1|a0|a1|a2|a3|t0|t1|t2|t3|t4|t5|t6|t7|s0|s1|s2|s3|s4|s5|s6|s7|t8|t9|k0|k1|gp|sp|s8|fp|ra' split: '|', each: {:i:v
   RegFile put: (RegFile at: i) at: v.
 }.
 
-var MemoryBlock is Array new.
+var MEMBLOCK_SZE is 1024 * 1024.
+
+var MemoryBlock is Array new: MEMBLOCK_SZE.
 
 MemoryBlock on: 'init' do: {:self
   my bp is 0.
   Pen red writeln: 'Initializing memory...', resetColor.
-  64 * 1024 times: {:i self push: 0.}. #64 KB of accessible memory. for now
+  MEMBLOCK_SZE times: {:i self push: 0.}. #64 KB of accessible memory. for now
   Pen cyan writeln: 'Memory init done', resetColor.
 }.
 MemoryBlock on: 'absForBase:offset:' do: {:base:offset

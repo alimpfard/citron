@@ -1,0 +1,3 @@
+Parser warning, unexpected . ( tests/test0300.ctr: 3)
+-> Expected a message recipient.
+1

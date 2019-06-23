@@ -127,6 +127,7 @@ Inject on: 'generateCFunctionWrapperFor:withCIF:andName:' do: {:sym:cif:x
   # Pen writeln: ast2ctrcode[av0].
   var pointer is CTypes pointer.
   ^($!av0)
+    on: 'cPtr' do: { ^my symbol run. },
     set: 'cif' value: cif,
     set: 'symbol' value: (
       cif isFunctionPointer not
@@ -141,22 +142,35 @@ Inject on: 'getDefines:fromHeaders:' do: {:self:defs:headers
   var context is me new.
   me includePaths each_v: {:path context addIncludePath: path. }.
   var sheader is ((['#include %s\n' % [self normalizeHeaderString: x],, (x: headers)]) join: '').
+  sheader +=: '#define Cprocess_numbers 0\n'.
   sheader +=: '#define CTR_INJECT_CAST_STR(x) CTR_INJECT_CAST_ST_STR(x)\n'.
   sheader +=: '#define CTR_INJECT_CAST_ST_STR(x) #x\n'.
   sheader +=: 'typedef struct { void* ptr; void* next; } ctr_argument;\n'.
   sheader +=: 'extern void* ctr_array_push(void*,void*);\n'.
   sheader +=: 'extern void* ctr_build_string_from_cstring(char*);\n'.
+  sheader +=: 'extern void* ctr_build_number_from_float(double);\n'.
   sheader +=: 'extern void* get_CtrStdArray();\n'.
-  sheader +=: 'extern void* ctr_array_new(void*,void*);\n'.
   var ptr is CTypes pointer.
   var sbody is defs
-    foldl: (\:&acc:&def 'ctr_array_push(${{acc}}$, &(ctr_argument*){ctr_build_string_from_cstring(CTR_INJECT_CAST_STR(${{def}}$))})')
-    accumulator: 'ptr'.
-  var body is '$$sheader void* main(void* ptr) { return $$sbody ;}'.
+    foldl: (\:&acc:&def '${{acc}}$
+      (CTR_INJECT_CAST_STR(${{def}}$) "\\n");
+      ptr = ctr_array_push(ptr, &(ctr_argument){
+#if Cprocess_numbers && isnumeric(${{def}}$)
+        #warning Will now produce numbers for ${{def}}$
+        ctr_build_number_from_float(${{def}}$)
+#else
+        ctr_build_string_from_cstring(CTR_INJECT_CAST_STR(${{def}}$))
+#endif
+      });')
+    accumulator: ''.
+  var body is '$$sheader void* main(void* ptr) {
+    $$sbody
+    return ptr;
+  }'.
   # Pen writeln: body.
   var main is context compile: body, symbol: 'main'.
   var values is Array new.
-  CIF newByInferringTypes: [ptr, ptr], call: main withArgs: [values], asObject.
+  CIF newByInferringTypes: [ptr, ptr], call: main withArgs: [ptr addressOfObject: values].
   var ret is Map new.
   defs each: {:i:x ret put: (values at: i) at: x. }.
   context destruct.

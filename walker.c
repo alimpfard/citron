@@ -493,7 +493,7 @@ ctr_object *ctr_cwlk_run(ctr_tnode *program) {
       printf("GC : %d bytes\n", ctr_gc_alloc);
 #endif
       // ctr_gc_internal_collect_a_little ();	//collect on limit mode
-      GC_collect_a_little();
+      // GC_collect_a_little();
 #ifdef DEBUG_BUILD
       printf("GC : %d bytes\n", ctr_gc_alloc);
 #endif

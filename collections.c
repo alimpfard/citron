@@ -41,8 +41,8 @@ ctr_object *ctr_array_new(ctr_object *myclass, ctr_argument *argumentList) {
   ctr_object *s = ctr_internal_create_object(CTR_OBJECT_TYPE_OTARRAY);
   ctr_set_link_all(s, myclass);
   int initial_length = 2;
-  if (argumentList && argumentList->object) {
-    int len = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  if (argumentList && argumentList->object && argumentList->object->info.type == CTR_OBJECT_TYPE_OTNUMBER) {
+    int len = argumentList->object->value.nvalue;
     if (len > 1)
       initial_length = len;
   }
@@ -54,6 +54,24 @@ ctr_object *ctr_array_new(ctr_object *myclass, ctr_argument *argumentList) {
   s->value.avalue->head = 0;
   s->value.avalue->tail = 0;
   return s;
+}
+
+/**
+ * [Array] newFill: [count] with: [Object]
+ *
+ * creates a prefilled array with the gived object copied into it
+ */
+ctr_object *ctr_array_alloc(ctr_object *myclass, ctr_argument *argumentList) {
+    ctr_object *s = ctr_internal_create_object(CTR_OBJECT_TYPE_OTARRAY);
+    ctr_set_link_all(s, myclass);
+    int len = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+    s->value.avalue = ctr_heap_allocate(sizeof(ctr_collection));
+    s->value.avalue->length = len;
+    s->value.avalue->head = len - 1;
+    s->value.avalue->elements = ctr_heap_allocate(sizeof(ctr_object*) * len);
+    for(len--;len--;)
+        s->value.avalue->elements[len] = argumentList->next->object;
+    return s;
 }
 
 /**
@@ -1439,7 +1457,7 @@ ctr_argument *ctr_array_to_argument_list(ctr_object *arr,
   return arg;
 }
 
-void ctr_deallocate_argument_list(ctr_argument *argumentList) {
+void ctr_deallocate_argument_list(const ctr_argument *argumentList) {
   ctr_argument *arg;
   while (argumentList) {
     arg = argumentList->next;

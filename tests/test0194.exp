@@ -1,3 +1,3 @@
 Uncaught error has occurred.
-Parser error, unexpected end of program ( tests/test0194.ctr: 3)
--> Expected a dot (.).
+Invalid bind
+#1 2 (test0194.ctr: 1)

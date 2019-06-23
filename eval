@@ -303,8 +303,10 @@ Eval on: 'Commands' do: {
       + !p <expression> -- evaluates and shows the properties of expression.
       + !f <[no-]flag> -- modifies flag
       + last [(<nth>)] <query> -- sets the next input to the last (nth if provided) match in history
+      + !last [n] -- sets the next input to the last nth expression in history
       + hist [(<nth>)] <query> -- searches for entry in history, and returns it as a block
       + !hist [(<nth>)] <query> -- searches and executes (like hist but executes immediately)
+      + list <{hist}> [n] -- lists the last n items in history
       + !repeat [-<stride>] <count> -- execute the last count expressions starting at stride?0 items up
       + set <(+|-)flag> -- alternative for !f with easier(?) syntax
       + !def <name> <expression> -- create a metacommand
@@ -411,6 +413,34 @@ Eval on: 'Commands' do: {
         }.
       } at: 'last',
       put: {:argstr
+        argstr is argstr trim.
+        argstr = '' ifTrue: {
+            Eval nextInput: Eval getHistory last.
+            ^''.
+        } ifFalse: {
+            Eval nextInput: (Eval getHistory at: Eval getHistory count - 1 - argstr toNumber).
+            ^''.
+        }.
+      } at: '!last',
+      put: {:argstr
+        var fs is argstr trim reSplit: '\\s+'.
+        var first is fs shift.
+        ^(frozen _ is String
+            case: '' do: {
+                ^'List what? {history}'.
+            },
+            case: 'h'
+            case: 'hist'
+            case: 'history' do: {
+                var hist is Eval getHistory copy.
+                var len is hist count min: (fs count = 0 either: (10) or: {^fs head toNumber.}).
+                ^hist from: hist count - len length: len, reverse imap!: {\:i:x ((i + 1) toString paddingRight: 3) + '| ' + (x from: 0 to: [TerminalWidth - 6, x length] min).}, join: '\n'.
+            },
+            default: {
+                ^'Unknown listing: $$first'.
+            }) switch: first.
+      } at: 'list',
+      put: {:argstr
         var nth is 0.
         var cmd is 'Nil.'.
         argstr findPattern: ?>(?:\((\d+|\*)\))?\s*(.+)$<? do: {:groups
@@ -511,6 +541,13 @@ Eval on: 'CommandCompletions' do: {
           ^flags filter: \:i:v v startsWith: flag, fmap: \:x x skip: flag length.
         } or: flags.
       } at: ':!f',
+      put: {:argstr
+        var vars is ['history'].
+        ^argstr count either: {
+            var f is argstr head trim.
+            ^vars filter: \:_:x (x startsWith: f), fmap: \:x x skip: f length.
+        } or: vars.
+      } at: ':list',
       put: {:argstr
           ^argstr count either: {
               var path is argstr head split: ' ', last ~ ?>s|.*?((/*\w+)(/\w+)+/?).*|$1|<?.

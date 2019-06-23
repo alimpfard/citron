@@ -24,3 +24,16 @@ Pen writeln: (f test: 10 blah: 64).
 Pen writeln: (f test: 'Hello ' blah: 64).
 Pen writeln: (f test: 10 blah: 32).
 # Pen writeln: (f test: Nil blah: Nil). #=> fails
+
+import Library/Functional/PatternMatch: 'match'.
+
+#:declare lazyev match
+
+Pen writeln: [1, 2, [3, 4, 'test']] `match` {
+  [1, 2, [a, b, c]] => choise: {
+    { c startsWith: 'e'. } => 'Fail #1'.
+    { c endsWith: 's'.   } => 'Fail #2'.
+    { a < b. c = 'test'. } => 'Success'.
+  }.
+  else-branch => 'Fail #3'.
+}.

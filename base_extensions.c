@@ -93,6 +93,35 @@ exit_not_ours:;
 }
 
 ctr_object *CtrStdAst;
+extern int speculative_parse;
+
+/**
+ * [AST] setSpeculative: [Boolean]
+ *
+ * Enables or disables speculative parsing mode
+ * In speculative parsing mode, the parser tries
+ * its best to generate sensible code for invalid
+ * stuff
+ * e.g.
+ * `1 +` is transformed to `1 + Nil`
+ * `[1,2` is transformed to `[1,2]`
+ * `[1,2 toString` is transformed to `[1, 2 toString]`
+ */
+ctr_object *ctr_ast_set_speculative(ctr_object *myself, ctr_argument *argumentList) {
+  speculative_parse = ctr_internal_cast2bool(argumentList->object)->value.bvalue;
+  return myself;
+}
+
+/**
+ * [AST] speculative?
+ *
+ * Returns True if speculative parsing is enabled, False otherwise
+ */
+ctr_object *ctr_ast_get_speculative(ctr_object *myself, ctr_argument *argumentList) {
+  (void) myself;
+  (void) argumentList;
+  return ctr_build_bool(speculative_parse);
+}
 /**
  * [AST] parse: [String]
  *
@@ -1645,6 +1674,12 @@ void initiailize_base_extensions() {
   ctr_internal_create_func(CtrStdAst,
                            ctr_build_string_from_cstring("instrCount"),
                            &ctr_ast_instrcount);
+  ctr_internal_create_func(CtrStdAst,
+                           ctr_build_string_from_cstring("speculative?"),
+                           &ctr_ast_get_speculative);
+  ctr_internal_create_func(CtrStdAst,
+                           ctr_build_string_from_cstring("setSpeculative:"),
+                           &ctr_ast_set_speculative);
   ctr_internal_create_func(CtrStdAst, ctr_build_string_from_cstring("count"),
                            &ctr_ast_instrcount);
   ctr_internal_create_func(CtrStdAst, ctr_build_string_from_cstring("parse:"),

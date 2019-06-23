@@ -1,0 +1,16 @@
+# Test <expr> <str>
+
+var echo is Object cnew: {
+  on: 'process:' do: {:str
+    Pen writeln: str.
+  }.
+}.
+
+echo 'This is a test with \u{1023}nicode'.
+
+echo ?>This is a test with literals<?.
+
+# The following breaks v TODO ()
+# echo ‹This is a test with unicode string start/end›.
+
+Pen writeln: ‹This is a test with unicode string start/end ?>which allows these characters inside<?›.

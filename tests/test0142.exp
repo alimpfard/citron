@@ -1,10 +1,3 @@
 Uncaught error has occurred.
 Unknown method Object::'doesNotUnderstand' was called
-#1 doesNotUnderstand (tests/test0142.ctr: 6)
-------------------------------------
-The probable cause of the exception: 
-4 | 
-5 | x is Object new.
-6 | x doesNotUnderstand this.
-~~~~~~~~~~~~~~~~~~~~~^
-7 | y doYouExist.
+#1 doesNotUnderstand (test0142.ctr: 6)

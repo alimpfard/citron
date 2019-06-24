@@ -147,6 +147,11 @@ static const int all_signals[] = {
     SIGKILL, // last one. must exist
 };
 
+static ctr_object* ctr_gc_dump(ctr_object* myself, ctr_argument* argumentList) {
+  GC_dump();
+  return myself;
+}
+
 static void register_signal_handlers() {
   struct sigaction act;
   int i = 0;
@@ -3102,6 +3107,8 @@ void ctr_initialize_world() {
   CtrStdGC = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
   ctr_internal_create_func(CtrStdGC, ctr_build_string_from_cstring("noGC:"),
                            &ctr_gc_with_gc_disabled);
+  ctr_internal_create_func(CtrStdGC, ctr_build_string_from_cstring("dump"),
+                           &ctr_gc_dump);
   ctr_internal_create_func(
       CtrStdGC, ctr_build_string_from_cstring(CTR_DICT_SWEEP), &ctr_gc_collect);
   ctr_internal_create_func(CtrStdGC,

@@ -1,4 +1,4 @@
-Broom memoryLimit: 100 * 1024 * 1024.
+Broom memoryLimit: 400 * 1024 * 1024.
 
 import _internal: \*.
 
@@ -212,11 +212,30 @@ var acamp  is _camp getRawAddress.
 var acamf  is _camf getRawAddress.
 var acamt  is _camt getRawAddress.
 var lastTime is 0.
-var fv is File new: 'render.ctr'.
-
+var renderBlock is {}.
+var norender is False.
+var render-watcher is Thread new: {:&renderBlock:&norender
+    var fv is File new: 'render.ctr'.
+    {
+        fv runHere.
+        &&renderBlock is render.
+    } run.
+    var f is Shell open: 'inotifywait -qme close_write render.ctr' mode: 'r'.
+    f generateLines fmap: {:line
+        Pen writeln: line.
+        &&norender is True.
+        Broom sweep: renderBlock.
+        fv runHere.
+        &&renderBlock is render.
+        &&norender is False.
+    }, each: {
+        Pen writeln: 'oooh, something happened to render.ctr'.
+    }.
+    fv close.
+} args: [renderBlock, norender], run.
 {
   var time is glfwGetTime[].
-  Pen writeln: 'time ${{1 / (time - lastTime)}}$'.
+  #Pen writeln: 'time ${{1 / (time - lastTime)}}$'.
   lastTime is time.
 
   glfwGetFramebufferSize[window, width, height].
@@ -224,13 +243,11 @@ var fv is File new: 'render.ctr'.
 
   glViewport[0, 0, width, height].
   glClear[GL_COLOR_BUFFER_BIT bitOr: GL_DEPTH_BUFFER_BIT].
-
-  Pen writeln: 'Whole frame took: ' + (Clock timeExecutionOf: {
-    Program new: { fv runHere. }, join.
-
-    glUseProgram[program].
-    glUniformMatrix4fv[mvp_location, 1, GL_FALSE, mvp].
-    glDrawArrays[GL_TRIANGLES, 0, 36].
-    glfwSwapBuffers[window].
-  }).
+  norender ifFalse: {
+      renderBlock run.
+  }.
+  Broom sweep: glUseProgram[program].
+  Broom sweep: glUniformMatrix4fv[mvp_location, 1, GL_FALSE, mvp].
+  Broom sweep: glDrawArrays[GL_TRIANGLES, 0, 36].
+  Broom sweep: glfwSwapBuffers[window].
 } forever.

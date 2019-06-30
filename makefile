@@ -1,4 +1,4 @@
-DEBUG_VERSION := 1222
+DEBUG_VERSION := 1223
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 o_cflags := -I/mingw64/include
 #it ain't so easy

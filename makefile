@@ -184,6 +184,7 @@ modules:
 	# TODO: the rest of the modules
 
 package:
+	ldd ./ctr
 	for dep in `ldd ./ctr | grep '=>' | cut -d' ' -f3 | xargs realpath`; do \
 		printf '%s ... ' "Resolving dependancy '$$dep'" ; \
 		if [[ $$dep == *msys* ]]; then \

@@ -62,9 +62,9 @@ ctr_object *FIBER_YIELDED = NULL; // to pass values around
 typedef struct {
 #ifndef DWIN32
   ucontext_t context; // Stores the current context
+#endif
   struct ctr_context_t ctr_context;
   int active : 1; // A boolean flag, 0 if it is not active, 1 if it is
-#endif
 } fiber;
 
 // The fiber "queue"

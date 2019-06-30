@@ -261,7 +261,7 @@ typedef struct ctr_overload_set ctr_overload_set;
 /**
  * Root Object
  */
-struct ctr_object {
+struct __attribute__((packed)) ctr_object {
 	ctr_map* properties;
 	ctr_map* methods;
 	struct {
@@ -274,6 +274,8 @@ struct ctr_object {
 		unsigned int shared: 1;
 		unsigned int raw: 1;
 		unsigned int overloaded: 1;
+		unsigned int pad0: 4;
+		unsigned char pad [6];
 	} info;
 	struct ctr_interfaces* interfaces;
 	struct ctr_object* lexical_name;

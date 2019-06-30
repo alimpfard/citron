@@ -2549,7 +2549,11 @@ ctr_object *ctr_string_escape_ascii(ctr_object *myself,
   ctr_object *escape =
       argumentList && argumentList->object && argumentList->object != CtrStdNil
           ? ctr_internal_cast2string(argumentList->object)
-          : ctr_build_string_from_cstring("\n\b\t\f\v\a\\"); // sensible default
+          : ctr_build_string_from_cstring((char[]){
+            0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,
+            0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+            0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x0a
+          }); // sensible default
   ctr_object *newString = NULL;
   char *str = myself->value.svalue->value;
   long len = myself->value.svalue->vlen;
@@ -4619,6 +4623,10 @@ ctr_object *ctr_string_html_escape(ctr_object *myself,
       tag_rlen += 1;
       break;
     default:
+      if (c < 32) {
+        tag_len += 7; // &#nnnn;
+        tag_rlen += 1;
+      }
       break;
     }
   }
@@ -4658,7 +4666,16 @@ ctr_object *ctr_string_html_escape(ctr_object *myself,
         tstr[k++] = replacement[j];
       break;
     default:
-      tstr[k++] = str[i];
+      if (c < 32) {
+        char rep[8];
+        sprintf(rep, "&#%04d;", c);
+        replacement = rep;
+        rlen = 7;
+        for (j = 0; j < rlen; j++)
+          tstr[k++] = replacement[j];
+      }
+      else
+        tstr[k++] = str[i];
       break;
     }
   }
@@ -5233,11 +5250,15 @@ ctr_object *ctr_build_listcomp(ctr_tnode *node) {
     ctr_object *filter_sobj = argm->object;
     ctr_object *filter_sv = ctr_build_string_from_cstring(
         "{"
+        "var gen-handler is my gen-handler."
         "^(my names fmap: \\:__vname gen-handler applyTo: (Reflect getObject: __vname)) "
         "internal-product fmap: my filter_s."
         "}");
     ctr_object *filter_svobj;
     filter_svobj = ctr_string_eval(filter_sv, NULL);
+    ctr_internal_object_add_property(
+        filter_svobj, ctr_build_string_from_cstring("gen-handler"), gen_handler,
+        CTR_CATEGORY_PRIVATE_PROPERTY);
     ctr_internal_object_add_property(
         filter_svobj, ctr_build_string_from_cstring("names"), resolved_refs,
         CTR_CATEGORY_PRIVATE_PROPERTY);

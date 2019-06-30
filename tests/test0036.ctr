@@ -1,5 +1,7 @@
 Broom autoAlloc: True.
 
+# these collects take _forever_
+
 1000 times: {
 	var a is 'First'.
 	var b is 'Second'.

@@ -3032,6 +3032,7 @@ void *ctr_run_thread_func(ctr_thread_t *threadt) {
   threadt->last_result = rv;
 #ifndef DWIN32
   sets = pthread_sigmask(SIG_SETMASK, &oset, NULL);
+#endif
   threadt->waiting_for_join = 1;
   // remove our context
   if (tw->prev)

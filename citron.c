@@ -172,7 +172,7 @@ void lambdaf_end_instance();
 
 void ctr_initialize_ex() {
   lambdaf_begin_instance();
-  GC_enable_incremental();
+  // GC_enable_incremental();
   oneLineExpressions = &oneline_p;
   flexibleConstructs = &flex_const;
   regexLineCheck = &regex_lc;

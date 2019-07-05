@@ -3810,6 +3810,8 @@ ctr_object *ctr_string_find_pattern_options_do(
  */
 ctr_object *ctr_string_find_pattern_do(ctr_object *myself,
                                        ctr_argument *argumentList) {
+  if (!argumentList->next->next)
+    argumentList->next->next = ctr_heap_allocate(sizeof (ctr_argument));
   argumentList->next->next->object = ctr_build_empty_string();
   ctr_object *answer;
   answer = ctr_string_find_pattern_options_do(myself, argumentList);

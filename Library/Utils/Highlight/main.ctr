@@ -22,7 +22,6 @@ Highlight on: 'highlight:' do: {:code:html
   var messageAcceptors is ['BLOCKCLOSE', 'BOOLEANNO', 'BOOLEANYES', 'CHAIN', 'NIL', 'NUMBER', 'PARCLOSE', 'QUOTE', 'REF', 'TUPCLOSE'].
   var last_end is 0.
   {^done.} whileFalse: {
-    var skip is False.
     var this_thing is ''.
     var rlen is Colors stripColors: returned, length.
     var color is ''.
@@ -270,7 +269,6 @@ Highlight on: 'highlight:' do: {:code:html
     (token @ 0 = 'CHAIN') & (last_toc = 'REF') ifTrue: { last_toc_override is 'NOT-CHAIN'. }.
     last_toc is last_toc_override or: token @ 0.
     last_end is token @ 2.
-    skip continue.
     var lin is AST lexline.
     token is AST token.
     returned +=: '\n' * (AST lexline - lin).

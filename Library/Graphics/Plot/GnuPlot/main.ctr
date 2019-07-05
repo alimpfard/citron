@@ -1,13 +1,230 @@
-import internal: 'GnuPlotInternal'.
+String on: 'write:' do: {:x me +=: x. }.
 
-var GnuPlot is GnuPlotInternal.
-
-GnuPlot on: 'plotList:opts:' do: {:self:list:opts
-  opts is opts or: ''.
-  opts isA: Array, ifTrue: {
-    opts is opts join: ' '.
+var Plot is Object cnew: {:self
+  on: 'type' do: {\ 'Plot' }.
+  genAccessors: ['cmd', 'data', 'settings', 'arbitrary_lines'].
+  on: 'new:do:' do: {:&io:block
+    ^me new initWithIO: io andCommand: 'plot' andBlock: block.
   }.
-  ^self send:
-    'plot \'-\' using 1:2 $$opts \n\t' + (list imap: \:i:x '\t%s %s' % [i, x], join: '\n') + '\n\te\n'.
+  on: 'initWithIO:andCommand:andBlock:' do: {:&io:cmd:block
+    cmd => cmd.
+    settings => Array new.
+    arbitrary_lines => Array new.
+    data => Array new.
+    styles => Array new.
+    quoted => ['title', 'output', 'xlabel', 'ylabel', 'y2label', 'clabel', 'cblabel', 'zlabel'].
+    block isNil ifFalse: {
+      Reflect runHere: block forObject: me arguments: [].
+    }.
+    io isNil ifFalse: {
+      toGplot: io.
+      storeDatasets: io.
+    }.
+  }.
+
+  (0..5) each: {:_:i
+    self on: 'respondTo:' + ('and:' * i) do: {:method:*args
+      message: 'set:value:' arguments: [method] + args.
+    }.
+  }.
+
+  on: 'set:value:' do: {:name:value
+    var quoted is my quoted.
+    name endsWith: ':', ifTrue: { name is name ~ 's/://g'. }.
+
+    value isNil ifTrue: { value is ''. }.
+    value containsPattern: ?>^'.*'$<?, ifFalse: {
+      quoted contains: name, ifTrue: {
+        value is '"${{value}}$"'.
+      }.
+    }.
+    my settings push: ['set', name, value].
+  }.
+
+  on: 'unset:' do: {:name
+    my settings push: ['unset', 'name'].
+  }.
+  on: 'array:rassoc:' do: {:arr:val
+    var value is Nil.
+    arr each_v: {:v
+      v isA: Array, ifTrue: {
+        v @ 1 = val ifTrue: { value is v. True break. }.
+      }.
+    }.
+    ^v.
+  }.
+  on: 'at:' do: {:name
+    var v is array: my settings rassoc: name.
+    v isNil ifTrue: { ^Nil. }.
+    v head = 'unset' ifTrue: { ^Nil. }.
+    ^v @ 2.
+  }.
+
+  on: 'style:' do: {:blk
+    var s is Style new.
+    s init: blk.
+    my styles push: s.
+    ^s.
+  }.
+
+  on: 'addData:' do: {:&ds my data push: ds. }.
+  on: 'toGplot:' do: {:&io
+    io isNil ifTrue: { io is ''. }.
+
+    my settings each_v: {:setting
+      io write: (setting fmap: \:x x toString, join: ' ') + '\n'.
+    }.
+    my styles each_v: {:style io write: style toString, write: '\n'. }.
+    my arbitrary_lines each_v: {:line io write: line, write: '\n'. }.
+    ^io.
+  }.
+  on: 'storeDatasets:' do: {:&io
+    io isNil ifTrue: { io is ''. }.
+
+    my data count > 0 ifTrue: {
+      io write: my cmd,
+         write: ' ',
+         write: (my data fmap: (\:x x plotArgs: Nil), join: ', '),
+         write: '\n'.
+      var data is my data fmap: (\:x x toGplot: Nil), filter_v: (\:x x isNil not).
+      var v is data join: 'e\n'.
+      io write: v.
+    }.
+    ^io.
+  }.
 }.
-GnuPlot learn: 'plotList:' means: 'plotList:opts:'.
+
+var DataSet is Object cnew: {
+  on: 'type' do: {\ 'DataSet' }.
+  genAccessors: ['title', 'with', 'using', 'data', 'linewidth', 'linecolor',
+                  'matrix', 'smooth', 'axes', 'index', 'linestyle'].
+
+  learn: 'ls' means: 'linestyle',
+  learn: 'ls:' means: 'linestyle:'.
+
+  on: 'init:withBlock:' do: {:data:block
+    data => data.
+    linestyle => title => with => using => linewidth => linecolor => matrix =>
+      smooth => axes => index => Nil.
+    block isNil ifFalse: {
+      Reflect runHere: block forObject: me arguments: [].
+    }.
+  }.
+
+  on: 'plotArgs:' do: {:&io
+    io isNil ifTrue: { io is ''. }.
+
+    # Order of these is important or gnuplot barfs on 'em
+    io write: (my data isA: String, either: my data or: ?>'-'<?).
+    io write: (my index isNil not  either: ' index ${{my index}}$' or: '').
+    io write: (my using isNil not  either: ' using ${{my using}}$' or: '').
+    io write: (my axes  isNil not  either: ' axes ${{my axes}}$'   or: '').
+    io write: (my title isNil not  either: ' title \'${{my title}}$\'' or: '').
+    io write: (my matrix isNil not either: ' matrix' or: '').
+    io write: (my smooth isNil not either: ' smooth ${{my smooth}}$' or: '').
+    io write: (my with isNil not   either: ' with ${{my with}}$' or: '').
+    io write: (my linecolor isNil not either: ' linecolor ${{my linecolor}}$' or: '').
+    io write: (my linewidth isNil not either: ' linewidth ${{my linewidth}}$' or: '').
+    io write: (my linestyle isNil not either: ' linestyle ${{my linestyle}}$' or: '').
+    ^io.
+  }.
+
+  on: 'toGplot:' do: {:io
+    io isNil ifTrue: { io is ''. }.
+
+    my data isNil ifFalse: {
+      my data isA: String, ifTrue: { ^Nil. }.
+      ^my data toGplot: io.
+    }.
+    ^ Nil.
+  }.
+}.
+
+Array on: 'toGplot:' do: {:&io
+  io isNil ifTrue: { io is ''. }.
+
+  me count = 0 ifTrue: {
+    ^io.
+  }.
+
+  var ff is me head.
+  ff isA: Array, ifTrue: {
+    ^([ff] + (me from: 1 length: (me count - 1))) zip fmap: (\:x x join: ' '), join: '\n', + '\ne'.
+  } ifFalse: {
+    ff isA: Number, ifTrue: {
+      ^me join: '\n'.
+    } ifFalse: {
+      ^([ff] + (me from: 1 length: (me count - 2))) zip toGplot: io.
+    }.
+  }.
+}.
+
+var Style is Object cnew: {
+  on: 'type' do: {\ 'Style' }.
+  genAccessors: ['linestyle', 'linetype', 'linewidth', 'linecolor', 'pointtype',
+                  'pointsize', 'fill', 'index'].
+
+  learn: 'ls' means: 'linestyle',
+  learn: 'lt' means: 'linetype',
+  learn: 'lw' means: 'linewidth',
+  learn: 'lc' means: 'linecolor',
+  learn: 'pt' means: 'pointtype',
+  learn: 'ps' means: 'pointsize',
+  learn: 'fs' means: 'fill'.
+
+  learn: 'ls:' means: 'linestyle:',
+  learn: 'lt:' means: 'linetype:',
+  learn: 'lw:' means: 'linewidth:',
+  learn: 'lc:' means: 'linecolor:',
+  learn: 'pt:' means: 'pointtype:',
+  learn: 'ps:' means: 'pointsize:',
+  learn: 'fs:' means: 'fill:'.
+
+  var m_index is 0.
+
+  on: 'increment_index' do: {
+      ^const m_index +=: 1.
+  }.
+
+  on: 'init:' do: {:self:block
+    styles => ['ls', 'lt', 'lw', 'lc', 'pt', 'ps', 'fs'].
+    my styles each_v: {:s
+      var style is self message: s + ':' arguments: [Nil].
+    }.
+    block isNil ifTrue: {
+      my index isNil ifTrue: {
+        my index is me increment_index.
+      }.
+    } ifFalse: {
+      Reflect runHere: block forObject: me arguments: [].
+    }.
+  }.
+
+  on: 'toString' do: {:self
+    var str is 'set style line ${{my index}}$'.
+    my styles each_v: {:s
+      var style is self message: s arguments: [].
+      style isNil ifFalse: {
+        str +=: ' $$s $$style'.
+      }.
+    }.
+    ^str.
+  }.
+}.
+
+var GnuPlot is Object cnew: {
+  on: 'type' do: {\ 'GnuPlot' }.
+  on: 'which:' do: {:bin ^Shell which: bin, trim. }.
+  on: 'gnuplot' do: {:persist
+    var exe_loc is which: (Program env: 'CTR_GNUPLOT', or: 'gnuplot').
+    exe_loc = '' ifTrue: { thisBlock error: 'gnuplot executable not found'. }.
+    ^'"${{exe_loc}}$"' + (persist either: ' -persist' or: '').
+  }.
+  on: 'open:' do: {:block
+    var cmd is gnuplotPersist: True.
+    var io is Shell open: cmd mode: 'w'.
+    block[io].
+    io close.
+  }.
+  learn: 'gnuplotPersist:' means: 'gnuplot'.
+}.

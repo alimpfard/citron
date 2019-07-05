@@ -1,0 +1,31 @@
+import Library/Graphics/Plot/GnuPlot: \*.
+
+var gp is File special: 'stdout'.
+# GnuPlot open: {:gp
+    Plot new: gp do: {
+      title: 'Sine Wave Example'.
+      xrange: '[-10:10]'.
+      ylabel: 'x'.
+      xlabel: 'sin(x)'.
+
+      var x is (0..50) toArray.
+      var y is x fmap: \:x x pow: 2.
+      var y2 is x fmap: \:x x sin abs.
+
+      data: [
+        (DataSet new init: 'sin(x)' withBlock: {
+          with: 'lines'.
+          title: 'String function'.
+          linewidth: 4.
+        }),
+        (DataSet new init: [x, y] withBlock: {
+          with: 'linespoints'.
+          title: 'Array data'.
+        }),
+        (DataSet new init: [x, y2] withBlock: {
+          with: 'lines'.
+          title: 'Array data |sin(x)|'.
+        })
+      ].
+    }.
+# }.

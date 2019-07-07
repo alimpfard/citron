@@ -91,7 +91,7 @@ ctr_object *ctr_cwlk_message(ctr_tnode *paramNode) {
     r = ctr_build_number_from_string(receiverNode->value, receiverNode->vlen);
     break;
   case CTR_AST_NODE_EMBED:
-    if (receiverNode->modifier)
+    if (!receiverNode->modifier)
       result = ctr_cwlk_expr(receiverNode->nodes->node, "\0");
     else {
       result = (ctr_object *)receiverNode->nodes->node;

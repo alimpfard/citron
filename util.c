@@ -133,7 +133,7 @@ void ctr_internal_debug_tree(ctr_tnode *ti, int indent) {
       strncpy(vbuf, "<Symbol>", 8);
     else
       strncpy(vbuf, t->value, t->vlen);
-    printf("%s %s (%p)\n", str, vbuf, (void *)t);
+    printf("%s[%d] %s (%p)\n", str, t->modifier, vbuf, (void *)t);
     ctr_heap_free(vbuf);
     if (t->nodes && t->type != CTR_AST_NODE_EMBED)
       ctr_internal_debug_tree(t, indent + 1);

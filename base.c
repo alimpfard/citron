@@ -4968,7 +4968,12 @@ ctr_object *ctr_build_block(ctr_tnode *node) {
       ctr_internal_create_object(CTR_OBJECT_TYPE_OTBLOCK);
   codeBlockObject->value.block = node;
   ctr_set_link_all(codeBlockObject, CtrStdBlock);
+  //printf("----------- %p ------------\n", node);
+  //ctr_internal_debug_tree(node, 1);
   ctr_capture_refs(node, codeBlockObject);
+  //printf("----------- %p ------------\n", node);
+  //ctr_internal_debug_tree(node, 1);
+  //printf("----------- %p ------------\n", node);
   return codeBlockObject;
 }
 
@@ -5353,8 +5358,15 @@ void ctr_capture_refs_(ctr_tnode *ti, ctr_object *block, ctr_object *parent,
         if (!value && parent)
           value = ctr_internal_object_find_property(
               parent, key, CTR_CATEGORY_PRIVATE_PROPERTY);
-        if (value)
-          ctr_internal_object_add_property(block, key, value, 0);
+        if (value) {
+          //if (value != CtrStdNil) {
+          //  t->type = CTR_AST_NODE_EMBED;
+          //  t->modifier = 1;
+          //  t->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
+          //  t->nodes->node = (ctr_tnode*) value;
+          //} else
+            ctr_internal_object_add_property(block, key, value, 0);
+        }
         else if (!noerror)
           ctr_find_(key, noerror);
       }

@@ -1252,6 +1252,8 @@ void ctr_open_context() {
  * Closes a context.
  */
 void ctr_close_context() {
+  // ctr_contexts[ctr_context_id]->properties->head = NULL;
+  // ctr_contexts[ctr_context_id]->properties->size = 0;
   ctr_contexts[ctr_context_id]->info.sticky = 0;
   if (ctr_context_id == 0)
     return;

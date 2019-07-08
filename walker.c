@@ -92,16 +92,16 @@ ctr_object *ctr_cwlk_message(ctr_tnode *paramNode) {
     break;
   case CTR_AST_NODE_EMBED:
     if (!receiverNode->modifier)
-      result = ctr_cwlk_expr(receiverNode->nodes->node, "\0");
+      result = r = ctr_cwlk_expr(receiverNode->nodes->node, "\0");
     else {
-      result = (ctr_object *)receiverNode->nodes->node;
+      result = r = (ctr_object *)receiverNode->nodes->node;
     }
     break;
   case CTR_AST_NODE_LISTCOMP:
-    result = ctr_build_listcomp(receiverNode);
+    result = r = ctr_build_listcomp(receiverNode);
     break;
   case CTR_AST_NODE_NATIVEFN:
-    result = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNATFUNC);
+    result = r = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNATFUNC);
     result->value.fvalue = (void *)receiverNode->value;
     ctr_set_link_all(result, CtrStdBlock);
     break;

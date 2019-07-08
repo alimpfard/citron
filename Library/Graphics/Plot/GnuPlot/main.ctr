@@ -2,9 +2,25 @@ String on: 'write:' do: {:x me +=: x. }.
 
 var Plot is Object cnew: {:self
   on: 'type' do: {\ 'Plot' }.
+  on: 'toString' do: { ^'Plot'. }.
+  initialized => False.
+
   genAccessors: ['cmd', 'data', 'settings', 'arbitrary_lines'].
+  on: 'initialized' do: { ^my initialized. }.
+
   on: 'new:do:' do: {:&io:block
-    ^me new initWithIO: io andCommand: 'plot' andBlock: block.
+    ^me new preinit initWithIO: io andCommand: 'plot' andBlock: block.
+  }.
+  on: 'new:' do: {:block
+    ^me new preinit initWithIO: '' andCommand: 'plot' andBlock: block.
+  }.
+  on: 'toIO:' do: {:&io toGplot: io. storeDatasets: io. }.
+  on: 'do:' do: {:block
+    Reflect runHere: block forObject: me arguments: [].
+  }.
+  on: 'preinit' do: {
+    quoted => ['title', 'output', 'xlabel', 'ylabel', 'y2label', 'clabel', 'cblabel', 'zlabel'].
+    initialized => False.
   }.
   on: 'initWithIO:andCommand:andBlock:' do: {:&io:cmd:block
     cmd => cmd.
@@ -12,10 +28,11 @@ var Plot is Object cnew: {:self
     arbitrary_lines => Array new.
     data => Array new.
     styles => Array new.
-    quoted => ['title', 'output', 'xlabel', 'ylabel', 'y2label', 'clabel', 'cblabel', 'zlabel'].
+    initialized => True.
     block isNil ifFalse: {
       Reflect runHere: block forObject: me arguments: [].
     }.
+    io => io.
     io isNil ifFalse: {
       toGplot: io.
       storeDatasets: io.
@@ -96,6 +113,7 @@ var Plot is Object cnew: {:self
 
 var DataSet is Object cnew: {
   on: 'type' do: {\ 'DataSet' }.
+  on: 'toString' do: { ^'DataSet'. }.
   genAccessors: ['title', 'with', 'using', 'data', 'linewidth', 'linecolor',
                   'matrix', 'smooth', 'axes', 'index', 'linestyle'].
 
@@ -214,6 +232,7 @@ var Style is Object cnew: {
 
 var GnuPlot is Object cnew: {
   on: 'type' do: {\ 'GnuPlot' }.
+  on: 'toString' do: { ^'GnuPlot'. }.
   on: 'which:' do: {:bin ^Shell which: bin, trim. }.
   on: 'gnuplot' do: {:persist
     var exe_loc is which: (Program env: 'CTR_GNUPLOT', or: 'gnuplot').

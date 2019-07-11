@@ -417,7 +417,8 @@ ctr_object *ctr_generator_internal_next(ctr_generator *genny, int gtype) {
     do {
       argm->next->object = ctr_generator_internal_next(igen, igen_type);
     } while ((argm->next->object == generator_end_marker && !igen->finished) ||
-             (argm->next->object != generator_end_marker && !ctr_block_run(fn, argm, fn)->value.bvalue));
+             (argm->next->object != generator_end_marker &&
+              !ctr_block_run(fn, argm, fn)->value.bvalue));
     genny->finished = genny->finished || igen->finished;
     if (argm->next->object == generator_end_marker)
       return argm->next->object;

@@ -621,7 +621,8 @@ void ctr_match_toggle_pragma() {
     int t0 = ctr_clex_tok(), t1 = ctr_clex_tok();
     ctr_set_pragma(callShorthand, t0, t1);
     // while(isspace(*ctr_clex_oldptr)) ctr_clex_oldptr++; //no chance of it
-    // falling off ctr_clex_oldptr++; while(*(ctr_code--) != '\n'); //go back out
+    // falling off ctr_clex_oldptr++; while(*(ctr_code--) != '\n'); //go back
+    // out
     ctr_clex_olderptr = ctr_code;
     ctr_clex_oldptr = ctr_code;
     ctr_code--;
@@ -811,9 +812,9 @@ int ctr_clex_tok() {
       if (t == CTR_TOKEN_COLON) { // transform \:x expr to {\:x expr}
         ctr_transform_lambda_shorthand = 1;
         return CTR_TOKEN_BLOCKOPEN_MAP; // HACK This thing here simply
-                                        // transforms the syntax, however we fool
-                                        // the in-language lexer to think that
-                                        // this is actually a ref
+                                        // transforms the syntax, however we
+                                        // fool the in-language lexer to think
+                                        // that this is actually a ref
       } else { // if not a (\:x expr) then it's simply a message
         ctr_clex_buffer[0] = '\\';
         ctr_clex_tokvlen = 1;
@@ -934,7 +935,6 @@ int ctr_clex_tok() {
       if (((ctr_code + 2) < ctr_eofcode) && *(ctr_code + 2) == -72)
         return CTR_TOKEN_FANCY_QUOT_CLOS;
     }
-
   }
   if (c == '\'') {
     ctr_code++;
@@ -1144,17 +1144,17 @@ char *ctr_clex_readfstr() {
   ctr_clex_tokvlen = 0;
   strbuff = ctr_heap_allocate_tracked(memblock);
   tracking_id = ctr_heap_get_latest_tracking_id();
-  c = *(ctr_code+=3);
+  c = *(ctr_code += 3);
   beginbuff = strbuff;
   while (1) {
     if (c == 0)
-     break;
+      break;
     if (c == '\n')
       ctr_clex_line_number++;
     if (c == -30) {
       if (((ctr_code + 1) < ctr_eofcode) && *(ctr_code + 1) == -128 &&
           ((ctr_code + 2) < ctr_eofcode) && *(ctr_code + 2) == -70) {
-            break;
+        break;
       }
     }
     ctr_clex_tokvlen++;

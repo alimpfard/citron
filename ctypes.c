@@ -39,8 +39,8 @@ wrapped_ffi_type *ctr_ctype_citron_object_try_infer_type(ctr_object *object) {
       return &wrapped_ffi_type_sint64;
     return &wrapped_ffi_type_double;
   }
-  case CTR_OBJECT_TYPE_OTARRAY: // if an array, pass array
-    return &wrapped_ffi_type_pointer;   // only doubles for now
+  case CTR_OBJECT_TYPE_OTARRAY:       // if an array, pass array
+    return &wrapped_ffi_type_pointer; // only doubles for now
   case CTR_OBJECT_TYPE_OTSTRING:
     return &wrapped_ffi_type_pointer;
   case CTR_OBJECT_TYPE_OTEX:
@@ -74,8 +74,9 @@ void ctr_run_function_ptr(ffi_cif *cif, void *ret, void *args[],
   argumentList = ctrargs;
   ctr_object *result = ctr_block_run(
       (ctr_object *)function, argumentList,
-      (ctr_object *)function); // No type information for args, so we can't
-                               // deconstruct them unless provided with type info
+      (ctr_object *)
+          function); // No type information for args, so we can't
+                     // deconstruct them unless provided with type info
   ffi_type *type =
       return_t ? return_t : ctr_ctype_citron_object_try_infer_type(result);
   if (type)
@@ -274,10 +275,10 @@ CTR_CT_SIMPLE_TYPE_FUNC_SET(uint8) {
 }
 
 CTR_CT_SIMPLE_TYPE_FUNC_GET(uint8) {
-  return ctr_build_number_from_float(
-      (double)(*((uint8_t *)(myself->value.rvalue
-                                 ->ptr)))); // kinda derpy in bigger
-                                            // values...meh will see if it derps.
+  return ctr_build_number_from_float((
+      double)(*((uint8_t *)(myself->value.rvalue
+                                ->ptr)))); // kinda derpy in bigger
+                                           // values...meh will see if it derps.
   // TODO: Check if derps
 }
 
@@ -1131,43 +1132,61 @@ ctr_object *ctr_ctypes_packed_type(ctr_object *myself,
   }
   ffi_type *etype = ptr->etype;
 
-  if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_uint8)
+  if (etype == (ffi_type *)&wrapped_ffi_type_uint8 || etype == &ffi_type_uint8)
     return ctr_build_number_from_float(0);
-  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_sint8)
+  else if (etype == (ffi_type *)&wrapped_ffi_type_uint8 ||
+           etype == &ffi_type_sint8)
     return ctr_build_number_from_float(1);
-  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_uint16)
+  else if (etype == (ffi_type *)&wrapped_ffi_type_uint8 ||
+           etype == &ffi_type_uint16)
     return ctr_build_number_from_float(2);
-  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_sint16)
+  else if (etype == (ffi_type *)&wrapped_ffi_type_uint8 ||
+           etype == &ffi_type_sint16)
     return ctr_build_number_from_float(3);
-  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_uint32)
+  else if (etype == (ffi_type *)&wrapped_ffi_type_uint8 ||
+           etype == &ffi_type_uint32)
     return ctr_build_number_from_float(4);
-  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_sint32)
+  else if (etype == (ffi_type *)&wrapped_ffi_type_uint8 ||
+           etype == &ffi_type_sint32)
     return ctr_build_number_from_float(5);
-  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_uint64)
+  else if (etype == (ffi_type *)&wrapped_ffi_type_uint8 ||
+           etype == &ffi_type_uint64)
     return ctr_build_number_from_float(6);
-  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_sint64)
+  else if (etype == (ffi_type *)&wrapped_ffi_type_uint8 ||
+           etype == &ffi_type_sint64)
     return ctr_build_number_from_float(7);
-  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_uchar)
+  else if (etype == (ffi_type *)&wrapped_ffi_type_uint8 ||
+           etype == &ffi_type_uchar)
     return ctr_build_number_from_float(8);
-  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_schar)
+  else if (etype == (ffi_type *)&wrapped_ffi_type_uint8 ||
+           etype == &ffi_type_schar)
     return ctr_build_number_from_float(9);
-  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_ushort)
+  else if (etype == (ffi_type *)&wrapped_ffi_type_uint8 ||
+           etype == &ffi_type_ushort)
     return ctr_build_number_from_float(10);
-  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_sshort)
+  else if (etype == (ffi_type *)&wrapped_ffi_type_uint8 ||
+           etype == &ffi_type_sshort)
     return ctr_build_number_from_float(11);
-  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_uint)
+  else if (etype == (ffi_type *)&wrapped_ffi_type_uint8 ||
+           etype == &ffi_type_uint)
     return ctr_build_number_from_float(12);
-  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_sint)
+  else if (etype == (ffi_type *)&wrapped_ffi_type_uint8 ||
+           etype == &ffi_type_sint)
     return ctr_build_number_from_float(13);
-  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_ulong)
+  else if (etype == (ffi_type *)&wrapped_ffi_type_uint8 ||
+           etype == &ffi_type_ulong)
     return ctr_build_number_from_float(14);
-  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_slong)
+  else if (etype == (ffi_type *)&wrapped_ffi_type_uint8 ||
+           etype == &ffi_type_slong)
     return ctr_build_number_from_float(15);
-  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_float)
+  else if (etype == (ffi_type *)&wrapped_ffi_type_uint8 ||
+           etype == &ffi_type_float)
     return ctr_build_number_from_float(16);
-  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_double)
+  else if (etype == (ffi_type *)&wrapped_ffi_type_uint8 ||
+           etype == &ffi_type_double)
     return ctr_build_number_from_float(17);
-  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_longdouble)
+  else if (etype == (ffi_type *)&wrapped_ffi_type_uint8 ||
+           etype == &ffi_type_longdouble)
     return ctr_build_number_from_float(18);
   return ctr_build_number_from_float(-1);
 }
@@ -1946,47 +1965,65 @@ wrapped_ffi_type *ctr_ctypes_ffi_convert_ctype_to_ffi_type(ctr_ctype type) {
 }
 
 ctr_ctype ctr_ctypes_ffi_convert_ffi_type_to_ctype(ffi_type *type) {
-  if (type == (ffi_type*) &wrapped_ffi_type_void || type == &ffi_type_void)
+  if (type == (ffi_type *)&wrapped_ffi_type_void || type == &ffi_type_void)
     return CTR_CTYPE_VOID;
-  else if (type == (ffi_type*) &wrapped_ffi_type_uint8 || type == &ffi_type_uint8)
+  else if (type == (ffi_type *)&wrapped_ffi_type_uint8 ||
+           type == &ffi_type_uint8)
     return CTR_CTYPE_UINT8;
-  else if (type == (ffi_type*) &wrapped_ffi_type_sint8 || type == &ffi_type_sint8)
+  else if (type == (ffi_type *)&wrapped_ffi_type_sint8 ||
+           type == &ffi_type_sint8)
     return CTR_CTYPE_SINT8;
-  else if (type == (ffi_type*) &wrapped_ffi_type_uint16 || type == &ffi_type_uint16)
+  else if (type == (ffi_type *)&wrapped_ffi_type_uint16 ||
+           type == &ffi_type_uint16)
     return CTR_CTYPE_UINT16;
-  else if (type == (ffi_type*) &wrapped_ffi_type_sint16 || type == &ffi_type_sint16)
+  else if (type == (ffi_type *)&wrapped_ffi_type_sint16 ||
+           type == &ffi_type_sint16)
     return CTR_CTYPE_SINT16;
-  else if (type == (ffi_type*) &wrapped_ffi_type_uint32 || type == &ffi_type_uint32)
+  else if (type == (ffi_type *)&wrapped_ffi_type_uint32 ||
+           type == &ffi_type_uint32)
     return CTR_CTYPE_UINT32;
-  else if (type == (ffi_type*) &wrapped_ffi_type_sint32 || type == &ffi_type_sint32)
+  else if (type == (ffi_type *)&wrapped_ffi_type_sint32 ||
+           type == &ffi_type_sint32)
     return CTR_CTYPE_SINT32;
-  else if (type == (ffi_type*) &wrapped_ffi_type_uint64 || type == &ffi_type_uint64)
+  else if (type == (ffi_type *)&wrapped_ffi_type_uint64 ||
+           type == &ffi_type_uint64)
     return CTR_CTYPE_UINT64;
-  else if (type == (ffi_type*) &wrapped_ffi_type_sint64 || type == &ffi_type_sint64)
+  else if (type == (ffi_type *)&wrapped_ffi_type_sint64 ||
+           type == &ffi_type_sint64)
     return CTR_CTYPE_SINT64;
-  else if (type == (ffi_type*) &wrapped_ffi_type_float || type == &ffi_type_float)
+  else if (type == (ffi_type *)&wrapped_ffi_type_float ||
+           type == &ffi_type_float)
     return CTR_CTYPE_FLOAT;
-  else if (type == (ffi_type*) &wrapped_ffi_type_double || type == &ffi_type_double)
+  else if (type == (ffi_type *)&wrapped_ffi_type_double ||
+           type == &ffi_type_double)
     return CTR_CTYPE_DOUBLE;
-  else if (type == (ffi_type*) &wrapped_ffi_type_uchar || type == &ffi_type_uchar)
+  else if (type == (ffi_type *)&wrapped_ffi_type_uchar ||
+           type == &ffi_type_uchar)
     return CTR_CTYPE_UCHAR;
-  else if (type == (ffi_type*) &wrapped_ffi_type_schar || type == &ffi_type_schar)
+  else if (type == (ffi_type *)&wrapped_ffi_type_schar ||
+           type == &ffi_type_schar)
     return CTR_CTYPE_SCHAR;
-  else if (type == (ffi_type*) &wrapped_ffi_type_ushort || type == &ffi_type_ushort)
+  else if (type == (ffi_type *)&wrapped_ffi_type_ushort ||
+           type == &ffi_type_ushort)
     return CTR_CTYPE_USHORT;
-  else if (type == (ffi_type*) &wrapped_ffi_type_sshort || type == &ffi_type_sshort)
+  else if (type == (ffi_type *)&wrapped_ffi_type_sshort ||
+           type == &ffi_type_sshort)
     return CTR_CTYPE_SSHORT;
-  else if (type == (ffi_type*) &wrapped_ffi_type_uint || type == &ffi_type_uint)
+  else if (type == (ffi_type *)&wrapped_ffi_type_uint || type == &ffi_type_uint)
     return CTR_CTYPE_UINT;
-  else if (type == (ffi_type*) &wrapped_ffi_type_sint || type == &ffi_type_sint)
+  else if (type == (ffi_type *)&wrapped_ffi_type_sint || type == &ffi_type_sint)
     return CTR_CTYPE_SINT;
-  else if (type == (ffi_type*) &wrapped_ffi_type_ulong || type == &ffi_type_ulong)
+  else if (type == (ffi_type *)&wrapped_ffi_type_ulong ||
+           type == &ffi_type_ulong)
     return CTR_CTYPE_ULONG;
-  else if (type == (ffi_type*) &wrapped_ffi_type_slong || type == &ffi_type_slong)
+  else if (type == (ffi_type *)&wrapped_ffi_type_slong ||
+           type == &ffi_type_slong)
     return CTR_CTYPE_SLONG;
-  else if (type == (ffi_type*) &wrapped_ffi_type_longdouble || type == &ffi_type_longdouble)
+  else if (type == (ffi_type *)&wrapped_ffi_type_longdouble ||
+           type == &ffi_type_longdouble)
     return CTR_CTYPE_LONGDOUBLE;
-  else if (type == (ffi_type*) &wrapped_ffi_type_pointer || type == &ffi_type_pointer)
+  else if (type == (ffi_type *)&wrapped_ffi_type_pointer ||
+           type == &ffi_type_pointer)
     return CTR_CTYPE_POINTER;
   return CTR_CTYPE_INVALID;
 }
@@ -2167,7 +2204,8 @@ CTR_CT_FFI_BIND(
     if (type->type == FFI_TYPE_STRUCT)
       avals[i] =
           ((ctr_ctypes_ffi_struct_value *)(obj->value.rvalue->ptr))->value;
-    else if ((type == (ffi_type*) &wrapped_ffi_type_pointer || type == &ffi_type_pointer) &&
+    else if ((type == (ffi_type *)&wrapped_ffi_type_pointer ||
+              type == &ffi_type_pointer) &&
              obj->info.type == CTR_OBJECT_TYPE_OTBLOCK) {
       void **bound_f = ctr_heap_allocate(sizeof(void *));
       ffi_closure *closure = ffi_closure_alloc(sizeof(ffi_closure), bound_f);

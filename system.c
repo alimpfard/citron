@@ -2856,15 +2856,17 @@ typedef struct {
 
 // this is a pretty ugly hack, but the only way to help the GC
 // get around the TLS issues
-static ctr_thread_workaround_double_list_t ctr_thread_workaround_double_list_t_sentinel = {0,0,0};
-ctr_thread_workaround_double_list_t *ctr_thread_workaround_double_list = &ctr_thread_workaround_double_list_t_sentinel;
+static ctr_thread_workaround_double_list_t
+    ctr_thread_workaround_double_list_t_sentinel = {0, 0, 0};
+ctr_thread_workaround_double_list_t *ctr_thread_workaround_double_list =
+    &ctr_thread_workaround_double_list_t_sentinel;
 
 typedef struct {
   volatile int waiting_for_join;
   int detached;
   ctr_object *target;
   ctr_object *args;
-  struct ctr_context_t* starting_context;
+  struct ctr_context_t *starting_context;
   ctr_thread_return_t *last_result; // please leave null
   pthread_mutex_t *mutex;
   pthread_t *thread;
@@ -2891,14 +2893,14 @@ void *ctr_run_thread_func(ctr_thread_t *threadt) {
   ctr_load_context(*threadt->starting_context);
 
   // copy our context to the global dlist
-  volatile ctr_thread_workaround_double_list_t* tw = ctr_heap_allocate(sizeof(*tw));
+  volatile ctr_thread_workaround_double_list_t *tw =
+      ctr_heap_allocate(sizeof(*tw));
   tw->next = NULL;
   tw->prev = ctr_thread_workaround_double_list;
   tw->context = ctr_contexts;
   ctr_thread_workaround_double_list = tw;
 
-  ctr_object *result =
-      ctr_block_run(threadt->target, args, threadt->target);
+  ctr_object *result = ctr_block_run(threadt->target, args, threadt->target);
   ctr_deallocate_argument_list(args);
 
   // ctr_switch_context(oct);
@@ -2979,8 +2981,7 @@ ctr_object *ctr_thread_set_target(ctr_object *myself,
   thdesc->starting_context = ctr_heap_allocate(sizeof(struct ctr_context_t));
   ctr_dump_context(thdesc->starting_context);
   pthread_mutex_lock(thdesc->mutex);
-  pthread_create(thread, NULL, (voidptrfn_t *)&ctr_run_thread_func,
-                 thdesc);
+  pthread_create(thread, NULL, (voidptrfn_t *)&ctr_run_thread_func, thdesc);
   char name[16];
   char pname[16];
   pthread_getname_np(pthread_self(), pname, 16);
@@ -3004,19 +3005,21 @@ ctr_object *ctr_thread_detach(ctr_object *myself, ctr_argument *argumentList) {
   int err;
   ctr_thread_t *thdesc;
   if (!myself->value.rvalue->ptr) {
-    CtrStdFlow = ctr_build_string_from_cstring("Cannot detach a thread that is not started");
+    CtrStdFlow = ctr_build_string_from_cstring(
+        "Cannot detach a thread that is not started");
     return CtrStdNil;
   } else {
     thdesc = ((ctr_thread_t *)myself->value.rvalue->ptr);
     thread = thdesc->thread;
     if (thdesc->detached) {
-        CtrStdFlow = ctr_build_string_from_cstring("This thread is already detached");
-        return CtrStdNil;
+      CtrStdFlow =
+          ctr_build_string_from_cstring("This thread is already detached");
+      return CtrStdNil;
     }
   }
   if ((err = pthread_detach(*thread))) {
-      CtrStdFlow = ctr_format_str("ECannot detach the thread: %s", strerror(err));
-      return CtrStdNil;
+    CtrStdFlow = ctr_format_str("ECannot detach the thread: %s", strerror(err));
+    return CtrStdNil;
   }
   thdesc->detached = 1;
   return myself;
@@ -3053,8 +3056,7 @@ ctr_object *ctr_thread_set_args(ctr_object *myself,
   thdesc->starting_context = ctr_heap_allocate(sizeof(struct ctr_context_t));
   ctr_dump_context(thdesc->starting_context);
   pthread_mutex_lock(thdesc->mutex);
-  pthread_create(thread, NULL, (voidptrfn_t *)&ctr_run_thread_func,
-                 thdesc);
+  pthread_create(thread, NULL, (voidptrfn_t *)&ctr_run_thread_func, thdesc);
   char name[16];
   char pname[16];
   pthread_getname_np(pthread_self(), pname, 16);
@@ -3099,8 +3101,7 @@ ctr_object *ctr_thread_make_set_target(ctr_object *myself,
   inst->value.rvalue->ptr = thdesc;
   thdesc->target = argumentList->object;
   pthread_mutex_lock(thdesc->mutex);
-  pthread_create(thread, NULL, (voidptrfn_t *)&ctr_run_thread_func,
-                 thdesc);
+  pthread_create(thread, NULL, (voidptrfn_t *)&ctr_run_thread_func, thdesc);
   char name[16];
   char pname[16];
   pthread_getname_np(pthread_self(), pname, 16);
@@ -3117,7 +3118,8 @@ ctr_object *ctr_thread_make_set_target(ctr_object *myself,
  *
  * Gives a (probable) result whether the thread is finished running
  */
-ctr_object *ctr_thread_finished(ctr_object *myself, ctr_argument *argumentList) {
+ctr_object *ctr_thread_finished(ctr_object *myself,
+                                ctr_argument *argumentList) {
   ctr_thread_t *thread = myself->value.rvalue->ptr;
   if (!thread)
     return ctr_build_bool(0);

@@ -21,29 +21,135 @@
 int initd = 0;
 
 void ctr_struct_initialize_internal() {
-  if (likely(initd)) return;
+  if (likely(initd))
+    return;
   initd = 1;
-  wrapped_ffi_type_void      = (wrapped_ffi_type){ .size = ffi_type_void.size, .alignment = ffi_type_void.alignment, .type = ffi_type_void.type, .elements = ffi_type_void.elements, .extension_data = WRAPPED_FFI_TYPE_MAGIC };
-  wrapped_ffi_type_uint8     = (wrapped_ffi_type){ .size = ffi_type_uint8.size, .alignment = ffi_type_uint8.alignment, .type = ffi_type_uint8.type, .elements = ffi_type_uint8.elements, .extension_data = WRAPPED_FFI_TYPE_MAGIC };
-  wrapped_ffi_type_sint8     = (wrapped_ffi_type){ .size = ffi_type_sint8.size, .alignment = ffi_type_sint8.alignment, .type = ffi_type_sint8.type, .elements = ffi_type_sint8.elements, .extension_data = WRAPPED_FFI_TYPE_MAGIC };
-  wrapped_ffi_type_uint16    = (wrapped_ffi_type){ .size = ffi_type_uint16.size, .alignment = ffi_type_uint16.alignment, .type = ffi_type_uint16.type, .elements = ffi_type_uint16.elements, .extension_data = WRAPPED_FFI_TYPE_MAGIC };
-  wrapped_ffi_type_sint16    = (wrapped_ffi_type){ .size = ffi_type_sint16.size, .alignment = ffi_type_sint16.alignment, .type = ffi_type_sint16.type, .elements = ffi_type_sint16.elements, .extension_data = WRAPPED_FFI_TYPE_MAGIC };
-  wrapped_ffi_type_uint32    = (wrapped_ffi_type){ .size = ffi_type_uint32.size, .alignment = ffi_type_uint32.alignment, .type = ffi_type_uint32.type, .elements = ffi_type_uint32.elements, .extension_data = WRAPPED_FFI_TYPE_MAGIC };
-  wrapped_ffi_type_sint32    = (wrapped_ffi_type){ .size = ffi_type_sint32.size, .alignment = ffi_type_sint32.alignment, .type = ffi_type_sint32.type, .elements = ffi_type_sint32.elements, .extension_data = WRAPPED_FFI_TYPE_MAGIC };
-  wrapped_ffi_type_uint64    = (wrapped_ffi_type){ .size = ffi_type_uint64.size, .alignment = ffi_type_uint64.alignment, .type = ffi_type_uint64.type, .elements = ffi_type_uint64.elements, .extension_data = WRAPPED_FFI_TYPE_MAGIC };
-  wrapped_ffi_type_sint64    = (wrapped_ffi_type){ .size = ffi_type_sint64.size, .alignment = ffi_type_sint64.alignment, .type = ffi_type_sint64.type, .elements = ffi_type_sint64.elements, .extension_data = WRAPPED_FFI_TYPE_MAGIC };
-  wrapped_ffi_type_uchar     = (wrapped_ffi_type){ .size = ffi_type_uchar.size, .alignment = ffi_type_uchar.alignment, .type = ffi_type_uchar.type, .elements = ffi_type_uchar.elements, .extension_data = WRAPPED_FFI_TYPE_MAGIC };
-  wrapped_ffi_type_schar     = (wrapped_ffi_type){ .size = ffi_type_schar.size, .alignment = ffi_type_schar.alignment, .type = ffi_type_schar.type, .elements = ffi_type_schar.elements, .extension_data = WRAPPED_FFI_TYPE_MAGIC };
-  wrapped_ffi_type_ushort    = (wrapped_ffi_type){ .size = ffi_type_ushort.size, .alignment = ffi_type_ushort.alignment, .type = ffi_type_ushort.type, .elements = ffi_type_ushort.elements, .extension_data = WRAPPED_FFI_TYPE_MAGIC };
-  wrapped_ffi_type_sshort    = (wrapped_ffi_type){ .size = ffi_type_sshort.size, .alignment = ffi_type_sshort.alignment, .type = ffi_type_sshort.type, .elements = ffi_type_sshort.elements, .extension_data = WRAPPED_FFI_TYPE_MAGIC };
-  wrapped_ffi_type_uint      = (wrapped_ffi_type){ .size = ffi_type_uint.size, .alignment = ffi_type_uint.alignment, .type = ffi_type_uint.type, .elements = ffi_type_uint.elements, .extension_data = WRAPPED_FFI_TYPE_MAGIC };
-  wrapped_ffi_type_sint      = (wrapped_ffi_type){ .size = ffi_type_sint.size, .alignment = ffi_type_sint.alignment, .type = ffi_type_sint.type, .elements = ffi_type_sint.elements, .extension_data = WRAPPED_FFI_TYPE_MAGIC };
-  wrapped_ffi_type_ulong     = (wrapped_ffi_type){ .size = ffi_type_ulong.size, .alignment = ffi_type_ulong.alignment, .type = ffi_type_ulong.type, .elements = ffi_type_ulong.elements, .extension_data = WRAPPED_FFI_TYPE_MAGIC };
-  wrapped_ffi_type_slong     = (wrapped_ffi_type){ .size = ffi_type_slong.size, .alignment = ffi_type_slong.alignment, .type = ffi_type_slong.type, .elements = ffi_type_slong.elements, .extension_data = WRAPPED_FFI_TYPE_MAGIC };
-  wrapped_ffi_type_float     = (wrapped_ffi_type){ .size = ffi_type_float.size, .alignment = ffi_type_float.alignment, .type = ffi_type_float.type, .elements = ffi_type_float.elements, .extension_data = WRAPPED_FFI_TYPE_MAGIC };
-  wrapped_ffi_type_double    = (wrapped_ffi_type){ .size = ffi_type_double.size, .alignment = ffi_type_double.alignment, .type = ffi_type_double.type, .elements = ffi_type_double.elements, .extension_data = WRAPPED_FFI_TYPE_MAGIC };
-  wrapped_ffi_type_pointer   = (wrapped_ffi_type){ .size = ffi_type_pointer.size, .alignment = ffi_type_pointer.alignment, .type = ffi_type_pointer.type, .elements = ffi_type_pointer.elements, .extension_data = WRAPPED_FFI_TYPE_MAGIC };
-  wrapped_ffi_type_longdouble= (wrapped_ffi_type){ .size = ffi_type_longdouble.size, .alignment = ffi_type_longdouble.alignment, .type = ffi_type_longdouble.type, .elements = ffi_type_longdouble.elements, .extension_data = WRAPPED_FFI_TYPE_MAGIC };
+  wrapped_ffi_type_void =
+      (wrapped_ffi_type){.size = ffi_type_void.size,
+                         .alignment = ffi_type_void.alignment,
+                         .type = ffi_type_void.type,
+                         .elements = ffi_type_void.elements,
+                         .extension_data = WRAPPED_FFI_TYPE_MAGIC};
+  wrapped_ffi_type_uint8 =
+      (wrapped_ffi_type){.size = ffi_type_uint8.size,
+                         .alignment = ffi_type_uint8.alignment,
+                         .type = ffi_type_uint8.type,
+                         .elements = ffi_type_uint8.elements,
+                         .extension_data = WRAPPED_FFI_TYPE_MAGIC};
+  wrapped_ffi_type_sint8 =
+      (wrapped_ffi_type){.size = ffi_type_sint8.size,
+                         .alignment = ffi_type_sint8.alignment,
+                         .type = ffi_type_sint8.type,
+                         .elements = ffi_type_sint8.elements,
+                         .extension_data = WRAPPED_FFI_TYPE_MAGIC};
+  wrapped_ffi_type_uint16 =
+      (wrapped_ffi_type){.size = ffi_type_uint16.size,
+                         .alignment = ffi_type_uint16.alignment,
+                         .type = ffi_type_uint16.type,
+                         .elements = ffi_type_uint16.elements,
+                         .extension_data = WRAPPED_FFI_TYPE_MAGIC};
+  wrapped_ffi_type_sint16 =
+      (wrapped_ffi_type){.size = ffi_type_sint16.size,
+                         .alignment = ffi_type_sint16.alignment,
+                         .type = ffi_type_sint16.type,
+                         .elements = ffi_type_sint16.elements,
+                         .extension_data = WRAPPED_FFI_TYPE_MAGIC};
+  wrapped_ffi_type_uint32 =
+      (wrapped_ffi_type){.size = ffi_type_uint32.size,
+                         .alignment = ffi_type_uint32.alignment,
+                         .type = ffi_type_uint32.type,
+                         .elements = ffi_type_uint32.elements,
+                         .extension_data = WRAPPED_FFI_TYPE_MAGIC};
+  wrapped_ffi_type_sint32 =
+      (wrapped_ffi_type){.size = ffi_type_sint32.size,
+                         .alignment = ffi_type_sint32.alignment,
+                         .type = ffi_type_sint32.type,
+                         .elements = ffi_type_sint32.elements,
+                         .extension_data = WRAPPED_FFI_TYPE_MAGIC};
+  wrapped_ffi_type_uint64 =
+      (wrapped_ffi_type){.size = ffi_type_uint64.size,
+                         .alignment = ffi_type_uint64.alignment,
+                         .type = ffi_type_uint64.type,
+                         .elements = ffi_type_uint64.elements,
+                         .extension_data = WRAPPED_FFI_TYPE_MAGIC};
+  wrapped_ffi_type_sint64 =
+      (wrapped_ffi_type){.size = ffi_type_sint64.size,
+                         .alignment = ffi_type_sint64.alignment,
+                         .type = ffi_type_sint64.type,
+                         .elements = ffi_type_sint64.elements,
+                         .extension_data = WRAPPED_FFI_TYPE_MAGIC};
+  wrapped_ffi_type_uchar =
+      (wrapped_ffi_type){.size = ffi_type_uchar.size,
+                         .alignment = ffi_type_uchar.alignment,
+                         .type = ffi_type_uchar.type,
+                         .elements = ffi_type_uchar.elements,
+                         .extension_data = WRAPPED_FFI_TYPE_MAGIC};
+  wrapped_ffi_type_schar =
+      (wrapped_ffi_type){.size = ffi_type_schar.size,
+                         .alignment = ffi_type_schar.alignment,
+                         .type = ffi_type_schar.type,
+                         .elements = ffi_type_schar.elements,
+                         .extension_data = WRAPPED_FFI_TYPE_MAGIC};
+  wrapped_ffi_type_ushort =
+      (wrapped_ffi_type){.size = ffi_type_ushort.size,
+                         .alignment = ffi_type_ushort.alignment,
+                         .type = ffi_type_ushort.type,
+                         .elements = ffi_type_ushort.elements,
+                         .extension_data = WRAPPED_FFI_TYPE_MAGIC};
+  wrapped_ffi_type_sshort =
+      (wrapped_ffi_type){.size = ffi_type_sshort.size,
+                         .alignment = ffi_type_sshort.alignment,
+                         .type = ffi_type_sshort.type,
+                         .elements = ffi_type_sshort.elements,
+                         .extension_data = WRAPPED_FFI_TYPE_MAGIC};
+  wrapped_ffi_type_uint =
+      (wrapped_ffi_type){.size = ffi_type_uint.size,
+                         .alignment = ffi_type_uint.alignment,
+                         .type = ffi_type_uint.type,
+                         .elements = ffi_type_uint.elements,
+                         .extension_data = WRAPPED_FFI_TYPE_MAGIC};
+  wrapped_ffi_type_sint =
+      (wrapped_ffi_type){.size = ffi_type_sint.size,
+                         .alignment = ffi_type_sint.alignment,
+                         .type = ffi_type_sint.type,
+                         .elements = ffi_type_sint.elements,
+                         .extension_data = WRAPPED_FFI_TYPE_MAGIC};
+  wrapped_ffi_type_ulong =
+      (wrapped_ffi_type){.size = ffi_type_ulong.size,
+                         .alignment = ffi_type_ulong.alignment,
+                         .type = ffi_type_ulong.type,
+                         .elements = ffi_type_ulong.elements,
+                         .extension_data = WRAPPED_FFI_TYPE_MAGIC};
+  wrapped_ffi_type_slong =
+      (wrapped_ffi_type){.size = ffi_type_slong.size,
+                         .alignment = ffi_type_slong.alignment,
+                         .type = ffi_type_slong.type,
+                         .elements = ffi_type_slong.elements,
+                         .extension_data = WRAPPED_FFI_TYPE_MAGIC};
+  wrapped_ffi_type_float =
+      (wrapped_ffi_type){.size = ffi_type_float.size,
+                         .alignment = ffi_type_float.alignment,
+                         .type = ffi_type_float.type,
+                         .elements = ffi_type_float.elements,
+                         .extension_data = WRAPPED_FFI_TYPE_MAGIC};
+  wrapped_ffi_type_double =
+      (wrapped_ffi_type){.size = ffi_type_double.size,
+                         .alignment = ffi_type_double.alignment,
+                         .type = ffi_type_double.type,
+                         .elements = ffi_type_double.elements,
+                         .extension_data = WRAPPED_FFI_TYPE_MAGIC};
+  wrapped_ffi_type_pointer =
+      (wrapped_ffi_type){.size = ffi_type_pointer.size,
+                         .alignment = ffi_type_pointer.alignment,
+                         .type = ffi_type_pointer.type,
+                         .elements = ffi_type_pointer.elements,
+                         .extension_data = WRAPPED_FFI_TYPE_MAGIC};
+  wrapped_ffi_type_longdouble =
+      (wrapped_ffi_type){.size = ffi_type_longdouble.size,
+                         .alignment = ffi_type_longdouble.alignment,
+                         .type = ffi_type_longdouble.type,
+                         .elements = ffi_type_longdouble.elements,
+                         .extension_data = WRAPPED_FFI_TYPE_MAGIC};
 }
 /*
     v      wrapped_ffi_type_void
@@ -71,7 +177,8 @@ void ctr_struct_initialize_internal() {
     {...}  union
     <\d+>  pad with size
  */
-wrapped_ffi_type *ctr_ffi_type_get_format_splat(char **format, ssize_t *this_size) {
+wrapped_ffi_type *ctr_ffi_type_get_format_splat(char **format,
+                                                ssize_t *this_size) {
   ctr_struct_initialize_internal();
   switch (**format) {
     // case 'v': *this_size = sizeof(void); return &wrapped_ffi_type_void;
@@ -233,7 +340,7 @@ wrapped_ffi_type *ctr_ffi_type_get_format_splat(char **format, ssize_t *this_siz
 
 int ctr_ffi_type_struct_sizeof(
     char *format) { // XXX: does not generate padding bytes
-      ctr_struct_initialize_internal();
+  ctr_struct_initialize_internal();
   int size = 0;
   char *beginning = format;
   int struct_opened = 1; // we are in a struct. a stray ']' will terminate this
@@ -718,7 +825,8 @@ wrapped_ffi_type *ctr_create_ffi_type_descriptor(char *format) {
   return ctr_create_ffi_type_descriptor_(format, desc.member_count);
 }
 
-wrapped_ffi_type *ctr_create_ffi_type_descriptor_(char *format, int member_count) {
+wrapped_ffi_type *ctr_create_ffi_type_descriptor_(char *format,
+                                                  int member_count) {
   ctr_struct_initialize_internal();
   wrapped_ffi_type *new_type = ctr_heap_allocate(sizeof(wrapped_ffi_type));
   new_type->size = 0;
@@ -748,7 +856,8 @@ wrapped_ffi_type *ctr_create_ffi_type_descriptor_(char *format, int member_count
   for (int i = 0; i < member_count; i++) {
     if (0)
       ;
-    wrapped_ffi_type *member = ctr_ffi_type_get_format_splat(&format, &this_size);
+    wrapped_ffi_type *member =
+        ctr_ffi_type_get_format_splat(&format, &this_size);
     if (this_size < 0) {
       size_t pad = -this_size;
       current_offset += pad;
@@ -768,7 +877,7 @@ wrapped_ffi_type *ctr_create_ffi_type_descriptor_(char *format, int member_count
     }
   }
   elems[member_count] = NULL;
-  new_type->elements = (ffi_type**) elems;
+  new_type->elements = (ffi_type **)elems;
   return new_type;
 }
 
@@ -777,87 +886,108 @@ int ctr_create_ffi_str_descriptor(wrapped_ffi_type *type, char *buf) {
   ctr_struct_initialize_internal();
   if (type->type != FFI_TYPE_STRUCT) {
     size_t size = 0;
-    if (type == &wrapped_ffi_type_void || type == (wrapped_ffi_type*) &ffi_type_void) {
+    if (type == &wrapped_ffi_type_void ||
+        type == (wrapped_ffi_type *)&ffi_type_void) {
       if (buf != NULL)
         memcpy(buf, "v", 1);
       size += 1;
-    } else if (type == &wrapped_ffi_type_sint || type == (wrapped_ffi_type*) &ffi_type_sint) {
+    } else if (type == &wrapped_ffi_type_sint ||
+               type == (wrapped_ffi_type *)&ffi_type_sint) {
       if (buf != NULL)
         memcpy(buf, "si", 2);
       size += 2;
-    } else if (type == &wrapped_ffi_type_uint || type == (wrapped_ffi_type*) &ffi_type_uint) {
+    } else if (type == &wrapped_ffi_type_uint ||
+               type == (wrapped_ffi_type *)&ffi_type_uint) {
       if (buf != NULL)
         memcpy(buf, "ui", 2);
       size += 2;
-    } else if (type == &wrapped_ffi_type_sshort || type == (wrapped_ffi_type*) &ffi_type_sshort) {
+    } else if (type == &wrapped_ffi_type_sshort ||
+               type == (wrapped_ffi_type *)&ffi_type_sshort) {
       if (buf != NULL)
         memcpy(buf, "ss", 2);
       size += 2;
-    } else if (type == &wrapped_ffi_type_ushort || type == (wrapped_ffi_type*) &ffi_type_ushort) {
+    } else if (type == &wrapped_ffi_type_ushort ||
+               type == (wrapped_ffi_type *)&ffi_type_ushort) {
       if (buf != NULL)
         memcpy(buf, "us", 2);
       size += 2;
-    } else if (type == &wrapped_ffi_type_slong || type == (wrapped_ffi_type*) &ffi_type_slong) {
+    } else if (type == &wrapped_ffi_type_slong ||
+               type == (wrapped_ffi_type *)&ffi_type_slong) {
       if (buf != NULL)
         memcpy(buf, "sl", 2);
       size += 2;
-    } else if (type == &wrapped_ffi_type_ulong || type == (wrapped_ffi_type*) &ffi_type_ulong) {
+    } else if (type == &wrapped_ffi_type_ulong ||
+               type == (wrapped_ffi_type *)&ffi_type_ulong) {
       if (buf != NULL)
         memcpy(buf, "ul", 2);
       size += 2;
-    } else if (type == &wrapped_ffi_type_schar || type == (wrapped_ffi_type*) &ffi_type_schar) {
+    } else if (type == &wrapped_ffi_type_schar ||
+               type == (wrapped_ffi_type *)&ffi_type_schar) {
       if (buf != NULL)
         memcpy(buf, "sc", 2);
       size += 2;
-    } else if (type == &wrapped_ffi_type_uchar || type == (wrapped_ffi_type*) &ffi_type_uchar) {
+    } else if (type == &wrapped_ffi_type_uchar ||
+               type == (wrapped_ffi_type *)&ffi_type_uchar) {
       if (buf != NULL)
         memcpy(buf, "uc", 2);
       size += 2;
-    } else if (type == &wrapped_ffi_type_pointer || type == (wrapped_ffi_type*) &ffi_type_pointer) {
+    } else if (type == &wrapped_ffi_type_pointer ||
+               type == (wrapped_ffi_type *)&ffi_type_pointer) {
       if (buf != NULL)
         memcpy(buf, "p", 1);
       size += 1;
-    } else if (type == &wrapped_ffi_type_float || type == (wrapped_ffi_type*) &ffi_type_float) {
+    } else if (type == &wrapped_ffi_type_float ||
+               type == (wrapped_ffi_type *)&ffi_type_float) {
       if (buf != NULL)
         memcpy(buf, "f", 1);
       size += 1;
-    } else if (type == &wrapped_ffi_type_double || type == (wrapped_ffi_type*) &ffi_type_double) {
+    } else if (type == &wrapped_ffi_type_double ||
+               type == (wrapped_ffi_type *)&ffi_type_double) {
       if (buf != NULL)
         memcpy(buf, "d", 1);
       size += 1;
-    } else if (type == &wrapped_ffi_type_sint8 || type == (wrapped_ffi_type*) &ffi_type_sint8) {
+    } else if (type == &wrapped_ffi_type_sint8 ||
+               type == (wrapped_ffi_type *)&ffi_type_sint8) {
       if (buf != NULL)
         memcpy(buf, "3si", 3);
       size += 3;
-    } else if (type == &wrapped_ffi_type_uint8 || type == (wrapped_ffi_type*) &ffi_type_uint8) {
+    } else if (type == &wrapped_ffi_type_uint8 ||
+               type == (wrapped_ffi_type *)&ffi_type_uint8) {
       if (buf != NULL)
         memcpy(buf, "3ui", 3);
       size += 3;
-    } else if (type == &wrapped_ffi_type_sint16 || type == (wrapped_ffi_type*) &ffi_type_sint16) {
+    } else if (type == &wrapped_ffi_type_sint16 ||
+               type == (wrapped_ffi_type *)&ffi_type_sint16) {
       if (buf != NULL)
         memcpy(buf, "4si", 3);
       size += 3;
-    } else if (type == &wrapped_ffi_type_sint32 || type == (wrapped_ffi_type*) &ffi_type_sint32) {
+    } else if (type == &wrapped_ffi_type_sint32 ||
+               type == (wrapped_ffi_type *)&ffi_type_sint32) {
       if (buf != NULL)
         memcpy(buf, "5si", 3);
       size += 3;
-    } else if (type == &wrapped_ffi_type_sint64 || type == (wrapped_ffi_type*) &ffi_type_sint64) {
+    } else if (type == &wrapped_ffi_type_sint64 ||
+               type == (wrapped_ffi_type *)&ffi_type_sint64) {
       if (buf != NULL)
         memcpy(buf, "6si", 3);
       size += 3;
-    } else if (type == &wrapped_ffi_type_uint16 || type == (wrapped_ffi_type*) &ffi_type_uint16) {
+    } else if (type == &wrapped_ffi_type_uint16 ||
+               type == (wrapped_ffi_type *)&ffi_type_uint16) {
       if (buf != NULL)
         memcpy(buf, "4ui", 3);
       size += 3;
-    } else if (type == &wrapped_ffi_type_uint32 || type == (wrapped_ffi_type*) &ffi_type_uint32) {
+    } else if (type == &wrapped_ffi_type_uint32 ||
+               type == (wrapped_ffi_type *)&ffi_type_uint32) {
       if (buf != NULL)
         memcpy(buf, "5ui", 3);
       size += 3;
-    } else if (type == &wrapped_ffi_type_uint64 || type == (wrapped_ffi_type*) &ffi_type_uint64) {
+    } else if (type == &wrapped_ffi_type_uint64 ||
+               type == (wrapped_ffi_type *)&ffi_type_uint64) {
       if (buf != NULL)
         memcpy(buf, "6ui", 3);
       size += 3;
-    } else if (type == &wrapped_ffi_type_longdouble || type == (wrapped_ffi_type*) &ffi_type_longdouble) {
+    } else if (type == &wrapped_ffi_type_longdouble ||
+               type == (wrapped_ffi_type *)&ffi_type_longdouble) {
       if (buf != NULL)
         memcpy(buf, "l", 1);
       size += 1;
@@ -868,95 +998,116 @@ int ctr_create_ffi_str_descriptor(wrapped_ffi_type *type, char *buf) {
   int size = 0;
   int imm_size = 0;
   for (int i = 0; elems[i] != NULL; i++) {
-    if (elems[i] == (ffi_type*) &wrapped_ffi_type_void || elems[i] == &ffi_type_void) {
+    if (elems[i] == (ffi_type *)&wrapped_ffi_type_void ||
+        elems[i] == &ffi_type_void) {
       if (buf != NULL)
         memcpy(buf, "v", 1);
       size += 1;
-    } else if (elems[i] == (ffi_type*) &wrapped_ffi_type_sint || elems[i] == &ffi_type_sint) {
+    } else if (elems[i] == (ffi_type *)&wrapped_ffi_type_sint ||
+               elems[i] == &ffi_type_sint) {
       if (buf != NULL)
         memcpy(buf, "si", 2);
       size += 2;
-    } else if (elems[i] == (ffi_type*) &wrapped_ffi_type_uint || elems[i] == &ffi_type_uint) {
+    } else if (elems[i] == (ffi_type *)&wrapped_ffi_type_uint ||
+               elems[i] == &ffi_type_uint) {
       if (buf != NULL)
         memcpy(buf, "ui", 2);
       size += 2;
-    } else if (elems[i] == (ffi_type*) &wrapped_ffi_type_sshort || elems[i] == &ffi_type_sshort) {
+    } else if (elems[i] == (ffi_type *)&wrapped_ffi_type_sshort ||
+               elems[i] == &ffi_type_sshort) {
       if (buf != NULL)
         memcpy(buf, "ss", 2);
       size += 2;
-    } else if (elems[i] == (ffi_type*) &wrapped_ffi_type_ushort || elems[i] == &ffi_type_ushort) {
+    } else if (elems[i] == (ffi_type *)&wrapped_ffi_type_ushort ||
+               elems[i] == &ffi_type_ushort) {
       if (buf != NULL)
         memcpy(buf, "us", 2);
       size += 2;
-    } else if (elems[i] == (ffi_type*) &wrapped_ffi_type_slong || elems[i] == &ffi_type_slong) {
+    } else if (elems[i] == (ffi_type *)&wrapped_ffi_type_slong ||
+               elems[i] == &ffi_type_slong) {
       if (buf != NULL)
         memcpy(buf, "sl", 2);
       size += 2;
-    } else if (elems[i] == (ffi_type*) &wrapped_ffi_type_ulong || elems[i] == &ffi_type_ulong) {
+    } else if (elems[i] == (ffi_type *)&wrapped_ffi_type_ulong ||
+               elems[i] == &ffi_type_ulong) {
       if (buf != NULL)
         memcpy(buf, "ul", 2);
       size += 2;
-    } else if (elems[i] == (ffi_type*) &wrapped_ffi_type_schar || elems[i] == &ffi_type_schar) {
+    } else if (elems[i] == (ffi_type *)&wrapped_ffi_type_schar ||
+               elems[i] == &ffi_type_schar) {
       if (buf != NULL)
         memcpy(buf, "sc", 2);
       size += 2;
-    } else if (elems[i] == (ffi_type*) &wrapped_ffi_type_uchar || elems[i] == &ffi_type_uchar) {
+    } else if (elems[i] == (ffi_type *)&wrapped_ffi_type_uchar ||
+               elems[i] == &ffi_type_uchar) {
       if (buf != NULL)
         memcpy(buf, "uc", 2);
       size += 2;
-    } else if (elems[i] == (ffi_type*) &wrapped_ffi_type_pointer || elems[i] == &ffi_type_pointer) {
+    } else if (elems[i] == (ffi_type *)&wrapped_ffi_type_pointer ||
+               elems[i] == &ffi_type_pointer) {
       if (buf != NULL)
         memcpy(buf, "p", 1);
       size += 1;
-    } else if (elems[i] == (ffi_type*) &wrapped_ffi_type_float || elems[i] == &ffi_type_float) {
+    } else if (elems[i] == (ffi_type *)&wrapped_ffi_type_float ||
+               elems[i] == &ffi_type_float) {
       if (buf != NULL)
         memcpy(buf, "f", 1);
       size += 1;
-    } else if (elems[i] == (ffi_type*) &wrapped_ffi_type_double || elems[i] == &ffi_type_double) {
+    } else if (elems[i] == (ffi_type *)&wrapped_ffi_type_double ||
+               elems[i] == &ffi_type_double) {
       if (buf != NULL)
         memcpy(buf, "d", 1);
       size += 1;
-    } else if (elems[i] == (ffi_type*) &wrapped_ffi_type_sint8 || elems[i] == &ffi_type_sint8) {
+    } else if (elems[i] == (ffi_type *)&wrapped_ffi_type_sint8 ||
+               elems[i] == &ffi_type_sint8) {
       if (buf != NULL)
         memcpy(buf, "3si", 3);
       size += 3;
-    } else if (elems[i] == (ffi_type*) &wrapped_ffi_type_uint8 || elems[i] == &ffi_type_uint8) {
+    } else if (elems[i] == (ffi_type *)&wrapped_ffi_type_uint8 ||
+               elems[i] == &ffi_type_uint8) {
       if (buf != NULL)
         memcpy(buf, "3ui", 3);
       size += 3;
-    } else if (elems[i] == (ffi_type*) &wrapped_ffi_type_sint16 || elems[i] == &ffi_type_sint16) {
+    } else if (elems[i] == (ffi_type *)&wrapped_ffi_type_sint16 ||
+               elems[i] == &ffi_type_sint16) {
       if (buf != NULL)
         memcpy(buf, "4si", 3);
       size += 3;
-    } else if (elems[i] == (ffi_type*) &wrapped_ffi_type_sint32 || elems[i] == &ffi_type_sint32) {
+    } else if (elems[i] == (ffi_type *)&wrapped_ffi_type_sint32 ||
+               elems[i] == &ffi_type_sint32) {
       if (buf != NULL)
         memcpy(buf, "5si", 3);
       size += 3;
-    } else if (elems[i] == (ffi_type*) &wrapped_ffi_type_sint64 || elems[i] == &ffi_type_sint64) {
+    } else if (elems[i] == (ffi_type *)&wrapped_ffi_type_sint64 ||
+               elems[i] == &ffi_type_sint64) {
       if (buf != NULL)
         memcpy(buf, "6si", 3);
       size += 3;
-    } else if (elems[i] == (ffi_type*) &wrapped_ffi_type_uint16 || elems[i] == &ffi_type_uint16) {
+    } else if (elems[i] == (ffi_type *)&wrapped_ffi_type_uint16 ||
+               elems[i] == &ffi_type_uint16) {
       if (buf != NULL)
         memcpy(buf, "4ui", 3);
       size += 3;
-    } else if (elems[i] == (ffi_type*) &wrapped_ffi_type_uint32 || elems[i] == &ffi_type_uint32) {
+    } else if (elems[i] == (ffi_type *)&wrapped_ffi_type_uint32 ||
+               elems[i] == &ffi_type_uint32) {
       if (buf != NULL)
         memcpy(buf, "5ui", 3);
       size += 3;
-    } else if (elems[i] == (ffi_type*) &wrapped_ffi_type_uint64 || elems[i] == &ffi_type_uint64) {
+    } else if (elems[i] == (ffi_type *)&wrapped_ffi_type_uint64 ||
+               elems[i] == &ffi_type_uint64) {
       if (buf != NULL)
         memcpy(buf, "6ui", 3);
       size += 3;
-    } else if (elems[i] == (ffi_type*) &wrapped_ffi_type_longdouble || elems[i] == &ffi_type_longdouble) {
+    } else if (elems[i] == (ffi_type *)&wrapped_ffi_type_longdouble ||
+               elems[i] == &ffi_type_longdouble) {
       if (buf != NULL)
         memcpy(buf, "l", 1);
       size += 1;
     } else if (elems[i]->type == FFI_TYPE_STRUCT) {
       if (buf != NULL)
         memcpy(buf, "[", 1);
-      int skip =
-          ctr_create_ffi_str_descriptor((wrapped_ffi_type*) elems[i], buf != NULL ? buf + 1 : NULL);
+      int skip = ctr_create_ffi_str_descriptor((wrapped_ffi_type *)elems[i],
+                                               buf != NULL ? buf + 1 : NULL);
       if (buf != NULL)
         memcpy(buf + skip, "]", 1);
       size += skip + 2;
@@ -990,7 +1141,8 @@ int main(void) {
   pad_info_node_t **pads = desc.pad_structure;
   int i = 0;
   while (pads[i]) {
-    printf("member number %d at %lu is %sa pad.\n", i, pads[i]->offset, pads[i]->pad ? "" : "not ");
+    printf("member number %d at %lu is %sa pad.\n", i, pads[i]->offset,
+           pads[i]->pad ? "" : "not ");
     ctr_heap_free(pads[i]);
     i++;
   }

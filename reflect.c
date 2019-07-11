@@ -1921,8 +1921,7 @@ ctr_object *ctr_reflect_run_glob(ctr_object *myself,
  */
 ctr_object *ctr_reflect_run_in_new_ctx(ctr_object *myself,
                                        ctr_argument *argumentList) {
-  ctr_object *ctx =
-      ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
+  ctr_object *ctx = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
   ctr_set_link_all(ctx, CtrStdMap);
   ctr_object *blk = argumentList->object;
   ctr_argument *args = ctr_heap_allocate(sizeof(*args));

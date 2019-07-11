@@ -170,39 +170,91 @@ struct nudt_t {
 
 static struct npdt_t npdtable[] = { // TODO: Fix mappings
     {&ffi_type_uchar, npuchar},
+    {(ffi_type*) &wrapped_ffi_type_uchar, npuchar},
     {&ffi_type_schar, npchar},
+    {(ffi_type*) &wrapped_ffi_type_schar, npchar},
     {&ffi_type_uint8, npuint8},
+    {(ffi_type*) &wrapped_ffi_type_uint8, npuint8},
     {&ffi_type_sint8, npint8},
+    {(ffi_type*) &wrapped_ffi_type_sint8, npint8},
     {&ffi_type_uint16, npuint16},
+    {(ffi_type*) &wrapped_ffi_type_uint16, npuint16},
     {&ffi_type_sint16, npint16},
+    {(ffi_type*) &wrapped_ffi_type_sint16, npint16},
     {&ffi_type_uint32, npuint32},
+    {(ffi_type*) &wrapped_ffi_type_uint32, npuint32},
     {&ffi_type_sint32, npint32},
+    {(ffi_type*) &wrapped_ffi_type_sint32, npint32},
     {&ffi_type_uint64, npuint64},
+    {(ffi_type*) &wrapped_ffi_type_uint64, npuint64},
     {&ffi_type_sint64, npint64},
+    {(ffi_type*) &wrapped_ffi_type_sint64, npint64},
     {&ffi_type_float, npfloat},
+    {(ffi_type*) &wrapped_ffi_type_float, npfloat},
     {&ffi_type_double, npdouble},
+    {(ffi_type*) &wrapped_ffi_type_double, npdouble},
     {&ffi_type_ushort, npushort},
+    {(ffi_type*) &wrapped_ffi_type_ushort, npushort},
     {&ffi_type_sshort, npshort},
+    {(ffi_type*) &wrapped_ffi_type_sshort, npshort},
     {&ffi_type_uint, npuint},
+    {(ffi_type*) &wrapped_ffi_type_uint, npuint},
     {&ffi_type_sint, npint},
+    {(ffi_type*) &wrapped_ffi_type_sint, npint},
     {&ffi_type_ulong, nplong},
+    {(ffi_type*) &wrapped_ffi_type_ulong, nplong},
     {&ffi_type_slong, nplong},
+    {(ffi_type*) &wrapped_ffi_type_slong, nplong},
     {&ffi_type_longdouble, nplonglong},
+    {(ffi_type*) &wrapped_ffi_type_longdouble, nplonglong},
     {&ffi_type_pointer, nppointer},
+    {(ffi_type*) &wrapped_ffi_type_pointer, nppointer},
     {NULL, NULL}};
 
 static struct nudt_t nudtable[] = { // TODO: Fix mappings
-    {&ffi_type_void, nuvoid},       {&ffi_type_uchar, nuuchar},
-    {&ffi_type_schar, nuchar},      {&ffi_type_uint8, nuuint8},
-    {&ffi_type_sint8, nuint8},      {&ffi_type_uint16, nuuint16},
-    {&ffi_type_sint16, nuint16},    {&ffi_type_uint32, nuuint32},
-    {&ffi_type_sint32, nuint32},    {&ffi_type_uint64, nuuint64},
-    {&ffi_type_sint64, nuint64},    {&ffi_type_float, nufloat},
-    {&ffi_type_double, nudouble},   {&ffi_type_ushort, nuushort},
-    {&ffi_type_sshort, nushort},    {&ffi_type_uint, nuuint},
-    {&ffi_type_sint, nuint},        {&ffi_type_ulong, nulong},
-    {&ffi_type_slong, nulong},      {&ffi_type_longdouble, nulonglong},
-    {&ffi_type_pointer, nupointer}, {NULL, NULL}};
+    {&ffi_type_void, nuvoid},
+    {(ffi_type*) &wrapped_ffi_type_void, nuvoid},       
+    {&ffi_type_uchar, nuuchar},
+    {(ffi_type*) &wrapped_ffi_type_uchar, nuuchar},
+    {&ffi_type_schar, nuchar},
+    {(ffi_type*) &wrapped_ffi_type_schar, nuchar},      
+    {&ffi_type_uint8, nuuint8},
+    {(ffi_type*) &wrapped_ffi_type_uint8, nuuint8},
+    {&ffi_type_sint8, nuint8},
+    {(ffi_type*) &wrapped_ffi_type_sint8, nuint8},      
+    {&ffi_type_uint16, nuuint16},
+    {(ffi_type*) &wrapped_ffi_type_uint16, nuuint16},
+    {&ffi_type_sint16, nuint16},
+    {(ffi_type*) &wrapped_ffi_type_sint16, nuint16},    
+    {&ffi_type_uint32, nuuint32},
+    {(ffi_type*) &wrapped_ffi_type_uint32, nuuint32},
+    {&ffi_type_sint32, nuint32},
+    {(ffi_type*) &wrapped_ffi_type_sint32, nuint32},    
+    {&ffi_type_uint64, nuuint64},
+    {(ffi_type*) &wrapped_ffi_type_uint64, nuuint64},
+    {&ffi_type_sint64, nuint64},
+    {(ffi_type*) &wrapped_ffi_type_sint64, nuint64},    
+    {&ffi_type_float, nufloat},
+    {(ffi_type*) &wrapped_ffi_type_float, nufloat},
+    {&ffi_type_double, nudouble},
+    {(ffi_type*) &wrapped_ffi_type_double, nudouble},   
+    {&ffi_type_ushort, nuushort},
+    {(ffi_type*) &wrapped_ffi_type_ushort, nuushort},
+    {&ffi_type_sshort, nushort},
+    {(ffi_type*) &wrapped_ffi_type_sshort, nushort},    
+    {&ffi_type_uint, nuuint},
+    {(ffi_type*) &wrapped_ffi_type_uint, nuuint},
+    {&ffi_type_sint, nuint},
+    {(ffi_type*) &wrapped_ffi_type_sint, nuint},        
+    {&ffi_type_ulong, nulong},
+    {(ffi_type*) &wrapped_ffi_type_ulong, nulong},
+    {&ffi_type_slong, nulong},
+    {(ffi_type*) &wrapped_ffi_type_slong, nulong},      
+    {&ffi_type_longdouble, nulonglong},
+    {(ffi_type*) &wrapped_ffi_type_longdouble, nulonglong},
+    {&ffi_type_pointer, nupointer},
+    {(ffi_type*) &wrapped_ffi_type_pointer, nupointer}, 
+    {NULL, NULL}};
 
 struct npdt_t get_pentry(ffi_type *type) {
   int i = 0;
@@ -251,6 +303,13 @@ int npdispatch(char *p, ctr_object *__restrict__ o, ffi_type *type) {
 
 struct nudt_t get_uentry(ffi_type *type) {
   int i = 0;
+  if ((((wrapped_ffi_type*)type)->extension_data & WRAPPED_FFI_TYPE_MAGIC) == WRAPPED_FFI_TYPE_MAGIC) {
+    unsigned int ext = ((wrapped_ffi_type*)type)->extension_data&~WRAPPED_FFI_TYPE_MAGIC;
+    printf("This %p is a wrapped ffi type, with extension_data %x\n", type, ext);
+    if (ext) {
+      __asm("int3");
+    }
+  }
   while (nudtable[i].type != NULL) {
     if (nudtable[i].type == type)
       return nudtable[i];

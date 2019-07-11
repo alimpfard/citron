@@ -5,6 +5,22 @@
 #include <stdlib.h>
 #include <ffi.h>
 
+struct wrapped_ffi_type {
+  /* struct _ffi_type */
+  size_t size;
+  unsigned short alignment;
+  unsigned short type;
+  struct _ffi_type **elements;
+  /* extension */
+  unsigned int extension_data;
+};
+
+/* consider this a joke */
+#define WRAPPED_FFI_TYPE_MAGIC 0xdeafbabe
+#define WRAPPED_FFI_TYPE_UNION 64
+
+typedef struct wrapped_ffi_type wrapped_ffi_type;
+
 typedef struct { char c; short x; } st_short;
 typedef struct { char c; int x; } st_int;
 typedef struct { char c; long x; } st_long;
@@ -43,8 +59,33 @@ typedef struct {
 
 struct_member_desc_t ctr_ffi_type_get_member_count(char* format, size_t* size_out, int record_pads);//such a big header, eh?
 int ctr_ffi_type_struct_sizeof(char* format); //XXX: Hack: specify offsets with the format for now
-ffi_type* ctr_create_ffi_type_descriptor(char* format);
-ffi_type* ctr_create_ffi_type_descriptor_(char* format, int member_count);
-int ctr_create_ffi_str_descriptor(ffi_type* type, char* buf);
+wrapped_ffi_type* ctr_create_ffi_type_descriptor(char* format);
+wrapped_ffi_type* ctr_create_ffi_type_descriptor_(char* format, int member_count);
+int ctr_create_ffi_str_descriptor(wrapped_ffi_type* type, char* buf);
+
+void ctr_struct_initialize_internal();
+
+wrapped_ffi_type  wrapped_ffi_type_void      ;
+wrapped_ffi_type  wrapped_ffi_type_uint8     ;
+wrapped_ffi_type  wrapped_ffi_type_sint8     ;
+wrapped_ffi_type  wrapped_ffi_type_uint16    ;
+wrapped_ffi_type  wrapped_ffi_type_sint16    ;
+wrapped_ffi_type  wrapped_ffi_type_uint32    ;
+wrapped_ffi_type  wrapped_ffi_type_sint32    ;
+wrapped_ffi_type  wrapped_ffi_type_uint64    ;
+wrapped_ffi_type  wrapped_ffi_type_sint64    ;
+wrapped_ffi_type  wrapped_ffi_type_uchar     ;
+wrapped_ffi_type  wrapped_ffi_type_schar     ;
+wrapped_ffi_type  wrapped_ffi_type_ushort    ;
+wrapped_ffi_type  wrapped_ffi_type_sshort    ;
+wrapped_ffi_type  wrapped_ffi_type_uint      ;
+wrapped_ffi_type  wrapped_ffi_type_sint      ;
+wrapped_ffi_type  wrapped_ffi_type_ulong     ;
+wrapped_ffi_type  wrapped_ffi_type_slong     ;
+wrapped_ffi_type  wrapped_ffi_type_float     ;
+wrapped_ffi_type  wrapped_ffi_type_double    ;
+wrapped_ffi_type  wrapped_ffi_type_pointer   ;
+wrapped_ffi_type  wrapped_ffi_type_longdouble;
+
 
 #endif

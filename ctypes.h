@@ -244,6 +244,6 @@ CTR_CT_FFI_BIND(prep_cif);
 CTR_CT_FFI_BIND(cif_new);
 CTR_CT_FFI_BIND(call);
 
-ffi_type* ctr_ctypes_ffi_convert_to_ffi_type(ctr_object* type);
+wrapped_ffi_type* ctr_ctypes_ffi_convert_to_ffi_type(ctr_object* type);
 ctr_object* ctr_ctypes_get_first_meta(ctr_object* object, ctr_object* last);
 #endif

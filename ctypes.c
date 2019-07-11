@@ -26,22 +26,23 @@ ctr_object *ctr_ctypes_packed_size(ctr_object *myself,
  *
  * An object that contains and specifies the types of a foreign function/symbol
  */
-ffi_type *ctr_ctype_citron_object_try_infer_type(ctr_object *object) {
+wrapped_ffi_type *ctr_ctype_citron_object_try_infer_type(ctr_object *object) {
+  ctr_struct_initialize_internal();
   switch (object->info.type) {
   case CTR_OBJECT_TYPE_OTNIL:
-    return &ffi_type_void;
+    return &wrapped_ffi_type_void;
   case CTR_OBJECT_TYPE_OTBOOL:
-    return &ffi_type_uint;
+    return &wrapped_ffi_type_uint;
   case CTR_OBJECT_TYPE_OTNUMBER: {
     double intpart;
     if (modf(object->value.nvalue, &intpart) == 0)
-      return &ffi_type_sint64;
-    return &ffi_type_double;
+      return &wrapped_ffi_type_sint64;
+    return &wrapped_ffi_type_double;
   }
   case CTR_OBJECT_TYPE_OTARRAY: // if an array, pass array
-    return &ffi_type_pointer;   // only doubles for now
+    return &wrapped_ffi_type_pointer;   // only doubles for now
   case CTR_OBJECT_TYPE_OTSTRING:
-    return &ffi_type_pointer;
+    return &wrapped_ffi_type_pointer;
   case CTR_OBJECT_TYPE_OTEX:
     return ctr_ctypes_ffi_convert_to_ffi_type(object);
   case CTR_OBJECT_TYPE_OTNATFUNC: // Do not pass around native functions, bad
@@ -914,25 +915,25 @@ CTR_CT_SIMPLE_TYPE_FUNC_TSTR(cont_pointer) {
   return ctr_build_string_from_cstring(buf);
 }
 /*
-ffi_type_uint8
-ffi_type_sint8
-ffi_type_uint16
-ffi_type_sint16
-ffi_type_uint32
-ffi_type_sint32
-ffi_type_uint64
-ffi_type_sint64
-ffi_type_uchar
-ffi_type_schar
-ffi_type_ushort
-ffi_type_sshort
-ffi_type_uint
-ffi_type_sint
-ffi_type_ulong
-ffi_type_slong
-ffi_type_float
-ffi_type_double
-ffi_type_longdouble
+wrapped_ffi_type_uint8
+wrapped_ffi_type_sint8
+wrapped_ffi_type_uint16
+wrapped_ffi_type_sint16
+wrapped_ffi_type_uint32
+wrapped_ffi_type_sint32
+wrapped_ffi_type_uint64
+wrapped_ffi_type_sint64
+wrapped_ffi_type_uchar
+wrapped_ffi_type_schar
+wrapped_ffi_type_ushort
+wrapped_ffi_type_sshort
+wrapped_ffi_type_uint
+wrapped_ffi_type_sint
+wrapped_ffi_type_ulong
+wrapped_ffi_type_slong
+wrapped_ffi_type_float
+wrapped_ffi_type_double
+wrapped_ffi_type_longdouble
 */
 ctr_object *ctr_ctypes_make_packed(
     ctr_object *myself,
@@ -945,83 +946,83 @@ ctr_object *ctr_ctypes_make_packed(
   switch (typeid) {
   case 0:
     size = sizeof(uint8_t);
-    type_ = &ffi_type_uint8;
+    type_ = &wrapped_ffi_type_uint8;
     break;
   case 1:
     size = sizeof(char);
-    type_ = &ffi_type_sint8;
+    type_ = &wrapped_ffi_type_sint8;
     break;
   case 2:
     size = sizeof(uint16_t);
-    type_ = &ffi_type_uint16;
+    type_ = &wrapped_ffi_type_uint16;
     break;
   case 3:
     size = sizeof(int16_t);
-    type_ = &ffi_type_sint16;
+    type_ = &wrapped_ffi_type_sint16;
     break;
   case 4:
     size = sizeof(uint32_t);
-    type_ = &ffi_type_uint32;
+    type_ = &wrapped_ffi_type_uint32;
     break;
   case 5:
     size = sizeof(int32_t);
-    type_ = &ffi_type_sint32;
+    type_ = &wrapped_ffi_type_sint32;
     break;
   case 6:
     size = sizeof(uint64_t);
-    type_ = &ffi_type_uint64;
+    type_ = &wrapped_ffi_type_uint64;
     break;
   case 7:
     size = sizeof(int64_t);
-    type_ = &ffi_type_sint64;
+    type_ = &wrapped_ffi_type_sint64;
     break;
   case 8:
     size = sizeof(unsigned char);
-    type_ = &ffi_type_uchar;
+    type_ = &wrapped_ffi_type_uchar;
     break;
   case 9:
     size = sizeof(signed char);
-    type_ = &ffi_type_schar;
+    type_ = &wrapped_ffi_type_schar;
     break;
   case 10:
     size = sizeof(unsigned short);
-    type_ = &ffi_type_ushort;
+    type_ = &wrapped_ffi_type_ushort;
     break;
   case 11:
     size = sizeof(signed short);
-    type_ = &ffi_type_sshort;
+    type_ = &wrapped_ffi_type_sshort;
     break;
   case 12:
     size = sizeof(unsigned int);
-    type_ = &ffi_type_uint;
+    type_ = &wrapped_ffi_type_uint;
     break;
   case 13:
     size = sizeof(signed int);
-    type_ = &ffi_type_sint;
+    type_ = &wrapped_ffi_type_sint;
     break;
   case 14:
     size = sizeof(unsigned long);
-    type_ = &ffi_type_ulong;
+    type_ = &wrapped_ffi_type_ulong;
     break;
   case 15:
     size = sizeof(signed long);
-    type_ = &ffi_type_slong;
+    type_ = &wrapped_ffi_type_slong;
     break;
   case 16:
     size = sizeof(float);
-    type_ = &ffi_type_float;
+    type_ = &wrapped_ffi_type_float;
     break;
   case 17:
     size = sizeof(double);
-    type_ = &ffi_type_double;
+    type_ = &wrapped_ffi_type_double;
     break;
   case 18:
     size = sizeof(long double);
-    type_ = &ffi_type_longdouble;
+    type_ = &wrapped_ffi_type_longdouble;
     break;
   case 19:
     size = sizeof(void *);
-    type_ = &ffi_type_pointer;
+    type_ = &wrapped_ffi_type_pointer;
     break;
   default:
     size = 0;
@@ -1130,43 +1131,43 @@ ctr_object *ctr_ctypes_packed_type(ctr_object *myself,
   }
   ffi_type *etype = ptr->etype;
 
-  if (etype == &ffi_type_uint8)
+  if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_uint8)
     return ctr_build_number_from_float(0);
-  else if (etype == &ffi_type_sint8)
+  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_sint8)
     return ctr_build_number_from_float(1);
-  else if (etype == &ffi_type_uint16)
+  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_uint16)
     return ctr_build_number_from_float(2);
-  else if (etype == &ffi_type_sint16)
+  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_sint16)
     return ctr_build_number_from_float(3);
-  else if (etype == &ffi_type_uint32)
+  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_uint32)
     return ctr_build_number_from_float(4);
-  else if (etype == &ffi_type_sint32)
+  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_sint32)
     return ctr_build_number_from_float(5);
-  else if (etype == &ffi_type_uint64)
+  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_uint64)
     return ctr_build_number_from_float(6);
-  else if (etype == &ffi_type_sint64)
+  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_sint64)
     return ctr_build_number_from_float(7);
-  else if (etype == &ffi_type_uchar)
+  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_uchar)
     return ctr_build_number_from_float(8);
-  else if (etype == &ffi_type_schar)
+  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_schar)
     return ctr_build_number_from_float(9);
-  else if (etype == &ffi_type_ushort)
+  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_ushort)
     return ctr_build_number_from_float(10);
-  else if (etype == &ffi_type_sshort)
+  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_sshort)
     return ctr_build_number_from_float(11);
-  else if (etype == &ffi_type_uint)
+  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_uint)
     return ctr_build_number_from_float(12);
-  else if (etype == &ffi_type_sint)
+  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_sint)
     return ctr_build_number_from_float(13);
-  else if (etype == &ffi_type_ulong)
+  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_ulong)
     return ctr_build_number_from_float(14);
-  else if (etype == &ffi_type_slong)
+  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_slong)
     return ctr_build_number_from_float(15);
-  else if (etype == &ffi_type_float)
+  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_float)
     return ctr_build_number_from_float(16);
-  else if (etype == &ffi_type_double)
+  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_double)
     return ctr_build_number_from_float(17);
-  else if (etype == &ffi_type_longdouble)
+  else if (etype == (ffi_type*) &wrapped_ffi_type_uint8 || etype == &ffi_type_longdouble)
     return ctr_build_number_from_float(18);
   return ctr_build_number_from_float(-1);
 }
@@ -1784,59 +1785,59 @@ ctr_object *ctr_ctypes_get_first_meta(ctr_object *object, ctr_object *last) {
   return link;
 }
 
-ffi_type *ctr_ctypes_ffi_convert_to_ffi_type(ctr_object *type) {
+wrapped_ffi_type *ctr_ctypes_ffi_convert_to_ffi_type(ctr_object *type) {
   ctr_object *initial =
       ctr_ctypes_get_first_meta(type->interfaces->link, CtrStdCType);
   if ((initial) == CtrStdCType_void)
-    return &ffi_type_void;
+    return &wrapped_ffi_type_void;
   else if ((initial) == CtrStdCType_uint8)
-    return &ffi_type_uint8;
+    return &wrapped_ffi_type_uint8;
   else if ((initial) == CtrStdCType_sint8)
-    return &ffi_type_sint8;
+    return &wrapped_ffi_type_sint8;
   else if ((initial) == CtrStdCType_uint16)
-    return &ffi_type_uint16;
+    return &wrapped_ffi_type_uint16;
   else if ((initial) == CtrStdCType_sint16)
-    return &ffi_type_sint16;
+    return &wrapped_ffi_type_sint16;
   else if ((initial) == CtrStdCType_uint32)
-    return &ffi_type_uint32;
+    return &wrapped_ffi_type_uint32;
   else if ((initial) == CtrStdCType_sint32)
-    return &ffi_type_sint32;
+    return &wrapped_ffi_type_sint32;
   else if ((initial) == CtrStdCType_uint64)
-    return &ffi_type_uint64;
+    return &wrapped_ffi_type_uint64;
   else if ((initial) == CtrStdCType_sint64)
-    return &ffi_type_sint64;
+    return &wrapped_ffi_type_sint64;
   else if ((initial) == CtrStdCType_float)
-    return &ffi_type_float;
+    return &wrapped_ffi_type_float;
   else if ((initial) == CtrStdCType_double)
-    return &ffi_type_double;
+    return &wrapped_ffi_type_double;
   else if ((initial) == CtrStdCType_uchar)
-    return &ffi_type_uchar;
+    return &wrapped_ffi_type_uchar;
   else if ((initial) == CtrStdCType_schar)
-    return &ffi_type_schar;
+    return &wrapped_ffi_type_schar;
   else if ((initial) == CtrStdCType_ushort)
-    return &ffi_type_ushort;
+    return &wrapped_ffi_type_ushort;
   else if ((initial) == CtrStdCType_sshort)
-    return &ffi_type_sshort;
+    return &wrapped_ffi_type_sshort;
   else if ((initial) == CtrStdCType_uint)
-    return &ffi_type_uint;
+    return &wrapped_ffi_type_uint;
   else if ((initial) == CtrStdCType_sint)
-    return &ffi_type_sint;
+    return &wrapped_ffi_type_sint;
   else if ((initial) == CtrStdCType_ulong)
-    return &ffi_type_ulong;
+    return &wrapped_ffi_type_ulong;
   else if ((initial) == CtrStdCType_slong)
-    return &ffi_type_slong;
+    return &wrapped_ffi_type_slong;
   else if ((initial) == CtrStdCType_longdouble)
-    return &ffi_type_longdouble;
+    return &wrapped_ffi_type_longdouble;
   else if ((initial) == CtrStdCType_pointer ||
            initial == CtrStdCType_dynamic_lib ||
            initial == CtrStdCType_string ||
            initial == CtrStdCType_functionptr ||
            initial == CtrStdCType_cont_pointer)
-    return &ffi_type_pointer;
+    return &wrapped_ffi_type_pointer;
   else if (initial == CtrStdCType_struct)
     return ((ctr_ctypes_ffi_struct_value *)(type->value.rvalue->ptr))->type;
   else
-    return &ffi_type_void;
+    return &wrapped_ffi_type_void;
 }
 
 ctr_ctype ctr_ctypes_ffi_convert_to_citron_ctype(ctr_object *type) {
@@ -1890,53 +1891,53 @@ ctr_ctype ctr_ctypes_ffi_convert_to_citron_ctype(ctr_object *type) {
     return CTR_CTYPE_VOID;
 }
 
-ffi_type *ctr_ctypes_ffi_convert_ctype_to_ffi_type(ctr_ctype type) {
+wrapped_ffi_type *ctr_ctypes_ffi_convert_ctype_to_ffi_type(ctr_ctype type) {
   switch (type) {
   case CTR_CTYPE_VOID:
-    return &ffi_type_void;
+    return &wrapped_ffi_type_void;
   case CTR_CTYPE_UINT8:
-    return &ffi_type_uint8;
+    return &wrapped_ffi_type_uint8;
   case CTR_CTYPE_SINT8:
-    return &ffi_type_sint8;
+    return &wrapped_ffi_type_sint8;
   case CTR_CTYPE_UINT16:
-    return &ffi_type_uint16;
+    return &wrapped_ffi_type_uint16;
   case CTR_CTYPE_SINT16:
-    return &ffi_type_sint16;
+    return &wrapped_ffi_type_sint16;
   case CTR_CTYPE_UINT32:
-    return &ffi_type_uint32;
+    return &wrapped_ffi_type_uint32;
   case CTR_CTYPE_SINT32:
-    return &ffi_type_sint32;
+    return &wrapped_ffi_type_sint32;
   case CTR_CTYPE_UINT64:
-    return &ffi_type_uint64;
+    return &wrapped_ffi_type_uint64;
   case CTR_CTYPE_SINT64:
-    return &ffi_type_sint64;
+    return &wrapped_ffi_type_sint64;
   case CTR_CTYPE_FLOAT:
-    return &ffi_type_float;
+    return &wrapped_ffi_type_float;
   case CTR_CTYPE_DOUBLE:
-    return &ffi_type_double;
+    return &wrapped_ffi_type_double;
   case CTR_CTYPE_UCHAR:
-    return &ffi_type_uchar;
+    return &wrapped_ffi_type_uchar;
   case CTR_CTYPE_SCHAR:
-    return &ffi_type_schar;
+    return &wrapped_ffi_type_schar;
   case CTR_CTYPE_USHORT:
-    return &ffi_type_ushort;
+    return &wrapped_ffi_type_ushort;
   case CTR_CTYPE_SSHORT:
-    return &ffi_type_sshort;
+    return &wrapped_ffi_type_sshort;
   case CTR_CTYPE_UINT:
-    return &ffi_type_uint;
+    return &wrapped_ffi_type_uint;
   case CTR_CTYPE_SINT:
-    return &ffi_type_sint;
+    return &wrapped_ffi_type_sint;
   case CTR_CTYPE_ULONG:
-    return &ffi_type_ulong;
+    return &wrapped_ffi_type_ulong;
   case CTR_CTYPE_SLONG:
-    return &ffi_type_slong;
+    return &wrapped_ffi_type_slong;
   case CTR_CTYPE_LONGDOUBLE:
-    return &ffi_type_longdouble;
+    return &wrapped_ffi_type_longdouble;
   case CTR_CTYPE_STRING:
   case CTR_CTYPE_FUNCTION_POINTER:
   case CTR_CTYPE_DYN_LIB:
   case CTR_CTYPE_POINTER:
-    return &ffi_type_pointer;
+    return &wrapped_ffi_type_pointer;
 
   case CTR_CTYPE_STRUCT:
   default:
@@ -1945,47 +1946,47 @@ ffi_type *ctr_ctypes_ffi_convert_ctype_to_ffi_type(ctr_ctype type) {
 }
 
 ctr_ctype ctr_ctypes_ffi_convert_ffi_type_to_ctype(ffi_type *type) {
-  if (type == &ffi_type_void)
+  if (type == (ffi_type*) &wrapped_ffi_type_void || type == &ffi_type_void)
     return CTR_CTYPE_VOID;
-  else if (type == &ffi_type_uint8)
+  else if (type == (ffi_type*) &wrapped_ffi_type_uint8 || type == &ffi_type_uint8)
     return CTR_CTYPE_UINT8;
-  else if (type == &ffi_type_sint8)
+  else if (type == (ffi_type*) &wrapped_ffi_type_sint8 || type == &ffi_type_sint8)
     return CTR_CTYPE_SINT8;
-  else if (type == &ffi_type_uint16)
+  else if (type == (ffi_type*) &wrapped_ffi_type_uint16 || type == &ffi_type_uint16)
     return CTR_CTYPE_UINT16;
-  else if (type == &ffi_type_sint16)
+  else if (type == (ffi_type*) &wrapped_ffi_type_sint16 || type == &ffi_type_sint16)
     return CTR_CTYPE_SINT16;
-  else if (type == &ffi_type_uint32)
+  else if (type == (ffi_type*) &wrapped_ffi_type_uint32 || type == &ffi_type_uint32)
     return CTR_CTYPE_UINT32;
-  else if (type == &ffi_type_sint32)
+  else if (type == (ffi_type*) &wrapped_ffi_type_sint32 || type == &ffi_type_sint32)
     return CTR_CTYPE_SINT32;
-  else if (type == &ffi_type_uint64)
+  else if (type == (ffi_type*) &wrapped_ffi_type_uint64 || type == &ffi_type_uint64)
     return CTR_CTYPE_UINT64;
-  else if (type == &ffi_type_sint64)
+  else if (type == (ffi_type*) &wrapped_ffi_type_sint64 || type == &ffi_type_sint64)
     return CTR_CTYPE_SINT64;
-  else if (type == &ffi_type_float)
+  else if (type == (ffi_type*) &wrapped_ffi_type_float || type == &ffi_type_float)
     return CTR_CTYPE_FLOAT;
-  else if (type == &ffi_type_double)
+  else if (type == (ffi_type*) &wrapped_ffi_type_double || type == &ffi_type_double)
     return CTR_CTYPE_DOUBLE;
-  else if (type == &ffi_type_uchar)
+  else if (type == (ffi_type*) &wrapped_ffi_type_uchar || type == &ffi_type_uchar)
     return CTR_CTYPE_UCHAR;
-  else if (type == &ffi_type_schar)
+  else if (type == (ffi_type*) &wrapped_ffi_type_schar || type == &ffi_type_schar)
     return CTR_CTYPE_SCHAR;
-  else if (type == &ffi_type_ushort)
+  else if (type == (ffi_type*) &wrapped_ffi_type_ushort || type == &ffi_type_ushort)
     return CTR_CTYPE_USHORT;
-  else if (type == &ffi_type_sshort)
+  else if (type == (ffi_type*) &wrapped_ffi_type_sshort || type == &ffi_type_sshort)
     return CTR_CTYPE_SSHORT;
-  else if (type == &ffi_type_uint)
+  else if (type == (ffi_type*) &wrapped_ffi_type_uint || type == &ffi_type_uint)
     return CTR_CTYPE_UINT;
-  else if (type == &ffi_type_sint)
+  else if (type == (ffi_type*) &wrapped_ffi_type_sint || type == &ffi_type_sint)
     return CTR_CTYPE_SINT;
-  else if (type == &ffi_type_ulong)
+  else if (type == (ffi_type*) &wrapped_ffi_type_ulong || type == &ffi_type_ulong)
     return CTR_CTYPE_ULONG;
-  else if (type == &ffi_type_slong)
+  else if (type == (ffi_type*) &wrapped_ffi_type_slong || type == &ffi_type_slong)
     return CTR_CTYPE_SLONG;
-  else if (type == &ffi_type_longdouble)
+  else if (type == (ffi_type*) &wrapped_ffi_type_longdouble || type == &ffi_type_longdouble)
     return CTR_CTYPE_LONGDOUBLE;
-  else if (type == &ffi_type_pointer)
+  else if (type == (ffi_type*) &wrapped_ffi_type_pointer || type == &ffi_type_pointer)
     return CTR_CTYPE_POINTER;
   return CTR_CTYPE_INVALID;
 }
@@ -2018,6 +2019,7 @@ CTR_CT_FFI_BIND(cif_new) { //^External CIF ptr
 }
 
 CTR_CT_FFI_BIND(prep_cif) { // cif*, int<abi>, type* rtype, type** atypes
+  ctr_struct_initialize_internal();
   ffi_cif *cif_res = (ffi_cif *)(myself->value.rvalue->ptr);
   int abi_mask = (int)(argumentList->object->value.nvalue);
   ffi_type *rtype =
@@ -2053,6 +2055,7 @@ CTR_CT_FFI_BIND(prep_cif) { // cif*, int<abi>, type* rtype, type** atypes
 }
 
 CTR_CT_FFI_BIND(prep_cif_inferred) { //[*atypes, rtype]
+  ctr_struct_initialize_internal();
   ctr_object *cifobj = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
   ffi_cif *cif_res = ctr_heap_allocate(sizeof(ffi_cif));
   ctr_object *atypes_ = argumentList->object;
@@ -2146,6 +2149,7 @@ CTR_CT_FFI_BIND(cif_arg_at) { //<cif, Number; ^CType
 
 CTR_CT_FFI_BIND(
     call) { //<cif, CTypes pointer (fn), Array avalues; ^Citron object
+  ctr_struct_initialize_internal();
   ffi_arg *result = ctr_heap_allocate(sizeof(ffi_arg));
   ffi_cif *cif = (ffi_cif *)(myself->value.rvalue->ptr);
   ctr_object *avals_ = argumentList->next->object;
@@ -2163,7 +2167,7 @@ CTR_CT_FFI_BIND(
     if (type->type == FFI_TYPE_STRUCT)
       avals[i] =
           ((ctr_ctypes_ffi_struct_value *)(obj->value.rvalue->ptr))->value;
-    else if (type == &ffi_type_pointer &&
+    else if ((type == (ffi_type*) &wrapped_ffi_type_pointer || type == &ffi_type_pointer) &&
              obj->info.type == CTR_OBJECT_TYPE_OTBLOCK) {
       void **bound_f = ctr_heap_allocate(sizeof(void *));
       ffi_closure *closure = ffi_closure_alloc(sizeof(ffi_closure), bound_f);

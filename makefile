@@ -1,4 +1,4 @@
-DEBUG_VERSION := 1492
+DEBUG_VERSION := 1497
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
 location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
@@ -121,7 +121,8 @@ inline-asm.o:
 define SHVAL =
 for f in *.c; do\
 	echo "Formatting $f";\
-	indent -l150 -hnl -bbo $f;\
+	cp "$f" ".bac/$f";\
+	clang-format -i "$f";\
 done
 endef
 

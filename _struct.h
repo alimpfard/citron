@@ -54,13 +54,14 @@ typedef struct {
 typedef struct {
     size_t member_count;
     size_t max_alignment;
+    size_t max_size;
     pad_info_node_t** pad_structure;
 } struct_member_desc_t;
 
-struct_member_desc_t ctr_ffi_type_get_member_count(char* format, size_t* size_out, int record_pads);//such a big header, eh?
+struct_member_desc_t ctr_ffi_type_get_member_count(char* format, size_t* size_out, int record_pads, int packed);//such a big header, eh?
 int ctr_ffi_type_struct_sizeof(char* format); //XXX: Hack: specify offsets with the format for now
-wrapped_ffi_type* ctr_create_ffi_type_descriptor(char* format);
-wrapped_ffi_type* ctr_create_ffi_type_descriptor_(char* format, int member_count);
+wrapped_ffi_type* ctr_create_ffi_type_descriptor(char* format, int union_);
+wrapped_ffi_type* ctr_create_ffi_type_descriptor_(char* format, int member_count, int union_);
 int ctr_create_ffi_str_descriptor(wrapped_ffi_type* type, char* buf);
 
 void ctr_struct_initialize_internal();

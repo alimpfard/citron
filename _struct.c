@@ -7,9 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 // #include "structmember.h"
+#define max(x,y) ((x)>(y)?(x):(y))
 
-#define TEST
-#undef TEST
 
 #ifndef TEST
 #include "citron.h"
@@ -18,7 +17,12 @@
 #define ctr_heap_allocate malloc
 #endif
 
+#define TEST
+#undef TEST
 int initd = 0;
+
+#define IS_WRAPPED(x) ((((wrapped_ffi_type*)(x))->extension_data&WRAPPED_FFI_TYPE_MAGIC) == WRAPPED_FFI_TYPE_MAGIC)
+#define WRAP_DATA(x) ((((wrapped_ffi_type*)(x))->extension_data&~WRAPPED_FFI_TYPE_MAGIC))
 
 void ctr_struct_initialize_internal() {
   if (likely(initd))
@@ -189,6 +193,7 @@ wrapped_ffi_type *ctr_ffi_type_get_format_splat(char **format,
       (*format)++;
       if (**format != 'i')
         return NULL;
+      ++*format;
       *this_size = sizeof(uint8_t);
       return &wrapped_ffi_type_uint8;
     }
@@ -196,6 +201,7 @@ wrapped_ffi_type *ctr_ffi_type_get_format_splat(char **format,
       (*format)++;
       if (**format != 'i')
         return NULL;
+      ++*format;
       *this_size = sizeof(int8_t);
       return &wrapped_ffi_type_sint8;
     }
@@ -210,6 +216,7 @@ wrapped_ffi_type *ctr_ffi_type_get_format_splat(char **format,
       (*format)++;
       if (**format != 'i')
         return NULL;
+        ++*format;
       *this_size = sizeof(uint16_t);
       return &wrapped_ffi_type_uint16;
     }
@@ -217,6 +224,7 @@ wrapped_ffi_type *ctr_ffi_type_get_format_splat(char **format,
       (*format)++;
       if (**format != 'i')
         return NULL;
+        ++*format;
       *this_size = sizeof(int16_t);
       return &wrapped_ffi_type_sint16;
     }
@@ -231,6 +239,7 @@ wrapped_ffi_type *ctr_ffi_type_get_format_splat(char **format,
       (*format)++;
       if (**format != 'i')
         return NULL;
+        ++*format;
       *this_size = sizeof(uint32_t);
       return &wrapped_ffi_type_uint32;
     }
@@ -238,6 +247,7 @@ wrapped_ffi_type *ctr_ffi_type_get_format_splat(char **format,
       (*format)++;
       if (**format != 'i')
         return NULL;
+        ++*format;
       *this_size = sizeof(int32_t);
       return &wrapped_ffi_type_sint32;
     }
@@ -252,6 +262,7 @@ wrapped_ffi_type *ctr_ffi_type_get_format_splat(char **format,
       (*format)++;
       if (**format != 'i')
         return NULL;
+        ++*format;
       *this_size = sizeof(uint64_t);
       return &wrapped_ffi_type_uint64;
     }
@@ -259,6 +270,7 @@ wrapped_ffi_type *ctr_ffi_type_get_format_splat(char **format,
       (*format)++;
       if (**format != 'i')
         return NULL;
+        ++*format;
       *this_size = sizeof(int64_t);
       return &wrapped_ffi_type_sint64;
     }
@@ -267,30 +279,38 @@ wrapped_ffi_type *ctr_ffi_type_get_format_splat(char **format,
     }
   }
   case 'f':
+    ++*format;
     *this_size = sizeof(float);
     return &wrapped_ffi_type_float;
   case 'd':
+    ++*format;
     *this_size = sizeof(double);
     return &wrapped_ffi_type_double;
   case 'p':
+    ++*format;
     *this_size = sizeof(void *);
     return &wrapped_ffi_type_pointer;
   case 'l':
+    ++*format;
     *this_size = sizeof(long long);
     return &wrapped_ffi_type_longdouble;
   case 'u': {
     (*format)++;
     switch (**format) {
     case 'c':
+      ++*format;
       *this_size = sizeof(unsigned char);
       return &wrapped_ffi_type_uchar;
     case 's':
+      ++*format;
       *this_size = sizeof(unsigned short);
       return &wrapped_ffi_type_ushort;
     case 'i':
+      ++*format;
       *this_size = sizeof(unsigned int);
       return &wrapped_ffi_type_uint;
     case 'l':
+      ++*format;
       *this_size = sizeof(unsigned long);
       return &wrapped_ffi_type_ulong;
     default:
@@ -301,15 +321,19 @@ wrapped_ffi_type *ctr_ffi_type_get_format_splat(char **format,
     (*format)++;
     switch (**format) {
     case 'c':
+      ++*format;
       *this_size = sizeof(signed char);
       return &wrapped_ffi_type_schar;
     case 's':
+      ++*format;
       *this_size = sizeof(signed short);
       return &wrapped_ffi_type_sshort;
     case 'i':
+      ++*format;
       *this_size = sizeof(signed int);
       return &wrapped_ffi_type_sint;
     case 'l':
+      ++*format;
       *this_size = sizeof(signed long);
       return &wrapped_ffi_type_slong;
     default:
@@ -326,13 +350,18 @@ wrapped_ffi_type *ctr_ffi_type_get_format_splat(char **format,
     *this_size = -size; // negative says "pad"
     return &wrapped_ffi_type_uchar;
   }
+  case '{': {
+    (*format)++;
+    return ctr_create_ffi_type_descriptor(*format, 1);
+  }
   case '[': {
     (*format)++;
     char *fmt = *format;
     ctr_ffi_type_get_format_splat(&fmt, this_size);
-    return ctr_create_ffi_type_descriptor(*format);
+    return ctr_create_ffi_type_descriptor(*format, 0);
   }
   case ']':
+  case '}':
   default:
     return NULL;
   }
@@ -344,36 +373,69 @@ int ctr_ffi_type_struct_sizeof(
   int size = 0;
   char *beginning = format;
   int struct_opened = 1; // we are in a struct. a stray ']' will terminate this
-  while (struct_opened > 0 && *format != '\0') {
+  int union_opened  = 1; // we pretend we're in a union, a stray '}' will terminate this
+  while ((union_opened > 0 && struct_opened > 0) && *format != '\0') {
     switch (*format) {
     case ']':
       struct_opened--;
       break;
+    case '}':
+      union_opened--;
+      break;
     case 'f':
-      size += sizeof(float);
+      if (union_opened > 1)
+        size = max(size, sizeof(float));
+      else
+        size += sizeof(float);
       break;
     case 'd':
       size += sizeof(double);
       break;
     case 'p':
-      size += sizeof(void *);
+      if (union_opened > 1)
+        size = max(size, sizeof(void *));
+      else
+        size += sizeof(void *);
       break;
     case 'l':
-      size += sizeof(long long);
+      if (union_opened > 1)
+        size = max(size, sizeof(long long));
+      else
+        size += sizeof(long long);
       break;
       // case 'v': size += sizeof(void); break;
     case '3':
-      size += sizeof(uint8_t);
+      if (union_opened > 1)
+        size = max(size, sizeof(uint8_t));
+      else
+        size += sizeof(uint8_t);
       break;
     case '4':
-      size += sizeof(uint16_t);
+      if (union_opened > 1)
+        size = max(size, sizeof(uint16_t));
+      else
+        size += sizeof(uint16_t);
       break;
     case '5':
-      size += sizeof(uint32_t);
+      if (union_opened > 1)
+        size = max(size, sizeof(uint32_t));
+      else
+        size += sizeof(uint32_t);
       break;
     case '6':
-      size += sizeof(uint64_t);
+      if (union_opened > 1)
+        size = max(size, sizeof(uint64_t));
+      else
+        size += sizeof(uint64_t);
       break;
+    case '{': {
+      union_opened++;
+      int s = ctr_ffi_type_struct_sizeof(format + 1);
+      if (s < 0)
+        return s - (format - beginning);
+      size += s;
+      break;
+    }
     case '[': {
       struct_opened++; // so that we don't terminate after this struct
       int s = ctr_ffi_type_struct_sizeof(format + 1);
@@ -386,16 +448,28 @@ int ctr_ffi_type_struct_sizeof(
       format++;
       switch (*format) {
       case 'c':
-        size += sizeof(unsigned char);
+        if (union_opened > 1)
+          size = max(size, sizeof(unsigned char));
+        else
+          size += sizeof(unsigned char);
         break;
       case 's':
-        size += sizeof(unsigned short);
+        if (union_opened > 1)
+          size = max(size, sizeof(unsigned short));
+        else
+          size += sizeof(unsigned short);
         break;
       case 'i':
-        size += sizeof(unsigned int);
+        if (union_opened > 1)
+          size = max(size, sizeof(unsigned int));
+        else
+          size += sizeof(unsigned int);
         break;
       case 'l':
-        size += sizeof(unsigned long);
+        if (union_opened > 1)
+          size = max(size, sizeof(unsigned long));
+        else
+          size += sizeof(unsigned long);
         break;
       default:
         return -((int)(format - beginning + 1));
@@ -406,16 +480,28 @@ int ctr_ffi_type_struct_sizeof(
       format++;
       switch (*format) {
       case 'c':
-        size += sizeof(signed char);
+        if (union_opened > 1)
+          size = max(size, sizeof(signed char));
+        else
+          size += sizeof(signed char);
         break;
       case 's':
-        size += sizeof(signed short);
+        if (union_opened > 1)
+          size = max(size, sizeof(signed short));
+        else
+          size += sizeof(signed short);
         break;
       case 'i':
-        size += sizeof(signed int);
+        if (union_opened > 1)
+          size = max(size, sizeof(signed int));
+        else
+          size += sizeof(signed int);
         break;
       case 'l':
-        size += sizeof(signed long);
+        if (union_opened > 1)
+          size = max(size, sizeof(signed long));
+        else
+          size += sizeof(signed long);
         break;
       default:
         return -((int)(format - beginning + 1));
@@ -431,13 +517,15 @@ int ctr_ffi_type_struct_sizeof(
 }
 
 struct_member_desc_t
-ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
+ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads, int packed) {
   ctr_struct_initialize_internal();
   int mc = 0;
   char *beginning = format;
   int struct_opened = 1;
+  int union_opened = 1;
   size_t current_offset = 0;
   size_t this_size = 0;
+  size_t max_size = 0;
   size_t this_alignment = 0;
   size_t max_alignment = 0;
   size_t pad = 0;
@@ -448,16 +536,22 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
   if (record_pads)
     padinfo = ctr_heap_allocate(sizeof(pad_info_node_t *) * padinfo_max);
   while (*format != '\0') {
+    int element_count = 1;
     switch (*format) {
     case ']':
       struct_opened--;
       pad = 0;
       break;
+    case '}':
+      union_opened--;
+      pad = 0;
+      break;
     case 'f':
       this_size = sizeof(float);
+      max_size = fmax(this_size, max_size);
       this_alignment = alignof(float);
       max_alignment = fmax(this_alignment, max_alignment);
-      if (current_offset % this_alignment != 0) {
+      if (!packed && current_offset % this_alignment != 0) {
         pad = this_alignment - (current_offset % this_alignment);
         mc += pad;
         current_offset += pad;
@@ -466,9 +560,10 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
       break;
     case 'd':
       this_size = sizeof(double);
+      max_size = fmax(this_size, max_size);
       this_alignment = alignof(double);
       max_alignment = fmax(this_alignment, max_alignment);
-      if (current_offset % this_alignment != 0) {
+      if (!packed && current_offset % this_alignment != 0) {
         pad = this_alignment - (current_offset % this_alignment);
         mc += pad;
         current_offset += pad;
@@ -477,9 +572,10 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
       break;
     case 'p':
       this_size = sizeof(void *);
+      max_size = fmax(this_size, max_size);
       this_alignment = alignof(void *);
       max_alignment = fmax(this_alignment, max_alignment);
-      if (current_offset % this_alignment != 0) {
+      if (!packed && current_offset % this_alignment != 0) {
         pad = this_alignment - (current_offset % this_alignment);
         mc += pad;
         current_offset += pad;
@@ -488,9 +584,10 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
       break;
     case 'l':
       this_size = sizeof(long long);
+      max_size = fmax(this_size, max_size);
       this_alignment = alignof(long long);
       max_alignment = fmax(this_alignment, max_alignment);
-      if (current_offset % this_alignment != 0) {
+      if (!packed && current_offset % this_alignment != 0) {
         pad = this_alignment - (current_offset % this_alignment);
         mc += pad;
         current_offset += pad;
@@ -504,6 +601,7 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
       // current_offset+=pad;} mc++; break;
     case '3':
       this_size = sizeof(uint8_t);
+      max_size = fmax(this_size, max_size);
       this_alignment = alignof(uint8_t);
       max_alignment = fmax(this_alignment, max_alignment);
       {
@@ -514,9 +612,10 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
         if (*format != 'i')
           goto exit_error;
         this_size = sizeof(uint8_t);
+        max_size = fmax(this_size, max_size);
         this_alignment = alignof(uint8_t);
         max_alignment = fmax(this_alignment, max_alignment);
-        if (current_offset % this_alignment != 0) {
+        if (!packed && current_offset % this_alignment != 0) {
           pad = this_alignment - (current_offset % this_alignment);
           mc += pad;
           current_offset += pad;
@@ -526,6 +625,7 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
       }
     case '4':
       this_size = sizeof(uint16_t);
+      max_size = fmax(this_size, max_size);
       this_alignment = alignof(uint16_t);
       max_alignment = fmax(this_alignment, max_alignment);
       {
@@ -536,9 +636,10 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
         if (*format != 'i')
           goto exit_error;
         this_size = sizeof(uint32_t);
+        max_size = fmax(this_size, max_size);
         this_alignment = alignof(uint32_t);
         max_alignment = fmax(this_alignment, max_alignment);
-        if (current_offset % this_alignment != 0) {
+        if (!packed && current_offset % this_alignment != 0) {
           pad = this_alignment - (current_offset % this_alignment);
           mc += pad;
           current_offset += pad;
@@ -548,6 +649,7 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
       }
     case '5':
       this_size = sizeof(uint32_t);
+      max_size = fmax(this_size, max_size);
       this_alignment = alignof(uint32_t);
       max_alignment = fmax(this_alignment, max_alignment);
       {
@@ -558,9 +660,10 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
         if (*format != 'i')
           goto exit_error;
         this_size = sizeof(uint32_t);
+        max_size = fmax(this_size, max_size);
         this_alignment = alignof(uint32_t);
         max_alignment = fmax(this_alignment, max_alignment);
-        if (current_offset % this_alignment != 0) {
+        if (!packed && current_offset % this_alignment != 0) {
           pad = this_alignment - (current_offset % this_alignment);
           mc += pad;
           current_offset += pad;
@@ -570,6 +673,7 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
       }
     case '6':
       this_size = sizeof(uint64_t);
+      max_size = fmax(this_size, max_size);
       this_alignment = alignof(uint64_t);
       max_alignment = fmax(this_alignment, max_alignment);
       {
@@ -580,9 +684,10 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
         if (*format != 'i')
           goto exit_error;
         this_size = sizeof(uint64_t);
+        max_size = fmax(this_size, max_size);
         this_alignment = alignof(uint64_t);
         max_alignment = fmax(this_alignment, max_alignment);
-        if (current_offset % this_alignment != 0) {
+        if (!packed && current_offset % this_alignment != 0) {
           pad = this_alignment - (current_offset % this_alignment);
           mc += pad;
           current_offset += pad;
@@ -598,9 +703,33 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
       if (res != 1)
         goto exit_error;
       this_size = 0;
-      pad = size; // negative says "pad"
+      pad = size;
       mc += pad;
       current_offset += pad;
+      break;
+    }
+    case '{': {
+      pad = 0;
+      union_opened++;
+      size_t inner_size;
+      struct_member_desc_t s =
+        ctr_ffi_type_get_member_count(format + 1, &inner_size, 0, 1);
+      this_size = s.max_size;
+      max_size = fmax(this_size, max_size);
+      this_alignment = s.max_alignment;
+      max_alignment = fmax(this_alignment, max_alignment);
+      if (!packed && current_offset % this_alignment != 0) {
+        pad = this_alignment - (current_offset % this_alignment);
+        mc += pad;
+        current_offset += pad;
+      }
+      while (*format != '}') {
+        if (*format == '\0')
+          goto exit_error;
+        format++;
+      }
+      mc += s.member_count;
+      element_count = s.member_count - pad;
       break;
     }
     case '[': {
@@ -608,21 +737,21 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
       struct_opened++;
       size_t inner_size;
       struct_member_desc_t s =
-          ctr_ffi_type_get_member_count(format + 1, &inner_size, 0);
+          ctr_ffi_type_get_member_count(format + 1, &inner_size, 0, 0);
       this_size = inner_size;
+      max_size = fmax(this_size, max_size);
       this_alignment = s.max_alignment;
       max_alignment = fmax(this_alignment, max_alignment);
-      if (current_offset % this_alignment != 0) {
+      if (!packed && current_offset % this_alignment != 0) {
         pad = this_alignment - (current_offset % this_alignment);
         mc += pad;
         current_offset += pad;
       }
       while (*format != ']') {
-        format++;
         if (*format == '\0')
           goto exit_error;
+        format++;
       }
-      format++;
       mc++;
       break;
     }
@@ -631,6 +760,7 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
       switch (*format) {
       case 'c':
         this_size = sizeof(unsigned char);
+        max_size = fmax(this_size, max_size);
         this_alignment = alignof(unsigned char);
         max_alignment = fmax(this_alignment, max_alignment);
         pad = 0;
@@ -640,9 +770,10 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
         } // no padding for chars
       case 's':
         this_size = sizeof(unsigned short);
+        max_size = fmax(this_size, max_size);
         this_alignment = alignof(unsigned short);
         max_alignment = fmax(this_alignment, max_alignment);
-        if (current_offset % this_alignment != 0) {
+        if (!packed && current_offset % this_alignment != 0) {
           pad = this_alignment - (current_offset % this_alignment);
           mc += pad;
           current_offset += pad;
@@ -653,9 +784,10 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
         }
       case 'i':
         this_size = sizeof(unsigned int);
+        max_size = fmax(this_size, max_size);
         this_alignment = alignof(unsigned int);
         max_alignment = fmax(this_alignment, max_alignment);
-        if (current_offset % this_alignment != 0) {
+        if (!packed && current_offset % this_alignment != 0) {
           pad = this_alignment - (current_offset % this_alignment);
           mc += pad;
           current_offset += pad;
@@ -666,9 +798,10 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
         }
       case 'l':
         this_size = sizeof(unsigned long);
+        max_size = fmax(this_size, max_size);
         this_alignment = alignof(unsigned long);
         max_alignment = fmax(this_alignment, max_alignment);
-        if (current_offset % this_alignment != 0) {
+        if (!packed && current_offset % this_alignment != 0) {
           pad = this_alignment - (current_offset % this_alignment);
           mc += pad;
           current_offset += pad;
@@ -687,6 +820,7 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
       switch (*format) {
       case 'c':
         this_size = sizeof(unsigned char);
+        max_size = fmax(this_size, max_size);
         this_alignment = alignof(unsigned char);
         max_alignment = fmax(this_alignment, max_alignment);
         pad = 0;
@@ -696,9 +830,10 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
         }
       case 's':
         this_size = sizeof(signed short);
+        max_size = fmax(this_size, max_size);
         this_alignment = alignof(signed short);
         max_alignment = fmax(this_alignment, max_alignment);
-        if (current_offset % this_alignment != 0) {
+        if (!packed && current_offset % this_alignment != 0) {
           pad = this_alignment - (current_offset % this_alignment);
           mc += pad;
           current_offset += pad;
@@ -709,9 +844,10 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
         }
       case 'i':
         this_size = sizeof(signed int);
+        max_size = fmax(this_size, max_size);
         this_alignment = alignof(signed int);
         max_alignment = fmax(this_alignment, max_alignment);
-        if (current_offset % this_alignment != 0) {
+        if (!packed && current_offset % this_alignment != 0) {
           pad = this_alignment - (current_offset % this_alignment);
           mc += pad;
           current_offset += pad;
@@ -722,9 +858,10 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
         }
       case 'l':
         this_size = sizeof(signed long);
+        max_size = fmax(this_size, max_size);
         this_alignment = alignof(signed long);
         max_alignment = fmax(this_alignment, max_alignment);
-        if (current_offset % this_alignment != 0) {
+        if (!packed && current_offset % this_alignment != 0) {
           pad = this_alignment - (current_offset % this_alignment);
           mc += pad;
           current_offset += pad;
@@ -757,21 +894,23 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
         newinfo->offset = current_offset - p + pad;
         padinfo[padinfo_index++] = newinfo;
       }
-      pad_info_node_t *newinfo = ctr_heap_allocate(sizeof(pad_info_node_t));
-      newinfo->pad = 0;
-      newinfo->offset = current_offset;
-      if (padinfo_index >= padinfo_max) {
-        padinfo_max *= 2;
-        padinfo = ctr_heap_reallocate(padinfo,
-                                      sizeof(pad_info_node_t *) * padinfo_max);
+      for (int i = 0; i<element_count; i++) {
+        pad_info_node_t *newinfo = ctr_heap_allocate(sizeof(pad_info_node_t));
+        newinfo->pad = 0;
+        newinfo->offset = current_offset;
+        if (padinfo_index >= padinfo_max) {
+          padinfo_max *= 2;
+          padinfo = ctr_heap_reallocate(padinfo,
+                                        sizeof(pad_info_node_t *) * padinfo_max);
+        }
+        padinfo[padinfo_index++] = newinfo;
       }
-      padinfo[padinfo_index++] = newinfo;
     }
     current_offset += this_size;
     format++;
     pad = 0;
   }
-  if (current_offset % max_alignment != 0) {
+  if (!packed && current_offset % max_alignment != 0) {
     pad = max_alignment - (current_offset % max_alignment);
     mc += pad;
     current_offset += pad;
@@ -810,6 +949,7 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads) {
 
   ret.member_count = mc;
   ret.max_alignment = max_alignment;
+  ret.max_size = max_size;
   ret.pad_structure = padinfo;
   return ret;
 
@@ -818,21 +958,21 @@ exit_error:;
   return ret;
 }
 
-wrapped_ffi_type *ctr_create_ffi_type_descriptor(char *format) {
+wrapped_ffi_type *ctr_create_ffi_type_descriptor(char *format, int union_) {
   ctr_struct_initialize_internal();
   size_t size;
-  struct_member_desc_t desc = ctr_ffi_type_get_member_count(format, &size, 0);
-  return ctr_create_ffi_type_descriptor_(format, desc.member_count);
+  struct_member_desc_t desc = ctr_ffi_type_get_member_count(format, &size, 0, union_);
+  return ctr_create_ffi_type_descriptor_(format, desc.member_count, union_);
 }
 
 wrapped_ffi_type *ctr_create_ffi_type_descriptor_(char *format,
-                                                  int member_count) {
+                                                  int member_count, int union_) {
   ctr_struct_initialize_internal();
   wrapped_ffi_type *new_type = ctr_heap_allocate(sizeof(wrapped_ffi_type));
   new_type->size = 0;
   new_type->alignment = 0;
   new_type->type = FFI_TYPE_STRUCT;
-  new_type->extension_data = WRAPPED_FFI_TYPE_MAGIC;
+  new_type->extension_data = WRAPPED_FFI_TYPE_MAGIC | (union_ ? WRAPPED_FFI_TYPE_UNION : 0);
   if (member_count < 0) {
     char err[512];
     int len = sprintf(
@@ -852,32 +992,33 @@ wrapped_ffi_type *ctr_create_ffi_type_descriptor_(char *format,
       (member_count + 1)); // plus one for the terminating NULL
   size_t current_offset = 0;
   ssize_t this_size = 0;
-  size_t this_alignment = 0;
+  size_t alignment = 0;
+  char *fff = format;
   for (int i = 0; i < member_count; i++) {
-    if (0)
-      ;
     wrapped_ffi_type *member =
         ctr_ffi_type_get_format_splat(&format, &this_size);
+    alignment = fmax(alignment, member->alignment);
     if (this_size < 0) {
       size_t pad = -this_size;
       current_offset += pad;
       for (int j = 0; j < pad; j++)
         elems[i++] = &wrapped_ffi_type_uchar;
     } else {
-      if (current_offset % this_size != 0) {
+      if (!union_ && current_offset % this_size != 0) { // no padding for unions
         size_t pad = this_size - (current_offset % this_size);
         current_offset += pad;
         for (int j = 0; j < pad; j++) {
           elems[i++] = &wrapped_ffi_type_uchar; // insert a bunch of pads
         }
       }
-      format++;
       elems[i] = member;
       current_offset += this_size;
     }
   }
   elems[member_count] = NULL;
   new_type->elements = (ffi_type **)elems;
+  new_type->size = current_offset;
+  new_type->alignment = alignment;
   return new_type;
 }
 
@@ -1104,12 +1245,14 @@ int ctr_create_ffi_str_descriptor(wrapped_ffi_type *type, char *buf) {
         memcpy(buf, "l", 1);
       size += 1;
     } else if (elems[i]->type == FFI_TYPE_STRUCT) {
+      int is_wrapped = IS_WRAPPED(elems[i]);
+      int is_union = is_wrapped && (WRAP_DATA(elems[i]) == WRAPPED_FFI_TYPE_UNION);
       if (buf != NULL)
-        memcpy(buf, "[", 1);
+        memcpy(buf, &"[{"[is_union], 1);
       int skip = ctr_create_ffi_str_descriptor((wrapped_ffi_type *)elems[i],
                                                buf != NULL ? buf + 1 : NULL);
       if (buf != NULL)
-        memcpy(buf + skip, "]", 1);
+        memcpy(buf + skip + 1, &"]}"[is_union], 1);
       size += skip + 2;
     } else
       return -1;
@@ -1126,13 +1269,15 @@ struct test_str {
   long long b;
   void *c;
   char d;
-  char e;
-  int f;
+  union {
+    char e;
+    int f;
+  };
 };
 int main(void) {
-  char *fmt = "dlpscsc<2>si";
+  char *fmt = "dlpsc{scsi}";
   size_t size;
-  struct_member_desc_t desc = ctr_ffi_type_get_member_count(fmt, &size, 1);
+  struct_member_desc_t desc = ctr_ffi_type_get_member_count(fmt, &size, 1, 0);
   int count = desc.member_count;
   if (count < 0) {
     printf("Error at %d\n", count);

@@ -1494,9 +1494,9 @@ ctr_object *ctr_ctypes_struct_make_internal(ctr_object *myself, char *_fmt) {
   char *fmtp = fmt;
   size_t size;
   struct_member_desc_t desc;
-  desc = ctr_ffi_type_get_member_count(fmt, &size, 1);
+  desc = ctr_ffi_type_get_member_count(fmt, &size, 1, 0);
   int member_count = desc.member_count;
-  ffi_type *type = ctr_create_ffi_type_descriptor_(fmt, member_count);
+  ffi_type *type = ctr_create_ffi_type_descriptor_(fmt, member_count, 0);
   ctr_ctypes_ffi_struct_value *ptr =
       ctr_heap_allocate(sizeof(ctr_ctypes_ffi_struct_value));
   ptr->member_count = member_count;
@@ -1514,6 +1514,25 @@ ctr_object *ctr_ctypes_make_struct(ctr_object *myself,
                                    ctr_argument *argumentList) {
   char *fmt = ctr_heap_allocate_cstring(argumentList->object);
   return ctr_ctypes_struct_make_internal(myself, fmt);
+}
+
+static ffi_type *collapse_type_tree_index(ffi_type **types, int* index) {
+  ffi_type **elems = types;
+  elems != NULL || (printf("type elements cannot be NULL at %s:%d\n", __FUNCTION__, __LINE__) && raise());
+  while(elems[0]) {
+    ffi_type *elem = elems[0];
+    elems++;
+    if (elem->type == FFI_TYPE_STRUCT) {
+      // descend
+      ffi_type *ret = collapse_type_tree_index(elem->elements, index);
+      if (*index == -1)
+        return ret;
+      continue;
+    }
+    if (--*index == -1)
+      return elem;
+  }
+  return NULL;
 }
 
 /* ptr is CTypes fromString: 'test'.
@@ -1543,7 +1562,9 @@ ctr_object *ctr_ctypes_pack_struct(
   //----
   int init = 0;
   for (int i = data->value.avalue->tail; i < data->value.avalue->head; i++) {
-    size_t this_size = reverse_ffi_type_size_map_lookup(struct_fields[init]);
+    int x = init;
+    ffi_type *ty = struct_fields[x];
+    size_t this_size = ty->size; //reverse_ffi_type_size_map_lookup(ty);
     if (this_size == 0)
       printf("\n");
     while (padinfo[init]->pad) { // skip them pads
@@ -1559,7 +1580,7 @@ ctr_object *ctr_ctypes_pack_struct(
     } else if (fld->info.type == CTR_OBJECT_TYPE_OTEX) {
       nppointer(fieldsp, fld);
     } else {
-      int ret = npdispatch(fieldsp, fld, struct_fields[init]);
+      int ret = npdispatch(fieldsp, fld, ty);
     }
     fieldsp += this_size;
     // ctr_heap_free(padinfo[init]); //we don't need this anymoar either
@@ -1594,13 +1615,15 @@ ctr_object *ctr_ctypes_pack_struct_at(
   //----
   for (int i = 0; i < member_count; i++) {
     if (padinfo[i]->offset == offset) {
-      size_t this_size = reverse_ffi_type_size_map_lookup(struct_fields[i]);
+      int x = i;
+      ffi_type *typev = collapse_type_tree_index(struct_fields, &x);
+      size_t this_size = typev->size; //reverse_ffi_type_size_map_lookup(typev);
       if (fld->info.type == CTR_OBJECT_TYPE_OTNIL) {
         memset(fieldsp + offset, 0, this_size);
       } else if (fld->info.type == CTR_OBJECT_TYPE_OTEX) {
         nppointer(fieldsp + offset, fld);
       } else {
-        (void)npdispatch(fieldsp + offset, fld, struct_fields[i]);
+        (void)npdispatch(fieldsp + offset, fld, typev);
       }
       structptr->value = fields;
     }
@@ -1635,7 +1658,9 @@ ctr_ctypes_unpack_struct(ctr_object *myself,
   int ignore_pads = 0;
   // while(struct_fields[i]) {
   for (; i < member_count; i++) {
-    if (!struct_fields[init])
+    int x = init;
+    ffi_type *ty = collapse_type_tree_index(struct_fields, &x);
+    if (!ty)
       break;
     // size_t this_size = reverse_ffi_type_size_map_lookup(struct_fields[init]);
     if (!padinfo[init]) {
@@ -1650,7 +1675,7 @@ ctr_ctypes_unpack_struct(ctr_object *myself,
       i++;
     }
     ctr_object *fld =
-        nudispatch(fieldsp + padinfo[init]->offset, struct_fields[init]);
+        nudispatch(fieldsp + padinfo[init]->offset, ty);
     if (fld) {
       arglist->object = fld;
       ctr_array_push(data, arglist);

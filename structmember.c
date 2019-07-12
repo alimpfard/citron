@@ -299,18 +299,18 @@ int npdispatch(char *p, ctr_object *__restrict__ o, ffi_type *type) {
       WRAPPED_FFI_TYPE_MAGIC) {
     unsigned int ext =
         ((wrapped_ffi_type *)type)->extension_data & ~WRAPPED_FFI_TYPE_MAGIC;
-    switch(ext) {
-      case 0:
-        break;
+    switch (ext) {
+    case 0:
+      break;
 
-      case WRAPPED_FFI_TYPE_UNION: {
-        // enumerate the elements and pass out the first compliant one
-        int ret;
-        for (ffi_type **types = type->elements; *types; types++)
-          if ((ret = npdispatch(p, o, *types)) == 0)
-            return ret;
-        return -2;
-      }
+    case WRAPPED_FFI_TYPE_UNION: {
+      // enumerate the elements and pass out the first compliant one
+      int ret;
+      for (ffi_type **types = type->elements; *types; types++)
+        if ((ret = npdispatch(p, o, *types)) == 0)
+          return ret;
+      return -2;
+    }
     }
   }
   int (*fn)(char *, ctr_object *) = get_pentry(type).fn;
@@ -326,18 +326,18 @@ struct nudt_t get_uentry(ffi_type *type) {
       WRAPPED_FFI_TYPE_MAGIC) {
     unsigned int ext =
         ((wrapped_ffi_type *)type)->extension_data & ~WRAPPED_FFI_TYPE_MAGIC;
-    switch(ext) {
-      case 0:
-        break;
+    switch (ext) {
+    case 0:
+      break;
 
-      case WRAPPED_FFI_TYPE_UNION: {
-        // what do? how do we figure out which one is desired?
-        // biggest? smallest? :think:
-        //
-        // we'll go with _first_
-        // TODO: Fix this somehow
-        return get_uentry(type->elements[0]); // handle the rest, master
-      }
+    case WRAPPED_FFI_TYPE_UNION: {
+      // what do? how do we figure out which one is desired?
+      // biggest? smallest? :think:
+      //
+      // we'll go with _first_
+      // TODO: Fix this somehow
+      return get_uentry(type->elements[0]); // handle the rest, master
+    }
     }
   }
   while (nudtable[i].type != NULL) {

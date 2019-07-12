@@ -7,8 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 // #include "structmember.h"
-#define max(x,y) ((x)>(y)?(x):(y))
-
+#define max(x, y) ((x) > (y) ? (x) : (y))
 
 #ifndef TEST
 #include "citron.h"
@@ -21,8 +20,11 @@
 #undef TEST
 int initd = 0;
 
-#define IS_WRAPPED(x) ((((wrapped_ffi_type*)(x))->extension_data&WRAPPED_FFI_TYPE_MAGIC) == WRAPPED_FFI_TYPE_MAGIC)
-#define WRAP_DATA(x) ((((wrapped_ffi_type*)(x))->extension_data&~WRAPPED_FFI_TYPE_MAGIC))
+#define IS_WRAPPED(x)                                                          \
+  ((((wrapped_ffi_type *)(x))->extension_data & WRAPPED_FFI_TYPE_MAGIC) ==     \
+   WRAPPED_FFI_TYPE_MAGIC)
+#define WRAP_DATA(x)                                                           \
+  ((((wrapped_ffi_type *)(x))->extension_data & ~WRAPPED_FFI_TYPE_MAGIC))
 
 void ctr_struct_initialize_internal() {
   if (likely(initd))
@@ -216,7 +218,7 @@ wrapped_ffi_type *ctr_ffi_type_get_format_splat(char **format,
       (*format)++;
       if (**format != 'i')
         return NULL;
-        ++*format;
+      ++*format;
       *this_size = sizeof(uint16_t);
       return &wrapped_ffi_type_uint16;
     }
@@ -224,7 +226,7 @@ wrapped_ffi_type *ctr_ffi_type_get_format_splat(char **format,
       (*format)++;
       if (**format != 'i')
         return NULL;
-        ++*format;
+      ++*format;
       *this_size = sizeof(int16_t);
       return &wrapped_ffi_type_sint16;
     }
@@ -239,7 +241,7 @@ wrapped_ffi_type *ctr_ffi_type_get_format_splat(char **format,
       (*format)++;
       if (**format != 'i')
         return NULL;
-        ++*format;
+      ++*format;
       *this_size = sizeof(uint32_t);
       return &wrapped_ffi_type_uint32;
     }
@@ -247,7 +249,7 @@ wrapped_ffi_type *ctr_ffi_type_get_format_splat(char **format,
       (*format)++;
       if (**format != 'i')
         return NULL;
-        ++*format;
+      ++*format;
       *this_size = sizeof(int32_t);
       return &wrapped_ffi_type_sint32;
     }
@@ -262,7 +264,7 @@ wrapped_ffi_type *ctr_ffi_type_get_format_splat(char **format,
       (*format)++;
       if (**format != 'i')
         return NULL;
-        ++*format;
+      ++*format;
       *this_size = sizeof(uint64_t);
       return &wrapped_ffi_type_uint64;
     }
@@ -270,7 +272,7 @@ wrapped_ffi_type *ctr_ffi_type_get_format_splat(char **format,
       (*format)++;
       if (**format != 'i')
         return NULL;
-        ++*format;
+      ++*format;
       *this_size = sizeof(int64_t);
       return &wrapped_ffi_type_sint64;
     }
@@ -373,7 +375,8 @@ int ctr_ffi_type_struct_sizeof(
   int size = 0;
   char *beginning = format;
   int struct_opened = 1; // we are in a struct. a stray ']' will terminate this
-  int union_opened  = 1; // we pretend we're in a union, a stray '}' will terminate this
+  int union_opened =
+      1; // we pretend we're in a union, a stray '}' will terminate this
   while ((union_opened > 0 && struct_opened > 0) && *format != '\0') {
     switch (*format) {
     case ']':
@@ -516,8 +519,10 @@ int ctr_ffi_type_struct_sizeof(
   return size;
 }
 
-struct_member_desc_t
-ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads, int packed) {
+struct_member_desc_t ctr_ffi_type_get_member_count(char *format,
+                                                   size_t *size_out,
+                                                   int record_pads,
+                                                   int packed) {
   ctr_struct_initialize_internal();
   int mc = 0;
   char *beginning = format;
@@ -713,7 +718,7 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads, i
       union_opened++;
       size_t inner_size;
       struct_member_desc_t s =
-        ctr_ffi_type_get_member_count(format + 1, &inner_size, 0, 1);
+          ctr_ffi_type_get_member_count(format + 1, &inner_size, 0, 1);
       this_size = s.max_size;
       max_size = fmax(this_size, max_size);
       this_alignment = s.max_alignment;
@@ -894,14 +899,14 @@ ctr_ffi_type_get_member_count(char *format, size_t *size_out, int record_pads, i
         newinfo->offset = current_offset - p + pad;
         padinfo[padinfo_index++] = newinfo;
       }
-      for (int i = 0; i<element_count; i++) {
+      for (int i = 0; i < element_count; i++) {
         pad_info_node_t *newinfo = ctr_heap_allocate(sizeof(pad_info_node_t));
         newinfo->pad = 0;
         newinfo->offset = current_offset;
         if (padinfo_index >= padinfo_max) {
           padinfo_max *= 2;
-          padinfo = ctr_heap_reallocate(padinfo,
-                                        sizeof(pad_info_node_t *) * padinfo_max);
+          padinfo = ctr_heap_reallocate(padinfo, sizeof(pad_info_node_t *) *
+                                                     padinfo_max);
         }
         padinfo[padinfo_index++] = newinfo;
       }
@@ -961,18 +966,20 @@ exit_error:;
 wrapped_ffi_type *ctr_create_ffi_type_descriptor(char *format, int union_) {
   ctr_struct_initialize_internal();
   size_t size;
-  struct_member_desc_t desc = ctr_ffi_type_get_member_count(format, &size, 0, union_);
+  struct_member_desc_t desc =
+      ctr_ffi_type_get_member_count(format, &size, 0, union_);
   return ctr_create_ffi_type_descriptor_(format, desc.member_count, union_);
 }
 
-wrapped_ffi_type *ctr_create_ffi_type_descriptor_(char *format,
-                                                  int member_count, int union_) {
+wrapped_ffi_type *
+ctr_create_ffi_type_descriptor_(char *format, int member_count, int union_) {
   ctr_struct_initialize_internal();
   wrapped_ffi_type *new_type = ctr_heap_allocate(sizeof(wrapped_ffi_type));
   new_type->size = 0;
   new_type->alignment = 0;
   new_type->type = FFI_TYPE_STRUCT;
-  new_type->extension_data = WRAPPED_FFI_TYPE_MAGIC | (union_ ? WRAPPED_FFI_TYPE_UNION : 0);
+  new_type->extension_data =
+      WRAPPED_FFI_TYPE_MAGIC | (union_ ? WRAPPED_FFI_TYPE_UNION : 0);
   if (member_count < 0) {
     char err[512];
     int len = sprintf(
@@ -1246,7 +1253,8 @@ int ctr_create_ffi_str_descriptor(wrapped_ffi_type *type, char *buf) {
       size += 1;
     } else if (elems[i]->type == FFI_TYPE_STRUCT) {
       int is_wrapped = IS_WRAPPED(elems[i]);
-      int is_union = is_wrapped && (WRAP_DATA(elems[i]) == WRAPPED_FFI_TYPE_UNION);
+      int is_union =
+          is_wrapped && (WRAP_DATA(elems[i]) == WRAPPED_FFI_TYPE_UNION);
       if (buf != NULL)
         memcpy(buf, &"[{"[is_union], 1);
       int skip = ctr_create_ffi_str_descriptor((wrapped_ffi_type *)elems[i],

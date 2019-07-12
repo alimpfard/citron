@@ -1516,10 +1516,12 @@ ctr_object *ctr_ctypes_make_struct(ctr_object *myself,
   return ctr_ctypes_struct_make_internal(myself, fmt);
 }
 
-static ffi_type *collapse_type_tree_index(ffi_type **types, int* index) {
+static ffi_type *collapse_type_tree_index(ffi_type **types, int *index) {
   ffi_type **elems = types;
-  elems != NULL || (printf("type elements cannot be NULL at %s:%d\n", __FUNCTION__, __LINE__) && raise());
-  while(elems[0]) {
+  elems != NULL || (printf("type elements cannot be NULL at %s:%d\n",
+                           __FUNCTION__, __LINE__) &&
+                    raise());
+  while (elems[0]) {
     ffi_type *elem = elems[0];
     elems++;
     if (elem->type == FFI_TYPE_STRUCT) {
@@ -1564,7 +1566,7 @@ ctr_object *ctr_ctypes_pack_struct(
   for (int i = data->value.avalue->tail; i < data->value.avalue->head; i++) {
     int x = init;
     ffi_type *ty = struct_fields[x];
-    size_t this_size = ty->size; //reverse_ffi_type_size_map_lookup(ty);
+    size_t this_size = ty->size; // reverse_ffi_type_size_map_lookup(ty);
     if (this_size == 0)
       printf("\n");
     while (padinfo[init]->pad) { // skip them pads
@@ -1617,7 +1619,7 @@ ctr_object *ctr_ctypes_pack_struct_at(
     if (padinfo[i]->offset == offset) {
       int x = i;
       ffi_type *typev = collapse_type_tree_index(struct_fields, &x);
-      size_t this_size = typev->size; //reverse_ffi_type_size_map_lookup(typev);
+      size_t this_size = typev->size; // reverse_ffi_type_size_map_lookup(typev);
       if (fld->info.type == CTR_OBJECT_TYPE_OTNIL) {
         memset(fieldsp + offset, 0, this_size);
       } else if (fld->info.type == CTR_OBJECT_TYPE_OTEX) {
@@ -1674,8 +1676,7 @@ ctr_ctypes_unpack_struct(ctr_object *myself,
       init++;
       i++;
     }
-    ctr_object *fld =
-        nudispatch(fieldsp + padinfo[init]->offset, ty);
+    ctr_object *fld = nudispatch(fieldsp + padinfo[init]->offset, ty);
     if (fld) {
       arglist->object = fld;
       ctr_array_push(data, arglist);

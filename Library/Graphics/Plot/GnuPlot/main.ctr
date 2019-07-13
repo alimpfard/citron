@@ -111,6 +111,16 @@ var Plot is Object cnew: {:self
   }.
 }.
 
+var SPlot is Plot cnew: {
+  initialized => False.
+  on: 'new:do:' do: {:&io:block
+    ^me new preinit initWithIO: io andCommand: 'splot' andBlock: block.
+  }.
+  on: 'new:' do: {:block
+    ^me new preinit initWithIO: '' andCommand: 'splot' andBlock: block.
+  }.
+}.
+
 var DataSet is Object cnew: {
   on: 'type' do: {\ 'DataSet' }.
   on: 'toString' do: { ^'DataSet'. }.

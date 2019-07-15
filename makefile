@@ -185,7 +185,7 @@ modules:
 
 package:
 	ls -l /usr/lib
-	ln -s /usr/lib/libdl.a /usr/bin/msys-libdl.a.dll
+	ln -s /usr/lib/libdl.a /usr/bin/msys-libdl.dll.a
 	ldd ./ctr
 	for dep in `ldd ./ctr | grep '=>' | cut -d' ' -f3 | xargs realpath`; do \
 		printf '%s ... ' "Resolving dependancy '$$dep'" ; \

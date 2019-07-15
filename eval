@@ -1025,6 +1025,20 @@ Eval on: 'togglePasteMode' do: {
       args pop.
       Eval enableFlag: 'html_colors'.
       import Library/Utils/Colors/HTML.
+    }, case: '--update-stdlib' do: {
+      args pop.
+      import Library/Utils/update-self: \*.
+      update-stdlib run.
+      Program exit.
+    }, case: '--update-stdlib-from' do: {
+      args pop.
+      var path is Eval shiftArgs.
+      path isNil ifTrue: {
+        thisBlock error: '--update-stdlib-from expects a github repository name in form of `owner/repo-name\''.
+      }.
+      import Library/Utils/update-self: \*.
+      update-stdlib applyTo: path.
+      Program exit.
     }, default: {
       (opt startsWith: '-') & (opt startsWith: '--', not) ifTrue: {
         args pop.

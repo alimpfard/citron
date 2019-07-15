@@ -34,3 +34,36 @@ Object on: 'case:do:' do: { :s :b
   var ret is const CaseConstruct new initFor: me.
   ^ret case: s do: b.
 }.
+
+#
+# lambdaCase {
+#   expr => { consequence },
+#   expr => { consequence },
+#   ...
+# } -> Block {:arg alternative. }.
+#
+var blockCase is Object cnew: {
+  on: 'applyAll:' do: {:exprs
+    var frame is Reflect frame: Reflect frameId - 1. # a copy of the past frame
+    var otherwise is Object new.
+    Reflect
+      run: {:&x otherwise => x. _ => x. else => x. }
+      inContextAsWorld: frame
+      arguments: [otherwise].
+
+    var blk is {:it ^my alternatives switch: it.}.
+    var alternatives is const CaseConstruct new initFor: Nil.
+    exprs each_v: {:expr
+      # ASSIGN (case) (alternative)
+      var case is expr @ 0 evaluateInContext: frame.
+      var alternative is expr @ 1 evaluateInContext: frame.
+      case id = otherwise id ifTrue: {
+        alternatives default: alternative.
+      } ifFalse: {
+        alternatives case: case do: alternative.
+      }.
+    }.
+    blk set: 'alternatives' value: alternatives.
+    ^blk.
+  }.
+}.

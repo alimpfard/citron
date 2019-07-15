@@ -5,12 +5,15 @@ import
   Library/Control/Error/NotImplementedError
 .
 
-var Colors is Object cnew: {
+var Colors is Object cnew: {:self
+  var colors is self.
   my cache is Map new on: 'at:' do: {:key
-    var self is const me.
     var cself is me.
-    ^((var v is me `at: key) isNil not) either: {\ v. } or: {
-      cself put: (var c is self message: 'color' arguments: key) at: key.
+    var v is `at: key.
+    v isNil not ifTrue: {
+      ^v.
+    } ifFalse: {
+      put: (var c is const colors message: 'color' arguments: key) at: key.
       ^c.
     }.
   }.

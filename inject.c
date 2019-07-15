@@ -344,7 +344,7 @@ void ctr_inject_free_function_type(ctr_inferred_ctype_type_t ty) {
 
 extern void ctr_ctypes_set_type(ctr_object *object, ctr_ctype type);
 extern ctr_ctype ctr_ctypes_ffi_convert_ffi_type_to_ctype(ffi_type *type);
-ffi_type *ctr_ctypes_ffi_convert_to_ffi_type(ctr_object *type);
+wrapped_ffi_type *ctr_ctypes_ffi_convert_to_ffi_type(ctr_object *type);
 ssize_t ctr_ctype_get_c_size(ctr_object *obj);
 
 ctr_object *ctr_inject_generate_ctype(ctr_inferred_ctype_type_t ty) {

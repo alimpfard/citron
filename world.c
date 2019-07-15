@@ -1,13 +1,13 @@
 #include <ctype.h>
 #include <errno.h>
 #include <math.h>
-#include <sys/types.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -41,7 +41,6 @@ static pthread_mutex_t ctr_message_mutex = {{PTHREAD_MUTEX_RECURSIVE}};
 #else
 #define ctr_heap_allocate_typed_(s, t) ctr_heap_allocate(s)
 #endif
-
 
 #include "promise.h"
 
@@ -149,7 +148,7 @@ static const int all_signals[] = {
 #endif
 };
 
-static ctr_object* ctr_gc_dump(ctr_object* myself, ctr_argument* argumentList) {
+static ctr_object *ctr_gc_dump(ctr_object *myself, ctr_argument *argumentList) {
   GC_dump();
   return myself;
 }
@@ -549,7 +548,7 @@ ctr_object *ctr_internal_object_find_property_with_hash(ctr_object *owner,
   } else
     lookup = owner->properties;
   if (unlikely(!lookup))
-      return NULL;
+    return NULL;
   if (unlikely(lookup->size == 1 &&
                (head = lookup->head)->hashKey == hashKey)) {
     if (likely(ctr_internal_object_is_equal(head->key, key))) {
@@ -599,7 +598,7 @@ ctr_object *ctr_internal_object_find_property_or_create_with_hash(
   } else
     lookup = owner->properties;
   if (unlikely(!lookup))
-      return NULL;
+    return NULL;
   if (unlikely(lookup->size == 0)) {
     ctr_object *repl = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNIL);
     ctr_set_link_all(repl, CtrStdNil);
@@ -702,7 +701,7 @@ void ctr_internal_object_delete_property_with_hash(ctr_object *owner,
     head = owner->methods->head;
   } else {
     if (!owner->properties)
-        return;
+      return;
     if (owner->properties->size == 0) {
       return;
     }
@@ -1256,6 +1255,8 @@ void ctr_open_context() {
  * Closes a context.
  */
 void ctr_close_context() {
+  // ctr_contexts[ctr_context_id]->properties->head = NULL;
+  // ctr_contexts[ctr_context_id]->properties->size = 0;
   ctr_contexts[ctr_context_id]->info.sticky = 0;
   if (ctr_context_id == 0)
     return;
@@ -1483,11 +1484,12 @@ void ctr_initialize_world_minimal() {
   if (ctr_world_initialized)
     return;
 
-  volatile ctr_thread_workaround_double_list_t* tw = ctr_heap_allocate_tracked(sizeof(*tw));
+  volatile ctr_thread_workaround_double_list_t *tw =
+      ctr_heap_allocate_tracked(sizeof(*tw));
   tw->next = NULL;
   tw->prev = ctr_thread_workaround_double_list;
   tw->context = ctr_contexts;
-  ctr_thread_workaround_double_list = (ctr_thread_workaround_double_list_t*) tw;
+  ctr_thread_workaround_double_list = (ctr_thread_workaround_double_list_t *)tw;
 
   trace_ignore_count = 0;
   ctr_world_initialized = 1;
@@ -1585,11 +1587,12 @@ void ctr_initialize_world_minimal() {
 void ctr_initialize_world() {
   if (ctr_world_initialized)
     return;
-  volatile ctr_thread_workaround_double_list_t* tw = ctr_heap_allocate_tracked(sizeof(*tw));
+  volatile ctr_thread_workaround_double_list_t *tw =
+      ctr_heap_allocate_tracked(sizeof(*tw));
   tw->next = NULL;
   tw->prev = ctr_thread_workaround_double_list;
   tw->context = ctr_contexts;
-  ctr_thread_workaround_double_list = (ctr_thread_workaround_double_list_t*) tw;
+  ctr_thread_workaround_double_list = (ctr_thread_workaround_double_list_t *)tw;
 
   trace_ignore_count = 0;
   ctr_world_initialized = 1;
@@ -2744,14 +2747,18 @@ void ctr_initialize_world() {
                            &ctr_file_stdext_path);
   ctr_internal_create_func(
       CtrStdFile, ctr_build_string_from_cstring(CTR_DICT_READ), &ctr_file_read);
-  ctr_internal_create_func(
-      CtrStdFile, ctr_build_string_from_cstring("generateLines"), &ctr_file_generate_lines);
+
+  ctr_internal_create_func(CtrStdFile,
+                           ctr_build_string_from_cstring("generateLines"),
+                           &ctr_file_generate_lines);
 
   ctr_internal_create_func(
-      CtrStdFile, ctr_build_string_from_cstring("generateLinesBlocking:"), &ctr_file_generate_lines);
+      CtrStdFile, ctr_build_string_from_cstring("generateLinesBlocking:"),
+      &ctr_file_generate_lines);
 
   // ctr_internal_create_func(
-  //     CtrStdFile, ctr_build_string_from_cstring("generateLinesNonblocking"), &ctr_file_generate_lines);
+  //     CtrStdFile, ctr_build_string_from_cstring("generateLinesNonblocking"),
+  //     &ctr_file_generate_lines);
   ctr_internal_create_func(CtrStdFile,
                            ctr_build_string_from_cstring(CTR_DICT_WRITE),
                            &ctr_file_write);
@@ -3359,11 +3366,13 @@ void ctr_initialize_world() {
                            &ctr_thread_set_target);
   ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("run"),
                            &ctr_thread_run);
-  ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("finished"),
+  ctr_internal_create_func(CtrStdThread,
+                           ctr_build_string_from_cstring("finished"),
                            &ctr_thread_finished);
   ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("join"),
                            &ctr_thread_join);
-  ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("detach"),
+  ctr_internal_create_func(CtrStdThread,
+                           ctr_build_string_from_cstring("detach"),
                            &ctr_thread_detach);
   ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("id"),
                            &ctr_thread_id);

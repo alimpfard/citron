@@ -107,8 +107,10 @@ extern int speculative_parse;
  * `[1,2` is transformed to `[1,2]`
  * `[1,2 toString` is transformed to `[1, 2 toString]`
  */
-ctr_object *ctr_ast_set_speculative(ctr_object *myself, ctr_argument *argumentList) {
-  speculative_parse = ctr_internal_cast2bool(argumentList->object)->value.bvalue;
+ctr_object *ctr_ast_set_speculative(ctr_object *myself,
+                                    ctr_argument *argumentList) {
+  speculative_parse =
+      ctr_internal_cast2bool(argumentList->object)->value.bvalue;
   return myself;
 }
 
@@ -117,9 +119,10 @@ ctr_object *ctr_ast_set_speculative(ctr_object *myself, ctr_argument *argumentLi
  *
  * Returns True if speculative parsing is enabled, False otherwise
  */
-ctr_object *ctr_ast_get_speculative(ctr_object *myself, ctr_argument *argumentList) {
-  (void) myself;
-  (void) argumentList;
+ctr_object *ctr_ast_get_speculative(ctr_object *myself,
+                                    ctr_argument *argumentList) {
+  (void)myself;
+  (void)argumentList;
   return ctr_build_bool(speculative_parse);
 }
 /**

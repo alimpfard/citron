@@ -89,7 +89,9 @@ It on: 'do:' do: {:blk
             Reflect stackTrace
                 split: '\n',
                 do shift shift shift shift done reverse
-                fmap: \:x '\t${{(Colors red)}}$|${{(Colors default)}}$ $$x',
+                filter: (\:_:x x containsPattern: ?>\(.*(Library/Test|extensions/importlib\.ctr).*\)<?, not),
+                fmap: \:x x ~ ?>s/^#\d+ (.*)$/$1/<?,
+                imap: \:i:x '\t${{(Colors red)}}$| #${{i + 1}}$${{(Colors default)}}$ $$x',
                 join: '\n'
         ).
         const errPen write: '\t${{(Colors red)}}$* ${{(Colors magenta)}}$$$e', resetColor brk.
@@ -101,7 +103,9 @@ It on: 'do:' do: {:blk
             Reflect stackTrace
                 split: '\n',
                 do shift shift shift shift done reverse
-                fmap: \:x '\t| $$x',
+                filter: (\:_:x x containsPattern: ?>\(.*(Library/Test|extensions/importlib\.ctr).*\)<?, not),
+                fmap: \:x x ~ ?>s/^#\d+ (.*)$/$1/<?,
+                imap: \:i:x '\t${{(Colors red)}}$| #${{i + 1}}$${{(Colors default)}}$ $$x',
                 join: '\n'
         ).
         const errPen red write: '\t* ' + e, resetColor brk.

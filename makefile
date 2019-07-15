@@ -131,7 +131,8 @@ inline-asm.o:
 define SHVAL =
 for f in *.c; do\
 	echo "Formatting $f";\
-	indent -l150 -hnl -bbo $f;\
+	cp "$f" ".bac/$f";\
+	clang-format -i "$f";\
 done
 endef
 

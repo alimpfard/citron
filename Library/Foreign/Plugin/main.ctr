@@ -1,3 +1,0 @@
-var LoadPlugin is {:path_to_so
-  Inject cExec.
-}.

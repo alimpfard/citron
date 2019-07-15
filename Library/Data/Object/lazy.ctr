@@ -1,5 +1,0 @@
-#:language XFrozen
-
-var lazy is {:expr
-  ^{ ^frozen _ is const expr evaluate. }.
-}.

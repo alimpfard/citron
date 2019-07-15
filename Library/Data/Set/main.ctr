@@ -1,3 +1,0 @@
-import HashSet: 'HashSet'.
-
-import export: HashSet as: 'HashSet'.

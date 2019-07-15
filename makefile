@@ -3,7 +3,7 @@ DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 o_cflags := -I/mingw64/include
 #it ain't so easy
 #$(shell pkg-config --cflags tcl)
-o_ldflags := -L/mingw64/lib -ltcl8.6 -ldl -lz -lpthread -lz
+o_ldflags := -L/mingw64/lib -ltcl8.6 -lz -lpthread -lz
 #$(shell pkg-config --libs tcl)
 CFLAGS := ${CFLAGS} ${o_cflags} -I/usr/include
 LEXTRACF := ${LEXTRACF} ${o_ldflags} -flto -lstdc++ -static-libgcc -static-libstdc++
@@ -91,7 +91,7 @@ install:
 	echo -e "install directly from source not allowed.\nUse citron_autohell instead for installs"
 	exit 1;
 ctr:	$(OBJS) $(EXTRAOBJS)
-	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) ${CXXFLAGS}  -rdynamic -lm -ldl -lpcre -lpthread /usr/lib/libgc.dll.a ${LEXTRACF} -o ctr
+	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) ${CXXFLAGS}  -rdynamic -lm -lpthread /usr/lib/libgc.dll.a /usr/lib/libdl.a /usr/lib/libpcre.a ${LEXTRACF} -o ctr
 
 libctr: CFLAGS := $(CFLAGS) -fPIC -DCITRON_LIBRARY
 libctr: deps
@@ -185,7 +185,6 @@ modules:
 
 package:
 	ls -l /usr/lib
-	ln -s /usr/lib/libdl.a /usr/bin/msys-libdl.dll.a
 	ldd ./ctr
 	for dep in `ldd ./ctr | grep '=>' | cut -d' ' -f3 | xargs realpath`; do \
 		printf '%s ... ' "Resolving dependancy '$$dep'" ; \

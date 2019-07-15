@@ -801,6 +801,8 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '--without-signals : Disable signal processing\n',
           indent: 2 write: '--without-history : Disable recording of history\n',
           indent: 2 write: '--history-dir <dir> : Save the history in dir/ctrhist\n',
+          indent: 2 write: '--update-stdlib -- Update the stdlib from alimpfard/citron_standard_library\n',
+          indent: 2 write: '--update-stdlib-from <path> -- Update the stdlib from the given path\n',
           indent: 2 write: '--clear-errors : show tips for some common errors\n',
           indent: 2 write: '--html-colors : output html for syntax highlighting\n',
           magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.

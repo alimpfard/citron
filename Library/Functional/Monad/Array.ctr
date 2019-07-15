@@ -1,9 +1,0 @@
-import Library/Functional/TypeClass/Monad.
-
-Array
-  inheritFrom: Monad,
-  on: 'unit:' do: {:v ^[v].},
-  on: 'bind:' do: {:fn
-    var thisContext is me.
-    ^me fmap: fn, sum.
-  }.

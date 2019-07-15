@@ -1,9 +1,0 @@
-import Library/Functional/TypeClass/Category.
-
-Array inheritFrom: Category,
-  on: 'compose:' do: {:other
-    ^me + other.
-  },
-  on: 'id' do: {
-    ^me.
-  }.

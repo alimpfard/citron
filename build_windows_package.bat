@@ -14,10 +14,7 @@ if %COMPILER%==msys2 (
     SET "CC=gcc.exe"
     make all
     call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat"
-    dumpbin /dependents libcurl-4.dll
-    dumpbin /dependents ctr.exe > deps
-    dumpbin /exports ctr.exe > exports
-    appveyor PushArtifact deps
-    appveyor PushArtifact exports
+    where dumpbin > dumpbin.location
+    make pull_dependencies
     make distribute
 )

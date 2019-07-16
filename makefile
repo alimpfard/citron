@@ -72,7 +72,7 @@ deps:
 	# This is just a hacky way of getting bdwgc "libgc" from MSYS2,
 	# Do not expect it to work anywhere else
 	# TODO: Find a better solution
-	pacman --noconfirm -S libgc-devel libgc mingw-w64-i686-dlfcn mingw-w64-x86_64-dlfcn mingw-w64-x86_64-pcre mingw-w64-i686-pcre git
+	pacman --noconfirm --needed -S libgc-devel libgc mingw-w64-i686-dlfcn mingw-w64-x86_64-dlfcn mingw-w64-x86_64-pcre mingw-w64-i686-pcre git
 
 all: CFALGS := $(CFLAGS) -O2
 all: deps modules cxx
@@ -165,9 +165,115 @@ love:
 
 war:
 	echo "Not love?"
+
+pull_dependencies:
+	ln -s "$$(cat dumpbin.location)" dumpbin;\
+	./dumpbin -dependents libcurl-4.dll >> dependencies;\
+	sed -n '/Image has the following dependencies/,/Summary/p' dependencies | head -n -1 | tail -n +2 | sed -e 's/^\s*//g' > dependencies.list;\
+	mkdir .deps;\
+	declare -A DEPS;\
+	declare -A DEPSOLD;\
+	declare -A RESOLVED;\
+	for dep in `cat dependencies.list`; do \
+		echo "Initial resolve :: $$dep";\
+		FS=$$(misc/fakeldconfig -p lib -p msys $${dep%.dll} | tr '[:upper:]' '[:lower:]' | tr -d '\r' | awk NF);\
+		if echo "$$FS" | grep loadlibrary; then \
+			if [[ "x$${RESOLVED["$$(basename $$dep)"]}" == "x" ]]; then \
+				cp "/mingw64/bin/$$(basename $$dep)" .;\
+				DEPS[$$(basename $$dep)]=1;\
+			fi;\
+		else \
+			echo "FS -> $$FS <-";\
+			if [[ "x$$FS" != "x" ]]; then \
+				for vdep in $$FS; do \
+					if [[ "$$vdep" == "$$dep" ]]; then \
+						echo "'$$vdep' found, let's be done with it";\
+						RESOLVED["$$(basename $$vdep)"]=1;\
+						unset DEPS["$$vdep"];\
+						cp "$$vdep" .;\
+					else \
+						if [[ "x$${DEPS["$$vdep"]}" == "x1" ]]; then \
+							echo "'$$vdep' probably resolved before";\
+							RESOLVED["$$(basename $$vdep)"]=1;\
+							unset DEPS["$$vdep"];\
+						else \
+							if [[ "x$${RESOLVED["$$(basename $$vdep)"]}" == "x" ]]; then \
+								echo "new dep '$$vdep' found";\
+								DEPS[$$vdep]=1;\
+							fi;\
+						fi;\
+					fi;\
+				done;\
+			fi;\
+		fi;\
+	done;\
+	while true; do \
+		unresolved=0;\
+		for k in "$${!DEPS[@]}"; do \
+			DEPSOLD[$$k]=1; \
+		done;\
+		for dep in "$${!DEPS[@]}"; do \
+			if [[ "x$${RESOLVED["$$(basename $$dep)"]}" == "x" ]]; then \
+				unresolved=$$(($$unresolved+1));\
+				echo "Trying to resolve '$$dep'...";\
+				for vdep in $$(./dumpbin -dependents "$$dep" | sed -n '/Image has the following dependencies/,/Summary/p' | head -n -1 | tail -n +2 | sed -e 's/^\s*//g'); do \
+					echo "> Found sub-dependency $$vdep";\
+					if [[ "x$${RESOLVED["$$(basename $$vdep)"]}" == "x" ]]; then \
+						DEPS[$$vdep]=1;\
+					fi;\
+				done;\
+				FS=$$(misc/fakeldconfig -p lib -p msys $${dep%.dll} | tr '[:upper:]' '[:lower:]' | tr -d '\r' | awk NF);\
+				echo "$$dep -- $$FS";\
+				if echo "$$FS" | grep loadlibrary; then \
+					if [[ "x$${RESOLVED["$$(basename $$dep)"]}" == "x" ]]; then \
+						RESOLVED[$$(basename $$dep)]=1;\
+						cp "/mingw64/bin/$$(basename $$dep)" .;\
+					fi;\
+				else \
+					echo "->($$FS)<-";\
+					if [[ "x$$FS" != "x" ]]; then \
+						for vdep in $$FS; do \
+							if [[ "$$vdep" == "$$dep" ]]; then \
+								echo "'$$vdep' found, let's be done with it";\
+								RESOLVED["$$(basename $$vdep)"]=1;\
+								unset DEPS["$$vdep"];\
+								cp "$$vdep" .;\
+							else \
+								if [[ "x$${DEPS["$$vdep"]}" == "x1" ]]; then \
+									echo "'$$vdep' probably resolved before";\
+									RESOLVED["$$(basename $$vdep)"]=1;\
+									unset DEPS["$$vdep"];\
+								else \
+									if [[ "x$${RESOLVED["$$(basename $$vdep)"]}" == "x" ]]; then \
+										echo "new dep '$$vdep' found";\
+										DEPS[$$vdep]=1;\
+									fi;\
+								fi;\
+							fi;\
+						done;\
+					else \
+						echo "'$$vdep' was resolved but was not needed";\
+						RESOLVED[$$(basename $$vdep)]=1;\
+						unset DEPS[$$(basename $$vdep)];\
+						unresolved=$$(($$unresolved-1));\
+					fi;\
+				fi;\
+			fi;\
+		done;\
+		if [[ $$unresolved -eq 0 ]]; then \
+			break;\
+		fi;\
+	done; \
+	for dep in "$${!DEPS[@]}"; do \
+		cp "$$dep" .deps || cp "/mingw64/bin/$$(basename $$dep)" .deps; \
+	done;\
+	ls -al .deps;\
+	mv .deps/* .;\
+	rm -fr .deps;
+
 modules:
 	# tcl
-	pacman -S --overwrite '*' --noconfirm mingw64/mingw-w64-x86_64-tcl mingw64/mingw-w64-x86_64-tk mingw64/mingw-w64-x86_64-curl
+	pacman -S --needed --overwrite '*' --noconfirm mingw64/mingw-w64-x86_64-tcl mingw64/mingw-w64-x86_64-tk mingw64/mingw-w64-x86_64-curl
 	# fuckin windows shit
 	# create a symlink so ld will be happy
 	mkdir -p /usr/lib/
@@ -177,10 +283,8 @@ modules:
 	mkdir -p lib
 	cp -r `pacman -Ql mingw-w64-x86_64-tcl | grep 'lib/tcl8.6/$$' | cut -d' ' -f2` lib
 	cp -r `pacman -Ql mingw-w64-x86_64-tk | grep 'lib/tk8.6/$$' | cut -d' ' -f2` lib
-	cp -r /usr/lib/libcurl*.a lib
 	$(CC) -fopenmp $(CFLAGS) -static -c modules.c -o modules.o
 	cp /mingw64/bin/*curl*.dll .
-	cp /mingw64/bin/*libwinpthread*.dll .
 	cp /mingw64/bin/tcl86.dll tcl86.dll
 	mkdir bin
 	cp /mingw64/bin/tk86.dll bin/tk86.dll

@@ -3,13 +3,14 @@ DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 o_cflags := -I/mingw64/include
 #it ain't so easy
 #$(shell pkg-config --cflags tcl)
-o_ldflags := -L/mingw64/lib -ltcl8.6 -lz -lpthread -lz
+o_ldflags := -L/mingw64/lib -ltcl8.6 -lz -lpthread -lz -lcurl
 #$(shell pkg-config --libs tcl)
 CFLAGS := ${CFLAGS} ${o_cflags} -I/usr/include
 LEXTRACF := ${LEXTRACF} ${o_ldflags} -flto -lstdc++ -static-libgcc -static-libstdc++
 location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 WHERE_ART_THOU := $(location)
 new_makefile_l1 := $(shell perl -ne '/((DEBUG_VERSION := )(\d+))/ && print (sprintf("%s%s", "$$2", "$$3"+1));' $(WHERE_ART_THOU))
+# '
 shell_cflags := ${CFLAGS}
 shell_ldflags := ${LDFLAGS}
 
@@ -35,7 +36,7 @@ else
 CFLAGS := ${CFLAGS} "-D withBoehmGC_P"
 endif
 
-CFLAGS := ${CFLAGS} -pthread -fsigned-char
+CFLAGS := ${CFLAGS} -fsigned-char
 
 CFLAGS += ${shell_cflags}
 LDFLAGS += ${shell_ldflags}
@@ -91,19 +92,19 @@ install:
 	echo -e "install directly from source not allowed.\nUse citron_autohell instead for installs"
 	exit 1;
 ctr:	$(OBJS) $(EXTRAOBJS)
-	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) ${CXXFLAGS}  -rdynamic -lm -lpthread /usr/lib/libgc.dll.a /usr/lib/libdl.a /usr/lib/libpcre.a ${LEXTRACF} -o ctr
+	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) ${CXXFLAGS}  -rdynamic -lm /usr/lib/libgc.dll.a /usr/lib/libdl.a /usr/lib/libpcre.a ${LEXTRACF} -o ctr
 
 libctr: CFLAGS := $(CFLAGS) -fPIC -DCITRON_LIBRARY
 libctr: deps
 libctr: symbol_cxx
 libctr: $(OBJS)
-	$(CC) $(OBJS) -shared -export-dynamic -ldl -lpcre -lpthread /usr/lib/libgc.dll.a -o libctr.so
+	$(CC) $(OBJS) -shared -export-dynamic -ldl -lpcre /usr/lib/libgc.dll.a -o libctr.so
 
 compiler: CFLAGS := $(CFLAGS) -D comp=1
 compiler: deps
 compiler: cxx
 compiler: $(COBJS)
-	$(CC) $(COBJS) -rdynamic -lm -ldl -lpcre -lpthread /usr/lib/libgc.dll.a ${LEXTRACF} -o ctrc
+	$(CC) $(COBJS) -rdynamic -lm -ldl -lpcre /usr/lib/libgc.dll.a ${LEXTRACF} -o ctrc
 cxx:
 	echo "blah"
 
@@ -164,10 +165,9 @@ love:
 
 war:
 	echo "Not love?"
-
 modules:
 	# tcl
-	pacman -S --overwrite '*' --noconfirm mingw64/mingw-w64-x86_64-tcl mingw64/mingw-w64-x86_64-tk
+	pacman -S --overwrite '*' --noconfirm mingw64/mingw-w64-x86_64-tcl mingw64/mingw-w64-x86_64-tk mingw64/mingw-w64-x86_64-curl
 	# fuckin windows shit
 	# create a symlink so ld will be happy
 	mkdir -p /usr/lib/
@@ -177,7 +177,10 @@ modules:
 	mkdir -p lib
 	cp -r `pacman -Ql mingw-w64-x86_64-tcl | grep 'lib/tcl8.6/$$' | cut -d' ' -f2` lib
 	cp -r `pacman -Ql mingw-w64-x86_64-tk | grep 'lib/tk8.6/$$' | cut -d' ' -f2` lib
+	cp -r /usr/lib/libcurl*.a lib
 	$(CC) -fopenmp $(CFLAGS) -static -c modules.c -o modules.o
+	cp /mingw64/bin/*curl*.dll .
+	cp /mingw64/bin/*libwinpthread*.dll .
 	cp /mingw64/bin/tcl86.dll tcl86.dll
 	mkdir bin
 	cp /mingw64/bin/tk86.dll bin/tk86.dll
@@ -217,7 +220,7 @@ release:
 	  fi
 
 
-distribute: all package clean
+distribute: package clean
 distribute:
 	if [ "x$$BUILD_I686" = "xYES" ]; then \
 		PATH="$$PATH:/mingw32/bin" make -f makefile.32 distribute; \

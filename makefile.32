@@ -3,13 +3,14 @@ DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
 o_cflags := -DNOSOCKET -DDWIN32 -I/mingw32/include
 #it ain't so easy
 #$(shell pkg-config --cflags tcl)
-o_ldflags := -L/mingw32/lib -ltcl8.6 -ldl -lz -lpthread -lz 
+o_ldflags := -L/mingw32/lib -ltcl8.6 -ldl -lz -lpthread -lz -lcurl
 #$(shell pkg-config --libs tcl)
 CFLAGS := ${CFLAGS} ${o_cflags} -Ibwgc/include
 LEXTRACF := ${LEXTRACF} ${o_ldflags} -flto -lstdc++ -static-libgcc -static-libstdc++
 location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 WHERE_ART_THOU := $(location)
 new_makefile_l1 := $(shell perl -ne '/((DEBUG_VERSION := )(\d+))/ && print (sprintf("%s%s", "$$2", "$$3"+1));' $(WHERE_ART_THOU))
+#'
 shell_cflags := ${CFLAGS}
 shell_ldflags := ${LDFLAGS}
 
@@ -174,7 +175,7 @@ war:
 
 modules:
 	# tcl
-	pacman -S --overwrite '*' --noconfirm mingw-w64-i686-tcl mingw-w64-i686-tk
+	pacman -S --overwrite '*' --noconfirm mingw-w64-i686-tcl mingw-w64-i686-tk mingw-w64-i686-curl
 	# fuckin windows shit
 	# create a symlink so ld will be happy
 	mkdir -p /mingw32/lib/
@@ -185,8 +186,10 @@ modules:
 	mkdir -p lib
 	cp -r `pacman -Ql mingw-w64-i686-tcl | grep 'lib/tcl8.6/$$' | cut -d' ' -f2` lib
 	cp -r `pacman -Ql mingw-w64-i686-tk | grep 'lib/tk8.6/$$' | cut -d' ' -f2` lib
+	cp -r /mingw32/lib/*curl*.a lib
 	$(CC) -fopenmp $(CFLAGS) -static -c modules.c -o modules.o
 	cp /mingw32/bin/tcl86.dll tcl86.dll
+	cp /mingw32/bin/*curl*.dll .
 	mkdir bin
 	cp /mingw32/bin/tk86.dll bin/tk86.dll
 	cp /mingw32/bin/zlib1.dll zlib1.dll

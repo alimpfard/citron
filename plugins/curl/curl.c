@@ -386,6 +386,8 @@ ctr_object* ctr_curl_perform(ctr_object* myself, ctr_argument* argumentList) {
 
 	FILE *temp = tmpfile();
 	curl_easy_setopt(myself->value.rvalue->ptr, CURLOPT_WRITEDATA, temp);
+    // get around fwrite being bound to some other function on windows
+	curl_easy_setopt(myself->value.rvalue->ptr, CURLOPT_WRITEFUNCTION, fwrite);
 
 	CURLcode code = curl_easy_perform(myself->value.rvalue->ptr);
 

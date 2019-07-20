@@ -381,9 +381,9 @@ struct MemoryStruct {
   char *memory;
   size_t size;
 };
-size_t own_fmemwrite(const void* ptr, size_t size, size_t count, void* data) {
-  size_t realsize = size * nmemb;
-  struct MemoryStruct *mem = (struct MemoryStruct *)userp;
+size_t own_fmemwrite(const void* contents, size_t size, size_t count, void* data) {
+  size_t realsize = size * count;
+  struct MemoryStruct *mem = (struct MemoryStruct *)data;
 
   char *ptr = realloc(mem->memory, mem->size + realsize + 1);
   if(ptr == NULL) {

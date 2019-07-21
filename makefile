@@ -289,6 +289,9 @@ modules:
 	mkdir bin
 	cp /mingw64/bin/tk86.dll bin/tk86.dll
 	cp /mingw64/bin/zlib1.dll zlib1.dll
+	curl -o cacert.pem https://curl.haxx.se/ca/cacert.pem
+	mkdir -p lib/curl/ca
+	mv cacert.pem lib/curl/ca
 	# TODO: the rest of the modules
 
 package:

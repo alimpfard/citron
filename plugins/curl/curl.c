@@ -37,6 +37,11 @@ ctr_object *ctr_internal_otype(ctr_object *o) {
 	return ctr_object_message(o, &arg);
 }
 
+#ifndef __linux__
+static char *cacert = NULL;
+static char cabuf[1024];
+#endif
+
 /**
  * Curl new.
  *
@@ -53,6 +58,16 @@ ctr_object* ctr_curl_new(ctr_object* myself, ctr_argument* argumentList) {
 	ctr_resource* rsrc = ctr_heap_allocate(sizeof(ctr_resource));
 	rsrc->type = CTR_OBJECT_RESOURCE_CURL;
 	rsrc->ptr = curl_easy_init();
+
+#ifndef __linux__
+	if (!cacert) {
+	  cacert = ctr_heap_allocate_cstring(ctr_file_stdext_path(CtrStdFile, NULL));
+	  sprintf(cabuf, "%slib/curl/ca/cacert.pem", cacert);
+	  ctr_heap_free(cacert);
+	  cacert = cabuf;
+	}
+	curl_easy_setopt(rsrc->ptr, CURLOPT_CAINFO, cacert);
+#endif
 
 	curlObjectInstance->value.rvalue = rsrc;
 
@@ -381,9 +396,9 @@ struct MemoryStruct {
   char *memory;
   size_t size;
 };
-size_t own_fmemwrite(const void* ptr, size_t size, size_t count, void* data) {
-  size_t realsize = size * nmemb;
-  struct MemoryStruct *mem = (struct MemoryStruct *)userp;
+size_t own_fmemwrite(const void* contents, size_t size, size_t count, void* data) {
+  size_t realsize = size * count;
+  struct MemoryStruct *mem = (struct MemoryStruct *)data;
 
   char *ptr = realloc(mem->memory, mem->size + realsize + 1);
   if(ptr == NULL) {

@@ -183,7 +183,7 @@ void ctr_initialize_ex() {
   SystemTZ = getenv("TZ") ?: "UTC";
 
   ctr_gc_mode = 1; /* default GC mode: activate GC */
-  ctr_gc_memlimit = 8388608;
+  ctr_gc_memlimit = 1073741824;
   CTR_LIMIT_MEM = 1; // enfore GC
   ctr_callstack_index = 0;
   ctr_source_map_head = NULL;

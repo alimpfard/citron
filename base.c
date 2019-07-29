@@ -2010,15 +2010,14 @@ ctr_object *ctr_number_to_step_do(ctr_object *myself,
   }
   if (!codeBlock->value.block->lexical)
     ctr_open_context();
-  ctr_object *arg =
-      ctr_internal_create_standalone_object(CTR_OBJECT_TYPE_OTNUMBER);
-  arg->value.nvalue = curValue;
+  ctr_object *arg = ctr_build_number_from_float(curValue);
   while ((forward ? curValue < endValue : curValue > endValue) && !CtrStdFlow) {
     arg->value.nvalue = curValue;
     arguments->object = arg;
     ctr_block_run_here(codeBlock, arguments, codeBlock);
     if (CtrStdFlow == CtrStdContinue)
       CtrStdFlow = NULL; /* consume continue and go on */
+    curValue = arg->value.nvalue;
     curValue += incValue;
   }
   if (!codeBlock->value.block->lexical)

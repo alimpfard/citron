@@ -667,7 +667,6 @@ ctr_object *ctr_internal_object_find_property_or_create_with_hash(
  * InternalObjectDeleteProperty
  *
  * Deletes the specified property from the object.
- * NOTE: Does not update the bloom filter TODO: Try to fix
  */
 void ctr_internal_object_delete_property(ctr_object *owner, ctr_object *key,
                                          int is_method) {
@@ -749,6 +748,59 @@ void ctr_internal_object_delete_property_with_hash(ctr_object *owner,
 /**
  * @internal
  *
+ * InternalObjectGetPropertyWithHash
+ *
+ * Gets the specified property from the object given a hash value.
+ */
+ctr_mapitem *ctr_internal_object_get_property_with_hash(ctr_object *owner,
+                                                   ctr_object *key,
+                                                   uint64_t hashKey,
+                                                   int is_method) {
+  ctr_did_side_effect = 1;
+  ctr_mapitem *head;
+  if (is_method) {
+    if (!owner->methods || owner->methods->size == 0) {
+      return NULL;
+    }
+    // if((owner->methods->s_hash&hashKey) != hashKey)
+    // return;
+    head = owner->methods->head;
+  } else {
+    if (!owner->properties)
+      return NULL;
+    if (owner->properties->size == 0) {
+      return NULL;
+    }
+    // if((owner->properties->s_hash&hashKey) != hashKey)
+    // return;
+    head = owner->properties->head;
+  }
+  while (head) {
+    if ((hashKey == head->hashKey) &&
+        ctr_internal_object_is_equal(head->key, key)) {
+      return head;
+    }
+    head = head->next;
+  }
+  return NULL;
+}
+
+/**
+ * @internal
+ *
+ * InternalObjectGetProperty
+ *
+ * Gets the specified property from the object.
+ */
+ctr_mapitem* ctr_internal_object_get_property(ctr_object *owner, ctr_object *key,
+                                         int is_method) {
+  return ctr_internal_object_get_property_with_hash(
+      owner, key, ctr_internal_index_hash(key), is_method);
+}
+
+/**
+ * @internal
+ *
  * InternalObjectAddProperty
  *
  * Adds a property to an object.
@@ -815,8 +867,13 @@ void ctr_internal_object_add_property_with_hash(ctr_object *owner,
  */
 void ctr_internal_object_set_property(ctr_object *owner, ctr_object *key,
                                       ctr_object *value, int is_method) {
-  ctr_internal_object_delete_property(owner, key, is_method);
-  ctr_internal_object_add_property(owner, key, value, is_method);
+  ctr_mapitem *o = NULL;
+  if ((o = ctr_internal_object_get_property(owner, key, is_method))) {
+    o->value = value;
+    o->key = key;
+  } else
+  ctr_internal_object_add_property(owner, key, value,
+                                     is_method);
 }
 
 /**
@@ -831,8 +888,13 @@ void ctr_internal_object_set_property_with_hash(ctr_object *owner,
                                                 uint64_t hashKey,
                                                 ctr_object *value,
                                                 int is_method) {
-  ctr_internal_object_delete_property_with_hash(owner, key, hashKey, is_method);
-  ctr_internal_object_add_property_with_hash(owner, key, hashKey, value,
+  ctr_mapitem *o = NULL;
+  if ((o = ctr_internal_object_get_property_with_hash(owner, key, hashKey, is_method))) {
+    o->value = value;
+    o->key = key;
+    o->hashKey = hashKey;
+  } else
+    ctr_internal_object_add_property_with_hash(owner, key, hashKey, value,
                                              is_method);
 }
 

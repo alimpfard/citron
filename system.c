@@ -600,7 +600,9 @@ void ctr_gc_sweep(int all) { GC_gcollect(); }
 void ctr_gc_internal_collect() { GC_gcollect(); }
 
 ctr_object *ctr_gc_collect(ctr_object *myself, ctr_argument *argumentList) {
+  ctr_nogc_decr();
   GC_gcollect();
+  ctr_nogc_incr();
   return myself;
 }
 

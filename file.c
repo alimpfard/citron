@@ -1315,7 +1315,7 @@ ret:
 }
 
 /**
- * File mkdir [: [Number:permissions]]
+ * [File] mkdir [: [Number:permissions]]
  *
  * makes a directory
  */
@@ -1338,4 +1338,104 @@ ctr_object *ctr_file_mkdir(ctr_object *myself, ctr_argument *argumentList) {
   }
   ctr_heap_free(path);
   return myself;
+}
+
+
+ctr_object *ctr_generate_timespec(long ts) {
+    return ctr_build_number_from_float(ts);
+}
+
+/**
+ * [File] stat
+ *
+ * returns the entire dataset of stat(2) about the given file
+ *
+ */
+ctr_object *ctr_file_stat(ctr_object *myself, ctr_argument *argumentList) {
+  ctr_check_permission(CTR_SECPRO_NO_FILE_READ);
+  ctr_object *pathobj = ctr_file_rpath(myself, NULL);
+  if (pathobj == CtrStdNil) {
+    CtrStdFlow = ctr_build_string_from_cstring("file object contains no path");
+    return CtrStdNil;
+  }
+  char *path = ctr_heap_allocate_cstring(pathobj);
+  struct stat st;
+  if (stat(path, &st) == -1) {
+    ctr_heap_free(path);
+    CtrStdFlow = ctr_format_str("stat() error %s", strerror(errno));
+    return CtrStdNil;
+  }
+  ctr_object *res = ctr_map_new(CtrStdMap, NULL);
+  
+  ctr_map_put(res, &(ctr_argument){
+          .object = ctr_build_string_from_cstring("st_dev"), 
+          .next = &(ctr_argument){
+            .object = ctr_build_number_from_float((long) st.st_dev), 
+            .next = NULL}});       
+  ctr_map_put(res, &(ctr_argument){
+          .object = ctr_build_string_from_cstring("st_ino"), 
+          .next = &(ctr_argument){
+            .object = ctr_build_number_from_float((long) st.st_ino), 
+            .next = NULL}});    
+  ctr_map_put(res, &(ctr_argument){
+          .object = ctr_build_string_from_cstring("st_mode"), 
+          .next = &(ctr_argument){
+            .object = ctr_build_number_from_float((long) st.st_mode), 
+            .next = NULL}});   
+  ctr_map_put(res, &(ctr_argument){
+          .object = ctr_build_string_from_cstring("st_nlink"), 
+          .next = &(ctr_argument){
+            .object = ctr_build_number_from_float((long) st.st_nlink), 
+            .next = NULL}});  
+  ctr_map_put(res, &(ctr_argument){
+          .object = ctr_build_string_from_cstring("st_uid"), 
+          .next = &(ctr_argument){
+            .object = ctr_build_number_from_float((long) st.st_uid), 
+            .next = NULL}});    
+  ctr_map_put(res, &(ctr_argument){
+          .object = ctr_build_string_from_cstring("st_gid"), 
+          .next = &(ctr_argument){
+            .object = ctr_build_number_from_float((long) st.st_gid), 
+            .next = NULL}});    
+  ctr_map_put(res, &(ctr_argument){
+          .object = ctr_build_string_from_cstring("st_rdev"), 
+          .next = &(ctr_argument){
+            .object = ctr_build_number_from_float((long) st.st_rdev), 
+            .next = NULL}});   
+  ctr_map_put(res, &(ctr_argument){
+          .object = ctr_build_string_from_cstring("st_size"), 
+          .next = &(ctr_argument){
+            .object = ctr_build_number_from_float((long) st.st_size), 
+            .next = NULL}});   
+  ctr_map_put(res, &(ctr_argument){
+          .object = ctr_build_string_from_cstring("st_blksize"), 
+          .next = &(ctr_argument){
+            .object = ctr_build_number_from_float((long) st.st_blksize), 
+            .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+          .object = ctr_build_string_from_cstring("st_blocks"), 
+          .next = &(ctr_argument){
+            .object = ctr_build_number_from_float((long) st.st_blocks), 
+            .next = NULL}}); 
+
+#if _POSIX_C_SOURCE>=200809L || _XOPEN_SOURCE>=700
+  ctr_map_put(res, &(ctr_argument){
+          .object = ctr_build_string_from_cstring("st_atime"), 
+          .next = &(ctr_argument){
+            .object = ctr_generate_timespec(st.st_atime), 
+            .next = NULL}}); 
+  ctr_map_put(res, &(ctr_argument){
+          .object = ctr_build_string_from_cstring("st_ctime"), 
+          .next = &(ctr_argument){
+            .object = ctr_generate_timespec(st.st_ctime), 
+            .next = NULL}}); 
+  ctr_map_put(res, &(ctr_argument){
+          .object = ctr_build_string_from_cstring("st_mtime"), 
+          .next = &(ctr_argument){
+            .object = ctr_generate_timespec(st.st_mtime), 
+            .next = NULL}}); 
+#endif
+  
+  ctr_heap_free(path);
+  return res;
 }

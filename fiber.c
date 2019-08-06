@@ -270,12 +270,13 @@ ctr_object *ctr_fiber_yield(ctr_object *myself, ctr_argument *argumentList) {
   // CTR_CATEGORY_PRIVATE_PROPERTY)->value.nvalue;
   // FIBER_YIELDED = argumentList->object;      // record the output, or set to
   // NULL
+  ctr_object *ys = ctr_build_string_from_cstring("yielded");
   ctr_internal_object_set_property(
-      myself, ctr_build_string_from_cstring("yielded"),
+      myself, ys,
       argumentList->object ? argumentList->object : CtrStdNil,
       CTR_CATEGORY_PRIVATE_PROPERTY);
   fiberYield();
-  return myself; // Won't really reach here until the end of the fiber chain
+  return ctr_internal_object_find_property(myself, ys, CTR_CATEGORY_PRIVATE_PROPERTY);
 }
 
 /**

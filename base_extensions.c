@@ -1449,12 +1449,13 @@ ctr_object *ctr_coro_yield(ctr_object *myself, ctr_argument *argumentList) {
     CtrStdFlow = ctr_build_string_from_cstring("Coroutine not runnning");
     return myself;
   }
-  coroutine_yield(S);
+  ctr_object *ys = ctr_build_string_from_cstring("yield");
   if (argumentList->object)
     ctr_internal_object_set_property(myself,
-                                     ctr_build_string_from_cstring("yield"),
+                                     ys,
                                      argumentList->object, 0);
-  return myself;
+  coroutine_yield(S);
+  return ctr_internal_object_find_property(myself, ys, 0) ?: CtrStdNil;
 }
 
 ctr_object *ctr_coro_state(ctr_object *myself, ctr_argument *argumentList) {

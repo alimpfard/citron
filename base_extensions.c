@@ -1451,9 +1451,7 @@ ctr_object *ctr_coro_yield(ctr_object *myself, ctr_argument *argumentList) {
   }
   ctr_object *ys = ctr_build_string_from_cstring("yield");
   if (argumentList->object)
-    ctr_internal_object_set_property(myself,
-                                     ys,
-                                     argumentList->object, 0);
+    ctr_internal_object_set_property(myself, ys, argumentList->object, 0);
   coroutine_yield(S);
   return ctr_internal_object_find_property(myself, ys, 0) ?: CtrStdNil;
 }

@@ -1340,9 +1340,8 @@ ctr_object *ctr_file_mkdir(ctr_object *myself, ctr_argument *argumentList) {
   return myself;
 }
 
-
 ctr_object *ctr_generate_timespec(long ts) {
-    return ctr_build_number_from_float(ts);
+  return ctr_build_number_from_float(ts);
 }
 
 /**
@@ -1361,81 +1360,84 @@ ctr_object *ctr_file_stat(ctr_object *myself, ctr_argument *argumentList) {
   char *path = ctr_heap_allocate_cstring(pathobj);
   struct stat st;
   if (stat(path, &st) == -1) {
+    CtrStdFlow =
+        ctr_format_str("Estat() error %s (path = %s)", strerror(errno), path);
     ctr_heap_free(path);
-    CtrStdFlow = ctr_format_str("stat() error %s", strerror(errno));
     return CtrStdNil;
   }
   ctr_object *res = ctr_map_new(CtrStdMap, NULL);
-  
-  ctr_map_put(res, &(ctr_argument){
-          .object = ctr_build_string_from_cstring("st_dev"), 
-          .next = &(ctr_argument){
-            .object = ctr_build_number_from_float((long) st.st_dev), 
-            .next = NULL}});       
-  ctr_map_put(res, &(ctr_argument){
-          .object = ctr_build_string_from_cstring("st_ino"), 
-          .next = &(ctr_argument){
-            .object = ctr_build_number_from_float((long) st.st_ino), 
-            .next = NULL}});    
-  ctr_map_put(res, &(ctr_argument){
-          .object = ctr_build_string_from_cstring("st_mode"), 
-          .next = &(ctr_argument){
-            .object = ctr_build_number_from_float((long) st.st_mode), 
-            .next = NULL}});   
-  ctr_map_put(res, &(ctr_argument){
-          .object = ctr_build_string_from_cstring("st_nlink"), 
-          .next = &(ctr_argument){
-            .object = ctr_build_number_from_float((long) st.st_nlink), 
-            .next = NULL}});  
-  ctr_map_put(res, &(ctr_argument){
-          .object = ctr_build_string_from_cstring("st_uid"), 
-          .next = &(ctr_argument){
-            .object = ctr_build_number_from_float((long) st.st_uid), 
-            .next = NULL}});    
-  ctr_map_put(res, &(ctr_argument){
-          .object = ctr_build_string_from_cstring("st_gid"), 
-          .next = &(ctr_argument){
-            .object = ctr_build_number_from_float((long) st.st_gid), 
-            .next = NULL}});    
-  ctr_map_put(res, &(ctr_argument){
-          .object = ctr_build_string_from_cstring("st_rdev"), 
-          .next = &(ctr_argument){
-            .object = ctr_build_number_from_float((long) st.st_rdev), 
-            .next = NULL}});   
-  ctr_map_put(res, &(ctr_argument){
-          .object = ctr_build_string_from_cstring("st_size"), 
-          .next = &(ctr_argument){
-            .object = ctr_build_number_from_float((long) st.st_size), 
-            .next = NULL}});   
-  ctr_map_put(res, &(ctr_argument){
-          .object = ctr_build_string_from_cstring("st_blksize"), 
-          .next = &(ctr_argument){
-            .object = ctr_build_number_from_float((long) st.st_blksize), 
-            .next = NULL}});
-  ctr_map_put(res, &(ctr_argument){
-          .object = ctr_build_string_from_cstring("st_blocks"), 
-          .next = &(ctr_argument){
-            .object = ctr_build_number_from_float((long) st.st_blocks), 
-            .next = NULL}}); 
 
-#if _POSIX_C_SOURCE>=200809L || _XOPEN_SOURCE>=700
   ctr_map_put(res, &(ctr_argument){
-          .object = ctr_build_string_from_cstring("st_atime"), 
-          .next = &(ctr_argument){
-            .object = ctr_generate_timespec(st.st_atime), 
-            .next = NULL}}); 
+                       .object = ctr_build_number_from_float((long)st.st_dev),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_dev"),
+                           .next = NULL}});
   ctr_map_put(res, &(ctr_argument){
-          .object = ctr_build_string_from_cstring("st_ctime"), 
-          .next = &(ctr_argument){
-            .object = ctr_generate_timespec(st.st_ctime), 
-            .next = NULL}}); 
+                       .object = ctr_build_number_from_float((long)st.st_ino),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_ino"),
+                           .next = NULL}});
   ctr_map_put(res, &(ctr_argument){
-          .object = ctr_build_string_from_cstring("st_mtime"), 
-          .next = &(ctr_argument){
-            .object = ctr_generate_timespec(st.st_mtime), 
-            .next = NULL}}); 
+                       .object = ctr_build_number_from_float((long)st.st_mode),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_mode"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_build_number_from_float((long)st.st_nlink),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_nlink"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_build_number_from_float((long)st.st_uid),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_uid"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_build_number_from_float((long)st.st_gid),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_gid"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_build_number_from_float((long)st.st_rdev),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_rdev"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_build_number_from_float((long)st.st_size),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_size"),
+                           .next = NULL}});
+  ctr_map_put(res,
+              &(ctr_argument){
+                  .object = ctr_build_number_from_float((long)st.st_blksize),
+                  .next = &(ctr_argument){
+                      .object = ctr_build_string_from_cstring("st_blksize"),
+                      .next = NULL}});
+  ctr_map_put(
+      res,
+      &(ctr_argument){.object = ctr_build_number_from_float((long)st.st_blocks),
+                      .next = &(ctr_argument){
+                          .object = ctr_build_string_from_cstring("st_blocks"),
+                          .next = NULL}});
+
+#if _POSIX_C_SOURCE >= 200809L || _XOPEN_SOURCE >= 700
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_generate_timespec(st.st_atime),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_atime"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_generate_timespec(st.st_ctime),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_ctime"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_generate_timespec(st.st_mtime),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_mtime"),
+                           .next = NULL}});
 #endif
-  
+
   ctr_heap_free(path);
   return res;
 }

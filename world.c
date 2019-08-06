@@ -753,9 +753,9 @@ void ctr_internal_object_delete_property_with_hash(ctr_object *owner,
  * Gets the specified property from the object given a hash value.
  */
 ctr_mapitem *ctr_internal_object_get_property_with_hash(ctr_object *owner,
-                                                   ctr_object *key,
-                                                   uint64_t hashKey,
-                                                   int is_method) {
+                                                        ctr_object *key,
+                                                        uint64_t hashKey,
+                                                        int is_method) {
   ctr_did_side_effect = 1;
   ctr_mapitem *head;
   if (is_method) {
@@ -792,8 +792,8 @@ ctr_mapitem *ctr_internal_object_get_property_with_hash(ctr_object *owner,
  *
  * Gets the specified property from the object.
  */
-ctr_mapitem* ctr_internal_object_get_property(ctr_object *owner, ctr_object *key,
-                                         int is_method) {
+ctr_mapitem *ctr_internal_object_get_property(ctr_object *owner,
+                                              ctr_object *key, int is_method) {
   return ctr_internal_object_get_property_with_hash(
       owner, key, ctr_internal_index_hash(key), is_method);
 }
@@ -872,8 +872,7 @@ void ctr_internal_object_set_property(ctr_object *owner, ctr_object *key,
     o->value = value;
     o->key = key;
   } else
-  ctr_internal_object_add_property(owner, key, value,
-                                     is_method);
+    ctr_internal_object_add_property(owner, key, value, is_method);
 }
 
 /**
@@ -889,13 +888,14 @@ void ctr_internal_object_set_property_with_hash(ctr_object *owner,
                                                 ctr_object *value,
                                                 int is_method) {
   ctr_mapitem *o = NULL;
-  if ((o = ctr_internal_object_get_property_with_hash(owner, key, hashKey, is_method))) {
+  if ((o = ctr_internal_object_get_property_with_hash(owner, key, hashKey,
+                                                      is_method))) {
     o->value = value;
     o->key = key;
     o->hashKey = hashKey;
   } else
     ctr_internal_object_add_property_with_hash(owner, key, hashKey, value,
-                                             is_method);
+                                               is_method);
 }
 
 /**
@@ -2780,8 +2780,7 @@ void ctr_initialize_world() {
   ctr_internal_create_func(CtrStdFile,
                            ctr_build_string_from_cstring("fileDescriptor"),
                            &ctr_file_get_descriptor);
-  ctr_internal_create_func(CtrStdFile,
-                           ctr_build_string_from_cstring("stat"),
+  ctr_internal_create_func(CtrStdFile, ctr_build_string_from_cstring("stat"),
                            &ctr_file_stat);
   ctr_internal_create_func(CtrStdFile,
                            ctr_build_string_from_cstring("memopen:mode:"),

@@ -2781,6 +2781,9 @@ void ctr_initialize_world() {
                            ctr_build_string_from_cstring("fileDescriptor"),
                            &ctr_file_get_descriptor);
   ctr_internal_create_func(CtrStdFile,
+                           ctr_build_string_from_cstring("stat"),
+                           &ctr_file_stat);
+  ctr_internal_create_func(CtrStdFile,
                            ctr_build_string_from_cstring("memopen:mode:"),
                            &ctr_file_memopen);
   ctr_internal_create_func(

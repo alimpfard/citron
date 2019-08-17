@@ -2528,6 +2528,18 @@ ctr_object *ctr_build_string_from_cstring(char *cstring) {
  */
 ctr_object *ctr_build_empty_string() { return ctr_build_string("", 0); }
 
+static const char ascii_escape_names[] = (char[256]){
+    [0x07] = 'a',
+    [0x08] = 'b',
+    [0x0c] = 'f',
+    [0x0a] = 'n',
+    [0x0d] = 'r',
+    [0x09] = 't',
+    [0x5c] = '\\',
+    [0x27] = '\'',
+    [0x22] = '"',
+    [0x3f] = '?'
+  };
 /**
  * [String] escape: '\n'.
  *
@@ -2582,31 +2594,27 @@ ctr_object *ctr_string_escape_ascii(ctr_object *myself,
     for (q = 0; q < nchars; q++) {
       character = characters[q];
       is_cchar = 0;
-      switch (character) {
-      case '\t':
-        descr = 't';
-        is_cchar = 1;
-        break;
-      case '\r':
-        descr = 'r';
-        is_cchar = 1;
-        break;
-      case '\n':
-        descr = 'n';
-        is_cchar = 1;
-        break;
-      case '\b':
-        descr = 'b';
-        is_cchar = 1;
-        break;
-      }
+      // switch (character) {
+      // case '\t':
+      //   descr = 't';
+      //   is_cchar = 1;
+      //   break;
+      // case '\r':
+      //   descr = 'r';
+      //   is_cchar = 1;
+      //   break;
+      // case '\n':
+      //   descr = 'n';
+      //   is_cchar = 1;
+      //   break;
+      // case '\b':
+      //   descr = 'b';
+      //   is_cchar = 1;
+      //   break;
+      // }
       if (c == character) {
         tstr[k++] = '\\';
-        if (is_cchar) {
-          tstr[k++] = descr;
-        } else {
-          tstr[k++] = str[i];
-        }
+        tstr[k++] = ascii_escape_names[c] ?: str[i];
         escaped = 1;
         break;
       }
@@ -2615,7 +2623,7 @@ ctr_object *ctr_string_escape_ascii(ctr_object *myself,
       tstr[k++] = str[i];
     }
   }
-  newString = ctr_build_string(tstr, tlen);
+  newString = ctr_build_string(tstr, k);
   ctr_heap_free(tstr);
   return newString;
 }

@@ -2,11 +2,4 @@
 echo Hello world
 Uncaught error has occurred.
 Unknown method Object::'tellme:and:' was called
-#1 tellme:and: (tests/test0232.ctr: 7)
-------------------------------------
-The probable cause of the exception: 
-5 | 
-6 | Pen write: (x obtain), brk.
-7 | x tellme: 123 and: 987. #This should fail...maybe change that?
-~~~~~~~~~~^
-8 | Pen write: (x obtain), brk.
+#1 tellme:and: (test0232.ctr: 7)

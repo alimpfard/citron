@@ -39,6 +39,18 @@ Generator on: 'any:' do: {:self:pred
   }.
   ^tf.
 }.
+Generator on: 'push:' do: {:self:member
+  ^Generator repeat: Nil, imap: {:i
+    i = 0 ifTrue: {
+      ^const member.
+    } ifFalse: {
+      var res is const self next.
+      const self finished break.
+      ^res.
+    }.
+  }.
+}.
+
 Number on: 'enumTo:until:' do: {:self:n:last
   ^Generator from: me to: last step: n - self.
 }.

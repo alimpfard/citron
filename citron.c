@@ -26,6 +26,9 @@ static int compile_and_quit = 0;
 static int debug = 0;
 static int from_stdin = 0;
 int with_stdlib = 1;
+static int parse_only = 0;
+extern int speculative_parse;
+extern int more_exception_data;
 
 char *SystemTZ;
 
@@ -60,6 +63,8 @@ void ctr_cli_welcome(char *invoked_by) {
   printf("\tbuilt with Extensions at: %s\n", ctr_file_stdext_path_raw());
   printf("Usage: %s [options] filename\n", invoked_by);
   puts("Options:");
+  puts("\t-s | enable speculative parsing");
+  puts("\t-p | parse and exit");
   puts("\t-c | --compile : serialize AST to stdout and exit");
   puts("\t-fc | --from-compiled : assume file is a serialized AST, execute "
        "that");
@@ -67,6 +72,7 @@ void ctr_cli_welcome(char *invoked_by) {
   puts("\t-- | read from stdin");
   puts("\t--no-std | launch without the stdlib");
   puts("\t--ext | print ext path and exit");
+  puts("\t--compact | display no extra data for exceptions");
   printf("\n");
 }
 
@@ -129,10 +135,16 @@ void ctr_cli_read_args(int argc, char *argv[]) {
     else if (strcmp(argv[0], "-fc") == 0 ||
              strcmp(argv[0], "--from-compiled") == 0)
       compile_and_quit = 2;
+    else if (strcmp(argv[0], "-p") == 0)
+      parse_only = 1;
+    else if (strcmp(argv[0], "-s") == 0)
+      speculative_parse = 1;
     else if (strcmp(argv[0], "-d") == 0)
       debug = 1;
     else if (strcmp(argv[0], "--") == 0)
       from_stdin = 1;
+    else if (strcmp(argv[0], "--compact") == 0)
+      more_exception_data = 0;
     else if (strcmp(argv[0], "--ext") == 0) {
       puts(ctr_file_stdext_path_raw());
       exit(0);
@@ -254,7 +266,8 @@ int main(int argc, char *argv[]) {
 #endif
     if (debug)
       ctr_internal_debug_tree(program, 1); /*-- for debugging */
-    ctr_cwlk_run(program);
+    if (!parse_only)
+      ctr_cwlk_run(program);
     ctr_gc_sweep(1);
     ctr_heap_free(prg);
     ctr_heap_free_rest();

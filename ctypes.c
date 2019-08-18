@@ -1261,7 +1261,7 @@ ctr_object *ctr_ctypes_addr_of_raw(ctr_object *myself,
 ctr_object *ctr_ctypes_pointer_set_obj(ctr_object *myself,
                                        ctr_argument *argumentList) {
   ctr_object *ret = ctr_ctypes_make_pointer(NULL, NULL);
-  ret->value.rvalue->ptr = &(myself);
+  ret->value.rvalue->ptr = argumentList->object;
   return ret;
 }
 

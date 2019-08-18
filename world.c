@@ -1,6 +1,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <math.h>
+#include <sys/types.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -16,15 +17,6 @@
 
 #include "siphash.h"
 
-#ifdef withBoehmGC
-#include <gc/gc.h>
-#endif
-#ifdef withBoehmGC_P
-#define ctr_heap_allocate_typed_(s, t) ctr_heap_allocate_typed(s, t)
-#else
-#define ctr_heap_allocate_typed_(s, t) ctr_heap_allocate(s)
-#endif
-
 static int ctr_world_initialized = 0;
 extern ctr_object *generator_end_marker;
 
@@ -39,6 +31,17 @@ static pthread_mutex_t ctr_message_mutex = {{PTHREAD_MUTEX_RECURSIVE}};
 #define CTR_THREAD_LOCK()
 #define CTR_THREAD_UNLOCK()
 #endif
+
+#ifdef withBoehmGC
+#define GC_THREAD
+#include <gc/gc.h>
+#endif
+#ifdef withBoehmGC_P
+#define ctr_heap_allocate_typed_(s, t) ctr_heap_allocate_typed(s, t)
+#else
+#define ctr_heap_allocate_typed_(s, t) ctr_heap_allocate(s)
+#endif
+
 
 #include "promise.h"
 
@@ -143,6 +146,11 @@ static const int all_signals[] = {
 #endif
     SIGKILL, // last one. must exist
 };
+
+static ctr_object* ctr_gc_dump(ctr_object* myself, ctr_argument* argumentList) {
+  GC_dump();
+  return myself;
+}
 
 static void register_signal_handlers() {
   struct sigaction act;
@@ -536,6 +544,8 @@ ctr_object *ctr_internal_object_find_property_with_hash(ctr_object *owner,
     lookup = owner->methods;
   } else
     lookup = owner->properties;
+  if (unlikely(!lookup))
+      return NULL;
   if (unlikely(lookup->size == 1 &&
                (head = lookup->head)->hashKey == hashKey)) {
     if (likely(ctr_internal_object_is_equal(head->key, key))) {
@@ -584,6 +594,8 @@ ctr_object *ctr_internal_object_find_property_or_create_with_hash(
     lookup = owner->methods;
   } else
     lookup = owner->properties;
+  if (unlikely(!lookup))
+      return NULL;
   if (unlikely(lookup->size == 0)) {
     ctr_object *repl = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNIL);
     ctr_set_link_all(repl, CtrStdNil);
@@ -685,6 +697,8 @@ void ctr_internal_object_delete_property_with_hash(ctr_object *owner,
     // return;
     head = owner->methods->head;
   } else {
+    if (!owner->properties)
+        return;
     if (owner->properties->size == 0) {
       return;
     }
@@ -1464,6 +1478,13 @@ ctr_object *ctr_frame_present(ctr_object *myself, ctr_argument *argumentList) {
 void ctr_initialize_world_minimal() {
   if (ctr_world_initialized)
     return;
+
+  volatile ctr_thread_workaround_double_list_t* tw = ctr_heap_allocate_tracked(sizeof(*tw));
+  tw->next = NULL;
+  tw->prev = ctr_thread_workaround_double_list;
+  tw->context = ctr_contexts;
+  ctr_thread_workaround_double_list = (ctr_thread_workaround_double_list_t*) tw;
+
   trace_ignore_count = 0;
   ctr_world_initialized = 1;
   // register_signal_handlers ();
@@ -1560,6 +1581,12 @@ void ctr_initialize_world_minimal() {
 void ctr_initialize_world() {
   if (ctr_world_initialized)
     return;
+  volatile ctr_thread_workaround_double_list_t* tw = ctr_heap_allocate_tracked(sizeof(*tw));
+  tw->next = NULL;
+  tw->prev = ctr_thread_workaround_double_list;
+  tw->context = ctr_contexts;
+  ctr_thread_workaround_double_list = (ctr_thread_workaround_double_list_t*) tw;
+
   trace_ignore_count = 0;
   ctr_world_initialized = 1;
   // register_signal_handlers ();
@@ -2326,6 +2353,9 @@ void ctr_initialize_world() {
   ctr_internal_create_func(CtrStdArray,
                            ctr_build_string_from_cstring(CTR_DICT_NEW_ARG),
                            &ctr_array_new);
+  ctr_internal_create_func(CtrStdArray,
+                           ctr_build_string_from_cstring("newFill:with:"),
+                           &ctr_array_alloc);
   ctr_internal_create_func(
       CtrStdArray, ctr_build_string_from_cstring(CTR_DICT_NEW_ARRAY_AND_PUSH),
       &ctr_array_new_and_push);
@@ -3077,6 +3107,8 @@ void ctr_initialize_world() {
   CtrStdGC = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
   ctr_internal_create_func(CtrStdGC, ctr_build_string_from_cstring("noGC:"),
                            &ctr_gc_with_gc_disabled);
+  ctr_internal_create_func(CtrStdGC, ctr_build_string_from_cstring("dump"),
+                           &ctr_gc_dump);
   ctr_internal_create_func(
       CtrStdGC, ctr_build_string_from_cstring(CTR_DICT_SWEEP), &ctr_gc_collect);
   ctr_internal_create_func(CtrStdGC,
@@ -3324,8 +3356,12 @@ void ctr_initialize_world() {
                            &ctr_thread_set_target);
   ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("run"),
                            &ctr_thread_run);
+  ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("finished"),
+                           &ctr_thread_finished);
   ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("join"),
                            &ctr_thread_join);
+  ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("detach"),
+                           &ctr_thread_detach);
   ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("id"),
                            &ctr_thread_id);
   ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("name:"),
@@ -3990,7 +4026,6 @@ no_instrum:;
   ctr_object *result;
   ctr_object *(*funct)(ctr_object * receiverObject,
                        ctr_argument * argumentList);
-  ctr_object *msg = ctr_build_string(message, vlen);
   int argCount;
   if (CtrStdFlow != NULL) {
     msgName__ = message;
@@ -4039,7 +4074,6 @@ no_instrum:;
     returnValue = ctr_send_message_blocking(receiverObject, catch_all,
                                             catch_all_v, mesgArgument);
     ctr_heap_free(mesgArgument);
-    msg->info.sticky = 0;
     msgName__ = message;
     msgLen__ = vlen;
     if (receiverObject->info.chainMode == 1)
@@ -4058,6 +4092,7 @@ no_instrum:;
         }
       }
       if (!messageApproved) {
+        ctr_object *msg = ctr_build_string(message, vlen);
         printf("Native message not allowed in eval %s.\n",
                msg->value.svalue->value);
         ctr_print_stack_trace();
@@ -4088,8 +4123,6 @@ no_instrum:;
 #endif
     result = ctr_block_run(methodObject, argumentList, receiverObject);
   }
-  if (msg)
-    msg->info.sticky = 0;
   msgName__ = message;
   msgLen__ = vlen;
   if (receiverObject->info.chainMode == 1)

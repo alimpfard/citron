@@ -16,8 +16,9 @@ f is File new: '/tmp/seek_test.txt'.
 f write: 'hello world'.
 Pen write: f read, brk.
 
-f open. #not good
+f open: 'r'.
 q is f readBytes: 1. #but should not cause segfault
+f close.
 
 #no open the right way, seek (lo)
 x is f open: 'r', seek: 3, readBytes: 2.

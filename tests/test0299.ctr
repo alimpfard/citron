@@ -1,0 +1,22 @@
+# Threads!
+
+Broom memoryLimit: 1024 * 1024 * 1024.
+
+var magic-array is Array new.
+
+var ths is (0..100) fmap: {:i
+    ^Thread new: {:x:magic-array
+        Clock wait: (x * 4 + 600) ms.
+        magic-array push: x.
+    } args: [i, magic-array].
+}, toArray fmap!: \:x x run.
+
+Clock wait: 250 ms.
+
+20 times: {:x
+    Clock wait: x ms.
+}.
+
+ths fmap!: \:x x join.
+
+Pen writeln: magic-array count.

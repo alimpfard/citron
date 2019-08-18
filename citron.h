@@ -26,6 +26,17 @@ extern "C" {
 #include <string.h>
 #include <stdio.h>
 
+#ifdef NO_TLS
+#define X__THREAD__
+#define THREAD_STRING "-notls"
+#else
+#define THREAD_STRING ""
+#endif
+
+#ifndef X__THREAD__
+#define X__THREAD__ __thread
+#endif
+
 #ifdef DEBUG_BUILD
 #define VALUE_TO_STRING(x) #x
 #define VALUE(x) VALUE_TO_STRING(x)
@@ -48,9 +59,9 @@ extern "C" {
 #endif
 
 #ifdef withBoehmGC
-#define CTR_VERSION "0.0.9.1-boehm-gc" IS_DEBUG_STRING
+#define CTR_VERSION "0.0.9.2-boehm-gc" IS_DEBUG_STRING THREAD_STRING
 #else
-#define CTR_VERSION "0.0.9.1" IS_DEBUG_STRING
+#define CTR_VERSION "0.0.9.2" IS_DEBUG_STRING THREAD_STRING
 #endif
 
 #define CTR_LOG_WARNINGS 2//2 to enable
@@ -250,7 +261,7 @@ typedef struct ctr_overload_set ctr_overload_set;
 /**
  * Root Object
  */
-struct ctr_object {
+struct __attribute__((packed)) ctr_object {
 	ctr_map* properties;
 	ctr_map* methods;
 	struct {
@@ -263,6 +274,8 @@ struct ctr_object {
 		unsigned int shared: 1;
 		unsigned int raw: 1;
 		unsigned int overloaded: 1;
+		unsigned int pad0: 4;
+		unsigned char pad [6];
 	} info;
 	struct ctr_interfaces* interfaces;
 	struct ctr_object* lexical_name;
@@ -701,13 +714,24 @@ struct ctr_context_t {
 CTR_H_DECLSPEC void ctr_dump_context(struct ctr_context_t*);
 CTR_H_DECLSPEC void ctr_load_context(struct ctr_context_t);
 #ifndef CTR_GLOBALS_DEFINE
-extern ctr_object* ctr_contexts[CTR_CONTEXT_VECTOR_DEPTH];
+extern __thread ctr_tnode* ctr_callstack[CTR_CONTEXT_VECTOR_DEPTH]; //That should be enough... right?
+extern __thread uint8_t ctr_callstack_index;
+extern __thread int ctr_context_id;
+extern X__THREAD__ ctr_object* ctr_contexts[CTR_CONTEXT_VECTOR_DEPTH];
 #else
-CTR_H_DECLSPEC ctr_object* ctr_contexts[CTR_CONTEXT_VECTOR_DEPTH];
+CTR_H_DECLSPEC __thread ctr_tnode* ctr_callstack[CTR_CONTEXT_VECTOR_DEPTH]; //That should be enough... right?
+CTR_H_DECLSPEC __thread uint8_t ctr_callstack_index;
+CTR_H_DECLSPEC __thread int ctr_context_id;
+CTR_H_DECLSPEC X__THREAD__ ctr_object* ctr_contexts[CTR_CONTEXT_VECTOR_DEPTH];
 #endif
-CTR_H_DECLSPEC int ctr_context_id;
-CTR_H_DECLSPEC ctr_tnode* ctr_callstack[CTR_CONTEXT_VECTOR_DEPTH]; //That should be enough... right?
-CTR_H_DECLSPEC uint8_t ctr_callstack_index;
+// CTR_H_DECLSPEC ctr_object* ctr_contexts[CTR_CONTEXT_VECTOR_DEPTH];
+
+typedef struct ctr_thread_workaround_double_list_t {
+  struct ctr_thread_workaround_double_list_t *prev, *next;
+  ctr_object *context;
+} ctr_thread_workaround_double_list_t;
+
+extern ctr_thread_workaround_double_list_t *ctr_thread_workaround_double_list;
 
 /**
  * Nil Interface
@@ -925,6 +949,7 @@ ctr_object* ctr_block_assign(ctr_object* myself, ctr_argument* argumentList);
  * Array Interface
  */
 ctr_object* ctr_array_new(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_array_alloc(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_copy(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_new_and_push(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_type(ctr_object* myself, ctr_argument* argumentList);
@@ -1297,6 +1322,8 @@ ctr_object* ctr_thread_make(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_thread_make_set_target(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_thread_set_target(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_thread_run(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_thread_finished(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_thread_detach(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_thread_join(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_thread_id(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_thread_name(ctr_object* myself, ctr_argument* argumentList);
@@ -1397,7 +1424,7 @@ CTR_H_DECLSPEC int ctr_current_node_is_return;
 
 static inline void ctr_linkstr();
 void ctr_set_link_all(ctr_object*, ctr_object*);
-void ctr_deallocate_argument_list(ctr_argument*);
+void ctr_deallocate_argument_list(const ctr_argument*);
 int ctr_internal_object_is_equal(ctr_object*, ctr_object*);
 int ctr_internal_object_is_constructible_(ctr_object*, ctr_object*, int);
 

@@ -1,11 +1,5 @@
 Uncaught error has occurred.
 Key not found: me
-#3 me (tests/test0193.ctr: 4)
-#2 + (tests/test0193.ctr: 4)
-#1 write:grep: (tests/test0193.ctr: 4)
-------------------------------------
-The probable cause of the exception: 
-2 | 
-3 |  line number 4... '.
-4 | Pen write: 'testje.ctr' + grep: 'Shell'.
-~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+#3 me (test0193.ctr: 4)
+#2 + (test0193.ctr: 4)
+#1 write:grep: (test0193.ctr: 4)

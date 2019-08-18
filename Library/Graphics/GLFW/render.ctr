@@ -1,23 +1,25 @@
-Pen writeln: 'mat stuff took: ' + (Clock timeExecutionOf: {
-  mat4x4_identity[mat].
-  # mat4x4_rotate_Y[mat, mat, time].
-  # mat4x4_rotate_X[mat, mat, time].
-  camp
-    put: time sin * 5 at: 0,
-    # put: time sin * 10 at: 1,
-    put: time cos * 5 at: 2
-    .
-  camf
-    put: time sin * 5 at: 0
-  .
-  # camt
-    # put: time cos * 5 at: 1,
-    # put: time sin * 5 at: 2
-  # .
-  mat4x4_look_at[mat, acamp, acamt, acamf].
-  mat4x4_rotate_Z[mat, mat, time].
-  # mat4x4_ortho[matp, 0 - ratio, ratio, -1, 1, 1, -1].
-  mat4x4_perspective[matp, 0.785, ratio, 0.1, 100].
-  mat4x4_mul[mvp, matp, mat].
-  mat4x4_print[mvp].
-}).
+var render is {
+    Pen writeln: 'mat stuff took: ' + (Clock timeExecutionOf: {
+            mat4x4_identity[mat].
+# mat4x4_rotate_Y[mat, mat, time].
+# mat4x4_rotate_X[mat, mat, time].
+            camp
+            put: time sin * 5 at: 0,
+# put: time sin * 10 at: 1,
+            put: time cos * 5 at: 2
+            .
+            camf
+            put: time sin * 5 at: 0
+            .
+# camt
+# put: time cos * 5 at: 1,
+# put: time sin * 5 at: 2
+# .
+            mat4x4_look_at[mat, acamp, acamt, acamf].
+            mat4x4_rotate_Z[mat, mat, time].
+# mat4x4_ortho[matp, 0 - ratio, ratio, -1, 1, 1, -1].
+            mat4x4_perspective[matp, 0.785, ratio, 0.1, 80].
+            mat4x4_mul[mvp, matp, mat].
+            mat4x4_print[mvp].
+    }).
+}.

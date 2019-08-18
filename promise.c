@@ -1,7 +1,4 @@
 #include "promise.h"
-#include <pthread.h>
-
-#define pthread_create GC_pthread_create
 
 static ctr_object *ctr_promise_native_respond = NULL;
 void *ctr_promise_thread_sf(void *data) {

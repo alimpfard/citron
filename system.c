@@ -19,6 +19,7 @@
 #include <unistd.h>
 
 #ifdef withBoehmGC
+#define GC_THREAD
 #include <gc/gc.h>
 #define pthread_create GC_pthread_create
 #endif
@@ -2853,9 +2854,17 @@ typedef struct {
   ctr_object *stdFlow;
 } ctr_thread_return_t;
 
+// this is a pretty ugly hack, but the only way to help the GC
+// get around the TLS issues
+static ctr_thread_workaround_double_list_t ctr_thread_workaround_double_list_t_sentinel = {0,0,0};
+ctr_thread_workaround_double_list_t *ctr_thread_workaround_double_list = &ctr_thread_workaround_double_list_t_sentinel;
+
 typedef struct {
+  volatile int waiting_for_join;
+  int detached;
   ctr_object *target;
   ctr_object *args;
+  struct ctr_context_t* starting_context;
   ctr_thread_return_t *last_result; // please leave null
   pthread_mutex_t *mutex;
   pthread_t *thread;
@@ -2869,15 +2878,27 @@ void *ctr_run_thread_func(ctr_thread_t *threadt) {
   ctr_thread_return_t *rv = ctr_heap_allocate(sizeof(ctr_thread_return_t));
   // ctr_object* ctx = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
   // pthread_mutex_lock (&GLOBAL_MUTEX);
-  pthread_mutex_lock(threadt->mutex);
+  threadt->waiting_for_join = 0;
+  if (!threadt->detached) {
+    pthread_mutex_lock(threadt->mutex);
+  }
   // ctr_object* oct = ctr_contexts[ctr_context_id];
   int sets = pthread_sigmask(SIG_SETMASK, &set, &oset);
   // ctr_switch_context(ctx);
 
   ctr_argument *args = ctr_heap_allocate(sizeof(ctr_argument));
   (void)ctr_array_to_argument_list(threadt->args, args);
+  ctr_load_context(*threadt->starting_context);
+
+  // copy our context to the global dlist
+  volatile ctr_thread_workaround_double_list_t* tw = ctr_heap_allocate(sizeof(*tw));
+  tw->next = NULL;
+  tw->prev = ctr_thread_workaround_double_list;
+  tw->context = ctr_contexts;
+  ctr_thread_workaround_double_list = tw;
+
   ctr_object *result =
-      ctr_block_run_here(threadt->target, args, threadt->target);
+      ctr_block_run(threadt->target, args, threadt->target);
   ctr_deallocate_argument_list(args);
 
   // ctr_switch_context(oct);
@@ -2885,9 +2906,20 @@ void *ctr_run_thread_func(ctr_thread_t *threadt) {
   rv->stdFlow = CtrStdFlow;
   threadt->last_result = rv;
   sets = pthread_sigmask(SIG_SETMASK, &oset, NULL);
-  pthread_mutex_unlock(threadt->mutex);
-  // pthread_mutex_unlock (&GLOBAL_MUTEX);
-  pthread_exit(rv);
+  threadt->waiting_for_join = 1;
+  // remove our context
+  if (tw->prev)
+    tw->prev->next = tw->next;
+  if (tw->next)
+    tw->next->prev = tw->prev;
+  ctr_heap_free(tw);
+
+  if (!threadt->detached) {
+    pthread_mutex_unlock(threadt->mutex);
+    // pthread_mutex_unlock (&GLOBAL_MUTEX);
+    pthread_exit(rv);
+  }
+  return NULL; // deatched return
 }
 
 void *ctr_thread_free_res(void *res) {
@@ -2926,33 +2958,67 @@ ctr_object *ctr_thread_set_target(ctr_object *myself,
   ctr_did_side_effect = 1;
   pthread_t *thread;
   int err;
+  ctr_thread_t *thdesc;
   if (!myself->value.rvalue->ptr) {
-    ctr_thread_t *thdesc = ctr_heap_allocate(sizeof(ctr_thread_t));
     pthread_mutex_t *mutex = ctr_heap_allocate(sizeof(pthread_mutex_t));
     if ((err = pthread_mutex_init(mutex, NULL)) != 0) {
       // Error
       printf("Bitching about mutex %p (cannot init (%s))\n", mutex,
              strerror(err));
     }
+    thdesc = ctr_heap_allocate(sizeof(ctr_thread_t));
     thread = ctr_heap_allocate(sizeof(pthread_t));
     thdesc->mutex = mutex;
     thdesc->thread = thread;
     myself->value.rvalue->ptr = thdesc;
-  } else
-    thread = ((ctr_thread_t *)myself->value.rvalue->ptr)->thread;
-  ((ctr_thread_t *)myself->value.rvalue->ptr)->target = argumentList->object;
-  pthread_mutex_lock(((ctr_thread_t *)myself->value.rvalue->ptr)->mutex);
+  } else {
+    thdesc = (ctr_thread_t *)myself->value.rvalue->ptr;
+    thread = thdesc->thread;
+  }
+  thdesc->target = argumentList->object;
+  thdesc->starting_context = ctr_heap_allocate(sizeof(struct ctr_context_t));
+  ctr_dump_context(thdesc->starting_context);
+  pthread_mutex_lock(thdesc->mutex);
   pthread_create(thread, NULL, (voidptrfn_t *)&ctr_run_thread_func,
-                 myself->value.rvalue->ptr);
+                 thdesc);
   char name[16];
   char pname[16];
   pthread_getname_np(pthread_self(), pname, 16);
-  sprintf(name, "%.*s-%.*d", 15 - sizeof(ctr_size), pname, sizeof(ctr_size),
-          thread_current_number % (sizeof(ctr_size)));
+  sprintf(name, "%.*lu", 15, thread_current_number % (sizeof(ctr_size)));
   thread_current_number++;
   if ((err = pthread_setname_np(*thread, name)) != 0) {
     //
   }
+  return myself;
+}
+
+/**
+ * [Thread] detach
+ *
+ * Detaches the thread
+ *
+ */
+ctr_object *ctr_thread_detach(ctr_object *myself, ctr_argument *argumentList) {
+  ctr_did_side_effect = 1;
+  pthread_t *thread;
+  int err;
+  ctr_thread_t *thdesc;
+  if (!myself->value.rvalue->ptr) {
+    CtrStdFlow = ctr_build_string_from_cstring("Cannot detach a thread that is not started");
+    return CtrStdNil;
+  } else {
+    thdesc = ((ctr_thread_t *)myself->value.rvalue->ptr);
+    thread = thdesc->thread;
+    if (thdesc->detached) {
+        CtrStdFlow = ctr_build_string_from_cstring("This thread is already detached");
+        return CtrStdNil;
+    }
+  }
+  if ((err = pthread_detach(*thread))) {
+      CtrStdFlow = ctr_format_str("ECannot detach the thread: %s", strerror(err));
+      return CtrStdNil;
+  }
+  thdesc->detached = 1;
   return myself;
 }
 
@@ -2966,8 +3032,9 @@ ctr_object *ctr_thread_set_args(ctr_object *myself,
   ctr_did_side_effect = 1;
   pthread_t *thread;
   int err;
+  ctr_thread_t *thdesc;
   if (!myself->value.rvalue->ptr) {
-    ctr_thread_t *thdesc = ctr_heap_allocate(sizeof(ctr_thread_t));
+    thdesc = ctr_heap_allocate(sizeof(ctr_thread_t));
     pthread_mutex_t *mutex = ctr_heap_allocate(sizeof(pthread_mutex_t));
     if ((err = pthread_mutex_init(mutex, NULL)) != 0) {
       // Error
@@ -2978,17 +3045,20 @@ ctr_object *ctr_thread_set_args(ctr_object *myself,
     thdesc->mutex = mutex;
     thdesc->thread = thread;
     myself->value.rvalue->ptr = thdesc;
-  } else
-    thread = ((ctr_thread_t *)myself->value.rvalue->ptr)->thread;
-  ((ctr_thread_t *)myself->value.rvalue->ptr)->args = argumentList->object;
-  pthread_mutex_lock(((ctr_thread_t *)myself->value.rvalue->ptr)->mutex);
+  } else {
+    thdesc = ((ctr_thread_t *)myself->value.rvalue->ptr);
+    thread = thdesc->thread;
+  }
+  thdesc->args = argumentList->object;
+  thdesc->starting_context = ctr_heap_allocate(sizeof(struct ctr_context_t));
+  ctr_dump_context(thdesc->starting_context);
+  pthread_mutex_lock(thdesc->mutex);
   pthread_create(thread, NULL, (voidptrfn_t *)&ctr_run_thread_func,
-                 myself->value.rvalue->ptr);
+                 thdesc);
   char name[16];
   char pname[16];
   pthread_getname_np(pthread_self(), pname, 16);
-  sprintf(name, "%.*s-%.*d", 15 - sizeof(ctr_size), pname, sizeof(ctr_size),
-          thread_current_number % (sizeof(ctr_size)));
+  sprintf(name, "%.*lu", 15, thread_current_number % (sizeof(ctr_size)));
   thread_current_number++;
   if ((err = pthread_setname_np(*thread, name)) != 0) {
     //
@@ -3020,25 +3090,38 @@ ctr_object *ctr_thread_make_set_target(ctr_object *myself,
   thread = ctr_heap_allocate(sizeof(pthread_t));
   thdesc->mutex = mutex;
   thdesc->thread = thread;
+  thdesc->starting_context = ctr_heap_allocate(sizeof(struct ctr_context_t));
+  ctr_dump_context(thdesc->starting_context);
   if (argumentList->next && argumentList->next->object)
     thdesc->args = argumentList->next->object;
   else
     thdesc->args = NULL;
   inst->value.rvalue->ptr = thdesc;
-  ((ctr_thread_t *)inst->value.rvalue->ptr)->target = argumentList->object;
-  pthread_mutex_lock(((ctr_thread_t *)inst->value.rvalue->ptr)->mutex);
+  thdesc->target = argumentList->object;
+  pthread_mutex_lock(thdesc->mutex);
   pthread_create(thread, NULL, (voidptrfn_t *)&ctr_run_thread_func,
-                 inst->value.rvalue->ptr);
+                 thdesc);
   char name[16];
   char pname[16];
   pthread_getname_np(pthread_self(), pname, 16);
-  sprintf(name, "%.*s-%.*d", 15 - sizeof(ctr_size), pname, sizeof(ctr_size),
-          thread_current_number % (sizeof(ctr_size)));
+  sprintf(name, "%.*lu", 15, thread_current_number % (sizeof(ctr_size)));
   thread_current_number++;
   if ((err = pthread_setname_np(*thread, name)) != 0) {
     //
   }
   return inst;
+}
+
+/**
+ * [Thread] finished
+ *
+ * Gives a (probable) result whether the thread is finished running
+ */
+ctr_object *ctr_thread_finished(ctr_object *myself, ctr_argument *argumentList) {
+  ctr_thread_t *thread = myself->value.rvalue->ptr;
+  if (!thread)
+    return ctr_build_bool(0);
+  return ctr_build_bool(thread->waiting_for_join);
 }
 
 /**
@@ -3071,12 +3154,14 @@ ctr_object *ctr_thread_join(ctr_object *myself, ctr_argument *argumentList) {
   ctr_thread_return_t *retval;
   // pthread_mutex_lock(((ctr_thread_t*)myself->value.rvalue->ptr)->mutex);//get
   // the mutex
+  // printf("CONTEXT %p - %d\n", ctr_contexts, ctr_context_id);
   if (pthread_join(*(((ctr_thread_t *)myself->value.rvalue->ptr)->thread),
                    (void **)&retval) != 0) {
     CtrStdFlow = ctr_build_string_from_cstring("Thread could not join");
     return CtrStdNil;
   }
-  if (!retval) {
+  // printf("CONTEXT %p - %d\n", ctr_contexts, ctr_context_id);
+  if (retval == PTHREAD_CANCELED || !retval) {
     ctr_heap_free(retval);
     return CtrStdNil;
   } else {

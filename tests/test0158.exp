@@ -1,9 +1,3 @@
 Uncaught error has occurred.
 File has already been opened.
-#1 open: (tests/test0158.ctr: 17)
-------------------------------------
-The probable cause of the exception: 
-15 | 
-16 | 
-17 | f open: 'r+'.
-~~~~~~~~~^
+#1 open: (test0158.ctr: 17)

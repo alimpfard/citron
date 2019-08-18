@@ -1,10 +1,3 @@
 Uncaught error has occurred.
 Unknown method Object::'exists:' was called
-#1 exists: (tests/test0168.ctr: 11)
-------------------------------------
-The probable cause of the exception: 
-9 | 
-10 | f is File new: '/tmp/citron_test_file.txt'.
-11 | f exists: { f delete. }.
-~~~~~~~~~~~^
-12 | f write: 'hello world'.
+#1 exists: (test0168.ctr: 11)

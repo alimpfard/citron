@@ -16,13 +16,19 @@ Object on: 'match:' do: {:self:ast
     done is True.
     ret is {
       self message: 'unpack:' arguments: [$!(__PMATCH_V0 head), Reflect thisContext].
-      $!(__PMATCH_V0 tail init) all: (\:__PMATCH_V1 Reflect runHere: {^$!(__PMATCH_V1).} forObject: self arguments: []), ifFalse: {
-        cblk error: 'guard fail'.
-      }.
+      $!(__PMATCH_V0 tail init) all: {\:__PMATCH_V1
+          Reflect runHere: {
+            ^$!(__PMATCH_V1).
+          } forObject: const self arguments: [].
+        }, ifFalse: {
+          cblk error: 'guard fail'.
+        }.
       ^Reflect runHere: {^$!(__PMATCH_V0 last).} forObject: self arguments: [].
     } catch: {:e
       e !=: 'Invalid bind', ifTrue: {
-        thisBlock error: e.
+        e !=: 'guard fail', ifTrue: {
+          thisBlock error: e.
+        }.
       }.
       done is False.
     }, run.
@@ -50,13 +56,15 @@ Object on: 'on:pdo:' do: {:msg:ast
 # This one's a bit of a doozy
 # arg1 is the ast of this expression:
 # {
-#   match => result.
+#   match => me choise: { [{ guard.* } => result.]* }.
 #   match => result.
 # }
 #
 # which is transformed into this:
 # [
-#   [match, result],
+#   [match, guard*, result],
+#   [match, guard*, result],
+#   ...
 #   [match, result]
 # ]
 #
@@ -65,15 +73,61 @@ Object on: 'on:pdo:' do: {:msg:ast
 #
 # e.g. in a context that `x' is not defined,
 # it is transformed into \x
-var match is {\:__arg0:__arg1:__obj:__mid_ast
+var match is {\:__arg0:__arg1:__obj:__mid_ast:__hadguard
   __arg0 is __arg0 evaluate.
+  __arg1 isA: CodeBlock, ifTrue: {
+    thisBlock error: 'Syntax error: expected AST but got a block (maybe missing `#:declare lazyev match` ?)'.
+  }.
   ^__arg1 type = 'CODEBLOCK' either: { # This is a block
     __arg1 is __arg1 at: 1. # Skip the arguments section
     __obj is Array new. # Get a new array
-    __arg1 each_v: {:__ast
-      (__ast type = 'EXPRASSIGNMENT') ifFalse: { thisBlock error: 'Syntax error: Expected assignment, but got ' + __ast type. }.
+    __arg1 each_v: {:__ast # for each `a => b`
+      __hadguard is False.
+      (__ast type = 'EXPRASSIGNMENT') ifFalse: {
+        thisBlock error: 'Syntax error: Expected assignment, but got ' + __ast type.
+      }.
       __mid_ast is quoteAllUnbound applyTo: (__ast at: 0).
-      __obj push: [(__mid_ast), (__ast at: 1)].
+      (var amsg is __ast @ 1) type = 'EXPRMESSAGE' ifTrue: {
+        (var aexpr is amsg at: 0) type = 'REFERENCE' ifTrue: {
+          aexpr value = 'me' ifTrue: {
+              # process messages to the pattern construct
+              1 to: amsg count step: 1 do: {:idx
+                var msg is amsg @ idx.
+                msg value = 'choise:' ifTrue: {
+                  # has guards and shit
+                  __hadguard is True.
+                  var dec is msg @ 0.
+                  dec type = 'CODEBLOCK' ifFalse: {
+                    thisBlock error: 'PatternMatch::\'choise:\' expects a codeblock'.
+                  }.
+                  dec is dec at: 1. # ignore the args
+                  var elseb is False.
+                  dec each_v: {:guarded_expr
+                    guarded_expr type = 'EXPRASSIGNMENT' ifTrue: {
+                      # has a guard block
+                      var guard is guarded_expr @ 0 @ 1. # a in `a => b`.
+                      var res is guarded_expr @ 1.   # b in `a => b`.
+                      var guards is Array new fill: guard count with: \:i guard @ i.
+                      __obj push: [__mid_ast] + guards + [res].
+                    } ifFalse: {
+                      # else branch
+                      elseb ifTrue: {
+                        thisBlock error: 'An else branch has already been defined for this match'.
+                      }.
+                      elseb is True.
+                      __obj push: [__mid_ast, guarded_expr].
+                    }.
+                  }.
+                } ifFalse: {
+                  thisBlock error: 'Unknown responder of PatternMatch::\'${{msg value}}$\''.
+                }.
+              }.
+          }.
+        }.
+      }.
+      __hadguard ifFalse: {
+        __obj push: [(__mid_ast), (__ast at: 1)].
+      }.
     }.
     ^__arg0 match: __obj.
   } or: { # Just pass it along

@@ -93,8 +93,10 @@ extern int speculative_parse;
  * `[1,2` is transformed to `[1,2]`
  * `[1,2 toString` is transformed to `[1, 2 toString]`
  */
-ctr_object *ctr_ast_set_speculative(ctr_object *myself, ctr_argument *argumentList) {
-  speculative_parse = ctr_internal_cast2bool(argumentList->object)->value.bvalue;
+ctr_object *ctr_ast_set_speculative(ctr_object *myself,
+                                    ctr_argument *argumentList) {
+  speculative_parse =
+      ctr_internal_cast2bool(argumentList->object)->value.bvalue;
   return myself;
 }
 
@@ -103,9 +105,10 @@ ctr_object *ctr_ast_set_speculative(ctr_object *myself, ctr_argument *argumentLi
  *
  * Returns True if speculative parsing is enabled, False otherwise
  */
-ctr_object *ctr_ast_get_speculative(ctr_object *myself, ctr_argument *argumentList) {
-  (void) myself;
-  (void) argumentList;
+ctr_object *ctr_ast_get_speculative(ctr_object *myself,
+                                    ctr_argument *argumentList) {
+  (void)myself;
+  (void)argumentList;
   return ctr_build_bool(speculative_parse);
 }
 /**
@@ -1446,12 +1449,11 @@ ctr_object *ctr_coro_yield(ctr_object *myself, ctr_argument *argumentList) {
     CtrStdFlow = ctr_build_string_from_cstring("Coroutine not runnning");
     return myself;
   }
-  coroutine_yield(S);
+  ctr_object *ys = ctr_build_string_from_cstring("yield");
   if (argumentList->object)
-    ctr_internal_object_set_property(myself,
-                                     ctr_build_string_from_cstring("yield"),
-                                     argumentList->object, 0);
-  return myself;
+    ctr_internal_object_set_property(myself, ys, argumentList->object, 0);
+  coroutine_yield(S);
+  return ctr_internal_object_find_property(myself, ys, 0) ?: CtrStdNil;
 }
 
 ctr_object *ctr_coro_state(ctr_object *myself, ctr_argument *argumentList) {

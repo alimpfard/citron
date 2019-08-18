@@ -1,0 +1,6 @@
+var ss is CTypes structWithFormat: 'd{scsi}'.
+var sv is ss newIns.
+Pen writeln: sv offsets.
+ss pack: [1, 1343].
+Pen writeln: (ss at: 8).
+Pen writeln: ss unpack.

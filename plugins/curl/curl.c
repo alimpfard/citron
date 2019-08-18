@@ -37,6 +37,11 @@ ctr_object *ctr_internal_otype(ctr_object *o) {
 	return ctr_object_message(o, &arg);
 }
 
+#ifndef __linux__
+static char *cacert = NULL;
+static char cabuf[1024];
+#endif
+
 /**
  * Curl new.
  *
@@ -53,6 +58,16 @@ ctr_object* ctr_curl_new(ctr_object* myself, ctr_argument* argumentList) {
 	ctr_resource* rsrc = ctr_heap_allocate(sizeof(ctr_resource));
 	rsrc->type = CTR_OBJECT_RESOURCE_CURL;
 	rsrc->ptr = curl_easy_init();
+
+#ifndef __linux__
+	if (!cacert) {
+	  cacert = ctr_heap_allocate_cstring(ctr_file_stdext_path(CtrStdFile, NULL));
+	  sprintf(cabuf, "%slib/curl/ca/cacert.pem", cacert);
+	  ctr_heap_free(cacert);
+	  cacert = cabuf;
+	}
+	curl_easy_setopt(rsrc->ptr, CURLOPT_CAINFO, cacert);
+#endif
 
 	curlObjectInstance->value.rvalue = rsrc;
 
@@ -376,6 +391,31 @@ ctr_object* ctr_curl_respondto(ctr_object* myself, ctr_argument* argumentList) {
 	return myself;
 }
 
+#ifndef __linux__
+struct MemoryStruct {
+  char *memory;
+  size_t size;
+};
+size_t own_fmemwrite(const void* contents, size_t size, size_t count, void* data) {
+  size_t realsize = size * count;
+  struct MemoryStruct *mem = (struct MemoryStruct *)data;
+
+  char *ptr = realloc(mem->memory, mem->size + realsize + 1);
+  if(ptr == NULL) {
+    /* out of memory! */
+    CtrStdFlow = ctr_format_str("ECurl ~ not enough memory");
+    return 0;
+  }
+
+  mem->memory = ptr;
+  memcpy(&(mem->memory[mem->size]), contents, realsize);
+  mem->size += realsize;
+  mem->memory[mem->size] = 0;
+
+  return realsize;
+}
+#endif
+
 /**
  * [Curl] perform.
  *
@@ -383,14 +423,28 @@ ctr_object* ctr_curl_respondto(ctr_object* myself, ctr_argument* argumentList) {
  *
  **/
 ctr_object* ctr_curl_perform(ctr_object* myself, ctr_argument* argumentList) {
-
+	#ifndef __linux__
+	struct MemoryStruct chunk;
+  chunk.memory = malloc(1);
+  chunk.size = 0;
+	// get around fwrite being bound to some other function on windows
+	curl_easy_setopt(myself->value.rvalue->ptr, CURLOPT_WRITEFUNCTION, own_fmemwrite);
+	curl_easy_setopt(myself->value.rvalue->ptr, CURLOPT_WRITEDATA, (void*)&chunk);
+	#else
 	FILE *temp = tmpfile();
 	curl_easy_setopt(myself->value.rvalue->ptr, CURLOPT_WRITEDATA, temp);
+	#endif
 
 	CURLcode code = curl_easy_perform(myself->value.rvalue->ptr);
 
 	if (code != CURLE_OK)
 		ctr_curl_internal_error(myself, "Curl perform", "Received Curl error code");
+
+	#ifndef __linux__
+	ctr_object *str = ctr_build_string(chunk.memory, chunk.size);
+	free(chunk.memory);
+
+	#else
 
 	fseek(temp, 0, SEEK_END);
 	ctr_size fileLen = ftell(temp);
@@ -405,6 +459,7 @@ ctr_object* ctr_curl_perform(ctr_object* myself, ctr_argument* argumentList) {
 	fclose(temp);
 	ctr_object *str = ctr_build_string(buffer, fileLen);
 	ctr_heap_free(buffer);
+	#endif
 
 	return str;
 }

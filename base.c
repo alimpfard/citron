@@ -916,8 +916,8 @@ ctr_object *ctr_object_respond_and_and(ctr_object *myself,
  * Always returns boolean object False.
  */
 ctr_object *ctr_object_is_nil(ctr_object *myself, ctr_argument *argumentList) {
-  (void) myself;
-  (void) argumentList;
+  (void)myself;
+  (void)argumentList;
 
   return ctr_build_bool(0);
 }
@@ -1010,7 +1010,7 @@ ctr_object *ctr_bool_neq(ctr_object *myself, ctr_argument *argumentList) {
  * Simple cast function.
  */
 ctr_object *ctr_bool_to_string(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   if (myself->value.bvalue == 1) {
     return ctr_build_string_from_cstring("True");
@@ -1030,7 +1030,7 @@ ctr_object *ctr_bool_to_string(ctr_object *myself, ctr_argument *argumentList) {
  * (iteration > 10) break. #breaks out of loop after 10 iterations
  */
 ctr_object *ctr_bool_break(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   if (myself->value.bvalue) {
     CtrStdFlow = CtrStdBreak; /* If error = Break it's a break, there is no real
@@ -1050,7 +1050,7 @@ ctr_object *ctr_bool_break(ctr_object *myself, ctr_argument *argumentList) {
  * (iteration > 10) continue.
  */
 ctr_object *ctr_bool_continue(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   if (myself->value.bvalue) {
     CtrStdFlow = CtrStdContinue; /* If error = Continue, then it breaks only one
@@ -1196,7 +1196,7 @@ ctr_object *ctr_object_if_tf(ctr_object *myself, ctr_argument *argumentList) {
  *
  */
 ctr_object *ctr_bool_not(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   return ctr_build_bool(!myself->value.bvalue);
 }
@@ -1210,8 +1210,8 @@ ctr_object *ctr_bool_not(ctr_object *myself, ctr_argument *argumentList) {
  * coinLandsOn := (Boolean flip).
  */
 ctr_object *ctr_bool_flip(ctr_object *myself, ctr_argument *argumentList) {
-  (void) myself;
-  (void) argumentList;
+  (void)myself;
+  (void)argumentList;
 
   return ctr_build_bool((rand() % 2));
 }
@@ -1312,7 +1312,7 @@ ctr_object *ctr_bool_xor(ctr_object *myself, ctr_argument *argumentList) {
  * Returns 0 if boolean is False and 1 otherwise.
  */
 ctr_object *ctr_bool_to_number(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   return ctr_build_number_from_float((ctr_number)myself->value.bvalue);
 }
@@ -1540,7 +1540,7 @@ ctr_object *ctr_number_between(ctr_object *myself, ctr_argument *argumentList) {
  * Returns True if the number is odd and False otherwise.
  */
 ctr_object *ctr_number_odd(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   return ctr_build_bool((int)myself->value.nvalue % 2);
 }
@@ -1551,7 +1551,7 @@ ctr_object *ctr_number_odd(ctr_object *myself, ctr_argument *argumentList) {
  * Returns True if the number is even and False otherwise.
  */
 ctr_object *ctr_number_even(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   return ctr_build_bool(!((int)myself->value.nvalue % 2));
 }
@@ -1625,7 +1625,7 @@ ctr_object *ctr_number_dec(ctr_object *myself, ctr_argument *argumentList) {
  * Negates the value of the number object
  */
 ctr_object *ctr_number_negate(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   myself->value.nvalue = 0 - myself->value.nvalue;
   return myself;
@@ -1898,7 +1898,7 @@ ctr_object *ctr_number_pow(ctr_object *myself, ctr_argument *argumentList) {
  */
 ctr_object *ctr_number_positive(ctr_object *myself,
                                 ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   return ctr_build_bool((myself->value.nvalue > 0));
 }
@@ -1921,7 +1921,7 @@ ctr_object *ctr_number_positive(ctr_object *myself,
  */
 ctr_object *ctr_number_negative(ctr_object *myself,
                                 ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   return ctr_build_bool((myself->value.nvalue < 0));
 }
@@ -1967,7 +1967,7 @@ ctr_object *ctr_number_min(ctr_object *myself, ctr_argument *argumentList) {
  */
 ctr_object *ctr_number_factorial(ctr_object *myself,
                                  ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   ctr_number t = myself->value.nvalue;
   int i;
@@ -2010,15 +2010,14 @@ ctr_object *ctr_number_to_step_do(ctr_object *myself,
   }
   if (!codeBlock->value.block->lexical)
     ctr_open_context();
-  ctr_object *arg =
-      ctr_internal_create_standalone_object(CTR_OBJECT_TYPE_OTNUMBER);
-  arg->value.nvalue = curValue;
+  ctr_object *arg = ctr_build_number_from_float(curValue);
   while ((forward ? curValue < endValue : curValue > endValue) && !CtrStdFlow) {
     arg->value.nvalue = curValue;
     arguments->object = arg;
     ctr_block_run_here(codeBlock, arguments, codeBlock);
     if (CtrStdFlow == CtrStdContinue)
       CtrStdFlow = NULL; /* consume continue and go on */
+    curValue = arg->value.nvalue;
     curValue += incValue;
   }
   if (!codeBlock->value.block->lexical)
@@ -2051,7 +2050,7 @@ ctr_object *ctr_number_to_step(ctr_object *myself, ctr_argument *argumentList) {
  * returning a new number object (4).
  */
 ctr_object *ctr_number_floor(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   return ctr_build_number_from_float(floor(myself->value.nvalue));
 }
@@ -2084,7 +2083,7 @@ ctr_object *ctr_number_respond_to(ctr_object *myself,
  * returning a new number object (5).
  */
 ctr_object *ctr_number_ceil(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   return ctr_build_number_from_float(ceil(myself->value.nvalue));
 }
@@ -2095,7 +2094,7 @@ ctr_object *ctr_number_ceil(ctr_object *myself, ctr_argument *argumentList) {
  * Returns the rounded number.
  */
 ctr_object *ctr_number_round(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   return ctr_build_number_from_float(round(myself->value.nvalue));
 }
@@ -2114,7 +2113,7 @@ ctr_object *ctr_number_round(ctr_object *myself, ctr_argument *argumentList) {
  * in 7.
  */
 ctr_object *ctr_number_abs(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   return ctr_build_number_from_float(fabs(myself->value.nvalue));
 }
@@ -2133,7 +2132,7 @@ ctr_object *ctr_number_abs(ctr_object *myself, ctr_argument *argumentList) {
  * number 7.
  */
 ctr_object *ctr_number_sqrt(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   return ctr_build_number_from_float(sqrt(myself->value.nvalue));
 }
@@ -2154,7 +2153,7 @@ ctr_object *ctr_number_exp(ctr_object *myself, ctr_argument *argumentList) {
  */
 
 ctr_object *ctr_number_sin(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   return ctr_build_number_from_float(sin(myself->value.nvalue));
 }
@@ -2165,7 +2164,7 @@ ctr_object *ctr_number_sin(ctr_object *myself, ctr_argument *argumentList) {
  * Returns the cosine of the number.
  */
 ctr_object *ctr_number_cos(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   return ctr_build_number_from_float(cos(myself->value.nvalue));
 }
@@ -2176,7 +2175,7 @@ ctr_object *ctr_number_cos(ctr_object *myself, ctr_argument *argumentList) {
  * Caculates the tangent of a number.
  */
 ctr_object *ctr_number_tan(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   return ctr_build_number_from_float(tan(myself->value.nvalue));
 }
@@ -2187,7 +2186,7 @@ ctr_object *ctr_number_tan(ctr_object *myself, ctr_argument *argumentList) {
  * Caculates the arctangent of a number.
  */
 ctr_object *ctr_number_atan(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   return ctr_build_number_from_float(atan(myself->value.nvalue));
 }
@@ -2198,7 +2197,7 @@ ctr_object *ctr_number_atan(ctr_object *myself, ctr_argument *argumentList) {
  * Calculates the logarithm of a number.
  */
 ctr_object *ctr_number_log(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   return ctr_build_number_from_float(log(myself->value.nvalue));
 }
@@ -2263,7 +2262,7 @@ ctr_object *ctr_number_xor(ctr_object *myself, ctr_argument *argumentList) {
  * Converts a number to a single byte.
  */
 ctr_object *ctr_number_to_byte(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   ctr_object *str = ctr_build_empty_string();
   str->value.svalue->value = ctr_heap_allocate(1);
@@ -2324,7 +2323,7 @@ ctr_object *ctr_number_to_string_base(ctr_object *myself,
  */
 ctr_object *ctr_number_to_string(ctr_object *myself,
                                  ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   ctr_object *o = myself;
   int slen;
@@ -2358,7 +2357,7 @@ ctr_object *ctr_number_to_string(ctr_object *myself,
  */
 ctr_object *ctr_number_to_boolean(ctr_object *myself,
                                   ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   return ctr_build_bool(myself->value.nvalue);
 }
@@ -2529,6 +2528,18 @@ ctr_object *ctr_build_string_from_cstring(char *cstring) {
  */
 ctr_object *ctr_build_empty_string() { return ctr_build_string("", 0); }
 
+static const char ascii_escape_names[] = (char[256]){
+    [0x07] = 'a',
+    [0x08] = 'b',
+    [0x0c] = 'f',
+    [0x0a] = 'n',
+    [0x0d] = 'r',
+    [0x09] = 't',
+    [0x5c] = '\\',
+    [0x27] = '\'',
+    [0x22] = '"',
+    [0x3f] = '?'
+  };
 /**
  * [String] escape: '\n'.
  *
@@ -2540,10 +2551,10 @@ ctr_object *ctr_string_escape_ascii(ctr_object *myself,
       argumentList && argumentList->object && argumentList->object != CtrStdNil
           ? ctr_internal_cast2string(argumentList->object)
           : ctr_build_string_from_cstring((char[]){
-            0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,
-            0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
-            0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x0a
-          }); // sensible default
+                0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+                0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10,
+                0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
+                0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x0a}); // sensible default
   ctr_object *newString = NULL;
   char *str = myself->value.svalue->value;
   long len = myself->value.svalue->vlen;
@@ -2583,31 +2594,27 @@ ctr_object *ctr_string_escape_ascii(ctr_object *myself,
     for (q = 0; q < nchars; q++) {
       character = characters[q];
       is_cchar = 0;
-      switch (character) {
-      case '\t':
-        descr = 't';
-        is_cchar = 1;
-        break;
-      case '\r':
-        descr = 'r';
-        is_cchar = 1;
-        break;
-      case '\n':
-        descr = 'n';
-        is_cchar = 1;
-        break;
-      case '\b':
-        descr = 'b';
-        is_cchar = 1;
-        break;
-      }
+      // switch (character) {
+      // case '\t':
+      //   descr = 't';
+      //   is_cchar = 1;
+      //   break;
+      // case '\r':
+      //   descr = 'r';
+      //   is_cchar = 1;
+      //   break;
+      // case '\n':
+      //   descr = 'n';
+      //   is_cchar = 1;
+      //   break;
+      // case '\b':
+      //   descr = 'b';
+      //   is_cchar = 1;
+      //   break;
+      // }
       if (c == character) {
         tstr[k++] = '\\';
-        if (is_cchar) {
-          tstr[k++] = descr;
-        } else {
-          tstr[k++] = str[i];
-        }
+        tstr[k++] = ascii_escape_names[c] ?: str[i];
         escaped = 1;
         break;
       }
@@ -2616,7 +2623,7 @@ ctr_object *ctr_string_escape_ascii(ctr_object *myself,
       tstr[k++] = str[i];
     }
   }
-  newString = ctr_build_string(tstr, tlen);
+  newString = ctr_build_string(tstr, k);
   ctr_heap_free(tstr);
   return newString;
 }
@@ -2628,7 +2635,7 @@ ctr_object *ctr_string_escape_ascii(ctr_object *myself,
  * length which returns the number of UTF-8 code points (symbols or characters).
  */
 ctr_object *ctr_string_bytes(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   return ctr_build_number_from_float((float)myself->value.svalue->vlen);
 }
@@ -2705,7 +2712,7 @@ ctr_object *ctr_string_neq(ctr_object *myself, ctr_argument *argumentList) {
  *ONE.
  */
 ctr_object *ctr_string_length(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   ctr_size n = ctr_getutf8len(myself->value.svalue->value,
                               (ctr_size)myself->value.svalue->vlen);
@@ -2718,7 +2725,7 @@ ctr_object *ctr_string_length(ctr_object *myself, ctr_argument *argumentList) {
  * returns whether this string is empty
  */
 ctr_object *ctr_string_empty(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   ctr_size n = ctr_getutf8len(myself->value.svalue->value,
                               (ctr_size)myself->value.svalue->vlen);
@@ -3427,7 +3434,7 @@ ctr_object *ctr_string_ends_with(ctr_object *myself,
  */
 ctr_object *ctr_string_to_upper(ctr_object *myself,
                                 ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   ctr_object *newString = NULL;
   char *str = myself->value.svalue->value;
@@ -3452,7 +3459,7 @@ ctr_object *ctr_string_to_upper(ctr_object *myself,
  */
 ctr_object *ctr_string_to_lower(ctr_object *myself,
                                 ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   ctr_object *newString = NULL;
   char *str = myself->value.svalue->value;
@@ -3475,7 +3482,7 @@ ctr_object *ctr_string_to_lower(ctr_object *myself,
  */
 ctr_object *ctr_string_to_lower1st(ctr_object *myself,
                                    ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   ctr_object *newString = NULL;
   size_t len = myself->value.svalue->vlen;
@@ -3497,7 +3504,7 @@ ctr_object *ctr_string_to_lower1st(ctr_object *myself,
  */
 ctr_object *ctr_string_to_upper1st(ctr_object *myself,
                                    ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   ctr_object *newString;
   size_t len = myself->value.svalue->vlen;
@@ -3513,7 +3520,7 @@ ctr_object *ctr_string_to_upper1st(ctr_object *myself,
 
 ctr_object *ctr_string_to_string(ctr_object *myself,
                                  ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   return ctr_build_string(myself->value.svalue->value,
                           myself->value.svalue->vlen);
@@ -3810,6 +3817,8 @@ ctr_object *ctr_string_find_pattern_options_do(
  */
 ctr_object *ctr_string_find_pattern_do(ctr_object *myself,
                                        ctr_argument *argumentList) {
+  if (!argumentList->next->next)
+    argumentList->next->next = ctr_heap_allocate(sizeof(ctr_argument));
   argumentList->next->next->object = ctr_build_empty_string();
   ctr_object *answer;
   answer = ctr_string_find_pattern_options_do(myself, argumentList);
@@ -3834,7 +3843,7 @@ ctr_object *ctr_string_reg_compile(ctr_object *myself,
 #else
 ctr_object *ctr_string_reg_compile(ctr_object *myself,
                                    ctr_argument *argumentList) {
-  (void) myself;
+  (void)myself;
 
   if (argumentList->next->object) { // pattern, substitute, [options]
     ctr_object *pat = argumentList->object;
@@ -3888,7 +3897,7 @@ ctr_object *ctr_string_reg_compile(ctr_object *myself,
 }
 ctr_object *ctr_string_reg_replace(ctr_object *myself,
                                    ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   if (argumentList->next->object) { // pattern, substitute, [options]
     ctr_object *pat = argumentList->object;
@@ -4025,8 +4034,8 @@ ctr_object *ctr_string_contains_pattern(ctr_object *myself,
   char *needle = ctr_heap_allocate_cstring(argumentList->object);
   char *haystack = ctr_heap_allocate_cstring(myself);
   ctr_object *answer;
-  pattern =
-      pcre_compile(needle, PCRE_EXTENDED, (char const**) &error_message, &regex_error, NULL);
+  pattern = pcre_compile(needle, PCRE_EXTENDED, (char const **)&error_message,
+                         &regex_error, NULL);
   if (!pattern) {
     CtrStdFlow = ctr_build_string_from_cstring(error_message);
     answer = CtrStdNil;
@@ -4051,8 +4060,8 @@ ctr_object *ctr_string_contains_pattern(ctr_object *myself,
 
 ctr_object *ctr_string_is_regex_pcre(ctr_object *myself,
                                      ctr_argument *argumentList) {
-  (void) myself;
-  (void) argumentList;
+  (void)myself;
+  (void)argumentList;
 
   int ispcre =
 #ifndef POSIXRE
@@ -4095,7 +4104,7 @@ ctr_object *ctr_string_count_of(ctr_object *myself,
  * for variations of this message.
  */
 ctr_object *ctr_string_trim(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   ctr_object *newString = NULL;
   char *str = myself->value.svalue->value;
@@ -4130,7 +4139,7 @@ ctr_object *ctr_string_trim(ctr_object *myself, ctr_argument *argumentList) {
  * string but leave the spaces at the right side intact.
  */
 ctr_object *ctr_string_ltrim(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   ctr_object *newString = NULL;
   char *str = myself->value.svalue->value;
@@ -4206,7 +4215,7 @@ ctr_object *ctr_string_padding_right(ctr_object *myself,
  * string but leave the spaces at the left side intact.
  */
 ctr_object *ctr_string_rtrim(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   ctr_object *newString = NULL;
   char *str = myself->value.svalue->value;
@@ -4230,7 +4239,7 @@ ctr_object *ctr_string_rtrim(ctr_object *myself, ctr_argument *argumentList) {
  */
 ctr_object *ctr_string_to_number(ctr_object *myself,
                                  ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   return ctr_build_number_from_string(myself->value.svalue->value,
                                       myself->value.svalue->vlen);
@@ -4243,7 +4252,7 @@ ctr_object *ctr_string_to_number(ctr_object *myself,
  */
 ctr_object *ctr_string_to_boolean(ctr_object *myself,
                                   ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   return ctr_build_bool(!!myself->value.svalue->vlen);
 }
@@ -4362,7 +4371,7 @@ ctr_object *ctr_string_split_re_gen(ctr_object *myself,
  */
 ctr_object *ctr_string_characters(ctr_object *myself,
                                   ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   ctr_size i;
   int charSize;
@@ -4389,7 +4398,7 @@ ctr_object *ctr_string_characters(ctr_object *myself,
  */
 ctr_object *ctr_string_to_byte_array(ctr_object *myself,
                                      ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   ctr_size i;
   ctr_object *arr;
@@ -4575,7 +4584,7 @@ ctr_object *ctr_string_cadd(ctr_object *myself, ctr_argument *argumentList) {
 
 ctr_object *ctr_string_html_escape(ctr_object *myself,
                                    ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   ctr_object *newString = NULL;
   char *str = myself->value.svalue->value;
@@ -4663,8 +4672,7 @@ ctr_object *ctr_string_html_escape(ctr_object *myself,
         rlen = 7;
         for (j = 0; j < rlen; j++)
           tstr[k++] = replacement[j];
-      }
-      else
+      } else
         tstr[k++] = str[i];
       break;
     }
@@ -4717,7 +4725,7 @@ ctr_object *ctr_string_hash_with_key(ctr_object *myself,
  * x := a @ 2. #3
  */
 ctr_object *ctr_string_eval(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   ctr_tnode *parsedCode;
   char *pathString;
@@ -4763,7 +4771,7 @@ ctr_object *ctr_string_eval(ctr_object *myself, ctr_argument *argumentList) {
  * Does <i>not</i> return a value unless the code itself does.
  */
 ctr_object *ctr_string_exec(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   ctr_tnode *parsedCode;
   char *pathString;
@@ -4791,7 +4799,7 @@ ctr_object *ctr_string_exec(ctr_object *myself, ctr_argument *argumentList) {
  */
 ctr_object *ctr_string_quotes_escape(ctr_object *myself,
                                      ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   ctr_object *answer;
   char *str;
@@ -4820,7 +4828,7 @@ ctr_object *ctr_string_quotes_escape(ctr_object *myself,
 
 ctr_object *ctr_string_dquotes_escape(ctr_object *myself,
                                       ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   ctr_object *answer;
   char *str;
@@ -4884,7 +4892,7 @@ ctr_object *ctr_string_randomize_bytes(ctr_object *myself,
  * reverse the string
  */
 ctr_object *ctr_string_reverse(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   ctr_object *newString = ctr_build_empty_string();
   size_t i = ctr_string_length(myself, NULL)->value.nvalue;
@@ -4966,7 +4974,12 @@ ctr_object *ctr_build_block(ctr_tnode *node) {
       ctr_internal_create_object(CTR_OBJECT_TYPE_OTBLOCK);
   codeBlockObject->value.block = node;
   ctr_set_link_all(codeBlockObject, CtrStdBlock);
+  // printf("----------- %p ------------\n", node);
+  // ctr_internal_debug_tree(node, 1);
   ctr_capture_refs(node, codeBlockObject);
+  // printf("----------- %p ------------\n", node);
+  // ctr_internal_debug_tree(node, 1);
+  // printf("----------- %p ------------\n", node);
   return codeBlockObject;
 }
 
@@ -5190,15 +5203,14 @@ ctr_object *ctr_build_listcomp(ctr_tnode *node) {
         fs);
     return CtrStdNil;
   }
-  ctr_object* gen_handler_s = ctr_build_string_from_cstring(
-    "{:obj "
-      "obj isA: Generator, ifTrue: {"
-        "^obj toArray."
-      "} ifFalse: {"
-        "^obj."
-      "}."
-    "}"
-  );
+  ctr_object *gen_handler_s =
+      ctr_build_string_from_cstring("{:obj "
+                                    "obj isA: Generator, ifTrue: {"
+                                    "^obj toArray."
+                                    "} ifFalse: {"
+                                    "^obj."
+                                    "}."
+                                    "}");
   ctr_object *gen_handler = ctr_string_eval(gen_handler_s, NULL);
   //(pred*) -> [{^pred}*]
   if (preds) {
@@ -5238,12 +5250,13 @@ ctr_object *ctr_build_listcomp(ctr_tnode *node) {
     ctr_internal_object_add_property(
         argm->object, ctr_build_string_from_cstring("syms"), resolved_refs, 0);
     ctr_object *filter_sobj = argm->object;
-    ctr_object *filter_sv = ctr_build_string_from_cstring(
-        "{"
-        "var gen-handler is my gen-handler."
-        "^(my names fmap: \\:__vname gen-handler applyTo: (Reflect getObject: __vname)) "
-        "internal-product fmap: my filter_s."
-        "}");
+    ctr_object *filter_sv =
+        ctr_build_string_from_cstring("{"
+                                      "var gen-handler is my gen-handler."
+                                      "^(my names fmap: \\:__vname gen-handler "
+                                      "applyTo: (Reflect getObject: __vname)) "
+                                      "internal-product fmap: my filter_s."
+                                      "}");
     ctr_object *filter_svobj;
     filter_svobj = ctr_string_eval(filter_sv, NULL);
     ctr_internal_object_add_property(
@@ -5278,7 +5291,7 @@ ctr_object *ctr_build_listcomp(ctr_tnode *node) {
       "^syms letEqualAst: gen in: filter."
       "}, all: {:x ^x.}, not continue. "
       "^{:blk"
-        "^const syms letEqualAst: const gen in: blk."
+      "^const syms letEqualAst: const gen in: blk."
       "}."
       "}");
   argm->object = ctr_string_eval(filter_s, NULL);
@@ -5290,14 +5303,15 @@ ctr_object *ctr_build_listcomp(ctr_tnode *node) {
   ctr_object *filter_sv = ctr_build_string_from_cstring(
       "{"
       "var gen-handler is my gen-handler."
-      "var nvs is (my names fmap: \\:__vname gen-handler applyTo: (Reflect getObject: __vname))."
+      "var nvs is (my names fmap: \\:__vname gen-handler applyTo: (Reflect "
+      "getObject: __vname))."
       "^nvs internal-product fmap: my filter_s."
       "}");
   ctr_object *filter_svobj;
   filter_svobj = ctr_string_eval(filter_sv, NULL);
-  ctr_internal_object_add_property(
-      filter_svobj, ctr_build_string_from_cstring("gen-handler"), gen_handler,
-      CTR_CATEGORY_PRIVATE_PROPERTY);
+  ctr_internal_object_add_property(filter_svobj,
+                                   ctr_build_string_from_cstring("gen-handler"),
+                                   gen_handler, CTR_CATEGORY_PRIVATE_PROPERTY);
   ctr_internal_object_add_property(
       filter_svobj, ctr_build_string_from_cstring("names"), resolved_refs,
       CTR_CATEGORY_PRIVATE_PROPERTY);
@@ -5351,9 +5365,15 @@ void ctr_capture_refs_(ctr_tnode *ti, ctr_object *block, ctr_object *parent,
         if (!value && parent)
           value = ctr_internal_object_find_property(
               parent, key, CTR_CATEGORY_PRIVATE_PROPERTY);
-        if (value)
+        if (value) {
+          // if (value != CtrStdNil) {
+          //  t->type = CTR_AST_NODE_EMBED;
+          //  t->modifier = 1;
+          //  t->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
+          //  t->nodes->node = (ctr_tnode*) value;
+          //} else
           ctr_internal_object_add_property(block, key, value, 0);
-        else if (!noerror)
+        } else if (!noerror)
           ctr_find_(key, noerror);
       }
       break;
@@ -6174,7 +6194,7 @@ ctr_object *ctr_block_while_false(ctr_object *myself,
 }
 
 ctr_object *ctr_block_forever(ctr_object *myself, ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   ctr_tnode *cblock = myself->value.block;
   ctr_tlistitem *params = cblock->nodes->node->nodes;
@@ -6264,7 +6284,7 @@ ctr_object *ctr_block_run_variadic_my(ctr_object *myself, ctr_object *my,
   ctr_argument *pass = argumentList;
   va_list ap;
   va_start(ap, count);
-  for (size_t i = 0; i < (ctr_size) count; i++) {
+  for (size_t i = 0; i < (ctr_size)count; i++) {
     pass->object = va_arg(ap, ctr_object *);
     pass->next = argalloc + i;
     pass = pass->next;
@@ -6284,7 +6304,7 @@ ctr_object *ctr_block_run_variadic(ctr_object *myself, int count, ...) {
   ctr_argument *pass = argumentList;
   va_list ap;
   va_start(ap, count);
-  for (size_t i = 0; i < (ctr_size) count; i++) {
+  for (size_t i = 0; i < (ctr_size)count; i++) {
     pass->object = va_arg(ap, ctr_object *);
     pass->next = argalloc + i;
     pass = pass->next;
@@ -6305,9 +6325,9 @@ ctr_object *ctr_send_message_variadic(ctr_object *myself, char *message,
   ctr_argument *pass = argumentList;
   va_list ap;
   va_start(ap, count);
-  for (size_t i = 0; i < (ctr_size) count; i++) {
+  for (size_t i = 0; i < (ctr_size)count; i++) {
     pass->object = va_arg(ap, ctr_object *);
-    if (i + 1 != (ctr_size) count) {
+    if (i + 1 != (ctr_size)count) {
       pass->next = argalloc + i;
       pass = pass->next;
     }
@@ -6330,9 +6350,9 @@ ctr_object *ctr_invoke_variadic(ctr_object *myself,
   ctr_argument *pass = argumentList;
   va_list ap;
   va_start(ap, count);
-  for (size_t i = 0; i < (ctr_size) count; i++) {
+  for (size_t i = 0; i < (ctr_size)count; i++) {
     pass->object = va_arg(ap, ctr_object *);
-    if (i + 1 != (ctr_size) count) {
+    if (i + 1 != (ctr_size)count) {
       pass->next = argalloc + i;
       pass = pass->next;
     }
@@ -6350,9 +6370,9 @@ ctr_argument *ctr_allocate_argumentList(int count, ...) {
   ctr_argument *pass = argumentList;
   va_list ap;
   va_start(ap, count);
-  for (size_t i = 0; i < (ctr_size) count; i++) {
+  for (size_t i = 0; i < (ctr_size)count; i++) {
     pass->object = va_arg(ap, ctr_object *);
-    if (i + 1 != (ctr_size) count) {
+    if (i + 1 != (ctr_size)count) {
       pass->next = ctr_heap_allocate(sizeof(ctr_argument));
       pass = pass->next;
     }
@@ -6492,7 +6512,7 @@ ctr_object *ctr_block_catch_type(ctr_object *myself,
  */
 ctr_object *ctr_block_to_string(ctr_object *myself,
                                 ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   char *name = "";
   char *np;
@@ -6561,7 +6581,8 @@ ctr_object *ctr_get_stack_trace() {
   return ctr_build_string_from_cstring(trace);
 }
 
-extern int more_exception_data; /* flag: should we display more data for exceptions? */
+extern int
+    more_exception_data; /* flag: should we display more data for exceptions? */
 void ctr_print_stack_trace() {
   int line;
   char *currentProgram;
@@ -6606,13 +6627,14 @@ void ctr_print_stack_trace() {
                         : -1; /*first=lfirst; first_p=lfirst_p; */
         }
         if (!more_exception_data) {
-          char* fCurrentProgram = strrchr(currentProgram, '/');
+          char *fCurrentProgram = strrchr(currentProgram, '/');
           if (fCurrentProgram)
             currentProgram = fCurrentProgram + 1;
         }
         printf(" (%s: %d)%s", currentProgram, line + 1,
-               ignored && more_exception_data ? CTR_ANSI_COLOR_CYAN " [Ignored]" CTR_ANSI_COLOR_RESET
-                       : "");
+               ignored && more_exception_data ? CTR_ANSI_COLOR_CYAN
+                   " [Ignored]" CTR_ANSI_COLOR_RESET
+                                              : "");
         break;
       }
       if (line == -1 && mapItem->node == stackNode) {
@@ -6701,8 +6723,8 @@ void ctr_print_stack_trace() {
 }
 
 ctr_object *ctr_get_last_trace_stringified(ctr_object *m_, ctr_argument *a_) {
-  (void) m_;
-  (void) a_;
+  (void)m_;
+  (void)a_;
 
   static char errorbufs[10240];
   char *errorbuf = errorbufs;
@@ -6718,7 +6740,7 @@ ctr_object *ctr_get_last_trace_stringified(ctr_object *m_, ctr_argument *a_) {
   for (int i = ctr_callstack_index; i > 0; i--) {
     errorbuf += sprintf(errorbuf, "#%d ", i);
     stackNode = ctr_callstack[i - 1];
-    errorbuf += sprintf(errorbuf, "%.*s", (int) (sizeof(char) * stackNode->vlen),
+    errorbuf += sprintf(errorbuf, "%.*s", (int)(sizeof(char) * stackNode->vlen),
                         stackNode->value);
     if (!first_p) {
       first_p = ctr_heap_allocate(sizeof(char) * stackNode->vlen);
@@ -6772,7 +6794,7 @@ ctr_object *ctr_get_last_trace_stringified(ctr_object *m_, ctr_argument *a_) {
  */
 ctr_object *ctr_exception_getinfo(ctr_object *myself,
                                   ctr_argument *argumentList) {
-  (void) argumentList;
+  (void)argumentList;
 
   return ctr_internal_object_find_property(
       myself, ctr_build_string_from_cstring(":exdata"), 0);
@@ -6807,8 +6829,8 @@ ctr_object *ctr_internal_ex_data() {
 }
 
 ctr_object *ctr_get_last_trace(ctr_object *myself, ctr_argument *argumentList) {
-  (void) myself;
-  (void) argumentList;
+  (void)myself;
+  (void)argumentList;
 
   int line;
   char *currentProgram;

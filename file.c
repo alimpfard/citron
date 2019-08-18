@@ -233,18 +233,20 @@ ctr_object *ctr_file_stdext_path(ctr_object *myself,
 }
 
 struct ctr_file_gen {
-  ctr_object* fp;
+  ctr_object *fp;
   FILE *FILEp;
   ctr_object *next;
-  int vopen  ;
-  int block  ;
+  int vopen;
+  int block;
   int noblock;
   int finished;
 };
 
-extern ctr_object* generator_end_marker;
-static ctr_object *ctr_file_generate_lines_next(ctr_object *myself, ctr_argument *argumentList) {
-	struct ctr_file_gen* val = argumentList->object->value.rvalue->ptr; // todo: error check
+extern ctr_object *generator_end_marker;
+static ctr_object *ctr_file_generate_lines_next(ctr_object *myself,
+                                                ctr_argument *argumentList) {
+  struct ctr_file_gen *val =
+      argumentList->object->value.rvalue->ptr; // todo: error check
   if (val->finished) {
     CtrStdFlow = CtrStdBreak;
     return generator_end_marker;
@@ -255,14 +257,14 @@ static ctr_object *ctr_file_generate_lines_next(ctr_object *myself, ctr_argument
       CtrStdFlow = CtrStdBreak; // signal end of sequence
       return val->next ?: CtrStdNil;
     }
-    nowopen:;
+  nowopen:;
     FILE *f = val->FILEp;
     size_t lineBufLen = 0;
     char *lineptr = NULL;
     ssize_t len = getline(&lineptr, &lineBufLen, f);
     if (len == 0 || len == -1) {
       if (val->block) {
-        while(len<=0)
+        while (len <= 0)
           len = getline(&lineptr, &lineBufLen, f);
       } else if (val->noblock) {
         free(lineptr);
@@ -278,7 +280,7 @@ static ctr_object *ctr_file_generate_lines_next(ctr_object *myself, ctr_argument
             res->ptr = 0;
         }
         free(lineptr);
-				CtrStdFlow = CtrStdBreak; // signal end of sequence
+        CtrStdFlow = CtrStdBreak; // signal end of sequence
         return val->next ?: CtrStdNil;
       }
     }
@@ -301,8 +303,8 @@ static ctr_object *ctr_file_generate_lines_next(ctr_object *myself, ctr_argument
     char *pathString;
     FILE *f;
     if (!path->value.svalue) {
-        CtrStdFlow = ctr_build_string_from_cstring("invalid file.");
-        return generator_end_marker;
+      CtrStdFlow = ctr_build_string_from_cstring("invalid file.");
+      return generator_end_marker;
     }
     vlen = path->value.svalue->vlen;
     pathString = ctr_heap_allocate(sizeof(char) * (vlen + 1));
@@ -325,17 +327,18 @@ static ctr_object *ctr_file_generate_lines_next(ctr_object *myself, ctr_argument
 }
 ctr_object *ctr_file_generate_lines(ctr_object *myself,
                                     ctr_argument *argumentList) {
-  ctr_object *inst  = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
-  ctr_set_link_all (inst, ctr_std_generator);
-  inst->value.rvalue = ctr_heap_allocate (sizeof (ctr_resource));
+  ctr_object *inst = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+  ctr_set_link_all(inst, ctr_std_generator);
+  inst->value.rvalue = ctr_heap_allocate(sizeof(ctr_resource));
   ctr_resource *res = inst->value.rvalue;
   res->type = CTR_IFN_OF_GENNY;
-  ctr_generator *gen = ctr_heap_allocate (sizeof (*gen));
-  ctr_mapping_generator *genny = ctr_heap_allocate (sizeof (*genny));
+  ctr_generator *gen = ctr_heap_allocate(sizeof(*gen));
+  ctr_mapping_generator *genny = ctr_heap_allocate(sizeof(*genny));
   gen->finished = 0;
   genny->i_type = CTR_REPEAT_GENNY;
-  ctr_object *methodObject = ctr_internal_create_object (CTR_OBJECT_TYPE_OTNATFUNC);
-  ctr_set_link_all (methodObject, CtrStdBlock);
+  ctr_object *methodObject =
+      ctr_internal_create_object(CTR_OBJECT_TYPE_OTNATFUNC);
+  ctr_set_link_all(methodObject, CtrStdBlock);
   methodObject->value.fvalue = ctr_file_generate_lines_next;
   genny->fn = methodObject;
   gen->sequence = genny;
@@ -343,14 +346,14 @@ ctr_object *ctr_file_generate_lines(ctr_object *myself,
   res->ptr = gen;
   inst->release_hook = ctr_generator_free;
 
-  ctr_object *rpt_v = ctr_internal_create_object (CTR_OBJECT_TYPE_OTEX);
-  rpt_v->value.rvalue = ctr_heap_allocate (sizeof (ctr_resource));
+  ctr_object *rpt_v = ctr_internal_create_object(CTR_OBJECT_TYPE_OTEX);
+  rpt_v->value.rvalue = ctr_heap_allocate(sizeof(ctr_resource));
   ctr_resource *resv = rpt_v->value.rvalue;
-  ctr_set_link_all (rpt_v, CtrStdObject);
-  ctr_generator *rptgen = ctr_heap_allocate (sizeof (*gen));
+  ctr_set_link_all(rpt_v, CtrStdObject);
+  ctr_generator *rptgen = ctr_heap_allocate(sizeof(*gen));
   rptgen->finished = 0;
   rptgen->sequence = rpt_v;
-  struct ctr_file_gen* alloc = ctr_heap_allocate(sizeof(*alloc));
+  struct ctr_file_gen *alloc = ctr_heap_allocate(sizeof(*alloc));
   alloc->fp = myself;
   alloc->vopen = 0;
   if (myself->value.rvalue && myself->value.rvalue->ptr) {
@@ -358,13 +361,15 @@ ctr_object *ctr_file_generate_lines(ctr_object *myself,
     alloc->vopen = 1;
   }
 
-  alloc->block   = /* block */ argumentList->object ? ctr_internal_cast2bool(argumentList->object)->value.bvalue : 0;
+  alloc->block =
+      /* block */ argumentList->object
+          ? ctr_internal_cast2bool(argumentList->object)->value.bvalue
+          : 0;
   alloc->noblock = /* noblock */ 0;
 
   resv->ptr = alloc;
   genny->genny = rptgen;
   return inst;
-
 }
 
 /**
@@ -390,8 +395,11 @@ ctr_object *ctr_file_tmp(ctr_object *myself, ctr_argument *argumentList) {
   memcpy(pathString + vlen, "\0", 1);
   FILE *f;
   int fd = mkstemp(pathString);
+  if (fd == -1)
+      goto err;
   f = fdopen(fd, "rb");
   if (f == NULL) {
+err:;
     char *buf = ctr_heap_allocate(sizeof(char) * 1024);
     sprintf(buf, "%d: %s", fd, strerror(errno));
     CtrStdFlow = ctr_build_string_from_cstring(buf);
@@ -1323,7 +1331,7 @@ ret:
 }
 
 /**
- * File mkdir [: [Number:permissions]]
+ * [File] mkdir [: [Number:permissions]]
  *
  * makes a directory
  */
@@ -1346,4 +1354,106 @@ ctr_object *ctr_file_mkdir(ctr_object *myself, ctr_argument *argumentList) {
   }
   ctr_heap_free(path);
   return myself;
+}
+
+ctr_object *ctr_generate_timespec(long ts) {
+  return ctr_build_number_from_float(ts);
+}
+
+/**
+ * [File] stat
+ *
+ * returns the entire dataset of stat(2) about the given file
+ *
+ */
+ctr_object *ctr_file_stat(ctr_object *myself, ctr_argument *argumentList) {
+  ctr_check_permission(CTR_SECPRO_NO_FILE_READ);
+  ctr_object *pathobj = ctr_file_rpath(myself, NULL);
+  if (pathobj == CtrStdNil) {
+    CtrStdFlow = ctr_build_string_from_cstring("file object contains no path");
+    return CtrStdNil;
+  }
+  char *path = ctr_heap_allocate_cstring(pathobj);
+  struct stat st;
+  if (stat(path, &st) == -1) {
+    CtrStdFlow =
+        ctr_format_str("Estat() error %s (path = %s)", strerror(errno), path);
+    ctr_heap_free(path);
+    return CtrStdNil;
+  }
+  ctr_object *res = ctr_map_new(CtrStdMap, NULL);
+
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_build_number_from_float((long)st.st_dev),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_dev"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_build_number_from_float((long)st.st_ino),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_ino"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_build_number_from_float((long)st.st_mode),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_mode"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_build_number_from_float((long)st.st_nlink),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_nlink"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_build_number_from_float((long)st.st_uid),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_uid"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_build_number_from_float((long)st.st_gid),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_gid"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_build_number_from_float((long)st.st_rdev),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_rdev"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_build_number_from_float((long)st.st_size),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_size"),
+                           .next = NULL}});
+  ctr_map_put(res,
+              &(ctr_argument){
+                  .object = ctr_build_number_from_float((long)st.st_blksize),
+                  .next = &(ctr_argument){
+                      .object = ctr_build_string_from_cstring("st_blksize"),
+                      .next = NULL}});
+  ctr_map_put(
+      res,
+      &(ctr_argument){.object = ctr_build_number_from_float((long)st.st_blocks),
+                      .next = &(ctr_argument){
+                          .object = ctr_build_string_from_cstring("st_blocks"),
+                          .next = NULL}});
+
+#if _POSIX_C_SOURCE >= 200809L || _XOPEN_SOURCE >= 700
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_generate_timespec(st.st_atime),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_atime"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_generate_timespec(st.st_ctime),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_ctime"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_generate_timespec(st.st_mtime),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_mtime"),
+                           .next = NULL}});
+#endif
+
+  ctr_heap_free(path);
+  return res;
 }

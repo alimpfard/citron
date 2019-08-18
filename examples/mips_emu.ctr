@@ -1,6 +1,9 @@
-Broom memoryLimit: 1024 * 1024 * 1024.
+Broom memoryLimit: 1024 * 1024 * 1024 * 2.
 
 import Library/Data/String.
+import Library/Data/SwitchCase.
+
+#:language XFrozen
 
 var debug is {:blk DEBUG ifTrue: {blk evaluate.}.}.
 
@@ -16,6 +19,7 @@ ub<pc> :: alias for unbreak
 step :: step the instruction
 s :: step
 <blank> :: step
+ex <instruction> :: execute instruction
 continue :: step until the end or a break
 c :: continue
 q :: quit'.
@@ -47,14 +51,14 @@ RegFile put: (RegFile @ 34) at: '34'.
   RegFile put: (RegFile at: i) at: v.
 }.
 
-var MEMBLOCK_SZE is 1024 * 1024.
+var MEMBLOCK_SZE is 1024 * 64.
 
 var MemoryBlock is Array new: MEMBLOCK_SZE.
 
 MemoryBlock on: 'init' do: {:self
   my bp is 0.
   Pen red writeln: 'Initializing memory...', resetColor.
-  MEMBLOCK_SZE times: {:i self push: 0.}. #64 KB of accessible memory. for now
+  me fill: MEMBLOCK_SZE with: 0.
   Pen cyan writeln: 'Memory init done', resetColor.
 }.
 MemoryBlock on: 'absForBase:offset:' do: {:base:offset
@@ -104,6 +108,61 @@ var mfhi is {my machine setReg: my destintaion to: (my machine getReg: 33). }.
 var mflo is {my machine setReg: my destintaion to: (my machine getReg: 34). }.
 var mult is {var val is (my machine getReg: my operand0) * (my machine getReg: my operand1). my machine setReg: 34 to: (val bitAnd: 0xff). my machine setReg: 33 to: (val shiftRight: 8).}.
 var li is noop.
+var syscall is {
+    # v0 -> 2
+    # a0 -> 4... 
+    var machine is my machine.
+    var reg@ is \:x machine getReg: x.
+    var $reg is \:x:y machine setReg: x to: y.
+    var syscode is my machine getReg: 2.
+    (frozen _ is Number
+        case: 1 do: {
+            # print integer
+            Pen write: reg@[4].
+        },
+        case: 6
+        case: 7
+        case: 2
+        case: 3 do: {
+            thisBlock error: 'floating point support not present'.
+        },
+        case: 4 do: {
+            # print string at $4
+            var offset is 0.
+            var base   is reg@[4].
+            {
+                var byte is (machine getBytes: 1 base: base offset: offset).
+                (byte = 0) break.
+                offset +=: 1.
+                Pen write: ('' appendByte: byte).
+            } forever.
+        }, 
+        case: 5 do: {
+            # read int -> $2
+            2 `$reg` (Program waitForInput toNumber).
+        },
+        case: 8 do: {
+            # read string -> $4, size+1 is in $5
+            var base is reg@[4].
+            reg@[5] - 1 times: {:idx
+                var ch is Program getCharacter byteAt: 0.
+                machine setBytes: 1 base: base offset: idx.
+            }.
+        },
+        case: 9 do: {
+            thisBlock error: 'memory functions not present'.
+        },
+        case: 10 do: {
+            Program exit.
+        },
+        case: 11 do: {
+            Pen write: ('' appendByte: reg@[4]).
+        },
+        case: 12 do: {
+            2 `$reg` (Program getCharacter byteAt: 0).
+        }) switch: syscode.
+}.
+
 # ---
 # Descr
 # bit|runtime
@@ -177,6 +236,7 @@ var lwb   is Array < '100011' ; ''.
 var lbub  is Array < '100100' ; ''.
 var swb   is Array < '101011' ; ''.
 var sbb   is Array < '101000' ; ''.
+var sys   is Array < '000000' ; '001100'.
 var lib   is tnoop.
 #-----
 
@@ -209,7 +269,8 @@ var MIPSIntructions is Map new
   put: lw      at: 'lw',
   put: sw      at: 'sw',
   put: li      at: 'li',
-  put: lui     at: 'lui'.
+  put: lui     at: 'lui',
+  put: syscall at: 'syscall'.
   #TODO: Finish instructions
 
 var MIPSIntructionBits is Map new
@@ -233,7 +294,8 @@ var MIPSIntructionBits is Map new
     put: swb at: 'sw',
     put: lib at: 'li',
     put: bgtzb at: 'bgtz',
-    put: blezb at: 'blez'.
+    put: blezb at: 'blez',
+    put: sys   at: 'syscall'.
     #TODO: Finish instructions
 
 var MIPSOpsToInstrs is MIPSIntructionBits flip.
@@ -251,6 +313,8 @@ MIPSAbstractMachine on: 'setParseLocation:'  do: {:loc my ploc is loc. my mloc i
 MIPSAbstractMachine on: 'setReg:to:'         do: {:reg:value my dirtyregs push: [reg, (me getReg: reg)]. my regfile at: reg, set: value. }.
 MIPSAbstractMachine on: 'getReg:'            do: {:reg ^my regfile at: reg, get.}.
 MIPSAbstractMachine on: 'load:'              do: {:prg my program is MIPSIntructions decode: prg machine: me.}.
+MIPSAbstractMachine on: 'program:pc:'        do: {:prg:pc setPC: pc. my program is prg.}.
+MIPSAbstractMachine on: 'program'            do: { ^[my program, me PC]. }.
 MIPSAbstractMachine on: 'assemble:'          do: {:prg ^MIPSIntructions assemble: prg forMachine: me.}.
 MIPSAbstractMachine on: 'addPDLabel:'        do: {:label my labels put: my ploc at: label. my asmlabels put: my mloc at: label.}.
 MIPSAbstractMachine on: 'addWord:length:'    do: {:name:len my data put: [4, (my memory allocate: (len * 4))] at: name.}.
@@ -299,6 +363,14 @@ MIPSAbstractMachine on: 'runQASession' do: {:self
   var last_q is q.
   {Pen cyan write: '>>> ', resetColor. ^((q is Program waitForInput trim)). q containsPattern: '^$', ifFalse: {last_q is q.}, else: {q is last_q.}. } whileTrue: {
     (q = 'q') ifTrue: {Program exit.}.
+    (q startsWith: 'ex ') ifTrue: {
+        var instruction is q skip: 3.
+        var prg is self program.
+        self load: instruction.
+        self setPC: -1.
+        self stepGraphical.
+        self program: prg head pc: prg last.
+    }.
     (q containsPattern: '^s/.*?/\\d+') ifTrue: {
       var reg is 0.
       var value is 0.
@@ -573,6 +645,12 @@ MIPSIntructions on: 'instrFor:machine:' do: {:command:machine
     ret is JFormat emit: op label: oimm.
     ^''.
   }.
+  command findPattern: '\\s*syscall\\s*' do: {:parts # syscall
+    op is 'syscall'.
+    ret is RFormat emit: op op0: Nil op1: Nil dst: Nil.
+    Pen write: ('$$op :: dest=~ operand0=~ operand1=~'), brk.
+    ^''.
+  }.
   ret on: 'src' do: {^my source.}. ret set: 'source' value: ((ret = noop) either: '...noop...' or: command).
   ret set: 'machine' value: machine.
   ^ret.
@@ -637,6 +715,12 @@ MIPSIntructions on: 'assembleInstr:forMachine:' do: {:command:machine
     oimm is parts @ 2.
     Pen write: ('$$op :: dest=$$oimm'), brk.
     ret is JFormat emitBits: op label: oimm machine: machine.
+    ^''.
+  }.
+  command findPattern: '\\s*syscall\\s*' do: {:parts # syscall
+    op is 'syscall'.
+    ret is RFormat emitBits: op op0: Nil op1: Nil dst: Nil.
+    Pen write: ('$$op :: dest=~ operand0=~ operand1=~'), brk.
     ^''.
   }.
   ^ret.
@@ -784,7 +868,11 @@ beq $2,$4,exit
 addi $2,$2,10
 add $3,$2,$2
 j main
- exit:'.#And she supported multiline strings like normal ones
+ exit:
+xor $2,$2,$2
+ori $2,$2,1
+syscall
+'.#And she supported multiline strings like normal ones
 # 'li $t0, 0'.
 MIPSAbstractMachine addWord: 'X' length: 12.
 MIPSAbstractMachine addWord: 'Y' length: 12.

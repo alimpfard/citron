@@ -1,8 +1,0 @@
-{
-  Reflect addGlobalVariable: 'Json'.
-  Json is JSON.
-} catch: {
-  import Parser: 'Json'.
-}, run.
-
-import Serializer.

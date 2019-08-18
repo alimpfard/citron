@@ -1,2 +1,0 @@
-Pen writeln: 'use Library/AST'.
-{thisBlock error: Nil.} run.

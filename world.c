@@ -1,13 +1,13 @@
 #include <ctype.h>
 #include <errno.h>
 #include <math.h>
-#include <sys/types.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -41,7 +41,6 @@ static pthread_mutex_t ctr_message_mutex = {{PTHREAD_MUTEX_RECURSIVE}};
 #else
 #define ctr_heap_allocate_typed_(s, t) ctr_heap_allocate(s)
 #endif
-
 
 #include "promise.h"
 
@@ -147,7 +146,7 @@ static const int all_signals[] = {
     SIGKILL, // last one. must exist
 };
 
-static ctr_object* ctr_gc_dump(ctr_object* myself, ctr_argument* argumentList) {
+static ctr_object *ctr_gc_dump(ctr_object *myself, ctr_argument *argumentList) {
   GC_dump();
   return myself;
 }
@@ -545,7 +544,7 @@ ctr_object *ctr_internal_object_find_property_with_hash(ctr_object *owner,
   } else
     lookup = owner->properties;
   if (unlikely(!lookup))
-      return NULL;
+    return NULL;
   if (unlikely(lookup->size == 1 &&
                (head = lookup->head)->hashKey == hashKey)) {
     if (likely(ctr_internal_object_is_equal(head->key, key))) {
@@ -595,7 +594,7 @@ ctr_object *ctr_internal_object_find_property_or_create_with_hash(
   } else
     lookup = owner->properties;
   if (unlikely(!lookup))
-      return NULL;
+    return NULL;
   if (unlikely(lookup->size == 0)) {
     ctr_object *repl = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNIL);
     ctr_set_link_all(repl, CtrStdNil);
@@ -668,7 +667,6 @@ ctr_object *ctr_internal_object_find_property_or_create_with_hash(
  * InternalObjectDeleteProperty
  *
  * Deletes the specified property from the object.
- * NOTE: Does not update the bloom filter TODO: Try to fix
  */
 void ctr_internal_object_delete_property(ctr_object *owner, ctr_object *key,
                                          int is_method) {
@@ -698,7 +696,7 @@ void ctr_internal_object_delete_property_with_hash(ctr_object *owner,
     head = owner->methods->head;
   } else {
     if (!owner->properties)
-        return;
+      return;
     if (owner->properties->size == 0) {
       return;
     }
@@ -745,6 +743,59 @@ void ctr_internal_object_delete_property_with_hash(ctr_object *owner,
     head = head->next;
   }
   return;
+}
+
+/**
+ * @internal
+ *
+ * InternalObjectGetPropertyWithHash
+ *
+ * Gets the specified property from the object given a hash value.
+ */
+ctr_mapitem *ctr_internal_object_get_property_with_hash(ctr_object *owner,
+                                                        ctr_object *key,
+                                                        uint64_t hashKey,
+                                                        int is_method) {
+  ctr_did_side_effect = 1;
+  ctr_mapitem *head;
+  if (is_method) {
+    if (!owner->methods || owner->methods->size == 0) {
+      return NULL;
+    }
+    // if((owner->methods->s_hash&hashKey) != hashKey)
+    // return;
+    head = owner->methods->head;
+  } else {
+    if (!owner->properties)
+      return NULL;
+    if (owner->properties->size == 0) {
+      return NULL;
+    }
+    // if((owner->properties->s_hash&hashKey) != hashKey)
+    // return;
+    head = owner->properties->head;
+  }
+  while (head) {
+    if ((hashKey == head->hashKey) &&
+        ctr_internal_object_is_equal(head->key, key)) {
+      return head;
+    }
+    head = head->next;
+  }
+  return NULL;
+}
+
+/**
+ * @internal
+ *
+ * InternalObjectGetProperty
+ *
+ * Gets the specified property from the object.
+ */
+ctr_mapitem *ctr_internal_object_get_property(ctr_object *owner,
+                                              ctr_object *key, int is_method) {
+  return ctr_internal_object_get_property_with_hash(
+      owner, key, ctr_internal_index_hash(key), is_method);
 }
 
 /**
@@ -816,8 +867,12 @@ void ctr_internal_object_add_property_with_hash(ctr_object *owner,
  */
 void ctr_internal_object_set_property(ctr_object *owner, ctr_object *key,
                                       ctr_object *value, int is_method) {
-  ctr_internal_object_delete_property(owner, key, is_method);
-  ctr_internal_object_add_property(owner, key, value, is_method);
+  ctr_mapitem *o = NULL;
+  if ((o = ctr_internal_object_get_property(owner, key, is_method))) {
+    o->value = value;
+    o->key = key;
+  } else
+    ctr_internal_object_add_property(owner, key, value, is_method);
 }
 
 /**
@@ -832,9 +887,15 @@ void ctr_internal_object_set_property_with_hash(ctr_object *owner,
                                                 uint64_t hashKey,
                                                 ctr_object *value,
                                                 int is_method) {
-  ctr_internal_object_delete_property_with_hash(owner, key, hashKey, is_method);
-  ctr_internal_object_add_property_with_hash(owner, key, hashKey, value,
-                                             is_method);
+  ctr_mapitem *o = NULL;
+  if ((o = ctr_internal_object_get_property_with_hash(owner, key, hashKey,
+                                                      is_method))) {
+    o->value = value;
+    o->key = key;
+    o->hashKey = hashKey;
+  } else
+    ctr_internal_object_add_property_with_hash(owner, key, hashKey, value,
+                                               is_method);
 }
 
 /**
@@ -1252,6 +1313,8 @@ void ctr_open_context() {
  * Closes a context.
  */
 void ctr_close_context() {
+  // ctr_contexts[ctr_context_id]->properties->head = NULL;
+  // ctr_contexts[ctr_context_id]->properties->size = 0;
   ctr_contexts[ctr_context_id]->info.sticky = 0;
   if (ctr_context_id == 0)
     return;
@@ -1479,11 +1542,12 @@ void ctr_initialize_world_minimal() {
   if (ctr_world_initialized)
     return;
 
-  volatile ctr_thread_workaround_double_list_t* tw = ctr_heap_allocate_tracked(sizeof(*tw));
+  volatile ctr_thread_workaround_double_list_t *tw =
+      ctr_heap_allocate_tracked(sizeof(*tw));
   tw->next = NULL;
   tw->prev = ctr_thread_workaround_double_list;
   tw->context = ctr_contexts;
-  ctr_thread_workaround_double_list = (ctr_thread_workaround_double_list_t*) tw;
+  ctr_thread_workaround_double_list = (ctr_thread_workaround_double_list_t *)tw;
 
   trace_ignore_count = 0;
   ctr_world_initialized = 1;
@@ -1581,11 +1645,12 @@ void ctr_initialize_world_minimal() {
 void ctr_initialize_world() {
   if (ctr_world_initialized)
     return;
-  volatile ctr_thread_workaround_double_list_t* tw = ctr_heap_allocate_tracked(sizeof(*tw));
+  volatile ctr_thread_workaround_double_list_t *tw =
+      ctr_heap_allocate_tracked(sizeof(*tw));
   tw->next = NULL;
   tw->prev = ctr_thread_workaround_double_list;
   tw->context = ctr_contexts;
-  ctr_thread_workaround_double_list = (ctr_thread_workaround_double_list_t*) tw;
+  ctr_thread_workaround_double_list = (ctr_thread_workaround_double_list_t *)tw;
 
   trace_ignore_count = 0;
   ctr_world_initialized = 1;
@@ -2715,6 +2780,8 @@ void ctr_initialize_world() {
   ctr_internal_create_func(CtrStdFile,
                            ctr_build_string_from_cstring("fileDescriptor"),
                            &ctr_file_get_descriptor);
+  ctr_internal_create_func(CtrStdFile, ctr_build_string_from_cstring("stat"),
+                           &ctr_file_stat);
   ctr_internal_create_func(CtrStdFile,
                            ctr_build_string_from_cstring("memopen:mode:"),
                            &ctr_file_memopen);
@@ -2741,14 +2808,17 @@ void ctr_initialize_world() {
   ctr_internal_create_func(
       CtrStdFile, ctr_build_string_from_cstring(CTR_DICT_READ), &ctr_file_read);
 
-  ctr_internal_create_func(
-      CtrStdFile, ctr_build_string_from_cstring("generateLines"), &ctr_file_generate_lines);
+  ctr_internal_create_func(CtrStdFile,
+                           ctr_build_string_from_cstring("generateLines"),
+                           &ctr_file_generate_lines);
 
   ctr_internal_create_func(
-      CtrStdFile, ctr_build_string_from_cstring("generateLinesBlocking:"), &ctr_file_generate_lines);
+      CtrStdFile, ctr_build_string_from_cstring("generateLinesBlocking:"),
+      &ctr_file_generate_lines);
 
   // ctr_internal_create_func(
-  //     CtrStdFile, ctr_build_string_from_cstring("generateLinesNonblocking"), &ctr_file_generate_lines);
+  //     CtrStdFile, ctr_build_string_from_cstring("generateLinesNonblocking"),
+  //     &ctr_file_generate_lines);
   ctr_internal_create_func(CtrStdFile,
                            ctr_build_string_from_cstring(CTR_DICT_WRITE),
                            &ctr_file_write);
@@ -3356,11 +3426,13 @@ void ctr_initialize_world() {
                            &ctr_thread_set_target);
   ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("run"),
                            &ctr_thread_run);
-  ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("finished"),
+  ctr_internal_create_func(CtrStdThread,
+                           ctr_build_string_from_cstring("finished"),
                            &ctr_thread_finished);
   ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("join"),
                            &ctr_thread_join);
-  ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("detach"),
+  ctr_internal_create_func(CtrStdThread,
+                           ctr_build_string_from_cstring("detach"),
                            &ctr_thread_detach);
   ctr_internal_create_func(CtrStdThread, ctr_build_string_from_cstring("id"),
                            &ctr_thread_id);

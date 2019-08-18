@@ -91,17 +91,17 @@ ctr_object *ctr_cwlk_message(ctr_tnode *paramNode) {
     r = ctr_build_number_from_string(receiverNode->value, receiverNode->vlen);
     break;
   case CTR_AST_NODE_EMBED:
-    if (receiverNode->modifier)
-      result = ctr_cwlk_expr(receiverNode->nodes->node, "\0");
+    if (!receiverNode->modifier)
+      result = r = ctr_cwlk_expr(receiverNode->nodes->node, "\0");
     else {
-      result = (ctr_object *)receiverNode->nodes->node;
+      result = r = (ctr_object *)receiverNode->nodes->node;
     }
     break;
   case CTR_AST_NODE_LISTCOMP:
-    result = ctr_build_listcomp(receiverNode);
+    result = r = ctr_build_listcomp(receiverNode);
     break;
   case CTR_AST_NODE_NATIVEFN:
-    result = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNATFUNC);
+    result = r = ctr_internal_create_object(CTR_OBJECT_TYPE_OTNATFUNC);
     result->value.fvalue = (void *)receiverNode->value;
     ctr_set_link_all(result, CtrStdBlock);
     break;
@@ -491,13 +491,13 @@ ctr_object *ctr_cwlk_run(ctr_tnode *program) {
     if (((ctr_gc_mode & 1) && ctr_gc_alloc > (ctr_gc_memlimit * 0.8)) ||
         ctr_gc_mode & 4) {
 #ifdef DEBUG_BUILD
-      printf("GC : %d bytes\n", ctr_gc_alloc);
+      printf("< GC : %d bytes\n", ctr_gc_alloc);
 #endif
       // ctr_gc_internal_collect_a_little ();	//collect on limit mode
       // GC_collect_a_little();
       GC_gcollect();
 #ifdef DEBUG_BUILD
-      printf("GC : %d bytes\n", ctr_gc_alloc);
+      printf("> GC : %d bytes\n", ctr_gc_alloc);
 #endif
     }
     if (!li->next)

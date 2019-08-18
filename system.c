@@ -3161,7 +3161,7 @@ ctr_object *ctr_thread_join(ctr_object *myself, ctr_argument *argumentList) {
     return CtrStdNil;
   }
   // printf("CONTEXT %p - %d\n", ctr_contexts, ctr_context_id);
-  if (retval == PTHREAD_CANCELED || !retval) {
+  if (!retval) {
     ctr_heap_free(retval);
     return CtrStdNil;
   } else {

@@ -2528,7 +2528,7 @@ ctr_object *ctr_build_string_from_cstring(char *cstring) {
  */
 ctr_object *ctr_build_empty_string() { return ctr_build_string("", 0); }
 
-static const char ascii_escape_names[] = (char[256]){
+static const char ascii_escape_names[256] = (const char[256]){
     [0x07] = 'a',
     [0x08] = 'b',
     [0x0c] = 'f',

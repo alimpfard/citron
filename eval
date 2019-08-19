@@ -749,6 +749,7 @@ Eval on: 'togglePasteMode' do: {
 }.
 
 # parse arguments
+var tidyIndentOptions is Map new.
 { ^(Eval argCount > 0). } whileTrue: {
     # get an option
     var opt is Eval shiftArgs.
@@ -786,6 +787,9 @@ Eval on: 'togglePasteMode' do: {
           indent: 2 write: '--qe : evaluate expression without printing the value, then exit, all args after the expr will be passed to the code as var `args`\n',
           indent: 2 write: '-v : print version information and exit\n',
           indent: 2 write: '--tidy : [Experimental] try to tidy up the given file and write it back out to stdout\n',
+          indent: 3 write: '-ml <int> : set max line length for --tidy\n',
+          indent: 3 write: '-il <int> : set indent length in spaces for --tidy\n',
+          indent: 3 write: '-pk : enable parentesize_kwmsgs for --tidy\n',
           indent: 2 write: '-s <port>: start a evaluation server on the specified port (Forked and the current process will be killed. pidfile at ~/.ctrpid.pid)\n',
           indent: 2 write: '-m <executable module> <modu_arg>* : Execute an executable module (at Library/Executable)\n',
           indent: 2 write: '--import <module_names_colon_sep> : preload modules separated by colons\n',
@@ -855,13 +859,29 @@ Eval on: 'togglePasteMode' do: {
     }, case: '--meta' do: {
         args pop.
         Eval doMeta: Eval shiftArgs.
+    }, case: '-ml' do: {
+        args pop.
+        tidyIndentOptions put: (Eval shiftArgs toNumber) at: 'max_line_length'.
+    }, case: '-il' do: {
+        args pop.
+        tidyIndentOptions put: (Eval shiftArgs toNumber) at: 'indent_length'.
+    }, case: 'pk' do: {
+        args pop.
+        tidyIndentOptions put: True at: 'parenthesize_kwmsgs'.
     }, case: '--tidy' do: {
         args pop.
         var fname is Eval shiftArgs.
         fname isNil ifTrue: { thisBlock error: '--tidy requires an argument'. }.
+        var code is Nil.
+        fname = '-' ifTrue: {
+            code is Program input.
+        } ifFalse: {
+            code is File new: fname, read.
+            Pen writeln: '# File $$fname'.
+        }.
         import Library/AST/ast2ctrcode: 'ast2ctrcode'.
-        Pen writeln: '# File $$fname'.
-        Pen writeln: ast2ctrcode[(AST parse: (File new: fname, read))].
+        var options is tidyIndentOptions.
+        Pen writeln: ast2ctrcode[(AST parse: code), 0, options].
         Program exit.
     }, case: '-e' do: {
         args pop. #consume option..

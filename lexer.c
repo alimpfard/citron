@@ -579,7 +579,7 @@ __attribute__((always_inline)) static void handle_extension() {
   char *ext = ctr_clex_buffer;
   int len = ctr_clex_tokvlen;
 #ifdef DEBUG_BUILD
-  printf("+ext %.*s\n", len, ext);
+  fprintf(stderr, "+ext %.*s\n", len, ext);
 #endif
   if (len == 7 && strncmp(ext, "XFrozen", 7) == 0) {
     extensionsPra->value |= CTR_EXT_FROZEN_K;

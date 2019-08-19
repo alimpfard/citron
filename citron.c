@@ -107,7 +107,7 @@ char const *ctr_file_stdext_path_raw() {
     return EXT_PATH;
   char *env = getenv(CTR_STD_EXTENSION_ENV_NAME);
 #ifdef DEBUG_BUILD
-  printf("%s = %p(%s)\n", CTR_STD_EXTENSION_ENV_NAME, env,
+  fprintf(stderr, "%s = %p(%s)\n", CTR_STD_EXTENSION_ENV_NAME, env,
          env == 0 ? "()" : env);
 #endif
   if (env) {

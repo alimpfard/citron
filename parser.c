@@ -57,6 +57,7 @@ ctr_tnode *ctr_cparse_tuple(int);
 ctr_tnode *ctr_cparse_create_generator_node_step(ctr_tnode *, ctr_tnode *,
                                                  ctr_tnode *);
 ctr_tnode *ctr_cparse_create_generator_node_simple(ctr_tnode *, ctr_tnode *);
+ctr_tnode *ctr_deep_copy_ast(ctr_tnode *);
 
 int ctr_scan_inner_refs_for_(ctr_tnode *node, char *name, size_t len) {
   switch (node->type) {
@@ -621,7 +622,7 @@ ctr_tnode *ctr_cparse_lit_esc(int opt) {
   v = ctr_cparse_create_node(CTR_AST_NODE);
   v->type = CTR_AST_NODE_RAW;
   v->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
-  v->nodes->node = r;
+  v->nodes->node = ctr_deep_copy_ast(r);
   if (!unescape)
     v->modifier = -len;
   else {
@@ -1817,4 +1818,47 @@ ctr_tnode *ctr_cparse_parse(char *prg, char *pathString) {
   program->type = CTR_AST_NODE_PROGRAM;
   ctr_cparse_current_program = oldp;
   return program;
+}
+
+ctr_tnode *ctr_deep_copy_ast(ctr_tnode *src) {
+  ctr_tnode *dst = ctr_heap_allocate(sizeof *dst);
+  dst->vlen = src->vlen;
+  if (src->value)
+    dst->value = src->value; // TODO: figure out copying this
+  dst->type = src->type;
+  dst->modifier = src->modifier;
+  dst->lexical = src->lexical;
+
+  if (src->type == CTR_AST_NODE_EMBED) {
+    if (src->modifier == 2) {
+      ctr_tlistitem *nodes = ctr_heap_allocate(sizeof *nodes);
+      nodes->next = ctr_heap_allocate(sizeof *nodes);
+      nodes->node = src->nodes->node;
+      nodes->next->node = src->nodes->next->node;
+      dst->nodes = nodes;
+      return dst;
+    }
+    else if (src->modifier == 1) {
+      ctr_tlistitem *nodes = ctr_heap_allocate(sizeof *nodes);
+      nodes->node = src->nodes->node;
+      dst->nodes = nodes;
+      return dst;
+    }
+  }
+  ctr_tlistitem *nodes = src->nodes;
+  dst->nodes = NULL;
+  if (nodes) {
+    ctr_tlistitem *dnodes = ctr_heap_allocate(sizeof *nodes), *pnodes = NULL;
+    dst->nodes = dnodes;
+    while (nodes) {
+      dnodes->node = ctr_deep_copy_ast(nodes->node);
+      dnodes->next = ctr_heap_allocate(sizeof *dnodes);
+      pnodes = dnodes;
+      dnodes = dnodes->next;
+      nodes = nodes->next;
+    }
+    ctr_heap_free(dnodes);
+    pnodes->next = NULL;
+  }
+  return dst;
 }

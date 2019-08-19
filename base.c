@@ -5391,8 +5391,10 @@ void ctr_capture_refs_(ctr_tnode *ti, ctr_object *block, ctr_object *parent,
         ctr_heap_free(CtrStdFlow);
         CtrStdFlow = NULL;
       } else {
-        t->nodes->node = (ctr_tnode *)p;
-        t->modifier = 1;
+        t->modifier = 2;
+        ctr_tlistitem* nl = ctr_heap_allocate(sizeof *nl);
+        nl->node = (ctr_tnode*) p;
+        t->nodes->next = nl;
       }
       break;
     }

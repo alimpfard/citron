@@ -91,10 +91,16 @@ ctr_object *ctr_cwlk_message(ctr_tnode *paramNode) {
     r = ctr_build_number_from_string(receiverNode->value, receiverNode->vlen);
     break;
   case CTR_AST_NODE_EMBED:
-    if (!receiverNode->modifier)
+    switch(receiverNode->modifier) {
+      case 0:
       result = r = ctr_cwlk_expr(receiverNode->nodes->node, "\0");
-    else {
+      break;
+      case 1:
       result = r = (ctr_object *)receiverNode->nodes->node;
+      break;
+      case 2:
+      result = r = (ctr_object *)receiverNode->nodes->next->node;
+      break;
     }
     break;
   case CTR_AST_NODE_LISTCOMP:
@@ -284,10 +290,14 @@ ctr_object *ctr_cwlk_assignment(ctr_tnode *node) {
 }
 
 void execute_if_quote(ctr_tnode *node) {
-  if (node->type == CTR_AST_NODE_EMBED && node->modifier == 0) {
-    node->modifier = 1;
-    node->nodes->node = (ctr_tnode *)ctr_cwlk_expr(node->nodes->node, "");
-    return;
+  if (node->type == CTR_AST_NODE_EMBED) {
+    if (node->modifier == 0) {
+      node->modifier = 2;
+      ctr_tlistitem* nl = ctr_heap_allocate(sizeof *nl);
+      nl->node = (ctr_tnode *)ctr_cwlk_expr(node->nodes->node, "");
+      node->nodes->next = nl;
+      return;
+    }
   }
   switch (node->type) {
   case CTR_AST_NODE_CODEBLOCK:
@@ -318,6 +328,45 @@ void execute_if_quote(ctr_tnode *node) {
   }
 }
 
+void reset_quote(ctr_tnode *node) {
+  if (node->type == CTR_AST_NODE_EMBED) {
+    if (node->modifier == 2) {
+      node->modifier = 0;
+      ctr_heap_free(node->nodes->next);
+      node->nodes->next = NULL;
+      return;
+    }
+  }
+  switch (node->type) {
+  case CTR_AST_NODE_CODEBLOCK:
+    reset_quote(node->nodes->next->node);
+    return;
+  case CTR_AST_NODE_EXPRMESSAGE:
+  case CTR_AST_NODE_EXPRASSIGNMENT:
+    reset_quote(node->nodes->node);
+    reset_quote(node->nodes->next->node);
+    return;
+  case CTR_AST_NODE_BINMESSAGE:
+  case CTR_AST_NODE_RAW:
+  case CTR_AST_NODE_NESTED:
+    reset_quote(node->nodes->node);
+    return;
+  case CTR_AST_NODE_IMMUTABLE:
+  case CTR_AST_NODE_PROGRAM:
+    node = node->nodes->node;
+    /* Fallthrough */
+  case CTR_AST_NODE_KWMESSAGE:
+  case CTR_AST_NODE_INSTRLIST:
+    for (ctr_tlistitem *instr = node->nodes; instr; instr = instr->next)
+      reset_quote(instr->node);
+    return;
+    // TODO X: handle listcomp
+  default:
+    break;
+  }
+}
+
+extern ctr_tnode *ctr_deep_copy_ast(ctr_tnode*);
 /**
  * CTRWalkerExpression
  *
@@ -350,10 +399,16 @@ ctr_object *ctr_cwlk_expr(ctr_tnode *node, char *wasReturn) {
     result = ctr_build_block(node);
     break;
   case CTR_AST_NODE_EMBED:
-    if (node->modifier)
-      result = (ctr_object *)node->nodes->node;
-    else {
+    switch (node->modifier) {
+    case 0:
       result = ctr_cwlk_expr(node->nodes->node, "");
+      break;
+    case 1:
+      result = (ctr_object *)node->nodes->node;
+      break;
+    case 2:
+      result = (ctr_object *)node->nodes->next->node;
+      break;
     }
     break;
   case CTR_AST_NODE_REFERENCE:
@@ -388,10 +443,12 @@ ctr_object *ctr_cwlk_expr(ctr_tnode *node, char *wasReturn) {
   case CTR_AST_NODE_RAW: {
     int quote = 0;
     switch (node->modifier) {
-    case 1:
-      execute_if_quote(node->nodes->node);
-      result = ctr_ast_from_node(node->nodes->node);
+    case 1: {
+      ctr_tnode *cnode = ctr_deep_copy_ast(node->nodes->node);
+      execute_if_quote(cnode);
+      result = ctr_ast_from_node(cnode);
       break;
+    }
     case 2:
       result = ctr_build_immutable(node->nodes->node);
       break;

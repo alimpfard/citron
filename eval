@@ -784,7 +784,7 @@ var tidyIndentOptions is Map new.
           indent: 2 write: '--Fsel : allow the user to pick from available flags via a terminal selection menu\n',
           indent: 2 write: '--meta <command> : execute a metacommand (sans the initial :)\n',
           indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
-          indent: 2 write: '--qe : evaluate expression without printing the value, then exit, all args after the expr will be passed to the code as var `args`\n',
+          indent: 2 write: '--qe : evaluate expression without printing the value, then continue, all args after the expr will be passed to the code as var `args`\n',
           indent: 2 write: '-v : print version information and exit\n',
           indent: 2 write: '--tidy : [Experimental] try to tidy up the given file and write it back out to stdout\n',
           indent: 3 write: '-ml <int> : set max line length for --tidy\n',
@@ -918,14 +918,9 @@ var tidyIndentOptions is Map new.
         (value isNil) ifTrue: { thisBlock error: '--qe requires an argument.'. }.
         Reflect addGlobalVariable: '%0'.
         %0 is value.
-        { ^(Eval argCount > 0). } whileTrue: { args push: Eval shiftArgs. }. #consume all other arguments.
-        args imap: {:i:n Reflect addGlobalVariable: '%' + (i + 1). Reflect set: '%' + (i + 1) to: (Eval tryNumrify: n).}.
-        Reflect addGlobalVariable: '%_'.
-        %_ is args.
         value endsWith: '.', ifFalse: { value +=: '.'. }.
         value is '{ $$value }'.
         (Eval evaluatorObject evaluate: value) run.
-        Program exit.
     }, case: '-v' do: {
         Eval display/writeln: 'Citron Version ' + Reflect version.
         Eval display/writeln: 'Built with the extension prefix of ' + File extensionsPath.

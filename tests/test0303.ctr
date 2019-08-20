@@ -1,0 +1,16 @@
+# test @comptime "macros"
+
+@comptime[discard]
+var inline_factorial is {:num
+    ^$($`(num factorial)).
+}.
+
+@comptime[discard]
+var inline_thrice is {:mcode
+    ^$({ $`mcode. $`mcode. $`mcode. } run).
+}.
+
+@comptime 
+    inline_thrice {
+        Pen writeln: @comptime inline_factorial[10]
+    }.

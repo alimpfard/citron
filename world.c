@@ -4491,6 +4491,8 @@ ctr_object *ctr_resolve_constraints_for_hole(ctr_object *message, ctr_argument *
         // a candidate!
         arg.object = head->key; // store the name
         candidates = ctr_array_push(candidates, argp);
+        if (autofillHoles->value)
+            return candidates; // just one is enough
         // let's continue now
       }
       head = head->next;

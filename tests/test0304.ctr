@@ -1,0 +1,15 @@
+# test autofilling holes!
+# Exciting!
+
+#:autofillHoles
+
+var obj1 is 'test'. # String - responds to `length' and `+'
+var obj2 is Array new. # Array - responds to `push:'
+var obj3 is Object cnew: {
+    on: 'totallyNewMessage' do: {
+        ^'Magick!'.
+    }.
+}.
+
+? writeln:
+    ? + ? length + (? push: ? totallyNewMessage, join: ? + ' ').

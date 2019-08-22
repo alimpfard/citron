@@ -9,11 +9,11 @@ dummy_input="test
 fnames=()
 echo $# -- $!
 if [[ $# -ne 0 ]]; then
-  fnames=($@)
+  fnames=("$@")
 else
   fnames=$(find tests -maxdepth 1 -name 'test*.ctr' | sort)
 fi
-for i in $fnames; do
+for i in "${fnames[@]}"; do
     dest=${i%%.ctr}.exp
     echo "Generating results for $i > $dest"
     res=$(echo $dummy_input | timeout 5 ${pre_c}/ctr --compact $i 2>&1)

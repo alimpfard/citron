@@ -1,3 +1,2 @@
 Uncaught error has occurred.
-Parser error, unexpected . ( tests/test0147.ctr: 3)
--> Expected a message recipient.
+Hole encountered in program without any constraint

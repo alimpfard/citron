@@ -471,6 +471,7 @@ ctr_object* ctr_exception_getinfo(ctr_object* myself, ctr_argument* argumentList
 ctr_object* ctr_internal_ex_data();
 
 ctr_object* ctr_internal_find_overload(ctr_object*,ctr_argument*);
+ctr_object* ctr_resolve_constraints_for_hole(ctr_object*, ctr_argument*);
 /**
 * @internal
  * standard instrumentor, do not override.
@@ -578,6 +579,7 @@ ctr_object* ctr_lex_get_buf_str();
 // Pragmas
 CTR_H_DECLSPEC ctr_code_pragma* oneLineExpressions;
 CTR_H_DECLSPEC ctr_code_pragma* flexibleConstructs;
+CTR_H_DECLSPEC ctr_code_pragma* autofillHoles;
 CTR_H_DECLSPEC ctr_code_pragma* regexLineCheck;
 CTR_H_DECLSPEC ctr_code_pragma* callShorthand;
 CTR_H_DECLSPEC ctr_code_pragma* nextCallLazy;

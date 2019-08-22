@@ -616,6 +616,11 @@ void ctr_match_toggle_pragma() {
     ctr_code += 18;
     return;
   }
+  if (strncmp(ctr_code, ":autofillHoles", 14) == 0) {
+    ctr_activate_pragma(autofillHoles);
+    ctr_code += 14;
+    return;
+  }
   if (strncmp(ctr_code, ":callShorthand", 14) == 0) {
     ctr_code += 14;
     int t0 = ctr_clex_tok(), t1 = ctr_clex_tok();

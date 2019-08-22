@@ -4474,6 +4474,31 @@ ctr_object *ctr_internal_find_overload(ctr_object *original,
   return original;
 }
 
+ctr_object *ctr_resolve_constraints_for_hole(ctr_object *message, ctr_argument *arguments) {
+  ctr_object *candidates = ctr_array_new(CtrStdArray, NULL);
+  ctr_argument arg = {0,0};
+  ctr_argument *argp = &arg;
+  // go over all the currently available objects and find the ones that satisfy
+  // the given constraint
+  for (int scopeid = ctr_context_id; scopeid >= 0; scopeid--) {
+    ctr_object *context = ctr_contexts[scopeid];
+    ctr_map *items = context->properties;
+    if (items->size < 1)
+      continue;
+    ctr_mapitem *head = items->head;
+    while (head) {
+      if (ctr_internal_has_responder(head->value, message)) {
+        // a candidate!
+        arg.object = head->key; // store the name
+        candidates = ctr_array_push(candidates, argp);
+        // let's continue now
+      }
+      head = head->next;
+    }
+  }
+  return candidates;
+}
+
 ctr_object **get_CtrStdWorld() { return &CtrStdWorld; }
 
 ctr_object **get_CtrStdObject() { return &CtrStdObject; }

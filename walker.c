@@ -56,12 +56,20 @@ ctr_object *ctr_cwlk_message(ctr_tnode *paramNode) {
   ctr_tlistitem *argumentList;
   ctr_object *r;
   ctr_object *recipientName = NULL;
+  int is_hole = 0;
   switch (receiverNode->type) {
   case CTR_AST_NODE_REFERENCE:
     recipientName = ctr_build_string(receiverNode->value, receiverNode->vlen);
     recipientName->info.sticky = 1;
     if (CtrStdFlow == NULL) {
       ctr_callstack[ctr_callstack_index++] = receiverNode;
+    }
+    if (strncmp(receiverNode->value, "?", 1) == 0) {
+      // this is a "hole"
+      // mark it as such, return Nil
+      is_hole = 1;
+      r = CtrStdNil;
+      break;
     }
     if (receiverNode->modifier == 1 || receiverNode->modifier == 3) {
       r = ctr_find_in_my(recipientName);
@@ -158,6 +166,24 @@ ctr_object *ctr_cwlk_message(ctr_tnode *paramNode) {
         aItem->object = NULL;
         argumentList = argumentList->next;
       }
+    }
+    if (is_hole) {
+      is_hole = 0;
+      ctr_object *msg = ctr_build_string(message, l);
+      ctr_object* candidates = ctr_resolve_constraints_for_hole(msg, a);
+      if (ctr_array_count(candidates, NULL)->value.nvalue > 0) {
+        if (autofillHoles->value) {
+          // actually just guess (I lie, pick the first)
+          r = ctr_find_(ctr_array_head(candidates, NULL), 0);
+        } else
+          CtrStdFlow = ctr_format_str("EHole encountered in program with constraint: `%S'\n"
+                                      "Matching objects in the context are:\n"
+                                      "%S",
+                                      msg,
+                                      ctr_array_join(candidates, &(ctr_argument){ctr_build_string_from_cstring(", "), 0}));
+      } else
+        CtrStdFlow = ctr_format_str("EHole encountered in program with constraint `%S' but nothing could satisfy that",
+                                    msg);
     }
     sticky = r->info.sticky;
     r->info.sticky = 1;
@@ -419,6 +445,10 @@ ctr_object *ctr_cwlk_expr(ctr_tnode *node, char *wasReturn) {
     }
     if (CtrStdFlow == NULL) {
       ctr_callstack[ctr_callstack_index++] = node;
+    }
+    if (node->vlen == 1 && '?' == *node->value) {
+        CtrStdFlow = ctr_format_str("EHole encountered in program without any constraint");
+        result = CtrStdNil;
     }
     if (node->modifier == 1 || node->modifier == 3) {
       result = ctr_find_in_my(ctr_build_string(node->value, node->vlen));

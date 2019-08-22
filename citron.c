@@ -36,6 +36,9 @@ ctr_code_pragma oneline_p = {.type = 't', .value = 0},
                 flex_const =
 
                     {.type = 'o', .value = 0},
+                autofill_hole =
+
+                    {.type = 'o', .value = 0},
                 regex_lc =
 
                     {.type = 't', .value = 0},
@@ -175,6 +178,7 @@ void ctr_initialize_ex() {
   // GC_enable_incremental();
   oneLineExpressions = &oneline_p;
   flexibleConstructs = &flex_const;
+  autofillHoles = &autofill_hole;
   regexLineCheck = &regex_lc;
   callShorthand = &callshorth;
   extensionsPra = &extpragmas;

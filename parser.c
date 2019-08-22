@@ -54,10 +54,20 @@ ctr_tnode *ctr_cparse_fancy_string();
 ctr_tnode *ctr_cparse_symbol();
 ctr_tnode *ctr_cparse_true();
 ctr_tnode *ctr_cparse_tuple(int);
+ctr_tnode *ctr_fake_parse_hole();
 ctr_tnode *ctr_cparse_create_generator_node_step(ctr_tnode *, ctr_tnode *,
                                                  ctr_tnode *);
 ctr_tnode *ctr_cparse_create_generator_node_simple(ctr_tnode *, ctr_tnode *);
 ctr_tnode *ctr_deep_copy_ast(ctr_tnode *);
+
+ctr_tnode *ctr_fake_parse_hole() {
+  ctr_tnode *r = ctr_cparse_create_node(CTR_AST_NODE);
+  r->type = CTR_AST_NODE_REFERENCE;
+  r->vlen = 1;
+  r->value = ctr_heap_allocate(1);
+  strcpy(r->value, "?");
+  return r;
+}
 
 int ctr_scan_inner_refs_for_(ctr_tnode *node, char *name, size_t len) {
   switch (node->type) {
@@ -409,7 +419,7 @@ ctr_tlistitem *ctr_cparse_messages(ctr_tnode *r, int mode) {
         ctr_cparse_emit_error_unexpected(t, "Expected message.\n");
         if (speculative_parse)
           if (ctr_clex_inject_token(CTR_TOKEN_REF,
-                                    ctr_clex_tok_value() ?: "unknown-ref",
+                                    ctr_clex_tok_value() ?: "?",
                                     ctr_clex_tok_value_length() ?: 11, 11)) {
             ctr_cparse_emit_error_unexpected(
                 t, "Speculative parsing failed, not enough vector space\n");
@@ -775,7 +785,7 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
     t = ctr_clex_tok();
     if (t != CTR_TOKEN_REF) {
       ctr_cparse_emit_error_unexpected(t, "Expected an argument name\n");
-      return speculative_parse ? ctr_cparse_nil() : NULL;
+      return speculative_parse ? ctr_fake_parse_hole() : NULL;
     }
     int len = ctr_clex_tok_value_length();
     char *val = ctr_clex_tok_value();
@@ -783,7 +793,7 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
       if (!isalpha(val[i])) {
         ctr_cparse_emit_error_unexpected(
             t, "asm block arguments must contain only alpha characters\n");
-        return speculative_parse ? ctr_cparse_nil() : NULL;
+        return speculative_parse ? ctr_fake_parse_hole() : NULL;
       }
     argidx++;
     enum AsmArgType _ty = ASM_ARG_TY_DBL;
@@ -805,7 +815,7 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
                (len == 3 && strncasecmp(tok, "att", 3) == 0))) {
       ctr_cparse_emit_error_unexpected(
           t, "Expected literal name att|at&t|intel\n");
-      return speculative_parse ? ctr_cparse_nil() : NULL;
+      return speculative_parse ? ctr_fake_parse_hole() : NULL;
     }
     t = ctr_clex_tok();
   }
@@ -815,7 +825,7 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
     if (!end) {
       ctr_cparse_emit_error_unexpected(
           t, "Expected a ')' to end the asm constraint block\n");
-      return speculative_parse ? ctr_cparse_nil() : NULL;
+      return speculative_parse ? ctr_fake_parse_hole() : NULL;
     }
     constraint = ctr_heap_allocate(end - begin + 1);
     memcpy(constraint, begin, end - begin);
@@ -828,7 +838,7 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
   if (!asm_end) {
     ctr_cparse_emit_error_unexpected(
         t, "Expected a '}' to end the native block\n");
-    return speculative_parse ? ctr_cparse_nil() : NULL;
+    return speculative_parse ? ctr_fake_parse_hole() : NULL;
   }
   void *fn = ctr_cparse_intern_asm_block(
       /* start = */ asm_begin,
@@ -1447,7 +1457,7 @@ ctr_tnode *ctr_cparse_receiver() {
   default:
     /* This function always exits, so return a dummy value. */
     ctr_cparse_emit_error_unexpected(t, "Expected a message recipient.\n");
-    return speculative_parse ? ctr_cparse_nil() : NULL;
+    return speculative_parse ? ctr_fake_parse_hole() : NULL;
   }
 }
 
@@ -1714,13 +1724,13 @@ ctr_tnode *ctr_cparse_comptime() {
     ctr_cparse_emit_error_unexpected(
         CTR_TOKEN_INV,
         "Expected an AST splice as a return value from a comptime expression");
-    return speculative_parse ? ctr_cparse_nil() : NULL;
+    return speculative_parse ? ctr_fake_parse_hole() : NULL;
   }
   if (!val->value.rvalue || !val->value.rvalue->ptr) {
     ctr_cparse_emit_error_unexpected(CTR_TOKEN_INV,
                                      "Expected a valid AST splice as a return "
                                      "value from a comptime expression");
-    return speculative_parse ? ctr_cparse_nil() : NULL;
+    return speculative_parse ? ctr_fake_parse_hole() : NULL;
   }
   return val->value.rvalue->ptr;
 }
@@ -1769,7 +1779,7 @@ ctr_tlistitem *ctr_cparse_statement() {
       }
     }
     if (!li->node)
-      li->node = ctr_cparse_nil();
+      li->node = ctr_fake_parse_hole();
     // li->node = ctr_cparse_fin();
   }
   return li;

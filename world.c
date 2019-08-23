@@ -4474,21 +4474,69 @@ ctr_object *ctr_internal_find_overload(ctr_object *original,
   return original;
 }
 
-ctr_object *ctr_resolve_constraints_for_hole(ctr_object *message, ctr_argument *arguments) {
+int ctr_is_linked_to(ctr_object *a, ctr_object* b) {
+    if (!a)
+        return 0;
+    if (!b)
+        return 1;
+    if (a == b)
+        return 1;
+    if (!a->interfaces || !a->interfaces->link)
+        return 0;
+    if (a->interfaces->link == b)
+        return 1;
+    return ctr_is_linked_to(a->interfaces->link, b);
+}
+
+ctr_object *ctr_resolve_constraints_for_hole(ctr_object *message, ctr_argument *constraints, ctr_object *context) {
   ctr_object *candidates = ctr_array_new(CtrStdArray, NULL);
   ctr_argument arg = {0,0};
   ctr_argument *argp = &arg;
+  int entered = 0, fail = 0;
+  int extra_constraints = !!constraints;
+  if (context)
+      goto searchone;
   // go over all the currently available objects and find the ones that satisfy
   // the given constraint
-  for (int scopeid = ctr_context_id; scopeid >= 0; scopeid--) {
-    ctr_object *context = ctr_contexts[scopeid];
+  for (int scopeid=ctr_context_id; scopeid >= 0; scopeid--) {
+    entered = 1;
+    context = ctr_contexts[scopeid];
+searchone:;
     ctr_map *items = context->properties;
     if (items->size < 1)
       continue;
     ctr_mapitem *head = items->head;
     while (head) {
-      if (ctr_internal_has_responder(head->value, message)) {
+      if (extra_constraints || ctr_internal_has_responder(head->value, message)) {
         // a candidate!
+        if (unlikely(extra_constraints)) {
+            fail = 0;
+            // check for extra stuff
+            // every argument is a method constraint if 
+            // it's a string
+            ctr_argument *cargs = constraints;
+            while(cargs) {
+                ctr_object *obj = cargs->object;
+                if (obj->interfaces && obj->interfaces->link == CtrStdString) {
+                    if (!ctr_internal_has_responder(head->value, obj)) {
+                        fail = 1;
+                        break;
+                    }
+                } else {
+                    if (!ctr_is_linked_to(head->value, obj)) {
+                        fail = 1;
+                        break;
+                    }
+                }
+                cargs = cargs->next;
+                while (cargs && (cargs->object == CtrStdNil || cargs->object == NULL))
+                    cargs = cargs->next;
+            }
+            if (fail) {
+                head = head->next;
+                continue;
+            }
+        }
         arg.object = head->key; // store the name
         candidates = ctr_array_push(candidates, argp);
         if (autofillHoles->value)
@@ -4497,6 +4545,8 @@ ctr_object *ctr_resolve_constraints_for_hole(ctr_object *message, ctr_argument *
       }
       head = head->next;
     }
+    if (unlikely(!entered))
+        break;
   }
   return candidates;
 }

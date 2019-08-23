@@ -6,10 +6,17 @@
 var obj1 is 'test'. # String - responds to `length' and `+'
 var obj2 is Array new. # Array - responds to `push:'
 var obj3 is Object cnew: {
+    prop  => 'some string I guess'.
+    prop1 => Object cnew: { on: 'boo' do: { ^'Booo'. }. on: 'toString' do: { ^'!'. }. }.
+
     on: 'totallyNewMessage' do: {
-        ^'Magick!'.
+        ^'Magick'.
+    }.
+
+    on: 'toString' do: {
+        ^my ? ?: 'boo', toString.
     }.
 }.
 
 ? writeln:
-    ? + ? length + (? push: ? totallyNewMessage, join: ? + ' ').
+    (? ?: String) + ? length + (? push: ? totallyNewMessage, join: (? ?: String)) + (? ?: 'totallyNewMessage').

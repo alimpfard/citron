@@ -471,7 +471,7 @@ ctr_object* ctr_exception_getinfo(ctr_object* myself, ctr_argument* argumentList
 ctr_object* ctr_internal_ex_data();
 
 ctr_object* ctr_internal_find_overload(ctr_object*,ctr_argument*);
-ctr_object* ctr_resolve_constraints_for_hole(ctr_object*, ctr_argument*);
+ctr_object* ctr_resolve_constraints_for_hole(ctr_object*, ctr_argument*, ctr_object*);
 /**
 * @internal
  * standard instrumentor, do not override.

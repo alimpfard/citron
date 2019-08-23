@@ -64,10 +64,10 @@ ctr_object *ctr_cwlk_message(ctr_tnode *paramNode) {
     if (CtrStdFlow == NULL) {
       ctr_callstack[ctr_callstack_index++] = receiverNode;
     }
-    if (strncmp(receiverNode->value, "?", 1) == 0) {
+    if (strcmp(receiverNode->value, "?") == 0) {
       // this is a "hole"
       // mark it as such, return Nil
-      is_hole = 1;
+      is_hole = 1 + (receiverNode->modifier == 1 || receiverNode->modifier == 3);
       r = CtrStdNil;
       break;
     }
@@ -168,27 +168,36 @@ ctr_object *ctr_cwlk_message(ctr_tnode *paramNode) {
       }
     }
     if (is_hole) {
-      is_hole = 0;
       ctr_object *msg = ctr_build_string(message, l);
-      ctr_object* candidates = ctr_resolve_constraints_for_hole(msg, a);
+      if (strncmp(message, "?:", 2) == 0)
+          is_hole |= 4;
+      ctr_object* candidates = ctr_resolve_constraints_for_hole(
+              msg,
+              is_hole&4?a:NULL,
+              is_hole&0x2?ctr_find(&CTR_CLEX_KW_ME):NULL
+      );
       if (ctr_array_count(candidates, NULL)->value.nvalue > 0) {
         if (autofillHoles->value) {
           // actually just guess (I lie, pick the first)
-          r = ctr_find_(ctr_array_head(candidates, NULL), 0);
+          if (is_hole&2)
+            r = ctr_find_in_my(ctr_array_head(candidates, NULL));
+          else
+            r = ctr_find_(ctr_array_head(candidates, NULL), 0);
+
         } else
           CtrStdFlow = ctr_format_str("EHole encountered in program with constraint: `%S'\n"
                                       "Matching objects in the context are:\n"
                                       "%S",
                                       msg,
-                                      ctr_array_join(candidates, &(ctr_argument){ctr_build_string_from_cstring(", "), 0}));
+                                      ctr_array_join(candidates, &(ctr_argument) {
+                                          ctr_build_string_from_cstring(", "), 0
+                                       }));
       } else
         CtrStdFlow = ctr_format_str("EHole encountered in program with constraint `%S' but nothing could satisfy that",
                                     msg);
     }
-    sticky = r->info.sticky;
-    r->info.sticky = 1;
-    result = ctr_send_message(r, message, l, a);
-    r->info.sticky = sticky;
+    result = is_hole&4 ? r : ctr_send_message(r, message, l, a);
+    is_hole = 0;
     aItem = a;
     if (CtrStdFlow == NULL) {
       ctr_callstack_index--;

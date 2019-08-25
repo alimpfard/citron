@@ -89,6 +89,7 @@ Eval on: 'init' do: {
   my last_error is Nil.
   my inNewBlock is False.
   my breakpoints is Map new.
+  my messageHooks is Map new.
   my debug is False.
   my stepDebug is False.
   my returnValue is Array new.
@@ -313,7 +314,8 @@ Eval on: 'Commands' do: {
       + p <expression> -- prints the value of expression
       + c -- clear screen and history
       + break <obj> <msg> -- break on object\'s message
-      + !enable <b[reak]> -- enable option
+      + hook <msg> <obj> <codeblock...> -- execute given code if message triggers
+      + !enable <i[nstrumentation]> -- enable option
       + % <...> -- line comment in REPL (ignores args)
       + h -- show this help
       - ! <cmd> -- execute shell command
@@ -339,7 +341,16 @@ Eval on: 'Commands' do: {
         ^'will break on messages %L' % [msgs].
       } at: 'break',
       put: {:args
-        args startsWith: 'b', either: {
+        var msg-obj is args split: ' ' max: 1.
+        var obj-code is msg-obj @ 1 split: ' ' max: 1.
+        Eval hook: (
+          Eval evaluatorObject evaluate: obj-code last)
+         for: (
+          Eval evaluatorObject evaluate: obj-code head)
+         message: msg-obj head.
+      } at: 'hook',
+      put: {:args
+        args startsWith: 'i', either: { # instrument
           Eval instrument.
         } or: {
           thisBlock error: 'Invalid option $$args'.
@@ -672,19 +683,40 @@ Eval on: 'instrument' do: {
   Reflect enableInstrumentation.
 }.
 
-Eval on: 'breakFor:message:' do: {:o:m
+Eval on: 'breakFor:message:' do: {:&o:m
   my breakpoints put: True at: (o &responder: m).
+}.
+
+Eval on: 'hook:for:message:' do: {:blk:&o:m
+  var resp is o &responder: m.
+  (var existing is my messageHooks at: resp) isNil ifTrue: {
+    my messageHooks put: (Array < blk) at: resp.
+  } ifFalse: {
+    existing push: blk.
+  }.
+}.
+
+Eval on: 'fireHooksFor:message:arguments:' do: {:&obj:msg:args
+  var hooks is my messageHooks at: (obj &responder: msg).
+  hooks isNil ifTrue: {
+    ^Nil.
+  }.
+  hooks each_v: {:&hook
+    hook applyAll: args.
+  }.
 }.
 
 Eval on: 'hasBreakPoint:message:' do: {:object:message
   ^my breakpoints at: (object &responder: message), or: my stepDebug.
 }.
+
 Eval on: 'tryDebug' do: {:self
   var ctx is my evaluationContext.
   ^{:object:message:args
     var this is me.
     var eval is const self.
     (Reflect isInFrame: const ctx) ifFalse: {^this.}.
+    eval fireHooksFor: object message: message arguments: args.
     var bp is eval hasBreakPoint: object message: message.
     ^bp either: {
         ^eval debugRepl: [this, object, message, args].

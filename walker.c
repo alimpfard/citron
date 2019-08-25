@@ -430,6 +430,23 @@ ctr_object *ctr_cwlk_expr(ctr_tnode *node, char *wasReturn) {
   case CTR_AST_NODE_LTRNUM:
     result = ctr_build_number_from_string(node->value, node->vlen);
     break;
+  case CTR_AST_NODE_INSTRLIST: {
+    ctr_tlistitem *fnode = node->nodes;
+    char wasret = 0;
+    while(fnode) {
+      if (fnode->node) {
+        result = ctr_cwlk_expr(fnode->node, &wasret);
+        if (wasret || ctr_internal_next_return) {
+          ctr_internal_next_return = 0;
+          break;
+        }
+      }
+      fnode = fnode->next;
+    }
+    if (!result)
+      result = CtrStdNil;
+    break;
+  }
   case CTR_AST_NODE_CODEBLOCK:
     result = ctr_build_block(node);
     break;

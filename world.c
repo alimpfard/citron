@@ -1301,7 +1301,7 @@ void ctr_open_context() {
     CtrStdFlow->info.sticky = 1;
   }
   context = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
-  context->info.sticky = 1;
+  // ctr_gc_pin(context->properties);
   ctr_contexts[++ctr_context_id] = context;
 }
 
@@ -1315,10 +1315,34 @@ void ctr_open_context() {
 void ctr_close_context() {
   // ctr_contexts[ctr_context_id]->properties->head = NULL;
   // ctr_contexts[ctr_context_id]->properties->size = 0;
-  ctr_contexts[ctr_context_id]->info.sticky = 0;
+  // ctr_gc_unpin(ctr_contexts[ctr_context_id]->properties);
   if (ctr_context_id == 0)
     return;
   ctr_context_id--;
+}
+
+void ctr_print_context(ctr_object *context) {
+  ctr_map *pp = context->properties;
+  fprintf(stderr, "context {\n");
+  if (!pp) {
+    fprintf(stderr, "\t*Unknown*\n}\n");
+    return;
+  }
+  ctr_mapitem *head = pp->head;
+  while(head) {
+    fprintf(stderr, "\t%.*s (%lu) = %p\n", head->key->value.svalue->vlen, head->key->value.svalue->value, head->hashKey, head->value);
+    head = head->next;
+  }
+  fprintf(stderr, "}\n");
+}
+
+void ctr_dump_context_print() {
+  int i = ctr_context_id;
+  while (i > -1) {
+    fprintf(stderr, "%.3x ", i);
+    ctr_object *context = ctr_contexts[i--];
+    ctr_print_context(context);
+  }
 }
 
 /**
@@ -4512,7 +4536,7 @@ searchone:;
         if (unlikely(extra_constraints)) {
             fail = 0;
             // check for extra stuff
-            // every argument is a method constraint if 
+            // every argument is a method constraint if
             // it's a string
             ctr_argument *cargs = constraints;
             while(cargs) {

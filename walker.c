@@ -61,7 +61,7 @@ ctr_object *ctr_cwlk_message(ctr_tnode *paramNode) {
   case CTR_AST_NODE_REFERENCE:
     recipientName = ctr_build_string(receiverNode->value, receiverNode->vlen);
     recipientName->info.sticky = 1;
-    if (CtrStdFlow == NULL) {
+    if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue) {
       ctr_callstack[ctr_callstack_index++] = receiverNode;
     }
     if (strcmp(receiverNode->value, "?") == 0) {
@@ -76,7 +76,7 @@ ctr_object *ctr_cwlk_message(ctr_tnode *paramNode) {
     } else {
       r = ctr_find(recipientName);
     }
-    if (CtrStdFlow == NULL) {
+    if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue) {
       ctr_callstack_index--;
     }
     if (!r) {
@@ -143,7 +143,7 @@ ctr_object *ctr_cwlk_message(ctr_tnode *paramNode) {
     msgnode = li->node;
     message = msgnode->value;
     l = msgnode->vlen;
-    if (CtrStdFlow == NULL) {
+    if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue) {
       ctr_callstack[ctr_callstack_index++] = msgnode;
     }
     argumentList = msgnode->nodes;
@@ -199,7 +199,7 @@ ctr_object *ctr_cwlk_message(ctr_tnode *paramNode) {
     result = is_hole&4 ? r : ctr_send_message(r, message, l, a);
     is_hole = 0;
     aItem = a;
-    if (CtrStdFlow == NULL) {
+    if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue) {
       ctr_callstack_index--;
     }
     while (aItem->next) {
@@ -240,7 +240,7 @@ ctr_object *ctr_cwlk_assignment(ctr_tnode *node) {
   ctr_object *x;
   ctr_object *result;
   char ret;
-  if (CtrStdFlow == NULL) {
+  if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue) {
     ctr_callstack[ctr_callstack_index++] = assignee;
   }
   ctr_did_side_effect = 0;
@@ -318,7 +318,7 @@ ctr_object *ctr_cwlk_assignment(ctr_tnode *node) {
         x, "unpack:", 7, 2, y,
         ctr_contexts[ctr_context_id]); // hand the block the context
   }
-  if (CtrStdFlow == NULL) {
+  if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue) {
     ctr_callstack_index--;
   }
   return result;
@@ -469,7 +469,7 @@ ctr_object *ctr_cwlk_expr(ctr_tnode *node, char *wasReturn) {
       result = ctr_get_or_create_symbol_table_entry(node->value, node->vlen);
       break;
     }
-    if (CtrStdFlow == NULL) {
+    if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue) {
       ctr_callstack[ctr_callstack_index++] = node;
     }
     if (node->vlen == 1 && '?' == *node->value) {
@@ -480,7 +480,7 @@ ctr_object *ctr_cwlk_expr(ctr_tnode *node, char *wasReturn) {
       result = ctr_find_in_my(ctr_build_string(node->value, node->vlen));
     } else
       result = ctr_find(ctr_build_string(node->value, node->vlen));
-    if (CtrStdFlow == NULL) {
+    if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue) {
       ctr_callstack_index--;
     }
     break;

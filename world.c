@@ -2002,17 +2002,29 @@ void ctr_initialize_world() {
   ctr_internal_create_func(CtrStdNumber,
                            ctr_build_string_from_cstring(CTR_DICT_DIVIDE),
                            &ctr_number_div);
+  ctr_internal_create_func(
+      CtrStdNumber, ctr_build_string_from_cstring("<=>"),
+      &ctr_number_order);
+  ctr_internal_create_func(
+      CtrStdNumber, ctr_build_string_from_cstring("<=>:"),
+      &ctr_number_order);
   ctr_internal_create_func(CtrStdNumber,
                            ctr_build_string_from_cstring(CTR_DICT_GREATER),
                            &ctr_number_higherThan);
   ctr_internal_create_func(
       CtrStdNumber, ctr_build_string_from_cstring(CTR_DICT_GREATER_OR_EQUAL),
       &ctr_number_higherEqThan);
+  ctr_internal_create_func(
+      CtrStdNumber, ctr_build_string_from_cstring(">="),
+      &ctr_number_higherEqThan);
   ctr_internal_create_func(CtrStdNumber,
                            ctr_build_string_from_cstring(CTR_DICT_LESS),
                            &ctr_number_lowerThan);
   ctr_internal_create_func(
       CtrStdNumber, ctr_build_string_from_cstring(CTR_DICT_LESS_OR_EQUAL),
+      &ctr_number_lowerEqThan);
+  ctr_internal_create_func(
+      CtrStdNumber, ctr_build_string_from_cstring("<="),
       &ctr_number_lowerEqThan);
   ctr_internal_create_func(
       CtrStdNumber, ctr_build_string_from_cstring(CTR_DICT_SYMBOL_EQUALS),
@@ -2364,6 +2376,30 @@ void ctr_initialize_world() {
   ctr_internal_create_func(CtrStdString,
                            ctr_build_string_from_cstring(CTR_DICT_UNPACK),
                            &ctr_string_assign);
+  ctr_internal_create_func(CtrStdString,
+                           ctr_build_string_from_cstring(">"),
+                           &ctr_string_lex_gt);
+  ctr_internal_create_func(CtrStdString,
+                           ctr_build_string_from_cstring(">=:"),
+                           &ctr_string_lex_gte);
+  ctr_internal_create_func(CtrStdString,
+                           ctr_build_string_from_cstring(">="),
+                           &ctr_string_lex_gte);
+  ctr_internal_create_func(CtrStdString,
+                           ctr_build_string_from_cstring("<"),
+                           &ctr_string_lex_lt);
+  ctr_internal_create_func(CtrStdString,
+                           ctr_build_string_from_cstring("<=:"),
+                           &ctr_string_lex_lte);
+  ctr_internal_create_func(CtrStdString,
+                           ctr_build_string_from_cstring("<="),
+                           &ctr_string_lex_lte);
+  ctr_internal_create_func(CtrStdString,
+                           ctr_build_string_from_cstring("<=>:"),
+                           &ctr_string_lex_order);
+  ctr_internal_create_func(CtrStdString,
+                           ctr_build_string_from_cstring("<=>"),
+                           &ctr_string_lex_order);
   ctr_internal_object_add_property(
       CtrStdWorld, ctr_build_string_from_cstring(CTR_DICT_STRING), CtrStdString,
       0);

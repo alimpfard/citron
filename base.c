@@ -1572,6 +1572,18 @@ ctr_object *ctr_number_neq(ctr_object *myself, ctr_argument *argumentList) {
 }
 
 /**
+ *[Number] <=> [other]
+ *
+ * Number ordering, 1 if greater, 0 if equal, -1 if smaller
+ */
+ctr_object *ctr_number_order(ctr_object *myself, ctr_argument *argumentList) {
+  CTR_ENSURE_TYPE_NUMBER (argumentList->object);
+  ctr_object *otherNum = ctr_internal_cast2number(argumentList->object);
+  ctr_number fl = myself->value.nvalue - otherNum->value.nvalue;
+  return ctr_build_number_from_float((fl>0)-(fl<0));
+}
+
+/**
  *[Number] between: [low] and: [high]
  *
  * Returns True if the number instance has a value between the two
@@ -2757,6 +2769,69 @@ ctr_object *ctr_string_neq(ctr_object *myself, ctr_argument *argumentList) {
   return ctr_build_bool(
       !(strncmp(other->value.svalue->value, myself->value.svalue->value,
                 myself->value.svalue->vlen) == 0));
+}
+
+/**
+ *[String] < [other]
+ *
+ * string lexical ordering.
+ */
+ctr_object *ctr_string_lex_lt(ctr_object *myself, ctr_argument *argumentList) {
+  ctr_object *other = ctr_internal_cast2string(argumentList->object);
+  return ctr_build_bool(
+      (strncmp(other->value.svalue->value, myself->value.svalue->value,
+               myself->value.svalue->vlen) > 0));
+}
+
+/**
+ *[String] <= [other]
+ *
+ * string lexical ordering.
+ * alias: `<=:'
+ */
+ctr_object *ctr_string_lex_lte(ctr_object *myself, ctr_argument *argumentList) {
+  ctr_object *other = ctr_internal_cast2string(argumentList->object);
+  return ctr_build_bool(
+      (strncmp(other->value.svalue->value, myself->value.svalue->value,
+               myself->value.svalue->vlen) >= 0));
+}
+
+/**
+ *[String] > [other]
+ *
+ * string lexical ordering.
+ */
+ctr_object *ctr_string_lex_gt(ctr_object *myself, ctr_argument *argumentList) {
+  ctr_object *other = ctr_internal_cast2string(argumentList->object);
+  return ctr_build_bool(
+      (strncmp(other->value.svalue->value, myself->value.svalue->value,
+               myself->value.svalue->vlen) < 0));
+}
+
+/**
+ *[String] >= [other]
+ *
+ * string lexical ordering.
+ * alias: `>=:'
+ */
+ctr_object *ctr_string_lex_gte(ctr_object *myself, ctr_argument *argumentList) {
+  ctr_object *other = ctr_internal_cast2string(argumentList->object);
+  return ctr_build_bool(
+      (strncmp(other->value.svalue->value, myself->value.svalue->value,
+               myself->value.svalue->vlen) <= 0));
+}
+
+/**
+ * [String] <=> [other]
+ *
+ * string lexical ordering.
+ * alias: `<=>:'
+ */
+ctr_object *ctr_string_lex_order(ctr_object *myself, ctr_argument *argumentList) {
+  ctr_object *other = ctr_internal_cast2string(argumentList->object);
+  return ctr_build_number_from_float(
+      (strncmp(other->value.svalue->value, myself->value.svalue->value,
+               myself->value.svalue->vlen)));
 }
 
 /**

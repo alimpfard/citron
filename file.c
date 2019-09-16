@@ -918,6 +918,7 @@ ctr_object *ctr_file_open(ctr_object *myself, ctr_argument *argumentList) {
  *
  * Closes the file represented by the recipient.
  *
+ * Returns the exit code if the file is created by Shell::'open:mode:'
  * Usage:
  *
  * f := File new: '/path/to/file.txt'.
@@ -930,9 +931,9 @@ ctr_object *ctr_file_close(ctr_object *myself, ctr_argument *argumentList) {
   if (myself->value.rvalue == NULL)
     return myself;
   if (myself->value.rvalue->type == 2) {
-    pclose((FILE *)myself->value.rvalue->ptr);
+    int res = pclose((FILE *)myself->value.rvalue->ptr);
     myself->value.rvalue = NULL;
-    return myself;
+    return ctr_build_number_from_float(res);
   }
   if (myself->value.rvalue->type != 1)
     return myself;

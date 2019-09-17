@@ -2481,6 +2481,12 @@ void ctr_initialize_world() {
   ctr_internal_create_func(CtrStdArray,
                            ctr_build_string_from_cstring("newFill:with:"),
                            &ctr_array_alloc);
+  ctr_internal_create_func(CtrStdArray,
+  ctr_build_string_from_cstring("viewFrom:length:"),
+&ctr_array_view);
+  ctr_internal_create_func(CtrStdArray,
+  ctr_build_string_from_cstring("viewFrom:"),
+&ctr_array_view);
   ctr_internal_create_func(
       CtrStdArray, ctr_build_string_from_cstring(CTR_DICT_NEW_ARRAY_AND_PUSH),
       &ctr_array_new_and_push);

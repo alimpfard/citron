@@ -958,6 +958,7 @@ ctr_object* ctr_block_assign(ctr_object* myself, ctr_argument* argumentList);
  */
 ctr_object* ctr_array_new(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_alloc(ctr_object* myself, ctr_argument* argumentList);
+ctr_object *ctr_array_view(ctr_object *myself, ctr_argument *argumentList);
 ctr_object* ctr_array_copy(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_new_and_push(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_type(ctr_object* myself, ctr_argument* argumentList);

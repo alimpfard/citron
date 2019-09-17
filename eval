@@ -329,7 +329,21 @@ Eval on: 'Commands' do: {
       + !cont -- continue
       + !frame [show, all, <id>] -- show frames'
       + '\nUser-defined commands:
-      ' + (Eval userDefs fmap: \:k:v '+ %s -- %s' % [k, v], values join: '\n', or: '-None-').} at: 'h',
+      ' + (Eval userDefs fmap: \:k:v '+ %s -- %s' % [k, v], values join: '\n', or: '-None-')
+      + '\nKeybindings:
+      + tab
+        attempt code completion in edit mode
+      + enter
+        run code if complete, otherwise newline (in edit mode)
+      + <C-c>
+        break out of all blocks if in edit mode
+        interrupt running code if running
+      + <C-d>
+        Immediately exit REPL anywhere in edit mode
+      + <C-l>
+        clear screen in edit mode
+      + F2
+        enter or exit paste mode'.} at: 'h',
       put: {^Eval stopEvalServer.} at: '!server',
       put: {:args ^Reflect getPropertiesOf: (Eval evaluatorObject evaluate: args).} at: '!p',
       put: {:args Eval display/writeln: (Eval evaluatorObject evaluate: args). ^''.} at: 'p',
@@ -1277,7 +1291,7 @@ Eval on: 'complete' do: {
 
 Eval on: 'probeSearch:offset:' do: {:&term:&sindex
   var offset is False.
-  sindex = -1 ifTrue: {
+  (sindex < 0) | (sindex > my history count) ifTrue: {
     sindex -=: sindex.
   }.
   my history viewFrom: sindex, each: {:&off:&entry
@@ -1296,6 +1310,7 @@ Eval on: 'substituteSearchResult' do: {
   clear_next_line[1].
   inp is searchResult.
   cursor is searchResult indexOf: searchTerm.
+  searchIndex is 0.
 }.
 
 Eval on: 'read_eval_print:' do: ({:prompt
@@ -1336,7 +1351,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
   var inc is ''.
   var searchIndex is 0.
   var searchTerm is ''.
-  var searchResult is Nil.
+  var searchResult is ''.
 
   {^done & (inBlock = 0).} whileFalse: {
     cmt is ''.
@@ -1347,27 +1362,29 @@ Eval on: 'read_eval_print:' do: ({:prompt
       }.
       clear_next_line applyTo: linesp.
       inBlock is inBlockNew.
-      have_context ifFalse: {
-        inp is inp findPattern: ?>(?:^\s*((?::{)+)|((?::}\s*)+)\s*$)<? do: {:groups
-          var s is groups at: 0, replace: ':' with: ''.
-          var s0 is s at: 0, = '{' either: 1 or: -1.
-          inBlock is inBlock + (s0 * s length) max: 0.
-          cursor -=: (groups at: 0, length).
-          ^''.
-        }.
-        inp length > 0 ifTrue: {
-          (inp containsPattern: ?>^\s*:[^{}]<?) ifTrue: {
-            done is True.
-          }, else: {
-            (inp containsPattern: ?>\.\s*$<?, not) & (inBlock = 0) ifTrue: {
-              # nothing?
-            }.
-            done is inBlock = 0.
+      (inp !=: '') ifTrue: {
+        have_context ifFalse: {
+          inp is inp findPattern: ?>(?:^\s*((?::{)+)|((?::}\s*)+)\s*$)<? do: {:groups
+            var s is groups at: 0, replace: ':' with: ''.
+            var s0 is s at: 0, = '{' either: 1 or: -1.
+            inBlock is inBlock + (s0 * s length) max: 0.
+            cursor -=: (groups at: 0, length).
+            ^''.
           }.
-          inBlock !=: 0, ifTrue: { Eval newBlock. Pen brk. inp +=: '\n'. inpbrk is inp length. cursor +=: 1.}.
-        }, else: { Pen brk. done is True. }.
+          inp length > 0 ifTrue: {
+            (inp containsPattern: ?>^\s*:[^{}]<?) ifTrue: {
+              done is True.
+            }, else: {
+              (inp containsPattern: ?>\.\s*$<?, not) & (inBlock = 0) ifTrue: {
+                # nothing?
+              }.
+              done is inBlock = 0.
+            }.
+            inBlock !=: 0, ifTrue: { Eval newBlock. Pen brk. inp +=: '\n'. inpbrk is inp length. cursor +=: 1.}.
+          }, else: { Pen brk. done is True. }.
+        }.
+        have_context is False.
       }.
-      have_context is False.
     }, case: '\x3' do: {#<^C>
       Eval getFlag: 'searching', ifTrue: {
         Eval substituteSearchResult.
@@ -1402,6 +1419,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
       } ifFalse: {
         searchTerm is inp + ''.
         searchIndex -=: searchIndex.
+        Pen writeln: searchIndex.
         Eval enableFlag: 'searching'.
       }.
     }, case: '\xc' do: {#^L -- clear screen
@@ -1610,11 +1628,13 @@ Eval on: 'read_eval_print:' do: ({:prompt
   }.
   hindex is Eval getHistory count.
   # Eval display/cyan write: ' [cursor %d in (%s)]' % [cursor, (inp)], resetColor.
-  (inp trim = '') do ifTrue: {
+  (inp trim = '') ifTrue: {
     enterRepeat ifTrue: {
       inp is Eval getHistory or: ['Nil'], head.
+    } ifFalse: {
+        True continue.
     }.
-  }, continue done.
+  }.
   Eval getFlag: 'printvs', ifTrue: { Eval display/brk. }.
   # if it ends in a dot, get rid of it.
   inp is inp trim.

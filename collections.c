@@ -88,7 +88,7 @@ ctr_object *ctr_array_view(ctr_object *myself, ctr_argument *argumentList) {
   if (endo) {
     CTR_ENSURE_TYPE_NUMBER(endo);
   }
-  int start = starto->value.nvalue;
+  int start = starto->value.nvalue + myself->value.avalue->tail;
   if (start < myself->value.avalue->tail ||
       start > myself->value.avalue->head) {
     CtrStdFlow = ctr_build_string_from_cstring("Index out of bounds");

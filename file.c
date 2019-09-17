@@ -392,10 +392,10 @@ ctr_object *ctr_file_tmp(ctr_object *myself, ctr_argument *argumentList) {
   FILE *f;
   int fd = mkstemp(pathString);
   if (fd == -1)
-      goto err;
+    goto err;
   f = fdopen(fd, "rb");
   if (f == NULL) {
-err:;
+  err:;
     char *buf = ctr_heap_allocate(sizeof(char) * 1024);
     sprintf(buf, "%d: %s", fd, strerror(errno));
     CtrStdFlow = ctr_build_string_from_cstring(buf);

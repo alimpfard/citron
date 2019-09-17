@@ -418,8 +418,7 @@ ctr_tlistitem *ctr_cparse_messages(ctr_tnode *r, int mode) {
       if (t != CTR_TOKEN_REF) {
         ctr_cparse_emit_error_unexpected(t, "Expected message.\n");
         if (speculative_parse)
-          if (ctr_clex_inject_token(CTR_TOKEN_REF,
-                                    ctr_clex_tok_value() ?: "?",
+          if (ctr_clex_inject_token(CTR_TOKEN_REF, ctr_clex_tok_value() ?: "?",
                                     ctr_clex_tok_value_length() ?: 11, 11)) {
             ctr_cparse_emit_error_unexpected(
                 t, "Speculative parsing failed, not enough vector space\n");
@@ -1847,8 +1846,7 @@ ctr_tnode *ctr_deep_copy_ast(ctr_tnode *src) {
       nodes->next->node = src->nodes->next->node;
       dst->nodes = nodes;
       return dst;
-    }
-    else if (src->modifier == 1) {
+    } else if (src->modifier == 1) {
       ctr_tlistitem *nodes = ctr_heap_allocate(sizeof *nodes);
       nodes->node = src->nodes->node;
       dst->nodes = nodes;

@@ -31,16 +31,16 @@
 
 int more_exception_data = 1;
 
-__attribute__((always_inline))
-static ctr_object *
-ctr_internal_run_block(ctr_tnode *codeBlockPart2, ctr_object *myself, ctr_object *my) {
+__attribute__((always_inline)) static ctr_object *
+ctr_internal_run_block(ctr_tnode *codeBlockPart2, ctr_object *myself,
+                       ctr_object *my) {
   if (my)
     ctr_assign_value_to_local_by_ref(
         &CTR_CLEX_KW_ME, my); /* me should always point to object, otherwise you
                                  have to store me in self and can't use in if */
   ctr_assign_value_to_local(
       &CTR_CLEX_KW_THIS, myself); /* otherwise running block may get gc'ed. */
-  ctr_object* result = ctr_cwlk_run(codeBlockPart2);
+  ctr_object *result = ctr_cwlk_run(codeBlockPart2);
   if (result == NULL) {
     if (my)
       result = my;
@@ -1577,10 +1577,10 @@ ctr_object *ctr_number_neq(ctr_object *myself, ctr_argument *argumentList) {
  * Number ordering, 1 if greater, 0 if equal, -1 if smaller
  */
 ctr_object *ctr_number_order(ctr_object *myself, ctr_argument *argumentList) {
-  CTR_ENSURE_TYPE_NUMBER (argumentList->object);
+  CTR_ENSURE_TYPE_NUMBER(argumentList->object);
   ctr_object *otherNum = ctr_internal_cast2number(argumentList->object);
   ctr_number fl = myself->value.nvalue - otherNum->value.nvalue;
-  return ctr_build_number_from_float((fl>0)-(fl<0));
+  return ctr_build_number_from_float((fl > 0) - (fl < 0));
 }
 
 /**
@@ -2596,17 +2596,8 @@ ctr_object *ctr_build_string_from_cstring(char *cstring) {
 ctr_object *ctr_build_empty_string() { return ctr_build_string("", 0); }
 
 static const char ascii_escape_names[] = (char[256]){
-    [0x07] = 'a',
-    [0x08] = 'b',
-    [0x0c] = 'f',
-    [0x0a] = 'n',
-    [0x0d] = 'r',
-    [0x09] = 't',
-    [0x5c] = '\\',
-    [0x27] = '\'',
-    [0x22] = '"',
-    [0x3f] = '?'
-  };
+    [0x07] = 'a', [0x08] = 'b',  [0x0c] = 'f',  [0x0a] = 'n', [0x0d] = 'r',
+    [0x09] = 't', [0x5c] = '\\', [0x27] = '\'', [0x22] = '"', [0x3f] = '?'};
 /**
  * [String] escape: '\n'.
  *
@@ -2827,7 +2818,8 @@ ctr_object *ctr_string_lex_gte(ctr_object *myself, ctr_argument *argumentList) {
  * string lexical ordering.
  * alias: `<=>:'
  */
-ctr_object *ctr_string_lex_order(ctr_object *myself, ctr_argument *argumentList) {
+ctr_object *ctr_string_lex_order(ctr_object *myself,
+                                 ctr_argument *argumentList) {
   ctr_object *other = ctr_internal_cast2string(argumentList->object);
   return ctr_build_number_from_float(
       (strncmp(other->value.svalue->value, myself->value.svalue->value,
@@ -5522,8 +5514,8 @@ void ctr_capture_refs_(ctr_tnode *ti, ctr_object *block, ctr_object *parent,
         CtrStdFlow = NULL;
       } else {
         t->modifier = 2;
-        ctr_tlistitem* nl = ctr_heap_allocate(sizeof *nl);
-        nl->node = (ctr_tnode*) p;
+        ctr_tlistitem *nl = ctr_heap_allocate(sizeof *nl);
+        nl->node = (ctr_tnode *)p;
         t->nodes->next = nl;
       }
       break;
@@ -6047,7 +6039,9 @@ ctr_object *ctr_block_while_true(ctr_object *myself,
     ctr_contexts[++ctr_context_id] = myself;
   else
     ctr_open_context();
-  while (!CtrStdFlow && ctr_internal_cast2bool(ctr_internal_run_block(block0, myself, block))->value.bvalue) {
+  while (!CtrStdFlow &&
+         ctr_internal_cast2bool(ctr_internal_run_block(block0, myself, block))
+             ->value.bvalue) {
     ctr_internal_run_block(block1, runblock, runblock);
   }
   ctr_close_context();
@@ -6082,7 +6076,9 @@ ctr_object *ctr_block_while_false(ctr_object *myself,
     ctr_contexts[++ctr_context_id] = myself;
   else
     ctr_open_context();
-  while (!CtrStdFlow && !ctr_internal_cast2bool(ctr_internal_run_block(block0, myself, block))->value.bvalue) {
+  while (!CtrStdFlow &&
+         !ctr_internal_cast2bool(ctr_internal_run_block(block0, myself, block))
+              ->value.bvalue) {
     ctr_internal_run_block(block1, runblock, runblock);
   }
   ctr_close_context();

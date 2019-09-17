@@ -61,13 +61,15 @@ ctr_object *ctr_cwlk_message(ctr_tnode *paramNode) {
   case CTR_AST_NODE_REFERENCE:
     recipientName = ctr_build_string(receiverNode->value, receiverNode->vlen);
     recipientName->info.sticky = 1;
-    if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue) {
+    if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak ||
+        CtrStdFlow == CtrStdContinue) {
       ctr_callstack[ctr_callstack_index++] = receiverNode;
     }
     if (strcmp(receiverNode->value, "?") == 0) {
       // this is a "hole"
       // mark it as such, return Nil
-      is_hole = 1 + (receiverNode->modifier == 1 || receiverNode->modifier == 3);
+      is_hole =
+          1 + (receiverNode->modifier == 1 || receiverNode->modifier == 3);
       r = CtrStdNil;
       break;
     }
@@ -76,7 +78,8 @@ ctr_object *ctr_cwlk_message(ctr_tnode *paramNode) {
     } else {
       r = ctr_find(recipientName);
     }
-    if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue) {
+    if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak ||
+        CtrStdFlow == CtrStdContinue) {
       ctr_callstack_index--;
     }
     if (!r) {
@@ -99,14 +102,14 @@ ctr_object *ctr_cwlk_message(ctr_tnode *paramNode) {
     r = ctr_build_number_from_string(receiverNode->value, receiverNode->vlen);
     break;
   case CTR_AST_NODE_EMBED:
-    switch(receiverNode->modifier) {
-      case 0:
+    switch (receiverNode->modifier) {
+    case 0:
       result = r = ctr_cwlk_expr(receiverNode->nodes->node, "\0");
       break;
-      case 1:
+    case 1:
       result = r = (ctr_object *)receiverNode->nodes->node;
       break;
-      case 2:
+    case 2:
       result = r = (ctr_object *)receiverNode->nodes->next->node;
       break;
     }
@@ -143,7 +146,8 @@ ctr_object *ctr_cwlk_message(ctr_tnode *paramNode) {
     msgnode = li->node;
     message = msgnode->value;
     l = msgnode->vlen;
-    if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue) {
+    if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak ||
+        CtrStdFlow == CtrStdContinue) {
       ctr_callstack[ctr_callstack_index++] = msgnode;
     }
     argumentList = msgnode->nodes;
@@ -170,36 +174,38 @@ ctr_object *ctr_cwlk_message(ctr_tnode *paramNode) {
     if (is_hole) {
       ctr_object *msg = ctr_build_string(message, l);
       if (strncmp(message, "?:", 2) == 0)
-          is_hole |= 4;
-      ctr_object* candidates = ctr_resolve_constraints_for_hole(
-              msg,
-              is_hole&4?a:NULL,
-              is_hole&0x2?ctr_find(&CTR_CLEX_KW_ME):NULL
-      );
+        is_hole |= 4;
+      ctr_object *candidates = ctr_resolve_constraints_for_hole(
+          msg, is_hole & 4 ? a : NULL,
+          is_hole & 0x2 ? ctr_find(&CTR_CLEX_KW_ME) : NULL);
       if (ctr_array_count(candidates, NULL)->value.nvalue > 0) {
         if (autofillHoles->value) {
           // actually just guess (I lie, pick the first)
-          if (is_hole&2)
+          if (is_hole & 2)
             r = ctr_find_in_my(ctr_array_head(candidates, NULL));
           else
             r = ctr_find_(ctr_array_head(candidates, NULL), 0);
 
         } else
-          CtrStdFlow = ctr_format_str("EHole encountered in program with constraint: `%S'\n"
-                                      "Matching objects in the context are:\n"
-                                      "%S",
-                                      msg,
-                                      ctr_array_join(candidates, &(ctr_argument) {
-                                          ctr_build_string_from_cstring(", "), 0
-                                       }));
+          CtrStdFlow = ctr_format_str(
+              "EHole encountered in program with constraint: `%S'\n"
+              "Matching objects in the context are:\n"
+              "%S",
+              msg,
+              ctr_array_join(
+                  candidates,
+                  &(ctr_argument){ctr_build_string_from_cstring(", "), 0}));
       } else
-        CtrStdFlow = ctr_format_str("EHole encountered in program with constraint `%S' but nothing could satisfy that",
-                                    msg);
+        CtrStdFlow =
+            ctr_format_str("EHole encountered in program with constraint `%S' "
+                           "but nothing could satisfy that",
+                           msg);
     }
-    result = is_hole&4 ? r : ctr_send_message(r, message, l, a);
+    result = is_hole & 4 ? r : ctr_send_message(r, message, l, a);
     is_hole = 0;
     aItem = a;
-    if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue) {
+    if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak ||
+        CtrStdFlow == CtrStdContinue) {
       ctr_callstack_index--;
     }
     while (aItem->next) {
@@ -240,7 +246,8 @@ ctr_object *ctr_cwlk_assignment(ctr_tnode *node) {
   ctr_object *x;
   ctr_object *result;
   char ret;
-  if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue) {
+  if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak ||
+      CtrStdFlow == CtrStdContinue) {
     ctr_callstack[ctr_callstack_index++] = assignee;
   }
   ctr_did_side_effect = 0;
@@ -318,7 +325,8 @@ ctr_object *ctr_cwlk_assignment(ctr_tnode *node) {
         x, "unpack:", 7, 2, y,
         ctr_contexts[ctr_context_id]); // hand the block the context
   }
-  if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue) {
+  if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak ||
+      CtrStdFlow == CtrStdContinue) {
     ctr_callstack_index--;
   }
   return result;
@@ -328,7 +336,7 @@ void execute_if_quote(ctr_tnode *node) {
   if (node->type == CTR_AST_NODE_EMBED) {
     if (node->modifier == 0) {
       node->modifier = 2;
-      ctr_tlistitem* nl = ctr_heap_allocate(sizeof *nl);
+      ctr_tlistitem *nl = ctr_heap_allocate(sizeof *nl);
       nl->node = (ctr_tnode *)ctr_cwlk_expr(node->nodes->node, "");
       node->nodes->next = nl;
       return;
@@ -401,7 +409,7 @@ void reset_quote(ctr_tnode *node) {
   }
 }
 
-extern ctr_tnode *ctr_deep_copy_ast(ctr_tnode*);
+extern ctr_tnode *ctr_deep_copy_ast(ctr_tnode *);
 /**
  * CTRWalkerExpression
  *
@@ -433,7 +441,7 @@ ctr_object *ctr_cwlk_expr(ctr_tnode *node, char *wasReturn) {
   case CTR_AST_NODE_INSTRLIST: {
     ctr_tlistitem *fnode = node->nodes;
     char wasret = 0;
-    while(fnode) {
+    while (fnode) {
       if (fnode->node) {
         result = ctr_cwlk_expr(fnode->node, &wasret);
         if (wasret || ctr_internal_next_return) {
@@ -469,18 +477,21 @@ ctr_object *ctr_cwlk_expr(ctr_tnode *node, char *wasReturn) {
       result = ctr_get_or_create_symbol_table_entry(node->value, node->vlen);
       break;
     }
-    if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue) {
+    if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak ||
+        CtrStdFlow == CtrStdContinue) {
       ctr_callstack[ctr_callstack_index++] = node;
     }
     if (node->vlen == 1 && '?' == *node->value) {
-        CtrStdFlow = ctr_format_str("EHole encountered in program without any constraint");
-        result = CtrStdNil;
+      CtrStdFlow =
+          ctr_format_str("EHole encountered in program without any constraint");
+      result = CtrStdNil;
     }
     if (node->modifier == 1 || node->modifier == 3) {
       result = ctr_find_in_my(ctr_build_string(node->value, node->vlen));
     } else
       result = ctr_find(ctr_build_string(node->value, node->vlen));
-    if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue) {
+    if (CtrStdFlow == NULL || CtrStdFlow == CtrStdBreak ||
+        CtrStdFlow == CtrStdContinue) {
       ctr_callstack_index--;
     }
     break;

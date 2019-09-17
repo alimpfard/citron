@@ -1329,8 +1329,9 @@ void ctr_print_context(ctr_object *context) {
     return;
   }
   ctr_mapitem *head = pp->head;
-  while(head) {
-    fprintf(stderr, "\t%.*s (%lu) = %p\n", head->key->value.svalue->vlen, head->key->value.svalue->value, head->hashKey, head->value);
+  while (head) {
+    fprintf(stderr, "\t%.*s (%lu) = %p\n", head->key->value.svalue->vlen,
+            head->key->value.svalue->value, head->hashKey, head->value);
     head = head->next;
   }
   fprintf(stderr, "}\n");
@@ -2002,30 +2003,26 @@ void ctr_initialize_world() {
   ctr_internal_create_func(CtrStdNumber,
                            ctr_build_string_from_cstring(CTR_DICT_DIVIDE),
                            &ctr_number_div);
-  ctr_internal_create_func(
-      CtrStdNumber, ctr_build_string_from_cstring("<=>"),
-      &ctr_number_order);
-  ctr_internal_create_func(
-      CtrStdNumber, ctr_build_string_from_cstring("<=>:"),
-      &ctr_number_order);
+  ctr_internal_create_func(CtrStdNumber, ctr_build_string_from_cstring("<=>"),
+                           &ctr_number_order);
+  ctr_internal_create_func(CtrStdNumber, ctr_build_string_from_cstring("<=>:"),
+                           &ctr_number_order);
   ctr_internal_create_func(CtrStdNumber,
                            ctr_build_string_from_cstring(CTR_DICT_GREATER),
                            &ctr_number_higherThan);
   ctr_internal_create_func(
       CtrStdNumber, ctr_build_string_from_cstring(CTR_DICT_GREATER_OR_EQUAL),
       &ctr_number_higherEqThan);
-  ctr_internal_create_func(
-      CtrStdNumber, ctr_build_string_from_cstring(">="),
-      &ctr_number_higherEqThan);
+  ctr_internal_create_func(CtrStdNumber, ctr_build_string_from_cstring(">="),
+                           &ctr_number_higherEqThan);
   ctr_internal_create_func(CtrStdNumber,
                            ctr_build_string_from_cstring(CTR_DICT_LESS),
                            &ctr_number_lowerThan);
   ctr_internal_create_func(
       CtrStdNumber, ctr_build_string_from_cstring(CTR_DICT_LESS_OR_EQUAL),
       &ctr_number_lowerEqThan);
-  ctr_internal_create_func(
-      CtrStdNumber, ctr_build_string_from_cstring("<="),
-      &ctr_number_lowerEqThan);
+  ctr_internal_create_func(CtrStdNumber, ctr_build_string_from_cstring("<="),
+                           &ctr_number_lowerEqThan);
   ctr_internal_create_func(
       CtrStdNumber, ctr_build_string_from_cstring(CTR_DICT_SYMBOL_EQUALS),
       &ctr_number_eq);
@@ -2376,29 +2373,21 @@ void ctr_initialize_world() {
   ctr_internal_create_func(CtrStdString,
                            ctr_build_string_from_cstring(CTR_DICT_UNPACK),
                            &ctr_string_assign);
-  ctr_internal_create_func(CtrStdString,
-                           ctr_build_string_from_cstring(">"),
+  ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring(">"),
                            &ctr_string_lex_gt);
-  ctr_internal_create_func(CtrStdString,
-                           ctr_build_string_from_cstring(">=:"),
+  ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring(">=:"),
                            &ctr_string_lex_gte);
-  ctr_internal_create_func(CtrStdString,
-                           ctr_build_string_from_cstring(">="),
+  ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring(">="),
                            &ctr_string_lex_gte);
-  ctr_internal_create_func(CtrStdString,
-                           ctr_build_string_from_cstring("<"),
+  ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring("<"),
                            &ctr_string_lex_lt);
-  ctr_internal_create_func(CtrStdString,
-                           ctr_build_string_from_cstring("<=:"),
+  ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring("<=:"),
                            &ctr_string_lex_lte);
-  ctr_internal_create_func(CtrStdString,
-                           ctr_build_string_from_cstring("<="),
+  ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring("<="),
                            &ctr_string_lex_lte);
-  ctr_internal_create_func(CtrStdString,
-                           ctr_build_string_from_cstring("<=>:"),
+  ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring("<=>:"),
                            &ctr_string_lex_order);
-  ctr_internal_create_func(CtrStdString,
-                           ctr_build_string_from_cstring("<=>"),
+  ctr_internal_create_func(CtrStdString, ctr_build_string_from_cstring("<=>"),
                            &ctr_string_lex_order);
   ctr_internal_object_add_property(
       CtrStdWorld, ctr_build_string_from_cstring(CTR_DICT_STRING), CtrStdString,
@@ -2482,11 +2471,10 @@ void ctr_initialize_world() {
                            ctr_build_string_from_cstring("newFill:with:"),
                            &ctr_array_alloc);
   ctr_internal_create_func(CtrStdArray,
-  ctr_build_string_from_cstring("viewFrom:length:"),
-&ctr_array_view);
-  ctr_internal_create_func(CtrStdArray,
-  ctr_build_string_from_cstring("viewFrom:"),
-&ctr_array_view);
+                           ctr_build_string_from_cstring("viewFrom:length:"),
+                           &ctr_array_view);
+  ctr_internal_create_func(
+      CtrStdArray, ctr_build_string_from_cstring("viewFrom:"), &ctr_array_view);
   ctr_internal_create_func(
       CtrStdArray, ctr_build_string_from_cstring(CTR_DICT_NEW_ARRAY_AND_PUSH),
       &ctr_array_new_and_push);
@@ -4540,79 +4528,83 @@ ctr_object *ctr_internal_find_overload(ctr_object *original,
   return original;
 }
 
-int ctr_is_linked_to(ctr_object *a, ctr_object* b) {
-    if (!a)
-        return 0;
-    if (!b)
-        return 1;
-    if (a == b)
-        return 1;
-    if (!a->interfaces || !a->interfaces->link)
-        return 0;
-    if (a->interfaces->link == b)
-        return 1;
-    return ctr_is_linked_to(a->interfaces->link, b);
+int ctr_is_linked_to(ctr_object *a, ctr_object *b) {
+  if (!a)
+    return 0;
+  if (!b)
+    return 1;
+  if (a == b)
+    return 1;
+  if (!a->interfaces || !a->interfaces->link)
+    return 0;
+  if (a->interfaces->link == b)
+    return 1;
+  return ctr_is_linked_to(a->interfaces->link, b);
 }
 
-ctr_object *ctr_resolve_constraints_for_hole(ctr_object *message, ctr_argument *constraints, ctr_object *context) {
+ctr_object *ctr_resolve_constraints_for_hole(ctr_object *message,
+                                             ctr_argument *constraints,
+                                             ctr_object *context) {
   ctr_object *candidates = ctr_array_new(CtrStdArray, NULL);
-  ctr_argument arg = {0,0};
+  ctr_argument arg = {0, 0};
   ctr_argument *argp = &arg;
   int entered = 0, fail = 0;
   int extra_constraints = !!constraints;
   if (context)
-      goto searchone;
+    goto searchone;
   // go over all the currently available objects and find the ones that satisfy
   // the given constraint
-  for (int scopeid=ctr_context_id; scopeid >= 0; scopeid--) {
+  for (int scopeid = ctr_context_id; scopeid >= 0; scopeid--) {
     entered = 1;
     context = ctr_contexts[scopeid];
-searchone:;
+  searchone:;
     ctr_map *items = context->properties;
     if (items->size < 1)
       continue;
     ctr_mapitem *head = items->head;
     while (head) {
-      if (extra_constraints || ctr_internal_has_responder(head->value, message)) {
+      if (extra_constraints ||
+          ctr_internal_has_responder(head->value, message)) {
         // a candidate!
         if (unlikely(extra_constraints)) {
-            fail = 0;
-            // check for extra stuff
-            // every argument is a method constraint if
-            // it's a string
-            ctr_argument *cargs = constraints;
-            while(cargs) {
-                ctr_object *obj = cargs->object;
-                if (obj->interfaces && obj->interfaces->link == CtrStdString) {
-                    if (!ctr_internal_has_responder(head->value, obj)) {
-                        fail = 1;
-                        break;
-                    }
-                } else {
-                    if (!ctr_is_linked_to(head->value, obj)) {
-                        fail = 1;
-                        break;
-                    }
-                }
-                cargs = cargs->next;
-                while (cargs && (cargs->object == CtrStdNil || cargs->object == NULL))
-                    cargs = cargs->next;
+          fail = 0;
+          // check for extra stuff
+          // every argument is a method constraint if
+          // it's a string
+          ctr_argument *cargs = constraints;
+          while (cargs) {
+            ctr_object *obj = cargs->object;
+            if (obj->interfaces && obj->interfaces->link == CtrStdString) {
+              if (!ctr_internal_has_responder(head->value, obj)) {
+                fail = 1;
+                break;
+              }
+            } else {
+              if (!ctr_is_linked_to(head->value, obj)) {
+                fail = 1;
+                break;
+              }
             }
-            if (fail) {
-                head = head->next;
-                continue;
-            }
+            cargs = cargs->next;
+            while (cargs &&
+                   (cargs->object == CtrStdNil || cargs->object == NULL))
+              cargs = cargs->next;
+          }
+          if (fail) {
+            head = head->next;
+            continue;
+          }
         }
         arg.object = head->key; // store the name
         candidates = ctr_array_push(candidates, argp);
         if (autofillHoles->value)
-            return candidates; // just one is enough
+          return candidates; // just one is enough
         // let's continue now
       }
       head = head->next;
     }
     if (unlikely(!entered))
-        break;
+      break;
   }
   return candidates;
 }

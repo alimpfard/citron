@@ -207,7 +207,7 @@ ctr_object *ctr_ast_nth(ctr_object *myself, ctr_argument *argumentList) {
 
   if (node->type == CTR_AST_NODE_EMBED && node->modifier == 2 && n == 1) {
     // wants the value
-    return (ctr_object *) (node->nodes->next->node);
+    return (ctr_object *)(node->nodes->next->node);
   }
   ctr_tlistitem *pitem = node->nodes;
   while (n) {

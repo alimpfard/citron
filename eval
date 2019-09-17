@@ -40,7 +40,7 @@ import
   Library/Functional/LazyBoolean: ['and', 'or']
   Library/Prelude: \*
   Library/Data/Array/LRArray: 'LRArray'
-  Library/Utils/CLIContextMenu: ['generate_context_menu', 'clear_next_line', 'write_next_line']
+  Library/Utils/CLIContextMenu: ['generate_context_menu', 'clear_next_line', 'write_next_line', 'move_cursor']
   Library/Data/IO/Pen: 'pPen'.
 
 #:declare lazyev or
@@ -1290,6 +1290,14 @@ Eval on: 'probeSearch:offset:' do: {:&term:&sindex
   ^offset.
 }.
 
+Eval on: 'substituteSearchResult' do: {
+  Eval disableFlag: 'searching'.
+  Eval disableFlag: 'searchfailed'.
+  clear_next_line[1].
+  inp is searchResult.
+  cursor is searchResult indexOf: searchTerm.
+}.
+
 Eval on: 'read_eval_print:' do: ({:prompt
   var hindex is me getHistory count.
   var ncmessage is ' <- No completion'.
@@ -1335,10 +1343,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
     var select_toplevel_inc is (frozen select_toplevel_inc is Object
      case: '\xd' do: {#<Enter>
       Eval getFlag: 'searching', ifTrue: {
-        Eval disableFlag: 'searching'.
-        Eval disableFlag: 'searchfailed'.
-        clear_next_line[1].
-        inp is searchResult.
+        Eval substituteSearchResult.
       }.
       clear_next_line applyTo: linesp.
       inBlock is inBlockNew.
@@ -1364,16 +1369,19 @@ Eval on: 'read_eval_print:' do: ({:prompt
       }.
       have_context is False.
     }, case: '\x3' do: {#<^C>
-      Eval disableFlag: 'searching'.
-      Eval disableFlag: 'searchfailed'.
-      clear_next_line applyTo: linesp. have_context is False.
-      inp is ''.
-      cursor is 0.
-      inBlock is 0.
-      inBlockNew is 0.
-      cmt is '<Broke block>'.
-      # Pen red writeln: 'Interrupted', resetColor.
-      # done is True.
+      Eval getFlag: 'searching', ifTrue: {
+        Eval substituteSearchResult.
+        cmt is '<Cancelled search>'.
+      } ifFalse: {
+        clear_next_line applyTo: linesp. have_context is False.
+        inp is ''.
+        cursor is 0.
+        inBlock is 0.
+        inBlockNew is 0.
+        cmt is '<Broke block>'.
+        # Pen red writeln: 'Interrupted', resetColor.
+        # done is True.
+      }.
     }, case: '\x4' do: {#^D
       Program exit.
     }, case: '\x12' do: {#^R -- backwards-search
@@ -1420,14 +1428,15 @@ Eval on: 'read_eval_print:' do: ({:prompt
         cursor -=: 1.
         Eval display/write: '\b \b'.
       }, else: { Eval display/write: '\a'. }.
-    }, case: '\x11' do: {
+    }, case: '\x13' do: {
       var toc is (inp trim or: '  ') split: ' ', last.
       var recs is '%:L' % [' ', (Eval allTheNames filter: {:_:n ^n startsWith: toc.})].
       Eval display/cyan write: recs, resetColor.
       clear_next_line applyTo: linesp. have_context is False.
     }, case: '\x1b' do: { #<esc>
-      Eval disableFlag: 'searching'.
-      Eval disableFlag: 'searchfailed'.
+      Eval getFlag: 'searching', ifTrue: {
+        Eval substituteSearchResult.
+      }.
       # Eval redraw: inp at: cursor - 1 comment: '<escape>'.
       inc is stdin readUTF8Bytes: 1.
       (frozen select_inlevel_t is
@@ -1521,7 +1530,12 @@ Eval on: 'read_eval_print:' do: ({:prompt
             inString ifTrue: {
               lastEscape is lastEscape not.
               justInEscape is True.
-            }.
+            }.        clear_next_line[1].
+        Eval disableFlag: 'searching'.
+        Eval disableFlag: 'searchfailed'.
+        inp is searchTerm.
+        cursor is inp length.
+
           },
           case: '#' do: {
             inString ifFalse: {
@@ -1586,6 +1600,7 @@ Eval on: 'read_eval_print:' do: ({:prompt
         searchResult is ''.
       }.
       Eval redraw: searchResult at: 0 comment: (inBlock either: '%s%d' % ['%{', inBlock] or: cmt).
+      move_cursor[0, (searchResult indexOf: searchTerm)].
       write_next_line['search> ' + searchTerm].
     }.
     # Eval display/write: inc toByteArray.

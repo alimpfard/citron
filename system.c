@@ -1167,27 +1167,36 @@ ctr_object *ctr_command_waitforinput(ctr_object *myself,
 }
 
 /**
- * [Program] getCharacter
+ * [Program] getCharacter [: [Boolean:ignore_eof]]
  *
  * reads a character from STDIN.
  * Will only return after reading one ASCII character and a return.
+ * if ignore_eof is False, will not wait for an actual char and return 0
  */
 ctr_object *ctr_command_getc(ctr_object *myself, ctr_argument *argumentList) {
   ctr_check_permission(CTR_SECPRO_COUNTDOWN);
   ctr_did_side_effect = 1;
-  // char c;
-  char c;
+  char c = 0;
 #ifdef withTermios
-  tcgetattr(STDIN_FILENO, &oldTermios);
+  if (tcgetattr(STDIN_FILENO, &oldTermios) < 0)
+      goto end;
   newTermios = oldTermios;
-  cfmakeraw(&newTermios);
-  tcsetattr(STDIN_FILENO, TCSANOW, &newTermios);
+  // cfmakeraw(&newTermios);
+  newTermios.c_lflag &= ~(ICANON | ECHO | ISIG);
+  newTermios.c_cc[VMIN] = 1;
+  newTermios.c_cc[VTIME] = 0;
+  if (tcsetattr(STDIN_FILENO, TCSANOW, &newTermios) < 0)
+      goto end;
 #endif
-  while ((c = fgetc(stdin)) == EOF)
-    ;
+  if (read(STDIN_FILENO, &c, 1) == 1)
+      c = (int)(0xff & c);
+  else
+      c = EOF;
 #ifdef withTermios
   tcsetattr(STDIN_FILENO, TCSANOW, &oldTermios);
 #endif
+  if (c == EOF) c = 0;
+end:
   return ctr_build_string(&c, 1);
 }
 

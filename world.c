@@ -2400,6 +2400,9 @@ void ctr_initialize_world() {
                            ctr_build_string_from_cstring(CTR_DICT_RUN),
                            &ctr_block_runIt);
   ctr_internal_create_func(CtrStdBlock,
+                           ctr_build_string_from_cstring("jump"),
+                           &ctr_block_goto);
+  ctr_internal_create_func(CtrStdBlock,
                            ctr_build_string_from_cstring("specialize:with:"),
                            &ctr_block_specialise);
   ctr_internal_create_func(CtrStdBlock,

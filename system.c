@@ -1179,23 +1179,24 @@ ctr_object *ctr_command_getc(ctr_object *myself, ctr_argument *argumentList) {
   char c = 0;
 #ifdef withTermios
   if (tcgetattr(STDIN_FILENO, &oldTermios) < 0)
-      goto end;
+    goto end;
   newTermios = oldTermios;
   // cfmakeraw(&newTermios);
   newTermios.c_lflag &= ~(ICANON | ECHO | ISIG);
   newTermios.c_cc[VMIN] = 1;
   newTermios.c_cc[VTIME] = 0;
   if (tcsetattr(STDIN_FILENO, TCSANOW, &newTermios) < 0)
-      goto end;
+    goto end;
 #endif
   if (read(STDIN_FILENO, &c, 1) == 1)
-      c = (int)(0xff & c);
+    c = (int)(0xff & c);
   else
-      c = EOF;
+    c = EOF;
 #ifdef withTermios
   tcsetattr(STDIN_FILENO, TCSANOW, &oldTermios);
 #endif
-  if (c == EOF) c = 0;
+  if (c == EOF)
+    c = 0;
 end:
   return ctr_build_string(&c, 1);
 }

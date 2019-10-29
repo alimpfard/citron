@@ -586,8 +586,7 @@ ctr_object *ctr_cwlk_expr(ctr_tnode *node, char *wasReturn) {
  * Processes the execution of a block of code.
  */
 
-__attribute__((always_inline))
-ctr_object *ctr_cwlk_run(ctr_tnode *program) {
+__attribute__((always_inline)) ctr_object *ctr_cwlk_run(ctr_tnode *program) {
   ctr_cwlk_msg_level++;
   ctr_object *result = NULL;
   char wasReturn = 0;

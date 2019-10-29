@@ -6127,7 +6127,7 @@ ctr_object *ctr_block_runIt(ctr_object *myself, ctr_argument *argumentList) {
   return result;
 }
 
-ctr_object *ctr_block_goto(ctr_object *myself, ctr_argument *argumentList) { 
+ctr_object *ctr_block_goto(ctr_object *myself, ctr_argument *argumentList) {
   return ctr_cwlk_run(myself->value.block->nodes->next->node) ?: myself;
 }
 

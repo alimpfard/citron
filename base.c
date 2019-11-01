@@ -1139,7 +1139,7 @@ ctr_object *ctr_bool_if_true(ctr_object *myself, ctr_argument *argumentList) {
     }
     return myself;
   }
-  if (CtrStdFlow == CtrStdBreak)
+  if (CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
     CtrStdFlow = NULL; /* consume break */
   return myself;
 }
@@ -1169,7 +1169,7 @@ ctr_object *ctr_bool_if_false(ctr_object *myself, ctr_argument *argumentList) {
     }
     return myself;
   }
-  if (CtrStdFlow == CtrStdBreak)
+  if (CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
     CtrStdFlow = NULL; /* consume break */
   return myself;
 }
@@ -1199,7 +1199,7 @@ ctr_object *ctr_bool_if_tf(ctr_object *myself, ctr_argument *argumentList) {
     }
     return myself;
   }
-  if (CtrStdFlow == CtrStdBreak)
+  if (CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
     CtrStdFlow = NULL; /* consume break */
   return myself;
 }
@@ -1602,7 +1602,7 @@ ctr_object *ctr_number_between(ctr_object *myself, ctr_argument *argumentList) {
 }
 
 /**
- *[Number] odd
+ *[Number] odd?
  *
  * Returns True if the number is odd and False otherwise.
  */
@@ -1613,7 +1613,7 @@ ctr_object *ctr_number_odd(ctr_object *myself, ctr_argument *argumentList) {
 }
 
 /**
- *[Number] even
+ *[Number] even?
  *
  * Returns True if the number is even and False otherwise.
  */
@@ -1950,7 +1950,7 @@ ctr_object *ctr_number_pow(ctr_object *myself, ctr_argument *argumentList) {
 }
 
 /**
- *[Number] pos
+ *[Number] pos?
  *
  * Returns a boolean indicating wether the number is positive.
  * This message will return a boolean object 'True' if the recipient is
@@ -1959,7 +1959,7 @@ ctr_object *ctr_number_pow(ctr_object *myself, ctr_argument *argumentList) {
  * Usage:
  *
  * hope := 0.1.
- * ( hope pos ) ifTrue: { Pen write: 'Still a little hope for humanity'. }.
+ * hope pos? ifTrue: { Pen write: 'Still a little hope for humanity'. }.
  *
  * The example above will print the message because hope is higher than 0.
  */
@@ -1971,7 +1971,7 @@ ctr_object *ctr_number_positive(ctr_object *myself,
 }
 
 /**
- *[Number] neg
+ *[Number] neg?
  *
  * Returns a boolean indicating wether the number is negative.
  * This message will return a boolean object 'True' if the recipient is
@@ -1981,7 +1981,7 @@ ctr_object *ctr_number_positive(ctr_object *myself,
  * Usage:
  *
  * hope := -1.
- * (hope neg) ifTrue: { Pen write: 'No hope left'. }.
+ * (hope neg?) ifTrue: { Pen write: 'No hope left'. }.
  *
  * The example above will print the message because the value of the variable
  * hope is less than 0.
@@ -2842,7 +2842,7 @@ ctr_object *ctr_string_length(ctr_object *myself, ctr_argument *argumentList) {
 }
 
 /**
- *[String] empty
+ *[String] empty?
  *
  * returns whether this string is empty
  */
@@ -6045,7 +6045,7 @@ ctr_object *ctr_block_while_true(ctr_object *myself,
     ctr_internal_run_block(block1, runblock, runblock);
   }
   ctr_close_context();
-  if (CtrStdFlow == CtrStdBreak)
+  if (CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
     CtrStdFlow = NULL; /* consume break */
   return myself;
 }
@@ -6082,7 +6082,7 @@ ctr_object *ctr_block_while_false(ctr_object *myself,
     ctr_internal_run_block(block1, runblock, runblock);
   }
   ctr_close_context();
-  if (CtrStdFlow == CtrStdBreak)
+  if (CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
     CtrStdFlow = NULL; /* consume break */
   return myself;
 }
@@ -6098,7 +6098,7 @@ ctr_object *ctr_block_forever(ctr_object *myself, ctr_argument *argumentList) {
     ctr_internal_run_block(block0, myself, myself);
   }
   ctr_close_context();
-  if (CtrStdFlow == CtrStdBreak)
+  if (CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
     CtrStdFlow = NULL; /* consume break */
   return myself;
 }

@@ -159,6 +159,7 @@
 #define CTR_DICT_ESCAPEQUOTES                                                    "escapeQuotes"
 #define CTR_DICT_ESCAPE_QUOTES                                                   "escapeQuotes"
 #define CTR_DICT_ESCAPE                                                          "escape"
+#define CTR_DICT_ESCAPE_                                                         "escape:"
 #define CTR_DICT_EVAL                                                            "eval"
 #define CTR_DICT_EVEN                                                            "even?"
 #define CTR_DICT_EVERY_DO                                                        "every:do:"

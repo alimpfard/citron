@@ -2147,7 +2147,7 @@ void ctr_initialize_world() {
   // CtrStdString = ctr_internal_create_object(CTR_OBJECT_TYPE_OTSTRING);
   ctr_linkstr();
   ctr_internal_create_func(CtrStdString,
-                           ctr_build_string_from_cstring(CTR_DICT_ESCAPE),
+                           ctr_build_string_from_cstring(CTR_DICT_ESCAPE_),
                            &ctr_string_escape_ascii);
   ctr_internal_create_func(CtrStdString,
                            ctr_build_string_from_cstring(CTR_DICT_ESCAPEASCIICONTROLS),

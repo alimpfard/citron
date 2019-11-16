@@ -1116,8 +1116,8 @@ Eval break ifTrue: { Program exit. }.
     # This will blow up on libffi <3.3
     # investigate (related to #8)
     Signal new
-      handle: 'SIGWINCH' with: winsize,
-      handle: 'SIGINT'   with: stopexec.
+      handle: 'SIGINT'   with: stopexec,
+      handle: 'SIGWINCH' with: winsize.
   }.
 }.
 
@@ -1548,12 +1548,8 @@ Eval on: 'read_eval_print:' do: ({:prompt
             inString ifTrue: {
               lastEscape is lastEscape not.
               justInEscape is True.
-            }.        clear_next_line[1].
-        Eval disableFlag: 'searching'.
-        Eval disableFlag: 'searchfailed'.
-        inp is searchTerm.
-        cursor is inp length.
-
+            }.
+            clear_next_line[1].
           },
           case: '#' do: {
             inString ifFalse: {

@@ -37,6 +37,8 @@ import
   Library/Control/MethodResolve
   Library/Data/String
   Library/Data/IO/UTF-8/input
+  Library/System/File/Temp
+  Library/System/system: { system => Csystem. }
   Library/Functional/LazyBoolean: ['and', 'or']
   Library/Prelude: \*
   Library/Data/Array/LRArray: 'LRArray'
@@ -386,6 +388,18 @@ Eval on: 'Commands' do: {
         }.
         ^''.
       } at: '!step',
+      put: {:argstr
+        import Library/AST/ast2ctrcode: 'ast2ctrcode'.
+        var f is File tempFile: '/tmp/XXXXXX.ctr'.
+        f open: 'w+'.
+        f write: '# Write your code in here\n# and close the editor when done\n'.
+        f close.
+        Csystem['${{Program env: 'EDITOR', or: 'vim'}}$ "${{f path escapeDoubleQuotes}}$"'].
+        var code is AST parse: '{\n' + f read + '\n} run.'.
+        var source is ast2ctrcode[code].
+        Eval pushHist: source.
+        ^Eval evaluatorObject evaluate: (source from: 0 to: source length - 1).
+      } at: 'edit',
       put: {:argstr
         var nth is 0.
         var cmd is 'Nil.'.

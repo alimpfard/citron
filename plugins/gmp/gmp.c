@@ -35,6 +35,8 @@ ctr_object* ctr_gmp_sqrt(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gmp_sqrtrem(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gmp_is_perfect_power(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_gmp_is_perfect_square(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_gmp_to_number(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_gmp_delete(ctr_object* myself, ctr_argument* argumentList);
 
 
 ctr_object* ctr_gmp_make(ctr_object* myself, ctr_argument* argumentList) {
@@ -63,6 +65,10 @@ ctr_object* ctr_gmp_make(ctr_object* myself, ctr_argument* argumentList) {
   return numobj;
 }
 
+ctr_object* ctr_gmp_delete(ctr_object* myself, ctr_argument* argumentList) {
+  mpz_clear((*(mpz_t*)(myself->value.rvalue->ptr)));
+  return CtrStdNil;
+}
 ctr_object* ctr_gmp_set(ctr_object* myself, ctr_argument* argumentList) {
   int number;
   if (argumentList != NULL && argumentList->object != NULL)
@@ -164,6 +170,11 @@ ctr_object* ctr_gmp_nmul(ctr_object* myself, ctr_argument* argumentList) {
     }
   }
   return res;
+}
+
+ctr_object* ctr_gmp_to_number(ctr_object* myself, ctr_argument* argumentList) {
+  if (myself->value.rvalue == NULL || myself->value.rvalue->ptr == NULL) return ctr_build_number_from_float(0);
+  return ctr_build_number_from_float(mpz_get_d(*(mpz_t*)(myself->value.rvalue->ptr)));
 }
 
 ctr_object* ctr_gmp_to_string(ctr_object* myself, ctr_argument* argumentList) {
@@ -344,6 +355,7 @@ void begin() {
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("<=:"), &ctr_gmp_lte);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("times:"), &ctr_gmp_times);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("toString"), &ctr_gmp_to_string);
+  ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("toNumber"), &ctr_gmp_to_number);
 
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("root:"), &ctr_gmp_root);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("root:withRemainderIn:"), &ctr_gmp_rootrem);
@@ -351,6 +363,7 @@ void begin() {
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("sqrtWithRemainderIn:"), &ctr_gmp_sqrtrem);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("isPerfectPower"), &ctr_gmp_is_perfect_power);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("isPerfectSquare"), &ctr_gmp_is_perfect_square);
+  ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("delete"), &ctr_gmp_delete);
 
   ctr_internal_object_add_property(CtrStdWorld, ctr_build_string_from_cstring("BigInteger"), CtrStdBigInt, 0);
 }

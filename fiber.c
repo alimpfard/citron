@@ -64,7 +64,7 @@ typedef struct {
 } fiber;
 
 // The fiber "queue"
-static fiber fiberList[MAX_FIBERS];
+fiber fiberList[MAX_FIBERS];
 
 // The index of the currently executing fiber
 static int currentFiber = -1;

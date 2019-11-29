@@ -121,7 +121,24 @@ import on: 'respondTo:and:' do: {:mods:*names
       names is import __unify: names.
       ^names
         fmap:
-          (\:name name isA: CodeBlock, either: (\:_ import __map2Array: (Map cnew: name)) or: \:_ [[name, name]]),
+          {\:name
+            name isA: CodeBlock, 
+            either: {\
+              # { Ident | Assign[Ident, Ident] }
+              {
+                  var imps is Array new.
+                  var ast is AST fromBlock: name, at: 1.
+                  ast each_v: {:exp
+                    exp type = 'EXPRASSIGNMENT' ifTrue: {
+                      imps push: [(exp @ 0) value, (exp @ 1) value].
+                    } ifFalse: {
+                      imps push: [exp value] * 2.
+                    }.
+                  }.
+                  ^imps.
+              } run
+            } or: {\ [[name, name]] }
+          },
         fmap: \:x (x fmap: {:name
           var p is modv at: name head.
           import export: p as: name last.

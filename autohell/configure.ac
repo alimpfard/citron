@@ -73,6 +73,12 @@ AC_ARG_WITH([no-tls],
               AS_HELP_STRING([--with-no-tls], [Build without threadlocal storage (fucks up threads)]),
               [no_tls=yes],
               [])
+
+AC_ARG_VAR([STD_PATH], [Set Standard Data path])
+AS_IF([test "x$STD_PATH" = "x"], [
+       STD_PATH="../../share/Citron"
+       ])
+
 AS_IF([test "x$no_tls" = "xyes"], [
               CFLAGS+=' -DNO_TLS'
 ])

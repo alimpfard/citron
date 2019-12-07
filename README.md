@@ -30,7 +30,8 @@ clone this repository
 $ git submodule update --init
 $ cd citron/autohell
 $ autoreconf
-$ CFLAGS="-O3" CXXFLAGS="-O3" ./configure --with-inject --with-ffi --with-inlineasm
+$ export prefix="/usr/local/bin"
+$ CFLAGS="-O3" CXXFLAGS="-O3" ./configure STD_PATH="$prefix/../../share/Citron" --prefix=$prefix --with-inject --with-ffi --with-inlineasm
 $ make
 $ make install
 ```

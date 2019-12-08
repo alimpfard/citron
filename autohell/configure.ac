@@ -66,32 +66,35 @@ AC_ARG_WITH([ffi],
               [want_ffi=yes],
               [])
 AC_ARG_WITH([inlineasm],
-              AS_HELP_STRING([--with-inlineasm], [Build with Inline assembly support (requires llvm)]),
+              AS_HELP_STRING([--with-inline-asm], [Build with Inline assembly support (requires llvm)]),
               [want_inlineasm=yes],
               [])
+AC_ARG_WITH([lffi],
+            AS_HELP_STRING([--with-lffi], [Build with the specified ffi library]))
+AC_ARG_WITH([stdpath],
+            AS_HELP_STRING([--with-stdpath], [Set the standard lib path]))
 AC_ARG_WITH([no-tls],
               AS_HELP_STRING([--with-no-tls], [Build without threadlocal storage (fucks up threads)]),
               [no_tls=yes],
               [])
-
-AC_ARG_VAR([STD_PATH], [Set Standard Data path])
-AS_IF([test "x$STD_PATH" = "x"], [
-       STD_PATH="../../share/Citron"
-       ])
-
 AS_IF([test "x$no_tls" = "xyes"], [
               CFLAGS+=' -DNO_TLS'
-])
-AS_IF([test "x$with_ffi" != "xyes"], [
-              lffi=$want_ffi
-])
-AS_IF([test "x$with_ffi" = "xyes"], [
-              lffi=ffi
 ])
 AS_IF([test "x$enable_boehm_gc" = "xyes"], [
        CFLAGS+=" -DwithBoehmGC"
        AC_CHECK_LIB([gc], [GC_free])
 ])
+
+AS_IF([test "x$with_lffi" = "x"], [
+       with_lffi=ffi
+])
+
+AS_IF([test "x$with_stdpath" = "x"], [
+       STD_PATH="../../share/Citron"
+       ])
+AS_IF([test "x$with_stdpath" != "x"], [
+       STD_PATH="$with_stdpath"
+    ])
 
 AC_MSG_CHECKING(inject)
 AS_IF([test "x$want_inject" = "xyes"], [
@@ -105,7 +108,7 @@ AC_MSG_CHECKING(ffi)
 AS_IF([test "x$want_ffi" = "xyes"], [
        CFLAGS+=" -DwithCTypesNative=1"
        MAYBE_FFI=ffi
-       MAYBE_FFI_L=-l$lffi
+       MAYBE_FFI_L=-l$with_lffi
        CTR_MAYBE_FFI="ctypes.c reverse_sizes.h _struct.h structmember.h ctypes.h _struct.c structmember.c"
        ])
 AC_MSG_RESULT($want_ffi)
@@ -117,14 +120,10 @@ AS_IF([test "x$want_inlineasm" = "xyes"], [
        MAYBE_ASM_L=`llvm-config --system-libs --libs core orcjit native`
        CTR_MAYBE_ASM="inline-asm.cpp native-asm.h"
        ])
-AS_IF([test 1 = 1], [
-  BUILD_DIR_L="`pwd`/.."
-  ])
 AC_MSG_RESULT($want_inlineasm)
 AC_SUBST([MAYBE_TCC_L])
 AC_SUBST([MAYBE_FFI_L])
 AC_SUBST([MAYBE_ASM_L])
-AC_SUBST([BUILD_DIR_L])
 AM_CONDITIONAL([WITH_INJECT], [test "x$want_inject" = "xyes"])
 AM_CONDITIONAL([WITH_FFI], [test "x$want_ffi" = "xyes"])
 AM_CONDITIONAL([WITH_INLINEASM], [test "x$want_inlineasm" = "xyes"])

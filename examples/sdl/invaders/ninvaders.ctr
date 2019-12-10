@@ -158,6 +158,7 @@ var Missile is RenderableEntity cnew: {
     }.
     target die.
     self die.
+    missilePool push: self.
     ^ParticleSystem new initAtX: my posX - 15 andY: my posY - 35.
   }.
   on: 'toString' do: {
@@ -207,12 +208,14 @@ var any? is {:ty:x:y:bb
 
 var allInvaders is Array new fill: 16 with: {:x ^Invader new initAtX: (Dice rollWithSides: w) andY: (Dice rollWithSides: h - 300, + 50).}.
 
+var missilePool is Array new: 64, fill: 64 with: \:_ Missile new.
+
 var shoot_particle is {:from:heading:target
-  ^Missile new initAtX: from head andY: from last headingX: heading head andY: heading last targeting: target.
+  ^missilePool pop initAtX: from head andY: from last headingX: heading head andY: heading last targeting: target.
 }.
 
 var shoot_laser is {:from
-  ^Missile new initAtX: from head andY: from last headingX: 0 andY: -10 model: laser targeting: Nil.
+  ^missilePool pop initAtX: from head andY: from last headingX: 0 andY: -10 model: laser targeting: Nil.
 }.
 
 var Ship is RenderableEntity cnew: {

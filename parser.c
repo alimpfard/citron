@@ -857,6 +857,14 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
   node->type = CTR_AST_NODE_NATIVEFN;
   node->value = (char *)fn;
   node->vlen = 0;
+  // src
+  node->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
+  node->nodes->node = ctr_cparse_create_node(CTR_AST_NODE);
+  node->nodes->node->vlen = asm_end-asm_begin;
+  node->nodes->node->value = ctr_heap_allocate(node->nodes->node->vlen+1);
+  memcpy(node->nodes->node->value, asm_begin, asm_end-asm_begin);
+  node->nodes->node->value[node->nodes->node->vlen] = 0;
+  // TODO: constraints, types and dialect
   return node;
 }
 #endif

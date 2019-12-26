@@ -51,6 +51,7 @@ ctr_object* ctr_generator_ifmap(ctr_object*, ctr_argument*);
 ctr_object* ctr_generator_tostr(ctr_object*, ctr_argument*);
 ctr_object* ctr_generator_copy(ctr_object*, ctr_argument*);
 ctr_object* ctr_generator_isfin(ctr_object*, ctr_argument*);
+ctr_object* ctr_generator_fin(ctr_object*, ctr_argument*);
 ctr_object* ctr_generator_toarray(ctr_object*, ctr_argument*);
 ctr_object* ctr_generator_foldl(ctr_object*, ctr_argument*);
 ctr_object* ctr_generator_foldl0(ctr_object*, ctr_argument*);

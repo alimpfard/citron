@@ -1866,6 +1866,9 @@ void initiailize_base_extensions() {
                            ctr_build_string_from_cstring("finished"),
                            &ctr_generator_isfin);
   ctr_internal_create_func(ctr_std_generator,
+                           ctr_build_string_from_cstring("finish"),
+                           &ctr_generator_fin);
+  ctr_internal_create_func(ctr_std_generator,
                            ctr_build_string_from_cstring("toString"),
                            &ctr_generator_tostr);
   ctr_internal_create_func(ctr_std_generator,

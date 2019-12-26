@@ -2399,6 +2399,15 @@ void ctr_initialize_world() {
   ctr_internal_create_func(CtrStdBlock,
                            ctr_build_string_from_cstring(CTR_DICT_RUN),
                            &ctr_block_runIt);
+  ctr_internal_create_func(CtrStdBlock,
+                           ctr_build_string_from_cstring(CTR_DICT_IF),
+                           &ctr_block_if);
+  ctr_internal_create_func(CtrStdBlock,
+                           ctr_build_string_from_cstring(CTR_DICT_IFFALSE),
+                           &ctr_block_iffalse);
+  ctr_internal_create_func(CtrStdBlock,
+                           ctr_build_string_from_cstring(CTR_DICT_UNLESS),
+                           &ctr_block_iffalse);
   ctr_internal_create_func(CtrStdBlock, ctr_build_string_from_cstring(CTR_DICT_JUMP),
                            &ctr_block_goto);
   ctr_internal_create_func(CtrStdBlock,

@@ -642,11 +642,11 @@ WITH_FFI_FALSE
 WITH_FFI_TRUE
 WITH_INJECT_FALSE
 WITH_INJECT_TRUE
-BUILD_DIR_L
+STD_PATH
 MAYBE_ASM_L
 MAYBE_FFI_L
 MAYBE_TCC_L
-STD_PATH
+BUILD_DIR_L
 POW_LIB
 ALLOCA
 XMKMF
@@ -790,6 +790,8 @@ with_boehm_gc
 with_inject
 with_ffi
 with_inlineasm
+with_lffi
+with_stdpath
 with_no_tls
 with_linux
 '
@@ -807,8 +809,7 @@ CXX
 CXXFLAGS
 CCC
 CXXCPP
-XMKMF
-STD_PATH'
+XMKMF'
 
 
 # Initialize some variables set by options.
@@ -1458,7 +1459,9 @@ Optional Packages:
   --with-boehm-gc         Build without libgc present
   --with-inject           Build with the Inject object
   --with-ffi              Build with the CTypes object
-  --with-inlineasm        Build with Inline assembly support (requires llvm)
+  --with-inline-asm       Build with Inline assembly support (requires llvm)
+  --with-lffi             Build with the specified ffi library
+  --with-stdpath          Set the standard lib path
   --with-no-tls           Build without threadlocal storage (fucks up threads)
   --for-linux             Build for linux OSs
 
@@ -1477,7 +1480,6 @@ Some influential environment variables:
   CXXFLAGS    C++ compiler flags
   CXXCPP      C++ preprocessor
   XMKMF       Path to xmkmf, Makefile generator for X Window System
-  STD_PATH    Set Standard Data path
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -19901,32 +19903,26 @@ if test "${with_inlineasm+set}" = set; then :
 fi
 
 
+@%:@ Check whether --with-lffi was given.
+if test "${with_lffi+set}" = set; then :
+  withval=$with_lffi; 
+fi
+
+
+@%:@ Check whether --with-stdpath was given.
+if test "${with_stdpath+set}" = set; then :
+  withval=$with_stdpath; 
+fi
+
+
 @%:@ Check whether --with-no-tls was given.
 if test "${with_no_tls+set}" = set; then :
   withval=$with_no_tls; no_tls=yes
 fi
 
-
-
-if test "x$STD_PATH" = "x"; then :
-  
-       STD_PATH="../../share/Citron"
-       
-fi
-
 if test "x$no_tls" = "xyes"; then :
   
               CFLAGS+=' -DNO_TLS'
-
-fi
-if test "x$with_ffi" != "xyes"; then :
-  
-              lffi=$want_ffi
-
-fi
-if test "x$with_ffi" = "xyes"; then :
-  
-              lffi=ffi
 
 fi
 if test "x$enable_boehm_gc" = "xyes"; then :
@@ -19980,6 +19976,23 @@ fi
 
 fi
 
+if test "x$with_lffi" = "x"; then :
+  
+       with_lffi=ffi
+
+fi
+
+if test "x$with_stdpath" = "x"; then :
+  
+       STD_PATH="../../share/Citron"
+       
+fi
+if test "x$with_stdpath" != "x"; then :
+  
+       STD_PATH="$with_stdpath"
+    
+fi
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking inject" >&5
 $as_echo_n "checking inject... " >&6; }
 if test "x$want_inject" = "xyes"; then :
@@ -19998,7 +20011,7 @@ if test "x$want_ffi" = "xyes"; then :
   
        CFLAGS+=" -DwithCTypesNative=1"
        MAYBE_FFI=ffi
-       MAYBE_FFI_L=-l$lffi
+       MAYBE_FFI_L=-l$with_lffi
        CTR_MAYBE_FFI="ctypes.c reverse_sizes.h _struct.h structmember.h ctypes.h _struct.c structmember.c"
        
 fi
@@ -20015,13 +20028,14 @@ if test "x$want_inlineasm" = "xyes"; then :
        CTR_MAYBE_ASM="inline-asm.cpp native-asm.h"
        
 fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $want_inlineasm" >&5
+$as_echo "$want_inlineasm" >&6; }
 if test 1 = 1; then :
   
   BUILD_DIR_L="`pwd`/.."
   
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $want_inlineasm" >&5
-$as_echo "$want_inlineasm" >&6; }
+
 
 
 

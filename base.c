@@ -3773,6 +3773,7 @@ ctr_object *ctr_string_find_pattern_options_do(ctr_object *myself,
   uint8_t flagIgnore = 0;
   uint8_t flagNewLine = 0;
   uint8_t flagCI = 0;
+  int flagOne = 0;
   for (p = 0; p < olen; p++) {
     if (options[p] == '!') {
       flagIgnore = 1;
@@ -3782,6 +3783,9 @@ ctr_object *ctr_string_find_pattern_options_do(ctr_object *myself,
     }
     if (options[p] == 'i') {
       flagCI = 1;
+    }
+    if (options[p] == 'o') {
+      flagOne = 1;
     }
   }
   ctr_object *block = argumentList->next->object;
@@ -3826,6 +3830,8 @@ ctr_object *ctr_string_find_pattern_options_do(ctr_object *myself,
       ctr_string_append(newString, arg);
       offset += matches[0].rm_eo;
     }
+    if (flagOne)
+        break;
   }
   arg->object = ctr_build_string(haystack + offset, strlen(haystack + offset));
   ctr_string_append(newString, arg);
@@ -3856,6 +3862,7 @@ ctr_object *ctr_string_find_pattern_options_do(
   uint8_t flagIgnore = 0;
   uint8_t flagNewLine = 0;
   uint8_t flagCI = 0;
+  int flagOne = 0;
   for (p = 0; p < olen; p++) {
     if (options[p] == '!') {
       flagIgnore = 1;
@@ -3865,6 +3872,9 @@ ctr_object *ctr_string_find_pattern_options_do(
     }
     if (options[p] == 'i') {
       flagCI = 1;
+    }
+    if (options[p] == 'o') {
+      flagOne = 1;
     }
   }
   ctr_object *block = argumentList->next->object;
@@ -3918,6 +3928,8 @@ ctr_object *ctr_string_find_pattern_options_do(
       offset += matches[1];
     } else
       break;
+    if (flagOne)
+        break;
   }
   arg->object = ctr_build_string(haystack + offset, strlen(haystack + offset));
   ctr_string_append(newString, arg);
@@ -5567,6 +5579,61 @@ ctr_object *ctr_block_assign(ctr_object *myself, ctr_argument *argumentList) {
   return myself;
 }
 
+/**
+ *[Block] if: [Boolean]
+ *
+ * Executes the block of code if the value of the boolean
+ * object is True.
+ *
+ * Example:
+ * { thisBlock error: 'Nooooo'. } if: 64 even?.
+ */
+ctr_object *ctr_block_if(ctr_object *myself, ctr_argument *argumentList) {
+  ctr_object *result;
+  ctr_argument arg = {0}, *arguments = &arg;
+  ctr_object *cond = argumentList->object;
+  if (cond->value.bvalue) {
+    arguments->object = cond;
+
+    result = ctr_block_run(myself, arguments, NULL);
+    if (result != myself) {
+      ctr_internal_next_return = 1;
+      return result;
+    }
+    return myself;
+  }
+  if (CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
+    CtrStdFlow = NULL; /* consume break */
+  return myself;
+}
+
+/**
+ *[Block] unless: [Boolean]
+ *
+ * Executes the block of code if the value of the boolean
+ * object is False.
+ *
+ * Example:
+ * { thisBlock error: 'Nooooo'. } unless: 64 odd?.
+ */
+ctr_object *ctr_block_iffalse(ctr_object *myself, ctr_argument *argumentList) {
+  ctr_object *result;
+  ctr_argument arg = {0}, *arguments = &arg;
+  ctr_object *cond = argumentList->object;
+  if (!cond->value.bvalue) {
+    arguments->object = cond;
+
+    result = ctr_block_run(myself, arguments, NULL);
+    if (result != myself) {
+      ctr_internal_next_return = 1;
+      return result;
+    }
+    return myself;
+  }
+  if (CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
+    CtrStdFlow = NULL; /* consume break */
+  return myself;
+}
 /**
  * [Block] specialize: [types...] with: [Block]
  *

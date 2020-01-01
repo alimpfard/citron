@@ -1,0 +1,15 @@
+# test Block::if:/unless:
+
+{ Pen writeln: 'no'. } if: False.
+{ Pen writeln: 'yes'.} if: True.
+{ Pen writeln: 'yes'. } unless: False.
+{ Pen writeln: 'no'. } unless: True.
+
+# check if it's run in the current scope
+
+{
+    { ^'whatever'. } if: True.
+    Pen writeln: ohnoes.
+} catch: {:e
+    Pen writeln: '$$e should not have fired'.
+}, run.

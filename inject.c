@@ -159,7 +159,7 @@ ctr_inferred_ctype_type_t ctr_inject_type_to_ctype(Sym *svv, CType *type) {
     TokenSym *token = table_ident[tok];
     sprintf(nbuf, "%.*s", token->len, token->str);
     (void)type_to_str(fbuf, 1024, pointed_type(type), nbuf);
-    printf("%s[%lu]\n", fbuf, array_count);
+    // printf("%s[%lu]\n", fbuf, array_count);
     ctr_inferred_ctype_type_t contained =
         ctr_inject_type_to_ctype(svv, pointed_type(type));
     ctr_inferred_ctype_type_t *inner = ctr_heap_allocate(sizeof *inner);
@@ -256,7 +256,7 @@ ctr_inferred_ctype_type_t ctr_inject_type_to_ctype(Sym *svv, CType *type) {
       if (!pad) {
         tok -= TOK_IDENT;
         TokenSym *token = table_ident[tok];
-        printf("FIELD %.*s\n", token->len, token->str);
+        // printf("FIELD %.*s\n", token->len, token->str);
         // todo get field name
         ctr_array_push(descriptor.names, &(ctr_argument){ctr_build_string(
                                              token->str, token->len)});

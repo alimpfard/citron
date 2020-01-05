@@ -3,6 +3,12 @@
 ### Release
 A binary release (x86_64 ELF) is available (see [Default Module Resolution](#default-module-resolution) for dynamic modules)
 
+You can also use the docker image (will probably be auto-built later...)
+```sh
+# to run an interpreter
+$ docker run --rm -it anothertest/citron:latest
+```
+
 ### Build guide
 required libraries:
 * `libdl`   -- for dynamic loading of modules

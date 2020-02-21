@@ -209,7 +209,7 @@ static int ctr_is_binary_alternative(char const *s, long length) {
     if (!(c == '-' || c == '+' || c == '*' || c == '&' || c == '%' ||
           c == '$' || c == '@' || c == '!' || c == '=' || c == '"' ||
           c == ';' || c == '/' || c == '\\' || c == '<' || c == '>' ||
-          c == '?' || c == '~')) {
+          c == '?' || c == '~' || c == '|')) {
       return 0;
     }
   }

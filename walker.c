@@ -175,6 +175,8 @@ ctr_object *ctr_cwlk_message(ctr_tnode *paramNode) {
       ctr_object *msg = ctr_build_string(message, l);
       if (strncmp(message, "?:", 2) == 0)
         is_hole |= 4;
+      if (strncmp(message, "?conforms:", 10) == 0)
+        is_hole |= 4;
       ctr_object *candidates = ctr_resolve_constraints_for_hole(
           msg, is_hole & 4 ? a : NULL,
           is_hole & 0x2 ? ctr_find(&CTR_CLEX_KW_ME) : NULL);

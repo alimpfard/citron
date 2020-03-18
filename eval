@@ -246,13 +246,13 @@ Eval on: 'onlyRelevantArgs' do: {
 Eval on: 'startEvalServer' do: {
   var port is 5000 + (Dice rollWithSides: 1000).
 
-  var EvalServer is Eval new init.
+  # var EvalServer is Eval new init.
 
   my eServer is Program new: {:p
       Program is p.
       File new: PIDFILE, write: Program pid.
       p port: port.
-      p serve_ipv4: EvalServer.
+      p serve_ipv4: Eval.
   }.
 
   ^port.
@@ -260,13 +260,13 @@ Eval on: 'startEvalServer' do: {
 
 Eval on: 'startEvalServerOnPort:' do: {:port
 
-  var EvalServer is Eval new init.
+  # var EvalServer is Eval new init.
 
   my eServer is Program new: {:p
       Program is p.
       File new: PIDFILE, write: Program pid.
       p port: port.
-      p serve: EvalServer.
+      p serve: Eval.
   }.
 
   ^port.
@@ -1007,8 +1007,8 @@ var tidyIndentOptions is Map new.
       args pop.
       var obj is Eval shiftArgs.
       obj is Eval evaluate: obj, or: \:_ thisBlock error: '--evaluator-object requires an argument'.
-      Reflect object: obj hasOwnResponder: 'evaluate:', ifFalse: {
-        thisBlock error: 'argument to --evaluator-object must respond to \'evaluate:\' ($$obj does not)'.
+      (Reflect object: obj hasOwnResponder: 'evaluate:'), ifFalse: {
+        Pen red writeln: 'argument to --evaluator-object must respond to \'evaluate:\' ($$obj does not)', resetColor.
       }.
       Eval evaluatorObject: obj.
     }, case: '--completer-object' do: {

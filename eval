@@ -252,7 +252,7 @@ Eval on: 'startEvalServer' do: {
       Program is p.
       File new: PIDFILE, write: Program pid.
       p port: port.
-      p serve: EvalServer.
+      p serve_ipv4: EvalServer.
   }.
 
   ^port.

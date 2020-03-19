@@ -87,7 +87,9 @@ Eval on: 'init' do: {
     put: True at: 'history',
     put: False at: 'html_colors',
     put: False at: 'searching',
-    put: False at: 'searchfailed'.
+    put: False at: 'searchfailed',
+    put: False at: 'startServer'.
+  my port is Nil.
   me genReader: 'eServer'.
   my errd is False.
   my last_error is Nil.
@@ -244,27 +246,15 @@ Eval on: 'onlyRelevantArgs' do: {
 }. #get rid of ./ctr eval
 
 Eval on: 'startEvalServer' do: {
-  var port is 5000 + (Dice rollWithSides: 1000).
+  my port is 5000 + (Dice rollWithSides: 1000).
+  enableFlag: 'startServer'.
 
-  my eServer is Program new: {:p
-      Program is p.
-      File new: PIDFILE, write: Program pid.
-      p port: port.
-      p serve_ipv4: Eval.
-  }.
-
-  ^port.
+  ^my port.
 }.
 
 Eval on: 'startEvalServerOnPort:' do: {:port
-
-  my eServer is Program new: {:p
-      Program is p.
-      File new: PIDFILE, write: Program pid.
-      p port: port.
-      p serve: Eval.
-  }.
-
+  port => port.
+  enableFlag: 'startServer'.
   ^port.
 }.
 
@@ -282,7 +272,7 @@ Eval on: 'userDefs' do: {
   }.
 }.
 
-Eval genAccessors: 'nextInput'.
+Eval genAccessors: ['nextInput', 'port'].
 
 Eval on: 'returnValue:' do: {:x my returnValue do pop push: x, done. }.
 Eval on: 'stepDebug:' do: {:x my stepDebug is x. }.
@@ -970,7 +960,6 @@ var tidyIndentOptions is Map new.
       (f <=: 0) ifTrue: { thisBlock error: 'Invalid port specified: $$f'. }.
       Eval enableFlag: 'jsonout'.
       Eval startEvalServerOnPort: f.
-      Program exit.
     }, case: '-m' do: {
       args pop.
       var mod is Eval shiftArgs.
@@ -1682,4 +1671,13 @@ Eval on: 'read_eval_print:' do: ({:prompt
   }.
 }).# catch: {:e Eval handleInternalException: e.}).
 
-Eval repl.
+Eval getFlag: 'startServer', ifTrue: {
+  Program new: {:p
+      Program is p.
+      File new: PIDFILE, write: Program pid.
+      p port: Eval port.
+      p serve_ipv4: Eval.
+  }.
+} ifFalse: {
+    Eval repl.
+}.

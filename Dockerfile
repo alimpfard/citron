@@ -18,4 +18,4 @@ RUN (tar cf - .) | (cd .. && tar xf -)
 
 ENV CITRON_EXT_PATH=/share/Citron
 
-ENTRYPOINT "citron"
+ENTRYPOINT ["citron"]

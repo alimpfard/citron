@@ -797,7 +797,8 @@ var tidyIndentOptions is Map new.
           indent: 2 write: '--pc : set the prompt continuation\n',
           indent: 2 write: '-c : set the result color\n',
           indent: 2 write: '-h : show this help\n',
-          indent: 2 write: '-f : evaluate file. many can be passed. All the files get added as runnable blocks (fully-qualified path without extensions)\n',
+          indent: 2 write: '-f : evaluate file. many can be passed. They will be executed in order\n',
+          indent: 2 write: '-u : evaluate content at url. many can be passed. They will be executed in order\n',
           indent: 2 write: '-F<[no-]flag> : enables the passed flag\n',
           indent: 2 write: '--Fs : display all the available flags\n',
           indent: 2 write: '--Fsel : allow the user to pick from available flags via a terminal selection menu\n',
@@ -855,7 +856,12 @@ var tidyIndentOptions is Map new.
         args pop. #consume option.
         var file is Eval shiftArgs.
         (file isNil) ifTrue: { thisBlock error: '-f requires a file name.'. }.
-        Eval addFile: (File new: file, read) named: file.
+        AST parse: (File new: file, read), evaluate.
+    }, case: '-u' do: {
+        args pop. #consume option.
+        var url is Eval shiftArgs.
+        (url isNil) ifTrue: { thisBlock error: '-u requires a url.'. }.
+        AST parse: (Curl new url: url, perform), evaluate.
     }, case: '--Fs' do: {
         args pop. #consume option.
         Eval display/writeln: (Eval flags keys join: '\n').

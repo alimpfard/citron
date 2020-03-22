@@ -1,5 +1,7 @@
 language: c
 compiler: gcc
+services:
+    - docker
 dist: bionic
 matrix:
   include:
@@ -14,6 +16,10 @@ matrix:
         - bash codecov.sh -x gcov-8 >/dev/null 2>&1
     - name: "Build Artifacts"
       env: TEST=NO
+      after_success:
+          - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+          - docker build -t anothertest/citron:cilatest .
+          - docker push anothertest/citron:cilatest
 
 before_install:
     - wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -

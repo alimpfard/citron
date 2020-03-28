@@ -276,6 +276,7 @@ ctr_tnode *ctr_cparse_message(int mode) {
     return m;
   }
   int replacement = 0;
+  int is_bmap = 0;
   if (lookAhead == CTR_TOKEN_COLON) {
     if (mode > 0) {
       ctr_clex_putback();
@@ -337,6 +338,10 @@ ctr_tnode *ctr_cparse_message(int mode) {
   } else if (t == CTR_TOKEN_BLOCKOPEN) {
     replacement = CTR_TOKEN_BLOCKCLOSE;
     goto callShorthand;
+  } else if (t == CTR_TOKEN_BLOCKOPEN_MAP) {
+    replacement = CTR_TOKEN_BLOCKCLOSE;
+    is_bmap = 1;
+    goto callShorthand;
   } else if (t == CTR_TOKEN_FANCY_QUOT_OPEN) {
     replacement = CTR_TOKEN_FANCY_QUOT_CLOS;
     msgReplacement = "process:";
@@ -356,12 +361,37 @@ ctr_tnode *ctr_cparse_message(int mode) {
     if (nextCallLazy->value == 1 || replacement == CTR_TOKEN_BLOCKCLOSE) {
       if (!replacement)
         nextCallLazy->value--;
-      if (ctr_clex_inject_token(CTR_TOKEN_INV, DOLLAR_SIGN, -2, 1)) {
-        ctr_cparse_emit_error_unexpected(
-            t, "lazy call cannot be instantiated at this state");
-        return NULL;
+      if (!is_bmap) {
+        if (ctr_clex_inject_token(CTR_TOKEN_INV, DOLLAR_SIGN, -2, 1)) {
+          ctr_cparse_emit_error_unexpected(
+              t, "lazy call cannot be instantiated at this state");
+          return NULL;
+        }
+        li->node = ctr_cparse_lit_esc(replacement ?: callShorthand->value_e);
+      } else {
+        int texpr = ctr_transform_template_expr;
+        ctr_transform_template_expr = 1;
+        ctr_tnode* block = ctr_cparse_block();
+        ctr_transform_template_expr = texpr;
+        ctr_tnode* v = ctr_cparse_create_node(CTR_AST_NODE);
+        v->type = CTR_AST_NODE_RAW;
+        v->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
+        v->nodes->node = ctr_deep_copy_ast(block);
+        block = v;
+        block->modifier = 1;
+        ctr_tnode* arg = ctr_cparse_create_node(CTR_AST_NODE);
+        ctr_tlistitem* tl0 = ctr_heap_allocate(sizeof *tl0);
+        arg->type = CTR_AST_NODE_IMMUTABLE;
+        arg->nodes = tl0;
+        tl0->next = NULL;
+        tl0->node = ctr_cparse_create_node(CTR_AST_NODE);
+        tl0->node->type = CTR_AST_NODE_NESTED;
+        ctr_tlistitem* tl1 = ctr_heap_allocate(sizeof *tl1);
+        tl0->node->nodes = tl1;
+        tl1->next = NULL;
+        tl1->node = block;
+        li->node = arg;
       }
-      li->node = ctr_cparse_lit_esc(replacement ?: callShorthand->value_e);
     } else if (nextCallLazy->value > 1) {
       nextCallLazy->value--;
       int texpr_res = ctr_transform_template_expr;
@@ -411,7 +441,7 @@ ctr_tlistitem *ctr_cparse_messages(ctr_tnode *r, int mode) {
   while (t == CTR_TOKEN_REF ||
          (t == CTR_TOKEN_CHAIN && node &&
           node->type == CTR_AST_NODE_KWMESSAGE && node->modifier != -2) ||
-         (t == callShorthand->value) || (t == CTR_TOKEN_BLOCKOPEN) ||
+         (t == callShorthand->value) || (t == CTR_TOKEN_BLOCKOPEN || t == CTR_TOKEN_BLOCKOPEN_MAP) ||
          (t == CTR_TOKEN_FANCY_QUOT_OPEN) || (t == CTR_TOKEN_QUOTE)) {
     if (t == CTR_TOKEN_CHAIN) {
       t = ctr_clex_tok();

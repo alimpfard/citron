@@ -17,6 +17,30 @@ matrix:
     - name: "Build Artifacts"
       env: TEST=NO
       after_success:
+          - wget https://github.com/probonopd/linuxdeployqt/releases/download/6/linuxdeployqt-6-x86_64.AppImage
+          - chmod a+x linuxdeployqt-6-x86_64.AppImage
+          - mkdir -p appimage/AppDir/usr && cp -r autohell/build/* appimage/AppDir/usr
+          - mkdir -p appimage/AppDir/usr/share/application
+          - mkdir -p appimage/AppDir/usr/share/icons/hicolor/256x256
+          - cp image/citron.png appimage/AppDir/usr/share/icons/hicolor/256x256/
+          - echo "[Desktop Entry]" > appimage/AppDir/usr/share/application/citron.desktop
+          - echo "Type=Application" >> appimage/AppDir/usr/share/application/citron.desktop
+          - echo "Name=Citron" >> appimage/AppDir/usr/share/application/citron.desktop
+          - echo "Comment=Citron Interp" >> appimage/AppDir/usr/share/application/citron.desktop
+          - echo "Exec=ctr" >> appimage/AppDir/usr/share/application/citron.desktop
+          - echo "Icon=citron" >> appimage/AppDir/usr/share/application/citron.desktop
+          - echo "Categories=Development;" >> appimage/AppDir/usr/share/application/citron.desktop
+          - echo "Terminal=true" >> appimage/AppDir/usr/share/application/citron.desktop # Needed for CLI tools
+          # Fine, no appimage?
+          - ./linuxdeployqt-6-x86_64.AppImage appimage/AppDir/usr/share/application/citron.desktop -appimage
+          - sudo cp -rf Citron*.AppImage autohell/build/bin/ctr
+          - ls -lh autohell/build/*
+          - ls -alh autohell/build/share/Citron/mods
+          - ls -lh
+          - tar cvjf release.tar.bz2 -C autohell/build .
+          - (cd autohell/build && zip -r - .) > release.zip
+          - wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
+          - bash upload.sh release.tar.bz2 release.zip #Citron*.AppImage*
           - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
           - docker build -t anothertest/citron:cilatest .
           - docker push anothertest/citron:cilatest
@@ -56,33 +80,6 @@ install:
 
 script:
   - export VERSION=$(git rev-parse --short HEAD)
-
-after_success:
-#  - wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
-  - wget https://github.com/probonopd/linuxdeployqt/releases/download/6/linuxdeployqt-6-x86_64.AppImage
-  - chmod a+x linuxdeployqt-6-x86_64.AppImage
-  - mkdir -p appimage/AppDir/usr && cp -r autohell/build/* appimage/AppDir/usr
-  - mkdir -p appimage/AppDir/usr/share/application
-  - mkdir -p appimage/AppDir/usr/share/icons/hicolor/256x256
-  - cp image/citron.png appimage/AppDir/usr/share/icons/hicolor/256x256/
-  - echo "[Desktop Entry]" > appimage/AppDir/usr/share/application/citron.desktop
-  - echo "Type=Application" >> appimage/AppDir/usr/share/application/citron.desktop
-  - echo "Name=Citron" >> appimage/AppDir/usr/share/application/citron.desktop
-  - echo "Comment=Citron Interp" >> appimage/AppDir/usr/share/application/citron.desktop
-  - echo "Exec=ctr" >> appimage/AppDir/usr/share/application/citron.desktop
-  - echo "Icon=citron" >> appimage/AppDir/usr/share/application/citron.desktop
-  - echo "Categories=Development;" >> appimage/AppDir/usr/share/application/citron.desktop
-  - echo "Terminal=true" >> appimage/AppDir/usr/share/application/citron.desktop # Needed for CLI tools
-  # Fine, no appimage?
-  - ./linuxdeployqt-6-x86_64.AppImage appimage/AppDir/usr/share/application/citron.desktop -appimage
-  - sudo cp -rf Citron*.AppImage autohell/build/bin/ctr
-  - ls -lh autohell/build/*
-  - ls -alh autohell/build/share/Citron/mods
-  - ls -lh
-  - tar cvjf release.tar.bz2 -C autohell/build .
-  - (cd autohell/build && zip -r - .) > release.zip
-  - wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
-  - bash upload.sh release.tar.bz2 release.zip #Citron*.AppImage*
 
 branches:
   except:

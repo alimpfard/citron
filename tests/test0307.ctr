@@ -1,0 +1,29 @@
+# Test expr {\ ... }
+
+var passes-ast? is {:inp
+    inp isA: AST, ifFalse: {
+        Pen writeln: 'FAIL'.
+    }.
+}.
+
+var can-be-evaluated? is {:inp
+    $!(inp) isA: CodeBlock, ifFalse: {
+        Pen writeln: 'FAIL'.
+    }.
+}.
+
+var holds-locals? is {:inp
+    var local is 'PASS'.
+    $!(inp) run.
+}.
+
+passes-ast? {\ }.
+can-be-evaluated? {\ }.
+
+passes-ast? {\ Example code. }.
+can-be-evaluated? {\ Example code. }.
+
+var local is 'FAIL'.
+holds-locals? {\
+    Pen writeln: local.
+}.

@@ -1523,6 +1523,7 @@ ctr_object *ctr_file_stat(ctr_object *myself, ctr_argument *argumentList) {
                        .next = &(ctr_argument){
                            .object = ctr_build_string_from_cstring("st_size"),
                            .next = NULL}});
+#ifndef FOR_WINDOWS
   ctr_map_put(res,
               &(ctr_argument){
                   .object = ctr_build_number_from_float((long)st.st_blksize),
@@ -1535,6 +1536,7 @@ ctr_object *ctr_file_stat(ctr_object *myself, ctr_argument *argumentList) {
                       .next = &(ctr_argument){
                           .object = ctr_build_string_from_cstring("st_blocks"),
                           .next = NULL}});
+#endif
 
 #if _POSIX_C_SOURCE >= 200809L || _XOPEN_SOURCE >= 700
   ctr_map_put(res, &(ctr_argument){

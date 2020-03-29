@@ -5,7 +5,7 @@ o_cflags := -I/mingw64/include
 #$(shell pkg-config --cflags tcl)
 o_ldflags := -L/mingw64/lib -ltcl8.6 -lz -lpthread -lz -lcurl
 #$(shell pkg-config --libs tcl)
-CFLAGS := ${CFLAGS} ${o_cflags} -I/usr/include
+CFLAGS := ${CFLAGS} ${o_cflags} -I/usr/include -DFOR_WINDOWS 
 LEXTRACF := ${LEXTRACF} ${o_ldflags} -flto -lstdc++ -static-libgcc -static-libstdc++
 location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 WHERE_ART_THOU := $(location)

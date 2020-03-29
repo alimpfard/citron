@@ -1,0 +1,12 @@
+# Test generator#finish
+
+var gen is Generator from: 0 to: 10, fmap: {:x
+    x = 5 ifTrue: {
+        gen finish.
+    }.
+    ^x * 100.
+}.
+
+gen each: {:i:v
+    Pen writeln: '$$i : $$v'.
+}.

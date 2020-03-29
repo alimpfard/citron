@@ -1,4 +1,4 @@
-AM_CFLAGS = --pedantic -O3 -Wall -fPIC -mtune=native -D withTermios -D forLinux -DCTR_STD_EXTENSION_PATH=\"$(pkgdatadir)\" -D WITH_AUTOMAKE=\"$(pkgdatadir)\" $(MAYBE_ASM_C)
+AM_CFLAGS = --pedantic -O3 -Wall -fPIC -mtune=native -D withTermios -D forLinux -DCTR_STD_EXTENSION_PATH=\"$(STD_PATH)\" -D WITH_AUTOMAKE=\"$(pkgdatadir)\" $(MAYBE_ASM_C)
 AM_LDFLAGS = -rdynamic -lm -ldl -lbsd -lpcre -lpthread $(MAYBE_FFI_L) $(MAYBE_TCC_L) $(MAYBE_ASM_L) $(BUILD_DIR_L)/lambdaf.a $(BUILD_DIR_L)/libsocket.so -o ctr
 
 SUBDIRS = $(MAYBE_TCC) lambdaf libsocket

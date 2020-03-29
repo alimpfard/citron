@@ -142,9 +142,13 @@ void ctr_internal_debug_tree(ctr_tnode *ti, int indent) {
         int i;
         for (i = 0; i <= indent; i++)
           printf(" ");
-        ctr_object *lname = ((ctr_object *)t->nodes->node)->lexical_name;
+        ctr_object *lname =
+            ((ctr_object *)(t->modifier == 1 ? t->nodes->node
+                                             : t->nodes->next->node))
+                ->lexical_name;
         if (!lname)
-          lname = ((ctr_object *)t->nodes->node);
+          lname = ((ctr_object *)(t->modifier == 1 ? t->nodes->node
+                                                   : t->nodes->next->node));
         ctr_object *str = ctr_internal_cast2string(lname);
         printf("%p type %d, %.*s\n", t->nodes->node,
                ((ctr_object *)t->nodes->node)->info.type,

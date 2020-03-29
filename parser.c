@@ -54,9 +54,20 @@ ctr_tnode *ctr_cparse_fancy_string();
 ctr_tnode *ctr_cparse_symbol();
 ctr_tnode *ctr_cparse_true();
 ctr_tnode *ctr_cparse_tuple(int);
+ctr_tnode *ctr_fake_parse_hole();
 ctr_tnode *ctr_cparse_create_generator_node_step(ctr_tnode *, ctr_tnode *,
                                                  ctr_tnode *);
 ctr_tnode *ctr_cparse_create_generator_node_simple(ctr_tnode *, ctr_tnode *);
+ctr_tnode *ctr_deep_copy_ast(ctr_tnode *);
+
+ctr_tnode *ctr_fake_parse_hole() {
+  ctr_tnode *r = ctr_cparse_create_node(CTR_AST_NODE);
+  r->type = CTR_AST_NODE_REFERENCE;
+  r->vlen = 1;
+  r->value = ctr_heap_allocate(1);
+  strcpy(r->value, "?");
+  return r;
+}
 
 int ctr_scan_inner_refs_for_(ctr_tnode *node, char *name, size_t len) {
   switch (node->type) {
@@ -198,7 +209,7 @@ static int ctr_is_binary_alternative(char const *s, long length) {
     if (!(c == '-' || c == '+' || c == '*' || c == '&' || c == '%' ||
           c == '$' || c == '@' || c == '!' || c == '=' || c == '"' ||
           c == ';' || c == '/' || c == '\\' || c == '<' || c == '>' ||
-          c == '?' || c == '~')) {
+          c == '?' || c == '~' || c == '|')) {
       return 0;
     }
   }
@@ -265,6 +276,7 @@ ctr_tnode *ctr_cparse_message(int mode) {
     return m;
   }
   int replacement = 0;
+  int is_bmap = 0;
   if (lookAhead == CTR_TOKEN_COLON) {
     if (mode > 0) {
       ctr_clex_putback();
@@ -326,6 +338,10 @@ ctr_tnode *ctr_cparse_message(int mode) {
   } else if (t == CTR_TOKEN_BLOCKOPEN) {
     replacement = CTR_TOKEN_BLOCKCLOSE;
     goto callShorthand;
+  } else if (t == CTR_TOKEN_BLOCKOPEN_MAP) {
+    replacement = CTR_TOKEN_BLOCKCLOSE;
+    is_bmap = 1;
+    goto callShorthand;
   } else if (t == CTR_TOKEN_FANCY_QUOT_OPEN) {
     replacement = CTR_TOKEN_FANCY_QUOT_CLOS;
     msgReplacement = "process:";
@@ -345,12 +361,37 @@ ctr_tnode *ctr_cparse_message(int mode) {
     if (nextCallLazy->value == 1 || replacement == CTR_TOKEN_BLOCKCLOSE) {
       if (!replacement)
         nextCallLazy->value--;
-      if (ctr_clex_inject_token(CTR_TOKEN_INV, DOLLAR_SIGN, -2, 1)) {
-        ctr_cparse_emit_error_unexpected(
-            t, "lazy call cannot be instantiated at this state");
-        return NULL;
+      if (!is_bmap) {
+        if (ctr_clex_inject_token(CTR_TOKEN_INV, DOLLAR_SIGN, -2, 1)) {
+          ctr_cparse_emit_error_unexpected(
+              t, "lazy call cannot be instantiated at this state");
+          return NULL;
+        }
+        li->node = ctr_cparse_lit_esc(replacement ?: callShorthand->value_e);
+      } else {
+        int texpr = ctr_transform_template_expr;
+        ctr_transform_template_expr = 1;
+        ctr_tnode* block = ctr_cparse_block();
+        ctr_transform_template_expr = texpr;
+        ctr_tnode* v = ctr_cparse_create_node(CTR_AST_NODE);
+        v->type = CTR_AST_NODE_RAW;
+        v->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
+        v->nodes->node = ctr_deep_copy_ast(block);
+        block = v;
+        block->modifier = 1;
+        ctr_tnode* arg = ctr_cparse_create_node(CTR_AST_NODE);
+        ctr_tlistitem* tl0 = ctr_heap_allocate(sizeof *tl0);
+        arg->type = CTR_AST_NODE_IMMUTABLE;
+        arg->nodes = tl0;
+        tl0->next = NULL;
+        tl0->node = ctr_cparse_create_node(CTR_AST_NODE);
+        tl0->node->type = CTR_AST_NODE_NESTED;
+        ctr_tlistitem* tl1 = ctr_heap_allocate(sizeof *tl1);
+        tl0->node->nodes = tl1;
+        tl1->next = NULL;
+        tl1->node = block;
+        li->node = arg;
       }
-      li->node = ctr_cparse_lit_esc(replacement ?: callShorthand->value_e);
     } else if (nextCallLazy->value > 1) {
       nextCallLazy->value--;
       int texpr_res = ctr_transform_template_expr;
@@ -400,15 +441,14 @@ ctr_tlistitem *ctr_cparse_messages(ctr_tnode *r, int mode) {
   while (t == CTR_TOKEN_REF ||
          (t == CTR_TOKEN_CHAIN && node &&
           node->type == CTR_AST_NODE_KWMESSAGE && node->modifier != -2) ||
-         (t == callShorthand->value) || (t == CTR_TOKEN_BLOCKOPEN) ||
+         (t == callShorthand->value) || (t == CTR_TOKEN_BLOCKOPEN || t == CTR_TOKEN_BLOCKOPEN_MAP) ||
          (t == CTR_TOKEN_FANCY_QUOT_OPEN) || (t == CTR_TOKEN_QUOTE)) {
     if (t == CTR_TOKEN_CHAIN) {
       t = ctr_clex_tok();
       if (t != CTR_TOKEN_REF) {
         ctr_cparse_emit_error_unexpected(t, "Expected message.\n");
         if (speculative_parse)
-          if (ctr_clex_inject_token(CTR_TOKEN_REF,
-                                    ctr_clex_tok_value() ?: "unknown-ref",
+          if (ctr_clex_inject_token(CTR_TOKEN_REF, ctr_clex_tok_value() ?: "?",
                                     ctr_clex_tok_value_length() ?: 11, 11)) {
             ctr_cparse_emit_error_unexpected(
                 t, "Speculative parsing failed, not enough vector space\n");
@@ -621,7 +661,7 @@ ctr_tnode *ctr_cparse_lit_esc(int opt) {
   v = ctr_cparse_create_node(CTR_AST_NODE);
   v->type = CTR_AST_NODE_RAW;
   v->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
-  v->nodes->node = r;
+  v->nodes->node = ctr_deep_copy_ast(r);
   if (!unescape)
     v->modifier = -len;
   else {
@@ -774,7 +814,7 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
     t = ctr_clex_tok();
     if (t != CTR_TOKEN_REF) {
       ctr_cparse_emit_error_unexpected(t, "Expected an argument name\n");
-      return speculative_parse ? ctr_cparse_nil() : NULL;
+      return speculative_parse ? ctr_fake_parse_hole() : NULL;
     }
     int len = ctr_clex_tok_value_length();
     char *val = ctr_clex_tok_value();
@@ -782,7 +822,7 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
       if (!isalpha(val[i])) {
         ctr_cparse_emit_error_unexpected(
             t, "asm block arguments must contain only alpha characters\n");
-        return speculative_parse ? ctr_cparse_nil() : NULL;
+        return speculative_parse ? ctr_fake_parse_hole() : NULL;
       }
     argidx++;
     enum AsmArgType _ty = ASM_ARG_TY_DBL;
@@ -804,7 +844,7 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
                (len == 3 && strncasecmp(tok, "att", 3) == 0))) {
       ctr_cparse_emit_error_unexpected(
           t, "Expected literal name att|at&t|intel\n");
-      return speculative_parse ? ctr_cparse_nil() : NULL;
+      return speculative_parse ? ctr_fake_parse_hole() : NULL;
     }
     t = ctr_clex_tok();
   }
@@ -814,7 +854,7 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
     if (!end) {
       ctr_cparse_emit_error_unexpected(
           t, "Expected a ')' to end the asm constraint block\n");
-      return speculative_parse ? ctr_cparse_nil() : NULL;
+      return speculative_parse ? ctr_fake_parse_hole() : NULL;
     }
     constraint = ctr_heap_allocate(end - begin + 1);
     memcpy(constraint, begin, end - begin);
@@ -827,7 +867,7 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
   if (!asm_end) {
     ctr_cparse_emit_error_unexpected(
         t, "Expected a '}' to end the native block\n");
-    return speculative_parse ? ctr_cparse_nil() : NULL;
+    return speculative_parse ? ctr_fake_parse_hole() : NULL;
   }
   void *fn = ctr_cparse_intern_asm_block(
       /* start = */ asm_begin,
@@ -847,6 +887,14 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
   node->type = CTR_AST_NODE_NATIVEFN;
   node->value = (char *)fn;
   node->vlen = 0;
+  // src
+  node->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
+  node->nodes->node = ctr_cparse_create_node(CTR_AST_NODE);
+  node->nodes->node->vlen = asm_end-asm_begin;
+  node->nodes->node->value = ctr_heap_allocate(node->nodes->node->vlen+1);
+  memcpy(node->nodes->node->value, asm_begin, asm_end-asm_begin);
+  node->nodes->node->value[node->nodes->node->vlen] = 0;
+  // TODO: constraints, types and dialect
   return node;
 }
 #endif
@@ -1446,7 +1494,7 @@ ctr_tnode *ctr_cparse_receiver() {
   default:
     /* This function always exits, so return a dummy value. */
     ctr_cparse_emit_error_unexpected(t, "Expected a message recipient.\n");
-    return speculative_parse ? ctr_cparse_nil() : NULL;
+    return speculative_parse ? ctr_fake_parse_hole() : NULL;
   }
 }
 
@@ -1713,13 +1761,13 @@ ctr_tnode *ctr_cparse_comptime() {
     ctr_cparse_emit_error_unexpected(
         CTR_TOKEN_INV,
         "Expected an AST splice as a return value from a comptime expression");
-    return speculative_parse ? ctr_cparse_nil() : NULL;
+    return speculative_parse ? ctr_fake_parse_hole() : NULL;
   }
   if (!val->value.rvalue || !val->value.rvalue->ptr) {
     ctr_cparse_emit_error_unexpected(CTR_TOKEN_INV,
                                      "Expected a valid AST splice as a return "
                                      "value from a comptime expression");
-    return speculative_parse ? ctr_cparse_nil() : NULL;
+    return speculative_parse ? ctr_fake_parse_hole() : NULL;
   }
   return val->value.rvalue->ptr;
 }
@@ -1768,7 +1816,7 @@ ctr_tlistitem *ctr_cparse_statement() {
       }
     }
     if (!li->node)
-      li->node = ctr_cparse_nil();
+      li->node = ctr_fake_parse_hole();
     // li->node = ctr_cparse_fin();
   }
   return li;
@@ -1817,4 +1865,46 @@ ctr_tnode *ctr_cparse_parse(char *prg, char *pathString) {
   program->type = CTR_AST_NODE_PROGRAM;
   ctr_cparse_current_program = oldp;
   return program;
+}
+
+ctr_tnode *ctr_deep_copy_ast(ctr_tnode *src) {
+  ctr_tnode *dst = ctr_heap_allocate(sizeof *dst);
+  dst->vlen = src->vlen;
+  if (src->value)
+    dst->value = src->value; // TODO: figure out copying this
+  dst->type = src->type;
+  dst->modifier = src->modifier;
+  dst->lexical = src->lexical;
+
+  if (src->type == CTR_AST_NODE_EMBED) {
+    if (src->modifier == 2) {
+      ctr_tlistitem *nodes = ctr_heap_allocate(sizeof *nodes);
+      nodes->next = ctr_heap_allocate(sizeof *nodes);
+      nodes->node = src->nodes->node;
+      nodes->next->node = src->nodes->next->node;
+      dst->nodes = nodes;
+      return dst;
+    } else if (src->modifier == 1) {
+      ctr_tlistitem *nodes = ctr_heap_allocate(sizeof *nodes);
+      nodes->node = src->nodes->node;
+      dst->nodes = nodes;
+      return dst;
+    }
+  }
+  ctr_tlistitem *nodes = src->nodes;
+  dst->nodes = NULL;
+  if (nodes) {
+    ctr_tlistitem *dnodes = ctr_heap_allocate(sizeof *nodes), *pnodes = NULL;
+    dst->nodes = dnodes;
+    while (nodes) {
+      dnodes->node = ctr_deep_copy_ast(nodes->node);
+      dnodes->next = ctr_heap_allocate(sizeof *dnodes);
+      pnodes = dnodes;
+      dnodes = dnodes->next;
+      nodes = nodes->next;
+    }
+    ctr_heap_free(dnodes);
+    pnodes->next = NULL;
+  }
+  return dst;
 }

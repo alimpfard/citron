@@ -1,3 +1,3 @@
-Parser warning, unexpected . ( tests/test0300.ctr: 3)
--> Expected a message recipient.
-1
+Parser warning, unexpected end of program ( tests/test0300.ctr: 4)
+-> Expected a ')'.
+4

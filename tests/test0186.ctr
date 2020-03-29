@@ -11,10 +11,10 @@ Pen write: (6 < 5), brk.
 Pen write: (2 > 1), brk.
 Pen write: (2 <=: 1), brk.
 Pen write: (9 >=: 1), brk.
-Pen write: (2 odd), brk.
-Pen write: (4 even), brk.
-Pen write: (-1 pos), brk.
-Pen write: (-2 neg), brk.
+Pen write: (2 odd?), brk.
+Pen write: (4 even?), brk.
+Pen write: (-1 pos?), brk.
+Pen write: (-2 neg?), brk.
 Pen write: (3 between: 4 and: 5), brk.
 Pen write: (3 = 3), brk.
 Pen write: (3 !=: 3), brk.
@@ -29,10 +29,10 @@ Pen write: (6 < 5), brk.
 Pen write: (2 > 1), brk.
 Pen write: (2 <=: 1), brk.
 Pen write: (9 >=: 1), brk.
-Pen write: (2 odd), brk.
-Pen write: (4 even), brk.
-Pen write: (-1 pos), brk.
-Pen write: (-2 neg), brk.
+Pen write: (2 odd?), brk.
+Pen write: (4 even?), brk.
+Pen write: (-1 pos?), brk.
+Pen write: (-2 neg?), brk.
 Pen write: (3 between: 4 and: 5), brk.
 Pen write: (3 = 3), brk.
 Pen write: (3 !=: 3), brk.
@@ -46,10 +46,10 @@ Pen write: (6 < 5), brk.
 Pen write: (2 > 1), brk.
 Pen write: (2 <=: 1), brk.
 Pen write: (9 >=: 1), brk.
-Pen write: (2 odd), brk.
-Pen write: (4 even), brk.
-Pen write: (-1 pos), brk.
-Pen write: (-2 neg), brk.
+Pen write: (2 odd?), brk.
+Pen write: (4 even?), brk.
+Pen write: (-1 pos?), brk.
+Pen write: (-2 neg?), brk.
 Pen write: (3 between: 4 and: 5), brk.
 Pen write: (3 = 3), brk.
 Pen write: (3 !=: 3), brk.

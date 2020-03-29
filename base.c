@@ -33,6 +33,61 @@
 
 int more_exception_data = 1;
 
+__attribute__((always_inline)) static ctr_object *
+ctr_internal_run_block(ctr_tnode *codeBlockPart2, ctr_object *myself,
+                       ctr_object *my) {
+  if (my)
+    ctr_assign_value_to_local_by_ref(
+        &CTR_CLEX_KW_ME, my); /* me should always point to object, otherwise you
+                                 have to store me in self and can't use in if */
+  ctr_assign_value_to_local(
+      &CTR_CLEX_KW_THIS, myself); /* otherwise running block may get gc'ed. */
+  ctr_object *result = ctr_cwlk_run(codeBlockPart2);
+  if (result == NULL) {
+    if (my)
+      result = my;
+    else
+      result = myself;
+  }
+  if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak &&
+      CtrStdFlow != CtrStdContinue) {
+    ctr_object *catchBlock = ctr_internal_object_find_property(
+        myself, ctr_build_string_from_cstring("catch"), 0);
+    if (catchBlock != NULL) {
+      ctr_object *catch_type = ctr_internal_object_find_property(
+          catchBlock, ctr_build_string_from_cstring("%catch"), 0);
+      ctr_argument aa = {0}, ab = {0}, *a = &aa;
+      ctr_object *exdata = ctr_build_string_from_cstring(":exdata"),
+                 *ex = CtrStdFlow,
+                 *getexinfo = ctr_build_string_from_cstring("exceptionInfo");
+      ctr_internal_object_set_property(ex, exdata, ctr_internal_ex_data(), 0);
+      ctr_internal_create_func(ex, getexinfo, &ctr_exception_getinfo);
+      int setstr = 0;
+      if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING) {
+        ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
+        setstr = 1;
+        ctr_internal_create_func(ex, ctr_build_string_from_cstring("toString"),
+                                 &ctr_string_to_string);
+      }
+      a->object = ex;
+      a->next = &ab;
+      a->next->object = catch_type;
+      if (!catch_type ||
+          ctr_reflect_is_linked_to(CtrStdReflect, a)->value.bvalue) {
+        CtrStdFlow = NULL;
+        a->object = ex;
+        ctr_object *alternative = ctr_block_run_here(catchBlock, a, my);
+        result = alternative;
+      }
+      ctr_internal_object_delete_property(ex, exdata, 0);
+      ctr_internal_object_delete_property(ex, getexinfo, 1);
+      if (setstr)
+        ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
+    }
+  }
+  return result;
+}
+
 #include "generator.h"
 char *ctr_itoa(int value, char *buffer, int base);
 static inline void ctr_assign_block_parameters(ctr_tlistitem *, ctr_argument *,
@@ -1094,7 +1149,7 @@ ctr_object *ctr_bool_if_true(ctr_object *myself, ctr_argument *argumentList) {
     }
     return myself;
   }
-  if (CtrStdFlow == CtrStdBreak)
+  if (CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
     CtrStdFlow = NULL; /* consume break */
   return myself;
 }
@@ -1124,7 +1179,7 @@ ctr_object *ctr_bool_if_false(ctr_object *myself, ctr_argument *argumentList) {
     }
     return myself;
   }
-  if (CtrStdFlow == CtrStdBreak)
+  if (CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
     CtrStdFlow = NULL; /* consume break */
   return myself;
 }
@@ -1154,7 +1209,7 @@ ctr_object *ctr_bool_if_tf(ctr_object *myself, ctr_argument *argumentList) {
     }
     return myself;
   }
-  if (CtrStdFlow == CtrStdBreak)
+  if (CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
     CtrStdFlow = NULL; /* consume break */
   return myself;
 }
@@ -1527,6 +1582,18 @@ ctr_object *ctr_number_neq(ctr_object *myself, ctr_argument *argumentList) {
 }
 
 /**
+ *[Number] <=> [other]
+ *
+ * Number ordering, 1 if greater, 0 if equal, -1 if smaller
+ */
+ctr_object *ctr_number_order(ctr_object *myself, ctr_argument *argumentList) {
+  CTR_ENSURE_TYPE_NUMBER(argumentList->object);
+  ctr_object *otherNum = ctr_internal_cast2number(argumentList->object);
+  ctr_number fl = myself->value.nvalue - otherNum->value.nvalue;
+  return ctr_build_number_from_float((fl > 0) - (fl < 0));
+}
+
+/**
  *[Number] between: [low] and: [high]
  *
  * Returns True if the number instance has a value between the two
@@ -1545,7 +1612,7 @@ ctr_object *ctr_number_between(ctr_object *myself, ctr_argument *argumentList) {
 }
 
 /**
- *[Number] odd
+ *[Number] odd?
  *
  * Returns True if the number is odd and False otherwise.
  */
@@ -1556,7 +1623,7 @@ ctr_object *ctr_number_odd(ctr_object *myself, ctr_argument *argumentList) {
 }
 
 /**
- *[Number] even
+ *[Number] even?
  *
  * Returns True if the number is even and False otherwise.
  */
@@ -1893,7 +1960,7 @@ ctr_object *ctr_number_pow(ctr_object *myself, ctr_argument *argumentList) {
 }
 
 /**
- *[Number] pos
+ *[Number] pos?
  *
  * Returns a boolean indicating wether the number is positive.
  * This message will return a boolean object 'True' if the recipient is
@@ -1902,7 +1969,7 @@ ctr_object *ctr_number_pow(ctr_object *myself, ctr_argument *argumentList) {
  * Usage:
  *
  * hope := 0.1.
- * ( hope pos ) ifTrue: { Pen write: 'Still a little hope for humanity'. }.
+ * hope pos? ifTrue: { Pen write: 'Still a little hope for humanity'. }.
  *
  * The example above will print the message because hope is higher than 0.
  */
@@ -1914,7 +1981,7 @@ ctr_object *ctr_number_positive(ctr_object *myself,
 }
 
 /**
- *[Number] neg
+ *[Number] neg?
  *
  * Returns a boolean indicating wether the number is negative.
  * This message will return a boolean object 'True' if the recipient is
@@ -1924,7 +1991,7 @@ ctr_object *ctr_number_positive(ctr_object *myself,
  * Usage:
  *
  * hope := -1.
- * (hope neg) ifTrue: { Pen write: 'No hope left'. }.
+ * (hope neg?) ifTrue: { Pen write: 'No hope left'. }.
  *
  * The example above will print the message because the value of the variable
  * hope is less than 0.
@@ -2020,15 +2087,14 @@ ctr_object *ctr_number_to_step_do(ctr_object *myself,
   }
   if (!codeBlock->value.block->lexical)
     ctr_open_context();
-  ctr_object *arg =
-      ctr_internal_create_standalone_object(CTR_OBJECT_TYPE_OTNUMBER);
-  arg->value.nvalue = curValue;
+  ctr_object *arg = ctr_build_number_from_float(curValue);
   while ((forward ? curValue < endValue : curValue > endValue) && !CtrStdFlow) {
     arg->value.nvalue = curValue;
     arguments->object = arg;
     ctr_block_run_here(codeBlock, arguments, codeBlock);
     if (CtrStdFlow == CtrStdContinue)
       CtrStdFlow = NULL; /* consume continue and go on */
+    curValue = arg->value.nvalue;
     curValue += incValue;
   }
   if (!codeBlock->value.block->lexical)
@@ -2539,6 +2605,9 @@ ctr_object *ctr_build_string_from_cstring(char *cstring) {
  */
 ctr_object *ctr_build_empty_string() { return ctr_build_string("", 0); }
 
+static const char ascii_escape_names[] = (char[256]){
+    [0x07] = 'a', [0x08] = 'b',  [0x0c] = 'f',  [0x0a] = 'n', [0x0d] = 'r',
+    [0x09] = 't', [0x5c] = '\\', [0x27] = '\'', [0x22] = '"', [0x3f] = '?'};
 /**
  * [String] escape: '\n'.
  *
@@ -2593,31 +2662,27 @@ ctr_object *ctr_string_escape_ascii(ctr_object *myself,
     for (q = 0; q < nchars; q++) {
       character = characters[q];
       is_cchar = 0;
-      switch (character) {
-      case '\t':
-        descr = 't';
-        is_cchar = 1;
-        break;
-      case '\r':
-        descr = 'r';
-        is_cchar = 1;
-        break;
-      case '\n':
-        descr = 'n';
-        is_cchar = 1;
-        break;
-      case '\b':
-        descr = 'b';
-        is_cchar = 1;
-        break;
-      }
+      // switch (character) {
+      // case '\t':
+      //   descr = 't';
+      //   is_cchar = 1;
+      //   break;
+      // case '\r':
+      //   descr = 'r';
+      //   is_cchar = 1;
+      //   break;
+      // case '\n':
+      //   descr = 'n';
+      //   is_cchar = 1;
+      //   break;
+      // case '\b':
+      //   descr = 'b';
+      //   is_cchar = 1;
+      //   break;
+      // }
       if (c == character) {
         tstr[k++] = '\\';
-        if (is_cchar) {
-          tstr[k++] = descr;
-        } else {
-          tstr[k++] = str[i];
-        }
+        tstr[k++] = ascii_escape_names[c] ?: str[i];
         escaped = 1;
         break;
       }
@@ -2626,7 +2691,7 @@ ctr_object *ctr_string_escape_ascii(ctr_object *myself,
       tstr[k++] = str[i];
     }
   }
-  newString = ctr_build_string(tstr, tlen);
+  newString = ctr_build_string(tstr, k);
   ctr_heap_free(tstr);
   return newString;
 }
@@ -2708,6 +2773,70 @@ ctr_object *ctr_string_neq(ctr_object *myself, ctr_argument *argumentList) {
 }
 
 /**
+ *[String] < [other]
+ *
+ * string lexical ordering.
+ */
+ctr_object *ctr_string_lex_lt(ctr_object *myself, ctr_argument *argumentList) {
+  ctr_object *other = ctr_internal_cast2string(argumentList->object);
+  return ctr_build_bool(
+      (strncmp(other->value.svalue->value, myself->value.svalue->value,
+               myself->value.svalue->vlen) > 0));
+}
+
+/**
+ *[String] <= [other]
+ *
+ * string lexical ordering.
+ * alias: `<=:'
+ */
+ctr_object *ctr_string_lex_lte(ctr_object *myself, ctr_argument *argumentList) {
+  ctr_object *other = ctr_internal_cast2string(argumentList->object);
+  return ctr_build_bool(
+      (strncmp(other->value.svalue->value, myself->value.svalue->value,
+               myself->value.svalue->vlen) >= 0));
+}
+
+/**
+ *[String] > [other]
+ *
+ * string lexical ordering.
+ */
+ctr_object *ctr_string_lex_gt(ctr_object *myself, ctr_argument *argumentList) {
+  ctr_object *other = ctr_internal_cast2string(argumentList->object);
+  return ctr_build_bool(
+      (strncmp(other->value.svalue->value, myself->value.svalue->value,
+               myself->value.svalue->vlen) < 0));
+}
+
+/**
+ *[String] >= [other]
+ *
+ * string lexical ordering.
+ * alias: `>=:'
+ */
+ctr_object *ctr_string_lex_gte(ctr_object *myself, ctr_argument *argumentList) {
+  ctr_object *other = ctr_internal_cast2string(argumentList->object);
+  return ctr_build_bool(
+      (strncmp(other->value.svalue->value, myself->value.svalue->value,
+               myself->value.svalue->vlen) <= 0));
+}
+
+/**
+ * [String] <=> [other]
+ *
+ * string lexical ordering.
+ * alias: `<=>:'
+ */
+ctr_object *ctr_string_lex_order(ctr_object *myself,
+                                 ctr_argument *argumentList) {
+  ctr_object *other = ctr_internal_cast2string(argumentList->object);
+  return ctr_build_number_from_float(
+      (strncmp(other->value.svalue->value, myself->value.svalue->value,
+               myself->value.svalue->vlen)));
+}
+
+/**
  *[String] length
  *
  * Returns the length of the string in symbols.
@@ -2723,7 +2852,7 @@ ctr_object *ctr_string_length(ctr_object *myself, ctr_argument *argumentList) {
 }
 
 /**
- *[String] empty
+ *[String] empty?
  *
  * returns whether this string is empty
  */
@@ -3654,6 +3783,7 @@ ctr_object *ctr_string_find_pattern_options_do(ctr_object *myself,
   uint8_t flagIgnore = 0;
   uint8_t flagNewLine = 0;
   uint8_t flagCI = 0;
+  int flagOne = 0;
   for (p = 0; p < olen; p++) {
     if (options[p] == '!') {
       flagIgnore = 1;
@@ -3663,6 +3793,9 @@ ctr_object *ctr_string_find_pattern_options_do(ctr_object *myself,
     }
     if (options[p] == 'i') {
       flagCI = 1;
+    }
+    if (options[p] == 'o') {
+      flagOne = 1;
     }
   }
   ctr_object *block = argumentList->next->object;
@@ -3707,6 +3840,8 @@ ctr_object *ctr_string_find_pattern_options_do(ctr_object *myself,
       ctr_string_append(newString, arg);
       offset += matches[0].rm_eo;
     }
+    if (flagOne)
+        break;
   }
   arg->object = ctr_build_string(haystack + offset, strlen(haystack + offset));
   ctr_string_append(newString, arg);
@@ -3737,6 +3872,7 @@ ctr_object *ctr_string_find_pattern_options_do(
   uint8_t flagIgnore = 0;
   uint8_t flagNewLine = 0;
   uint8_t flagCI = 0;
+  int flagOne = 0;
   for (p = 0; p < olen; p++) {
     if (options[p] == '!') {
       flagIgnore = 1;
@@ -3746,6 +3882,9 @@ ctr_object *ctr_string_find_pattern_options_do(
     }
     if (options[p] == 'i') {
       flagCI = 1;
+    }
+    if (options[p] == 'o') {
+      flagOne = 1;
     }
   }
   ctr_object *block = argumentList->next->object;
@@ -3799,6 +3938,8 @@ ctr_object *ctr_string_find_pattern_options_do(
       offset += matches[1];
     } else
       break;
+    if (flagOne)
+        break;
   }
   arg->object = ctr_build_string(haystack + offset, strlen(haystack + offset));
   ctr_string_append(newString, arg);
@@ -5394,8 +5535,10 @@ void ctr_capture_refs_(ctr_tnode *ti, ctr_object *block, ctr_object *parent,
         ctr_heap_free(CtrStdFlow);
         CtrStdFlow = NULL;
       } else {
-        t->nodes->node = (ctr_tnode *)p;
-        t->modifier = 1;
+        t->modifier = 2;
+        ctr_tlistitem *nl = ctr_heap_allocate(sizeof *nl);
+        nl->node = (ctr_tnode *)p;
+        t->nodes->next = nl;
       }
       break;
     }
@@ -5446,6 +5589,61 @@ ctr_object *ctr_block_assign(ctr_object *myself, ctr_argument *argumentList) {
   return myself;
 }
 
+/**
+ *[Block] if: [Boolean]
+ *
+ * Executes the block of code if the value of the boolean
+ * object is True.
+ *
+ * Example:
+ * { thisBlock error: 'Nooooo'. } if: 64 even?.
+ */
+ctr_object *ctr_block_if(ctr_object *myself, ctr_argument *argumentList) {
+  ctr_object *result;
+  ctr_argument arg = {0}, *arguments = &arg;
+  ctr_object *cond = argumentList->object;
+  if (cond->value.bvalue) {
+    arguments->object = cond;
+
+    result = ctr_block_run(myself, arguments, NULL);
+    if (result != myself) {
+      ctr_internal_next_return = 1;
+      return result;
+    }
+    return myself;
+  }
+  if (CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
+    CtrStdFlow = NULL; /* consume break */
+  return myself;
+}
+
+/**
+ *[Block] unless: [Boolean]
+ *
+ * Executes the block of code if the value of the boolean
+ * object is False.
+ *
+ * Example:
+ * { thisBlock error: 'Nooooo'. } unless: 64 odd?.
+ */
+ctr_object *ctr_block_iffalse(ctr_object *myself, ctr_argument *argumentList) {
+  ctr_object *result;
+  ctr_argument arg = {0}, *arguments = &arg;
+  ctr_object *cond = argumentList->object;
+  if (!cond->value.bvalue) {
+    arguments->object = cond;
+
+    result = ctr_block_run(myself, arguments, NULL);
+    if (result != myself) {
+      ctr_internal_next_return = 1;
+      return result;
+    }
+    return myself;
+  }
+  if (CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
+    CtrStdFlow = NULL; /* consume break */
+  return myself;
+}
 /**
  * [Block] specialize: [types...] with: [Block]
  *
@@ -5889,57 +6087,7 @@ ctr_object *ctr_block_run_here(ctr_object *myself, ctr_argument *argList,
   ctr_tlistitem *parameterList = codeBlockPart1->nodes;
   // ctr_open_context();
   ctr_assign_block_parameters(parameterList, argList, my);
-  if (my)
-    ctr_assign_value_to_local_by_ref(
-        &CTR_CLEX_KW_ME, my); /* me should always point to object, otherwise you
-                                 have to store me in self and can't use in if */
-  ctr_assign_value_to_local(
-      &CTR_CLEX_KW_THIS, myself); /* otherwise running block may get gc'ed. */
-  result = ctr_cwlk_run(codeBlockPart2);
-  if (result == NULL) {
-    if (my)
-      result = my;
-    else
-      result = myself;
-  }
-  // ctr_close_context();
-  if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak &&
-      CtrStdFlow != CtrStdContinue) {
-    ctr_object *catchBlock = ctr_internal_object_find_property(
-        myself, ctr_build_string_from_cstring("catch"), 0);
-    if (catchBlock != NULL) {
-      ctr_object *catch_type = ctr_internal_object_find_property(
-          catchBlock, ctr_build_string_from_cstring("%catch"), 0);
-      ctr_argument aa = {0}, ab = {0}, *a = &aa;
-      ctr_object *exdata = ctr_build_string_from_cstring(":exdata"),
-                 *ex = CtrStdFlow,
-                 *getexinfo = ctr_build_string_from_cstring("exceptionInfo");
-      ctr_internal_object_set_property(ex, exdata, ctr_internal_ex_data(), 0);
-      ctr_internal_create_func(ex, getexinfo, &ctr_exception_getinfo);
-      int setstr = 0;
-      if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING) {
-        ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
-        setstr = 1;
-        ctr_internal_create_func(ex, ctr_build_string_from_cstring("toString"),
-                                 &ctr_string_to_string);
-      }
-      a->object = ex;
-      a->next = &ab;
-      a->next->object = catch_type;
-      if (!catch_type ||
-          ctr_reflect_is_linked_to(CtrStdReflect, a)->value.bvalue) {
-        CtrStdFlow = NULL;
-        a->object = ex;
-        ctr_object *alternative = ctr_block_run_here(catchBlock, a, my);
-        result = alternative;
-      }
-      ctr_internal_object_delete_property(ex, exdata, 0);
-      ctr_internal_object_delete_property(ex, getexinfo, 1);
-      if (setstr)
-        ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
-    }
-  }
-  return result;
+  return ctr_internal_run_block(codeBlockPart2, myself, my);
 }
 
 /**
@@ -5960,112 +6108,22 @@ ctr_object *ctr_block_run_here(ctr_object *myself, ctr_argument *argList,
  */
 ctr_object *ctr_block_while_true(ctr_object *myself,
                                  ctr_argument *argumentList) {
-  int sticky1, sticky2;
-  sticky1 = myself->info.sticky;
-  sticky2 = argumentList->object->info.sticky;
-  myself->info.sticky = 1;
-  argumentList->object->info.sticky = 1;
   ctr_object *my = myself, *block = my, *runblock = argumentList->object,
              *result, *my0;
+  ctr_tnode *block0 = block->value.block->nodes->next->node,
+            *block1 = runblock->value.block->nodes->next->node;
   if (myself->value.block->lexical)
     ctr_contexts[++ctr_context_id] = myself;
   else
     ctr_open_context();
-  ctr_tnode *node = myself->value.block;
-  ctr_tlistitem *codeBlockParts = node->nodes,
-                *cbparts1 = runblock->value.block->nodes;
-  ctr_tnode *codeBlockPart1 = codeBlockParts->node, *cb1parts1 = cbparts1->node;
-  ctr_tnode *codeBlockPart2 = codeBlockParts->next->node,
-            *cb1parts2 = cbparts1->next->node;
-  ctr_tlistitem *parameterList = codeBlockPart1->nodes, *paramList0;
-  ctr_tnode *parameter;
-  ctr_tnode *block0;
-  int snd_stage = 0; // are we running the predicate, or the block
-  while (1 && !CtrStdFlow) {
-  resolve_value : {
-    if (parameterList && parameterList->node) {
-      parameter = parameterList->node;
-      if (parameter->vlen == 4 && strncmp(parameter->value, "self", 4) == 0) {
-        // assign self selectively, skip that parameter
-        ctr_assign_value_to_local_by_ref(
-            ctr_build_string(parameter->value, parameter->vlen), my);
-        parameterList = parameterList->next;
-      }
-    }
-    ctr_assign_value_to_local_by_ref(
-        &CTR_CLEX_KW_ME, my); /* me should always point to object, otherwise you
-                                 have to store me in self and can't use in if */
-    ctr_assign_value_to_local(
-        &CTR_CLEX_KW_THIS, block); /* otherwise running block may get gc'ed. */
-    result = ctr_cwlk_run(codeBlockPart2);
-    if (result == NULL)
-      result = my;
-    if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak &&
-        CtrStdFlow != CtrStdContinue) {
-      ctr_object *catchBlock = ctr_internal_object_find_property(
-          block, ctr_build_string_from_cstring("catch"), 0);
-      if (catchBlock != NULL) {
-        ctr_object *catch_type = ctr_internal_object_find_property(
-            catchBlock, ctr_build_string_from_cstring("%catch"), 0);
-        ctr_argument aa = {0}, ab = {0}, *a = &aa;
-        ctr_object *exdata = ctr_build_string_from_cstring(":exdata"),
-                   *ex = CtrStdFlow,
-                   *getexinfo = ctr_build_string_from_cstring("exceptionInfo");
-        ctr_internal_object_set_property(ex, exdata, ctr_internal_ex_data(), 0);
-        ctr_internal_create_func(ex, getexinfo, &ctr_exception_getinfo);
-        int setstr = 0;
-        if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING) {
-          ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
-          setstr = 1;
-          ctr_internal_create_func(ex,
-                                   ctr_build_string_from_cstring("toString"),
-                                   &ctr_string_to_string);
-        }
-        a->object = ex;
-        a->next = &ab;
-        a->next->object = catch_type;
-        if (!catch_type ||
-            ctr_reflect_is_linked_to(CtrStdReflect, a)->value.bvalue) {
-          CtrStdFlow = NULL;
-          a->object = ex;
-          ctr_object *alternative = ctr_block_run_here(catchBlock, a, my);
-          result = alternative;
-        }
-        ctr_internal_object_delete_property(ex, exdata, 0);
-        ctr_internal_object_delete_property(ex, getexinfo, 1);
-        if (setstr)
-          ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
-      }
-    }
-  }
-    if (snd_stage)
-      goto restore_stuff;
-    result = ctr_internal_cast2bool(result);
-    if (result->value.bvalue == 0 || CtrStdFlow)
-      break;
-    // save the stuff for the predicate block
-    paramList0 = parameterList;
-    block0 = codeBlockPart2;
-    my0 = my;
-    // subst for the stuff for the running block
-    parameterList = cb1parts1->nodes;
-    codeBlockPart2 = cb1parts2;
-    my = runblock;
-    snd_stage = 1;
-    goto resolve_value;
-  restore_stuff:;
-    snd_stage = 0;
-    parameterList = paramList0;
-    codeBlockPart2 = block0;
-    my = my0;
-    if (CtrStdFlow == CtrStdContinue)
-      CtrStdFlow = NULL; /* consume continue */
+  while (!CtrStdFlow &&
+         ctr_internal_cast2bool(ctr_internal_run_block(block0, myself, block))
+             ->value.bvalue) {
+    ctr_internal_run_block(block1, runblock, runblock);
   }
   ctr_close_context();
-  if (CtrStdFlow == CtrStdBreak)
+  if (CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
     CtrStdFlow = NULL; /* consume break */
-  myself->info.sticky = sticky1;
-  argumentList->object->info.sticky = sticky2;
   return myself;
 }
 
@@ -6087,159 +6145,38 @@ ctr_object *ctr_block_while_true(ctr_object *myself,
  */
 ctr_object *ctr_block_while_false(ctr_object *myself,
                                   ctr_argument *argumentList) {
-  int sticky1, sticky2;
-  sticky1 = myself->info.sticky;
-  sticky2 = argumentList->object->info.sticky;
-  myself->info.sticky = 1;
-  argumentList->object->info.sticky = 1;
   ctr_object *my = myself, *block = my, *runblock = argumentList->object,
              *result, *my0;
+  ctr_tnode *block0 = block->value.block->nodes->next->node,
+            *block1 = runblock->value.block->nodes->next->node;
   if (myself->value.block->lexical)
     ctr_contexts[++ctr_context_id] = myself;
   else
     ctr_open_context();
-  ctr_tnode *node = myself->value.block;
-  ctr_tlistitem *codeBlockParts = node->nodes,
-                *cbparts1 = runblock->value.block->nodes;
-  ctr_tnode *codeBlockPart1 = codeBlockParts->node, *cb1parts1 = cbparts1->node;
-  ctr_tnode *codeBlockPart2 = codeBlockParts->next->node,
-            *cb1parts2 = cbparts1->next->node;
-  ctr_tlistitem *parameterList = codeBlockPart1->nodes, *paramList0;
-  ctr_tnode *parameter;
-  ctr_tnode *block0;
-  int snd_stage = 0; // are we running the predicate, or the block
-  while (1 && !CtrStdFlow) {
-  resolve_value : {
-    if (parameterList && parameterList->node) {
-      parameter = parameterList->node;
-      if (parameter->vlen == 4 && strncmp(parameter->value, "self", 4) == 0) {
-        // assign self selectively, skip that parameter
-        ctr_assign_value_to_local_by_ref(
-            ctr_build_string(parameter->value, parameter->vlen), my);
-        parameterList = parameterList->next;
-      }
-    }
-    ctr_assign_value_to_local_by_ref(
-        &CTR_CLEX_KW_ME, my); /* me should always point to object, otherwise you
-                                 have to store me in self and can't use in if */
-    ctr_assign_value_to_local(
-        &CTR_CLEX_KW_THIS, block); /* otherwise running block may get gc'ed. */
-    result = ctr_cwlk_run(codeBlockPart2);
-    if (result == NULL)
-      result = my;
-    if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak &&
-        CtrStdFlow != CtrStdContinue) {
-      ctr_object *catchBlock = ctr_internal_object_find_property(
-          block, ctr_build_string_from_cstring("catch"), 0);
-      if (catchBlock != NULL) {
-        ctr_object *catch_type = ctr_internal_object_find_property(
-            catchBlock, ctr_build_string_from_cstring("%catch"), 0);
-        ctr_argument aa = {0}, ab = {0}, *a = &aa;
-        ctr_object *exdata = ctr_build_string_from_cstring(":exdata"),
-                   *ex = CtrStdFlow,
-                   *getexinfo = ctr_build_string_from_cstring("exceptionInfo");
-        ctr_internal_object_set_property(ex, exdata, ctr_internal_ex_data(), 0);
-        ctr_internal_create_func(ex, getexinfo, &ctr_exception_getinfo);
-        int setstr = 0;
-        if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING) {
-          ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
-          setstr = 1;
-          ctr_internal_create_func(ex,
-                                   ctr_build_string_from_cstring("toString"),
-                                   &ctr_string_to_string);
-        }
-        a->object = ex;
-        a->next = &ab;
-        a->next->object = catch_type;
-        if (!catch_type ||
-            ctr_reflect_is_linked_to(CtrStdReflect, a)->value.bvalue) {
-          CtrStdFlow = NULL;
-          a->object = ex;
-          ctr_object *alternative = ctr_block_run_here(catchBlock, a, my);
-          result = alternative;
-        }
-        ctr_internal_object_delete_property(ex, exdata, 0);
-        ctr_internal_object_delete_property(ex, getexinfo, 1);
-        if (setstr)
-          ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
-      }
-    }
-  }
-    if (snd_stage)
-      goto restore_stuff;
-    result = ctr_internal_cast2bool(result);
-    if (result->value.bvalue == 1 || CtrStdFlow)
-      break;
-    // save the stuff for the predicate block
-    paramList0 = parameterList;
-    block0 = codeBlockPart2;
-    my0 = my;
-    // subst for the stuff for the running block
-    parameterList = cb1parts1->nodes;
-    codeBlockPart2 = cb1parts2;
-    my = runblock;
-    snd_stage = 1;
-    goto resolve_value;
-  restore_stuff:;
-    snd_stage = 0;
-    parameterList = paramList0;
-    codeBlockPart2 = block0;
-    my = my0;
-    if (CtrStdFlow == CtrStdContinue)
-      CtrStdFlow = NULL; /* consume continue */
+  while (!CtrStdFlow &&
+         !ctr_internal_cast2bool(ctr_internal_run_block(block0, myself, block))
+              ->value.bvalue) {
+    ctr_internal_run_block(block1, runblock, runblock);
   }
   ctr_close_context();
-  if (CtrStdFlow == CtrStdBreak)
+  if (CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
     CtrStdFlow = NULL; /* consume break */
-  myself->info.sticky = sticky1;
-  argumentList->object->info.sticky = sticky2;
   return myself;
 }
 
 ctr_object *ctr_block_forever(ctr_object *myself, ctr_argument *argumentList) {
   (void)argumentList;
-
-  ctr_tnode *cblock = myself->value.block;
-  ctr_tlistitem *params = cblock->nodes->node->nodes;
-  ctr_tnode *code = cblock->nodes->next->node;
-  if (params && params->node && params->node->vlen == 4 &&
-      strncmp(params->node->value, "self", 4) == 0) {
-    // assign self selectively, skip that parameter
-    ctr_object *name =
-        ctr_build_string(params->node->value, params->node->vlen);
-    ctr_assign_value_to_local_by_ref(name, myself);
-    // ctr_heap_free(name);
-  }
-  ctr_object *catch = ctr_internal_object_find_property(
-      myself, ctr_build_string_from_cstring("catch"), 0);
-  ctr_argument agms;
+  ctr_tnode *block0 = myself->value.block->nodes->next->node;
   if (myself->value.block->lexical)
     ctr_contexts[++ctr_context_id] = myself;
   else
     ctr_open_context();
-  while (1 && !CtrStdFlow) {
-    ctr_assign_value_to_local_by_ref(
-        &CTR_CLEX_KW_ME,
-        myself); /* me should always point to object, otherwise you have to
-                    store me in self and can't use in if */
-    ctr_assign_value_to_local(
-        &CTR_CLEX_KW_THIS, myself); /* otherwise running block may get gc'ed. */
-    ctr_cwlk_run(code);
-    if (CtrStdFlow == CtrStdBreak) {
-      CtrStdFlow = NULL;
-      break;
-    }
-    if (CtrStdFlow == CtrStdContinue) {
-      CtrStdFlow = NULL;
-      continue;
-    }
-    if (CtrStdFlow && catch) {
-      agms.object = CtrStdFlow;
-      CtrStdFlow = NULL;
-      ctr_block_run_here(catch, &agms, catch);
-    }
+  while (!CtrStdFlow) {
+    ctr_internal_run_block(block0, myself, myself);
   }
   ctr_close_context();
+  if (CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
+    CtrStdFlow = NULL; /* consume break */
   return myself;
 }
 
@@ -6265,6 +6202,10 @@ ctr_object *ctr_block_runIt(ctr_object *myself, ctr_argument *argumentList) {
                          myself); /* here me/my refers to block itself not
                                      object - this allows closures. */
   return result;
+}
+
+ctr_object *ctr_block_goto(ctr_object *myself, ctr_argument *argumentList) {
+  return ctr_cwlk_run(myself->value.block->nodes->next->node) ?: myself;
 }
 
 ctr_object *ctr_block_runall(ctr_object *myself, ctr_argument *argumentList) {

@@ -19,3 +19,6 @@
 [submodule "Library"]
 	path = Library
 	url = https://github.com/alimpfard/citron_standard_library.git
+[submodule "integration/atom/atom-citron-formatter"]
+	path = integration/atom/atom-citron-formatter
+	url = https://github.com/alimpfard/atom-citron-formatter

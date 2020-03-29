@@ -1,1 +1,3 @@
-hello 
+Uncaught error has occurred.
+Unknown method Object::'write:' was called
+#1 write: (test0120.ctr: 14)

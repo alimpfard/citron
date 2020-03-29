@@ -1,6 +1,6 @@
 # Tests patterns as block args
 
-var first is \:([a, *_]) a.
+var first is {:([a, *_]) ^a.}.
 var second is \:([a, b, *_]) b.
 var tail is \:([a, *xs]) xs.
 var init is \:([*xs, y]) xs.

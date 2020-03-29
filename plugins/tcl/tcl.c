@@ -111,6 +111,7 @@ static Tcl_Obj* ctr_tcl_as_obj(ctr_object* ctrobj, void* interp) {
 struct tcl_run_data {
   ctr_object* blk;
   ctr_argument* argumentList;
+  ctr_object* context;
   char *name;
 };
 
@@ -134,8 +135,9 @@ int ctr_tcl_run_blk(ClientData clientData, Tcl_Interp* interp, int objc, Tcl_Obj
     argm = argm->next;
   }
   argm->next = NULL;
-
-  ctr_object* res = ctr_block_run(blk, argumentList, blk);
+  ctr_contexts[++ctr_context_id] = ((struct tcl_run_data*)clientData)->context;
+  ctr_object* res = ctr_block_run_here(blk, argumentList, blk);
+  ctr_close_context();
   ctr_free_argumentList(argumentList);
   if((*get_CtrStdFlow()) == CtrStdBreak) {
     (*get_CtrStdFlow()) = NULL;
@@ -170,6 +172,7 @@ ctr_object* ctr_tcl_fnof(ctr_object* myself, ctr_argument* argumentList) {
   struct tcl_run_data* data = ctr_heap_allocate(sizeof(*data));
   data->blk = blk;
   data->argumentList = NULL;
+  data->context = ctr_internal_create_object(CTR_OBJECT_TYPE_OTOBJECT);
   ctr_object* sname = blk->lexical_name;
   if (sname && sname->info.type == CTR_OBJECT_TYPE_OTSTRING) {
     struct ctr_string* strn = sname->value.svalue;

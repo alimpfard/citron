@@ -547,6 +547,20 @@ ctr_object *ctr_generator_isfin(ctr_object *myself,
 }
 
 /**
+ * [Generator] finish
+ *
+ * Finish the generator
+ */
+ctr_object *ctr_generator_fin(ctr_object *myself,
+                              ctr_argument *argumentList) {
+  ctr_resource *res = myself->value.rvalue;
+  ctr_generator *genny = res->ptr;
+  if (genny)
+      genny->finished = 1;
+  return myself;
+}
+
+/**
  * [Generator] each: [Block]
  *
  * Runs the block for each element in the generator
@@ -968,7 +982,7 @@ ctr_object *ctr_generator_foldl(ctr_object *myself,
         "Expected two arguments to Generator::'foldl:accumulator:'");
     return CtrStdNil;
   }
-  ctr_object *result = argumentList->next->object;
+  ctr_object *result = argumentList->next->object, *old_result = CtrStdNil;
   if (!genny) {
     CtrStdFlow =
         ctr_build_string_from_cstring("::'next' on uninitialized generator");
@@ -985,6 +999,7 @@ ctr_object *ctr_generator_foldl(ctr_object *myself,
       continue;
     argm.object = result;
     argm.next->object = next;
+    old_result = result;
     result = ctr_block_run(folder, &argm, folder);
     if (CtrStdFlow) {
       if (CtrStdFlow == CtrStdContinue) {
@@ -994,6 +1009,7 @@ ctr_object *ctr_generator_foldl(ctr_object *myself,
       if (CtrStdFlow == CtrStdBreak) {
         CtrStdFlow = NULL;
         genny->finished = 1;
+        result = old_result;
       }
       break;
     }
@@ -1024,7 +1040,7 @@ ctr_object *ctr_generator_foldl0(ctr_object *myself,
         ctr_build_string_from_cstring("::'next' on uninitialized generator");
     return CtrStdNil;
   }
-  ctr_object *result = NULL;
+  ctr_object *result = NULL, *old_result = CtrStdNil;
   ctr_argument argm = {0}, argm2 = {0};
   argm.next = &argm2;
 
@@ -1040,6 +1056,7 @@ ctr_object *ctr_generator_foldl0(ctr_object *myself,
     }
     argm.object = result;
     argm.next->object = next;
+    old_result = result;
     result = ctr_block_run(folder, &argm, folder);
     if (CtrStdFlow) {
       if (CtrStdFlow == CtrStdContinue) {
@@ -1049,6 +1066,7 @@ ctr_object *ctr_generator_foldl0(ctr_object *myself,
       if (CtrStdFlow == CtrStdBreak) {
         CtrStdFlow = NULL;
         genny->finished = 1;
+        result = old_result;
       }
       break;
     }

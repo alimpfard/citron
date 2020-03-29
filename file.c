@@ -421,8 +421,11 @@ ctr_object *ctr_file_tmp(ctr_object *myself, ctr_argument *argumentList) {
   memcpy(pathString + vlen, "\0", 1);
   FILE *f;
   int fd = mkstemp(pathString);
+  if (fd == -1)
+    goto err;
   f = fdopen(fd, "rb");
   if (f == NULL) {
+  err:;
     char *buf = ctr_heap_allocate(sizeof(char) * 1024);
     sprintf(buf, "%d: %s", fd, strerror(errno));
     CtrStdFlow = ctr_build_string_from_cstring(buf);
@@ -962,6 +965,7 @@ ctr_object *ctr_file_open(ctr_object *myself, ctr_argument *argumentList) {
  *
  * Closes the file represented by the recipient.
  *
+ * Returns the exit code if the file is created by Shell::'open:mode:'
  * Usage:
  *
  * f := File new: '/path/to/file.txt'.
@@ -974,9 +978,9 @@ ctr_object *ctr_file_close(ctr_object *myself, ctr_argument *argumentList) {
   if (myself->value.rvalue == NULL)
     return myself;
   if (myself->value.rvalue->type == 2) {
-    pclose((FILE *)myself->value.rvalue->ptr);
+    int res = pclose((FILE *)myself->value.rvalue->ptr);
     myself->value.rvalue = NULL;
-    return myself;
+    return ctr_build_number_from_float(res);
   }
   if (myself->value.rvalue->type != 1)
     return myself;
@@ -1423,7 +1427,7 @@ ret:
 }
 
 /**
- * File mkdir [: [Number:permissions]]
+ * [File] mkdir [: [Number:permissions]]
  *
  * makes a directory
  */
@@ -1450,4 +1454,106 @@ ctr_object *ctr_file_mkdir(ctr_object *myself, ctr_argument *argumentList) {
   }
   ctr_heap_free(path);
   return myself;
+}
+
+ctr_object *ctr_generate_timespec(long ts) {
+  return ctr_build_number_from_float(ts);
+}
+
+/**
+ * [File] stat
+ *
+ * returns the entire dataset of stat(2) about the given file
+ *
+ */
+ctr_object *ctr_file_stat(ctr_object *myself, ctr_argument *argumentList) {
+  ctr_check_permission(CTR_SECPRO_NO_FILE_READ);
+  ctr_object *pathobj = ctr_file_rpath(myself, NULL);
+  if (pathobj == CtrStdNil) {
+    CtrStdFlow = ctr_build_string_from_cstring("file object contains no path");
+    return CtrStdNil;
+  }
+  char *path = ctr_heap_allocate_cstring(pathobj);
+  struct stat st;
+  if (stat(path, &st) == -1) {
+    CtrStdFlow =
+        ctr_format_str("Estat() error %s (path = %s)", strerror(errno), path);
+    ctr_heap_free(path);
+    return CtrStdNil;
+  }
+  ctr_object *res = ctr_map_new(CtrStdMap, NULL);
+
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_build_number_from_float((long)st.st_dev),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_dev"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_build_number_from_float((long)st.st_ino),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_ino"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_build_number_from_float((long)st.st_mode),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_mode"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_build_number_from_float((long)st.st_nlink),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_nlink"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_build_number_from_float((long)st.st_uid),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_uid"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_build_number_from_float((long)st.st_gid),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_gid"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_build_number_from_float((long)st.st_rdev),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_rdev"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_build_number_from_float((long)st.st_size),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_size"),
+                           .next = NULL}});
+  ctr_map_put(res,
+              &(ctr_argument){
+                  .object = ctr_build_number_from_float((long)st.st_blksize),
+                  .next = &(ctr_argument){
+                      .object = ctr_build_string_from_cstring("st_blksize"),
+                      .next = NULL}});
+  ctr_map_put(
+      res,
+      &(ctr_argument){.object = ctr_build_number_from_float((long)st.st_blocks),
+                      .next = &(ctr_argument){
+                          .object = ctr_build_string_from_cstring("st_blocks"),
+                          .next = NULL}});
+
+#if _POSIX_C_SOURCE >= 200809L || _XOPEN_SOURCE >= 700
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_generate_timespec(st.st_atime),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_atime"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_generate_timespec(st.st_ctime),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_ctime"),
+                           .next = NULL}});
+  ctr_map_put(res, &(ctr_argument){
+                       .object = ctr_generate_timespec(st.st_mtime),
+                       .next = &(ctr_argument){
+                           .object = ctr_build_string_from_cstring("st_mtime"),
+                           .next = NULL}});
+#endif
+
+  ctr_heap_free(path);
+  return res;
 }

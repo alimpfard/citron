@@ -1621,7 +1621,8 @@ ctr_object *ctr_ctypes_pack_struct_at(
     if (padinfo[i]->offset == offset) {
       int x = i;
       ffi_type *typev = collapse_type_tree_index(struct_fields, &x);
-      size_t this_size = typev->size; // reverse_ffi_type_size_map_lookup(typev);
+      size_t this_size =
+          typev->size; // reverse_ffi_type_size_map_lookup(typev);
       if (fld->info.type == CTR_OBJECT_TYPE_OTNIL) {
         memset(fieldsp + offset, 0, this_size);
       } else if (fld->info.type == CTR_OBJECT_TYPE_OTEX) {

@@ -125,13 +125,14 @@ var atom is {:s
   ^s case: '(' do: { ^'['. },
      case: ')' do: { ^']'. },
      default: {
-       ^(s containsPattern: ?>^(-?\d+)|(-?\d*\.\d+)$<?) either: s or: '(\'%s\')' % [s].
+       ^(s containsPattern: ?>^(-?\d+)|(-?\d*\.\d+)$<?) either: s or: '(\'%s\')' % [s escape: '\''].
      }, switch.
 }.
 
 var parse is {:src
   var tokens is (src ~ ?>s/\(/ ( /g<? ~ ?>s/\)/ ) /g<?) reSplit: '\\s+', filter: \:_:x x trim !=: ''.
   var ps is '[' + (tokens fmap: (\:s atom applyTo: s), join: ' ', ~ ?>s/ ]/]/g<? ~ ?>s/([^\[']) /$1, /g<?) + ']'.
+  Pen writeln: ps.
   ^ps eval.
 }.
 

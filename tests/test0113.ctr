@@ -14,7 +14,7 @@ Pen write: 'Continue while-true, No --> before 5 and up.', brk.
 xIsLessThan10 whileTrue: {
 	Pen write: 'iteration #' + x, brk.
 	x +=: 1.
-	((x < 5) not) continue.
+	(x > 4) continue.
 	Pen write: '-->'.
 }.
 

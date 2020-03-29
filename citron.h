@@ -59,9 +59,9 @@ extern "C" {
 #endif
 
 #ifdef withBoehmGC
-#define CTR_VERSION "0.0.9.2-boehm-gc" IS_DEBUG_STRING THREAD_STRING
+#define CTR_VERSION "0.0.9.3-boehm-gc" IS_DEBUG_STRING THREAD_STRING
 #else
-#define CTR_VERSION "0.0.9.2" IS_DEBUG_STRING THREAD_STRING
+#define CTR_VERSION "0.0.9.3" IS_DEBUG_STRING THREAD_STRING
 #endif
 
 #define CTR_LOG_WARNINGS 2//2 to enable
@@ -471,6 +471,7 @@ ctr_object* ctr_exception_getinfo(ctr_object* myself, ctr_argument* argumentList
 ctr_object* ctr_internal_ex_data();
 
 ctr_object* ctr_internal_find_overload(ctr_object*,ctr_argument*);
+ctr_object* ctr_resolve_constraints_for_hole(ctr_object*, ctr_argument*, ctr_object*);
 /**
 * @internal
  * standard instrumentor, do not override.
@@ -578,6 +579,7 @@ ctr_object* ctr_lex_get_buf_str();
 // Pragmas
 CTR_H_DECLSPEC ctr_code_pragma* oneLineExpressions;
 CTR_H_DECLSPEC ctr_code_pragma* flexibleConstructs;
+CTR_H_DECLSPEC ctr_code_pragma* autofillHoles;
 CTR_H_DECLSPEC ctr_code_pragma* regexLineCheck;
 CTR_H_DECLSPEC ctr_code_pragma* callShorthand;
 CTR_H_DECLSPEC ctr_code_pragma* nextCallLazy;
@@ -816,6 +818,7 @@ ctr_object* ctr_number_lowerThan(ctr_object* myself, ctr_argument* argumentList)
 ctr_object* ctr_number_lowerEqThan(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_eq(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_neq(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_number_order(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_modulo(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_factorial(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_number_floor(ctr_object* myself, ctr_argument* argumentList);
@@ -867,6 +870,11 @@ ctr_object* ctr_string_append(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_multiply(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_eq(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_neq(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_lex_lt(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_lex_gt(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_lex_lte(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_lex_gte(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_string_lex_order(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_trim(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_ltrim(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_string_rtrim(ctr_object* myself, ctr_argument* argumentList);
@@ -928,6 +936,9 @@ ctr_object* ctr_string_assign(ctr_object* myself, ctr_argument* argumentList);
  * Block Interface
  */
 ctr_object* ctr_block_runIt(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_block_if(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_block_iffalse(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_block_goto(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_specialise(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_runall(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_block_run_variadic(ctr_object* myself, int count, ...);
@@ -950,6 +961,7 @@ ctr_object* ctr_block_assign(ctr_object* myself, ctr_argument* argumentList);
  */
 ctr_object* ctr_array_new(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_alloc(ctr_object* myself, ctr_argument* argumentList);
+ctr_object *ctr_array_view(ctr_object *myself, ctr_argument *argumentList);
 ctr_object* ctr_array_copy(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_new_and_push(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_array_type(ctr_object* myself, ctr_argument* argumentList);
@@ -1078,6 +1090,7 @@ ctr_object* ctr_console_clear_line(ctr_object* myself, ctr_argument* argumentLis
 ctr_object* ctr_file_new(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_special(ctr_object* myself, ctr_argument* argumentList);
 ctr_object* ctr_file_get_descriptor(ctr_object * myself, ctr_argument * argumentList);
+ctr_object* ctr_file_stat(ctr_object * myself, ctr_argument * argumentList);
 ctr_object* ctr_file_ddup(ctr_object* myself, ctr_argument * argumentList);
 ctr_object* ctr_file_memopen (ctr_object * myself, ctr_argument * argumentList);
 ctr_object* ctr_file_path(ctr_object* myself, ctr_argument* argumentList);

@@ -581,7 +581,7 @@ __attribute__((always_inline)) static void handle_extension() {
   char *ext = ctr_clex_buffer;
   int len = ctr_clex_tokvlen;
 #ifdef DEBUG_BUILD
-  printf("+ext %.*s\n", len, ext);
+  fprintf(stderr, "+ext %.*s\n", len, ext);
 #endif
   if (len == 7 && strncmp(ext, "XFrozen", 7) == 0) {
     extensionsPra->value |= CTR_EXT_FROZEN_K;
@@ -616,6 +616,11 @@ void ctr_match_toggle_pragma() {
   if (strncmp(ctr_code, ":flexibleConstructs", 19) == 0) {
     ctr_activate_pragma(flexibleConstructs);
     ctr_code += 18;
+    return;
+  }
+  if (strncmp(ctr_code, ":autofillHoles", 14) == 0) {
+    ctr_activate_pragma(autofillHoles);
+    ctr_code += 14;
     return;
   }
   if (strncmp(ctr_code, ":callShorthand", 14) == 0) {

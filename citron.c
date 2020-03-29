@@ -31,11 +31,15 @@ int with_stdlib = 1;
 static int parse_only = 0;
 extern int speculative_parse;
 extern int more_exception_data;
+uint64_t ctr_gc_memlimit_ex = 1073741824;
 
 char *SystemTZ;
 
 ctr_code_pragma oneline_p = {.type = 't', .value = 0},
                 flex_const =
+
+                    {.type = 'o', .value = 0},
+                autofill_hole =
 
                     {.type = 'o', .value = 0},
                 regex_lc =
@@ -75,6 +79,7 @@ void ctr_cli_welcome(char *invoked_by) {
   puts("\t--no-std | launch without the stdlib");
   puts("\t--ext | print ext path and exit");
   puts("\t--compact | display no extra data for exceptions");
+  puts("\t--initial-mem <value> | set the initial memory limit");
   printf("\n");
 }
 
@@ -109,8 +114,8 @@ char const *ctr_file_stdext_path_raw() {
     return EXT_PATH;
   char *env = getenv(CTR_STD_EXTENSION_ENV_NAME);
 #ifdef DEBUG_BUILD
-  printf("%s = %p(%s)\n", CTR_STD_EXTENSION_ENV_NAME, env,
-         env == 0 ? "()" : env);
+  fprintf(stderr, "%s = %p(%s)\n", CTR_STD_EXTENSION_ENV_NAME, env,
+          env == 0 ? "()" : env);
 #endif
   if (env) {
     EXT_PATH = env;
@@ -152,7 +157,16 @@ void ctr_cli_read_args(int argc, char *argv[]) {
       exit(0);
     } else if (strcmp(argv[0], "--no-std") == 0)
       with_stdlib = 0;
-    else
+    else if (strcmp(argv[0], "--initial-mem") == 0) {
+      argv++;
+      argc--;
+      uint64_t mem = strtoull(argv[0], NULL, 16);
+      if (mem < 107374182) {
+        printf("%d is too little memory~\n", mem);
+        exit(1);
+      }
+      ctr_gc_memlimit_ex = mem;
+    } else
       break;
     argv++;
     argc--;
@@ -177,6 +191,7 @@ void ctr_initialize_ex() {
   // GC_enable_incremental();
   oneLineExpressions = &oneline_p;
   flexibleConstructs = &flex_const;
+  autofillHoles = &autofill_hole;
   regexLineCheck = &regex_lc;
   callShorthand = &callshorth;
   extensionsPra = &extpragmas;
@@ -185,7 +200,8 @@ void ctr_initialize_ex() {
   SystemTZ = getenv("TZ") ?: "UTC";
 
   ctr_gc_mode = 1; /* default GC mode: activate GC */
-  ctr_gc_memlimit = 8388608;
+  ctr_gc_memlimit = ctr_gc_memlimit_ex;
+  GC_set_max_heap_size(ctr_gc_memlimit);
   CTR_LIMIT_MEM = 1; // enfore GC
   ctr_callstack_index = 0;
   ctr_source_map_head = NULL;

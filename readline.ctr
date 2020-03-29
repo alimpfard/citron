@@ -56,9 +56,11 @@ var keyhandler is CTypes closureOf: {:count:key
   ^key.
 } withCIF: (CIF new setABI: 0 return: int argTypes: [int, int]).
 cif setABI: 0 return: int argTypes: [int, pointer].
-Pen write: (cif call: rlbk withArgs: [('_' toByteArray at: 0), keyhandler]), brk.
+Pen write: '> ' + (cif call: rlbk withArgs: [('_' toByteArray at: 0), keyhandler]), brk.
 readline is {:prompt
-  ^CTypes string set: (const cif setABI: 0 return: const pointer argTypes: [const pointer],
-   call: const readline withArgs: [prompt]), get.
+  Pen writeln: prompt.
+  var ptr is const cif setABI: 0 return: const pointer argTypes: [const pointer],
+    call: const readline withArgs: [prompt].
+  Pen writeln: ptr.
 }.
 Pen writeln: 'You said %s' % [(readline applyTo: 'say shit: ')].

@@ -76,6 +76,44 @@ ctr_object *ctr_array_alloc(ctr_object *myclass, ctr_argument *argumentList) {
 }
 
 /**
+ * [Array] viewFrom: [start] length: [length]
+ *
+ * creates an immutable (structure-wise) view of the array starting at
+ * the given index, and with the given length
+ */
+ctr_object *ctr_array_view(ctr_object *myself, ctr_argument *argumentList) {
+  ctr_object *starto = argumentList->object,
+             *endo = argumentList->next ? argumentList->next->object : NULL;
+  CTR_ENSURE_TYPE_NUMBER(starto);
+  if (endo) {
+    CTR_ENSURE_TYPE_NUMBER(endo);
+  }
+  int start = starto->value.nvalue + myself->value.avalue->tail;
+  if (start < myself->value.avalue->tail ||
+      start > myself->value.avalue->head) {
+    CtrStdFlow = ctr_build_string_from_cstring("Index out of bounds");
+    return CtrStdNil;
+  }
+  int length =
+      endo ? endo->value.nvalue
+           : myself->value.avalue->head - myself->value.avalue->tail - start;
+  int end = start + length;
+  if (end < myself->value.avalue->tail || end > myself->value.avalue->head) {
+    CtrStdFlow = ctr_build_string_from_cstring("Index out of bounds");
+    return CtrStdNil;
+  }
+  ctr_object *s = ctr_internal_create_object(CTR_OBJECT_TYPE_OTARRAY);
+  ctr_set_link_all(s, myself);
+  s->value.avalue = ctr_heap_allocate(sizeof(ctr_collection));
+  *s->value.avalue = *myself->value.avalue;
+  s->value.avalue->elements += start;
+  s->value.avalue->immutable = 1;
+  s->value.avalue->head = length;
+  s->value.avalue->tail = 0;
+  return s;
+}
+
+/**
  * [Array] copy
  *
  * shallow copy of the array

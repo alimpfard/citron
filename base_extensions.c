@@ -218,6 +218,11 @@ ctr_object *ctr_ast_nth(ctr_object *myself, ctr_argument *argumentList) {
   }
   int n = argumentList->object->value.nvalue;
   ctr_tnode *node = myself->value.rvalue->ptr;
+
+  if (node->type == CTR_AST_NODE_EMBED && node->modifier == 2 && n == 1) {
+    // wants the value
+    return (ctr_object *)(node->nodes->next->node);
+  }
   ctr_tlistitem *pitem = node->nodes;
   while (n) {
     if (!pitem)
@@ -1394,6 +1399,8 @@ ctr_object *ctr_coro_new(ctr_object *myself, ctr_argument *argumentList) {
   args->block = argumentList->object;
   args->argumentList = ctr_array_to_argument_list(
       argumentList->next ? argumentList->next->object : NULL, NULL);
+  void *arglist = args->argumentList;
+  args->argumentList = ctr_heap_allocate(sizeof(*args->argumentList));
   int co = coroutine_new(S, ctr_coroutine_run_block, args);
   struct ctr_coro_coroutine *sco = ctr_heap_allocate(sizeof(*sco));
   sco->scheduler = myself;
@@ -1405,6 +1412,8 @@ ctr_object *ctr_coro_new(ctr_object *myself, ctr_argument *argumentList) {
   sco->first = 1;
   coro->value.rvalue = ctr_heap_allocate(sizeof(ctr_resource));
   coro->value.rvalue->ptr = sco;
+  args->argumentList->object = coro;
+  args->argumentList->next = arglist;
   return coro;
 }
 
@@ -1463,12 +1472,11 @@ ctr_object *ctr_coro_yield(ctr_object *myself, ctr_argument *argumentList) {
     CtrStdFlow = ctr_build_string_from_cstring("Coroutine not runnning");
     return myself;
   }
-  coroutine_yield(S);
+  ctr_object *ys = ctr_build_string_from_cstring("yield");
   if (argumentList->object)
-    ctr_internal_object_set_property(myself,
-                                     ctr_build_string_from_cstring("yield"),
-                                     argumentList->object, 0);
-  return myself;
+    ctr_internal_object_set_property(myself, ys, argumentList->object, 0);
+  coroutine_yield(S);
+  return ctr_internal_object_find_property(myself, ys, 0) ?: CtrStdNil;
 }
 
 ctr_object *ctr_coro_state(ctr_object *myself, ctr_argument *argumentList) {
@@ -1492,7 +1500,7 @@ ctr_object *ctr_coro_isrunning(ctr_object *myself, ctr_argument *argumentList) {
   struct ctr_coro_coroutine *sco = myself->value.rvalue->ptr;
   int co = sco->co;
   struct schedule *S = sco->scheduler->value.rvalue->ptr;
-  return ctr_build_bool(!!coroutine_status(S, co));
+  return ctr_build_bool(!!coroutine_running(S));
 }
 
 ctr_object *ctr_string_to_symbol(ctr_object *myself,
@@ -1782,6 +1790,10 @@ void initiailize_base_extensions() {
       CtrStdCoro_co, ctr_build_string_from_cstring("yield"), &ctr_coro_yield);
   ctr_internal_create_func(
       CtrStdCoro_co, ctr_build_string_from_cstring("yield:"), &ctr_coro_yield);
+  ctr_internal_create_func(
+      CtrStdCoro, ctr_build_string_from_cstring("yield"), &ctr_coro_yield);
+  ctr_internal_create_func(
+      CtrStdCoro, ctr_build_string_from_cstring("yield:"), &ctr_coro_yield);
   ctr_internal_create_func(CtrStdCoro_co,
                            ctr_build_string_from_cstring("isRunning"),
                            &ctr_coro_isrunning);
@@ -1867,6 +1879,9 @@ void initiailize_base_extensions() {
   ctr_internal_create_func(ctr_std_generator,
                            ctr_build_string_from_cstring("finished"),
                            &ctr_generator_isfin);
+  ctr_internal_create_func(ctr_std_generator,
+                           ctr_build_string_from_cstring("finish"),
+                           &ctr_generator_fin);
   ctr_internal_create_func(ctr_std_generator,
                            ctr_build_string_from_cstring("toString"),
                            &ctr_generator_tostr);

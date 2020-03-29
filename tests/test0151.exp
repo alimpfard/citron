@@ -1,3 +1,2 @@
 Uncaught error has occurred.
-Parser error, unexpected } ( tests/test0151.ctr: 6)
--> Expected a dot (.).
+Hole encountered in program without any constraint

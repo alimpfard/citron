@@ -36,7 +36,7 @@ struct ctr_mapping_generator
 typedef struct ctr_mapping_generator ctr_mapping_generator;
 
 
-ctr_object* ctr_std_generator;
+CTR_H_DECLSPEC ctr_object* ctr_std_generator;
 ctr_object* ctr_generator_make(ctr_object*, ctr_argument*);
 ctr_object* ctr_generator_make_rept (ctr_object*, ctr_argument*);
 ctr_object* ctr_generator_next(ctr_object*, ctr_argument*);

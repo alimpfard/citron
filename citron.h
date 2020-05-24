@@ -12,7 +12,11 @@ extern "C" {
 
 #else //__cplusplus
 
+#ifdef CTR_GLOBALS_DEFINE
 #define CTR_H_DECLSPEC
+#else
+#define CTR_H_DECLSPEC extern
+#endif
 
 #endif
 
@@ -407,7 +411,7 @@ CTR_H_DECLSPEC ctr_object* CtrStdSlurp;          //!< Standard Object : Slurp
 CTR_H_DECLSPEC ctr_object* CtrStdShell;          //!< Standard Object : Shell
 CTR_H_DECLSPEC ctr_object* CtrStdClock;          //!< Standard Object : Clock
 #ifndef CTR_GLOBALS_DEFINE
-extern __thread ctr_object* CtrStdFlow;
+CTR_H_DECLSPEC __thread ctr_object* CtrStdFlow;
 #else
 __thread ctr_object* CtrStdFlow = NULL;           //!< Internal Flow namespace : contains errors and flow control
 #endif
@@ -541,16 +545,16 @@ void    ctr_match_toggle_pragma();
 void    ctr_lex_parse_pragma();
 CTR_H_DECLSPEC char*   ctr_clex_code_init;
 CTR_H_DECLSPEC char*   ctr_clex_code_end;
-CTR_H_DECLSPEC char*   ctr_clex_oldptr;
-CTR_H_DECLSPEC char*   ctr_clex_olderptr;
+extern char*   ctr_clex_oldptr;
+extern char*   ctr_clex_olderptr;
 CTR_H_DECLSPEC int     ctr_clex_quiet;
 CTR_H_DECLSPEC char*   ctr_clex_keyword_var;
 CTR_H_DECLSPEC char*   ctr_clex_keyword_me;
 CTR_H_DECLSPEC char*   ctr_clex_keyword_my;
 CTR_H_DECLSPEC char*   ctr_clex_keyword_const;
 CTR_H_DECLSPEC char*   ctr_clex_keyword_static;
-CTR_H_DECLSPEC int     ctr_clex_line_number;
-CTR_H_DECLSPEC int     ctr_clex_old_line_number;
+extern int     ctr_clex_line_number;
+extern int     ctr_clex_old_line_number;
 
 CTR_H_DECLSPEC ctr_size ctr_clex_keyword_const_len;
 CTR_H_DECLSPEC ctr_size ctr_clex_keyword_my_len;
@@ -564,7 +568,7 @@ CTR_H_DECLSPEC ctr_size ctr_clex_len;
 CTR_H_DECLSPEC ctr_size ctr_program_length;
 CTR_H_DECLSPEC int ctr_clex_line_number;
 CTR_H_DECLSPEC int ctr_clex_char_num;
-CTR_H_DECLSPEC int ctr_transform_lambda_shorthand;
+extern int ctr_transform_lambda_shorthand;
 
 unsigned long ctr_lex_position();
 void ctr_lex_load(char* prg, size_t len);
@@ -697,7 +701,7 @@ int ctr_str_count_substr(char *str, char *substr, int overlap);
 #define CTR_TRACE_IGNORE_VEC_DEPTH 1024
 #define CTR_TRACE_IGNORE_LENGTH 2048
 CTR_H_DECLSPEC char ignore_in_trace[CTR_TRACE_IGNORE_LENGTH][CTR_TRACE_IGNORE_VEC_DEPTH]; //ignore named files.
-int trace_ignore_count;
+CTR_H_DECLSPEC int trace_ignore_count;
 extern char* SystemTZ;
 /**
  * Scoping functions
@@ -1366,6 +1370,12 @@ ctr_object *ctr_inject_add_lib(ctr_object* myself, ctr_argument* argumentList);
 ctr_object *ctr_inject_set_error_handler(ctr_object* myself, ctr_argument* argumentList);
 ctr_object *ctr_inject_generate_output(ctr_object *myself, ctr_argument *argumentList);
 ctr_object *ctr_inject_finish(ctr_object *myself, ctr_argument *argumentList);
+
+/** generator **/
+CTR_H_DECLSPEC ctr_object* ctr_std_generator;
+
+/** Promise **/
+CTR_H_DECLSPEC ctr_object* CtrStdPromise;
 
 /** FFI **/
 #include "ctypes.h"

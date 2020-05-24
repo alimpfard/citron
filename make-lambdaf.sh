@@ -19,16 +19,13 @@ AR=ar
 # gcc -Wall -Wextra -Q --help=warning | grep "\[disabled\]"
 # note: -Wswitch-enum looks helpful, but doesn't allow default case
 # to catch multiple cases, which we are using
-CC_FLAGS="-c -std=c99 -pedantic -pedantic-errors -Ilambdaf/ \
--Werror -Wfatal-errors -Wall -Wextra -Wshadow -Winit-self -Wwrite-strings \
--Wconversion -Wcast-qual -Wredundant-decls -fpic \
--fno-ident -fno-stack-protector -fno-asynchronous-unwind-tables"
+CC_FLAGS="-c -std=c99 -Ilambdaf/"
 
 
 # gcc sets --hash-style to a non-default setting when calling ld, which
 # increases the executable size; here we set it back to the default
 
-LINK_FLAGS="-Wl,--hash-style=sysv,--gc-sections,--strip-discarded,--print-gc-sections"
+LINK_FLAGS=""
 SOURCES=`find -L ./lambdaf -name "*.c" -not -path "./lambdaf/shared/lib/libc/*"`
 HEADERS=`find -L ./lambdaf -name "*.h" -not -path "./lambdaf/shared/lib/libc/*"`
 FOBJECTS=`find -L ./lambdaf -name "*.c" -not -path "./lambdaf/shared/lib/libc/*" | xargs basename -s .c | xargs -I {} echo {}.o`
@@ -55,7 +52,7 @@ build() {
     if ! is_up_to_date "$OUT"; then
         xxd -i 'lambdaf/stdlib.zero' | sed 's/};/, 0x00};/' > lambdaf/lstdlib.h &&
         echoexec $CC $CC_FLAGS $SOURCES &&
-        echoexec $AR -cvq "$OUT" $FOBJECTS &&
+        echoexec $CC -shared -o :"$OUT" $FOBJECTS &&
         rm -f $FOBJECTS &&
         echo &&
         echo "BUILD SUCCESSFUL:" &&

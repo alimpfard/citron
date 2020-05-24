@@ -13,6 +13,8 @@
 
 #define CTR_GLOBALS_DEFINE
 #include "citron.h"
+#include "ctypes.h"
+#include "_struct.h"
 #undef CTR_GLOBALS_DEFINE
 
 #include "siphash.h"

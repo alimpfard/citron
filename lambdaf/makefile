@@ -1,5 +1,5 @@
 all:
-	cd $(realpath .)/.. && ./make-lambdaf.sh
+	cd $(realpath .)/.. && ./make-lambdaf.sh fast
 
 clean:
 	cd $(realpath .)/.. && ./make-lambdaf.sh clean

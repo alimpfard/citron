@@ -221,7 +221,7 @@ ctr_object *ctr_fiber_tostring(ctr_object *myself, ctr_argument *argumentList);
 ctr_object *ctr_fiber_yielded(ctr_object *myself, ctr_argument *argumentList);
 void ctr_fiber_begin_init(void);
 
-ctr_object *CtrStdFiber; // Namespace for all fibers, conatining all the
+extern ctr_object *CtrStdFiber; // Namespace for all fibers, conatining all the
                          // relevant functions
 /**@I_OBJ_DEF Fiber*/
 

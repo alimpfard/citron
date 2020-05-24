@@ -30,7 +30,7 @@ ctr_object* ctr_promise_wait(ctr_object*,ctr_argument*);
 ctr_object* ctr_promise_then(ctr_object*, ctr_object *);
 ctr_object* ctr_promise_then_(ctr_object*,ctr_argument*);
 ctr_object* ctr_promise_pass_message(ctr_object* myself, ctr_argument* argumentList);
-ctr_object* CtrStdPromise;
+CTR_H_DECLSPEC ctr_object* CtrStdPromise;
 void promise_begin();
 
 #endif /* end of include guard: CTR_PROMISE_H */

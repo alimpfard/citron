@@ -1,7 +1,7 @@
 #ifndef CTR_CTYPES_H
 #define CTR_CTYPES_H
 
-#define CTR_CT_SIMPLE_TYPE_FUNC_MAKE(type) ctr_object* CtrStdCType_##type;\
+#define CTR_CT_SIMPLE_TYPE_FUNC_MAKE(type) CTR_H_DECLSPEC ctr_object* CtrStdCType_##type;\
 ctr_object* ctr_ctypes_make_##type (ctr_object* myself, ctr_argument* argumentList)
 #define CTR_CT_SIMPLE_TYPE_FUNC_UNMAKE(type) ctr_object* ctr_ctypes_unmake_##type (ctr_object* myself, ctr_argument* argumentList)
 
@@ -89,8 +89,8 @@ typedef struct ctr_ctypes_cont_array
     ffi_type* etype;
 } ctr_ctypes_cont_array_t;
 
-ctr_object* CtrStdCType; //Template, not added to the world
-ctr_object* CtrStdCType_ffi_cif;
+CTR_H_DECLSPEC ctr_object* CtrStdCType; //Template, not added to the world
+CTR_H_DECLSPEC ctr_object* CtrStdCType_ffi_cif;
 
 //Void
 CTR_CT_SIMPLE_TYPE_FUNC_MAKE(void);

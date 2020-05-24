@@ -5,6 +5,14 @@
 #include <stdlib.h>
 #include <ffi.h>
 
+#ifndef CTR_H_DECLSPEC
+#ifdef CTR_DEFINE
+#define CTR_H_DECLSPEC
+#else
+#define CTR_H_DECLSPEC extern
+#endif
+#endif
+
 struct wrapped_ffi_type {
   /* struct _ffi_type */
   size_t size;
@@ -66,27 +74,27 @@ int ctr_create_ffi_str_descriptor(wrapped_ffi_type* type, char* buf);
 
 void ctr_struct_initialize_internal();
 
-wrapped_ffi_type  wrapped_ffi_type_void      ;
-wrapped_ffi_type  wrapped_ffi_type_uint8     ;
-wrapped_ffi_type  wrapped_ffi_type_sint8     ;
-wrapped_ffi_type  wrapped_ffi_type_uint16    ;
-wrapped_ffi_type  wrapped_ffi_type_sint16    ;
-wrapped_ffi_type  wrapped_ffi_type_uint32    ;
-wrapped_ffi_type  wrapped_ffi_type_sint32    ;
-wrapped_ffi_type  wrapped_ffi_type_uint64    ;
-wrapped_ffi_type  wrapped_ffi_type_sint64    ;
-wrapped_ffi_type  wrapped_ffi_type_uchar     ;
-wrapped_ffi_type  wrapped_ffi_type_schar     ;
-wrapped_ffi_type  wrapped_ffi_type_ushort    ;
-wrapped_ffi_type  wrapped_ffi_type_sshort    ;
-wrapped_ffi_type  wrapped_ffi_type_uint      ;
-wrapped_ffi_type  wrapped_ffi_type_sint      ;
-wrapped_ffi_type  wrapped_ffi_type_ulong     ;
-wrapped_ffi_type  wrapped_ffi_type_slong     ;
-wrapped_ffi_type  wrapped_ffi_type_float     ;
-wrapped_ffi_type  wrapped_ffi_type_double    ;
-wrapped_ffi_type  wrapped_ffi_type_pointer   ;
-wrapped_ffi_type  wrapped_ffi_type_longdouble;
+CTR_H_DECLSPEC wrapped_ffi_type  wrapped_ffi_type_void      ;
+CTR_H_DECLSPEC wrapped_ffi_type  wrapped_ffi_type_uint8     ;
+CTR_H_DECLSPEC wrapped_ffi_type  wrapped_ffi_type_sint8     ;
+CTR_H_DECLSPEC wrapped_ffi_type  wrapped_ffi_type_uint16    ;
+CTR_H_DECLSPEC wrapped_ffi_type  wrapped_ffi_type_sint16    ;
+CTR_H_DECLSPEC wrapped_ffi_type  wrapped_ffi_type_uint32    ;
+CTR_H_DECLSPEC wrapped_ffi_type  wrapped_ffi_type_sint32    ;
+CTR_H_DECLSPEC wrapped_ffi_type  wrapped_ffi_type_uint64    ;
+CTR_H_DECLSPEC wrapped_ffi_type  wrapped_ffi_type_sint64    ;
+CTR_H_DECLSPEC wrapped_ffi_type  wrapped_ffi_type_uchar     ;
+CTR_H_DECLSPEC wrapped_ffi_type  wrapped_ffi_type_schar     ;
+CTR_H_DECLSPEC wrapped_ffi_type  wrapped_ffi_type_ushort    ;
+CTR_H_DECLSPEC wrapped_ffi_type  wrapped_ffi_type_sshort    ;
+CTR_H_DECLSPEC wrapped_ffi_type  wrapped_ffi_type_uint      ;
+CTR_H_DECLSPEC wrapped_ffi_type  wrapped_ffi_type_sint      ;
+CTR_H_DECLSPEC wrapped_ffi_type  wrapped_ffi_type_ulong     ;
+CTR_H_DECLSPEC wrapped_ffi_type  wrapped_ffi_type_slong     ;
+CTR_H_DECLSPEC wrapped_ffi_type  wrapped_ffi_type_float     ;
+CTR_H_DECLSPEC wrapped_ffi_type  wrapped_ffi_type_double    ;
+CTR_H_DECLSPEC wrapped_ffi_type  wrapped_ffi_type_pointer   ;
+CTR_H_DECLSPEC wrapped_ffi_type  wrapped_ffi_type_longdouble;
 
 
 #endif

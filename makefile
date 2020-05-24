@@ -106,7 +106,7 @@ tcc/%.a:
 # 	$(CC) $(CFLAHS) -c $< -o $@ >/dev/null 2>&1
 
 lambdaf.a:
-	./make-lambdaf.sh
+	./make-lambdaf.sh fast
 
 libsocket.so:
 	make -C libsocket

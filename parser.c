@@ -8,8 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "lambdaf.h"
-
 #if withInlineAsm
 #include "native-asm.h"
 #endif
@@ -1720,7 +1718,7 @@ ctr_tnode *ctr_cparse_pure() {
     char *code = ctr_heap_allocate(end - code_s + 1);
     memcpy(code, code_s, end - code_s);
     code[end - code_s] = 0;
-    lambdaf_interpret(code);
+    printf("Pure dialect block ignored\n");
     ctr_clex_tok();
   }
   ctr_tnode *r = ctr_cparse_create_node(CTR_AST_NODE);

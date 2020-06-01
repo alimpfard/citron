@@ -181,11 +181,7 @@ static const char ME_S[] = CTR_DICT_ME, MY_S[] = CTR_DICT_MY,
                   VAR_S[] = CTR_DICT_VAR, CONST_S[] = CTR_DICT_CONST,
                   STATIC_S[] = CTR_DICT_STATIC;
 
-void lambdaf_begin_instance();
-void lambdaf_end_instance();
-
 void ctr_initialize_ex() {
-  lambdaf_begin_instance();
   // GC_enable_incremental();
   oneLineExpressions = &oneline_p;
   flexibleConstructs = &flex_const;
@@ -300,7 +296,6 @@ int main(int argc, char *argv[]) {
     ProfilerStop();
 #endif
   }
-  lambdaf_end_instance();
   return 0;
 }
 #endif // CITRON_LIBRARY

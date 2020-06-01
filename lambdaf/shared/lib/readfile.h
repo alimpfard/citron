@@ -1,1 +1,0 @@
-char* readfile(FILE* stream);

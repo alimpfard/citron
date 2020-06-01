@@ -19,7 +19,7 @@ AR=ar
 # gcc -Wall -Wextra -Q --help=warning | grep "\[disabled\]"
 # note: -Wswitch-enum looks helpful, but doesn't allow default case
 # to catch multiple cases, which we are using
-CC_FLAGS="-c -std=c99 -Ilambdaf/"
+CC_FLAGS="-c -std=c99 -fpic -Ilambdaf/"
 
 
 # gcc sets --hash-style to a non-default setting when calling ld, which
@@ -52,7 +52,7 @@ build() {
     if ! is_up_to_date "$OUT"; then
         xxd -i 'lambdaf/stdlib.zero' | sed 's/};/, 0x00};/' > lambdaf/lstdlib.h &&
         echoexec $CC $CC_FLAGS $SOURCES &&
-        echoexec $CC -shared -o :"$OUT" $FOBJECTS &&
+        echoexec $CC -shared -fpic -o "$OUT" $FOBJECTS &&
         rm -f $FOBJECTS &&
         echo &&
         echo "BUILD SUCCESSFUL:" &&

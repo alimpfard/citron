@@ -69,4 +69,4 @@ Assuming the Tcl extension is built and accessible (the binary build has it); a 
 ```sh
 $ citron -m scratchpad
 ```
-For a basic introduction, see [Scratchpad](https://github.com/alimpfard/citron_book/blob/master/scratchpad.md) on the [citron-book](https://github.com/alimpfard/citron_book)
+For a basic introduction, see [Scratchpad](https://alimpfard.github.io/citron_book/book/scratchpad.html) on the [citron-book](https://alimpfard.github.io/citron_book/book/)

@@ -71,8 +71,6 @@ AC_ARG_WITH([inlineasm],
               [])
 AC_ARG_WITH([lffi],
             AS_HELP_STRING([--with-lffi], [Build with the specified ffi library]))
-AC_ARG_WITH([stdpath],
-            AS_HELP_STRING([--with-stdpath], [Set the standard lib path]))
 AC_ARG_WITH([no-tls],
               AS_HELP_STRING([--with-no-tls], [Build without threadlocal storage (fucks up threads)]),
               [no_tls=yes],
@@ -89,12 +87,9 @@ AS_IF([test "x$with_lffi" = "x"], [
        with_lffi=ffi
 ])
 
-AS_IF([test "x$with_stdpath" = "x"], [
+AS_IF([test "x$STD_PATH" = "x"], [
        STD_PATH="../../share/Citron"
        ])
-AS_IF([test "x$with_stdpath" != "x"], [
-       STD_PATH="$with_stdpath"
-    ])
 
 AC_MSG_CHECKING(inject)
 AS_IF([test "x$want_inject" = "xyes"], [

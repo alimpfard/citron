@@ -791,7 +791,6 @@ with_inject
 with_ffi
 with_inlineasm
 with_lffi
-with_stdpath
 with_no_tls
 with_linux
 '
@@ -1461,7 +1460,6 @@ Optional Packages:
   --with-ffi              Build with the CTypes object
   --with-inline-asm       Build with Inline assembly support (requires llvm)
   --with-lffi             Build with the specified ffi library
-  --with-stdpath          Set the standard lib path
   --with-no-tls           Build without threadlocal storage (fucks up threads)
   --for-linux             Build for linux OSs
 
@@ -19909,12 +19907,6 @@ if test "${with_lffi+set}" = set; then :
 fi
 
 
-# Check whether --with-stdpath was given.
-if test "${with_stdpath+set}" = set; then :
-  withval=$with_stdpath;
-fi
-
-
 # Check whether --with-no-tls was given.
 if test "${with_no_tls+set}" = set; then :
   withval=$with_no_tls; no_tls=yes
@@ -19982,14 +19974,9 @@ if test "x$with_lffi" = "x"; then :
 
 fi
 
-if test "x$with_stdpath" = "x"; then :
+if test "x$STD_PATH" = "x"; then :
 
        STD_PATH="../../share/Citron"
-
-fi
-if test "x$with_stdpath" != "x"; then :
-
-       STD_PATH="$with_stdpath"
 
 fi
 

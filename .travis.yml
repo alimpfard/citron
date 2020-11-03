@@ -64,7 +64,7 @@ before_install:
     - export PATH=/usr/lib/llvm-7/bin:$PATH
 
 install:
-  - cd autohell && aclocal && libtoolize && autoconf && automake --add-missing
+  - cd autohell && aclocal && libtoolize && autoconf -f -i && automake --add-missing
   - mkdir -p build && mkdir -p basemods && export BUILD_DIR_INT=$(realpath build)
   - export LD_LIBRARY_PATH=/usr/local/lib
   - cd src/tcc && ./configure && make && sudo make install && cd ../..

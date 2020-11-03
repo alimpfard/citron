@@ -2,13 +2,13 @@ language: c
 compiler: gcc
 services:
     - docker
-dist: bionic
+dist: focal
 matrix:
   include:
     - name: "Coverage Tests"
       env: TEST=YES
       install:
-        - CC='gcc-8 -fuse-ld=gold' CXX='g++-8 -fuse-ld=gold' CFLAGS='-DwithCTypesNative=1 -DwithInjectNative=1 -DwithInlineAsm=1 -fprofile-arcs -ftest-coverage' LDFLAGS="-lgcov --coverage" make all
+        - CC='gcc -fuse-ld=gold' CXX='g++ -fuse-ld=gold' CFLAGS='-DwithCTypesNative=1 -DwithInjectNative=1 -DwithInlineAsm=1 -fprofile-arcs -ftest-coverage' LDFLAGS="-lgcov --coverage" make all
       script:
         - bash ./runtests.sh
       after_success:
@@ -46,34 +46,22 @@ matrix:
           - docker push anothertest/citron:cilatest
 
 before_install:
-    - wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-    - echo "deb [trusted=yes] http://apt.llvm.org/xenial/ llvm-toolchain-xenial-7 main" | sudo tee -a /etc/apt/sources.list.d/llvm.list
-    - echo "deb-src [trusted=yes] http://apt.llvm.org/xenial/ llvm-toolchain-xenial-7 main" | sudo tee -a /etc/apt/sources.list.d/llvm.list
-    - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
     - sudo apt-get update
-    - sudo apt-get install -y --allow-unauthenticated libllvm-7-ocaml-dev libllvm7 llvm-7 llvm-7-dev llvm-7-runtime
-    - sudo apt-get install -y --allow-unauthenticated libc++-7-dev libc++abi-7-dev
+    - sudo apt-get install -y gcc g++
     - sudo apt-get install -y libffi-dev libbsd-dev libpcre3-dev libgc-dev coreutils curl libcurl4-openssl-dev libsparsehash-dev tcl tcl-dev
-    - sudo apt-get install -y --allow-unauthenticated gcc-8 g++-8
-    - echo =====================================================================
-    - /usr/lib/llvm-7/bin/llvm-config --ldflags --cxxflags --libs core orcjit native
-    - /usr/lib/llvm-7/bin/llvm-config --ldflags --cflags --libs core orcjit native
-    - echo =====================================================================
-    - /usr/lib/llvm-7/bin/llvm-config --version
-    - echo =====================================================================
-    - export PATH=/usr/lib/llvm-7/bin:$PATH
+    - sudo apt-get install -y llvm
 
 install:
   - cd autohell && aclocal && libtoolize && autoconf -f -i && automake --add-missing
   - mkdir -p build && mkdir -p basemods && export BUILD_DIR_INT=$(realpath build)
   - export LD_LIBRARY_PATH=/usr/local/lib
   - cd src/tcc && ./configure && make && sudo make install && cd ../..
-  - ./configure CFLAGS='-L/usr/local/lib' CXXFLAGS='-L/usr/local/lib' CC='gcc-8 -fuse-ld=gold' CXX='g++-8 -fuse-ld=gold' --prefix=$BUILD_DIR_INT --with-ffi --with-inject --with-inlineasm && llvmconfig=/usr/lib/llvm-7/bin/llvm-config make
+  - ./configure CFLAGS='-L/usr/local/lib' CXXFLAGS='-L/usr/local/lib' CC='gcc -fuse-ld=gold' CXX='g++ -fuse-ld=gold' --prefix=$BUILD_DIR_INT --with-ffi --with-inject --with-inlineasm && make
   - cd .. && CFLAGS="-I/usr/include/tcl8.6 -L/usr/lib/tcl8.6" bash ./makeplugs.sh
   - chown -R travis mods
   - echo "Built these" && ls mods
   - cd autohell
-  - sudo llvmconfig=/usr/lib/llvm-7/bin/llvm-config make install
+  - sudo make install
   - ls build
   - ls build/share/Citron
   - cd ..

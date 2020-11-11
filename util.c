@@ -332,7 +332,11 @@ ctr_object *ctr_format_str(const char *str_format, ...) {
   ctr_heap_free(ps);
   return ss;
 }
-char *ctr_itoa(int value, char *result, int base) {
+char *ctr_itoa(int value, char *result, int base, const char *map) {
+  if (!map)
+    map = "zyxwvutsrqponmlkjihgfedcba9876543210123456789"
+        "abcdefghijklmnopqrstuvwxyz";
+
   if (base < 2 || base > 36) {
     *result = '\0';
     return result;
@@ -344,8 +348,7 @@ char *ctr_itoa(int value, char *result, int base) {
   do {
     tmp_value = value;
     value /= base;
-    *ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrst"
-             "uvwxyz"[35 + (tmp_value - value * base)];
+    *ptr++ = map[35 + (tmp_value - value * base)];
   } while (value);
 
   if (tmp_value < 0)

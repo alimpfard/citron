@@ -87,7 +87,7 @@ ctr_internal_run_block(ctr_tnode *codeBlockPart2, ctr_object *myself,
 }
 
 #include "generator.h"
-char *ctr_itoa(int value, char *buffer, int base);
+char *ctr_itoa(int value, char *buffer, int base, const char *map);
 static inline void ctr_assign_block_parameters(ctr_tlistitem *, ctr_argument *,
                                                ctr_object *);
 
@@ -2358,9 +2358,9 @@ ctr_object *ctr_number_uint_binrep(ctr_object *myself,
 }
 
 /**
- * [Number] toStringInBase: [Number]
+ * [Number] toStringInBase: [Number] withMapping: [String]
  *
- * cast to number in the given base
+ * cast to number in the given base, using the provided digit map
  */
 ctr_object *ctr_number_to_string_base(ctr_object *myself,
                                       ctr_argument *argumentList) {
@@ -2371,15 +2371,20 @@ ctr_object *ctr_number_to_string_base(ctr_object *myself,
   int bufSize;
   ctr_object *stringObject;
   int base = ctr_internal_cast2number(argumentList->object)->value.nvalue;
+  char *map = NULL;
+  if (argumentList->next && argumentList->next->object)
+      map = ctr_heap_allocate_cstring(argumentList->next->object);
   s = ctr_heap_allocate(200 * sizeof(char));
   bufSize = 2000 / 8 * sizeof(char);
   buf = ctr_heap_allocate(bufSize);
-  ctr_itoa(o->value.nvalue, buf, base);
+  ctr_itoa(o->value.nvalue, buf, base, map);
   strncpy(s, buf, strlen(buf));
   ctr_heap_free(buf);
   slen = strlen(s);
   stringObject = ctr_build_string(s, slen);
   ctr_heap_free(s);
+  if (map)
+    ctr_heap_free(map);
   return stringObject;
 }
 

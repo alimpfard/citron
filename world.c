@@ -2098,6 +2098,9 @@ void ctr_initialize_world() {
                            ctr_build_string_from_cstring(CTR_DICT_TOSTRINGINBASE),
                            &ctr_number_to_string_base);
   ctr_internal_create_func(CtrStdNumber,
+                           ctr_build_string_from_cstring(CTR_DICT_TOSTRINGINBASE_WITHMAPPING),
+                           &ctr_number_to_string_base);
+  ctr_internal_create_func(CtrStdNumber,
                            ctr_build_string_from_cstring(CTR_DICT_TOBOOL),
                            &ctr_number_to_boolean);
   ctr_internal_create_func(CtrStdNumber,

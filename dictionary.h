@@ -454,6 +454,7 @@
 #define CTR_DICT_TO_NUMBER                                                       "toNumber"
 #define CTR_DICT_TOSTRING                                                        "toString"
 #define CTR_DICT_TOSTRINGINBASE                                                  "toStringInBase:"
+#define CTR_DICT_TOSTRINGINBASE_WITHMAPPING                                      "toStringInBase:withMapping:"
 #define CTR_DICT_TRIM                                                            "trim"
 #define CTR_DICT_TYPE                                                            "type"
 #define CTR_DICT_TYPEOF                                                          "typeOf:"

@@ -346,6 +346,7 @@ void execute_if_quote(ctr_tnode *node) {
   }
   switch (node->type) {
   case CTR_AST_NODE_CODEBLOCK:
+    execute_if_quote(node->nodes->node);
     execute_if_quote(node->nodes->next->node);
     return;
   case CTR_AST_NODE_EXPRMESSAGE:
@@ -356,6 +357,7 @@ void execute_if_quote(ctr_tnode *node) {
   case CTR_AST_NODE_BINMESSAGE:
   case CTR_AST_NODE_RAW:
   case CTR_AST_NODE_NESTED:
+  case CTR_AST_NODE_RETURNFROMBLOCK:
     execute_if_quote(node->nodes->node);
     return;
   case CTR_AST_NODE_IMMUTABLE:
@@ -364,10 +366,18 @@ void execute_if_quote(ctr_tnode *node) {
     /* Fallthrough */
   case CTR_AST_NODE_KWMESSAGE:
   case CTR_AST_NODE_INSTRLIST:
+  case CTR_AST_NODE_PARAMLIST:
     for (ctr_tlistitem *instr = node->nodes; instr; instr = instr->next)
       execute_if_quote(instr->node);
     return;
+  case CTR_AST_NODE_LISTCOMP:
     // TODO X: handle listcomp
+    break;
+  case CTR_AST_NODE_EMBED:
+    abort();
+    return;
+  case CTR_AST_NODE_UNAMESSAGE:
+  case CTR_AST_NODE_NATIVEFN:
   default:
     break;
   }

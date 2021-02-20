@@ -45,13 +45,13 @@ public:
       : nativeTarget(NativeLlvmTarget::Create()),
         Resolver(createLegacyLookupResolver(
             ES,
-            [this](const std::string &Name) -> JITSymbol {
-              if (auto Sym = CompileLayer.findSymbol(Name, false))
+            [this](const llvm::StringRef &Name) -> JITSymbol {
+              if (auto Sym = CompileLayer.findSymbol(Name.str(), false))
                 return Sym;
               else if (auto Err = Sym.takeError())
                 return std::move(Err);
               if (auto SymAddr =
-                      RTDyldMemoryManager::getSymbolAddressInProcess(Name))
+                      RTDyldMemoryManager::getSymbolAddressInProcess(Name.str()))
                 return JITSymbol(SymAddr, JITSymbolFlags::Exported);
               return nullptr;
             },
@@ -134,9 +134,7 @@ void llvmDebugPrint(Module* value) {
         }
     };
 
-    Value* generateInlineAsm(std::string asmdec, std::string constraint, InlineAsm::AsmDialect dialect, std::vector<llvm::Type *> AsmArgTypes) {
-        FunctionType *AsmFTy =
-        FunctionType::get(Type::getInt64Ty(_ctx), AsmArgTypes, false);
+    Value* generateInlineAsm(std::string asmdec, std::string constraint, InlineAsm::AsmDialect dialect, FunctionType* AsmFTy) {
         auto* value = InlineAsm::get(AsmFTy, asmdec, StringRef(constraint), true, false, dialect);
         return value;
     }
@@ -178,10 +176,10 @@ void llvmDebugPrint(Module* value) {
                 if (addr_a>0)
                     arg = GetElementPtrInst::CreateInBounds(arg, ConstantInt::get(i8ty, addr_a, false), "", blk);
                 arg = new BitCastInst(arg, i8ppty, "", blk);
-                arg = new LoadInst(arg, "", blk);
+                arg = new LoadInst(i8ppty, arg, "", blk);
                 arg = GetElementPtrInst::CreateInBounds(arg, ConstantInt::get(i8ty, off, false), "", blk);
                 arg = new BitCastInst(arg, dblpty, "", blk);
-                arg = new LoadInst(arg, "", blk);
+                arg = new LoadInst(dblpty, arg, "", blk);
                 auto dty = arginfo[i].ty;
                 auto argty = dblty;
                 if (dty == ASM_ARG_TY_INT)
@@ -193,15 +191,16 @@ void llvmDebugPrint(Module* value) {
                 if (i!=cnt-1) {
                     args = GetElementPtrInst::CreateInBounds(args, ConstantInt::get(i8ty, addr_b, false), "", blk);
                     args = new BitCastInst(args, i8ppty, "", blk);
-                    args = new LoadInst(args, "", blk);
+                    args = new LoadInst(i8ppty, args, "", blk);
                 }
                 // first
                 callargs.push_back(arg);
                 AsmArgTypes.push_back(argty);
             }
         }
-        auto* x = generateInlineAsm(asmdec, constr, dialect, AsmArgTypes);
-        Value* retval = CallInst::Create(x, callargs, "", blk);
+        FunctionType *AsmFTy = FunctionType::get(Type::getInt64Ty(_ctx), AsmArgTypes, false);
+        auto* x = generateInlineAsm(asmdec, constr, dialect, AsmFTy);
+        Value* retval = CallInst::Create(AsmFTy, x, callargs, "", blk);
         retval = new SIToFPInst(retval, Type::getDoubleTy(_ctx), "", blk);
         retval = CallInst::Create(context.module->getFunction("ctr_build_number_from_float"), std::vector<Value*>{retval}, "", blk);
         ReturnInst::Create(_ctx, retval, blk);

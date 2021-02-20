@@ -369,22 +369,22 @@ ctr_tnode *ctr_cparse_message(int mode) {
       } else {
         int texpr = ctr_transform_template_expr;
         ctr_transform_template_expr = 1;
-        ctr_tnode* block = ctr_cparse_block();
+        ctr_tnode *block = ctr_cparse_block();
         ctr_transform_template_expr = texpr;
-        ctr_tnode* v = ctr_cparse_create_node(CTR_AST_NODE);
+        ctr_tnode *v = ctr_cparse_create_node(CTR_AST_NODE);
         v->type = CTR_AST_NODE_RAW;
         v->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
         v->nodes->node = ctr_deep_copy_ast(block);
         block = v;
         block->modifier = 1;
-        ctr_tnode* arg = ctr_cparse_create_node(CTR_AST_NODE);
-        ctr_tlistitem* tl0 = ctr_heap_allocate(sizeof *tl0);
+        ctr_tnode *arg = ctr_cparse_create_node(CTR_AST_NODE);
+        ctr_tlistitem *tl0 = ctr_heap_allocate(sizeof *tl0);
         arg->type = CTR_AST_NODE_IMMUTABLE;
         arg->nodes = tl0;
         tl0->next = NULL;
         tl0->node = ctr_cparse_create_node(CTR_AST_NODE);
         tl0->node->type = CTR_AST_NODE_NESTED;
-        ctr_tlistitem* tl1 = ctr_heap_allocate(sizeof *tl1);
+        ctr_tlistitem *tl1 = ctr_heap_allocate(sizeof *tl1);
         tl0->node->nodes = tl1;
         tl1->next = NULL;
         tl1->node = block;
@@ -439,7 +439,8 @@ ctr_tlistitem *ctr_cparse_messages(ctr_tnode *r, int mode) {
   while (t == CTR_TOKEN_REF ||
          (t == CTR_TOKEN_CHAIN && node &&
           node->type == CTR_AST_NODE_KWMESSAGE && node->modifier != -2) ||
-         (t == callShorthand->value) || (t == CTR_TOKEN_BLOCKOPEN || t == CTR_TOKEN_BLOCKOPEN_MAP) ||
+         (t == callShorthand->value) ||
+         (t == CTR_TOKEN_BLOCKOPEN || t == CTR_TOKEN_BLOCKOPEN_MAP) ||
          (t == CTR_TOKEN_FANCY_QUOT_OPEN) || (t == CTR_TOKEN_QUOTE)) {
     if (t == CTR_TOKEN_CHAIN) {
       t = ctr_clex_tok();
@@ -888,9 +889,9 @@ ctr_tnode *ctr_cparse_intern_asm_block_() {
   // src
   node->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
   node->nodes->node = ctr_cparse_create_node(CTR_AST_NODE);
-  node->nodes->node->vlen = asm_end-asm_begin;
-  node->nodes->node->value = ctr_heap_allocate(node->nodes->node->vlen+1);
-  memcpy(node->nodes->node->value, asm_begin, asm_end-asm_begin);
+  node->nodes->node->vlen = asm_end - asm_begin;
+  node->nodes->node->value = ctr_heap_allocate(node->nodes->node->vlen + 1);
+  memcpy(node->nodes->node->value, asm_begin, asm_end - asm_begin);
   node->nodes->node->value[node->nodes->node->vlen] = 0;
   // TODO: constraints, types and dialect
   return node;

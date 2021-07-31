@@ -33,8 +33,9 @@ $ sudo apt install build-essential automake libtool cmake libbsd-dev libpcre3-de
 clone this repository
 
 ```sh
+$ cd citron
 $ git submodule update --init
-$ cd citron/autohell
+$ cd autohell
 $ autoreconf
 $ CFLAGS="-O3" CXXFLAGS="-O3" ./configure --with-stdpath=/usr/local/share/Citron --prefix=/usr/local --with-inject --with-ffi --with-inlineasm
 $ make

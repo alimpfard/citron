@@ -1,7 +1,0 @@
-var json is '{"pen": 1043, "lol": [1, 3, 5, {"pen": "test"}]}'.
-
-var test is JSON parse: json.
-Pen write: test, brk.
-test is Object cnew: {my pen is 1043. my lol is Array new < 1 ; 3 ; 5 ; (Object cnew: {my pen is 'test'.}).}.
-#var test is Array new < 1 ; 3 ; 5 ; (Object cnew: {my dick is 'test"'.}).
-Pen write: (JSON serialize: test), brk.

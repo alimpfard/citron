@@ -1,1 +1,0 @@
-Pen write: (File new: 'test.txt', read split: '\n', reverse join: '\n'), brk.

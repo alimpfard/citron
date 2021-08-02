@@ -1,1 +1,0 @@
-../../ctrconfig.c

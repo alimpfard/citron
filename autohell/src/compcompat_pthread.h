@@ -1,1 +1,0 @@
-../../compcompat_pthread.h

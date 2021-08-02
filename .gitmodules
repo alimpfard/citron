@@ -8,13 +8,13 @@
     path = integration/atom/language-citron
     url = https://github.com/alimpfard/atom-language-citron
 [submodule "libbsd"]
-    path = libbsd
+	path = src/lib/libbsd
     url = https://github.com/LuaDist/libbsd.git
 [submodule "tests/inject_test_suite/C"]
 	path = tests/inject_test_suite/C
 	url = https://github.com/c-testsuite/c-testsuite.git
 [submodule "libsocket/libsocket"]
-	path = libsocket/libsocket
+	path = src/lib/libsocket/libsocket
 	url = https://github.com/dermesser/libsocket
 [submodule "Library"]
 	path = Library

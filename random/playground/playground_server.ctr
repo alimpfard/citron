@@ -1,0 +1,47 @@
+Broom autoAlloc: True.
+var Evaluator is Object new.
+var EvalContext is Map new.
+var Parser is Object new.
+var BaseHTMLPage is File new: 'playground.html', read.
+
+Parser on: 'parse:' do: {:str
+  str is str split: '\n', filter: {:i:v ^v trim !=: ''.}.
+  ^str last.
+}.
+
+Evaluator on: 'run:' do: {:str
+  ^Reflect run: ({:str
+    ^str eval.
+  } catch: {:e ^'Error: $$e'.}) inContext: EvalContext arguments: [str].
+}.
+Evaluator on: 'handle:' do: {:str
+  var parsed is AST parse: str.
+  var p is Array new.
+  parsed count times: {:i p push: (Evaluator run: (parsed @ i) unparse).}.
+  ^p.
+}.
+Evaluator on: 'evalLines:' do: {:str
+  Pen writeln: 'evaluating [-- $$str --]'.
+  ^JSON serialize: (Evaluator handle: str).
+}.
+Evaluator on: 'handleRequest:' do: {:req
+  var ret is BaseHTMLPage.
+  Pen writeln: (req from: 0 length: 12).
+  ((req from: 0 length: 12) = 'POST /post()') ifTrue: {
+    ret is Evaluator evalLines: (var s is Parser parse: req).
+    Pen writeln: 'Found $$s'.
+  }.
+  ^'HTTP/1.1 200 OK
+date: %{date}
+x-powered-by: Citron/%{version}
+content-encoding: br
+Content-length: %{length}
+Content-type: application/json
+Connection: closed
+
+%{response}' formatMap: (Map new put: ret at: 'response', put: (Clock new toString) at: 'date', put: (Reflect version) at: 'version', put: (ret length) at: 'length').
+}.
+Program port: (var port is 5000 + (Dice rollWithSides: 1000)).
+Pen writeln: 'Serving on localhost:$$port'.
+Program serve_ipv4: Evaluator.
+# Pen writeln: (Evaluator handleRequest: 'poof').

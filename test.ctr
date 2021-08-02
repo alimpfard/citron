@@ -1,4 +1,0 @@
-import Library/Data/Generator.
-
-var it is (Generator elementsOf: 'Hello there friends, This is a test!') select: ({:g ^g take: my mgen next. } set: 'mgen' value: 1..100), toArray.
-Pen writeln: '[%:L]' % [' ', it fmap: \:x '[%:L]' % [' ', x]].

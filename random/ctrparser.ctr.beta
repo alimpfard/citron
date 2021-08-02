@@ -1,0 +1,563 @@
+ var CtrParser is Object new.
+var CtrLexer is Object new.
+var CtrTokDesc is Map new.
+var CtrTok is Map new.
+var CtrTokRev is Map new.
+Boolean on: 'neg' do: {
+  ^(me either: False or: True).
+}.
+CtrTokDesc put: 'reference' at: 'ref',
+       put: '\'' at: 'quote',
+       put: 'number' at: 'number',
+       put: '(' at: 'paropen',
+       put: ')' at: 'parclose',
+       put: '{' at: 'blockopen',
+       put: '}' at: 'blockclose',
+       put: ':' at: 'colon',
+       put: '.' at: 'dot',
+       put: ',' at: 'chain',
+       put: 'True' at: 'booleanyes',
+       put: 'False' at: 'booleanno',
+       put: 'Nil' at: 'nil',
+       put: 'is' at: 'assignment',
+       put: '^' at: 'ret',
+       put: '↑' at: 'ret_unicode',
+       put: 'end of program' at: 'fin',
+       put: '(unknown token)' at: 'unknown'.
+
+CtrTok put: 'ret' at: 0,
+       put: 'assignment' at: 1,
+       put: 'blockclose' at: 2,
+       put: 'blockopen' at: 3,
+       put: 'booleanno' at: 4,
+       put: 'booleanyes' at: 5,
+       put: 'chain' at: 6,
+       put: 'colon' at: 7,
+       put: 'dot' at: 8,
+       put: 'fin' at: 9,
+       put: 'nil' at: 10,
+       put: 'number' at: 11,
+       put: 'parclose' at: 12,
+       put: 'paropen' at: 13,
+       put: 'quote' at: 14,
+       put: 'ref' at: 15.
+CtrTok each: { :k :v CtrTokRev put: k at: v. }.
+
+CtrAST is Map new.
+CtrAST put: 'CTR_AST_NODE' at: 1.
+CtrAST put: 'CTR_AST_PROGRAM' at: 3.
+CtrAST put: 'CTR_AST_NODE_EXPRASSIGNMENT' at:  51.
+CtrAST put: 'CTR_AST_NODE_EXPRMESSAGE' at:  52.
+CtrAST put: 'CTR_AST_NODE_UNAMESSAGE' at:  53.
+CtrAST put: 'CTR_AST_NODE_BINMESSAGE' at:  54.
+CtrAST put: 'CTR_AST_NODE_KWMESSAGE' at:  55.
+CtrAST put: 'CTR_AST_NODE_LTRSTRING' at:  56.
+CtrAST put: 'CTR_AST_NODE_REFERENCE' at:  57.
+CtrAST put: 'CTR_AST_NODE_LTRNUM' at:  58.
+CtrAST put: 'CTR_AST_NODE_CODEBLOCK' at:  59.
+CtrAST put: 'CTR_AST_NODE_RETURNFROMBLOCK' at: 60.
+CtrAST put: 'CTR_AST_NODE_PARAMLIST' at:  76.
+CtrAST put: 'CTR_AST_NODE_INSTRLIST' at:  77.
+CtrAST put: 'CTR_AST_NODE_ENDOFPROGRAM' at:  79.
+CtrAST put: 'CTR_AST_NODE_NESTED' at:  80.
+CtrAST put: 'CTR_AST_NODE_LTRBOOLTRUE' at:  81.
+CtrAST put: 'CTR_AST_NODE_LTRBOOLFALSE' at:  82.
+CtrAST put: 'CTR_AST_NODE_LTRNIL' at:  83.
+CtrAST put: 'CTR_AST_NODE_PROGRAM' at:  84.
+
+CtrASTRev is Map new.
+CtrAST each: { :k :v CtrASTRev put: k at: v. }.
+
+CtrLexer on: 'init' do: {
+  my lineno is 0.
+  my oldlineno is 0.
+  my charpos is 0.
+  my code is ''.
+  my buffer is ''.
+  my tokenVLen is 0.
+  my codeEOI is ''.
+  my oldpos is 0.
+  my olderpos is 0.
+  my verbatim is False.
+  my stringInterpolation is 0.
+  my ivarname is ''.
+  my verbatimInsertQuote is 0.
+}.
+CtrLexer on: 'lineno' do: {^my lineno.}.
+CtrLexer on: 'isDelimiter:' do: { :c
+  ^(c containsPattern: '\\(|\\)|\\{|\\}|,|\\.|\\:|\\s').
+}.
+CtrLexer on: 'isspace:' do: { :c var meh is (c containsPattern: '\\s'). ^meh. }.
+CtrLexer on: 'isdigit:' do: { :c ^(c containsPattern: '[0-9]').}.
+CtrLexer on: 'emitError:' do: { :msg
+  var lineno is my lineno.
+  var ms is '$$msg on line: $$lineno'.
+  thisBlock error: ms.
+}.
+
+CtrLexer on: 'load:' do: { :prg
+  my code is prg.
+  my buffer is ''.
+  my lineno is 0.
+}.
+
+CtrLexer on: 'tokenValue' do: { ^my buffer. }.
+CtrLexer on: 'tokenDescribe:' do: { :tok
+  var description is CtrTokDesc @ tok.
+  (description isNil) ifTrue: {description is CtrTokDesc @ 'unknown'.}.
+  ^description.
+}.
+CtrLexer on: 'tokenValueLength' do: { ^my tokenVLen. }.
+CtrLexer on: 'putBack' do: {
+  (my stringInterpolation > 0) ifTrue: { my stringInterpolation -=: 1. },
+  ifFalse: {
+    my charpos is my oldpos.
+    my oldpos is my olderpos.
+    my lineno is my oldlineno.
+  }.
+}.
+CtrLexer on: 'checkNextLineEmpty' do: {
+  var pattern is '^$'.
+  var out is False.
+  var code is my code.
+  var charpos is my charpos.
+  {
+    out is (code from: charpos to: (code length)) containsPattern: pattern.
+  } catch: { :err CtrLexer emitError: err. }, run.
+  ^out.
+}.
+
+CtrLexer on: 'token' do: {
+  var c is ''.
+  var i is 0.
+  var comment_mode is False.
+  var presetToken is 0.
+  my tokenVLen is 0.
+  my olderpos is my oldpos.
+  my oldpos is my charpos.
+  my oldlineno is my lineno.
+  (my stringInterpolation = 1) ifTrue: { presetToken is (CtrTokRev @ 'quote'). }.
+  (my stringInterpolation = 2) ifTrue: {
+    my buffer append: '+'.
+    my tokenVLen = 1.
+    presetToken is (CtrTokRev @ 'ref').
+  }.
+  (my stringInterpolation = 3) ifTrue: { my beffer append: my ivarname. presetToken is (CtrTokRev @ 'ref'). }.
+  (my stringInterpolation = 4) ifTrue: {
+    my buffer append: '+'.
+    my tokenVLen = 1.
+    presetToken is (CtrTokRev @ 'ref').
+  }.
+  (my stringInterpolation = 5) ifTrue: { my code is my codeEIO. presetToken is (CtrTokRev @ 'quote'). }.
+  (my stringInterpolation !=: 0) ifTrue: { my stringInterpolation +=: 1. thisBlock error: presetToken. }.
+  (my verbatim & (my verbatimInsertQuote = my charpos)) ifTrue: {
+    thisBlock error:  ((CtrTokRev @ 'quote')).
+  }.
+  (((my code at: my charpos) containsPattern: '\\n') & (me checkNextLineEmpty)) ifTrue: {
+    my charpos +=: 1.
+    thisBlock error: ((CtrTokRev @ 'dot')).
+  }.
+  c is (my code at: my charpos).
+  #Pen write: '$$c ,'.
+  { var end is (my charpos !=: (my code length - 1)). var e is ((CtrLexer isspace: c) | (c containsPattern: '\\#') | comment_mode). ^(e & end).} whileTrue: { #Pen write: c.
+    #Pen write: my code, write: ' ', write: my charpos, brk.
+    (c = '\n') ifTrue: { comment_mode is False. my lineno +=: 1. }.
+    (c = '#') ifTrue: { comment_mode is True. }.
+    my charpos +=: 1.
+    c is (my code at: my charpos).
+  }.
+  #Pen write: '$$c ,'.
+  (my charpos = (my code length - 1)) ifTrue: { thisBlock error: (CtrTokRev @ 'fin'). }.
+  (c containsPattern: '\\(') ifTrue: { my charpos +=: 1. thisBlock error: (CtrTokRev @ 'paropen').}.
+  (c containsPattern: '\\)') ifTrue: { my charpos +=: 1. thisBlock error: (CtrTokRev @ 'parclose').}.
+  (c containsPattern: '\\{') ifTrue: { my charpos +=: 1. thisBlock error: (CtrTokRev @ 'blockopen').}.
+  (c containsPattern: '\\}') ifTrue: { my charpos +=: 1. thisBlock error: (CtrTokRev @ 'blockclose').}.
+  (c containsPattern: '\\.') ifTrue: { my charpos +=: 1. thisBlock error: (CtrTokRev @ 'dot').}.
+  (c containsPattern: ',') ifTrue: { my charpos +=: 1. thisBlock error: (CtrTokRev @ 'chain').}.
+  ((c containsPattern: 'i') & ((my code at: (my charpos + 1)) containsPattern: 's') & (CtrLexer isspace: (my code at: (my charpos + 2)))) ifTrue: {
+    my charpos +=: 2.
+    thisBlock error: (CtrTokRev @ 'assignment').
+  }.
+  (c containsPattern: '\\:') ifTrue: { my charpos +=: 1. thisBlock error: (CtrTokRev @ 'colon').}.
+  (c containsPattern: '\\^') ifTrue: { my charpos +=: 1. thisBlock error: (CtrTokRev @ 'ret').}.
+  (c containsPattern: '\\↑') ifTrue: { my charpos +=: 1. thisBlock error: (CtrTokRev @ 'ret').}.
+  (c containsPattern: '\'') ifTrue: { my charpos +=: 1. thisBlock error: (CtrTokRev @ 'quote').}.
+  (((c containsPattern: '\\-') & (CtrLexer isdigit: ((my code at: (my charpos + 1))))) | (CtrLexer isdigit: c)) ifTrue: {
+    my buffer append: c. my tokenVLen +=: 1. my charpos +=: 1.
+    c is (my code at: my charpos).
+    { ^ (CtrLexer isdigit: c). } whileTrue: { #Pen write: c.
+      my buffer append: c. my tokenVLen +=: 1. my charpos +=: 1.
+      c is (my code at: my charpos).
+    }.
+    (c containsPattern: '\\.') ifTrue: {
+      (CtrLexer isdigit: (my code at: (my charpos + 1))) ifFalse: {thisBlock error: (CtrTokRev @ 'number').}.
+      my buffer append: c. my tokenVLen +=: 1. my charpos +=: 1.
+      c is (my code at: my charpos).
+    }.
+    {^ (CtrLexer isdigit: c). } whileTrue: { #Pen write: c.
+      my buffer append: c. my tokenVLen +=: 1. my charpos +=: 1.
+      c is (my code at: my charpos).
+    }.
+    thisBlock error: (CtrTokRev @ 'number').
+  }.
+  ((my code from: my charpos to: (my charpos + 4)) containsPattern: 'True') ifTrue: {
+    (CtrLexer isDelimiter: (my code at: (my charpos + 4))) ifTrue: {
+      my charpos +=: 4.
+      thisBlock error: (CtrTokRev @ 'booleanyes').
+    }.
+  }.
+  ((my code from: my charpos to: (my charpos + 5)) containsPattern: 'False') ifTrue: {
+    (CtrLexer isDelimiter: (my code at: (my charpos + 5))) ifTrue: {
+      my charpos +=: 5.
+      thisBlock error: (CtrTokRev @ 'booleanno').
+    }.
+  }.
+  ((my code from: my charpos to: (my charpos + 3)) containsPattern: 'Nil') ifTrue: {
+    (CtrLexer isDelimiter: (my code at: (my charpos + 3))) ifTrue: {
+      my charpos +=: 3.
+      thisBlock error: (CtrTokRev @ 'nil').
+    }.
+  }.
+  ((my code from: my charpos to: (my charpos + 2)) containsPattern: '\\?\\>') ifTrue: {
+    my verbatim is True.
+    my charpos +=: 1.
+    my buffer append: '?'.
+    my tokenVLen is 1.
+    thisBlock error: (CtrTokRev @ 'ref').
+  }.
+  (((my code from: my charpos to: (my charpos + 1)) = '>') & my verbatim) ifTrue: {
+    my verbatimInsertQuote is my charpos + 1.
+    my charpos +=: 1.
+    my buffer append: '>'.
+    my tokenVLen is 1.
+    thisBlock error: (CtrTokRev @ 'ref').
+  }.
+  { ^((CtrLexer isspace: c) neg) & ((c !=: '#') & (c !=: '(') & (c !=: ')') & (c !=: '{') & (c !=: '}') & (c !=: '.') & (c !=: ',') & (c !=: '^') & (c !=: ':') & (c !=: '\'') & (my charpos !=: (my code length))).} whileTrue: { #Pen write: c.
+    #Pen write: '$$c ,'.
+    my buffer append: c. my tokenVLen +=: 1. my charpos +=: 1. c is my code at: my charpos.
+  }.
+  thisBlock error: (CtrTokRev @ 'ref').
+}.
+
+CtrLexer on: 'readStr' do: {
+  var strbuf is ''.
+  var c is ''.
+  var memblock is 1.
+  var escape is 0.
+  var beginbuff is ''.
+  var page is 100.
+  (my stringInterpolation = 6) ifTrue: {
+    my ivarname is ''.
+    my stringInterpolation = 0.
+  }.
+  my tokenVLen is 0.
+  c is my code at: my charpos.
+  beginbuff is strbuf.
+  { ^(((my verbatim neg) & ((c !=: '\'') | escape = 1)) | ((my verbatim) & (((c = '<') & (my charpos + 1 < (my code length - 1)) & (my code at: (my charpos + 1) = '?')) neg) & (my charpos < my code length - 1))). } whileTrue: {# Pen write: c.
+    ((my verbatim neg) & (escape = 0) & (c = '$') & (my code at: (my charpos + 1) = '$')) ifTrue: {
+      var q = 2.
+      { var cq is my code at: (my charpos + q). ^(((my charpos + q) < (my code length - 1)) & (((CtrLexer isspace:cq) neg) & (cq !=: '$') & (cq !=: '\'') & (q < 255))).} whileTrue: { q +=: 1.}.
+      var cq is my code at: (my charpos + q).
+      ((CtrLexer isspace: cq) | (cq = '$') | (cq = '\'') ) ifTrue: {
+        my ivarname is my code from: (my charpos + 2) to: (my charpos + q - 2 ).
+        my stringInterpolation is 1.
+        my codeEOI is my charpos + q + 0.
+      }, break.
+    }.
+    (c containsPattern: '\\n') ifTrue: { my lineno +=: 1.}.
+    (escape = 1) ifTrue: {
+      var c0 is c from:0 to:1.
+      (c0 = 'n') ifTrue: {c is '\n'.}.
+      (c0 = 'r') ifTrue: {c is '\r'.}.
+      (c0 = 't') ifTrue: {c is '\t'.}.
+      (c0 = 'v') ifTrue: {c is '\v'.}.
+      (c0 = 'b') ifTrue: {c is '\b'.}.
+      (c0 = 'a') ifTrue: {c is '\a'.}.
+      (c0 = 'f') ifTrue: {c is '\f'.}.
+    }.
+    (c = '\\' & escape = 0 & my verbatim) ifTrue: {
+      escape is 1.
+      my charpos +=: 1.
+      c is my code at: my charpos.
+    }.
+    my tokenVLen +=: 1.
+    escape is 0.
+    strbuf append: c.
+    my charpos +=: 1.
+    c is my code at: my charpos.
+  }.
+  (my verbatim) ifTrue: {
+    (my charpos >=: (my code length - 1)) ifTrue: {
+      my code append: '<?.'.
+    }.
+  }.
+  my verbatim is False.
+  my verbatimInsertQuote is 0.
+  ^strbuf.
+}.
+
+var CtrTListItem is Object new.
+CtrTListItem on: 'node:' do: { :n
+  my node is n.
+}.
+CtrTListItem on: 'next:' do: { :n
+  my next is n.
+}.
+
+var CtrTNode is Object new.
+CtrTNode on: 'initType:' do: {:t
+  my type is t.
+}.
+CtrTNode on: 'initModifier:' do: {:t
+  my modifier is t.
+}.
+CtrTNode on: 'initNodes:' do: {:t
+  my nodes is t.
+}.
+CtrTNode on: 'initValue:' do: {:t
+  my value is t.
+}.
+CtrTNode on: 'type' do: {^my type.}.
+CtrTNode on: 'modifier' do: {^my modifier.}.
+CtrTNode on: 'nodes' do: {^my nodes.}.
+CtrTNode on: 'value' do: {^my value.}.
+
+var CtrSourceMap is Object new.
+CtrSourceMap on: 'new:li:ne:' do: { :n :l :a my node is n. my line is l. my next is n. }.
+CtrSourceMap on: 'setNode:' do: { :n
+  my node is n.
+}.
+CtrSourceMap on: 'setLine:' do: { :li
+  my line is li.
+}.
+CtrSourceMap on: 'setNext:' do: { :n
+  my next is n.
+}.
+var CtrSourceMapHead is Nil.
+
+#Parser
+CtrParser on: 'init' do: {
+  my currentProgram is ''.
+  my sourceMapHead is CtrSourceMap new.
+  my sourceMapping is True.
+}.
+CtrParser on: 'emitError:hint:' do: { :tok :hint
+  var msg is CtrTokDesc @ tok.
+  var cp is my currentProgram.
+  var lineno is CtrLexer lineno + 1.
+  msg is 'Parse error, unexpected $$msg ( $$cp : $$lineno )\n'.
+  (hint isNil) ifFalse: { msg append: hint. }.
+  thisBlock error: msg.
+}.
+
+CtrParser on: 'createNode:' do: { :type
+  var node is CtrTNode new.
+  (my sourceMapping) ifTrue: {
+    var m is CtrSourceMap new.
+    m do setNode: node, setLine: (CtrLexer lineno), done.
+    (CtrSourceMapHead isNil) ifFalse: { m setNext: CtrSourceMapHead. CtrSourceMapHead is m. },
+                             ifTrue:  { CtrSourceMapHead is m. }.
+  }.
+  ^node.
+}.
+
+CtrParser on: 'cparseMessage:' do: { :mode
+  var msgpartlen is 0.
+  var m is CtrTNode new.
+  var t is -1.
+  var s is ''.
+  var msg is ''.
+  var li is CtrTListItem new.
+  var curlistitem is CtrTListItem new.
+  var lookAhead is -1.
+  var isBin is False.
+  var first is -1.
+  var ulen is 0.
+  {CtrLexer token.} catch: {:e t is e.}, run.
+  msgpartlen is CtrLexer tokenValueLength.
+  (msgpartlen > 255) ifTrue: {me emitError: t hint: 'Message too long\n'.}.
+  m is (me createNode: (CtrASTRev @ 'CTR_AST_NODE')).
+  m initType: -1.
+  s is (CtrLexer tokenValue).
+  msg is s.
+  ulen is (msg length).
+  isBin is (ulen = 1).
+  ((mode = 2) & (isBin)) ifTrue: {
+    CtrLexer putBack.
+    thisBlock error: m.
+  }.
+  (isBin) ifTrue: {
+    m initType: (CtrASTRev @ 'CTR_AST_NODE_BINMESSAGE').
+    m initValue: msg.
+    m initNodes: (me parseExpr: 2)
+    thisBlock error: m.
+  }.
+  {CtrLexer token.} catch: {:e lookAhead is e.}, run.
+  CtrLexer putBack.
+  var la is lookAhead = (CtrTok @ 'colon').
+  la ifTrue: {
+    (mode > 0) ifTrue: { CtrLexer putBack. thisBlock error: m.}.
+    msg append: ':'.
+    msgpartlen +=: 1.
+    (msgpartlen > 255) ifTrue: { me emitError: t hint: 'Message too long\n'.}.
+    m initType: (CtrASTRev @ 'CTR_AST_NODE_KWMESSAGE').
+    {CtrLexer token.} catch: {:e t is e.}, run.
+    first is 1.
+    {^True.} whileTrue: {
+      li is CtrTListItem new.
+      li node: (me parseExpr: 1).
+      var f is first = 1.
+      f ifTrue: {m initNodes: li. curlistitem is li. first is 0.}, ifFalse: {curlistitem next: li. curlistitem is li. }.
+      {CtrLexer token.} catch: {:e t is e.}, run.
+      (t = (CtrTokRev @ 'dot')) break.
+      (t = (CtrTokRev @ 'fin')) break.
+      (t = (CtrTokRev @ 'chain')) break.
+      (t = (CtrTokRev @ 'parclose')) break.
+      (t = (CtrTokRev @ 'ref')) ifTrue: {
+        var l is (CtrLexer tokenValueLength).
+        ((msgpartlen + l) > 255) ifTrue: { me emitError: t hint: 'Message too long\n'. }.
+        msg append: (CtrLexer tokenValue).
+        msgpartlen +=: l + 1.
+        msg append: ':'.
+        {CtrLexer token.} catch: {:e t is e.}, run.
+        (t !=: (CtrTokRev @ 'colon')) ifTrue: { me emitError: t hint: 'Expected colon.\n'. }.
+      }.
+    }.
+    CtrLexer putBack.
+    m initValue: msg.
+  }, ifFalse: {
+    m initType: (CtrASTRev @ 'CTR_AST_NODE_UNAMESSAGE').
+    m initValue: msg.
+  }.
+  thisBlock error: m.
+}.
+
+CtrParser on: 'cparseMessages:mode:' do: { :r :mode
+  var t is Nil.
+  {CtrLexer token.} catch: {:e t is e.}, run.
+  var pli is CtrTListItem new.
+  var li is CtrTListItem new.
+  var fli is CtrTListItem new.
+  var first is 1.
+  var node is CtrTNode new.
+  {^((t = (CtrTokRev @ 'ref') | ((t = (CtrTokRev @ 'chain') & (node isNil neg) & ((node type) = (CtrASTRev @ 'CTR_AST_NODE_KWMESSAGE')))))).} whileTrue: {
+    (t = (CtrTokRev @ 'chain')) ifTrue: {
+      {CtrLexer token.} catch: {:e t is e.}, run.
+      (t !=: (CtrTokRev @ 'ref')) ifTrue: {
+        me emitError: t hint: 'Expected message.\n'.
+      }.
+    }.
+    li is CtrTListItem new.
+    CtrLexer putBack.
+    node is me parseMessage: mode.
+    ((node type) = -1) ifTrue: {
+      (first = 1) ifTrue: {thisBlock error: Nil.}.
+    {CtrLexer token.} catch: {:e}, run.
+    True break.
+    }.
+    li node: node.
+    (first = 1) ifFalse: {
+      pli next: li.
+      pli is li.
+    }, ifTrue: {
+      first is 0.
+      pli is li.
+      fli is li.
+    }.
+    {CtrLexer token.} catch: {:e t is e.}, run.
+  }.
+  CtrLexer putBack.
+  thisBlock error: fli.
+}.
+
+CtrParser on: 'cparsePOpen' do: {
+  var li is CtrTListItem new.
+  var t is -1.
+  {CtrLexer token.} catch: {:e}, run.
+  r is (me createNode: (CtrASTRev @ 'CTR_AST_NODE')).
+  r initType: (CtrASTRev @ 'CTR_AST_NODE_NESTED').
+  li node: (me parseExpr: 0).
+  r initNodes: li.
+  {CtrLexer token.} catch: {:e}, run.
+  (t = (CtrTokRev @ 'parclose')) ifFalse: { me emitError: t hint: 'Expected ).\n'.}.
+  thisBlock error: r.
+}.
+
+CtrParser on: 'cparseBlock' do: {
+  var previousListItem is Nil.
+  var previousCodeListItem is Nil.
+  {CtrLexer token.} catch: {:e}, run.
+  var r is me createNode: (CtrASTRev @ 'CTR_AST_NODE').
+  r initType: (CtrASTRev @ 'CTR_AST_NODE_CODEBLOCK').
+  var cbp1 is me createNode: (CtrASTRev @ 'CTR_AST_NODE').
+  var cbp2 is me createNode: (CtrASTRev @ 'CTR_AST_NODE').
+  cbp1 next: cbp2.
+  r initNodes: cbp1.
+  var paramList is me createNode: (CtrASTRev @ 'CTR_AST_NODE').
+  var codeList is me createNode: (CtrASTRev @ 'CTR_AST_NODE').
+  paramList type: (CtrASTRev @ 'CTR_AST_NODE_PARAMLIST').
+  codeList type: (CtrASTRev @ 'CTR_AST_NODE_INSTRLIST').
+  cbp1 node: paramList.
+  cbp2 node: codeList.
+  var t is Nil.
+  {CtrLexer token.} catch: {:e t is e.}, run.
+  var first is 1.
+  {^(t = (CtrASTRev @ 'CTR_TOKEN_COLON')).} whileTrue: {
+    {CtrLexer token.} catch: {:e t is e.}, run.
+    var paramListItem is CtrTListItem new.
+    var paramItem is me createNode: (CtrASTRev @ 'CTR_AST_NODE').
+    var s is CtrLexer tokenValue.
+    paramItem value: s.
+    paramListItem node: paramItem.
+    var f is (first = 1).
+    f ifTrue: {
+      paramList nodes: paramListItem.
+      previousListItem is paramListItem.
+      first is 0.
+    }, ifFalse: {
+      previousListItem next: paramListItem.
+      previousListItem is paramListItem.
+    }.
+    {CtrLexer token.} catch: {:e t is e.}, run.
+  }.
+  first is 1.
+  {^((first = 1) | (t = (CtrASTRev @ 'CTR_TOKEN_DOT'))).} whileTrue: {
+    var codeListItem is CtrTListItem new.
+    var codeNode is (me createNode: (CtrASTRev @ 'CTR_AST_NODE')).
+    (first = 1) ifTrue: { CtrLexer putBack. }.
+    {CtrLexer token.} catch: {:e t is e.}, run.
+    (t = (CtrASTRev @ 'CTR_TOKEN_BLOCKCLOSE')) break.
+    CtrLexer putBack.
+    (t = (CtrASTRev @ 'CTR_TOKEN_RET')) ifFalse: {codeNode is (me parseRet).}, ifTrue: {codeNode is (me parseExpr: 0).}.
+    codeListItem nodes: codeNode.
+    var f is (first = 1).
+    f ifTrue: { codeList nodes: codeListItem. previousCodeListItem is codeListItem. first is 0. },
+      ifFalse: { previousCodeListItem next: codeListItem. previousCodeListItem is codeListItem. }.
+    {CtrLexer token.} catch: {:e t is e.}, run.
+    (t = (CtrASTRev @ 'CTR_TOKEN_DOT')) ifFalse: {me emitError: t hint: 'Expected a dot (.).\n'.}.
+  }.
+  thisBlock error: r.
+}.
+
+#CTRparseString
+
+
+
+CtrLexer init.
+CtrLexer load: 'Pen write: test, red brk.\n#comment test\n?>Verbatim test<?.\n'.
+CtrParser init.
+CtrParser cparseMessages.
+Pen red. ?>
+{CtrLexer token.} catch: {:e Pen write: (CtrTokDesc @ (CtrTok @ e)), brk.}, run.
+{CtrLexer token.} catch: {:e Pen write: (CtrTokDesc @ (CtrTok @ e)), brk.}, run.
+{CtrLexer token.} catch: {:e Pen write: (CtrTokDesc @ (CtrTok @ e)), brk.}, run.
+{CtrLexer token.} catch: {:e Pen write: (CtrTokDesc @ (CtrTok @ e)), brk.}, run.
+{CtrLexer token.} catch: {:e Pen write: (CtrTokDesc @ (CtrTok @ e)), brk.}, run.
+{CtrLexer token.} catch: {:e Pen write: (CtrTokDesc @ (CtrTok @ e)), brk.}, run.
+{CtrLexer token.} catch: {:e Pen write: (CtrTokDesc @ (CtrTok @ e)), brk.}, run.
+{CtrLexer token.} catch: {:e Pen write: (CtrTokDesc @ (CtrTok @ e)), brk.}, run.
+{CtrLexer token.} catch: {:e Pen write: (CtrTokDesc @ (CtrTok @ e)), brk.}, run.
+{CtrLexer token.} catch: {:e Pen write: (CtrTokDesc @ (CtrTok @ e)), brk.}, run.
+{CtrLexer token.} catch: {:e Pen write: (CtrTokDesc @ (CtrTok @ e)), brk.}, run.
+{CtrLexer token.} catch: {:e Pen write: (CtrTokDesc @ (CtrTok @ e)), brk.}, run.
+<?. Pen resetColor.

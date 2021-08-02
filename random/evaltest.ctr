@@ -1,0 +1,28 @@
+Program genAccessors: 'test'.
+Program test: 10.
+
+var p is Program new: {:pa
+    pa test: 20.
+    10 times: {:i 
+        pa listen: {:msg Pen write: 'CHILD<' + (Clock new format: '%s') + '>: ' + i + ': ' + (pa test) + ' $$msg ' + (const Program test), brk. }.
+    }.
+    pa exit.
+}.
+
+Pen write: 'test', brk.
+
+9 times: {:i 
+    p message: 'test$$i'.
+}.
+
+Pen write: 'keeping ' + (p pid) + ' idle for 1sec.', brk.
+Clock wait: 1000000.
+
+p message: 'This is the last one, you may exit now!'.
+p do 
+    message: 'extra0', 
+    message: 'extra1',
+done.
+
+
+Error for me.

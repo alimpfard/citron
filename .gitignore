@@ -18,3 +18,4 @@ integration/vscode
 integration/gdb
 tut
 .bac
+build/

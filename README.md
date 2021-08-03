@@ -24,7 +24,7 @@ build-time tools:
 
 #### for the braindead distros (don't kill me)
 ```sh
-$ sudo apt install build-essential automake libtool cmake libbsd-dev libpcre3-dev libgc-dev libsparsehash-dev llvm-8 llvm-8-dev
+$ sudo apt install build-essential cmake libbsd-dev libpcre3-dev libgc-dev libsparsehash-dev llvm-8 llvm-8-dev
 ```
 
 #### Basic steps to build and install:

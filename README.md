@@ -35,13 +35,9 @@ clone this repository
 ```sh
 $ cd citron
 $ git submodule update --init
-$ cd autohell
-$ autoreconf
-$ CFLAGS="-O3" CXXFLAGS="-O3" ./configure --with-stdpath=/usr/local/share/Citron --prefix=/usr/local --with-inject --with-ffi --with-inlineasm
 $ make
-$ make install
+$ sudo make install
 ```
-The normal configure options apply.
 
 ##### Note
 If the binary is built without ffi, to launch the repl, you must pass these flags to it:

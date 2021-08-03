@@ -6115,9 +6115,11 @@ ctr_object *ctr_block_while_true(ctr_object *myself,
          ctr_internal_cast2bool(ctr_internal_run_block(block0, myself, block))
              ->value.bvalue) {
     ctr_internal_run_block(block1, runblock, runblock);
+    if (CtrStdFlow == CtrStdContinue)
+      CtrStdFlow = NULL; /* consume continue */
   }
   ctr_close_context();
-  if (CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
+  if (CtrStdFlow == CtrStdBreak)
     CtrStdFlow = NULL; /* consume break */
   return myself;
 }
@@ -6152,6 +6154,8 @@ ctr_object *ctr_block_while_false(ctr_object *myself,
          !ctr_internal_cast2bool(ctr_internal_run_block(block0, myself, block))
               ->value.bvalue) {
     ctr_internal_run_block(block1, runblock, runblock);
+    if (CtrStdFlow == CtrStdContinue)
+      CtrStdFlow = NULL; /* consume continue */
   }
   ctr_close_context();
   if (CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
@@ -6168,9 +6172,11 @@ ctr_object *ctr_block_forever(ctr_object *myself, ctr_argument *argumentList) {
     ctr_open_context();
   while (!CtrStdFlow) {
     ctr_internal_run_block(block0, myself, myself);
+    if (CtrStdFlow == CtrStdContinue)
+      CtrStdFlow = NULL; /* consume continue */
   }
   ctr_close_context();
-  if (CtrStdFlow == CtrStdBreak || CtrStdFlow == CtrStdContinue)
+  if (CtrStdFlow == CtrStdBreak)
     CtrStdFlow = NULL; /* consume break */
   return myself;
 }

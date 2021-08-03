@@ -1776,10 +1776,10 @@ void initiailize_base_extensions() {
       CtrStdCoro_co, ctr_build_string_from_cstring("yield"), &ctr_coro_yield);
   ctr_internal_create_func(
       CtrStdCoro_co, ctr_build_string_from_cstring("yield:"), &ctr_coro_yield);
-  ctr_internal_create_func(
-      CtrStdCoro, ctr_build_string_from_cstring("yield"), &ctr_coro_yield);
-  ctr_internal_create_func(
-      CtrStdCoro, ctr_build_string_from_cstring("yield:"), &ctr_coro_yield);
+  ctr_internal_create_func(CtrStdCoro, ctr_build_string_from_cstring("yield"),
+                           &ctr_coro_yield);
+  ctr_internal_create_func(CtrStdCoro, ctr_build_string_from_cstring("yield:"),
+                           &ctr_coro_yield);
   ctr_internal_create_func(CtrStdCoro_co,
                            ctr_build_string_from_cstring("isRunning"),
                            &ctr_coro_isrunning);

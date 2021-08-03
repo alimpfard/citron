@@ -1270,10 +1270,9 @@ ctr_object *ctr_ctypes_addr_of_raw(ctr_object *myself,
         (meta == CtrStdCType_struct)
             ? ((ctr_ctypes_ffi_struct_value *)(myself->value.rvalue->ptr))
                   ->value
-            : (meta == CtrStdCType_cont_pointer)
-                  ? ((ctr_ctypes_cont_array_t *)(myself->value.rvalue->ptr))
-                        ->storage
-                  : (myself->value.rvalue->ptr);
+        : (meta == CtrStdCType_cont_pointer)
+            ? ((ctr_ctypes_cont_array_t *)(myself->value.rvalue->ptr))->storage
+            : (myself->value.rvalue->ptr);
     return ret;
   }
 }

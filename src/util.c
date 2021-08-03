@@ -335,7 +335,7 @@ ctr_object *ctr_format_str(const char *str_format, ...) {
 char *ctr_itoa(int value, char *result, int base, const char *map) {
   if (!map)
     map = "zyxwvutsrqponmlkjihgfedcba9876543210123456789"
-        "abcdefghijklmnopqrstuvwxyz";
+          "abcdefghijklmnopqrstuvwxyz";
 
   if (base < 2 || base > 36) {
     *result = '\0';

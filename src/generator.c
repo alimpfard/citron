@@ -551,12 +551,11 @@ ctr_object *ctr_generator_isfin(ctr_object *myself,
  *
  * Finish the generator
  */
-ctr_object *ctr_generator_fin(ctr_object *myself,
-                              ctr_argument *argumentList) {
+ctr_object *ctr_generator_fin(ctr_object *myself, ctr_argument *argumentList) {
   ctr_resource *res = myself->value.rvalue;
   ctr_generator *genny = res->ptr;
   if (genny)
-      genny->finished = 1;
+    genny->finished = 1;
   return myself;
 }
 

@@ -2373,7 +2373,7 @@ ctr_object *ctr_number_to_string_base(ctr_object *myself,
   int base = ctr_internal_cast2number(argumentList->object)->value.nvalue;
   char *map = NULL;
   if (argumentList->next && argumentList->next->object)
-      map = ctr_heap_allocate_cstring(argumentList->next->object);
+    map = ctr_heap_allocate_cstring(argumentList->next->object);
   s = ctr_heap_allocate(200 * sizeof(char));
   bufSize = 2000 / 8 * sizeof(char);
   buf = ctr_heap_allocate(bufSize);
@@ -3836,7 +3836,7 @@ ctr_object *ctr_string_find_pattern_options_do(ctr_object *myself,
       offset += matches[0].rm_eo;
     }
     if (flagOne)
-        break;
+      break;
   }
   arg->object = ctr_build_string(haystack + offset, strlen(haystack + offset));
   ctr_string_append(newString, arg);
@@ -3934,7 +3934,7 @@ ctr_object *ctr_string_find_pattern_options_do(
     } else
       break;
     if (flagOne)
-        break;
+      break;
   }
   arg->object = ctr_build_string(haystack + offset, strlen(haystack + offset));
   ctr_string_append(newString, arg);

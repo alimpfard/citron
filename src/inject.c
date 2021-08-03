@@ -459,9 +459,9 @@ ctr_object *ctr_inject_defined_functions(ctr_object *myself,
 
   s = symbols;
   typeof(ctr_map_contains) *fn_all_contains_val =
-      !all ? &ctr_true
-           : all->info.type == CTR_OBJECT_TYPE_OTARRAY ? &ctr_array_contains
-                                                       : &ctr_map_contains;
+      !all                                        ? &ctr_true
+      : all->info.type == CTR_OBJECT_TYPE_OTARRAY ? &ctr_array_contains
+                                                  : &ctr_map_contains;
   while (s != NULL) {
     v = s->v;
     /* remove symbol in token array */

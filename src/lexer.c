@@ -236,9 +236,10 @@ unsigned int ctr_internal_edit_distance(const char *a, const char *b,
       bDistance = code == a[index] ? distance : distance + 1;
       distance = cache[index];
 
-      cache[index] = result =
-          distance > result ? bDistance > result ? result + 1 : bDistance
-                            : bDistance > distance ? distance + 1 : bDistance;
+      cache[index] = result = distance > result
+                                  ? bDistance > result ? result + 1 : bDistance
+                              : bDistance > distance ? distance + 1
+                                                     : bDistance;
     }
   }
 
@@ -955,13 +956,10 @@ int ctr_clex_tok() {
     ctr_code++;
     c = toupper(*ctr_code);
     if (xnum_likely)
-      base = c == 'X'
-                 ? 16
-                 : c == 'C'
-                       ? 8
-                       : c == 'B'
-                             ? 2
-                             : 10; // let the parser handle incorrect values
+      base = c == 'X'   ? 16
+             : c == 'C' ? 8
+             : c == 'B' ? 2
+                        : 10; // let the parser handle incorrect values
     if (base == 10)
       xnum_likely = 0; // not an xnum
     if (base != 10) {

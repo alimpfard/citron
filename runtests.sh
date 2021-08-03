@@ -4,7 +4,7 @@
 # set -x
 
 dir=$(pwd)
-pre_c='.'
+pre_c='build'
 if [ "x$1" != "x" ]; then
     pre_c=$1
 fi

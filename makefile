@@ -13,9 +13,25 @@ INCLUDE_DIR ?= /usr/local/include/Citron
 
 .PHONY: all ctrconfig libctr ctr install cxx
 
+enable_inject ?= true
+enable_ctypes ?= true
+enable_inline_asm ?= false
+
 CFLAGS += -Wall -Wextra -Wno-unused-parameter -mtune=native\
 		  -march=native -D withTermios -D forLinux\
 		  -D CTR_STD_EXTENSION_PATH=\"$(DATADIR)\"
+
+ifeq ($(enable_inject),true)
+	CFLAGS += -DwithInjectNative=1
+endif
+
+ifeq ($(enable_ctypes),true)
+	CFLAGS += -DwithCTypesNative=1
+endif
+
+ifeq ($(enable_inline_asm),true)
+	CFLAGS += -DwithInlineAsm=1
+endif
 
 ifneq ($(strip $(WITH_ICU)),)
 	CFLAGS += -D withICU
@@ -40,6 +56,11 @@ OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
 	   promise.o symbol_cxx.o world.o libsocket.so
 EXTRAOBJS =
 
+ifneq ($(findstring withInjectNative=1,$(CFLAGS)),)
+	OBJS += inject.o lib/tcc/libtcc1.a lib/tcc/libtcc.a
+	CFLAGS += -DwithCTypesNative=1
+endif
+
 ifneq ($(findstring withCTypesNative=1,$(CFLAGS)),)
 	OBJS += _struct.o ctypes.o structmember.o
 endif
@@ -48,10 +69,6 @@ ifneq ($(findstring withInlineAsm=1,$(CFLAGS)),)
 	EXTRAOBJS += inline-asm.o
 	CFLAGS += $(shell llvm-config --cflags --system-libs --libs core orcjit native)
 	CXXFLAGS += $(shell llvm-config --cxxflags --system-libs --libs core orcjit native) -fexceptions
-endif
-
-ifneq ($(findstring withInjectNative=1,$(CFLAGS)),)
-	OBJS += inject.o tcc/libtcc1.a tcc/libtcc.a
 endif
 
 COBJS = $(OBJS) compiler.o
@@ -65,7 +82,7 @@ all: CFLAGS += -O2
 all: remove_libsocket_build cxx ctr ctrconfig
 
 remove_libsocket_build:
-	rm -rf src/lib/libsocket/libsocket/build/
+	@rm -rf src/lib/libsocket/libsocket/build/
 
 ctrconfig:
 	$(CC) src/ctrconfig.c -o $(BUILDDIR)/ctrconfig
@@ -110,12 +127,15 @@ clean:
 	make -C $(LIBSOCKETDIR) clean
 
 cxx:
-	@ echo "\033[31;1mblah \033[32;1mblah \033[33;1mblah\033[0m"
+	@ echo -e "\033[31;1mblah \033[32;1mblah \033[33;1mblah\033[0m"
 
-src/lib/tcc/%.a:
-	cd src/lib/tcc
-	./configure --prefix=$(realpath build)
-	$(MAKE) $<
+$(BUILDDIR)/lib/tcc/%.a:
+	mkdir -p $(BUILDDIR)/lib/tcc
+	pushd src/lib/tcc
+	./configure
+	popd
+	$(MAKE) -C src/lib/tcc $<
+	$(MAKE) -C src/lib/tcc {bin,include,lib,man,tcc}dir=$$(pwd)/$(BUILDDIR)/lib/tcc install
 
 $(BUILDDIR)/libsocket.so:
 	make -C $(LIBSOCKETDIR)

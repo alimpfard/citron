@@ -1,3 +1,6 @@
+#define CTR_DEFINE
+#include "_struct.h"
+#undef CTR_DEFINE
 #include "ctypes.h"
 #include <dlfcn.h>
 #include <inttypes.h>

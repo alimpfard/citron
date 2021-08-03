@@ -1,7 +1,7 @@
 #include "citron.h"
 #ifdef withInjectNative
 
-#include "tcc/tcc.h"
+#include "lib/tcc/tcc.h"
 #include <ffi.h>
 
 void *ctr_inject_compiled_state_release_hook(void *state) {

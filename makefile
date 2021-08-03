@@ -89,9 +89,9 @@ libctr: $(BUILDDIR)/libctr.so
 # 	cd -
 
 install: $(BUILDDIR)/ctr $(BUILDDIR)/libctr.so $(BUILDDIR)/ctrconfig
-	sudo install $(BUILDDIR)/ctr $(DESTDIR)
-	sudo install $(BUILDDIR)/libctr.so $(LIBDIR)
-	sudo install $(BUILDDIR)/ctrconfig $(DESTDIR)
+	install $(BUILDDIR)/ctr $(DESTDIR)
+	install $(BUILDDIR)/libctr.so $(LIBDIR)
+	install $(BUILDDIR)/ctrconfig $(DESTDIR)
 
 debug: CFLAGS += -DDEBUG_BUILD -DDEBUG_BUILD_VERSION=$(DEBUG_BUILD_VERSION) -Og -g3 -ggdb3 -Wno-unused-function
 debug: cxx ctr

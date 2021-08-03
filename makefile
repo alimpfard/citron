@@ -5,14 +5,17 @@ location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 new_makefile_l1 := $(shell perl -ne '/((DEBUG_VERSION := )(\d+))/ && print (sprintf("%s%s", "$$2", "$$3"+1));' $(location))
 LIBSOCKETDIR = src/lib/libsocket
 BUILDDIR ?= build
-DESTDIR ?= /usr/local/bin
-LIBDIR ?= /usr/local/lib
+BINDIR ?= /usr/local/bin
+DATADIR ?= /usr/share/Citron
+HEADERDIR ?= /usr/local/include/Citron
+DLLDIR ?= /usr/local/lib
+INCLUDE_DIR ?= /usr/local/include/Citron
 
 .PHONY: all ctrconfig libctr ctr install cxx
 
 CFLAGS += -Wall -Wextra -Wno-unused-parameter -mtune=native\
 		  -march=native -D withTermios -D forLinux\
-		  -D CTR_STD_EXTENSION_PATH=\"`pwd`\"
+		  -D CTR_STD_EXTENSION_PATH=\"$(DATADIR)\"
 
 ifneq ($(strip $(WITH_ICU)),)
 	CFLAGS += -D withICU
@@ -71,7 +74,7 @@ $(BUILDDIR):
 	mkdir -p $@
 
 $(BUILDDIR)/ctr: $(BUILDDIR) $(OBJS) $(EXTRAOBJS)
-	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) $(CXXFLAGS) -rdynamic -lm -ldl -lbsd -lpcre -lffi -lpthread $(LEXTRACF) -o $@
+	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) $(CXXFLAGS) -lm -ldl -lbsd -lpcre -lffi -lpthread $(LEXTRACF) -o $@
 
 ctr: $(BUILDDIR)/ctr
 
@@ -85,13 +88,18 @@ libctr: $(BUILDDIR)/libctr.so
 # compiler: cxx
 # compiler: $(COBJS)
 # 	cd $(BUILDDIR)
-# 	$(CC) $< -rdynamic -lm -ldl -lbsd -lpcre -lffi -lprofiler -lpthread $(LEXTRACF) -o ctrc
+# 	$(CC) $< -lm -ldl -lbsd -lpcre -lffi -lprofiler -lpthread $(LEXTRACF) -o ctrc
 # 	cd -
 
-install: $(BUILDDIR)/ctr $(BUILDDIR)/libctr.so $(BUILDDIR)/ctrconfig
-	install $(BUILDDIR)/ctr $(DESTDIR)
-	install $(BUILDDIR)/libctr.so $(LIBDIR)
-	install $(BUILDDIR)/ctrconfig $(DESTDIR)
+install: $(BUILDDIR)/ctr $(BUILDDIR)/libctr.so $(BUILDDIR)/ctrconfig Library mods extensions
+	mkdir -p $(BINDIR) $(DATADIR) $(HEADERDIR) $(DLLDIR)
+	install $(BUILDDIR)/ctr $(BINDIR)
+	install $(BUILDDIR)/ctrconfig $(BINDIR)
+	install $(BUILDDIR)/libctr.so $(DLLDIR)
+	cp -fr Library/ $(DATADIR)/Library
+	cp -fr extensions/ $(DATADIR)/extensions
+	cp -fr  mods/ $(DATADIR)/mods
+	install src/*.h $(HEADERDIR)
 
 debug: CFLAGS += -DDEBUG_BUILD -DDEBUG_BUILD_VERSION=$(DEBUG_BUILD_VERSION) -Og -g3 -ggdb3 -Wno-unused-function
 debug: cxx ctr

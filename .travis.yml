@@ -8,7 +8,7 @@ matrix:
     - name: "Coverage Tests"
       env: TEST=YES
       install:
-        - CC='gcc -fuse-ld=gold' CXX='g++ -fuse-ld=gold' CFLAGS='-DwithCTypesNative=1 -DwithInjectNative=1 -DwithInlineAsm=1 -fprofile-arcs -ftest-coverage' LDFLAGS="-lgcov --coverage" make all
+        - CC='gcc -fuse-ld=gold' CXX='g++ -fuse-ld=gold' CFLAGS='-DwithCTypesNative=1 -DwithInjectNative=1 -DwithInlineAsm=0 -fprofile-arcs -ftest-coverage' LDFLAGS="-lgcov --coverage" sudo make install
       script:
         - bash ./runtests.sh
       after_success:
@@ -17,54 +17,45 @@ matrix:
     - name: "Build Artifacts"
       env: TEST=NO
       after_success:
-          - wget https://github.com/probonopd/linuxdeployqt/releases/download/6/linuxdeployqt-6-x86_64.AppImage
-          - chmod a+x linuxdeployqt-6-x86_64.AppImage
-          - mkdir -p appimage/AppDir/usr && cp -r autohell/build/* appimage/AppDir/usr
-          - mkdir -p appimage/AppDir/usr/share/application
-          - mkdir -p appimage/AppDir/usr/share/icons/hicolor/256x256
-          - cp image/citron.png appimage/AppDir/usr/share/icons/hicolor/256x256/
-          - echo "[Desktop Entry]" > appimage/AppDir/usr/share/application/citron.desktop
-          - echo "Type=Application" >> appimage/AppDir/usr/share/application/citron.desktop
-          - echo "Name=Citron" >> appimage/AppDir/usr/share/application/citron.desktop
-          - echo "Comment=Citron Interp" >> appimage/AppDir/usr/share/application/citron.desktop
-          - echo "Exec=ctr" >> appimage/AppDir/usr/share/application/citron.desktop
-          - echo "Icon=citron" >> appimage/AppDir/usr/share/application/citron.desktop
-          - echo "Categories=Development;" >> appimage/AppDir/usr/share/application/citron.desktop
-          - echo "Terminal=true" >> appimage/AppDir/usr/share/application/citron.desktop # Needed for CLI tools
-          # Fine, no appimage?
-          - ./linuxdeployqt-6-x86_64.AppImage appimage/AppDir/usr/share/application/citron.desktop -appimage
-          - sudo cp -rf Citron*.AppImage autohell/build/bin/ctr
-          - ls -lh autohell/build/*
-          - ls -alh autohell/build/share/Citron/mods
-          - ls -lh
-          - tar cvjf release.tar.bz2 -C autohell/build .
-          - (cd autohell/build && zip -r - .) > release.zip
-          - wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
-          - bash upload.sh release.tar.bz2 release.zip #Citron*.AppImage*
-          - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-          - docker build -t anothertest/citron:cilatest .
-          - docker push anothertest/citron:cilatest
+        - wget https://github.com/probonopd/linuxdeployqt/releases/download/6/linuxdeployqt-6-x86_64.AppImage
+        - chmod a+x linuxdeployqt-6-x86_64.AppImage
+        - mkdir -p appimage/AppDir/usr && cp -r autohell/build/* appimage/AppDir/usr
+        - mkdir -p appimage/AppDir/usr/share/application
+        - mkdir -p appimage/AppDir/usr/share/icons/hicolor/256x256
+        - cp image/citron.png appimage/AppDir/usr/share/icons/hicolor/256x256/
+        - echo "[Desktop Entry]" > appimage/AppDir/usr/share/application/citron.desktop
+        - echo "Type=Application" >> appimage/AppDir/usr/share/application/citron.desktop
+        - echo "Name=Citron" >> appimage/AppDir/usr/share/application/citron.desktop
+        - echo "Comment=Citron Interp" >> appimage/AppDir/usr/share/application/citron.desktop
+        - echo "Exec=ctr" >> appimage/AppDir/usr/share/application/citron.desktop
+        - echo "Icon=citron" >> appimage/AppDir/usr/share/application/citron.desktop
+        - echo "Categories=Development;" >> appimage/AppDir/usr/share/application/citron.desktop
+        - echo "Terminal=true" >> appimage/AppDir/usr/share/application/citron.desktop # Needed for CLI tools
+        # Fine, no appimage?
+        - ./linuxdeployqt-6-x86_64.AppImage appimage/AppDir/usr/share/application/citron.desktop -appimage
+        - sudo cp -rf Citron*.AppImage autohell/build/bin/ctr
+        - ls -lh autohell/build/*
+        - ls -alh autohell/build/share/Citron/mods
+        - ls -lh
+        - tar cvjf release.tar.bz2 -C autohell/build .
+        - (cd autohell/build && zip -r - .) > release.zip
+        - wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
+        - bash upload.sh release.tar.bz2 release.zip #Citron*.AppImage*
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+        - docker build -t anothertest/citron:cilatest .
+        - docker push anothertest/citron:cilatest
 
 before_install:
-    - sudo apt-get update
-    - sudo apt-get install -y gcc g++
-    - sudo apt-get install -y libffi-dev libbsd-dev libpcre3-dev libgc-dev coreutils curl libcurl4-openssl-dev libsparsehash-dev tcl tcl-dev
-    - sudo apt-get install -y llvm
+  - sudo apt update
+  - sudo apt install -y gcc g++ llvm build-essential cmake libbsd-dev libpcre3-dev libgc-dev libsparsehash-dev llvm-8 llvm-8-dev
 
 install:
-  - cd autohell && aclocal && libtoolize && autoconf -f -i && automake --add-missing
-  - mkdir -p build && mkdir -p basemods && export BUILD_DIR_INT=$(realpath build)
-  - export LD_LIBRARY_PATH=/usr/local/lib
-  - cd src/tcc && ./configure && make && sudo make install && cd ../..
-  - ./configure CFLAGS='-L/usr/local/lib' CXXFLAGS='-L/usr/local/lib' CC='gcc -fuse-ld=gold' CXX='g++ -fuse-ld=gold' --prefix=$BUILD_DIR_INT --with-ffi --with-inject --with-inlineasm && make
-  - cd .. && CFLAGS="-I/usr/include/tcl8.6 -L/usr/lib/tcl8.6" bash ./makeplugs.sh
+  - git submodule update --init
   - chown -R travis mods
-  - echo "Built these" && ls mods
-  - cd autohell
+  - chown -R travis extensions
+  - chown -R travis Library
+  - make
   - sudo make install
-  - ls build
-  - ls build/share/Citron
-  - cd ..
 
 script:
   - export VERSION=$(git rev-parse --short HEAD)

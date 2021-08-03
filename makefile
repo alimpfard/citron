@@ -57,7 +57,7 @@ OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
 EXTRAOBJS =
 
 ifneq ($(findstring withInjectNative=1,$(CFLAGS)),)
-	OBJS += inject.o lib/tcc/libtcc1.a lib/tcc/libtcc.a
+	OBJS += inject.o libtcc1.a libtcc.a
 	CFLAGS += -DwithCTypesNative=1
 endif
 
@@ -82,7 +82,7 @@ all: CFLAGS += -O2
 all: remove_libsocket_build cxx ctr ctrconfig
 
 remove_libsocket_build:
-	@rm -rf src/lib/libsocket/libsocket/build/
+	@ rm -rf src/lib/libsocket/libsocket/build/
 
 ctrconfig:
 	$(CC) src/ctrconfig.c -o $(BUILDDIR)/ctrconfig
@@ -90,7 +90,7 @@ ctrconfig:
 $(BUILDDIR):
 	mkdir -p $@
 
-$(BUILDDIR)/ctr: $(BUILDDIR) $(OBJS) $(EXTRAOBJS)
+$(BUILDDIR)/ctr: build_tcc_statics $(BUILDDIR) $(OBJS) $(EXTRAOBJS)
 	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) $(CXXFLAGS) -lm -ldl -lbsd -lpcre -lffi -lpthread $(LEXTRACF) -o $@
 
 ctr: $(BUILDDIR)/ctr
@@ -113,9 +113,9 @@ install: $(BUILDDIR)/ctr $(BUILDDIR)/libctr.so $(BUILDDIR)/ctrconfig Library mod
 	install $(BUILDDIR)/ctr $(BINDIR)
 	install $(BUILDDIR)/ctrconfig $(BINDIR)
 	install $(BUILDDIR)/libctr.so $(DLLDIR)
-	cp -fr Library/ $(DATADIR)/Library
-	cp -fr extensions/ $(DATADIR)/extensions
-	cp -fr  mods/ $(DATADIR)/mods
+	cp -fr Library/ $(DATADIR)/
+	cp -fr extensions/ $(DATADIR)/
+	cp -fr  mods/ $(DATADIR)/
 	install src/*.h $(HEADERDIR)
 
 debug: CFLAGS += -DDEBUG_BUILD -DDEBUG_BUILD_VERSION=$(DEBUG_BUILD_VERSION) -Og -g3 -ggdb3 -Wno-unused-function
@@ -124,18 +124,20 @@ debug: cxx ctr
 
 clean:
 	rm -rf $(BUILDDIR)
-	make -C $(LIBSOCKETDIR) clean
+	$(MAKE) -C $(LIBSOCKETDIR) clean
+	$(MAKE) -C src/lib/tcc clean
 
 cxx:
 	@ echo -e "\033[31;1mblah \033[32;1mblah \033[33;1mblah\033[0m"
 
-$(BUILDDIR)/lib/tcc/%.a:
-	mkdir -p $(BUILDDIR)/lib/tcc
+build_tcc_statics:
 	pushd src/lib/tcc
 	./configure
 	popd
-	$(MAKE) -C src/lib/tcc $<
-	$(MAKE) -C src/lib/tcc {bin,include,lib,man,tcc}dir=$$(pwd)/$(BUILDDIR)/lib/tcc install
+	$(MAKE) -C src/lib/tcc
+
+$(BUILDDIR)/%.a: src/lib/tcc/%.a
+	cp $< $@
 
 $(BUILDDIR)/libsocket.so:
 	make -C $(LIBSOCKETDIR)

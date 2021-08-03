@@ -20,7 +20,6 @@ required libraries:
 * `llvm` -- (>= 7) for inline asm (if you're on a braindead distro that adds version numbers to these, add an alias for `llvm-config`)
 
 build-time tools:
-* autotools -- configure and such
 * cmake -- for libsocket
 
 #### for the braindead distros (don't kill me)

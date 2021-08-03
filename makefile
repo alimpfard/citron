@@ -59,7 +59,10 @@ COBJS := $(foreach obj,$(COBJS),$(BUILDDIR)/$(obj))
 EXTRAOBJS := $(foreach obj,$(EXTRAOBJS),$(BUILDDIR)/$(obj))
 
 all: CFLAGS += -O2
-all: cxx ctr ctrconfig
+all: remove_libsocket_build cxx ctr ctrconfig
+
+remove_libsocket_build:
+	rm -rf src/lib/libsocket/libsocket/build/
 
 ctrconfig:
 	$(CC) src/ctrconfig.c -o $(BUILDDIR)/ctrconfig

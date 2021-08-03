@@ -617,6 +617,7 @@ Eval on: 'metaCompletion:' do: {:m
 }.
 
 Eval on: 'evaluate:' do: { :str
+  str empty? ifTrue: { ^''. }.
   my errd is False.
   var eval_result_x is Nil.
   var evalContext is my evaluationContext.

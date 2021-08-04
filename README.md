@@ -1,4 +1,4 @@
-## Citron :: A Programming Language for the crazy and people that like functions [![Build Status](https://travis-ci.com/alimpfard/citron.svg?branch=master)](https://travis-ci.com/alimpfard/citron) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/d55fb1e699e14d50b9882af24cde137d)](https://www.codacy.com/app/Citron/citron?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=alimpfard/citron&amp;utm_campaign=Badge_Grade)[![codecov](https://codecov.io/gh/alimpfard/citron/branch/master/graph/badge.svg)](https://codecov.io/gh/alimpfard/citron)
+## Citron :: A Programming Language for the crazy and people that like functions [![Build Status](https://travis-ci.com/alimpfard/citron.svg?branch=master)](https://travis-ci.com/alimpfard/citron) [![codecov](https://codecov.io/gh/alimpfard/citron/branch/master/graph/badge.svg)](https://codecov.io/gh/alimpfard/citron)
 
 ### Release
 A binary release (x86_64 ELF) is available (see [Default Module Resolution](#default-module-resolution) for dynamic modules)

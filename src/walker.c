@@ -57,6 +57,8 @@ ctr_object *ctr_cwlk_message(ctr_tnode *paramNode) {
   ctr_object *r;
   ctr_object *recipientName = NULL;
   int is_hole = 0;
+  int old_replace = ctr_cwlk_replace_refs;
+  ctr_cwlk_replace_refs = 0;
   switch (receiverNode->type) {
   case CTR_AST_NODE_REFERENCE:
     recipientName = ctr_build_string(receiverNode->value, receiverNode->vlen);
@@ -138,6 +140,8 @@ ctr_object *ctr_cwlk_message(ctr_tnode *paramNode) {
            receiverNode->type);
     break;
   }
+  ctr_cwlk_replace_refs = old_replace;
+
   while (li->next) {
     ctr_argument *a;
     ctr_argument *aItem;

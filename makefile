@@ -113,6 +113,7 @@ install: $(BUILDDIR)/ctr $(BUILDDIR)/libctr.so $(BUILDDIR)/ctrconfig Library mod
 	install $(BUILDDIR)/ctr $(BINDIR)
 	install $(BUILDDIR)/ctrconfig $(BINDIR)
 	install $(BUILDDIR)/libctr.so $(DLLDIR)
+	install -m a+rx eval $(BINDIR)/citron
 	cp -fr Library/ $(DATADIR)/
 	cp -fr extensions/ $(DATADIR)/
 	cp -fr  mods/ $(DATADIR)/

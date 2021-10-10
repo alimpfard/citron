@@ -4,7 +4,7 @@
 #include <Citron/citron.h>
 #else
 #warning "We don't have Citron installed"
-#include "../../citron.h"
+#include "../../src/citron.h"
 #endif
 #include <gmp.h>
 
@@ -284,7 +284,7 @@ ctr_object* ctr_gmp_times(ctr_object* myself, ctr_argument* argumentList) {
     if ((*get_CtrStdFlow())) break;
   }
   ctr_heap_free( arguments );
-  if ((*get_CtrStdFlow()) == CtrStdBreak) (*get_CtrStdFlow()) = NULL; /* consume break */
+  if ((*get_CtrStdFlow()) == get_CtrStdBreak()) (*get_CtrStdFlow()) = NULL; /* consume break */
   blk->info.mark = 0;
   blk->info.sticky = 0;
   return myself;

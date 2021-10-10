@@ -8,7 +8,7 @@ compile:
 	${CC} ${EXTRAS} -c gmp.c -Wall -fPIC -g3 -o gmp.o
 
 link:
-	${CC} -shared -o libctrbiginteger.so -lgmp gmp.o
+	${CC} -shared -o libctrbiginteger.so -lgmp gmp.o -lcitron
 
 copy:
 	mkdir -p $(INTO)

@@ -2,7 +2,7 @@
 #include <Citron/citron.h>
 #else
 #warning "We don't have Citron installed"
-#include "../../citron.h"
+#include "../../src/citron.h"
 #endif
 #include <curl/curl.h>
 #include <stdio.h>

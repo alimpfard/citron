@@ -236,7 +236,7 @@ ctr_object *ctr_object_attr_accessor(ctr_object *myself,
     arglist->next->object =
         ctr_string_eval(ctr_build_string_from_cstring(mname), NULL);
     ctr_object_on_do(myself, arglist);
-    sprintf(mname, "{^my %.*s.}", (int)name->value.svalue->vlen,
+    sprintf(mname, "{^my %.*s.} catch: { ^Nil. }", (int)name->value.svalue->vlen,
             name->value.svalue->value);
     arglist->object = name;
     arglist->next->object =
@@ -274,10 +274,9 @@ ctr_object *ctr_object_attr_reader(ctr_object *myself,
     ctr_argument varg = {0}, narg = {0}, *arglist = &varg;
     arglist->next = &narg;
     char *mname = ctr_heap_allocate(sizeof(char) * 512);
-    sprintf(mname, "{^my %.*s.}", (int)name->value.svalue->vlen,
+    sprintf(mname, "{^my %.*s.} catch: { ^Nil. }", (int)name->value.svalue->vlen,
             name->value.svalue->value);
-    arglist->object = ctr_build_string_from_cstring(":");
-    arglist->object = ctr_string_concat(name, arglist);
+    arglist->object = name;
     arglist->next->object =
         ctr_string_eval(ctr_build_string_from_cstring(mname), NULL);
     ctr_object_on_do(myself, arglist);
@@ -312,7 +311,8 @@ ctr_object *ctr_object_attr_writer(ctr_object *myself,
     char *mname = ctr_heap_allocate(sizeof(char) * 512);
     sprintf(mname, "{:x my %.*s is x.}", (int)name->value.svalue->vlen,
             name->value.svalue->value);
-    arglist->object = name;
+    arglist->object = ctr_build_string_from_cstring(":");
+    arglist->object = ctr_string_concat(name, arglist);
     arglist->next->object =
         ctr_string_eval(ctr_build_string_from_cstring(mname), NULL);
     ctr_object_on_do(myself, arglist);

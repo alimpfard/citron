@@ -614,9 +614,9 @@ int npuint32(char *p, ctr_object *o) {
     return -1;
 
   //#if (sizeof(double) > sizeof(int))
-  if (x < (double)0 || x > (double)UINT8_MAX) {
+  if (x < (double)0 || x > (double)UINT32_MAX) {
     char err[1024];
-    int errlen = sprintf(err, "uint requires [%d,%d] but value was %f", 0,
+    int errlen = sprintf(err, "uint requires [%u,%u] but value was %f", 0,
                          UINT32_MAX, x);
     CtrStdFlow = ctr_build_string(err, errlen);
     return -1;

@@ -14,7 +14,6 @@ namedstruct.ctr
 docs
 tools/*
 sync.sh
-integration/vscode
 integration/gdb
 tut
 .bac

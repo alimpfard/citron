@@ -17,4 +17,4 @@ LIBSUF=.a
 EXESUF=
 ARCH=x86-64
 VERSION=0.9.25
-SRC_PATH=/home/Test/Documents/ProjectCitron/citron/tcc
+SRC_PATH=/home/Test/Workspace/citron/src/lib/tcc

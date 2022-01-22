@@ -1,0 +1,30 @@
+{
+    "name": "citron",
+    "displayName": "Citron",
+    "description": "Citron Syntax Highlighting",
+    "version": "0.0.1",
+    "publisher": "AnotherTest",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/alimpfard/citron.git"
+    },
+    "engines": {
+        "vscode": "^1.63.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "citron",
+            "aliases": ["Citron", "citron"],
+            "extensions": [".ctr"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "citron",
+            "scopeName": "source.Citron",
+            "path": "./syntaxes/citron.tmLanguage"
+        }]
+    }
+}

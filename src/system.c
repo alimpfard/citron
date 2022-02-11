@@ -35,6 +35,8 @@ static struct termios oldTermios, newTermios;
 #ifdef forLinux
 #    include <bsd/stdlib.h>
 
+#elif defined(__serenity__)
+// Nothing, they're in stdlib.h.
 #else
 // Arc4random
 

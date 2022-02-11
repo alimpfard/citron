@@ -43,10 +43,6 @@ ifeq ($(strip $(WITHOUT_BOEHM_GC)),)
 	LEXTRACF += $(fv)
 endif
 
-ifneq ($(strip $(WITH_TYPED_GC)),)
-	CFLAGS += "-D withBoehmGC_P"
-endif
-
 CFLAGS += -Isrc/lib/
 LEXTRACF += $(LDFLAGS) -flto -lstdc++
 

@@ -1420,9 +1420,6 @@ ctr_object* ctr_gc_sweep_this( ctr_object* myself, ctr_argument* argumentList );
 
 void* ctr_heap_allocate_shared( size_t size );
 void* ctr_heap_allocate( size_t size );
-#ifdef withBoehmGC_P
-void* ctr_heap_allocate_typed( size_t size, int type );
-#endif
 void* ctr_heap_allocate_tracked( size_t size );
 void  ctr_heap_free( void* ptr );
 void  ctr_heap_free_shared( void* ptr );

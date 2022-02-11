@@ -38,11 +38,8 @@ static pthread_mutex_t ctr_message_mutex = {{PTHREAD_MUTEX_RECURSIVE}};
 #define GC_THREAD
 #include <gc/gc.h>
 #endif
-#ifdef withBoehmGC_P
-#define ctr_heap_allocate_typed_(s, t) ctr_heap_allocate_typed(s, t)
-#else
+
 #define ctr_heap_allocate_typed_(s, t) ctr_heap_allocate(s)
-#endif
 
 #include "promise.h"
 

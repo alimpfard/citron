@@ -334,13 +334,19 @@ wrapped_ffi_type* ctr_ffi_type_get_format_splat(char** format,
     }
     case '{': {
         (*format)++;
-        return ctr_create_ffi_type_descriptor(*format, 1);
+        wrapped_ffi_type* p = ctr_create_ffi_type_descriptor(*format, 1);
+        if (p)
+            *this_size = p->size;
+        return p;
     }
     case '[': {
         (*format)++;
         char* fmt = *format;
         ctr_ffi_type_get_format_splat(&fmt, this_size);
-        return ctr_create_ffi_type_descriptor(*format, 0);
+        wrapped_ffi_type* p = ctr_create_ffi_type_descriptor(*format, 0);
+        if (p)
+            *this_size = p->size;
+        return p;
     }
     case ']':
     case '}':
@@ -534,9 +540,9 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format,
             break;
         case 'f':
             this_size = sizeof(float);
-            max_size = fmax(this_size, max_size);
+            max_size = max(this_size, max_size);
             this_alignment = alignof(float);
-            max_alignment = fmax(this_alignment, max_alignment);
+            max_alignment = max(this_alignment, max_alignment);
             if (!packed && current_offset % this_alignment != 0) {
                 pad = this_alignment - (current_offset % this_alignment);
                 mc += pad;
@@ -546,9 +552,9 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format,
             break;
         case 'd':
             this_size = sizeof(double);
-            max_size = fmax(this_size, max_size);
+            max_size = max(this_size, max_size);
             this_alignment = alignof(double);
-            max_alignment = fmax(this_alignment, max_alignment);
+            max_alignment = max(this_alignment, max_alignment);
             if (!packed && current_offset % this_alignment != 0) {
                 pad = this_alignment - (current_offset % this_alignment);
                 mc += pad;
@@ -558,9 +564,9 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format,
             break;
         case 'p':
             this_size = sizeof(void*);
-            max_size = fmax(this_size, max_size);
+            max_size = max(this_size, max_size);
             this_alignment = alignof(void*);
-            max_alignment = fmax(this_alignment, max_alignment);
+            max_alignment = max(this_alignment, max_alignment);
             if (!packed && current_offset % this_alignment != 0) {
                 pad = this_alignment - (current_offset % this_alignment);
                 mc += pad;
@@ -570,9 +576,9 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format,
             break;
         case 'l':
             this_size = sizeof(long long);
-            max_size = fmax(this_size, max_size);
+            max_size = max(this_size, max_size);
             this_alignment = alignof(long long);
-            max_alignment = fmax(this_alignment, max_alignment);
+            max_alignment = max(this_alignment, max_alignment);
             if (!packed && current_offset % this_alignment != 0) {
                 pad = this_alignment - (current_offset % this_alignment);
                 mc += pad;
@@ -581,15 +587,15 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format,
             mc++;
             break;
             // case 'v': this_size = sizeof(void); this_alignment = alignof(void);
-            // max_alignment = fmax(this_alignment, max_alignment);
+            // max_alignment = max(this_alignment, max_alignment);
             // if(current_offset%this_alignment!=0) { pad =
             // this_alignment-(current_offset%this_alignment); mc+=pad;
             // current_offset+=pad;} mc++; break;
         case '3':
             this_size = sizeof(uint8_t);
-            max_size = fmax(this_size, max_size);
+            max_size = max(this_size, max_size);
             this_alignment = alignof(uint8_t);
-            max_alignment = fmax(this_alignment, max_alignment);
+            max_alignment = max(this_alignment, max_alignment);
             {
                 format++;
                 if (*format != 'u' && *format != 's')
@@ -598,9 +604,9 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format,
                 if (*format != 'i')
                     goto exit_error;
                 this_size = sizeof(uint8_t);
-                max_size = fmax(this_size, max_size);
+                max_size = max(this_size, max_size);
                 this_alignment = alignof(uint8_t);
-                max_alignment = fmax(this_alignment, max_alignment);
+                max_alignment = max(this_alignment, max_alignment);
                 if (!packed && current_offset % this_alignment != 0) {
                     pad = this_alignment - (current_offset % this_alignment);
                     mc += pad;
@@ -611,9 +617,9 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format,
             }
         case '4':
             this_size = sizeof(uint16_t);
-            max_size = fmax(this_size, max_size);
+            max_size = max(this_size, max_size);
             this_alignment = alignof(uint16_t);
-            max_alignment = fmax(this_alignment, max_alignment);
+            max_alignment = max(this_alignment, max_alignment);
             {
                 format++;
                 if (*format != 'u' && *format != 's')
@@ -622,9 +628,9 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format,
                 if (*format != 'i')
                     goto exit_error;
                 this_size = sizeof(uint32_t);
-                max_size = fmax(this_size, max_size);
+                max_size = max(this_size, max_size);
                 this_alignment = alignof(uint32_t);
-                max_alignment = fmax(this_alignment, max_alignment);
+                max_alignment = max(this_alignment, max_alignment);
                 if (!packed && current_offset % this_alignment != 0) {
                     pad = this_alignment - (current_offset % this_alignment);
                     mc += pad;
@@ -635,9 +641,9 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format,
             }
         case '5':
             this_size = sizeof(uint32_t);
-            max_size = fmax(this_size, max_size);
+            max_size = max(this_size, max_size);
             this_alignment = alignof(uint32_t);
-            max_alignment = fmax(this_alignment, max_alignment);
+            max_alignment = max(this_alignment, max_alignment);
             {
                 format++;
                 if (*format != 'u' && *format != 's')
@@ -646,9 +652,9 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format,
                 if (*format != 'i')
                     goto exit_error;
                 this_size = sizeof(uint32_t);
-                max_size = fmax(this_size, max_size);
+                max_size = max(this_size, max_size);
                 this_alignment = alignof(uint32_t);
-                max_alignment = fmax(this_alignment, max_alignment);
+                max_alignment = max(this_alignment, max_alignment);
                 if (!packed && current_offset % this_alignment != 0) {
                     pad = this_alignment - (current_offset % this_alignment);
                     mc += pad;
@@ -659,9 +665,9 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format,
             }
         case '6':
             this_size = sizeof(uint64_t);
-            max_size = fmax(this_size, max_size);
+            max_size = max(this_size, max_size);
             this_alignment = alignof(uint64_t);
-            max_alignment = fmax(this_alignment, max_alignment);
+            max_alignment = max(this_alignment, max_alignment);
             {
                 format++;
                 if (*format != 'u' && *format != 's')
@@ -670,9 +676,9 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format,
                 if (*format != 'i')
                     goto exit_error;
                 this_size = sizeof(uint64_t);
-                max_size = fmax(this_size, max_size);
+                max_size = max(this_size, max_size);
                 this_alignment = alignof(uint64_t);
-                max_alignment = fmax(this_alignment, max_alignment);
+                max_alignment = max(this_alignment, max_alignment);
                 if (!packed && current_offset % this_alignment != 0) {
                     pad = this_alignment - (current_offset % this_alignment);
                     mc += pad;
@@ -700,9 +706,9 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format,
             size_t inner_size;
             struct_member_desc_t s = ctr_ffi_type_get_member_count(format + 1, &inner_size, 0, 1);
             this_size = s.max_size;
-            max_size = fmax(this_size, max_size);
+            max_size = max(this_size, max_size);
             this_alignment = s.max_alignment;
-            max_alignment = fmax(this_alignment, max_alignment);
+            max_alignment = max(this_alignment, max_alignment);
             if (!packed && current_offset % this_alignment != 0) {
                 pad = this_alignment - (current_offset % this_alignment);
                 mc += pad;
@@ -723,9 +729,9 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format,
             size_t inner_size;
             struct_member_desc_t s = ctr_ffi_type_get_member_count(format + 1, &inner_size, 0, 0);
             this_size = inner_size;
-            max_size = fmax(this_size, max_size);
+            max_size = max(this_size, max_size);
             this_alignment = s.max_alignment;
-            max_alignment = fmax(this_alignment, max_alignment);
+            max_alignment = max(this_alignment, max_alignment);
             if (!packed && current_offset % this_alignment != 0) {
                 pad = this_alignment - (current_offset % this_alignment);
                 mc += pad;
@@ -744,9 +750,9 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format,
             switch (*format) {
             case 'c':
                 this_size = sizeof(unsigned char);
-                max_size = fmax(this_size, max_size);
+                max_size = max(this_size, max_size);
                 this_alignment = alignof(unsigned char);
-                max_alignment = fmax(this_alignment, max_alignment);
+                max_alignment = max(this_alignment, max_alignment);
                 pad = 0;
                 {
                     mc++;
@@ -754,9 +760,9 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format,
                 } // no padding for chars
             case 's':
                 this_size = sizeof(unsigned short);
-                max_size = fmax(this_size, max_size);
+                max_size = max(this_size, max_size);
                 this_alignment = alignof(unsigned short);
-                max_alignment = fmax(this_alignment, max_alignment);
+                max_alignment = max(this_alignment, max_alignment);
                 if (!packed && current_offset % this_alignment != 0) {
                     pad = this_alignment - (current_offset % this_alignment);
                     mc += pad;
@@ -768,9 +774,9 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format,
                 }
             case 'i':
                 this_size = sizeof(unsigned int);
-                max_size = fmax(this_size, max_size);
+                max_size = max(this_size, max_size);
                 this_alignment = alignof(unsigned int);
-                max_alignment = fmax(this_alignment, max_alignment);
+                max_alignment = max(this_alignment, max_alignment);
                 if (!packed && current_offset % this_alignment != 0) {
                     pad = this_alignment - (current_offset % this_alignment);
                     mc += pad;
@@ -782,9 +788,9 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format,
                 }
             case 'l':
                 this_size = sizeof(unsigned long);
-                max_size = fmax(this_size, max_size);
+                max_size = max(this_size, max_size);
                 this_alignment = alignof(unsigned long);
-                max_alignment = fmax(this_alignment, max_alignment);
+                max_alignment = max(this_alignment, max_alignment);
                 if (!packed && current_offset % this_alignment != 0) {
                     pad = this_alignment - (current_offset % this_alignment);
                     mc += pad;
@@ -804,9 +810,9 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format,
             switch (*format) {
             case 'c':
                 this_size = sizeof(unsigned char);
-                max_size = fmax(this_size, max_size);
+                max_size = max(this_size, max_size);
                 this_alignment = alignof(unsigned char);
-                max_alignment = fmax(this_alignment, max_alignment);
+                max_alignment = max(this_alignment, max_alignment);
                 pad = 0;
                 {
                     mc++;
@@ -814,9 +820,9 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format,
                 }
             case 's':
                 this_size = sizeof(signed short);
-                max_size = fmax(this_size, max_size);
+                max_size = max(this_size, max_size);
                 this_alignment = alignof(signed short);
-                max_alignment = fmax(this_alignment, max_alignment);
+                max_alignment = max(this_alignment, max_alignment);
                 if (!packed && current_offset % this_alignment != 0) {
                     pad = this_alignment - (current_offset % this_alignment);
                     mc += pad;
@@ -828,9 +834,9 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format,
                 }
             case 'i':
                 this_size = sizeof(signed int);
-                max_size = fmax(this_size, max_size);
+                max_size = max(this_size, max_size);
                 this_alignment = alignof(signed int);
-                max_alignment = fmax(this_alignment, max_alignment);
+                max_alignment = max(this_alignment, max_alignment);
                 if (!packed && current_offset % this_alignment != 0) {
                     pad = this_alignment - (current_offset % this_alignment);
                     mc += pad;
@@ -842,9 +848,9 @@ struct_member_desc_t ctr_ffi_type_get_member_count(char* format,
                 }
             case 'l':
                 this_size = sizeof(signed long);
-                max_size = fmax(this_size, max_size);
+                max_size = max(this_size, max_size);
                 this_alignment = alignof(signed long);
-                max_alignment = fmax(this_alignment, max_alignment);
+                max_alignment = max(this_alignment, max_alignment);
                 if (!packed && current_offset % this_alignment != 0) {
                     pad = this_alignment - (current_offset % this_alignment);
                     mc += pad;
@@ -976,7 +982,9 @@ ctr_create_ffi_type_descriptor_(char* format, int member_count, int union_)
     char* fff = format;
     for (int i = 0; i < member_count; i++) {
         wrapped_ffi_type* member = ctr_ffi_type_get_format_splat(&format, &this_size);
-        alignment = fmax(alignment, member->alignment);
+        if (!member)
+            break;
+        alignment = max(alignment, member->alignment);
         if (this_size < 0) {
             size_t pad = -this_size;
             current_offset += pad;

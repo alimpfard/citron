@@ -3809,7 +3809,6 @@ ctr_object* ctr_get_responder(ctr_object* receiverObject, char* message,
             break;
         searchObject = searchObject->interfaces->link;
     }
-    ctr_heap_free(msg);
     if (!methodObject) {
         searchObject = receiverObject;
         while (!methodObject) {

@@ -4,13 +4,6 @@
 #    include "lib/tcc/tcc.h"
 #    include <ffi.h>
 
-void* ctr_inject_compiled_state_release_hook(void* state)
-{
-    if (state)
-        tcc_delete((struct TCCState*)state);
-    return NULL;
-}
-
 struct ctr_inject_data_t {
     struct {
         int relocated;
@@ -19,6 +12,15 @@ struct ctr_inject_data_t {
 };
 
 typedef struct ctr_inject_data_t ctr_inject_data_t;
+
+
+void* ctr_inject_compiled_state_release_hook(void* state)
+{
+    ctr_inject_data_t *ds = state;
+    if (ds && ds->state)
+        tcc_delete(ds->state);
+    return NULL;
+}
 
 /**
  * [Inject] newWithOutputMode: [outmode:String]

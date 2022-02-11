@@ -811,10 +811,9 @@ ctr_object* ctr_file_include_here(ctr_object* myself,
     pathString = ctr_heap_allocate_tracked(
         sizeof(char) * (vlen + 1)); // needed until end, pathString appears in stracktrace
     memcpy(pathString, path->value.svalue->value, vlen);
-    memcpy(pathString + vlen, "\0", 1);
+    pathString[vlen] = 0;
     prg = ctr_internal_readf(pathString, &program_size);
     parsedCode = ctr_cparse_parse(prg, pathString);
-    ctr_heap_free(prg);
     ctr_cwlk_subprogram++;
     ctr_cwlk_run(parsedCode);
     ctr_cwlk_subprogram--;

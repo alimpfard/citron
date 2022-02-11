@@ -213,9 +213,12 @@ void* ctr_internal_plugin_find(ctr_object* key)
         modName);
     ctr_heap_free(modName);
     realPathModName = realpath(pathNameMod, NULL);
+    if (!realPathModName)
+        return NULL;
     if (access(realPathModName, F_OK) == -1)
         return NULL;
     handle = dlopen(realPathModName, RTLD_NOW);
+    free(realPathModName);
     if (!handle) {
         printf("%s: %s\n", "Failed to open file", dlerror());
         return NULL;

@@ -570,7 +570,7 @@ ctr_object* ctr_object_learn_meaning(ctr_object* myself,
     while (i < myself->methods->size) {
         current_method_name_str = current_method->key->value.svalue->value;
         current_method_name_len = current_method->key->value.svalue->vlen;
-        if (current_method_name_len > target_method_name_len) {
+        if (current_method_name_len < target_method_name_len) {
             len = current_method_name_len;
         } else {
             len = target_method_name_len;
@@ -3039,7 +3039,7 @@ int ctr_str_count_substr(char* str, char* substr, int overlap)
 
     int count = 0;
     int increment = overlap ? 1 : strlen(substr);
-    for (char* s = (char*)str; (s = strstr(s, substr)); s += increment)
+    for (char* s = (char*)str; *s && (s = strstr(s, substr)); s += increment)
         ++count;
     return count;
 }
@@ -4964,7 +4964,7 @@ ctr_object* ctr_string_eval(ctr_object* myself, ctr_argument* argumentList)
     ctr_command_security_profile ^= CTR_SECPRO_EVAL;
 #endif
 
-    pathString = ctr_heap_allocate_tracked(sizeof(char) * 5);
+    pathString = ctr_heap_allocate_tracked(sizeof(char) * 7);
     memcpy(pathString, "<eval>\0", 7);
     /* add a return statement so we can catch result */
     ctr_argument narg = { 0 }, *newArgumentList = &narg;

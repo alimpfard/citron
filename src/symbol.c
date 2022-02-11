@@ -14,7 +14,7 @@ ctr_object* ctr_symbol_to_string(ctr_object* myself,
 {
     if (unlikely(myself == CtrStdSymbol))
         return ctr_build_string_from_cstring("Symbol#");
-    char* name = ctr_heap_allocate(sizeof(char) * (myself->value.svalue->vlen + 1));
+    char* name = ctr_heap_allocate(sizeof(char) * (myself->value.svalue->vlen + 2));
     ctr_size len = sprintf(name, "\\%.*s", myself->value.svalue->vlen,
         myself->value.svalue->value);
     ctr_object* nameS = ctr_build_string(name, len);

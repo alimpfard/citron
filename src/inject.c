@@ -65,8 +65,12 @@ ctr_object* ctr_inject_make(ctr_object* myself, ctr_argument* argumentList)
     static char buf[10240];
     sprintf(buf, "%s/tcc", ctr_file_stdext_path_raw());
     tcc_set_lib_path(s, buf);
+
     // add compiler-specific include path
-    sprintf(buf, "%s/include", buf);
+    unsigned long len = strlen(buf);
+    char include_str[] = "/include";
+    memcpy(&buf[len], include_str, sizeof(include_str));
+
     tcc_add_include_path(s, buf);
     tcc_define_symbol(s, "CTR_INJECT", "");
     // TODO: Add meaningful symbols

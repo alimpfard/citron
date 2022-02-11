@@ -1,6 +1,5 @@
 DEBUG_VERSION := 1603
 DEBUG_BUILD_VERSION := "\"$(DEBUG_VERSION)\""
-fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
 location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 new_makefile_l1 := $(shell perl -ne '/((DEBUG_VERSION := )(\d+))/ && print (sprintf("%s%s", "$$2", "$$3"+1));' $(location))
 LIBSOCKETDIR = src/lib/libsocket
@@ -39,6 +38,7 @@ ifneq ($(strip $(WITH_ICU)),)
 endif
 
 ifeq ($(strip $(WITHOUT_BOEHM_GC)),)
+	fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
 	CFLAGS += "-D withBoehmGC"
 	LEXTRACF += $(fv)
 endif
@@ -87,7 +87,7 @@ $(BUILDDIR):
 	mkdir -p $@
 
 $(BUILDDIR)/ctr: build_tcc_statics $(BUILDDIR) $(OBJS) $(EXTRAOBJS)
-	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) $(CXXFLAGS) -lm -ldl -lbsd -lpcre -lffi -lpthread $(LEXTRACF) -o $@
+	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) $(CXXFLAGS) $(CFLAGS) -lm -ldl -lbsd -lpcre -lffi -lpthread $(LEXTRACF) -o $@
 
 ctr: $(BUILDDIR)/ctr
 

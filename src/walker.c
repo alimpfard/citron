@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "citron.h"
+#include "gc.h"
 
 int ctr_cwlk_replace_refs = 0;
 int force_quote = 0;

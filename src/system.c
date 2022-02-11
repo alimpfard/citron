@@ -18,11 +18,8 @@
 #include <time.h>
 #include <unistd.h>
 
-#ifdef withBoehmGC
-#    define GC_THREAD
-#    include <gc/gc.h>
-#    define pthread_create GC_pthread_create
-#endif
+#include "gc.h"
+#define pthread_create GC_pthread_create
 
 #ifdef withTermios
 #    include <termios.h>
@@ -612,7 +609,6 @@ ctr_object* ctr_gc_sweep_this(ctr_object* myself, ctr_argument* argumentList)
 }
 #else // withBoehmGC
 
-#    include <gc/gc.h>
 #    define ctr_nogc_decr GC_disable
 #    define ctr_nogc_incr GC_enable
 

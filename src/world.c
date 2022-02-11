@@ -35,8 +35,7 @@ static pthread_mutex_t ctr_message_mutex = { { PTHREAD_MUTEX_RECURSIVE } };
 #endif
 
 #ifdef withBoehmGC
-#    define GC_THREAD
-#    include <gc/gc.h>
+#    include "gc.h"
 #endif
 
 #define ctr_heap_allocate_typed_(s, t) ctr_heap_allocate(s)
@@ -954,14 +953,6 @@ ctr_object* ctr_internal_create_mapped_object(int type, int shared)
         return ctr_internal_create_mapped_object_unshared(type);
 }
 
-#ifndef withBoehmGC
-void ctr_finalize_clear(GC_PTR obj, GC_PTR user_data)
-{
-    ctr_object* o = obj;
-    if (o->release_hook)
-        o->release_hook(o->value.rvalue);
-}
-#endif
 // __attribute__ ((always_inline))
 ctr_object* ctr_internal_create_mapped_object_shared(int type)
 {

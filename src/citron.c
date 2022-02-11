@@ -13,6 +13,8 @@
 #include <syslog.h>
 #include <unistd.h>
 
+#include "gc.h"
+
 #define DO_PROFILE 0
 #define CTR_STD_EXTENSION_ENV_NAME "CITRON_EXT_PATH"
 

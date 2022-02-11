@@ -16,9 +16,8 @@ enable_inject ?= true
 enable_ctypes ?= true
 enable_inline_asm ?= false
 
-CFLAGS += -Wall -Wextra -Wno-unused-parameter -mtune=native\
-		  -march=native -D withTermios -D forLinux\
-		  -D CTR_STD_EXTENSION_PATH=\"$(DATADIR)\"
+CFLAGS += -Wall -Wextra -Wno-unused-parameter\
+		  -D withTermios -D CTR_STD_EXTENSION_PATH=\"$(DATADIR)\"
 
 ifeq ($(enable_inject),true)
 	CFLAGS += -DwithInjectNative=1

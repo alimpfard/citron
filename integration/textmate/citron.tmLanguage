@@ -4,13 +4,13 @@
 <!-- Generated via Iro -->
 <dict>
   <key>fileTypes</key>
-  <array>
+  <array> 
     <string>ctr</string>
    </array>
   <key>name</key>
   <string>Citron</string>
   <key>patterns</key>
-  <array>
+  <array> 
     <dict>
       <key>include</key>
       <string>#main</string>
@@ -25,7 +25,7 @@
     <key>main</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
         <dict>
           <key>match</key>
           <string>(?:([^\s\d\x{003a}.\x{002c}\[\]\(\)\{\}\#][^\s\x{003a}.\x{002c}\[\]\(\)\{\}\#]*)(\s+)(‹)([^\x{203a}]*?)(›))</string>
@@ -128,7 +128,7 @@
             </dict>
           </dict>
           <key>patterns</key>
-          <array>
+          <array> 
             <dict>
               <key>include</key>
               <string>#main__3</string>
@@ -197,7 +197,7 @@
             </dict>
           </dict>
           <key>patterns</key>
-          <array>
+          <array> 
             <dict>
               <key>include</key>
               <string>#main__4</string>
@@ -232,7 +232,7 @@
             </dict>
           </dict>
           <key>patterns</key>
-          <array>
+          <array> 
             <dict>
               <key>include</key>
               <string>#fstring</string>
@@ -261,7 +261,7 @@
             </dict>
           </dict>
           <key>patterns</key>
-          <array>
+          <array> 
             <dict>
               <key>include</key>
               <string>#string</string>
@@ -339,7 +339,7 @@
             </dict>
           </dict>
           <key>patterns</key>
-          <array>
+          <array> 
             <dict>
               <key>include</key>
               <string>#main__6</string>
@@ -610,7 +610,7 @@
     <key>asm</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
         <dict>
           <key>match</key>
           <string>(.*)</string>
@@ -622,7 +622,7 @@
     <key>expr_interpolation</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
         <dict>
           <key>begin</key>
           <string>\b(var|my|const|frozen)\b</string>
@@ -664,7 +664,7 @@
             </dict>
           </dict>
           <key>patterns</key>
-          <array>
+          <array> 
             <dict>
               <key>include</key>
               <string>#expr_interpolation__2</string>
@@ -733,7 +733,7 @@
             </dict>
           </dict>
           <key>patterns</key>
-          <array>
+          <array> 
             <dict>
               <key>include</key>
               <string>#expr_interpolation__3</string>
@@ -768,7 +768,7 @@
             </dict>
           </dict>
           <key>patterns</key>
-          <array>
+          <array> 
             <dict>
               <key>include</key>
               <string>#string</string>
@@ -846,7 +846,7 @@
             </dict>
           </dict>
           <key>patterns</key>
-          <array>
+          <array> 
             <dict>
               <key>include</key>
               <string>#expr_interpolation__5</string>
@@ -1117,31 +1117,31 @@
     <key>expr_interpolation__1</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
        </array>
     </dict>
     <key>expr_interpolation__10</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
        </array>
     </dict>
     <key>expr_interpolation__11</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
        </array>
     </dict>
     <key>expr_interpolation__12</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
        </array>
     </dict>
     <key>expr_interpolation__2</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
         <dict>
           <key>match</key>
           <string>(.)</string>
@@ -1153,7 +1153,7 @@
     <key>expr_interpolation__3</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
         <dict>
           <key>match</key>
           <string>(.)</string>
@@ -1165,13 +1165,13 @@
     <key>expr_interpolation__4</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
        </array>
     </dict>
     <key>expr_interpolation__5</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
         <dict>
           <key>begin</key>
           <string>(?:\s*)</string>
@@ -1184,7 +1184,7 @@
             </dict>
           </dict>
           <key>patterns</key>
-          <array>
+          <array> 
             <dict>
               <key>include</key>
               <string>#asm</string>
@@ -1206,31 +1206,31 @@
     <key>expr_interpolation__6</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
        </array>
     </dict>
     <key>expr_interpolation__7</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
        </array>
     </dict>
     <key>expr_interpolation__8</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
        </array>
     </dict>
     <key>expr_interpolation__9</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
        </array>
     </dict>
     <key>fstring</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
         <dict>
           <key>match</key>
           <string>(.)</string>
@@ -1242,43 +1242,43 @@
     <key>main__1</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
        </array>
     </dict>
     <key>main__10</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
        </array>
     </dict>
     <key>main__11</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
        </array>
     </dict>
     <key>main__12</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
        </array>
     </dict>
     <key>main__13</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
        </array>
     </dict>
     <key>main__2</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
        </array>
     </dict>
     <key>main__3</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
         <dict>
           <key>match</key>
           <string>(.)</string>
@@ -1290,7 +1290,7 @@
     <key>main__4</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
         <dict>
           <key>match</key>
           <string>(.)</string>
@@ -1302,13 +1302,13 @@
     <key>main__5</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
        </array>
     </dict>
     <key>main__6</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
         <dict>
           <key>begin</key>
           <string>(?:\s*)</string>
@@ -1321,7 +1321,7 @@
             </dict>
           </dict>
           <key>patterns</key>
-          <array>
+          <array> 
             <dict>
               <key>include</key>
               <string>#asm</string>
@@ -1343,25 +1343,25 @@
     <key>main__7</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
        </array>
     </dict>
     <key>main__8</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
        </array>
     </dict>
     <key>main__9</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
        </array>
     </dict>
     <key>string</key>
     <dict>
       <key>patterns</key>
-      <array>
+      <array> 
         <dict>
           <key>match</key>
           <string>(?:(\$\$)(\w+)\b)</string>
@@ -1424,7 +1424,7 @@
             </dict>
           </dict>
           <key>patterns</key>
-          <array>
+          <array> 
             <dict>
               <key>include</key>
               <string>#expr_interpolation</string>

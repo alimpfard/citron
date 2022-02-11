@@ -24,12 +24,14 @@ struct ctr_promise_entry {
     struct ctr_context_t context;
 };
 
-ctr_object* ctr_promise_make(ctr_object*, ctr_object*, ctr_argument*, ctr_object*);
-ctr_object* ctr_promise_poll(ctr_object*,ctr_argument*);
-ctr_object* ctr_promise_wait(ctr_object*,ctr_argument*);
-ctr_object* ctr_promise_then(ctr_object*, ctr_object *);
-ctr_object* ctr_promise_then_(ctr_object*,ctr_argument*);
-ctr_object* ctr_promise_pass_message(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_promise_make(ctr_object*, ctr_object*, ctr_argument*,
+    ctr_object*);
+ctr_object* ctr_promise_poll(ctr_object*, ctr_argument*);
+ctr_object* ctr_promise_wait(ctr_object*, ctr_argument*);
+ctr_object* ctr_promise_then(ctr_object*, ctr_object*);
+ctr_object* ctr_promise_then_(ctr_object*, ctr_argument*);
+ctr_object* ctr_promise_pass_message(ctr_object* myself,
+    ctr_argument* argumentList);
 CTR_H_DECLSPEC ctr_object* CtrStdPromise;
 void promise_begin();
 

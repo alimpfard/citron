@@ -1,12 +1,12 @@
 #ifndef CTR_STRUCTMEMBER_H
 #define CTR_STRUCTMEMBER_H
 
-#include <limits.h>
-#include <float.h>
-#include <stdio.h>
 #include "citron.h"
 #include "ctypes.h"
 #include "reverse_sizes.h"
+#include <float.h>
+#include <limits.h>
+#include <stdio.h>
 
 ctr_object* nuchar(char* p);
 ctr_object* nuuchar(char* p);

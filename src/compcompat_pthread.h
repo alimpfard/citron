@@ -10,11 +10,19 @@
 
 int pthread_getname_np(pthread_t pth, char* buf, size_t len)
 {
+#ifdef __serenity__
+    return 0;
+#else
     return prctl(PR_GET_NAME, buf);
+#endif
 }
 int pthread_setname_np(pthread_t pth, const char* buf)
 {
+#ifdef __serenity__
+    return 0;
+#else
     return prctl(PR_SET_NAME, buf);
+#endif
 }
 #        else //__has_include
 
@@ -30,11 +38,19 @@ int pthread_setname_np(pthread_t pth, const char* buf) { return 1; }
 
 int pthread_getname_np(pthread_t pth, char* buf, size_t len)
 {
+#ifdef __serenity__
+    return 0;
+#else
     return prctl(PR_GET_NAME, buf);
+#endif
 }
 int pthread_setname_np(pthread_t pth, const char* buf)
 {
+#ifdef __serenity__
+    return 0;
+#else
     return prctl(PR_SET_NAME, buf);
+#endif
 }
 #    endif // ifdef  __has_include
 #endif     // ifndef _GNU_SOURCE

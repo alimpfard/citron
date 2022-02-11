@@ -706,7 +706,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_TSTR(ushort)
 {
     char buf[1024];
     sprintf(buf, "<CTypes ushort at: %p value: %ui>", myself->value.rvalue->ptr,
-        *(ushort*)myself->value.rvalue->ptr);
+        *(unsigned short*)myself->value.rvalue->ptr);
     return ctr_build_string_from_cstring(buf);
 }
 
@@ -779,7 +779,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_TSTR(uint)
 {
     char buf[1024];
     sprintf(buf, "<CTypes uint at: %p value: %ui>", myself->value.rvalue->ptr,
-        *(uint*)myself->value.rvalue->ptr);
+        *(unsigned int*)myself->value.rvalue->ptr);
     return ctr_build_string_from_cstring(buf);
 }
 

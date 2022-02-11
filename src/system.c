@@ -1138,7 +1138,7 @@ ctr_object* ctr_command_chdir(ctr_object* myself, ctr_argument* argumentList)
 {
     ctr_did_side_effect = 1;
     CTR_ENSURE_TYPE_STRING(argumentList->object);
-    char* path = ctr_heap_allocate_cstring(argumentList->object);
+    char* path = strndup(argumentList->object->value.svalue->value, argumentList->object->value.svalue->vlen);
     char* curpath = realpath(".", NULL);
     if (!curpath) {
         CtrStdFlow = ctr_build_string_from_cstring(
@@ -1148,7 +1148,7 @@ ctr_object* ctr_command_chdir(ctr_object* myself, ctr_argument* argumentList)
     ctr_object* lpath = ctr_build_string_from_cstring(curpath);
     free(curpath);
     if (chdir(path) == 0) {
-        ctr_heap_free(path);
+        free(path);
         return lpath;
     }
     ctr_object* err = ctr_build_string_from_cstring(

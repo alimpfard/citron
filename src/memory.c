@@ -1,6 +1,8 @@
 #include "citron.h"
 #include <ctype.h>
+#ifndef __serenity__
 #include <execinfo.h>
+#endif
 #include <math.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -39,6 +41,7 @@ void sttrace_print(void* ptr)
 {
     if (likely(ptr))
         return;
+#ifndef __serenity__
     printf("MEMORY ALLOC %p\n", ptr);
     void* array[99999];
     size_t size;
@@ -52,6 +55,7 @@ void sttrace_print(void* ptr)
         printf("%s\n", strings[i]);
 
     free(strings);
+#endif
 }
 
 /**

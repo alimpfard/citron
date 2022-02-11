@@ -78,7 +78,7 @@ OBJS := $(foreach obj,$(OBJS),$(BUILDDIR)/$(obj))
 COBJS := $(foreach obj,$(COBJS),$(BUILDDIR)/$(obj))
 EXTRAOBJS := $(foreach obj,$(EXTRAOBJS),$(BUILDDIR)/$(obj))
 
-all: CFLAGS += -O2
+all: CFLAGS += -O3 -fpic
 all: remove_libsocket_build cxx ctr ctrconfig
 
 remove_libsocket_build:
@@ -97,7 +97,7 @@ ctr: $(BUILDDIR)/ctr
 
 $(BUILDDIR)/libctr.so: CFLAGS += -fPIC -DCITRON_LIBRARY
 $(BUILDDIR)/libctr.so: $(OBJS)
-	$(CC) $< -shared -export-dynamic -ldl -lbsd -lpcre -lffi -lpthread -o $@
+	$(CC) $(OBJS) -fpic -shared -export-dynamic -ldl -lbsd -lpcre -lffi -lpthread -o $@
 
 libctr: $(BUILDDIR)/libctr.so
 

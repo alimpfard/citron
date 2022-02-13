@@ -58,10 +58,12 @@ OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
 	   importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o \
 	   promise.o symbol_cxx.o world.o libsocket.so
 EXTRAOBJS =
+TCC_STATICS = 
 
 ifneq ($(findstring withInjectNative=1,$(CFLAGS)),)
 	OBJS += inject.o libtcc1.a libtcc.a
 	CFLAGS += -DwithCTypesNative=1
+	TCC_STATICS = build_tcc_statics
 endif
 
 ifneq ($(findstring withCTypesNative=1,$(CFLAGS)),)
@@ -93,7 +95,7 @@ ctrconfig:
 $(BUILDDIR):
 	mkdir -p $@
 
-$(BUILDDIR)/ctr: build_tcc_statics $(BUILDDIR) $(OBJS) $(EXTRAOBJS)
+$(BUILDDIR)/ctr: $(TCC_STATICS) $(BUILDDIR) $(OBJS) $(EXTRAOBJS)
 	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) $(CXXFLAGS) $(CFLAGS) $(LIBS) $(LEXTRACF) -o $@
 
 ctr: $(BUILDDIR)/ctr

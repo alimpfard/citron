@@ -15,6 +15,7 @@ INCLUDE_DIR ?= /usr/local/include/Citron
 enable_inject ?= true
 enable_ctypes ?= true
 enable_inline_asm ?= false
+enable_boehm_gc ?= true
 use_libbsd ?= true
 
 CFLAGS += -Wall -Wextra -Wno-unused-parameter\
@@ -43,9 +44,9 @@ ifneq ($(strip $(WITH_ICU)),)
 	LEXTRACF += -L/usr/lib -licui18n -licuuc -licudata
 endif
 
-ifeq ($(strip $(WITHOUT_BOEHM_GC)),)
+ifeq ($(enable_boehm_gc),true)
 	fv := $(strip $(shell ldconfig -p | grep libgc.so | cut -d ">" -f2 | head -n1))
-	CFLAGS += "-D withBoehmGC"
+	CFLAGS += -D withBoehmGC
 	LEXTRACF += $(fv)
 endif
 

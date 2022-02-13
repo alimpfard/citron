@@ -4,11 +4,12 @@ location = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 new_makefile_l1 := $(shell perl -ne '/((DEBUG_VERSION := )(\d+))/ && print (sprintf("%s%s", "$$2", "$$3"+1));' $(location))
 LIBSOCKETDIR = src/lib/libsocket
 BUILDDIR ?= build
-BINDIR ?= /usr/local/bin
-DATADIR ?= /usr/share/Citron
-HEADERDIR ?= /usr/local/include/Citron
-DLLDIR ?= /usr/local/lib
-INCLUDE_DIR ?= /usr/local/include/Citron
+DESTDIR ?= /
+BINDIR ?= $(DESTDIR)/usr/local/bin
+DATADIR ?= $(DESTDIR)/usr/share/Citron
+HEADERDIR ?= $(DESTDIR)/usr/local/include/Citron
+DLLDIR ?= $(DESTDIR)/usr/local/lib
+INCLUDE_DIR ?= $(DESTDIR)/usr/local/include/Citron
 
 .PHONY: all ctrconfig libctr ctr install cxx
 

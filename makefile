@@ -15,9 +15,12 @@ INCLUDE_DIR ?= /usr/local/include/Citron
 enable_inject ?= true
 enable_ctypes ?= true
 enable_inline_asm ?= false
+use_libbsd ?= true
 
 CFLAGS += -Wall -Wextra -Wno-unused-parameter\
 		  -D withTermios -D CTR_STD_EXTENSION_PATH=\"$(DATADIR)\"
+
+LIBS = -lm -ldl -lpcre -pthread -lffi -lc
 
 ifeq ($(enable_inject),true)
 	CFLAGS += -DwithInjectNative=1
@@ -29,6 +32,10 @@ endif
 
 ifeq ($(enable_inline_asm),true)
 	CFLAGS += -DwithInlineAsm=1
+endif
+
+ifeq ($(use_libbsd),true)
+	LIBS += -lbsd
 endif
 
 ifneq ($(strip $(WITH_ICU)),)
@@ -86,13 +93,13 @@ $(BUILDDIR):
 	mkdir -p $@
 
 $(BUILDDIR)/ctr: build_tcc_statics $(BUILDDIR) $(OBJS) $(EXTRAOBJS)
-	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) $(CXXFLAGS) $(CFLAGS) -lm -ldl -lbsd -lpcre -lffi -lpthread $(LEXTRACF) -o $@
+	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) $(CXXFLAGS) $(CFLAGS) $(LIBS) $(LEXTRACF) -o $@
 
 ctr: $(BUILDDIR)/ctr
 
 $(BUILDDIR)/libctr.so: CFLAGS += -fPIC -DCITRON_LIBRARY
 $(BUILDDIR)/libctr.so: $(OBJS)
-	$(CC) $(OBJS) -fpic -shared -export-dynamic -ldl -lbsd -lpcre -lffi -lpthread -o $@
+	$(CC) $(OBJS) -fpic -shared -export-dynamic $(LIBS) -o $@
 
 libctr: $(BUILDDIR)/libctr.so
 
@@ -100,7 +107,7 @@ libctr: $(BUILDDIR)/libctr.so
 # compiler: cxx
 # compiler: $(COBJS)
 # 	cd $(BUILDDIR)
-# 	$(CC) $< -lm -ldl -lbsd -lpcre -lffi -lprofiler -lpthread $(LEXTRACF) -o ctrc
+# 	$(CC) $< $(LIBS) -lprofiler $(LEXTRACF) -o ctrc
 # 	cd -
 
 install: $(BUILDDIR)/ctr $(BUILDDIR)/libctr.so $(BUILDDIR)/ctrconfig Library mods extensions

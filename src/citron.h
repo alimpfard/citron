@@ -228,7 +228,6 @@ typedef struct ctr_map ctr_map;
  * Map item
  */
 struct ctr_mapitem {
-    int hits;
     uint64_t hashKey;
     struct ctr_object* key;
     struct ctr_object* value;

@@ -540,7 +540,6 @@ ctr_object* ctr_internal_object_find_property_with_hash(ctr_object* owner,
         return NULL;
     if (unlikely(lookup->size == 1 && (head = lookup->head)->hashKey == hashKey)) {
         if (likely(ctr_internal_object_is_equal(head->key, key))) {
-            head->hits++;
             return head->value;
         }
         return NULL;
@@ -551,24 +550,8 @@ ctr_object* ctr_internal_object_find_property_with_hash(ctr_object* owner,
         if ((hashKey == head->hashKey) && ctr_internal_object_is_equal(head->key, key)) {
             ctr_object* val = head->value;
             first_head = head->prev;
-            if (!first_head || first_head == head)
-                return val;
-            if (++head->hits > first_head->hits) {
-                int fh = first_head->hits;
-                void *fk = first_head->key, *fv = first_head->value;
-                uint64_t fhk = first_head->hashKey;
-                first_head->hits = head->hits;
-                first_head->key = head->key;
-                first_head->value = val;
-                first_head->hashKey = hashKey;
-                head->hits = fh;
-                head->key = fk;
-                head->value = fv;
-                head->hashKey = fhk;
-            }
             return val;
         }
-        head->hits = 0;
         head = head->next;
     }
     return NULL;
@@ -596,7 +579,6 @@ ctr_object* ctr_internal_object_find_property_or_create_with_hash(
     }
     if (unlikely(lookup->size == 1 && (head = lookup->head)->hashKey == hashKey)) {
         if (likely(ctr_internal_object_is_equal(head->key, key))) {
-            head->hits++;
             return head->value;
         }
         lookup->size++;
@@ -617,24 +599,8 @@ ctr_object* ctr_internal_object_find_property_or_create_with_hash(
         if ((hashKey == head->hashKey) && ctr_internal_object_is_equal(head->key, key)) {
             ctr_object* val = head->value;
             first_head = head->prev;
-            if (!first_head || first_head == head)
-                return val;
-            if (++head->hits > first_head->hits) {
-                int fh = first_head->hits;
-                void *fk = first_head->key, *fv = first_head->value;
-                uint64_t fhk = first_head->hashKey;
-                first_head->hits = head->hits;
-                first_head->key = head->key;
-                first_head->value = val;
-                first_head->hashKey = hashKey;
-                head->hits = fh;
-                head->key = fk;
-                head->value = fv;
-                head->hashKey = fhk;
-            }
             return val;
         }
-        head->hits = 0;
         last_head = head;
         head = head->next;
     }

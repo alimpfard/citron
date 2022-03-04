@@ -15,16 +15,28 @@ useless_input="test
 cd $dir
 for i in $(find tests -maxdepth 1 -name 'test*.ctr' | sort --version-sort); do
 	fexpect="${i%%.ctr}.exp"
+    fcrash="${i%%.ctr}.crash"
+    crash=false
     if [ ! -f $fexpect ]; then
-        echo "No expect file, skipping $i"
-        continue
+        if [ ! -f $fcrash ]; then
+            echo "No expect file, skipping $i"
+            continue
+        fi
+        crash=true
     fi
     fitem=$i
 	echo -n "$fitem interpret";
 	result=`echo "$useless_input" | timeout 15 ${pre_c}/ctr --compact ${fitem}`
     rv=$?
     if [ $rv -ne 0 ] && [ $rv -ne 1 ]; then
-        echo " [Failed with result $rv]"
+        if ! $crash; then
+            echo " [Failed with result $rv]"
+            failing+=($fitem)
+            continue
+        fi
+        result=''
+    elif $crash; then
+        echo " [Failed, expected crash]"
         failing+=($fitem)
         continue
     fi

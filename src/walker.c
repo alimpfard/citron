@@ -335,6 +335,9 @@ ctr_object* ctr_cwlk_assignment(ctr_tnode* node)
 
 void execute_if_quote(ctr_tnode* node)
 {
+    if (!node)
+        return;
+
     if (node->type == CTR_AST_NODE_EMBED) {
         if (node->modifier == 0) {
             node->modifier = 2;

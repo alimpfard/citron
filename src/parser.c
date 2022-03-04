@@ -1863,6 +1863,9 @@ ctr_tnode* ctr_cparse_parse(char* prg, char* pathString)
 
 ctr_tnode* ctr_deep_copy_ast(ctr_tnode* src)
 {
+    if (!src)
+        return src;
+
     ctr_tnode* dst = ctr_heap_allocate(sizeof *dst);
     dst->vlen = src->vlen;
     if (src->value)

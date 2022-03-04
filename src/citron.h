@@ -237,7 +237,7 @@ struct ctr_mapitem {
 typedef struct ctr_mapitem ctr_mapitem;
 
 /**
- * Citron Argument (internal, not accsible to users).
+ * Citron Argument (internal, not accessible to users).
  */
 struct ctr_argument {
     struct ctr_object* object;

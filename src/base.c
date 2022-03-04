@@ -6016,42 +6016,11 @@ ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList,
 {
     if (!myself)
         return CtrStdNil;
-    if (myself->info.type == CTR_OBJECT_TYPE_OTNATFUNC) {
-        ctr_object* result = myself->value.fvalue(my, argList);
-        return result;
-    }
-    // overload begin
-    if (myself->info.overloaded) {
-        // find proper overload to run
-        if (myself->overloads)
-            myself = ctr_internal_find_overload(myself, argList);
-    }
-    // overload end
-    int is_tail_call = 0, id;
-    if (myself->value.block && myself->value.block->lexical)
-        for (id = ctr_context_id;
-             id > 0 && !is_tail_call && ctr_current_node_is_return;
-             id--, is_tail_call = ctr_contexts[id] == myself)
-            ;
-    if (is_tail_call) {
-#ifdef DEBUG_BUILD
-        // printf ("tailcall at %p (%d from %d)\n", myself, id, ctr_context_id);
-#endif
-        // ctr_context_id = id;
-    }
-    ctr_object* result;
-    ctr_tnode* node = myself->value.block;
-    ctr_tlistitem* codeBlockParts = node->nodes;
-    ctr_tnode* codeBlockPart1 = codeBlockParts->node;
-    ctr_tnode* codeBlockPart2 = codeBlockParts->next->node;
-    ctr_tlistitem* parameterList = codeBlockPart1->nodes;
-    if (!is_tail_call) {
-        if (myself->value.block->lexical && (!my || my == myself))
-            ctr_contexts[++ctr_context_id] = myself;
-        else
-            ctr_open_context();
-    }
-    ctr_assign_block_parameters(parameterList, argList, my);
+    if (myself->value.block->lexical && (!my || my == myself))
+        ctr_contexts[++ctr_context_id] = myself;
+    else
+        ctr_open_context();
+
     if (my)
         ctr_assign_value_to_local_by_ref(
             &CTR_CLEX_KW_ME, my); /* me should always point to object, otherwise you
@@ -6059,7 +6028,8 @@ ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList,
     ctr_object* this_block = ctr_build_string("thisBlock", 9);
     ctr_assign_value_to_local(
         this_block, myself); /* otherwise running block may get gc'ed. */
-    // ctr_heap_free(this_block);
+
+
     int p = myself->properties->size - 1;
     struct ctr_mapitem* head;
     head = myself->properties->head;
@@ -6070,53 +6040,11 @@ ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList,
         head = head->next;
         p--;
     }
-    // ctr_block_run_cache_set_ready_for_comp();
-    result = ctr_cwlk_run(codeBlockPart2);
-    if (result == NULL) {
-        if (my)
-            result = my;
-        else
-            result = myself;
-    }
-    if (CtrStdFlow != NULL && CtrStdFlow != CtrStdBreak && CtrStdFlow != CtrStdContinue && CtrStdFlow != CtrStdExit) {
-        ctr_object* catchBlock = ctr_internal_object_find_property(
-            myself, ctr_build_string_from_cstring("catch"), 0);
-        if (catchBlock != NULL) {
-            ctr_object* catch_type = ctr_internal_object_find_property(
-                catchBlock, ctr_build_string_from_cstring("%catch"), 0);
-            ctr_argument aa = { 0 }, ab = { 0 }, *a = &aa;
-            ctr_object *exdata = ctr_build_string_from_cstring(":exdata"),
-                       *ex = CtrStdFlow,
-                       *getexinfo = ctr_build_string_from_cstring("exceptionInfo"),
-                       *exd = ctr_internal_ex_data();
-            ctr_internal_object_add_property(ex, exdata, exd, 0);
-            ctr_internal_create_func(ex, getexinfo, &ctr_exception_getinfo);
-            int setstr = 0;
-            if (ex->info.type == CTR_OBJECT_TYPE_OTSTRING) {
-                ex->info.type = CTR_OBJECT_TYPE_OTOBJECT;
-                setstr = 1;
-                ctr_internal_create_func(ex, ctr_build_string_from_cstring("toString"),
-                    &ctr_string_to_string);
-            }
-            a->object = ex;
-            a->next = &ab;
-            a->next->object = catch_type;
-            if (!catch_type || ctr_reflect_is_linked_to(CtrStdReflect, a)->value.bvalue) {
-                CtrStdFlow = NULL;
-                a->object = ex;
-                ctr_object* alternative = ctr_block_run_here(catchBlock, a, my);
-                result = alternative;
-            }
-            ctr_internal_object_delete_property(ex, exdata, 0);
-            ctr_internal_object_delete_property(ex, getexinfo, 1);
-            if (setstr)
-                ex->info.type = CTR_OBJECT_TYPE_OTSTRING;
-        }
-    }
-    if (!is_tail_call)
-        ctr_close_context();
 
-    // ctr_block_run_cache_result_if_expensive(myself, argList, result);
+    ctr_object* result = ctr_block_run_here(myself, argList, my);
+
+    ctr_close_context();
+
     return result;
 }
 

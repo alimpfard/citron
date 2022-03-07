@@ -18,6 +18,7 @@ enable_ctypes ?= true
 enable_inline_asm ?= false
 enable_boehm_gc ?= true
 use_libbsd ?= true
+use_openmp ?= true
 
 CFLAGS += -Wall -Wextra -Wno-unused-parameter\
 		  -D withTermios -D CTR_STD_EXTENSION_PATH=\"$(DATADIR)\"
@@ -38,6 +39,10 @@ endif
 
 ifeq ($(use_libbsd),true)
 	LIBS += -lbsd
+endif
+
+ifeq ($(use_openmp),true)
+	CFLAGS += -fopenmp -DHAVE_OPENMP
 endif
 
 ifneq ($(strip $(WITH_ICU)),)
@@ -91,13 +96,13 @@ remove_libsocket_build:
 	@ rm -rf src/lib/libsocket/libsocket/build/
 
 ctrconfig:
-	$(CC) src/ctrconfig.c -o $(BUILDDIR)/ctrconfig
+	$(CC) src/ctrconfig.c $(CFLAGS) $() -o $(BUILDDIR)/ctrconfig
 
 $(BUILDDIR):
 	mkdir -p $@
 
 $(BUILDDIR)/ctr: $(TCC_STATICS) $(BUILDDIR) $(OBJS) $(EXTRAOBJS)
-	$(CXX) -fopenmp $(EXTRAOBJS) $(OBJS) $(CXXFLAGS) $(CFLAGS) $(LIBS) $(LEXTRACF) -o $@
+	$(CXX) $(EXTRAOBJS) $(OBJS) $(CXXFLAGS) $(CFLAGS) $(LIBS) $(LEXTRACF) -o $@
 
 ctr: $(BUILDDIR)/ctr
 
@@ -118,8 +123,9 @@ install: $(BUILDDIR)/ctr $(BUILDDIR)/libctr.so $(BUILDDIR)/ctrconfig Library mod
 	mkdir -p $(BINDIR) $(DATADIR) $(HEADERDIR) $(DLLDIR)
 	install $(BUILDDIR)/ctr $(BINDIR)
 	install $(BUILDDIR)/ctrconfig $(BINDIR)
-	install $(BUILDDIR)/libctr.so $(DLLDIR)
+	install $(BUILDDIR)/libctr.so $(DLLDIR)/libcitron.so
 	install -m a+rx eval $(BINDIR)/citron
+	install -m a+rx compile.ctr $(BINDIR)/ctrc
 	cp -fr Library/ $(DATADIR)/
 	cp -fr extensions/ $(DATADIR)/
 	cp -fr  mods/ $(DATADIR)/
@@ -151,7 +157,7 @@ $(BUILDDIR)/libsocket.so:
 	cp $(LIBSOCKETDIR)/libsocket.so $(BUILDDIR)/libsocket.so
 
 $(BUILDDIR)/%.o: src/%.c
-	$(CC) -fopenmp $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILDDIR)/%.o: src/%.cpp
 	$(CXX) -g $(CFLAGS) -c $< $(CXXFLAGS) -o $@

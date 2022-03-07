@@ -3,7 +3,6 @@
 int cflags = 0;
 int ldflags = 0;
 
-#define CFLAGS "-rdynamic"
 #ifndef forLinux
 #    define BSD_L ""
 #else
@@ -24,7 +23,13 @@ int ldflags = 0;
 #else
 #    define FFI_L ""
 #endif
+#ifdef HAVE_OPENMP
+#    define OMP_F "-fopenmp "
+#else
+#    define OMP_F ""
+#endif
 #define LDFLAGS "-lcitron " TCC_L " -lpcre -ldl -lm -pthread " FFI_L BSD_L GC_L
+#define CFLAGS OMP_F "-rdynamic"
 
 int main(int argc, char* argv[])
 {

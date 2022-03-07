@@ -564,7 +564,7 @@ var generate_options is {
 }.
 
 tgt write: compile_complete[(AST parse: src)].
-Shell gcc: '%s %:L -ggdb3 %s -o %s' % [tgt path, '\x20', comp_opts, flags, ofilename].
+Shell g++: '%s -L/usr/local/lib %:L -ggdb3 %s -o %s' % [tgt path, '\x20', comp_opts, flags, ofilename].
 prgargs contains: '--keep-intermediates', ifFalse: {
   tgt delete.
 }.

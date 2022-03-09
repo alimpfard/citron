@@ -7,7 +7,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #ifndef __serenity__
-#define WITH_UCONTEXT
+#    define WITH_UCONTEXT
 #endif
 #ifdef WITH_UCONTEXT
 #    include <ucontext.h>

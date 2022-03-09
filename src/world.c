@@ -11,11 +11,13 @@
 #include <time.h>
 #include <unistd.h>
 
-#define CTR_GLOBALS_DEFINE
-#include "_struct.h"
-#include "citron.h"
-#include "ctypes.h"
-#undef CTR_GLOBALS_DEFINE
+#ifndef CITRON_LIBRARY
+#    define CTR_GLOBALS_DEFINE
+#endif
+#    include "_struct.h"
+#    include "citron.h"
+#    include "ctypes.h"
+#    undef CTR_GLOBALS_DEFINE
 
 #include "siphash.h"
 

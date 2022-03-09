@@ -333,7 +333,7 @@ void begin() {
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("new:"), &ctr_gmp_make);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("set:"), &ctr_gmp_set);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("setZero"), &ctr_gmp_set);
-  ctr_internal_create_func(CtrStdNumber, ctr_build_string_from_cstring("toBigInt"), &ctr_gmp_to_gmp);
+  ctr_internal_create_func(*get_CtrStdNumber(), ctr_build_string_from_cstring("toBigInt"), &ctr_gmp_to_gmp);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("+=:"), &ctr_gmp_add);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("-=:"), &ctr_gmp_sub);
   ctr_internal_create_func(CtrStdBigInt, ctr_build_string_from_cstring("*=:"), &ctr_gmp_mul);

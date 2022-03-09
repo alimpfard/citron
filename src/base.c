@@ -6029,7 +6029,6 @@ ctr_object* ctr_block_run(ctr_object* myself, ctr_argument* argList,
     ctr_assign_value_to_local(
         this_block, myself); /* otherwise running block may get gc'ed. */
 
-
     int p = myself->properties->size - 1;
     struct ctr_mapitem* head;
     head = myself->properties->head;

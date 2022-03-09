@@ -13,10 +13,9 @@ struct ctr_inject_data_t {
 
 typedef struct ctr_inject_data_t ctr_inject_data_t;
 
-
 void* ctr_inject_compiled_state_release_hook(void* state)
 {
-    ctr_inject_data_t *ds = state;
+    ctr_inject_data_t* ds = state;
     if (ds && ds->state)
         tcc_delete(ds->state);
     return NULL;

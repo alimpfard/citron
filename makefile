@@ -20,7 +20,7 @@ enable_boehm_gc ?= true
 use_libbsd ?= true
 use_openmp ?= true
 
-CFLAGS += -Wall -Wextra -Wno-unused-parameter\
+CFLAGS += -Wall -Wextra -Wno-unused-parameter -export-dynamic\
 		  -D withTermios -D CTR_STD_EXTENSION_PATH=\"$(DATADIR)\"
 
 LIBS = -lm -ldl -lpcre -pthread -lffi -lc
@@ -108,7 +108,7 @@ ctr: $(BUILDDIR)/ctr
 
 $(BUILDDIR)/libctr.so: CFLAGS += -DCITRON_LIBRARY
 $(BUILDDIR)/libctr.so: $(OBJS)
-	$(CC) $(OBJS) -shared -export-dynamic $(LIBS) -o $@
+	$(CC) $(OBJS) -shared $(CFLAGS) $(LIBS) -o $@
 
 libctr: $(BUILDDIR)/libctr.so
 

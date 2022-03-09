@@ -1,7 +1,7 @@
 #include "citron.h"
 #include <ctype.h>
 #ifndef __serenity__
-#include <execinfo.h>
+#    include <execinfo.h>
 #endif
 #include <math.h>
 #include <stdarg.h>
@@ -14,12 +14,12 @@
 #include "gc.h"
 
 #ifdef withBoehmGC
-#define malloc GC_MALLOC
-#define calloc(x, y) GC_MALLOC((x) * (y))
-#define gfree GC_FREE
-#define realloc GC_REALLOC
+#    define malloc GC_MALLOC
+#    define calloc(x, y) GC_MALLOC((x) * (y))
+#    define gfree GC_FREE
+#    define realloc GC_REALLOC
 #else
-#define gfree free
+#    define gfree free
 #endif
 
 /**

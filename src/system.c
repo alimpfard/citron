@@ -11,9 +11,9 @@
 #include <stdlib.h>
 #include <string.h>
 #ifdef __serenity__
-#include <fcntl.h>
+#    include <fcntl.h>
 #else
-#include <sys/fcntl.h>
+#    include <sys/fcntl.h>
 #endif
 #include <sys/ioctl.h>
 #include <sys/socket.h>

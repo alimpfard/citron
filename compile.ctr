@@ -244,7 +244,9 @@ var compile is {:ast:receiver
       }.
       var compiled is compile[_value]. 
       var arg is generate_single_arg_t[compiled]. 
-      global_variables push: [arg @ 0, arg @ 1, 'NULL'].
+      global_variables any: \:x (x @ 1) = (arg @ 1), ifFalse: {
+          global_variables push: [arg @ 0, arg @ 1, 'NULL'].
+      }.
       variables push: ['', arg @ 1, arg @ 2].
       locals put: arg @ 1 at: name.
 
@@ -298,10 +300,15 @@ var compile is {:ast:receiver
         })
           or: ['NULL']
       )].
+        funcode is funcode + '   ctr_close_context();'.
       # ast modifier = 'My', ifTrue: {
         funcode is funcode + '  if (result == NULL) result = self;\n'.
-        funcode is funcodeargs + generate_inits['  '] + funcode + 'return result;\n'.
+        funcode is 'ctr_open_context();\n' + funcodeargs + generate_inits['  '] + funcode.
+        funcode is funcode + '   return result;\n'.
       # }.
+      var code is ast2ctrcode[ast].
+      var instr_u is code replace: '\n' with: '<NL>'.
+      funcode is '/* ' + instr_u + '*/\n' + funcode.
       locals is old_locals.
       variables is oldvs.
       var_id is oldvarid.
@@ -398,7 +405,7 @@ var generate_globals is {
   var decl is ''.
   var sv is ''.
   global_variables each_v: {:v
-    decl +=: '%s %s;\n' % v init.
+    decl +=: '%s %s; //global\n' % v init.
     (v last isA: Map) either: {
       var vn is v @ 1.
       var vv is v @ 2.

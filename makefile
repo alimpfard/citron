@@ -15,7 +15,7 @@ INCLUDE_DIR ?= $(DESTDIR)/usr/local/include/Citron
 
 enable_inject ?= true
 enable_ctypes ?= true
-enable_inline_asm ?= true
+enable_inline_asm ?= false
 enable_boehm_gc ?= true
 use_libbsd ?= true
 use_openmp ?= true

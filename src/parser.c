@@ -885,6 +885,7 @@ ctr_tnode* ctr_cparse_intern_asm_block_()
     // src
     node->nodes = ctr_heap_allocate(sizeof(ctr_tlistitem));
     node->nodes->node = ctr_cparse_create_node(CTR_AST_NODE);
+    node->nodes->node->type = CTR_AST_NODE_LTRSTRING;
     node->nodes->node->vlen = asm_end - asm_begin;
     node->nodes->node->value = ctr_heap_allocate(node->nodes->node->vlen + 1);
     memcpy(node->nodes->node->value, asm_begin, asm_end - asm_begin);

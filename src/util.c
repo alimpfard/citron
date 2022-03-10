@@ -55,7 +55,6 @@ void ctr_internal_debug_tree(ctr_tnode* ti, int indent)
         int i;
         for (i = 0; i < indent; i++)
             printf(" ");
-        str = ctr_heap_allocate(40 * sizeof(char));
         switch (t->type) {
         case CTR_AST_NODE_EXPRASSIGNMENT:
             str = "ASSIGN";

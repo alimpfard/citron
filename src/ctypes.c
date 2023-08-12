@@ -5,6 +5,7 @@
 #include <dlfcn.h>
 #include <inttypes.h>
 #include <math.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -1611,7 +1612,7 @@ ctr_object* ctr_ctypes_make_struct(ctr_object* myself,
 static ffi_type* collapse_type_tree_index(ffi_type** types, int* index)
 {
     ffi_type** elems = types;
-    elems != NULL || (printf("type elements cannot be NULL at %s:%d\n", __FUNCTION__, __LINE__) && raise());
+    elems != NULL || (printf("type elements cannot be NULL at %s:%d\n", __FUNCTION__, __LINE__) && raise(SIGABRT));
     while (elems[0]) {
         ffi_type* elem = elems[0];
         elems++;

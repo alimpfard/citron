@@ -3,6 +3,7 @@
 
 #ifdef withBoehmGC
 #    define GC_THREAD
+#    define GC_PTHREADS
 #    include <gc/gc.h>
 #else
 // FIXME: These need to be implemented!

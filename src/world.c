@@ -1550,7 +1550,7 @@ void ctr_initialize_world_minimal()
     volatile ctr_thread_workaround_double_list_t* tw = ctr_heap_allocate_tracked(sizeof(*tw));
     tw->next = NULL;
     tw->prev = ctr_thread_workaround_double_list;
-    tw->context = ctr_contexts;
+    tw->context = (ctr_object*)ctr_contexts;
     ctr_thread_workaround_double_list = (ctr_thread_workaround_double_list_t*)tw;
 
     trace_ignore_count = 0;
@@ -1653,7 +1653,7 @@ void ctr_initialize_world()
     volatile ctr_thread_workaround_double_list_t* tw = ctr_heap_allocate_tracked(sizeof(*tw));
     tw->next = NULL;
     tw->prev = ctr_thread_workaround_double_list;
-    tw->context = ctr_contexts;
+    tw->context = (ctr_object*)ctr_contexts;
     ctr_thread_workaround_double_list = (ctr_thread_workaround_double_list_t*)tw;
 
     trace_ignore_count = 0;

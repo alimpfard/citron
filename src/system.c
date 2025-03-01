@@ -23,7 +23,6 @@
 #include <unistd.h>
 
 #include "gc.h"
-#define pthread_create GC_pthread_create
 
 #ifdef withTermios
 #    include <termios.h>
@@ -3013,7 +3012,7 @@ void* ctr_run_thread_func(ctr_thread_t* threadt)
     volatile ctr_thread_workaround_double_list_t* tw = ctr_heap_allocate(sizeof(*tw));
     tw->next = NULL;
     tw->prev = ctr_thread_workaround_double_list;
-    tw->context = ctr_contexts;
+    tw->context = (ctr_object*)ctr_contexts;
     ctr_thread_workaround_double_list = tw;
 
     ctr_object* result = ctr_block_run(threadt->target, args, threadt->target);

@@ -10,6 +10,8 @@
 
 #include "citron.h"
 
+int check_next_line_empty();
+
 static int ctr_lex_bflmt = 255;
 static ctr_size ctr_lex_tokvlen = 0; /* length of the string value of a token */
 static char* ctr_lex_buffer;

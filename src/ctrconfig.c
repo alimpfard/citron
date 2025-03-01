@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 int cflags = 0;
 int ldflags = 0;

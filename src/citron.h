@@ -674,6 +674,8 @@ ctr_object* ctr_internal_object_find_property_with_hash(ctr_object* owner,
     int is_method);
 ctr_object* ctr_internal_object_find_property_or_create_with_hash(
     ctr_object* owner, ctr_object* key, uint64_t hashKey, int is_method);
+ctr_object* ctr_internal_object_find_property_or_create(
+    ctr_object* owner, ctr_object* key, int is_method);
 ctr_object* ctr_internal_object_find_property_ignore(ctr_object* owner,
     ctr_object* key,
     int is_method, int ignore);

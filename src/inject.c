@@ -271,11 +271,11 @@ ctr_inferred_ctype_type_t ctr_inject_type_to_ctype(Sym* svv, CType* type)
                 innerty.vtype = &ffi_type_pointer;
             }
             if (!pad) {
-                if (ctr_create_ffi_str_descriptor(innerty.vtype, NULL) > remaining_buf_len) {
+                if (ctr_create_ffi_str_descriptor((wrapped_ffi_type*)innerty.vtype, NULL) > remaining_buf_len) {
                     remaining_buf_len += descriptor.format_length;
                     buf = descriptor.format = ctr_heap_reallocate(descriptor.format, descriptor.format_length += descriptor.format_length);
                 }
-                int sz = ctr_create_ffi_str_descriptor(innerty.vtype, buf);
+                int sz = ctr_create_ffi_str_descriptor((wrapped_ffi_type*)innerty.vtype, buf);
                 buf += sz;
                 remaining_buf_len -= sz;
             }
@@ -412,7 +412,7 @@ ctr_object* ctr_inject_generate_ctype(ctr_inferred_ctype_type_t ty)
         arr->storage = storage;
         arr->count = array_count;
         arr->esize = size;
-        arr->etype = ctr_ctypes_ffi_convert_to_ffi_type(ctype);
+        arr->etype = (ffi_type*)ctr_ctypes_ffi_convert_to_ffi_type(ctype);
         ctr_object* obj = ctr_ctypes_make_cont_pointer(NULL, NULL);
         obj->value.rvalue->ptr = arr;
         // ns = ctr_send_message_variadic(ns, "initWithCType:count:", 20, 2, obj,
@@ -845,7 +845,7 @@ ctr_object* ctr_inject_add_lib(ctr_object* myself, ctr_argument* argumentList)
     return myself;
 }
 
-void ctr_inject_error_handler(void* _blk, char* msg)
+void ctr_inject_error_handler(void* _blk, char const* msg)
 {
     ctr_object* blk = _blk;
     if (!(blk->info.type == CTR_OBJECT_TYPE_OTBLOCK || blk->info.type == CTR_OBJECT_TYPE_OTNATFUNC))

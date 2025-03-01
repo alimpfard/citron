@@ -83,7 +83,7 @@ void ctr_run_function_ptr(ffi_cif* cif, void* ret, void* args[],
         (ctr_object*)
             function); // No type information for args, so we can't
                        // deconstruct them unless provided with type info
-    ffi_type* type = return_t ? return_t : ctr_ctype_citron_object_try_infer_type(result);
+    ffi_type* type = return_t ? return_t : (ffi_type*)ctr_ctype_citron_object_try_infer_type(result);
     if (type)
         npdispatch((char*)ret, result, /*Inferred type */ type);
 }
@@ -1040,83 +1040,83 @@ ctr_object* ctr_ctypes_make_packed(
     switch (typeid) {
     case 0:
         size = sizeof(uint8_t);
-        type_ = &wrapped_ffi_type_uint8;
+        type_ = (ffi_type*)&wrapped_ffi_type_uint8;
         break;
     case 1:
         size = sizeof(char);
-        type_ = &wrapped_ffi_type_sint8;
+        type_ = (ffi_type*)&wrapped_ffi_type_sint8;
         break;
     case 2:
         size = sizeof(uint16_t);
-        type_ = &wrapped_ffi_type_uint16;
+        type_ = (ffi_type*)&wrapped_ffi_type_uint16;
         break;
     case 3:
         size = sizeof(int16_t);
-        type_ = &wrapped_ffi_type_sint16;
+        type_ = (ffi_type*)&wrapped_ffi_type_sint16;
         break;
     case 4:
         size = sizeof(uint32_t);
-        type_ = &wrapped_ffi_type_uint32;
+        type_ = (ffi_type*)&wrapped_ffi_type_uint32;
         break;
     case 5:
         size = sizeof(int32_t);
-        type_ = &wrapped_ffi_type_sint32;
+        type_ =(ffi_type*) &wrapped_ffi_type_sint32;
         break;
     case 6:
         size = sizeof(uint64_t);
-        type_ = &wrapped_ffi_type_uint64;
+        type_ = (ffi_type*)&wrapped_ffi_type_uint64;
         break;
     case 7:
         size = sizeof(int64_t);
-        type_ = &wrapped_ffi_type_sint64;
+        type_ = (ffi_type*)&wrapped_ffi_type_sint64;
         break;
     case 8:
         size = sizeof(unsigned char);
-        type_ = &wrapped_ffi_type_uchar;
+        type_ = (ffi_type*)&wrapped_ffi_type_uchar;
         break;
     case 9:
         size = sizeof(signed char);
-        type_ = &wrapped_ffi_type_schar;
+        type_ = (ffi_type*)&wrapped_ffi_type_schar;
         break;
     case 10:
         size = sizeof(unsigned short);
-        type_ = &wrapped_ffi_type_ushort;
+        type_ = (ffi_type*)&wrapped_ffi_type_ushort;
         break;
     case 11:
         size = sizeof(signed short);
-        type_ = &wrapped_ffi_type_sshort;
+        type_ = (ffi_type*)&wrapped_ffi_type_sshort;
         break;
     case 12:
         size = sizeof(unsigned int);
-        type_ = &wrapped_ffi_type_uint;
+        type_ = (ffi_type*)&wrapped_ffi_type_uint;
         break;
     case 13:
         size = sizeof(signed int);
-        type_ = &wrapped_ffi_type_sint;
+        type_ = (ffi_type*)&wrapped_ffi_type_sint;
         break;
     case 14:
         size = sizeof(unsigned long);
-        type_ = &wrapped_ffi_type_ulong;
+        type_ = (ffi_type*)&wrapped_ffi_type_ulong;
         break;
     case 15:
         size = sizeof(signed long);
-        type_ = &wrapped_ffi_type_slong;
+        type_ = (ffi_type*)&wrapped_ffi_type_slong;
         break;
     case 16:
         size = sizeof(float);
-        type_ = &wrapped_ffi_type_float;
+        type_ = (ffi_type*)&wrapped_ffi_type_float;
         break;
     case 17:
         size = sizeof(double);
-        type_ = &wrapped_ffi_type_double;
+        type_ = (ffi_type*)&wrapped_ffi_type_double;
         break;
     case 18:
         size = sizeof(long double);
-        type_ = &wrapped_ffi_type_longdouble;
+        type_ = (ffi_type*)&wrapped_ffi_type_longdouble;
         break;
     case 19:
         size = sizeof(void*);
-        type_ = &wrapped_ffi_type_pointer;
+        type_ = (ffi_type*)&wrapped_ffi_type_pointer;
         break;
     default:
         size = 0;
@@ -1589,7 +1589,7 @@ ctr_object* ctr_ctypes_struct_make_internal(ctr_object* myself, char* _fmt)
     struct_member_desc_t desc;
     desc = ctr_ffi_type_get_member_count(fmt, &size, 1, 0);
     int member_count = desc.member_count;
-    ffi_type* type = ctr_create_ffi_type_descriptor_(fmt, member_count, 0);
+    ffi_type* type = (ffi_type*)ctr_create_ffi_type_descriptor_(fmt, member_count, 0);
     ctr_ctypes_ffi_struct_value* ptr = ctr_heap_allocate(sizeof(ctr_ctypes_ffi_struct_value));
     ptr->member_count = member_count;
     ptr->type = type;
@@ -1817,9 +1817,9 @@ ctr_object* ctr_ctypes_struct_to_string(ctr_object* myself,
 {
     ctr_ctypes_ffi_struct_value* ptr = myself->value.rvalue->ptr;
     ffi_type* type = ptr->type;
-    int len = ctr_create_ffi_str_descriptor(type, NULL);
+    int len = ctr_create_ffi_str_descriptor((wrapped_ffi_type*)type, NULL);
     char* buf = ctr_heap_allocate(len * sizeof(char) + 1); // one lucky byte, pls
-    ctr_create_ffi_str_descriptor(type, buf);
+    ctr_create_ffi_str_descriptor((wrapped_ffi_type*)type, buf);
     char* nbf = ctr_heap_allocate((len + 32) * sizeof(char));
     len = sprintf(nbf, "CTypes structWithFormat: '%.*s'", len, buf);
     return ctr_build_string(nbf, len);
@@ -1973,7 +1973,7 @@ wrapped_ffi_type* ctr_ctypes_ffi_convert_to_ffi_type(ctr_object* type)
     else if ((initial) == CtrStdCType_pointer || initial == CtrStdCType_dynamic_lib || initial == CtrStdCType_string || initial == CtrStdCType_functionptr || initial == CtrStdCType_cont_pointer)
         return &wrapped_ffi_type_pointer;
     else if (initial == CtrStdCType_struct)
-        return ((ctr_ctypes_ffi_struct_value*)(type->value.rvalue->ptr))->type;
+        return (wrapped_ffi_type*)((ctr_ctypes_ffi_struct_value*)(type->value.rvalue->ptr))->type;
     else
         return &wrapped_ffi_type_void;
 }
@@ -2135,7 +2135,7 @@ ctr_object* ctr_ctypes_convert_ffi_type_to_citron(ffi_arg* value,
     ctr_ctype type)
 {
     // printf("p %d\n", type);
-    ctr_object* object = nudispatch((char*)value, ctr_ctypes_ffi_convert_ctype_to_ffi_type(type));
+    ctr_object* object = nudispatch((char*)value, (ffi_type*)ctr_ctypes_ffi_convert_ctype_to_ffi_type(type));
     return object;
 }
 
@@ -2165,14 +2165,14 @@ CTR_CT_FFI_BIND(prep_cif)
     ctr_struct_initialize_internal();
     ffi_cif* cif_res = (ffi_cif*)(myself->value.rvalue->ptr);
     int abi_mask = (int)(argumentList->object->value.nvalue);
-    ffi_type* rtype = (ctr_ctypes_ffi_convert_to_ffi_type(argumentList->next->object));
+    ffi_type* rtype = (ffi_type*)ctr_ctypes_ffi_convert_to_ffi_type(argumentList->next->object);
     ctr_object* atypes_ = argumentList->next->next->object;
     int asize = (int)(ctr_array_count(atypes_, NULL)->value.nvalue);
     ffi_type** atypes = ctr_heap_allocate(sizeof(ffi_type) * asize);
     ctr_argument* args = ctr_heap_allocate(sizeof(ctr_argument));
     for (int i = 0; i < asize; i++) {
         args->object = ctr_build_number_from_float(i);
-        atypes[i] = ctr_ctypes_ffi_convert_to_ffi_type(ctr_array_get(atypes_, args));
+        atypes[i] = (ffi_type*)ctr_ctypes_ffi_convert_to_ffi_type(ctr_array_get(atypes_, args));
     }
     ffi_abi abi;
     switch (abi_mask) {
@@ -2213,7 +2213,7 @@ CTR_CT_FFI_BIND(prep_cif_inferred)
     int error = 0;
     for (i = 0; i < asize; i++) {
         args->object = ctr_build_number_from_float(i);
-        ty = ctr_ctype_citron_object_try_infer_type(ctr_array_get(atypes_, args));
+        ty = (ffi_type*)ctr_ctype_citron_object_try_infer_type(ctr_array_get(atypes_, args));
         if (ty == NULL) {
             error = 5; // ERROR_INFERRED
             goto error_out_inf;
@@ -2221,7 +2221,7 @@ CTR_CT_FFI_BIND(prep_cif_inferred)
         atypes[i] = ty;
     }
     args->object = ctr_build_number_from_float(i);
-    ty = ctr_ctype_citron_object_try_infer_type(ctr_array_get(atypes_, args));
+    ty = (ffi_type*)ctr_ctype_citron_object_try_infer_type(ctr_array_get(atypes_, args));
     if (ty == NULL) {
         error = 5; // ERROR_INFERRED
         goto error_out_inf;

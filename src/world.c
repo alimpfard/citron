@@ -11,6 +11,8 @@
 #include <time.h>
 #include <unistd.h>
 
+extern void sttrace_print(void*);
+
 #ifndef CITRON_LIBRARY
 #    define CTR_GLOBALS_DEFINE
 #endif
@@ -176,7 +178,7 @@ static void register_signal_handlers()
 char* ctr_internal_readf(char* file_name, uint64_t* total_size)
 {
     char* prg;
-    char ch;
+    int ch;
     int prev;
     uint64_t size;
     uint64_t real_size;
@@ -212,7 +214,7 @@ char* ctr_internal_readf(char* file_name, uint64_t* total_size)
 char* ctr_internal_readfp(FILE* fp, uint64_t* total_size)
 {
     char* prg;
-    char ch;
+    int ch;
     ctr_size real_size = 0, size = 1024;
     ctr_program_length = 0;
     prg = ctr_heap_allocate(size * sizeof(char));

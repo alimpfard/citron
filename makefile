@@ -20,7 +20,7 @@ enable_boehm_gc ?= true
 use_libbsd ?= true
 use_openmp ?= true
 
-CFLAGS += -Wall -Wextra -Wno-unused-parameter -export-dynamic\
+CFLAGS += -std=gnu11 -fsigned-char -Wall -Wextra -Wno-unused-parameter -export-dynamic\
 		  -D withTermios -D CTR_STD_EXTENSION_PATH=\"$(DATADIR)\"
 
 LIBS = -lm -ldl -lpcre -pthread -lffi -lc

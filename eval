@@ -124,22 +124,22 @@ Eval on: 'display:' do: {:x
   my displayObject is x.
 }.
 ['clear', 'green', 'cyan', 'magenta',
- 'purple', 'blue', 'yellow', 'resetColor',
- 'red', 'brk', 'clearLine', 'write:',
- 'writeln:']
- each_v: {:v
-   Eval on: 'display/$$v' do: {:*args
-     ^my displayObject message: const v arguments: args.
-   }.
+    'purple', 'blue', 'yellow', 'resetColor',
+    'red', 'brk', 'clearLine', 'write:',
+    'writeln:']
+  each_v: {:v
+  Eval on: 'display/$$v' do: {:*args
+    ^my displayObject message: const v arguments: args.
+  }.
 }.
 ['clear', 'green', 'cyan', 'magenta',
- 'purple', 'blue', 'yellow', 'resetColor',
- 'red', 'brk', 'clearLine', 'write:',
- 'writeln:']
- each_v: {:v
-   Eval on: 'print/$$v' do: {:*args
-     ^my printObject message: const v arguments: args.
-   }.
+    'purple', 'blue', 'yellow', 'resetColor',
+    'red', 'brk', 'clearLine', 'write:',
+    'writeln:']
+  each_v: {:v
+  Eval on: 'print/$$v' do: {:*args
+    ^my printObject message: const v arguments: args.
+  }.
 }.
 
 Eval on: 'disambiguateError:' do: {:e
@@ -190,7 +190,7 @@ Eval on: 'end' do: {
     getFlag: 'history', & my hs_file isNil not ifTrue: {
       my hs_file write: (
         my history join: '\n\n\n'
-      ).
+        ).
     }.
   }.
 }.
@@ -242,7 +242,7 @@ Eval on: 'modifyFlags:' do: {:flag
 Eval on: 'histdir:' do: {:q my histdir is q. }.
 Eval on: 'argCount' do: { ^(my args count). }.
 Eval on: 'onlyRelevantArgs' do: {
-    my args do shift shift done.
+  my args do shift shift done.
 }. #get rid of ./ctr eval
 
 Eval on: 'startEvalServer' do: {
@@ -311,14 +311,14 @@ Eval on: 'Commands' do: {
       + h -- show this help
       - ! <cmd> -- execute shell command
       - :{\\n stmt* \\n:}\\n -- block expression'
-      + '\nDebug Mode commands (Currently Experimental):
+        + '\nDebug Mode commands (Currently Experimental):
       + !return <value> -- return value for this message
       + !step -- single step through messages
       + !cont -- continue
       + !frame [show, all, <id>] -- show frames'
-      + '\nUser-defined commands:
+        + '\nUser-defined commands:
       ' + (Eval userDefs fmap: \:k:v '+ %s -- %s' % [k, v], values join: '\n', or: '-None-')
-      + '\nKeybindings:
+        + '\nKeybindings:
       + tab
         attempt code completion in edit mode
       + enter
@@ -340,211 +340,211 @@ Eval on: 'Commands' do: {
       put: {:args AST pragma: args trim. ^''.} at: '!pragmaOnce',
       put: {^''.} at: '%',
       put: {:args
-        var msgs is args reSplit: '\\s+'.
-        var obj is Eval evaluatorObject evaluate: msgs head.
-        msgs tail each_v: \:msg Eval breakFor: obj message: msg.
-        ^'will break on messages %L' % [msgs].
-      } at: 'break',
+      var msgs is args reSplit: '\\s+'.
+      var obj is Eval evaluatorObject evaluate: msgs head.
+      msgs tail each_v: \:msg Eval breakFor: obj message: msg.
+      ^'will break on messages %L' % [msgs].
+    } at: 'break',
       put: {:args
-        args startsWith: 'b', either: {
-          Eval instrument.
-        } or: {
-          thisBlock error: 'Invalid option $$args'.
-        }.
-        ^''.
-      } at: '!enable',
+      args startsWith: 'b', either: {
+        Eval instrument.
+      } or: {
+        thisBlock error: 'Invalid option $$args'.
+      }.
+      ^''.
+    } at: '!enable',
       put: {:args
-        Eval debug ifTrue: {
-          Eval returnValue: (Eval evaluatorObject evaluate: args).
-          Eval end.
-        }.
-        ^''.
-      } at: '!return',
+      Eval debug ifTrue: {
+        Eval returnValue: (Eval evaluatorObject evaluate: args).
+        Eval end.
+      }.
+      ^''.
+    } at: '!return',
       put: {
-        Eval debug ifTrue: {
-          Eval stepDebug: False.
-          Eval end.
-        }.
-        ^''.
-      } at: '!continue',
+      Eval debug ifTrue: {
+        Eval stepDebug: False.
+        Eval end.
+      }.
+      ^''.
+    } at: '!continue',
       put: {
-        Eval debug ifTrue: {
-          Eval stepDebug: True.
-          Eval end.
-        }.
+      Eval debug ifTrue: {
+        Eval stepDebug: True.
+        Eval end.
+      }.
+      ^''.
+    } at: '!step',
+      put: {:argstr
+      import Library/AST/ast2ctrcode: 'ast2ctrcode'.
+      var f is File tempFile: '/tmp/XXXXXX.ctr'.
+      f open: 'w+'.
+      f write: '# Write your code in here\n# and close the editor when done\n'.
+      f close.
+      Csystem['${{Program env: 'EDITOR', or: 'vim'}}$ "${{f path escapeDoubleQuotes}}$"'].
+      var code is AST parse: '{\n' + f read + '\n} run.'.
+      var source is ast2ctrcode[code].
+      Eval pushHist: source.
+      ^Eval evaluatorObject evaluate: (source from: 0 to: source length - 1).
+    } at: 'edit',
+      put: {:argstr
+      var nth is 0.
+      var cmd is 'Nil.'.
+      argstr findPattern: ?>(?:\((\d+|\*)\))?\s*(.+)$<? do: {:groups
+        nth is groups at: 1.
+        nth = '*' ifTrue: { nth is -1. }, ifFalse: { nth is nth toNumber. }.
+        cmd is groups at: 2.
+      }.
+      cmd is Eval getHistory filter: {\:_:x x startsWith: cmd.}.
+      cmd count = 0 ifTrue: {
+        thisBlock error: 'No match found $$argstr'.
+      }.
+      nth is nth min: cmd count - 1.
+      ^nth = -1 either: {
+        Pen red writeln: 'Will execute: ', resetColor.
+        Pen cyan write: '+ ', writeln: (cmd join: '\n+ '), resetColor.
+        ^{\ cmd fmap: \:x x eval. }.
+      } or: {
+        cmd is cmd at: nth.
+        Pen red writeln: 'Will execute: ', resetColor.
+        Pen cyan writeln: cmd, resetColor.
+        ^{\ cmd eval. }.
+      }.
+    } at: 'hist',
+      put: {:argstr
+      var nth is -1.
+      var cmd is 'Nil.'.
+      argstr findPattern: ?>(?:\((\d+|\*)\))?\s*(.+)$<? do: {:groups
+        nth is groups at: 1.
+        nth = '*' ifTrue: { nth is -1. }, ifFalse: { nth is nth toNumber. }.
+        cmd is groups at: 2.
+      }.
+      cmd is Eval getHistory filter: {\:_:x x startsWith: cmd.}.
+      cmd count = 0 ifTrue: {
+        thisBlock error: 'No match found $$argstr'.
+      }.
+      nth is nth min: cmd count - 1.
+      ^nth = -1 either: {
+        Eval nextInput: cmd last.
         ^''.
-      } at: '!step',
+      } or: {
+        Eval nextInput: cmd @ nth.
+        ^''.
+      }.
+    } at: 'last',
       put: {:argstr
-        import Library/AST/ast2ctrcode: 'ast2ctrcode'.
-        var f is File tempFile: '/tmp/XXXXXX.ctr'.
-        f open: 'w+'.
-        f write: '# Write your code in here\n# and close the editor when done\n'.
-        f close.
-        Csystem['${{Program env: 'EDITOR', or: 'vim'}}$ "${{f path escapeDoubleQuotes}}$"'].
-        var code is AST parse: '{\n' + f read + '\n} run.'.
-        var source is ast2ctrcode[code].
-        Eval pushHist: source.
-        ^Eval evaluatorObject evaluate: (source from: 0 to: source length - 1).
-      } at: 'edit',
+      argstr is argstr trim.
+      argstr = '' ifTrue: {
+        Eval nextInput: Eval getHistory last.
+        ^''.
+      } ifFalse: {
+        Eval nextInput: (Eval getHistory at: Eval getHistory count - 1 - argstr toNumber).
+        ^''.
+      }.
+    } at: '!last',
       put: {:argstr
-        var nth is 0.
-        var cmd is 'Nil.'.
-        argstr findPattern: ?>(?:\((\d+|\*)\))?\s*(.+)$<? do: {:groups
-          nth is groups at: 1.
-          nth = '*' ifTrue: { nth is -1. }, ifFalse: { nth is nth toNumber. }.
-          cmd is groups at: 2.
-        }.
-        cmd is Eval getHistory filter: {\:_:x x startsWith: cmd.}.
-        cmd count = 0 ifTrue: {
-          thisBlock error: 'No match found $$argstr'.
-        }.
-        nth is nth min: cmd count - 1.
-        ^nth = -1 either: {
-          Pen red writeln: 'Will execute: ', resetColor.
-          Pen cyan write: '+ ', writeln: (cmd join: '\n+ '), resetColor.
-          ^{\ cmd fmap: \:x x eval. }.
-        } or: {
-          cmd is cmd at: nth.
-          Pen red writeln: 'Will execute: ', resetColor.
-          Pen cyan writeln: cmd, resetColor.
-          ^{\ cmd eval. }.
-        }.
-      } at: 'hist',
+      var fs is argstr trim reSplit: '\\s+'.
+      var first is fs shift.
+      ^(frozen _ is String
+          case: '' do: {
+          ^'List what? {history}'.
+        },
+          case: 'h'
+          case: 'hist'
+          case: 'history' do: {
+          var hist is Eval getHistory copy.
+          var len is hist count min: (fs count = 0 either: (10) or: {^fs head toNumber.}).
+          ^hist from: hist count - len length: len, reverse imap!: {\:i:x ((i + 1) toString paddingRight: 3) + '| ' + (x from: 0 to: [TerminalWidth - 6, x length] min).}, join: '\n'.
+        },
+          default: {
+          ^'Unknown listing: $$first'.
+      }) switch: first.
+    } at: 'list',
       put: {:argstr
-        var nth is -1.
-        var cmd is 'Nil.'.
-        argstr findPattern: ?>(?:\((\d+|\*)\))?\s*(.+)$<? do: {:groups
-          nth is groups at: 1.
-          nth = '*' ifTrue: { nth is -1. }, ifFalse: { nth is nth toNumber. }.
-          cmd is groups at: 2.
-        }.
-        cmd is Eval getHistory filter: {\:_:x x startsWith: cmd.}.
-        cmd count = 0 ifTrue: {
-          thisBlock error: 'No match found $$argstr'.
-        }.
-        nth is nth min: cmd count - 1.
-        ^nth = -1 either: {
-          Eval nextInput: cmd last.
-          ^''.
-        } or: {
-          Eval nextInput: cmd @ nth.
-          ^''.
-        }.
-      } at: 'last',
-      put: {:argstr
-        argstr is argstr trim.
-        argstr = '' ifTrue: {
-            Eval nextInput: Eval getHistory last.
-            ^''.
-        } ifFalse: {
-            Eval nextInput: (Eval getHistory at: Eval getHistory count - 1 - argstr toNumber).
-            ^''.
-        }.
-      } at: '!last',
-      put: {:argstr
-        var fs is argstr trim reSplit: '\\s+'.
-        var first is fs shift.
-        ^(frozen _ is String
-            case: '' do: {
-                ^'List what? {history}'.
-            },
-            case: 'h'
-            case: 'hist'
-            case: 'history' do: {
-                var hist is Eval getHistory copy.
-                var len is hist count min: (fs count = 0 either: (10) or: {^fs head toNumber.}).
-                ^hist from: hist count - len length: len, reverse imap!: {\:i:x ((i + 1) toString paddingRight: 3) + '| ' + (x from: 0 to: [TerminalWidth - 6, x length] min).}, join: '\n'.
-            },
-            default: {
-                ^'Unknown listing: $$first'.
-            }) switch: first.
-      } at: 'list',
-      put: {:argstr
-        var nth is 0.
-        var cmd is 'Nil.'.
-        argstr findPattern: ?>(?:\((\d+|\*)\))?\s*(.+)$<? do: {:groups
-          nth is groups at: 1.
-          nth = '*' ifTrue: { nth is -1. }, ifFalse: { nth is nth toNumber. }.
-          cmd is groups at: 2.
-        }.
-        cmd is Eval getHistory filter: {\:_:x x startsWith: cmd.}.
-        cmd count = 0 ifTrue: {
-          thisBlock error: 'No match found $$argstr'.
-        }.
-        nth is nth min: cmd count - 1.
-        ^nth = -1 either: {
-          ^Reflect run: {:cmd:nth ^cmd fmap: \:x x eval. } inContextAsMain: Eval evalContext arguments: [cmd, nth].
-        } or: {
-          ^Reflect run: {:cmd:nth ^cmd at: nth, eval. } inContextAsMain: Eval evalContext arguments: [cmd, nth].
-        }.
-      } at: '!hist',
+      var nth is 0.
+      var cmd is 'Nil.'.
+      argstr findPattern: ?>(?:\((\d+|\*)\))?\s*(.+)$<? do: {:groups
+        nth is groups at: 1.
+        nth = '*' ifTrue: { nth is -1. }, ifFalse: { nth is nth toNumber. }.
+        cmd is groups at: 2.
+      }.
+      cmd is Eval getHistory filter: {\:_:x x startsWith: cmd.}.
+      cmd count = 0 ifTrue: {
+        thisBlock error: 'No match found $$argstr'.
+      }.
+      nth is nth min: cmd count - 1.
+      ^nth = -1 either: {
+        ^Reflect run: {:cmd:nth ^cmd fmap: \:x x eval. } inContextAsMain: Eval evalContext arguments: [cmd, nth].
+      } or: {
+        ^Reflect run: {:cmd:nth ^cmd at: nth, eval. } inContextAsMain: Eval evalContext arguments: [cmd, nth].
+      }.
+    } at: '!hist',
 
       put: {:argstr
-        var stride is 0.
-        var count is 0.
-        var args is argstr reSplit: '[^-\\d]+'.
-        args head startsWith: '-', ifTrue: {
-          stride is args shift toNumber.
-        }.
-        args count = 0 ifTrue: {
-          thisBlock error: 'Missing argument 0 (count) for !repeat'.
-        }.
-        count is args head toNumber.
-        var hist is Eval getHistory.
-        var chunk is hist from: hist count + stride - count length: count.
-        chunk count > 0 ifTrue: {
-          Pen writeln: 'Will now execute $$count expressions:\n\t%:L' % ['\n\t', (chunk fmap: \:x Highlight highlight: x)].
-          var res is chunk fmap: {:x ^Eval evaluatorObject evaluate: x.}.
-          ^res.
-        }.
-        ^''.
-      } at: '!repeat',
+      var stride is 0.
+      var count is 0.
+      var args is argstr reSplit: '[^-\\d]+'.
+      args head startsWith: '-', ifTrue: {
+        stride is args shift toNumber.
+      }.
+      args count = 0 ifTrue: {
+        thisBlock error: 'Missing argument 0 (count) for !repeat'.
+      }.
+      count is args head toNumber.
+      var hist is Eval getHistory.
+      var chunk is hist from: hist count + stride - count length: count.
+      chunk count > 0 ifTrue: {
+        Pen writeln: 'Will now execute $$count expressions:\n\t%:L' % ['\n\t', (chunk fmap: \:x Highlight highlight: x)].
+        var res is chunk fmap: {:x ^Eval evaluatorObject evaluate: x.}.
+        ^res.
+      }.
+      ^''.
+    } at: '!repeat',
       put: {:args
-        var name is args reSplit: '\\s+'.
-        ^Reflect run: {:name
-          name count = 0 ifTrue: {
-            ^Reflect frame: (Reflect frameId - 2).
-          }.
-          name is name head.
-          ^(name case: 'show' do: {
-              var s is Reflect frame: (Reflect frameId - 2), kvlist: \:kv [kv head, (Reflect strTypeOf: kv last), kv last], fmap: \:x '%s (%s) = %s' % x, join: ', '.
-              ^'frame %d { %s }' % [Reflect frameId - 2, s].
+      var name is args reSplit: '\\s+'.
+      ^Reflect run: {:name
+        name count = 0 ifTrue: {
+          ^Reflect frame: (Reflect frameId - 2).
+        }.
+        name is name head.
+        ^(name case: 'show' do: {
+            var s is Reflect frame: (Reflect frameId - 2), kvlist: \:kv [kv head, (Reflect strTypeOf: kv last), kv last], fmap: \:x '%s (%s) = %s' % x, join: ', '.
+            ^'frame %d { %s }' % [Reflect frameId - 2, s].
           }, case: 'all' do: {
             var x is Array new.
             Reflect frameId - 1 times: ({:i
-              x push: (Reflect frame: i + 1).
-            } catch: {}).
+                x push: (Reflect frame: i + 1).
+              } catch: {}).
             ^x imap: (\:i:f 'frame %d { %s }' % [i + 1, (f kvlist: \:kv [kv head, (Reflect strTypeOf: kv last), kv last], fmap: \:x '%s (%s) = %s' % x, join: ', ')]), join: '\n'.
           }, default: {
             ^Reflect frame: (name toNumber), kvlist: \:kv [kv head, (Reflect strTypeOf: kv last), kv last], fmap: \:x '%s (%s) = %s' % x, join: ', '.
           }, switch).
-        } inContextAsMain: Eval evalContext arguments: [name].
-      } at: '!frame',
+      } inContextAsMain: Eval evalContext arguments: [name].
+    } at: '!frame',
       put: {:args
-        [name, fn] is args split: ' ' max: 1.
-        Eval addUserDef: name definition: fn.
-        Eval addMetaCommand: name function: (Eval evaluatorObject evaluate: fn).
-        ^'+def %s %s' % [name, fn].
-      } at: '!def'.
+      [name, fn] is args split: ' ' max: 1.
+      Eval addUserDef: name definition: fn.
+      Eval addMetaCommand: name function: (Eval evaluatorObject evaluate: fn).
+      ^'+def %s %s' % [name, fn].
+    } at: '!def'.
     c on: 'get:' do: {:self:cmd
       ^me at: cmd, or: {
         ^(cmd containsPattern: '^\\W$')
-         either: Nil
-         or: {
+          either: Nil
+          or: {
           var candidates is self keys filter: \:_:c c startsWith: cmd.
           ^candidates count
             case: 0 do: { ^Nil. },
             case: 1 do: { ^self at: candidates head. },
             default: {
-              var candidates2 is candidates filter: \:_:x (x = cmd).
-              ^candidates2 count
-                case: 1 do: { ^self at: candidates2 head. },
-                default: { ^\:args 'Ambiguous command %s, which one of (%L) did you mean?' % [cmd, candidates]. },
-                switch.
-            },
+            var candidates2 is candidates filter: \:_:x (x = cmd).
+            ^candidates2 count
+              case: 1 do: { ^self at: candidates2 head. },
+              default: { ^\:args 'Ambiguous command %s, which one of (%L) did you mean?' % [cmd, candidates]. },
+              switch.
+          },
             switch.
-          }.
         }.
+      }.
     }.
     ^c.
   }.
@@ -554,30 +554,30 @@ Eval on: 'CommandCompletions' do: {
   ^my command_comps is my command_comps or: {
     ^Map new
       put: {:argstr var flags is Eval flags keys.
-        ^argstr count either: {
-          var flag is argstr head trim.
-          flag startsWith: 'no-', either: { flag is flag skip: 3. } or: { }.
-          ^flags filter: \:i:v v startsWith: flag, fmap: \:x x skip: flag length.
-        } or: flags.
-      } at: ':!f',
+      ^argstr count either: {
+        var flag is argstr head trim.
+        flag startsWith: 'no-', either: { flag is flag skip: 3. } or: { }.
+        ^flags filter: \:i:v v startsWith: flag, fmap: \:x x skip: flag length.
+      } or: flags.
+    } at: ':!f',
       put: {:argstr
-        var vars is ['history'].
-        ^argstr count either: {
-            var f is argstr head trim.
-            ^vars filter: \:_:x (x startsWith: f), fmap: \:x x skip: f length.
-        } or: vars.
-      } at: ':list',
+      var vars is ['history'].
+      ^argstr count either: {
+        var f is argstr head trim.
+        ^vars filter: \:_:x (x startsWith: f), fmap: \:x x skip: f length.
+      } or: vars.
+    } at: ':list',
       put: {:argstr
-          ^argstr count either: {
-              var path is argstr head split: ' ', last ~ ?>s|.*?((/*\w+)(/\w+)+/?).*|$1|<?.
-              var path2 is path contains: '*', either: path or: path + '*'.
-              ^(File expand: path2, fmap: (\:x x skip: path length)).
-          } or: [].
-      } at: ':!',
+      ^argstr count either: {
+        var path is argstr head split: ' ', last ~ ?>s|.*?((/*\w+)(/\w+)+/?).*|$1|<?.
+        var path2 is path contains: '*', either: path or: path + '*'.
+        ^(File expand: path2, fmap: (\:x x skip: path length)).
+      } or: [].
+    } at: ':!',
       put: {:filter
-        filter is filter or: [''], last.
-        ^(['all', 'show'] + (Array new fill: Reflect frameId with: \:i i toString)) filter: (\:_:x x startsWith: filter), fmap: \:x x skip: filter length.
-      } at: ':!frame',
+      filter is filter or: [''], last.
+      ^(['all', 'show'] + (Array new fill: Reflect frameId with: \:i i toString)) filter: (\:_:x x startsWith: filter), fmap: \:x x skip: filter length.
+    } at: ':!frame',
       put: {:filter ^Eval Commands keys filter: (\:_:x x startsWith: filter), fmap: \:x x skip: filter length.} at: 'generic'.
   }.
 }.
@@ -595,8 +595,8 @@ Eval on: 'doMeta:' do: {:str:ptr
       ^cmd = '!'
         either: { ^(\:x Shell call: x). }
         or: {
-          ^unknownMetaCommandHandler[cmd, args].
-        }.
+        ^unknownMetaCommandHandler[cmd, args].
+      }.
     }, applyTo: args.
   } catch: {:e
     ^'Exception was thrown while evaluating `${{str}}$\': $$e'.
@@ -611,8 +611,8 @@ Eval on: 'metaCompletion:' do: {:m
   var argstrs is m tail.
   var cmds is Eval CommandCompletions.
   ^cmds at: meta, or: {
-      argstrs is meta skip: 1.
-      ^cmds at: 'generic'.
+    argstrs is meta skip: 1.
+    ^cmds at: 'generic'.
   }, applyTo: argstrs.
 }.
 
@@ -623,18 +623,18 @@ Eval on: 'evaluate:' do: { :str
   var evalContext is my evaluationContext.
   var f is (str at: 0, = ':')
     either:
-      ({ ^eval_result_x is Eval doMeta: (str skip: 1). } catch: {:e Eval handleException: e.})
+    ({ ^eval_result_x is Eval doMeta: (str skip: 1). } catch: {:e Eval handleException: e.})
     or:
-      ({
-          ^(str startsWith: 'import') not
-            either: ({
-                ^Reflect run: {:str ^str eval.} inContextAsMain: evalContext arguments: [str].
-                } catch: {:e Eval handleException: e. ^Nil.}
-            ) or: ({
-                ^str eval.
-                } catch: {:e Eval handleException: e. ^Nil.}).
-        }).
-    ^(Eval getFlag: 'jsonout') either: { ^Json serialize: [(f toString replace: '\\' with: '\\\\'), (Json serialize: [(Eval errored?), (Eval lastError), (Eval trace)])]. } or: {^f.}.
+    ({
+      ^(str startsWith: 'import') not
+        either: ({
+          ^Reflect run: {:str ^str eval.} inContextAsMain: evalContext arguments: [str].
+        } catch: {:e Eval handleException: e. ^Nil.}
+        ) or: ({
+          ^str eval.
+        } catch: {:e Eval handleException: e. ^Nil.}).
+  }).
+  ^(Eval getFlag: 'jsonout') either: { ^Json serialize: [(f toString replace: '\\' with: '\\\\'), (Json serialize: [(Eval errored?), (Eval lastError), (Eval trace)])]. } or: {^f.}.
 }.
 
 Eval on: 'addFile:named:' do: {:str:fname
@@ -653,7 +653,7 @@ Eval on: 'executeLast:' do: {:n
 Eval on: 'getHistory' do: {^my history.}.
 
 Eval on: 'queryState:' do: {:query
-    ^(((query countOf: '\'') - (query countOf: '\\\'')) even) & ((query countOf: '{') = (query countOf: '}')) & ((query countOf: '[') = (query countOf: ']')).
+  ^(((query countOf: '\'') - (query countOf: '\\\'')) even) & ((query countOf: '{') = (query countOf: '}')) & ((query countOf: '[') = (query countOf: ']')).
 }.
 
 Eval init.
@@ -707,10 +707,10 @@ Eval on: 'tryDebug' do: {:self
     (Reflect isInFrame: const ctx) ifFalse: {^this.}.
     var bp is eval hasBreakPoint: object message: message.
     ^bp either: {
-        ^eval debugRepl: [this, object, message, args].
-        } or: {
-          ^this.
-        }.
+      ^eval debugRepl: [this, object, message, args].
+    } or: {
+      ^this.
+    }.
   }.
 }.
 
@@ -723,7 +723,7 @@ Eval on: 'allTheNames:' do: {:obj
     # SPeCIAl CaSe
     ^[
       \import,
-      {:path-or-m
+        {:path-or-m
         var meths is Reflect getMethodsOf: import.
         var pml is path-or-m lower.
         # Early exit in case it's not a path...probably
@@ -741,24 +741,24 @@ Eval on: 'allTheNames:' do: {:obj
           dir exists ifFalse: { ^[]. }.
           ^File list: dir path,
             filter_v: {:v
-              ^ (['.', '..'] contains: v @ 'file', not)
-                  `and`
-                (v @ 'type' = 'folder')
-                  `or`
-                ( (v @ 'type' = 'file')
-                    `and`
-                  (v @ 'file' endsWith: '.ctr')
-                ). },
+            ^ (['.', '..'] contains: v @ 'file', not)
+              `and`
+              (v @ 'type' = 'folder')
+              `or`
+              ( (v @ 'type' = 'file')
+                `and`
+                (v @ 'file' endsWith: '.ctr')
+              ). },
             fmap: {:value ^value at: 'file'. },
             filter_v: {:x ^x lower startsWith: path. },
             fmap: {:x
-              x endsWith: '.ctr',
-                ifTrue: { ^ (pathv length > 0 either: pathv + '/' or: '') + (x from: 0 to: x length - 4). }
-                ifFalse: { ^(pathv length > 0 either: pathv + '/' or: '') + (x).}.
-            }.
+            x endsWith: '.ctr',
+              ifTrue: { ^ (pathv length > 0 either: pathv + '/' or: '') + (x from: 0 to: x length - 4). }
+              ifFalse: { ^(pathv length > 0 either: pathv + '/' or: '') + (x).}.
+          }.
         }, sum.
       }
-    ].
+      ].
   }.
   ^obj isNil not either: {^[\method, (Reflect getMethodsOf: obj)].} or: {^[\object, (Eval allTheNames)].}.
 }.
@@ -771,191 +771,191 @@ Eval on: 'togglePasteMode' do: {
 # parse arguments
 var tidyIndentOptions is Map new.
 { ^(Eval argCount > 0). } whileTrue: {
-    # get an option
-    var opt is Eval shiftArgs.
-    args push: opt.
-    # when passed -h, show help, then exit.
-    (frozen select_arg_q is case: '-h' do: {
-        args pop. #consume option.
-        Eval display/green write: 'Citron Evaluator.\n', resetColor.
-        var P is Eval display.
-        P on: 'indent:write:' do: {:self:i:w self write: ('  ' * i), write: w. }.
-        P indent: 1 write: 'Eval mode help:', brk.
-        P cyan indent: 1 write: 'Eval namespace', resetColor brk.
-        P magenta indent: 2 write: '[Eval] setPrompt: [String] ', resetColor write: '-- Sets the prompt.', brk.
-        P magenta indent: 2 write: '[Eval] setColor: [String] ', resetColor write: '-- sets the color of the output.', brk.
-        P magenta indent: 2 write: '[Eval] getHistory ', resetColor write: '-- returns the 100 last commands.', brk.
-        P magenta indent: 2 write: '[Eval] executeLast: [Number] ', resetColor write: '-- evaluates the Nth element of the history list.', brk.
-        P magenta indent: 2 write: '[Eval] startEvalServer ', resetColor write: '-- starts an eval server in the background. returns the port.', brk.
-        P magenta indent: 2 write: '[Eval] startEvalServerOnPort: [Number] ', resetColor write: '-- same as startEvalServer, with the port specified.', brk.
-        P magenta indent: 2 write: '[Eval] end ', resetColor write: '-- Ends the eval.', brk.
-        P indent: 1 write: 'Evaluates expressions in a single context.', brk.
-        P indent: 1 write: 'Since all expressions are in single lines, pragma oneLineExpressions is active,', brk.
-        P indent: 1 write: 'Hence ending expressions with a dot (.) is not required.', brk.
-        P indent: 1 write: 'All the args that were not consumed are in the variable `args`.', brk.
-        P cyan indent: 1 write: 'Program arguments\n',
-          resetColor indent: 2 write: '-p : set the prompt\n',
-          indent: 2 write: '--pc : set the prompt continuation\n',
-          indent: 2 write: '-c : set the result color\n',
-          indent: 2 write: '-h : show this help\n',
-          indent: 2 write: '-f : evaluate file. many can be passed. They will be executed in order\n',
-          indent: 2 write: '-u : evaluate content at url. many can be passed. They will be executed in order\n',
-          indent: 2 write: '-F<[no-]flag> : enables the passed flag\n',
-          indent: 2 write: '--Fs : display all the available flags\n',
-          indent: 2 write: '--Fsel : allow the user to pick from available flags via a terminal selection menu\n',
-          indent: 2 write: '--meta <command> : execute a metacommand (sans the initial :)\n',
-          indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
-          indent: 2 write: '--qe : evaluate expression without printing the value, then continue, all args after the expr will be passed to the code as var `args`\n',
-          indent: 2 write: '-v : print version information and exit\n',
-          indent: 2 write: '--tidy : [Experimental] try to tidy up the given file and write it back out to stdout\n',
-          indent: 3 write: '-ml <int> : set max line length for --tidy\n',
-          indent: 3 write: '-il <int> : set indent length in spaces for --tidy\n',
-          indent: 3 write: '-pk : enable parentesize_kwmsgs for --tidy\n',
-          indent: 2 write: '-s <port>: start a evaluation server on the specified port (Forked and the current process will be killed. pidfile at ~/.ctrpid.pid)\n',
-          indent: 2 write: '-m <executable module> <modu_arg>* : Execute an executable module (at Library/Executable)\n',
-          indent: 2 write: '--import <module_names_colon_sep> : preload modules separated by colons\n',
-          indent: 2 write: '--pid <pidfile>: set the pid file. value is ignored unless [-s <port>] comes after\n',
-          indent: 2 write: '--no-logo : don\'t display the ascii logo, use normal text instead\n',
-          indent: 2 write: '--interactive-print : Use this object instead of `Pen\' to print values\n',
-          indent: 2 write: '--interactive-output : Use this object instead of `Pen\' to print output\n',
-          indent: 2 write: '--evaluator-object <symbol> : use this object\'s ::\'evaluate:\' responder to eval things\n',
-          indent: 2 write: '--completer-object <symbol> : use this object\'s ::\'complete\' responder to complete things\n',
-          indent: 2 write: '--highlight-file <file|-> : highlight the file (or stdin) and quit\n',
-          indent: 2 write: '--assume-non-tty : Assume the terminal is not a tty\n',
-          indent: 2 write: '--terminal-width <int> : Set the perceived terminal width (this will be automatically determined unless --assume-non-tty is passed)\n',
-          indent: 2 write: '--without-signals : Disable signal processing\n',
-          indent: 2 write: '--without-history : Disable recording of history\n',
-          indent: 2 write: '--history-dir <dir> : Save the history in dir/ctrhist\n',
-          indent: 2 write: '--update-stdlib -- Update the stdlib from alimpfard/citron_standard_library\n',
-          indent: 2 write: '--update-stdlib-from <path> -- Update the stdlib from the given path\n',
-          indent: 2 write: '--clear-errors : show tips for some common errors\n',
-          indent: 2 write: '--html-colors : output html for syntax highlighting\n',
-          magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
-        P green write: 'default imported modules in eval are:',
-          cyan indent: 1 write: (import __loaded_modules keys reverse join: ' ') ~ 's/\\s|^/\\n+ /g'.
-        P resetColor brk.
-        Program exit.
-    # when passed -p, get the next arg, and set the prompt to that.
+  # get an option
+  var opt is Eval shiftArgs.
+  args push: opt.
+  # when passed -h, show help, then exit.
+  (frozen select_arg_q is case: '-h' do: {
+      args pop. #consume option.
+      Eval display/green write: 'Citron Evaluator.\n', resetColor.
+      var P is Eval display.
+      P on: 'indent:write:' do: {:self:i:w self write: ('  ' * i), write: w. }.
+      P indent: 1 write: 'Eval mode help:', brk.
+      P cyan indent: 1 write: 'Eval namespace', resetColor brk.
+      P magenta indent: 2 write: '[Eval] setPrompt: [String] ', resetColor write: '-- Sets the prompt.', brk.
+      P magenta indent: 2 write: '[Eval] setColor: [String] ', resetColor write: '-- sets the color of the output.', brk.
+      P magenta indent: 2 write: '[Eval] getHistory ', resetColor write: '-- returns the 100 last commands.', brk.
+      P magenta indent: 2 write: '[Eval] executeLast: [Number] ', resetColor write: '-- evaluates the Nth element of the history list.', brk.
+      P magenta indent: 2 write: '[Eval] startEvalServer ', resetColor write: '-- starts an eval server in the background. returns the port.', brk.
+      P magenta indent: 2 write: '[Eval] startEvalServerOnPort: [Number] ', resetColor write: '-- same as startEvalServer, with the port specified.', brk.
+      P magenta indent: 2 write: '[Eval] end ', resetColor write: '-- Ends the eval.', brk.
+      P indent: 1 write: 'Evaluates expressions in a single context.', brk.
+      P indent: 1 write: 'Since all expressions are in single lines, pragma oneLineExpressions is active,', brk.
+      P indent: 1 write: 'Hence ending expressions with a dot (.) is not required.', brk.
+      P indent: 1 write: 'All the args that were not consumed are in the variable `args`.', brk.
+      P cyan indent: 1 write: 'Program arguments\n',
+        resetColor indent: 2 write: '-p : set the prompt\n',
+        indent: 2 write: '--pc : set the prompt continuation\n',
+        indent: 2 write: '-c : set the result color\n',
+        indent: 2 write: '-h : show this help\n',
+        indent: 2 write: '-f : evaluate file. many can be passed. They will be executed in order\n',
+        indent: 2 write: '-u : evaluate content at url. many can be passed. They will be executed in order\n',
+        indent: 2 write: '-F<[no-]flag> : enables the passed flag\n',
+        indent: 2 write: '--Fs : display all the available flags\n',
+        indent: 2 write: '--Fsel : allow the user to pick from available flags via a terminal selection menu\n',
+        indent: 2 write: '--meta <command> : execute a metacommand (sans the initial :)\n',
+        indent: 2 write: '-e : evaluate expression and exit, all args after the expr will be passed to the code as var `args`\n',
+        indent: 2 write: '--qe : evaluate expression without printing the value, then continue, all args after the expr will be passed to the code as var `args`\n',
+        indent: 2 write: '-v : print version information and exit\n',
+        indent: 2 write: '--tidy : [Experimental] try to tidy up the given file and write it back out to stdout\n',
+        indent: 3 write: '-ml <int> : set max line length for --tidy\n',
+        indent: 3 write: '-il <int> : set indent length in spaces for --tidy\n',
+        indent: 3 write: '-pk : enable parentesize_kwmsgs for --tidy\n',
+        indent: 2 write: '-s <port>: start a evaluation server on the specified port (Forked and the current process will be killed. pidfile at ~/.ctrpid.pid)\n',
+        indent: 2 write: '-m <executable module> <modu_arg>* : Execute an executable module (at Library/Executable)\n',
+        indent: 2 write: '--import <module_names_colon_sep> : preload modules separated by colons\n',
+        indent: 2 write: '--pid <pidfile>: set the pid file. value is ignored unless [-s <port>] comes after\n',
+        indent: 2 write: '--no-logo : don\'t display the ascii logo, use normal text instead\n',
+        indent: 2 write: '--interactive-print : Use this object instead of `Pen\' to print values\n',
+        indent: 2 write: '--interactive-output : Use this object instead of `Pen\' to print output\n',
+        indent: 2 write: '--evaluator-object <symbol> : use this object\'s ::\'evaluate:\' responder to eval things\n',
+        indent: 2 write: '--completer-object <symbol> : use this object\'s ::\'complete\' responder to complete things\n',
+        indent: 2 write: '--highlight-file <file|-> : highlight the file (or stdin) and quit\n',
+        indent: 2 write: '--assume-non-tty : Assume the terminal is not a tty\n',
+        indent: 2 write: '--terminal-width <int> : Set the perceived terminal width (this will be automatically determined unless --assume-non-tty is passed)\n',
+        indent: 2 write: '--without-signals : Disable signal processing\n',
+        indent: 2 write: '--without-history : Disable recording of history\n',
+        indent: 2 write: '--history-dir <dir> : Save the history in dir/ctrhist\n',
+        indent: 2 write: '--update-stdlib -- Update the stdlib from alimpfard/citron_standard_library\n',
+        indent: 2 write: '--update-stdlib-from <path> -- Update the stdlib from the given path\n',
+        indent: 2 write: '--clear-errors : show tips for some common errors\n',
+        indent: 2 write: '--html-colors : output html for syntax highlighting\n',
+        magenta indent: 1 write: 'Any other option will be consumed and dumped into the `args` array.', brk.
+      P green write: 'default imported modules in eval are:',
+        cyan indent: 1 write: (import __loaded_modules keys reverse join: ' ') ~ 's/\\s|^/\\n+ /g'.
+      P resetColor brk.
+      Program exit.
+      # when passed -p, get the next arg, and set the prompt to that.
     }, case: '-p' do: {
-        args pop. #consume option..
-        var value is Eval shiftArgs.
-        (value isNil) ifTrue: { thisBlock error: '-p requires an arg.'. }.
-        Eval setPrompt: value.
-    # when passed -pc, get the next arg, and set the continuation prompt to that.
+      args pop. #consume option..
+      var value is Eval shiftArgs.
+      (value isNil) ifTrue: { thisBlock error: '-p requires an arg.'. }.
+      Eval setPrompt: value.
+      # when passed -pc, get the next arg, and set the continuation prompt to that.
     }, case: '--pc' do: {
-        args pop. #consume option..
-        var value is Eval shiftArgs.
-        (value isNil) ifTrue: { thisBlock error: '--pc requires an arg.'. }.
-        Eval setContinuation: value.
-    # when passed -c, get the next arg, and set the result color to that.
+      args pop. #consume option..
+      var value is Eval shiftArgs.
+      (value isNil) ifTrue: { thisBlock error: '--pc requires an arg.'. }.
+      Eval setContinuation: value.
+      # when passed -c, get the next arg, and set the result color to that.
     }, case: '-c' do: {
-        args pop. #consume option.
-        var value is Eval shiftArgs.
-        (value isNil) ifTrue: { thisBlock error: '-c requires an arg, valid arguments are: \n\t' + (((Eval allowedColors) split: '|') join: '\n\t'). }.
-        Eval setColor: value.
+      args pop. #consume option.
+      var value is Eval shiftArgs.
+      (value isNil) ifTrue: { thisBlock error: '-c requires an arg, valid arguments are: \n\t' + (((Eval allowedColors) split: '|') join: '\n\t'). }.
+      Eval setColor: value.
     }, case: '-f' do: {
-        args pop. #consume option.
-        var file is Eval shiftArgs.
-        (file isNil) ifTrue: { thisBlock error: '-f requires a file name.'. }.
-        AST parse: (File new: file, read), evaluate.
+      args pop. #consume option.
+      var file is Eval shiftArgs.
+      (file isNil) ifTrue: { thisBlock error: '-f requires a file name.'. }.
+      AST parse: (File new: file, read), evaluate.
     }, case: '-u' do: {
-        args pop. #consume option.
-        var url is Eval shiftArgs.
-        (url isNil) ifTrue: { thisBlock error: '-u requires a url.'. }.
-        AST parse: (Curl new url: url, perform), evaluate.
+      args pop. #consume option.
+      var url is Eval shiftArgs.
+      (url isNil) ifTrue: { thisBlock error: '-u requires a url.'. }.
+      AST parse: (Curl new url: url, perform), evaluate.
     }, case: '--Fs' do: {
-        args pop. #consume option.
-        Eval display/writeln: (Eval flags keys join: '\n').
-        Program exit.
+      args pop. #consume option.
+      Eval display/writeln: (Eval flags keys join: '\n').
+      Program exit.
     }, case: '--Fsel' do: {
-        import Library/Utils/CLISelectMenu: \*.
-        var keys is Eval flags keys.
-        var res is MultiSelectMenu
-          new: keys
-          pagesize: 5
-          preSelected: (Eval flags keys filter: \:_:k Eval flags at: k),
+      import Library/Utils/CLISelectMenu: \*.
+      var keys is Eval flags keys.
+      var res is MultiSelectMenu
+        new: keys
+        pagesize: 5
+        preSelected: (Eval flags keys filter: \:_:k Eval flags at: k),
         request.
-        keys each_v: {:key
-          res contains: key, ifTrue: {
-            Eval enableFlag: key.
-          } ifFalse: {
-            Eval disableFlag: key.
-          }.
+      keys each_v: {:key
+        res contains: key, ifTrue: {
+          Eval enableFlag: key.
+        } ifFalse: {
+          Eval disableFlag: key.
         }.
+      }.
     }, case: '--meta' do: {
-        args pop.
-        Eval doMeta: Eval shiftArgs.
+      args pop.
+      Eval doMeta: Eval shiftArgs.
     }, case: '-ml' do: {
-        args pop.
-        tidyIndentOptions put: (Eval shiftArgs toNumber) at: 'max_line_length'.
+      args pop.
+      tidyIndentOptions put: (Eval shiftArgs toNumber) at: 'max_line_length'.
     }, case: '-il' do: {
-        args pop.
-        tidyIndentOptions put: (Eval shiftArgs toNumber) at: 'indent_length'.
+      args pop.
+      tidyIndentOptions put: (Eval shiftArgs toNumber) at: 'indent_length'.
     }, case: 'pk' do: {
-        args pop.
-        tidyIndentOptions put: True at: 'parenthesize_kwmsgs'.
+      args pop.
+      tidyIndentOptions put: True at: 'parenthesize_kwmsgs'.
     }, case: '--tidy' do: {
-        args pop.
-        var fname is Eval shiftArgs.
-        fname isNil ifTrue: { thisBlock error: '--tidy requires an argument'. }.
-        var code is Nil.
-        fname = '-' ifTrue: {
-            code is Program input.
-        } ifFalse: {
-            code is File new: fname, read.
-            Pen writeln: '# File $$fname'.
-        }.
-        import Library/AST/ast2ctrcode: 'ast2ctrcode'.
-        var options is tidyIndentOptions.
-        Pen writeln: ast2ctrcode[(AST parse: code), 0, options].
-        Program exit.
+      args pop.
+      var fname is Eval shiftArgs.
+      fname isNil ifTrue: { thisBlock error: '--tidy requires an argument'. }.
+      var code is Nil.
+      fname = '-' ifTrue: {
+        code is Program input.
+      } ifFalse: {
+        code is File new: fname, read.
+        Pen writeln: '# File $$fname'.
+      }.
+      import Library/AST/ast2ctrcode: 'ast2ctrcode'.
+      var options is tidyIndentOptions.
+      Pen writeln: ast2ctrcode[(AST parse: code), 0, options].
+      Program exit.
     }, case: '-e' do: {
-        args pop. #consume option..
-        var value is Eval shiftArgs rightTrim.
-        (value isNil) ifTrue: { thisBlock error: '-e requires an argument.'. }.
-        import
-            Library/Utils/Shell: \*
-            Library/Control/MethodResolve: \*
+      args pop. #consume option..
+      var value is Eval shiftArgs rightTrim.
+      (value isNil) ifTrue: { thisBlock error: '-e requires an argument.'. }.
+      import
+        Library/Utils/Shell: \*
+        Library/Control/MethodResolve: \*
         .
-        Reflect addGlobalVariable: '%0'.
-        %0 is value.
-        { ^(Eval argCount > 0). } whileTrue: { args push: Eval shiftArgs. }. #consume all other arguments.
-        args imap: {:i:n Reflect addGlobalVariable: '%' + (i + 1). Reflect set: '%' + (i + 1) to: (Eval tryNumrify: n).}.
-        Reflect addGlobalVariable: '%_'.
-        %_ is args.
-        value endsWith: '.', ifFalse: { value +=: '.'. }.
-        value is '{ ^$$value }'.
-        var val is (Eval evaluatorObject evaluate: value) run.
-        val isA: Array, ifTrue: {
-          Eval display/write: val join. # convert to lines
-        } ifFalse: {
-          val isA: Generator, ifTrue: {
-            val each_v: {:v
-              Eval display/write: v.
-            }.
-          } ifFalse: {
-            Eval display/write: val.
+      Reflect addGlobalVariable: '%0'.
+      %0 is value.
+      { ^(Eval argCount > 0). } whileTrue: { args push: Eval shiftArgs. }. #consume all other arguments.
+      args imap: {:i:n Reflect addGlobalVariable: '%' + (i + 1). Reflect set: '%' + (i + 1) to: (Eval tryNumrify: n).}.
+      Reflect addGlobalVariable: '%_'.
+      %_ is args.
+      value endsWith: '.', ifFalse: { value +=: '.'. }.
+      value is '{ ^$$value }'.
+      var val is (Eval evaluatorObject evaluate: value) run.
+      val isA: Array, ifTrue: {
+        Eval display/write: val join. # convert to lines
+      } ifFalse: {
+        val isA: Generator, ifTrue: {
+          val each_v: {:v
+            Eval display/write: v.
           }.
+        } ifFalse: {
+          Eval display/write: val.
         }.
-        Program exit.
+      }.
+      Program exit.
     }, case: '--qe' do: {
-        args pop. #consume option..
-        var value is Eval shiftArgs rightTrim.
-        (value isNil) ifTrue: { thisBlock error: '--qe requires an argument.'. }.
-        Reflect addGlobalVariable: '%0'.
-        %0 is value.
-        value endsWith: '.', ifFalse: { value +=: '.'. }.
-        value is '{ $$value }'.
-        (Eval evaluatorObject evaluate: value) run.
+      args pop. #consume option..
+      var value is Eval shiftArgs rightTrim.
+      (value isNil) ifTrue: { thisBlock error: '--qe requires an argument.'. }.
+      Reflect addGlobalVariable: '%0'.
+      %0 is value.
+      value endsWith: '.', ifFalse: { value +=: '.'. }.
+      value is '{ $$value }'.
+      (Eval evaluatorObject evaluate: value) run.
     }, case: '-v' do: {
-        Eval display/writeln: 'Citron Version ' + Reflect version.
-        Eval display/writeln: 'Built with the extension prefix of ' + File extensionsPath.
-        Eval display/writeln: 'Compiled with ' + Reflect compilerInfo.
-        Program exit.
+      Eval display/writeln: 'Citron Version ' + Reflect version.
+      Eval display/writeln: 'Built with the extension prefix of ' + File extensionsPath.
+      Eval display/writeln: 'Compiled with ' + Reflect compilerInfo.
+      Program exit.
     }, case: '-V' do: {
-        Eval display/writeln: 'Citron'.
-        Eval display/writeln: '[%L]' % [(Reflect version split: '.')].
-        Program exit.
+      Eval display/writeln: 'Citron'.
+      Eval display/writeln: '[%L]' % [(Reflect version split: '.')].
+      Program exit.
     }, case: '--pid' do: {
       args pop.
       var f is Eval shiftArgs.
@@ -1030,8 +1030,8 @@ var tidyIndentOptions is Map new.
         Pen write: '<style>a{margin-right:2px;}</style>'.
       }.
       files each_v: \:f f = '-' either: {
-          var s is (Highlight highlight: (Program input) html: ishtml).
-          Pen writeln: (ishtml either: { ^fix_html[s]. } or: s).
+        var s is (Highlight highlight: (Program input) html: ishtml).
+        Pen writeln: (ishtml either: { ^fix_html[s]. } or: s).
       } or: {
         var s is (Highlight highlight: (File new: f, read) html: ishtml).
         Pen writeln: (ishtml either: { ^fix_html[s]. } or: s).
@@ -1087,7 +1087,7 @@ var tidyIndentOptions is Map new.
         args pop.
         opt skip: 1, reverse characters each_v: \:c args push: '-' + c.
       }.
-    }) switch: opt. # do not consume any other option.
+  }) switch: opt. # do not consume any other option.
 }.
 
 Eval break ifTrue: { Program exit. }.
@@ -1133,11 +1133,11 @@ Eval getFlag: 'history', ifTrue: { Eval initHistory. }.
 display_logo
   either: {Eval display/writeln: (Colors % [logo, GREEN_COLOR, ITALIC_EFFECT] % ['Project Citron', Reflect version, Reflect compilerInfo]).}
   or: {
-    Eval display/green write: ?>Project Citron : The Programming Language (V<?, write:(Reflect version) + ')', resetColor brk
+  Eval display/green write: ?>Project Citron : The Programming Language (V<?, write:(Reflect version) + ')', resetColor brk
     write:
     'Eval Mode, parameters related to eval are in the Eval namespace.\n' +
     'run with \'-h\' to read the eval mode help.\n'.
-  }.
+}.
 
 Eval on: 'redraw:at:comment:' do: {:inp:cursor:cmt
   cursor -=: inpbrk.
@@ -1238,16 +1238,16 @@ Eval on: 'complete' do: {
     or: 'Nil',
     reSplit: '\\s+',
     filter: {:_:v
-      (v endsWith: ':')
-        ifTrue: {
-          flipper set.
-          ^False.
-        }.
-      ^(
-        (v endsWith: ':') | (flipper get)
-      ) not |
-        (v containsPattern: ?>(-?(0[xXcC])?[\d]+(\.[\d]+)?)|(\'$)|(\]|\})$<?).
+    (v endsWith: ':')
+      ifTrue: {
+      flipper set.
+      ^False.
     }.
+    ^(
+      (v endsWith: ':') | (flipper get)
+      ) not |
+      (v containsPattern: ?>(-?(0[xXcC])?[\d]+(\.[\d]+)?)|(\'$)|(\]|\})$<?).
+  }.
   last_toc is (last_toc count) >=: 2, either: {
     toc is last_toc last.
     ^last_toc init last.
@@ -1271,10 +1271,10 @@ Eval on: 'complete' do: {
     cmt is (var iis is '[from %s]' % [last_toc]).
     last_comp_rewind is iis length.
     toc length > cursor ifTrue: {
-        cmt is 'not enough space, make query bigger'.
-        last_comp_init is ''.
-        last_comp_entry is ''.
-        last_comp_entry_len is 0.
+      cmt is 'not enough space, make query bigger'.
+      last_comp_init is ''.
+      last_comp_entry is ''.
+      last_comp_entry_len is 0.
     } ifFalse: {
       toc length times: {:i
         var pos is cursor - (toc length - i).
@@ -1297,12 +1297,12 @@ Eval on: 'complete' do: {
 }.
 
 Eval on: 'probeSearch:offset:' do: {:&term:&sindex
-  var offset is False.
+    var offset is False.
   (sindex < 0) | (sindex > my history count) ifTrue: {
     sindex -=: sindex.
   }.
   my history viewFrom: sindex, each: {:&off:&entry
-    entry contains: term, ifTrue: {
+      entry contains: term, ifTrue: {
       sindex +=: off.
       offset is True.
       True break.
@@ -1321,159 +1321,159 @@ Eval on: 'substituteSearchResult' do: {
 }.
 
 Eval on: 'read_eval_print:' do: ({:prompt
-  var hindex is me getHistory count.
-  var ncmessage is ' <- No completion'.
-  var stdin is File special: 'stdin'.
-  inp is Eval nextInput.
-  inp isNil ifTrue: {
-    inp is ''.
-  } ifFalse: {
-    Eval nextInput: Nil.
-  }.
-  # break the repl when `end` is True.
-  Eval break break.
-  Eval display/cyan write: prompt, resetColor.
+    var hindex is me getHistory count.
+    var ncmessage is ' <- No completion'.
+    var stdin is File special: 'stdin'.
+    inp is Eval nextInput.
+    inp isNil ifTrue: {
+      inp is ''.
+    } ifFalse: {
+      Eval nextInput: Nil.
+    }.
+    # break the repl when `end` is True.
+    Eval break break.
+    Eval display/cyan write: prompt, resetColor.
 
-  var last_was_comp is False.
-  var last_comp_entry is ''.
-  var last_comp_index is -1.
-  var last_comp_rewind is 0.
-  var last_toc is 'Object'.
-  var done is False.
-  var cursor is inp length.
-  var multichar_in is Array new.
-  inBlock is 0.
-  inBlockNew is 0.
-  Eval endBlock.
-  var lastEscape is False.
-  var justInEscape is False.
-  var inString is False.
-  var inpbrk is 0.
-  var last_comp_entry_len is 0.
-  var ce_idx is 0.
-  var cmt is ''.
-  var comp_set is HashSet new.
-  var have_context is False.
-  var last_comp_init is ''.
-  var inc is ''.
-  var searchIndex is 0.
-  var searchTerm is ''.
-  var searchResult is ''.
+    var last_was_comp is False.
+    var last_comp_entry is ''.
+    var last_comp_index is -1.
+    var last_comp_rewind is 0.
+    var last_toc is 'Object'.
+    var done is False.
+    var cursor is inp length.
+    var multichar_in is Array new.
+    inBlock is 0.
+    inBlockNew is 0.
+    Eval endBlock.
+    var lastEscape is False.
+    var justInEscape is False.
+    var inString is False.
+    var inpbrk is 0.
+    var last_comp_entry_len is 0.
+    var ce_idx is 0.
+    var cmt is ''.
+    var comp_set is HashSet new.
+    var have_context is False.
+    var last_comp_init is ''.
+    var inc is ''.
+    var searchIndex is 0.
+    var searchTerm is ''.
+    var searchResult is ''.
 
-  {^done & (inBlock = 0).} whileFalse: {
-    cmt is ''.
-    var select_toplevel_inc is (frozen select_toplevel_inc is Object
-     case: '\xd' do: {#<Enter>
-      Eval getFlag: 'searching', ifTrue: {
-        Eval substituteSearchResult.
-      }.
-      clear_next_line applyTo: linesp.
-      inBlock is inBlockNew.
-      (inp !=: '') ifTrue: {
-        have_context ifFalse: {
-          inp is inp findPattern: ?>(?:^\s*((?::{)+)|((?::}\s*)+)\s*$)<? do: {:groups
-            var s is groups at: 0, replace: ':' with: ''.
-            var s0 is s at: 0, = '{' either: 1 or: -1.
-            inBlock is inBlock + (s0 * s length) max: 0.
-            cursor -=: (groups at: 0, length).
-            ^''.
+    {^done & (inBlock = 0).} whileFalse: {
+      cmt is ''.
+      var select_toplevel_inc is (frozen select_toplevel_inc is Object
+          case: '\x3' do: {#<^C>
+          Eval getFlag: 'searching', ifTrue: {
+            Eval substituteSearchResult.
+            cmt is '<Cancelled search>'.
+          } ifFalse: {
+            clear_next_line applyTo: linesp. have_context is False.
+            inp is ''.
+            cursor is 0.
+            inBlock is 0.
+            inBlockNew is 0.
+            cmt is '<Broke block>'.
+            # Pen red writeln: 'Interrupted', resetColor.
+            # done is True.
           }.
-          inp length > 0 ifTrue: {
-            (inp containsPattern: ?>^\s*:[^{}]<?) ifTrue: {
-              done is True.
-            }, else: {
-              (inp containsPattern: ?>\.\s*$<?, not) & (inBlock = 0) ifTrue: {
-                # nothing?
+        }, case: '\xa' case: '\xd' do: {#<Enter>
+          Eval getFlag: 'searching', ifTrue: {
+            Eval substituteSearchResult.
+          }.
+          clear_next_line applyTo: linesp.
+          inBlock is inBlockNew.
+          (inp !=: '') ifTrue: {
+            have_context ifFalse: {
+              inp is inp findPattern: ?>(?:^\s*((?::{)+)|((?::}\s*)+)\s*$)<? do: {:groups
+                var s is groups at: 0, replace: ':' with: ''.
+                var s0 is s at: 0, = '{' either: 1 or: -1.
+                inBlock is inBlock + (s0 * s length) max: 0.
+                cursor -=: (groups at: 0, length).
+                ^''.
               }.
-              done is inBlock = 0.
+              inp length > 0 ifTrue: {
+                (inp containsPattern: ?>^\s*:[^{}]<?) ifTrue: {
+                  done is True.
+                }, else: {
+                  (inp containsPattern: ?>\.\s*$<?, not) & (inBlock = 0) ifTrue: {
+                    # nothing?
+                  }.
+                  done is inBlock = 0.
+                }.
+                inBlock !=: 0, ifTrue: { Eval newBlock. Pen brk. inp +=: '\n'. inpbrk is inp length. cursor +=: 1.}.
+              }, else: { Pen brk. done is True. }.
             }.
-            inBlock !=: 0, ifTrue: { Eval newBlock. Pen brk. inp +=: '\n'. inpbrk is inp length. cursor +=: 1.}.
-          }, else: { Pen brk. done is True. }.
-        }.
-        have_context is False.
-      }.
-    }, case: '\x3' do: {#<^C>
-      Eval getFlag: 'searching', ifTrue: {
-        Eval substituteSearchResult.
-        cmt is '<Cancelled search>'.
-      } ifFalse: {
-        clear_next_line applyTo: linesp. have_context is False.
-        inp is ''.
-        cursor is 0.
-        inBlock is 0.
-        inBlockNew is 0.
-        cmt is '<Broke block>'.
-        # Pen red writeln: 'Interrupted', resetColor.
-        # done is True.
-      }.
-    }, case: '\x4' do: {#^D
-      Program exit.
-    }, case: '\x12' do: {#^R -- backwards-search
-      Eval getFlag: 'searching', ifTrue: {
-        # prev-match
-        var hist is Eval getHistory.
-        searchIndex +=: 1.
-        searchIndex > hist count ifTrue: {
-          searchIndex -=: searchIndex.
-        }.
-        Eval probeSearch: searchTerm offset: searchIndex, ifTrue: {
-          Eval disableFlag: 'searchfailed'.
-          searchResult is hist @ searchIndex.
-        } ifFalse: {
-          Eval enableFlag: 'searchfailed'.
-          searchResult is Nil.
-        }.
-      } ifFalse: {
-        searchTerm is inp + ''.
-        searchIndex -=: searchIndex.
-        Pen writeln: searchIndex.
-        Eval enableFlag: 'searching'.
-      }.
-    }, case: '\xc' do: {#^L -- clear screen
-      Pen clear.
-    }, case: '\b' do: {#<\b>
-      Eval getFlag: 'searching', ifTrue: {
-        searchTerm is searchTerm from: 0 length: searchTerm length - 1.
-        ^Nil.
-      }.
-      clear_next_line applyTo: linesp. have_context is False.
-      cursor > 0 ifTrue: {
-        inp is inp removeFrom: (cursor - 1) to: cursor.
-        cursor -=: 1.
-        Eval display/write: '\b \b'.
-      }, else: { Eval display/write: '\a'. }.
-    }, case: '\x7f' do: {#<\b>
-      Eval getFlag: 'searching', ifTrue: {
-        searchTerm is searchTerm from: 0 length: searchTerm length - 1.
-        ^Nil.
-      }.
-      clear_next_line applyTo: linesp. have_context is False.
-      cursor > 0 ifTrue: {
-        inp is inp removeFrom: (cursor - 1) to: cursor.
-        cursor -=: 1.
-        Eval display/write: '\b \b'.
-      }, else: { Eval display/write: '\a'. }.
-    }, case: '\x13' do: {
-      var toc is (inp trim or: '  ') split: ' ', last.
-      var recs is '%:L' % [' ', (Eval allTheNames filter: {:_:n ^n startsWith: toc.})].
-      Eval display/cyan write: recs, resetColor.
-      clear_next_line applyTo: linesp. have_context is False.
-    }, case: '\x1b' do: { #<esc>
-      Eval getFlag: 'searching', ifTrue: {
-        Eval substituteSearchResult.
-      }.
-      # Eval redraw: inp at: cursor - 1 comment: '<escape>'.
-      inc is stdin readUTF8Bytes: 1.
-      (frozen select_inlevel_t is
-           case: '\x5b' do: {
-             inc is stdin readUTF8Bytes: 1.
-             (frozen select_inlevel_q is
-                 case: '\x41' do: { #Up Arrow
+            have_context is False.
+          }.
+        }, case: '\x4' do: {#^D
+          Program exit.
+        }, case: '\x12' do: {#^R -- backwards-search
+          Eval getFlag: 'searching', ifTrue: {
+            # prev-match
+            var hist is Eval getHistory.
+            searchIndex +=: 1.
+            searchIndex > hist count ifTrue: {
+              searchIndex -=: searchIndex.
+            }.
+            Eval probeSearch: searchTerm offset: searchIndex, ifTrue: {
+              Eval disableFlag: 'searchfailed'.
+              searchResult is hist @ searchIndex.
+            } ifFalse: {
+              Eval enableFlag: 'searchfailed'.
+              searchResult is Nil.
+            }.
+          } ifFalse: {
+            searchTerm is inp + ''.
+            searchIndex -=: searchIndex.
+            Pen writeln: searchIndex.
+            Eval enableFlag: 'searching'.
+          }.
+        }, case: '\xc' do: {#^L -- clear screen
+          Pen clear.
+        }, case: '\b' do: {#<\b>
+          Eval getFlag: 'searching', ifTrue: {
+            searchTerm is searchTerm from: 0 length: searchTerm length - 1.
+            ^Nil.
+          }.
+          clear_next_line applyTo: linesp. have_context is False.
+          cursor > 0 ifTrue: {
+            inp is inp removeFrom: (cursor - 1) to: cursor.
+            cursor -=: 1.
+            Eval display/write: '\b \b'.
+          }, else: { Eval display/write: '\a'. }.
+        }, case: '\x7f' do: {#<\b>
+          Eval getFlag: 'searching', ifTrue: {
+            searchTerm is searchTerm from: 0 length: searchTerm length - 1.
+            ^Nil.
+          }.
+          clear_next_line applyTo: linesp. have_context is False.
+          cursor > 0 ifTrue: {
+            inp is inp removeFrom: (cursor - 1) to: cursor.
+            cursor -=: 1.
+            Eval display/write: '\b \b'.
+          }, else: { Eval display/write: '\a'. }.
+        }, case: '\x13' do: {
+          var toc is (inp trim or: '  ') split: ' ', last.
+          var recs is '%:L' % [' ', (Eval allTheNames filter: {:_:n ^n startsWith: toc.})].
+          Eval display/cyan write: recs, resetColor.
+          clear_next_line applyTo: linesp. have_context is False.
+        }, case: '\x1b' do: { #<esc>
+          Eval getFlag: 'searching', ifTrue: {
+            Eval substituteSearchResult.
+          }.
+          # Eval redraw: inp at: cursor - 1 comment: '<escape>'.
+          inc is stdin readUTF8Bytes: 1.
+          (frozen select_inlevel_t is
+              case: '\x5b' do: {
+              inc is stdin readUTF8Bytes: 1.
+              (frozen select_inlevel_q is
+                  case: '\x41' do: { #Up Arrow
                   hindex > 0 ifTrue: {
                     cursor is (inp is Eval getHistory at: (hindex is hindex - 1)) length.
                   }.
                   clear_next_line applyTo: linesp. have_context is False.
-              }, case: '\x42' do: { #Down Arrow
+                }, case: '\x42' do: { #Down Arrow
                   (hindex > 0) & (Eval getHistory count > 0) ifTrue: {
                     hindex +=: 1.
                     Eval display/write: '\b' * (inp length).
@@ -1488,18 +1488,18 @@ Eval on: 'read_eval_print:' do: ({:prompt
                     cursor is 0.
                   }.
                   clear_next_line applyTo: linesp. have_context is False.
-              }, case: '\x43' do: { #Right Arrow
-                (cursor < inp length) ifTrue: {
-                  cursor +=: 1.
-                }, else: {Eval display/write: '\a'.}.
-                clear_next_line applyTo: linesp. have_context is False.
-              }, case: '\x44' do: { #Left Arrow
-                (cursor > 0) ifTrue: {
-                  cursor -=: 1.
-                }, else: {Eval display/write: '\a'.}.
-                clear_next_line applyTo: linesp. have_context is False.
-              }, case: '\x31' do: { #Supposedly <ctrl>
-                inc is stdin readUTF8Bytes: 3.
+                }, case: '\x43' do: { #Right Arrow
+                  (cursor < inp length) ifTrue: {
+                    cursor +=: 1.
+                  }, else: {Eval display/write: '\a'.}.
+                  clear_next_line applyTo: linesp. have_context is False.
+                }, case: '\x44' do: { #Left Arrow
+                  (cursor > 0) ifTrue: {
+                    cursor -=: 1.
+                  }, else: {Eval display/write: '\a'.}.
+                  clear_next_line applyTo: linesp. have_context is False.
+                }, case: '\x31' do: { #Supposedly <ctrl>
+                  inc is stdin readUTF8Bytes: 3.
                   (inc = '\x3b\x35\x44') & (cursor > 0) ifTrue: { #^Left Arrow
                     var ct is inp from: 0 to: cursor.
                     var ct is ct trim.
@@ -1515,74 +1515,74 @@ Eval on: 'read_eval_print:' do: ({:prompt
                     }.#, else: { Eval display/red write: inc. }.
                   }.
                   clear_next_line applyTo: linesp. have_context is False.
-              }, default: {
-                Pen writeln: inc toByteArray.
+                }, default: {
+                  Pen writeln: inc toByteArray.
               }) switch: inc.
-        }, case: '\x4f' do: {
-            inc is stdin readUTF8Bytes: 1.
-            (frozen select_inlevel_c is
-                 case: '\x51' do: { #F2
+            }, case: '\x4f' do: {
+              inc is stdin readUTF8Bytes: 1.
+              (frozen select_inlevel_c is
+                  case: '\x51' do: { #F2
                   clear_next_line applyTo: linesp. have_context is False.
                   Eval togglePasteMode.
-              }
-            ) switch: inc.
-        }, case: '\xd' do: { #<Enter>
-          inBlockNew +=: 1.
-          True continue.
-        }, case: '\x1b' do: { #<esc>
-          inBlockNew is 0 max: inBlockNew - 1.
-        }, default: {
-        }
-      ) switch: inc.
-    }, default: {
-      Eval getFlag: 'searching', ifTrue: {
-        searchTerm +=: inc.
-        ^Nil.
-      }.
-      have_context ifTrue: { clear_next_line applyTo: linesp. have_context is False. }.
-      Eval getFlag: 'paste', ifTrue: {
-        inp is inp insert: inc at: cursor.
-        cursor +=: inc length.
-      }
-      ifFalse: {
-        (frozen str_select_q is
-          case: '\'' do: {
-              inString either: {
-                lastEscape ifFalse: { inString is False. }.
-              } or: { inString is True. }.
-          },
-          case: '\\' do: {
-            inString ifTrue: {
-              lastEscape is lastEscape not.
-              justInEscape is True.
-            }.
-            clear_next_line[1].
-          },
-          case: '#' do: {
-            inString ifFalse: {
-              cmt is Colors % ['comments are not allowed in eval', \red].
-              inc is ''.
-            }.
-          },
-          case: '{' do: {
-            (inString not) ifTrue: {
+                }
+                ) switch: inc.
+            }, case: '\xa' case: '\xd' do: { #<Enter>
               inBlockNew +=: 1.
-            }.
-          },
-          case: '}' do: {
-            (inString not) & (inBlockNew > 0) ifTrue: {
-              inBlockNew -=: 1.
-            }.
-          },
-          default: { lastEscape & inString ifTrue: {lastEscape is False.}. }) switch: inc.
-          justInEscape ifFalse: { lastEscape is False. }.
-          inp is inp insert: inc at: cursor.
-          cursor +=: inc length.
-          # Eval redraw: inp at: cursor comment: ''.
-      }.
-    }).
-    Eval getFlag: 'searching', not ifTrue: {
-      inc = '\t' ifTrue: {#<Tab>
+              True continue.
+            }, case: '\x1b' do: { #<esc>
+              inBlockNew is 0 max: inBlockNew - 1.
+            }, default: {
+            }
+            ) switch: inc.
+        }, default: {
+          Eval getFlag: 'searching', ifTrue: {
+            searchTerm +=: inc.
+            ^Nil.
+          }.
+          have_context ifTrue: { clear_next_line applyTo: linesp. have_context is False. }.
+          Eval getFlag: 'paste', ifTrue: {
+            inp is inp insert: inc at: cursor.
+            cursor +=: inc length.
+          }
+            ifFalse: {
+            (frozen str_select_q is
+                case: '\'' do: {
+                inString either: {
+                  lastEscape ifFalse: { inString is False. }.
+                } or: { inString is True. }.
+              },
+                case: '\\' do: {
+                inString ifTrue: {
+                  lastEscape is lastEscape not.
+                  justInEscape is True.
+                }.
+                clear_next_line[1].
+              },
+                case: '#' do: {
+                inString ifFalse: {
+                  cmt is Colors % ['comments are not allowed in eval', \red].
+                  inc is ''.
+                }.
+              },
+                case: '{' do: {
+                (inString not) ifTrue: {
+                  inBlockNew +=: 1.
+                }.
+              },
+                case: '}' do: {
+                (inString not) & (inBlockNew > 0) ifTrue: {
+                  inBlockNew -=: 1.
+                }.
+              },
+                default: { lastEscape & inString ifTrue: {lastEscape is False.}. }) switch: inc.
+            justInEscape ifFalse: { lastEscape is False. }.
+            inp is inp insert: inc at: cursor.
+            cursor +=: inc length.
+            # Eval redraw: inp at: cursor comment: ''.
+          }.
+      }).
+      Eval getFlag: 'searching', not ifTrue: {
+        inc = '\t' ifTrue: {#<Tab>
           clear_next_line applyTo: linesp. have_context is False.
           comp_set clear.
           inp containsPattern: ?>^\s*:<?, either: {
@@ -1604,87 +1604,87 @@ Eval on: 'read_eval_print:' do: ({:prompt
           } or: {
             Eval complete.
           }.
+        } ifFalse: {
+          select_toplevel_inc switch: inc.
+          last_was_comp is False.
+        }.
+        Eval redraw: inp at: cursor - 1 comment: (inBlock either: '%s%d' % ['%{', inBlock] or: cmt).
       } ifFalse: {
         select_toplevel_inc switch: inc.
-        last_was_comp is False.
+        var hist is Eval getHistory.
+        searchIndex -=: 1.
+        Eval probeSearch: searchTerm offset: searchIndex, ifTrue: {
+          Eval disableFlag: 'searchfailed'.
+          searchResult is hist @ searchIndex.
+        } ifFalse: {
+          Eval enableFlag: 'searchfailed'.
+          searchResult is ''.
+        }.
+        Eval redraw: searchResult at: 0 comment: (inBlock either: '%s%d' % ['%{', inBlock] or: cmt).
+        move_cursor[0, (searchResult indexOf: searchTerm)].
+        write_next_line['search> ' + searchTerm].
       }.
-      Eval redraw: inp at: cursor - 1 comment: (inBlock either: '%s%d' % ['%{', inBlock] or: cmt).
-    } ifFalse: {
-      select_toplevel_inc switch: inc.
-      var hist is Eval getHistory.
-      searchIndex -=: 1.
-      Eval probeSearch: searchTerm offset: searchIndex, ifTrue: {
-        Eval disableFlag: 'searchfailed'.
-        searchResult is hist @ searchIndex.
+      # Eval display/write: inc toByteArray.
+      done is (done & (inBlock = 0)).
+      done break.
+      inc is stdin readUTF8Byte.
+    }.
+    hindex is Eval getHistory count.
+    # Eval display/cyan write: ' [cursor %d in (%s)]' % [cursor, (inp)], resetColor.
+    (inp trim = '') ifTrue: {
+      enterRepeat ifTrue: {
+        inp is Eval getHistory or: ['Nil'], head.
       } ifFalse: {
-        Eval enableFlag: 'searchfailed'.
-        searchResult is ''.
-      }.
-      Eval redraw: searchResult at: 0 comment: (inBlock either: '%s%d' % ['%{', inBlock] or: cmt).
-      move_cursor[0, (searchResult indexOf: searchTerm)].
-      write_next_line['search> ' + searchTerm].
-    }.
-    # Eval display/write: inc toByteArray.
-    done is (done & (inBlock = 0)).
-    done break.
-    inc is stdin readUTF8Byte.
-  }.
-  hindex is Eval getHistory count.
-  # Eval display/cyan write: ' [cursor %d in (%s)]' % [cursor, (inp)], resetColor.
-  (inp trim = '') ifTrue: {
-    enterRepeat ifTrue: {
-      inp is Eval getHistory or: ['Nil'], head.
-    } ifFalse: {
         True continue.
+      }.
     }.
-  }.
-  Eval getFlag: 'printvs', ifTrue: { Eval display/brk. }.
-  # if it ends in a dot, get rid of it.
-  inp is inp trim.
-  inp endsWith: '.', ifTrue: {
-    inp is inp from: 0 length: (inp length - 1).
-  }.
-  Eval statsb: 0, statsa: 0, exectime: 0.
-  Eval getFlag: 'stats', either: {
-    Eval statsb: Broom keptAlloc.
-    Eval exectime: (Clock timeExecutionOf: { Eval __eval_ret: (Eval evaluatorObject evaluate: inp). }).
-    Eval statsa: Broom keptAlloc.
-  }
-  or: {
-    Eval __eval_ret: (Eval evaluatorObject evaluate: inp).
-  }.
-  Eval pushHist: inp.
-  __ is _.
-  _ is Eval __eval_ret.
-  Eval errored? not ifTrue: {
-    var printed is False.
-    Eval getFlag: 'printvs', ifTrue: {
-      Eval print message: Eval color arguments: [], write: var str is Eval __eval_ret toString.
-      printed is str length > 0.
+    Eval getFlag: 'printvs', ifTrue: { Eval display/brk. }.
+    # if it ends in a dot, get rid of it.
+    inp is inp trim.
+    inp endsWith: '.', ifTrue: {
+      inp is inp from: 0 length: (inp length - 1).
     }.
-    Eval print/resetColor.
-    Eval getFlag: 'ptype', ifTrue: {
-      Eval print/yellow write: '%s=> (%s)%s' % [(printed either: ' ' or: ''), (Reflect strTypeOf: Eval __eval_ret, ~ 's/\\\\?\\\'//g'), (printed either: '' or: '\n')].
+    Eval statsb: 0, statsa: 0, exectime: 0.
+    Eval getFlag: 'stats', either: {
+      Eval statsb: Broom keptAlloc.
+      Eval exectime: (Clock timeExecutionOf: { Eval __eval_ret: (Eval evaluatorObject evaluate: inp). }).
+      Eval statsa: Broom keptAlloc.
+    }
+      or: {
+      Eval __eval_ret: (Eval evaluatorObject evaluate: inp).
+    }.
+    Eval pushHist: inp.
+    __ is _.
+    _ is Eval __eval_ret.
+    Eval errored? not ifTrue: {
+      var printed is False.
+      Eval getFlag: 'printvs', ifTrue: {
+        Eval print message: Eval color arguments: [], write: var str is Eval __eval_ret toString.
+        printed is str length > 0.
+      }.
       Eval print/resetColor.
+      Eval getFlag: 'ptype', ifTrue: {
+        Eval print/yellow write: '%s=> (%s)%s' % [(printed either: ' ' or: ''), (Reflect strTypeOf: Eval __eval_ret, ~ 's/\\\\?\\\'//g'), (printed either: '' or: '\n')].
+        Eval print/resetColor.
+      }.
+      Eval getFlag: 'stats', ifTrue: {
+        var str is '%s(%s seconds (%d cycles), %s bytes)' % [(printed either: '\n' or: ''), Eval exectime / (Clock ticksPerSecond), Eval exectime, ((Eval statsa - Eval statsb) toString reverse reSplit: '(?<=\\G...)', join: ',', reverse)].
+        Eval print/write: Colors % [str, GREEN_COLOR, ITALIC_EFFECT].
+        printed ifFalse: { Eval print/brk. }.
+      }.
+      it is _.
+      #Broom sweep. #Keep the darn pointers in memory
+      Eval __eval_ret toString length > 0 ifTrue: { Eval display/brk. }.
     }.
-    Eval getFlag: 'stats', ifTrue: {
-      var str is '%s(%s seconds (%d cycles), %s bytes)' % [(printed either: '\n' or: ''), Eval exectime / (Clock ticksPerSecond), Eval exectime, ((Eval statsa - Eval statsb) toString reverse reSplit: '(?<=\\G...)', join: ',', reverse)].
-      Eval print/write: Colors % [str, GREEN_COLOR, ITALIC_EFFECT].
-      printed ifFalse: { Eval print/brk. }.
-    }.
-    it is _.
-    #Broom sweep. #Keep the darn pointers in memory
-    Eval __eval_ret toString length > 0 ifTrue: { Eval display/brk. }.
-  }.
 }).# catch: {:e Eval handleInternalException: e.}).
 
 Eval getFlag: 'startServer', ifTrue: {
   Program new: {:p
-      Program is p.
-      File new: PIDFILE, write: Program pid.
-      p port: Eval port.
-      p serve_ipv4: Eval.
+    Program is p.
+    File new: PIDFILE, write: Program pid.
+    p port: Eval port.
+    p serve_ipv4: Eval.
   }.
 } ifFalse: {
-    Eval repl.
+  Eval repl.
 }.

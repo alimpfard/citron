@@ -14,6 +14,7 @@
 #include <unistd.h>
 
 #include "gc.h"
+#include "bytecode.h"
 
 #define DO_PROFILE 0
 #define CTR_STD_EXTENSION_ENV_NAME "CITRON_EXT_PATH"
@@ -78,6 +79,7 @@ void ctr_cli_welcome(char* invoked_by)
     puts("\t-d | enable debug mode");
     puts("\t-- | read from stdin");
     puts("\t--no-std | launch without the stdlib");
+    puts("\t--vm | run via the bc vm");
     puts("\t--ext | print ext path and exit");
     puts("\t--compact | display no extra data for exceptions");
     puts("\t--initial-mem <value> | set the initial memory limit");
@@ -160,6 +162,8 @@ void ctr_cli_read_args(int argc, char* argv[])
             exit(0);
         } else if (strcmp(argv[0], "--no-std") == 0)
             with_stdlib = 0;
+        else if (strcmp(argv[0], "--vm") == 0)
+            ctr_use_vm = 1;
         else if (strcmp(argv[0], "--initial-mem") == 0) {
             argv++;
             argc--;
@@ -284,8 +288,23 @@ int main(int argc, char* argv[])
 #        endif
         if (debug)
             ctr_internal_debug_tree(program, 1); /*-- for debugging */
-        if (!parse_only)
-            ctr_cwlk_run(program);
+        if (!parse_only) {
+            if (ctr_use_vm) {
+                ctr_proto* top = ctr_bcgen_program(program);
+                if (getenv("CTR_VM_DUMP"))
+                    ctr_proto_dump(top, 0);
+                if (top && top->promotable)
+                    ctr_vm_run_program(top);
+                else {
+                    int saved_use_vm = ctr_use_vm;
+                    ctr_use_vm = 0;
+                    ctr_cwlk_run(program);
+                    ctr_use_vm = saved_use_vm;
+                }
+            } else {
+                ctr_cwlk_run(program);
+            }
+        }
         ctr_gc_sweep(1);
         ctr_heap_free(prg);
         ctr_heap_free_rest();

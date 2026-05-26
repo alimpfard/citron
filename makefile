@@ -56,13 +56,15 @@ ifeq ($(enable_boehm_gc),true)
 	LEXTRACF += $(fv)
 endif
 
+LDFLAGS += -Wl,-rpath,\$$ORIGIN
+
 CFLAGS += -Isrc/lib/
 LEXTRACF += $(LDFLAGS) -flto -lstdc++
 
 OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
 	   lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o \
 	   importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o \
-	   promise.o symbol_cxx.o world.o libsocket.so
+	   promise.o symbol_cxx.o world.o bcgen.o vm.o libsocket.so
 EXTRAOBJS =
 TCC_STATICS = 
 

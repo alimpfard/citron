@@ -24,6 +24,7 @@
 #include "citron.h"
 #include "siphash.h"
 #include "symbol.h"
+#include "bytecode.h"
 
 #ifndef POSIXRE
 #    include "pcre_split.h"
@@ -41,7 +42,17 @@ ctr_internal_run_block(ctr_tnode* codeBlockPart2, ctr_object* myself,
                                      have to store me in self and can't use in if */
     ctr_assign_value_to_local(
         &CTR_CLEX_KW_THIS, myself); /* otherwise running block may get gc'ed. */
-    ctr_object* result = ctr_cwlk_run(codeBlockPart2);
+    ctr_object* result;
+    if (ctr_use_vm) {
+        ctr_proto* p = myself->value.block
+            ? ctr_proto_for_ast(myself->value.block) : NULL;
+        if (p && p->promotable)
+            result = ctr_vm_run_proto(p, my, myself);
+        else
+            result = ctr_cwlk_run(codeBlockPart2);
+    } else {
+        result = ctr_cwlk_run(codeBlockPart2);
+    }
     if (result == NULL) {
         if (my)
             result = my;

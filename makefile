@@ -102,7 +102,7 @@ $(BUILDDIR):
 	mkdir -p $@
 
 $(BUILDDIR)/ctr: $(TCC_STATICS) $(BUILDDIR) $(OBJS) $(EXTRAOBJS)
-	$(CXX) $(EXTRAOBJS) $(OBJS) $(CXXFLAGS) $(CFLAGS) $(LIBS) $(LEXTRACF) -o $@
+	$(CXX) $(EXTRAOBJS) $(OBJS) $(CXXFLAGS) $(CFLAGS) $(LIBS) $(LEXTRACF) $(LDFLAGS) -o $@
 
 ctr: $(BUILDDIR)/ctr
 

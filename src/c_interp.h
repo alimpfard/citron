@@ -47,8 +47,10 @@ int ctr_cinterp_compile_text(ctr_cinterp* interp, char const* source);
 int ctr_cinterp_compile_c(ctr_cinterp* interp, char const* source);
 ctr_cinterp_function* ctr_cinterp_find_function(ctr_cinterp* interp, char const* name);
 int ctr_cinterp_call(ctr_cinterp* interp, char const* name, ctr_cinterp_value* argv, size_t argc, ctr_cinterp_value* ret);
+char const* ctr_cinterp_last_error(ctr_cinterp const* interp);
 int ctr_cinterp_is_function_pointer(void* ptr);
 int ctr_cinterp_call_function_pointer(void* ptr, ctr_cinterp_value* argv, size_t argc, ctr_cinterp_value* ret);
+char const* ctr_cinterp_last_error_for_function_pointer(void* ptr);
 
 ffi_type* ctr_cinterp_ffi_type(ctr_cinterp_type type);
 size_t ctr_cinterp_type_size(ctr_cinterp_type type);

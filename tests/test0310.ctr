@@ -1,0 +1,6 @@
+var ctx is CInterpreter new.
+{
+    ctx compile: 'void nope() { missing_symbol(1); }'.
+} catch: {:e
+    Pen writeln: e.
+}, run.

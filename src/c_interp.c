@@ -64,6 +64,7 @@ typedef struct ctr_cinterp_instr {
     int a;
     int b;
     char* name;
+    ctr_cinterp_type* arg_types;
 } ctr_cinterp_instr;
 
 struct ctr_cinterp_function {
@@ -86,6 +87,7 @@ typedef struct ctr_cinterp_external {
     ctr_cinterp_type ret_type;
     ctr_cinterp_type* arg_types;
     size_t argc;
+    int variadic;
     ffi_cif cif;
     ffi_type** ffi_arg_types;
     int cif_ready;
@@ -139,6 +141,7 @@ struct ctr_cinterp {
     size_t library_handle_cap;
     ctr_cinterp_error_fn error_fn;
     void* error_userdata;
+    char* last_error;
 };
 
 static char* ci_strdup(char const* s)
@@ -159,8 +162,20 @@ static void ci_error(ctr_cinterp* interp, char const* fmt, ...)
     va_start(ap, fmt);
     vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
-    if (interp && interp->error_fn)
-        interp->error_fn(interp->error_userdata, buf);
+    if (interp) {
+        free(interp->last_error);
+        interp->last_error = ci_strdup(buf);
+        if (interp->error_fn)
+            interp->error_fn(interp->error_userdata, buf);
+    }
+}
+
+static void ci_clear_error(ctr_cinterp* interp)
+{
+    if (!interp)
+        return;
+    free(interp->last_error);
+    interp->last_error = NULL;
 }
 
 static int ci_grow(void** ptr, size_t* cap, size_t count, size_t elem_size)
@@ -276,8 +291,10 @@ static void ci_free_function(ctr_cinterp_function* fn)
     if (!fn)
         return;
     free(fn->name);
-    for (size_t i = 0; i < fn->code_count; i++)
+    for (size_t i = 0; i < fn->code_count; i++) {
         free(fn->code[i].name);
+        free(fn->code[i].arg_types);
+    }
     free(fn->code);
 }
 
@@ -323,6 +340,7 @@ void ctr_cinterp_free(ctr_cinterp* interp)
     free(interp->ctypes);
     free(interp->library_paths);
     free(interp->library_handles);
+    free(interp->last_error);
     free(interp);
 }
 
@@ -357,7 +375,7 @@ static ctr_cinterp_external* ci_find_external(ctr_cinterp* interp, char const* n
     return NULL;
 }
 
-static ctr_cinterp_external* ci_add_external(ctr_cinterp* interp, char const* name, ctr_cinterp_type ret_type, ctr_cinterp_type* arg_types, size_t argc)
+static ctr_cinterp_external* ci_add_external_ex(ctr_cinterp* interp, char const* name, ctr_cinterp_type ret_type, ctr_cinterp_type* arg_types, size_t argc, int variadic)
 {
     ctr_cinterp_external* ext = ci_find_external(interp, name);
     if (!ext) {
@@ -374,6 +392,7 @@ static ctr_cinterp_external* ci_add_external(ctr_cinterp* interp, char const* na
     }
     ext->ret_type = ret_type;
     ext->argc = argc;
+    ext->variadic = variadic;
     ext->arg_types = calloc(argc ? argc : 1, sizeof(ctr_cinterp_type));
     if (!ext->arg_types)
         return NULL;
@@ -381,6 +400,11 @@ static ctr_cinterp_external* ci_add_external(ctr_cinterp* interp, char const* na
         memcpy(ext->arg_types, arg_types, argc * sizeof(ctr_cinterp_type));
     ext->ptr = dlsym(RTLD_DEFAULT, name);
     return ext;
+}
+
+static ctr_cinterp_external* ci_add_external(ctr_cinterp* interp, char const* name, ctr_cinterp_type ret_type, ctr_cinterp_type* arg_types, size_t argc)
+{
+    return ci_add_external_ex(interp, name, ret_type, arg_types, argc, 0);
 }
 
 static ctr_cinterp_global* ci_find_global(ctr_cinterp* interp, char const* name)
@@ -672,6 +696,8 @@ int ctr_cinterp_link_library(ctr_cinterp* interp, char const* name)
 
 static int ci_prepare_cif(ctr_cinterp_external* ext)
 {
+    if (ext->variadic)
+        return 0;
     if (ext->cif_ready)
         return 1;
     ext->ffi_arg_types = calloc(ext->argc ? ext->argc : 1, sizeof(ffi_type*));
@@ -682,6 +708,34 @@ static int ci_prepare_cif(ctr_cinterp_external* ext)
     ffi_status status = ffi_prep_cif(&ext->cif, FFI_DEFAULT_ABI, ext->argc, ctr_cinterp_ffi_type(ext->ret_type), ext->ffi_arg_types);
     ext->cif_ready = status == FFI_OK;
     return ext->cif_ready;
+}
+
+static int ci_prepare_call_cif(ctr_cinterp_external* ext, ffi_cif* cif, ffi_type*** ffi_arg_types_out, ctr_cinterp_type* call_arg_types, size_t call_argc)
+{
+    if (!ext->variadic) {
+        if (call_argc != ext->argc)
+            return 0;
+        *ffi_arg_types_out = NULL;
+        return ci_prepare_cif(ext);
+    }
+    if (call_argc < ext->argc)
+        return 0;
+    ffi_type** ffi_arg_types = calloc(call_argc ? call_argc : 1, sizeof(ffi_type*));
+    if (!ffi_arg_types)
+        return 0;
+    for (size_t i = 0; i < call_argc; i++) {
+        ctr_cinterp_type type = i < ext->argc ? ext->arg_types[i] : call_arg_types[i];
+        if (type == CTR_CINTERP_T_F32)
+            type = CTR_CINTERP_T_F64;
+        ffi_arg_types[i] = ctr_cinterp_ffi_type(type);
+    }
+    ffi_status status = ffi_prep_cif_var(cif, FFI_DEFAULT_ABI, ext->argc, call_argc, ctr_cinterp_ffi_type(ext->ret_type), ffi_arg_types);
+    if (status != FFI_OK) {
+        free(ffi_arg_types);
+        return 0;
+    }
+    *ffi_arg_types_out = ffi_arg_types;
+    return 1;
 }
 
 static char* ci_read_file(char const* path)
@@ -709,20 +763,87 @@ static char* ci_read_file(char const* path)
 
 static char* ci_trim(char* s);
 static void ci_collect_typedefs(ctr_cinterp* interp, char const* source);
+static void ci_collect_function_declarations(ctr_cinterp* interp, char const* source);
 
-static int ci_is_identifier_token(char const* value)
+static int ci_append_text(char* out, size_t out_size, size_t* pos, char const* text, size_t text_len)
 {
-    if (!value || !(isalpha((unsigned char)value[0]) || value[0] == '_'))
+    if (*pos + text_len >= out_size)
         return 0;
-    for (size_t i = 1; value[i]; i++) {
-        if (!(isalnum((unsigned char)value[i]) || value[i] == '_'))
-            return 0;
+    memcpy(out + *pos, text, text_len);
+    *pos += text_len;
+    out[*pos] = 0;
+    return 1;
+}
+
+static int ci_split_macro_list(char* text, char** items, size_t* count, size_t max_count)
+{
+    *count = 0;
+    int depth = 0;
+    char* start = text;
+    for (char* p = text;; p++) {
+        if (*p == '(')
+            depth++;
+        else if (*p == ')' && depth > 0)
+            depth--;
+        if ((*p == ',' && depth == 0) || *p == 0) {
+            if (*count >= max_count)
+                return 0;
+            char saved = *p;
+            *p = 0;
+            items[(*count)++] = ci_trim(start);
+            if (!saved)
+                break;
+            start = p + 1;
+        }
     }
     return 1;
 }
 
-static int ci_substitute_macro_param(char const* body, char const* param, char const* arg, char* out, size_t out_size)
+static int ci_find_macro_arg(char const* name, size_t name_len, char** params, char** args, size_t count, char const** value, size_t* value_len)
 {
+    for (size_t i = 0; i < count; i++) {
+        if (strlen(params[i]) == name_len && strncmp(params[i], name, name_len) == 0) {
+            *value = args[i];
+            *value_len = strlen(args[i]);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static void ci_collapse_token_paste(char* text)
+{
+    char* r = text;
+    char* w = text;
+    while (*r) {
+        if (r[0] == '#' && r[1] == '#') {
+            while (w > text && isspace((unsigned char)w[-1]))
+                w--;
+            r += 2;
+            while (isspace((unsigned char)*r))
+                r++;
+            continue;
+        }
+        *w++ = *r++;
+    }
+    *w = 0;
+}
+
+static int ci_substitute_macro_params(ctr_cinterp* interp, char const* body, char const* param_list, char const* arg_list, char* out, size_t out_size)
+{
+    char params_copy[2048];
+    char args_copy[4096];
+    snprintf(params_copy, sizeof(params_copy), "%s", param_list ? param_list : "");
+    snprintf(args_copy, sizeof(args_copy), "%s", arg_list ? arg_list : "");
+    char* params[64];
+    char* args[64];
+    size_t param_count = 0;
+    size_t arg_count = 0;
+    if (!ci_split_macro_list(params_copy, params, &param_count, 64)
+        || !ci_split_macro_list(args_copy, args, &arg_count, 64)
+        || param_count != arg_count)
+        return 0;
+
     size_t pos = 0;
     for (size_t i = 0; body[i];) {
         if (isalpha((unsigned char)body[i]) || body[i] == '_') {
@@ -732,21 +853,33 @@ static int ci_substitute_macro_param(char const* body, char const* param, char c
             size_t len = i - start;
             char const* text = body + start;
             size_t text_len = len;
-            if (strlen(param) == len && strncmp(text, param, len) == 0) {
-                text = arg;
-                text_len = strlen(arg);
+            char const* arg_value = NULL;
+            size_t arg_value_len = 0;
+            if (ci_find_macro_arg(text, len, params, args, param_count, &arg_value, &arg_value_len)) {
+                text = arg_value;
+                text_len = arg_value_len;
+            } else {
+                char name[256];
+                if (len < sizeof(name)) {
+                    memcpy(name, text, len);
+                    name[len] = 0;
+                    char const* macro_value = ci_find_macro(interp, name);
+                    if (macro_value) {
+                        text = macro_value;
+                        text_len = strlen(macro_value);
+                    }
+                }
             }
-            if (pos + text_len >= out_size)
+            if (!ci_append_text(out, out_size, &pos, text, text_len))
                 return 0;
-            memcpy(out + pos, text, text_len);
-            pos += text_len;
             continue;
         }
-        if (pos + 1 >= out_size)
+        if (!ci_append_text(out, out_size, &pos, body + i, 1))
             return 0;
-        out[pos++] = body[i++];
+        i++;
     }
     out[pos] = 0;
+    ci_collapse_token_paste(out);
     return 1;
 }
 
@@ -754,44 +887,124 @@ static int ci_expand_macro_text(ctr_cinterp* interp, char const* text, char* out
 {
     if (depth > 32)
         return 0;
-    char work[4096];
+    char work[16384];
     snprintf(work, sizeof(work), "%s", text ? text : "");
     char* trimmed = ci_trim(work);
-    if (ci_is_identifier_token(trimmed)) {
-        char const* value = ci_find_macro(interp, trimmed);
-        if (value)
-            return ci_expand_macro_text(interp, value, out, out_size, depth + 1);
-        snprintf(out, out_size, "%s", trimmed);
-        return 1;
-    }
 
-    char* open = strchr(trimmed, '(');
-    if (open) {
+    for (char* scan = trimmed; *scan; scan++) {
+        if (!(isalpha((unsigned char)*scan) || *scan == '_'))
+            continue;
+        char* name_start = scan;
+        scan++;
+        while (isalnum((unsigned char)*scan) || *scan == '_')
+            scan++;
+        size_t name_len = (size_t)(scan - name_start);
         char macro_name[256];
-        size_t name_len = (size_t)(open - trimmed);
-        while (name_len > 0 && isspace((unsigned char)trimmed[name_len - 1]))
-            name_len--;
-        if (name_len > 0 && name_len < sizeof(macro_name)) {
-            memcpy(macro_name, trimmed, name_len);
-            macro_name[name_len] = 0;
-            if (ci_is_identifier_token(macro_name)) {
-                ctr_cinterp_macro* macro = ci_find_macro_entry(interp, macro_name);
-                if (macro && macro->function_like && macro->param) {
-                    char* close = strrchr(open + 1, ')');
-                    if (close) {
-                        *close = 0;
-                        char* arg = ci_trim(open + 1);
-                        char substituted[4096];
-                        if (ci_substitute_macro_param(macro->value, macro->param, arg, substituted, sizeof(substituted)))
-                            return ci_expand_macro_text(interp, substituted, out, out_size, depth + 1);
-                    }
-                }
-            }
+        if (name_len >= sizeof(macro_name))
+            continue;
+        memcpy(macro_name, name_start, name_len);
+        macro_name[name_len] = 0;
+
+        ctr_cinterp_macro* macro = ci_find_macro_entry(interp, macro_name);
+        if (!macro)
+            continue;
+
+        if (!macro->function_like) {
+            char replaced[16384] = "";
+            size_t pos = 0;
+            if (!ci_append_text(replaced, sizeof(replaced), &pos, trimmed, (size_t)(name_start - trimmed))
+                || !ci_append_text(replaced, sizeof(replaced), &pos, macro->value, strlen(macro->value))
+                || !ci_append_text(replaced, sizeof(replaced), &pos, scan, strlen(scan)))
+                return 0;
+            return ci_expand_macro_text(interp, replaced, out, out_size, depth + 1);
+        }
+
+        char* open = scan;
+        while (isspace((unsigned char)*open))
+            open++;
+        if (*open != '(')
+            continue;
+        int paren_depth = 1;
+        char* close = open + 1;
+        while (*close && paren_depth) {
+            if (*close == '(')
+                paren_depth++;
+            else if (*close == ')')
+                paren_depth--;
+            close++;
+        }
+        if (paren_depth)
+            continue;
+        close--;
+        char saved = *close;
+        *close = 0;
+        char* args = open + 1;
+        char substituted[16384];
+        int ok = ci_substitute_macro_params(interp, macro->value, macro->param, args, substituted, sizeof(substituted));
+        *close = saved;
+        if (ok) {
+            char replaced[16384] = "";
+            size_t pos = 0;
+            if (!ci_append_text(replaced, sizeof(replaced), &pos, trimmed, (size_t)(name_start - trimmed))
+                || !ci_append_text(replaced, sizeof(replaced), &pos, substituted, strlen(substituted))
+                || !ci_append_text(replaced, sizeof(replaced), &pos, close + 1, strlen(close + 1)))
+                return 0;
+            return ci_expand_macro_text(interp, replaced, out, out_size, depth + 1);
         }
     }
 
     snprintf(out, out_size, "%s", trimmed);
     return 1;
+}
+
+static char* ci_join_line_continuations(char const* source)
+{
+    size_t len = strlen(source);
+    char* out = malloc(len + 1);
+    if (!out)
+        return NULL;
+    size_t pos = 0;
+    for (size_t i = 0; source[i]; i++) {
+        if (source[i] == '\\' && source[i + 1] == '\n') {
+            i++;
+            continue;
+        }
+        out[pos++] = source[i];
+    }
+    out[pos] = 0;
+    return out;
+}
+
+static int ci_parse_directive(char* s, char** directive, char** rest)
+{
+    s = ci_trim(s);
+    if (*s != '#')
+        return 0;
+    s++;
+    while (isspace((unsigned char)*s))
+        s++;
+    *directive = s;
+    while (*s && !isspace((unsigned char)*s))
+        s++;
+    if (*s)
+        *s++ = 0;
+    *rest = ci_trim(s);
+    return **directive != 0;
+}
+
+static void ci_remove_macro(ctr_cinterp* interp, char const* name)
+{
+    for (size_t i = 0; i < interp->macro_count; i++) {
+        if (strcmp(interp->macros[i].name, name) == 0) {
+            free(interp->macros[i].name);
+            free(interp->macros[i].value);
+            free(interp->macros[i].param);
+            memmove(&interp->macros[i], &interp->macros[i + 1],
+                (interp->macro_count - i - 1) * sizeof(interp->macros[i]));
+            interp->macro_count--;
+            return;
+        }
+    }
 }
 
 static char const* ci_expand_macro(ctr_cinterp* interp, char const* name, char* out, size_t out_size)
@@ -808,12 +1021,16 @@ static void ci_preprocess_directives(ctr_cinterp* interp, char const* source, in
 {
     if (depth > 16)
         return;
-    char* copy = ci_strdup(source);
+    char* copy = ci_join_line_continuations(source);
+    if (!copy)
+        return;
     char* saveptr = NULL;
     for (char* line = strtok_r(copy, "\n", &saveptr); line; line = strtok_r(NULL, "\n", &saveptr)) {
         char* s = ci_trim(line);
-        if (strncmp(s, "#define", 7) == 0 && isspace((unsigned char)s[7])) {
-            s = ci_trim(s + 7);
+        char* directive = NULL;
+        char* rest = NULL;
+        if (ci_parse_directive(s, &directive, &rest) && strcmp(directive, "define") == 0) {
+            s = rest;
             char* name = s;
             while (*s && !isspace((unsigned char)*s) && *s != '(')
                 s++;
@@ -833,9 +1050,10 @@ static void ci_preprocess_directives(ctr_cinterp* interp, char const* source, in
                 ci_set_macro(interp, name, expanded ? expanded : value);
             }
             *s = saved;
-        } else if ((strncmp(s, "#include", 8) == 0 && isspace((unsigned char)s[8]))
-            || (strncmp(s, "#include_next", 13) == 0 && isspace((unsigned char)s[13]))) {
-            s = ci_trim(s + (s[8] == '_' ? 13 : 8));
+        } else if (directive && strcmp(directive, "undef") == 0) {
+            ci_remove_macro(interp, rest);
+        } else if (directive && (strcmp(directive, "include") == 0 || strcmp(directive, "include_next") == 0)) {
+            s = rest;
             char end = *s == '<' ? '>' : *s == '"' ? '"' : 0;
             if (!end)
                 continue;
@@ -856,9 +1074,14 @@ static void ci_preprocess_directives(ctr_cinterp* interp, char const* source, in
                 contents = ci_read_file((snprintf(full, sizeof(full), "/usr/include/%s", s), full));
             if (contents) {
                 ci_collect_typedefs(interp, contents);
+                ci_collect_function_declarations(interp, contents);
                 ci_preprocess_directives(interp, contents, depth + 1);
                 free(contents);
             }
+        } else if (!directive && strchr(s, '(') && strchr(s, ')')) {
+            char expanded[16384];
+            if (ci_expand_macro_text(interp, s, expanded, sizeof(expanded), 0))
+                ci_collect_function_declarations(interp, expanded);
         }
     }
     free(copy);
@@ -978,31 +1201,6 @@ static void ci_collect_typedefs(ctr_cinterp* interp, char const* source)
         *alias = saved;
     }
     free(copy);
-}
-
-static int ci_builtin_signature(char const* name, ctr_cinterp_type* ret_type, ctr_cinterp_type* arg_types, size_t* argc)
-{
-    if (strcmp(name, "atof") == 0) {
-        *ret_type = CTR_CINTERP_T_F64;
-        arg_types[0] = CTR_CINTERP_T_PTR;
-        *argc = 1;
-        return 1;
-    }
-    if (strcmp(name, "fmaxf") == 0 || strcmp(name, "fminf") == 0) {
-        *ret_type = CTR_CINTERP_T_F32;
-        arg_types[0] = CTR_CINTERP_T_F32;
-        arg_types[1] = CTR_CINTERP_T_F32;
-        *argc = 2;
-        return 1;
-    }
-    if (strcmp(name, "fmax") == 0 || strcmp(name, "fmin") == 0) {
-        *ret_type = CTR_CINTERP_T_F64;
-        arg_types[0] = CTR_CINTERP_T_F64;
-        arg_types[1] = CTR_CINTERP_T_F64;
-        *argc = 2;
-        return 1;
-    }
-    return 0;
 }
 
 static ctr_object* ci_make_cif_object(ctr_cinterp_type ret_type, ctr_cinterp_type* arg_types, size_t argc)
@@ -1409,6 +1607,7 @@ typedef struct ci_cparser {
     size_t var_count;
     size_t var_cap;
     int string_id;
+    ctr_cinterp_type last_type;
     int ok;
 } ci_cparser;
 
@@ -1562,6 +1761,11 @@ static int ci_lex_c(ctr_cinterp* interp, char const* source, ci_ctok** out, size
                 goto oom;
             continue;
         }
+        if (p[0] == '.' && p[1] == '.' && p[2] == '.') {
+            tok.kind = CI_CTOK_PUNCT;
+            tok.text = ci_strdup("...");
+            p += 3;
+        } else {
         char two[3] = { p[0], p[1], 0 };
         if (strcmp(two, "==") == 0 || strcmp(two, "!=") == 0 || strcmp(two, "<=") == 0 || strcmp(two, ">=") == 0 || strcmp(two, "&&") == 0 || strcmp(two, "||") == 0 || strcmp(two, "<<") == 0 || strcmp(two, ">>") == 0) {
             tok.kind = CI_CTOK_PUNCT;
@@ -1571,6 +1775,7 @@ static int ci_lex_c(ctr_cinterp* interp, char const* source, ci_ctok** out, size
             char one[2] = { *p++, 0 };
             tok.kind = CI_CTOK_PUNCT;
             tok.text = ci_strdup(one);
+        }
         }
         if (!ci_tok_push(&toks, &count, &cap, tok))
             goto oom;
@@ -1726,6 +1931,128 @@ static int cp_parse_type(ci_cparser* p, ctr_cinterp_type* out, int* storage_exte
     return 1;
 }
 
+static int ci_token_can_start_decl(ci_ctok* tok)
+{
+    switch (tok->kind) {
+    case CI_CTOK_EXTERN:
+    case CI_CTOK_STATIC:
+    case CI_CTOK_CONST:
+    case CI_CTOK_INT:
+    case CI_CTOK_LONG:
+    case CI_CTOK_SHORT:
+    case CI_CTOK_CHAR:
+    case CI_CTOK_VOID:
+    case CI_CTOK_FLOAT:
+    case CI_CTOK_DOUBLE:
+    case CI_CTOK_UNSIGNED:
+    case CI_CTOK_SIGNED:
+    case CI_CTOK_STRUCT:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+static int ci_collect_one_function_declaration(ctr_cinterp* interp, char const* decl)
+{
+    if (strstr(decl, "typedef") || strstr(decl, "(*"))
+        return 0;
+
+    ci_ctok* toks = NULL;
+    size_t count = 0;
+    if (!ci_lex_c(interp, decl, &toks, &count))
+        return 0;
+
+    ci_cparser p;
+    memset(&p, 0, sizeof(p));
+    p.interp = interp;
+    p.toks = toks;
+    p.count = count;
+    p.ok = 1;
+
+    if (!ci_token_can_start_decl(cp_peek(&p))) {
+        ci_free_tokens(toks, count);
+        return 0;
+    }
+
+    int storage_extern = 0;
+    ctr_cinterp_type ret_type;
+    if (!cp_parse_type(&p, &ret_type, &storage_extern) || !p.ok) {
+        ci_free_tokens(toks, count);
+        return 0;
+    }
+    if (cp_peek(&p)->kind != CI_CTOK_IDENT) {
+        ci_free_tokens(toks, count);
+        return 0;
+    }
+    char* name = ci_strdup(cp_peek(&p)->text);
+    p.pos++;
+    if (!cp_match_punct(&p, "(")) {
+        free(name);
+        ci_free_tokens(toks, count);
+        return 0;
+    }
+
+    ctr_cinterp_type arg_types[128];
+    size_t argc = 0;
+    int variadic = 0;
+    if (!cp_is_punct(&p, ")")) {
+        do {
+            if (cp_match_punct(&p, "...")) {
+                variadic = 1;
+                break;
+            }
+            if (cp_peek(&p)->kind == CI_CTOK_VOID && p.toks[p.pos + 1].kind == CI_CTOK_PUNCT && strcmp(p.toks[p.pos + 1].text, ")") == 0) {
+                p.pos++;
+                break;
+            }
+            if (argc >= 128) {
+                p.ok = 0;
+                break;
+            }
+            int ignored_storage = 0;
+            if (!cp_parse_type(&p, &arg_types[argc], &ignored_storage) || !p.ok)
+                break;
+            while (cp_peek(&p)->kind == CI_CTOK_IDENT || cp_is_punct(&p, "*"))
+                p.pos++;
+            while (cp_match_punct(&p, "[")) {
+                while (!cp_is_punct(&p, "]") && cp_peek(&p)->kind != CI_CTOK_EOF)
+                    p.pos++;
+                cp_match_punct(&p, "]");
+                arg_types[argc] = CTR_CINTERP_T_PTR;
+            }
+            argc++;
+        } while (cp_match_punct(&p, ","));
+    }
+
+    int ok = p.ok && cp_match_punct(&p, ")");
+    if (ok)
+        ci_add_external_ex(interp, name, ret_type, arg_types, argc, variadic);
+    free(name);
+    ci_free_tokens(toks, count);
+    return ok;
+}
+
+static void ci_collect_function_declarations(ctr_cinterp* interp, char const* source)
+{
+    char* copy = ci_strdup(source);
+    if (!copy)
+        return;
+    char* start = copy;
+    for (char* p = copy; *p; p++) {
+        if (*p != ';')
+            continue;
+        char saved = p[1];
+        p[1] = 0;
+        char* decl = ci_trim(start);
+        if (strchr(decl, '(') && strchr(decl, ')'))
+            ci_collect_one_function_declaration(interp, decl);
+        p[1] = saved;
+        start = p + 1;
+    }
+    free(copy);
+}
+
 static int cp_emit(ci_cparser* p, ctr_cinterp_instr ins)
 {
     if (!p->fn) {
@@ -1804,6 +2131,17 @@ static void cp_emit_store_var(ci_cparser* p, ci_cvar* var)
         cp_emit(p, ins);
 }
 
+static ctr_cinterp_type ci_promote_binary_type(ctr_cinterp_type a, ctr_cinterp_type b)
+{
+    if (a == CTR_CINTERP_T_F64 || b == CTR_CINTERP_T_F64)
+        return CTR_CINTERP_T_F64;
+    if (a == CTR_CINTERP_T_F32 || b == CTR_CINTERP_T_F32)
+        return CTR_CINTERP_T_F32;
+    if (a == CTR_CINTERP_T_PTR || b == CTR_CINTERP_T_PTR)
+        return CTR_CINTERP_T_PTR;
+    return CTR_CINTERP_T_I64;
+}
+
 static int cp_add_string_global(ci_cparser* p, char const* value)
 {
     char name[64];
@@ -1839,41 +2177,72 @@ static void cp_parse_primary(ci_cparser* p)
         ins.type = CTR_CINTERP_T_I64;
         ins.imm.i = p->toks[p->pos++].num;
         cp_emit(p, ins);
+        p->last_type = CTR_CINTERP_T_I64;
         return;
     }
     if (cp_peek(p)->kind == CI_CTOK_STR) {
         cp_add_string_global(p, p->toks[p->pos++].text);
+        p->last_type = CTR_CINTERP_T_PTR;
         return;
     }
     if (cp_peek(p)->kind == CI_CTOK_IDENT) {
         char* name = ci_strdup(cp_peek(p)->text);
         p->pos++;
         if (cp_match_punct(p, "(")) {
+            ctr_cinterp_type arg_types[128];
             size_t argc = 0;
             if (!cp_is_punct(p, ")")) {
                 do {
+                    if (argc >= 128) {
+                        cp_error(p, "too many function call arguments");
+                        break;
+                    }
                     cp_parse_expr(p);
+                    arg_types[argc] = p->last_type;
                     argc++;
                 } while (cp_match_punct(p, ","));
             }
             cp_expect_punct(p, ")");
             ctr_cinterp_instr ins;
             memset(&ins, 0, sizeof(ins));
-            ins.op = ctr_cinterp_find_function(p->interp, name) ? CI_OP_CALL : CI_OP_CALL_EXT;
+            ctr_cinterp_function* fn = ctr_cinterp_find_function(p->interp, name);
+            ctr_cinterp_external* ext = ci_find_external(p->interp, name);
+            if (fn) {
+                ins.op = CI_OP_CALL;
+                p->last_type = fn->ret_type;
+            } else if (ext) {
+                ins.op = CI_OP_CALL_EXT;
+                p->last_type = ext->ret_type;
+            } else {
+                cp_error(p, "call to unknown C function `%s' (include or declare it first)", name);
+                free(name);
+                return;
+            }
             ins.name = name;
             ins.a = (int)argc;
+            if (argc) {
+                ins.arg_types = calloc(argc, sizeof(ctr_cinterp_type));
+                if (!ins.arg_types) {
+                    cp_error(p, "out of memory recording call argument types");
+                    free(name);
+                    return;
+                }
+                memcpy(ins.arg_types, arg_types, argc * sizeof(ctr_cinterp_type));
+            }
             cp_emit(p, ins);
             return;
         }
         ci_cvar* var = cp_find_var(p, name);
-        if (var)
+        if (var) {
             cp_emit_load_var(p, var);
-        else {
+            p->last_type = var->type;
+        } else {
             ctr_cinterp_instr ins;
             memset(&ins, 0, sizeof(ins));
             ins.op = CI_OP_GLOBAL_ADDR;
             ins.name = name;
             cp_emit(p, ins);
+            p->last_type = CTR_CINTERP_T_PTR;
             return;
         }
         free(name);
@@ -1896,6 +2265,7 @@ static void cp_parse_unary(ci_cparser* p)
             ins.op = CI_OP_CAST;
             ins.type = cast_type;
             cp_emit(p, ins);
+            p->last_type = cast_type;
             return;
         }
         p->pos = save;
@@ -1913,6 +2283,7 @@ static void cp_parse_unary(ci_cparser* p)
         cp_emit(p, zero);
         ctr_cinterp_instr eq = { .op = CI_OP_EQ };
         cp_emit(p, eq);
+        p->last_type = CTR_CINTERP_T_I64;
     } else if (cp_match_punct(p, "&")) {
         if (cp_peek(p)->kind != CI_CTOK_IDENT) {
             cp_error(p, "address-of currently expects a local/global name");
@@ -1929,6 +2300,7 @@ static void cp_parse_unary(ci_cparser* p)
             ins.op = CI_OP_GLOBAL_ADDR;
             ins.name = name;
             cp_emit(p, ins);
+            p->last_type = CTR_CINTERP_T_PTR;
             return;
         }
         free(name);
@@ -1936,6 +2308,7 @@ static void cp_parse_unary(ci_cparser* p)
         cp_parse_unary(p);
         ctr_cinterp_instr ins = { .op = CI_OP_LOAD, .type = CTR_CINTERP_T_I64 };
         cp_emit(p, ins);
+        p->last_type = CTR_CINTERP_T_I64;
     } else {
         cp_parse_primary(p);
     }
@@ -1945,14 +2318,17 @@ static void cp_parse_mul(ci_cparser* p)
 {
     cp_parse_unary(p);
     while (cp_is_punct(p, "*") || cp_is_punct(p, "/") || cp_is_punct(p, "%")) {
+        ctr_cinterp_type lhs_type = p->last_type;
         char op = cp_peek(p)->text[0];
         p->pos++;
         cp_parse_unary(p);
+        ctr_cinterp_type rhs_type = p->last_type;
         ctr_cinterp_instr ins;
         memset(&ins, 0, sizeof(ins));
         ins.op = op == '*' ? CI_OP_MUL : op == '/' ? CI_OP_DIV
                                                    : CI_OP_MOD;
         cp_emit(p, ins);
+        p->last_type = op == '%' ? CTR_CINTERP_T_I64 : ci_promote_binary_type(lhs_type, rhs_type);
     }
 }
 
@@ -1960,13 +2336,16 @@ static void cp_parse_add(ci_cparser* p)
 {
     cp_parse_mul(p);
     while (cp_is_punct(p, "+") || cp_is_punct(p, "-")) {
+        ctr_cinterp_type lhs_type = p->last_type;
         char op = cp_peek(p)->text[0];
         p->pos++;
         cp_parse_mul(p);
+        ctr_cinterp_type rhs_type = p->last_type;
         ctr_cinterp_instr ins;
         memset(&ins, 0, sizeof(ins));
         ins.op = op == '+' ? CI_OP_ADD : CI_OP_SUB;
         cp_emit(p, ins);
+        p->last_type = ci_promote_binary_type(lhs_type, rhs_type);
     }
 }
 
@@ -1979,6 +2358,7 @@ static void cp_parse_shift(ci_cparser* p)
         cp_parse_add(p);
         ctr_cinterp_instr ins = { .op = left ? CI_OP_SHL : CI_OP_SHR };
         cp_emit(p, ins);
+        p->last_type = CTR_CINTERP_T_I64;
     }
 }
 
@@ -1995,6 +2375,7 @@ static void cp_parse_rel(ci_cparser* p)
             : strcmp(op, ">") == 0                                       ? CI_OP_GT
                                                                          : CI_OP_GE;
         cp_emit(p, ins);
+        p->last_type = CTR_CINTERP_T_I64;
     }
 }
 
@@ -2007,6 +2388,7 @@ static void cp_parse_eq(ci_cparser* p)
         cp_parse_rel(p);
         ctr_cinterp_instr ins = { .op = eq ? CI_OP_EQ : CI_OP_NE };
         cp_emit(p, ins);
+        p->last_type = CTR_CINTERP_T_I64;
     }
 }
 
@@ -2017,6 +2399,7 @@ static void cp_parse_bitand(ci_cparser* p)
         cp_parse_eq(p);
         ctr_cinterp_instr ins = { .op = CI_OP_AND };
         cp_emit(p, ins);
+        p->last_type = CTR_CINTERP_T_I64;
     }
 }
 
@@ -2027,6 +2410,7 @@ static void cp_parse_bitxor(ci_cparser* p)
         cp_parse_bitand(p);
         ctr_cinterp_instr ins = { .op = CI_OP_XOR };
         cp_emit(p, ins);
+        p->last_type = CTR_CINTERP_T_I64;
     }
 }
 
@@ -2037,6 +2421,7 @@ static void cp_parse_bitor(ci_cparser* p)
         cp_parse_bitxor(p);
         ctr_cinterp_instr ins = { .op = CI_OP_OR };
         cp_emit(p, ins);
+        p->last_type = CTR_CINTERP_T_I64;
     }
 }
 
@@ -2047,6 +2432,7 @@ static void cp_parse_logand(ci_cparser* p)
         cp_parse_bitor(p);
         ctr_cinterp_instr ins = { .op = CI_OP_AND };
         cp_emit(p, ins);
+        p->last_type = CTR_CINTERP_T_I64;
     }
 }
 
@@ -2057,6 +2443,7 @@ static void cp_parse_logor(ci_cparser* p)
         cp_parse_logand(p);
         ctr_cinterp_instr ins = { .op = CI_OP_OR };
         cp_emit(p, ins);
+        p->last_type = CTR_CINTERP_T_I64;
     }
 }
 
@@ -2316,9 +2703,14 @@ static int cp_parse_toplevel(ci_cparser* p)
     ctr_cinterp_type arg_types[128];
     char* arg_names[128];
     size_t argc = 0;
+    int variadic = 0;
     memset(arg_names, 0, sizeof(arg_names));
     if (!cp_is_punct(p, ")")) {
         do {
+            if (cp_match_punct(p, "...")) {
+                variadic = 1;
+                break;
+            }
             if (cp_peek(p)->kind == CI_CTOK_VOID && p->toks[p->pos + 1].kind == CI_CTOK_PUNCT && strcmp(p->toks[p->pos + 1].text, ")") == 0) {
                 p->pos++;
                 break;
@@ -2339,11 +2731,18 @@ static int cp_parse_toplevel(ci_cparser* p)
     }
     cp_expect_punct(p, ")");
     if (cp_match_punct(p, ";")) {
-        ci_add_external(p->interp, name, ret_type, arg_types, argc);
+        ci_add_external_ex(p->interp, name, ret_type, arg_types, argc, variadic);
         for (size_t i = 0; i < argc; i++)
             free(arg_names[i]);
         free(name);
         return p->ok;
+    }
+    if (variadic) {
+        cp_error(p, "interpreted C function definitions cannot be variadic");
+        for (size_t i = 0; i < argc; i++)
+            free(arg_names[i]);
+        free(name);
+        return 0;
     }
     if (!ci_grow((void**)&p->interp->functions, &p->interp->function_cap, p->interp->function_count, sizeof(ctr_cinterp_function))) {
         free(name);
@@ -2425,7 +2824,7 @@ static ctr_cinterp_value ci_cast_value(ctr_cinterp_value v, ctr_cinterp_type typ
 
 static int ci_call_function(ctr_cinterp* interp, ctr_cinterp_function* fn, ctr_cinterp_value* argv, size_t argc, ctr_cinterp_value* ret, unsigned depth);
 
-static int ci_call_external(ctr_cinterp* interp, ctr_cinterp_external* ext, ctr_cinterp_value* args, ctr_cinterp_value* ret)
+static int ci_call_external(ctr_cinterp* interp, ctr_cinterp_external* ext, ctr_cinterp_value* args, size_t argc, ctr_cinterp_type* arg_types, ctr_cinterp_value* ret)
 {
     if (!ext->ptr)
         ext->ptr = dlsym(RTLD_DEFAULT, ext->name);
@@ -2433,24 +2832,42 @@ static int ci_call_external(ctr_cinterp* interp, ctr_cinterp_external* ext, ctr_
         ci_error(interp, "External symbol `%s' is not linked", ext->name);
         return 0;
     }
-    if (!ci_prepare_cif(ext)) {
+    if ((!ext->variadic && argc != ext->argc) || (ext->variadic && argc < ext->argc)) {
+        ci_error(interp, "Bad call to external `%s': expected %s%zu argument(s), got %zu", ext->name, ext->variadic ? "at least " : "", ext->argc, argc);
+        return 0;
+    }
+    ffi_cif var_cif;
+    ffi_type** var_arg_types = NULL;
+    ffi_cif* cif = ext->variadic ? &var_cif : &ext->cif;
+    if (!ci_prepare_call_cif(ext, cif, &var_arg_types, arg_types, argc)) {
         ci_error(interp, "Could not prepare FFI call for `%s'", ext->name);
         return 0;
     }
-    void** ffi_args = calloc(ext->argc ? ext->argc : 1, sizeof(void*));
-    if (!ffi_args)
+    void** ffi_args = calloc(argc ? argc : 1, sizeof(void*));
+    if (!ffi_args) {
+        free(var_arg_types);
         return 0;
-    for (size_t i = 0; i < ext->argc; i++)
+    }
+    for (size_t i = 0; i < argc; i++)
         ffi_args[i] = &args[i];
-    ffi_call(&ext->cif, FFI_FN(ext->ptr), ret, ffi_args);
+    ffi_call(cif, FFI_FN(ext->ptr), ret, ffi_args);
     free(ffi_args);
+    free(var_arg_types);
     return 1;
 }
 
 static int ci_call_function(ctr_cinterp* interp, ctr_cinterp_function* fn, ctr_cinterp_value* argv, size_t argc, ctr_cinterp_value* ret, unsigned depth)
 {
-    if (!fn || argc != fn->argc || depth > 1024) {
-        ci_error(interp, "Bad call to bytecode function");
+    if (!fn) {
+        ci_error(interp, "Missing bytecode function");
+        return 0;
+    }
+    if (argc != fn->argc) {
+        ci_error(interp, "Bad call to bytecode function `%s': expected %zu argument(s), got %zu", fn->name, fn->argc, argc);
+        return 0;
+    }
+    if (depth > 1024) {
+        ci_error(interp, "Call depth exceeded while calling bytecode function `%s'", fn->name);
         return 0;
     }
     enum { STACK_MAX = 4096 };
@@ -2485,8 +2902,12 @@ static int ci_call_function(ctr_cinterp* interp, ctr_cinterp_function* fn, ctr_c
         case CI_OP_GLOBAL_ADDR: {
             ctr_cinterp_global* global = ci_find_global(interp, ins->name);
             ok = global != NULL;
-            v.p = ok ? global->data : NULL;
-            ok = ok && ci_push(stack, &sp, STACK_MAX, v);
+            if (ok) {
+                v.p = global->data;
+                ok = ci_push(stack, &sp, STACK_MAX, v);
+            } else {
+                ci_error(interp, "Unknown C global `%s'", ins->name);
+            }
             break;
         }
         case CI_OP_LOAD:
@@ -2648,10 +3069,12 @@ static int ci_call_function(ctr_cinterp* interp, ctr_cinterp_function* fn, ctr_c
                 ok = ci_call_function(interp, callee, call_args, call_argc, &v, depth + 1);
             } else if (ok) {
                 ctr_cinterp_external* ext = ci_find_external(interp, ins->name);
-                if (!ext)
-                    ctr_cinterp_link_symbol(interp, ins->name, dlsym(RTLD_DEFAULT, ins->name));
-                ext = ci_find_external(interp, ins->name);
-                ok = ext && ci_call_external(interp, ext, call_args, &v);
+                if (ext)
+                    ok = ci_call_external(interp, ext, call_args, call_argc, ins->arg_types, &v);
+                else {
+                    ci_error(interp, "Call to external `%s' has no declaration", ins->name);
+                    ok = 0;
+                }
             }
             free(call_args);
             ok = ok && ci_push(stack, &sp, STACK_MAX, v);
@@ -2694,7 +3117,7 @@ static int ci_call_function(ctr_cinterp* interp, ctr_cinterp_function* fn, ctr_c
         }
     }
 done:
-    if (!ok)
+    if (!ok && (!interp || !interp->last_error))
         ci_error(interp, "Runtime error in bytecode function `%s'", fn->name);
     if (locals != locals_stack)
         free(locals);
@@ -2703,12 +3126,18 @@ done:
 
 int ctr_cinterp_call(ctr_cinterp* interp, char const* name, ctr_cinterp_value* argv, size_t argc, ctr_cinterp_value* ret)
 {
+    ci_clear_error(interp);
     ctr_cinterp_function* fn = ctr_cinterp_find_function(interp, name);
     if (!fn) {
         ci_error(interp, "No such bytecode function `%s'", name);
         return 0;
     }
     return ci_call_function(interp, fn, argv, argc, ret, 0);
+}
+
+char const* ctr_cinterp_last_error(ctr_cinterp const* interp)
+{
+    return interp ? interp->last_error : NULL;
 }
 
 int ctr_cinterp_is_function_pointer(void* ptr)
@@ -2722,7 +3151,16 @@ int ctr_cinterp_call_function_pointer(void* ptr, ctr_cinterp_value* argv, size_t
     ctr_cinterp_function* fn = ptr;
     if (!ctr_cinterp_is_function_pointer(ptr))
         return 0;
+    ci_clear_error(fn->owner);
     return ci_call_function(fn->owner, fn, argv, argc, ret, 0);
+}
+
+char const* ctr_cinterp_last_error_for_function_pointer(void* ptr)
+{
+    ctr_cinterp_function* fn = ptr;
+    if (!ctr_cinterp_is_function_pointer(ptr))
+        return NULL;
+    return ctr_cinterp_last_error(fn->owner);
 }
 
 void* ctr_cinterp_resource_release_hook(void* state)
@@ -2759,14 +3197,19 @@ ctr_object* ctr_cinterp_compile(ctr_object* myself, ctr_argument* argumentList)
     CTR_ENSURE_TYPE_STRING(prg);
     char* program = ctr_heap_allocate_cstring(prg);
     char* trimmed = ci_trim(program);
+    ci_clear_error(interp);
     int preprocessor_only = ci_collect_include_only_macros(interp, trimmed);
     int ok = preprocessor_only ? 1
         : (strncmp(trimmed, ".function", 9) == 0 || strncmp(trimmed, ".extern", 7) == 0 || strncmp(trimmed, ".global", 7) == 0
                 ? ctr_cinterp_compile_text(interp, trimmed)
                 : ctr_cinterp_compile_c(interp, trimmed));
     ctr_heap_free(program);
-    if (!ok)
-        CtrStdFlow = ctr_build_string_from_cstring("C bytecode compilation failed");
+    if (!ok) {
+        char const* reason = ctr_cinterp_last_error(interp);
+        CtrStdFlow = reason && *reason
+            ? ctr_format_str("EC bytecode compilation failed: %s", reason)
+            : ctr_build_string_from_cstring("C bytecode compilation failed");
+    }
     return myself;
 }
 
@@ -2802,8 +3245,6 @@ ctr_object* ctr_cinterp_defined_functions(ctr_object* myself, ctr_argument* argu
                     argc = ext->argc;
                     for (size_t j = 0; j < argc && j < 16; j++)
                         arg_types[j] = ext->arg_types[j];
-                } else if (ci_builtin_signature(name, &ret_type, arg_types, &argc)) {
-                    ci_add_external(interp, name, ret_type, arg_types, argc);
                 } else {
                     ctr_cinterp_get_symbol(interp, name);
                 }
@@ -2834,8 +3275,6 @@ ctr_object* ctr_cinterp_defined_functions(ctr_object* myself, ctr_argument* argu
                     argc = ext->argc;
                     for (size_t j = 0; j < argc && j < 16; j++)
                         arg_types[j] = ext->arg_types[j];
-                } else if (ci_builtin_signature(name, &ret_type, arg_types, &argc)) {
-                    ci_add_external(interp, name, ret_type, arg_types, argc);
                 } else {
                     ctr_cinterp_get_symbol(interp, name);
                 }
@@ -2940,7 +3379,10 @@ static ctr_object* ci_call_from_ctr(ctr_cinterp* interp, char const* name, ctr_o
     }
     ctr_heap_free(argv);
     if (!ok) {
-        CtrStdFlow = ctr_format_str("C bytecode call to `%s' failed", name);
+        char const* reason = ctr_cinterp_last_error(interp);
+        CtrStdFlow = reason && *reason
+            ? ctr_format_str("EC bytecode call to `%s' failed: %s", name, reason)
+            : ctr_format_str("EC bytecode call to `%s' failed", name);
         return CtrStdNil;
     }
     return ctr_build_number_from_float((double)ret.i);

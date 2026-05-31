@@ -1,0 +1,3 @@
+var ctx is CInterpreter new.
+ctx compile: '#include <stdio.h>\n#include <string.h>'.
+ctx run: 'int main() { printf("%s\n", strerror(0)); return 0; }' arguments: [].

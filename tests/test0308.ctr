@@ -1,0 +1,12 @@
+var ctx is CInterpreter new.
+ctx compile: 'extern int missing_symbol(int); int bad(int x) { return missing_symbol(x); }'.
+
+var cifs is ctx definedFunctions: ['bad'].
+var cif is cifs at: 'bad'.
+var sym is ctx symbol: 'bad'.
+
+{
+    cif call: sym withArgs: [7].
+} catch: {:e
+    Pen writeln: e.
+}, run.

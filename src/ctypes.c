@@ -2293,8 +2293,18 @@ CTR_CT_FFI_BIND(
     call)
 { //<cif, CTypes pointer (fn), Array avalues; ^Citron object
     ctr_struct_initialize_internal();
-    ffi_arg* result = ctr_heap_allocate(sizeof(ffi_arg));
     ffi_cif* cif = (ffi_cif*)(myself->value.rvalue->ptr);
+    ctr_object* rtype_info = ctr_internal_object_find_property(
+        myself, ctr_build_string_from_cstring(":crType"), 0);
+    if (!cif || !rtype_info || rtype_info == CtrStdNil) {
+        CtrStdFlow = ctr_build_string_from_cstring("Cannot call unprepared CIF");
+        return CtrStdNil;
+    }
+    if (!argumentList->object || !argumentList->object->value.rvalue || !argumentList->object->value.rvalue->ptr) {
+        CtrStdFlow = ctr_build_string_from_cstring("Cannot call null C function pointer");
+        return CtrStdNil;
+    }
+    ffi_arg* result = ctr_heap_allocate(sizeof(ffi_arg));
     ctr_object* avals_ = argumentList->next->object;
     int asize = (int)(ctr_array_count(avals_, NULL)->value.nvalue);
     void** avals = ctr_heap_allocate(sizeof(void*) * asize);
@@ -2365,8 +2375,11 @@ CTR_CT_FFI_BIND(
                 iargs[i].i = *(int64_t*)avals[i];
         }
         if (!ctr_cinterp_call_function_pointer((void*)fn, iargs, asize, &iret)) {
+            char const* reason = ctr_cinterp_last_error_for_function_pointer((void*)fn);
             ctr_heap_free(iargs);
-            CtrStdFlow = ctr_build_string_from_cstring("Could not call interpreted C function");
+            CtrStdFlow = reason && *reason
+                ? ctr_format_str("ECould not call interpreted C function: %s", reason)
+                : ctr_build_string_from_cstring("Could not call interpreted C function");
             return CtrStdNil;
         }
         ctr_heap_free(iargs);

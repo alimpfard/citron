@@ -1587,6 +1587,36 @@ ctr_object* ctr_inject_generate_output(ctr_object* myself,
     ctr_argument* argumentList);
 ctr_object* ctr_inject_finish(ctr_object* myself, ctr_argument* argumentList);
 
+/** C bytecode interpreter **/
+CTR_H_DECLSPEC ctr_object* CtrStdCInterp;
+void* ctr_cinterp_resource_release_hook(void* state);
+ctr_object* ctr_cinterp_make(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_cinterp_compile(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_cinterp_defined_functions(ctr_object* myself,
+    ctr_argument* argumentList);
+ctr_object* ctr_cinterp_defined_macros_ctr(ctr_object* myself,
+    ctr_argument* argumentList);
+ctr_object* ctr_cinterp_get_symbol_ctr(ctr_object* myself,
+    ctr_argument* argumentList);
+ctr_object* ctr_cinterp_run(ctr_object* myself, ctr_argument* argumentList);
+ctr_object* ctr_cinterp_run_named(ctr_object* myself,
+    ctr_argument* argumentList);
+ctr_object* ctr_cinterp_add_libp_ctr(ctr_object* myself,
+    ctr_argument* argumentList);
+ctr_object* ctr_cinterp_get_libp_ctr(ctr_object* myself,
+    ctr_argument* argumentList);
+ctr_object* ctr_cinterp_add_inclp_ctr(ctr_object* myself,
+    ctr_argument* argumentList);
+ctr_object* ctr_cinterp_get_inclp_ctr(ctr_object* myself,
+    ctr_argument* argumentList);
+ctr_object* ctr_cinterp_add_lib_ctr(ctr_object* myself,
+    ctr_argument* argumentList);
+ctr_object* ctr_cinterp_set_error_handler_ctr(ctr_object* myself,
+    ctr_argument* argumentList);
+ctr_object* ctr_cinterp_generate_output_ctr(ctr_object* myself,
+    ctr_argument* argumentList);
+ctr_object* ctr_cinterp_finish(ctr_object* myself, ctr_argument* argumentList);
+
 /** generator **/
 CTR_H_DECLSPEC ctr_object* ctr_std_generator;
 

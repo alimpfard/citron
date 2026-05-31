@@ -66,16 +66,13 @@ OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
 	   importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o \
 	   promise.o symbol_cxx.o world.o bcgen.o vm.o libsocket.so
 EXTRAOBJS =
-TCC_STATICS = 
 
 ifneq ($(findstring withInjectNative=1,$(CFLAGS)),)
-	OBJS += inject.o libtcc1.a libtcc.a
 	CFLAGS += -DwithCTypesNative=1
-	TCC_STATICS = build_tcc_statics
 endif
 
 ifneq ($(findstring withCTypesNative=1,$(CFLAGS)),)
-	OBJS += _struct.o ctypes.o structmember.o
+	OBJS += _struct.o ctypes.o structmember.o c_interp.o
 endif
 
 ifneq ($(findstring withInlineAsm=1,$(CFLAGS)),)
@@ -103,7 +100,7 @@ ctrconfig:
 $(BUILDDIR):
 	mkdir -p $@
 
-$(BUILDDIR)/ctr: $(TCC_STATICS) $(BUILDDIR) $(OBJS) $(EXTRAOBJS)
+$(BUILDDIR)/ctr: $(BUILDDIR) $(OBJS) $(EXTRAOBJS)
 	$(CXX) $(EXTRAOBJS) $(OBJS) $(CXXFLAGS) $(CFLAGS) $(LIBS) $(LEXTRACF) $(LDFLAGS) -o $@
 
 ctr: $(BUILDDIR)/ctr
@@ -140,19 +137,9 @@ debug: cxx ctr
 clean:
 	rm -rf $(BUILDDIR)
 	$(MAKE) -C $(LIBSOCKETDIR) clean
-	$(MAKE) -C src/lib/tcc clean
 
 cxx:
 	@ echo -e "\033[31;1mblah \033[32;1mblah \033[33;1mblah\033[0m"
-
-build_tcc_statics:
-	pushd src/lib/tcc
-	./configure
-	popd
-	$(MAKE) -C src/lib/tcc
-
-$(BUILDDIR)/%.a: src/lib/tcc/%.a
-	cp $< $@
 
 $(BUILDDIR)/libsocket.so:
 	make -C $(LIBSOCKETDIR)

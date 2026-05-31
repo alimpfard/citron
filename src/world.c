@@ -3604,60 +3604,116 @@ void ctr_initialize_world()
 
 #if withInjectNative
     CtrStdInject = CtrStdObject;
-    CtrStdInject = ctr_inject_make(NULL, NULL);
+    CtrStdInject = ctr_cinterp_make(NULL, NULL);
     ctr_internal_object_add_property(
         CtrStdWorld, ctr_build_string_from_cstring(CTR_DICT_INJECT), CtrStdInject,
         0);
     ctr_internal_create_func(
         CtrStdInject, ctr_build_string_from_cstring(CTR_DICT_NEWWITHOUTPUTMODE),
-        &ctr_inject_make);
+        &ctr_cinterp_make);
     ctr_internal_create_func(CtrStdInject,
         ctr_build_string_from_cstring(CTR_DICT_NEW),
-        &ctr_inject_make);
+        &ctr_cinterp_make);
     ctr_internal_create_func(
         CtrStdInject, ctr_build_string_from_cstring(CTR_DICT_DEFINEDFUNCTIONS),
-        &ctr_inject_defined_functions);
+        &ctr_cinterp_defined_functions);
     ctr_internal_create_func(
         CtrStdInject, ctr_build_string_from_cstring(CTR_DICT_DEFINEDFUNCTIONS_),
-        &ctr_inject_defined_functions);
+        &ctr_cinterp_defined_functions);
+    ctr_internal_create_func(CtrStdInject,
+        ctr_build_string_from_cstring("definedMacros:"),
+        &ctr_cinterp_defined_macros_ctr);
     ctr_internal_create_func(CtrStdInject,
         ctr_build_string_from_cstring(CTR_DICT_COMPILE),
-        &ctr_inject_compile);
+        &ctr_cinterp_compile);
     ctr_internal_create_func(
         CtrStdInject, ctr_build_string_from_cstring(CTR_DICT_RUN_ARGUMENTS),
-        &ctr_inject_run);
+        &ctr_cinterp_run);
     ctr_internal_create_func(
         CtrStdInject,
         ctr_build_string_from_cstring(CTR_DICT_RUN_ARGUMENTS_FUNCTION),
-        &ctr_inject_run_named);
+        &ctr_cinterp_run_named);
     ctr_internal_create_func(CtrStdInject,
         ctr_build_string_from_cstring(CTR_DICT_SYMBOL),
-        &ctr_inject_get_symbol);
+        &ctr_cinterp_get_symbol_ctr);
     ctr_internal_create_func(
         CtrStdInject, ctr_build_string_from_cstring(CTR_DICT_ADDLIBRARYPATH),
-        &ctr_inject_add_libp);
+        &ctr_cinterp_add_libp_ctr);
     ctr_internal_create_func(CtrStdInject,
         ctr_build_string_from_cstring(CTR_DICT_LIBRARYPATHS),
-        &ctr_inject_get_libp);
+        &ctr_cinterp_get_libp_ctr);
     ctr_internal_create_func(
         CtrStdInject, ctr_build_string_from_cstring(CTR_DICT_ADDINCLUDEPATH),
-        &ctr_inject_add_inclp);
+        &ctr_cinterp_add_inclp_ctr);
     ctr_internal_create_func(CtrStdInject,
         ctr_build_string_from_cstring(CTR_DICT_INCLUDEPATHS),
-        &ctr_inject_get_inclp);
+        &ctr_cinterp_get_inclp_ctr);
     ctr_internal_create_func(
         CtrStdInject, ctr_build_string_from_cstring(CTR_DICT_LINKINLIBRARY),
-        &ctr_inject_add_lib);
+        &ctr_cinterp_add_lib_ctr);
     ctr_internal_create_func(CtrStdInject,
         ctr_build_string_from_cstring(CTR_DICT_ERRORHANDLER),
-        &ctr_inject_set_error_handler);
+        &ctr_cinterp_set_error_handler_ctr);
     ctr_internal_create_func(CtrStdInject,
         ctr_build_string_from_cstring(CTR_DICT_OUTPUTTO),
-        &ctr_inject_generate_output);
+        &ctr_cinterp_generate_output_ctr);
     ctr_internal_create_func(CtrStdInject,
         ctr_build_string_from_cstring(CTR_DICT_DESTRUCT),
-        &ctr_inject_finish);
+        &ctr_cinterp_finish);
 #endif // withInjectNative
+
+#if withCTypesNative
+    CtrStdCInterp = CtrStdObject;
+    CtrStdCInterp = ctr_cinterp_make(NULL, NULL);
+    ctr_internal_object_add_property(
+        CtrStdWorld, ctr_build_string_from_cstring("CInterpreter"), CtrStdCInterp,
+        0);
+    ctr_internal_create_func(CtrStdCInterp,
+        ctr_build_string_from_cstring(CTR_DICT_NEW),
+        &ctr_cinterp_make);
+    ctr_internal_create_func(CtrStdCInterp,
+        ctr_build_string_from_cstring(CTR_DICT_DEFINEDFUNCTIONS),
+        &ctr_cinterp_defined_functions);
+    ctr_internal_create_func(CtrStdCInterp,
+        ctr_build_string_from_cstring(CTR_DICT_DEFINEDFUNCTIONS_),
+        &ctr_cinterp_defined_functions);
+    ctr_internal_create_func(CtrStdCInterp,
+        ctr_build_string_from_cstring("definedMacros:"),
+        &ctr_cinterp_defined_macros_ctr);
+    ctr_internal_create_func(CtrStdCInterp,
+        ctr_build_string_from_cstring(CTR_DICT_COMPILE),
+        &ctr_cinterp_compile);
+    ctr_internal_create_func(CtrStdCInterp,
+        ctr_build_string_from_cstring(CTR_DICT_RUN_ARGUMENTS),
+        &ctr_cinterp_run);
+    ctr_internal_create_func(CtrStdCInterp,
+        ctr_build_string_from_cstring(CTR_DICT_RUN_ARGUMENTS_FUNCTION),
+        &ctr_cinterp_run_named);
+    ctr_internal_create_func(CtrStdCInterp,
+        ctr_build_string_from_cstring(CTR_DICT_SYMBOL),
+        &ctr_cinterp_get_symbol_ctr);
+    ctr_internal_create_func(CtrStdCInterp,
+        ctr_build_string_from_cstring(CTR_DICT_ADDLIBRARYPATH),
+        &ctr_cinterp_add_libp_ctr);
+    ctr_internal_create_func(CtrStdCInterp,
+        ctr_build_string_from_cstring(CTR_DICT_LIBRARYPATHS),
+        &ctr_cinterp_get_libp_ctr);
+    ctr_internal_create_func(CtrStdCInterp,
+        ctr_build_string_from_cstring(CTR_DICT_ADDINCLUDEPATH),
+        &ctr_cinterp_add_inclp_ctr);
+    ctr_internal_create_func(CtrStdCInterp,
+        ctr_build_string_from_cstring(CTR_DICT_INCLUDEPATHS),
+        &ctr_cinterp_get_inclp_ctr);
+    ctr_internal_create_func(CtrStdCInterp,
+        ctr_build_string_from_cstring(CTR_DICT_LINKINLIBRARY),
+        &ctr_cinterp_add_lib_ctr);
+    ctr_internal_create_func(CtrStdCInterp,
+        ctr_build_string_from_cstring(CTR_DICT_ERRORHANDLER),
+        &ctr_cinterp_set_error_handler_ctr);
+    ctr_internal_create_func(CtrStdCInterp,
+        ctr_build_string_from_cstring(CTR_DICT_DESTRUCT),
+        &ctr_cinterp_finish);
+#endif // withCTypesNative
 
     static ctr_object ctr_dummy_import;
     static ctr_interfaces ifs;

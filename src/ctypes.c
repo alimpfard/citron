@@ -1,6 +1,7 @@
 #define CTR_DEFINE
 #include "_struct.h"
 #undef CTR_DEFINE
+#include "c_interp.h"
 #include "ctypes.h"
 #include <dlfcn.h>
 #include <inttypes.h>
@@ -292,9 +293,9 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(uint8)
 {
     return ctr_build_number_from_float((
         double)(*((uint8_t*)(myself->value.rvalue
-                                 ->ptr)))); // kinda derpy in bigger
-                                            // values...meh will see if it derps.
-                                            // TODO: Check if derps
+            ->ptr)))); // kinda derpy in bigger
+                       // values...meh will see if it derps.
+                       // TODO: Check if derps
 }
 
 // Signed Int 8
@@ -648,7 +649,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_MAKE(uchar)
 CTR_CT_SIMPLE_TYPE_FUNC_SET(uchar)
 {
     *(unsigned char*)(myself->value.rvalue->ptr) = (unsigned char)(*(ctr_internal_cast2string(argumentList->object)
-                                                                         ->value.svalue->value)); // ONE char! lol
+            ->value.svalue->value)); // ONE char! lol
     return myself;
 }
 
@@ -685,7 +686,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_TSTR(schar)
 CTR_CT_SIMPLE_TYPE_FUNC_SET(schar)
 {
     *(char*)(myself->value.rvalue->ptr) = (char)(*(ctr_internal_cast2string(argumentList->object)
-                                                       ->value.svalue->value)); // ONE char! lol
+            ->value.svalue->value)); // ONE char! lol
     return myself;
 }
 
@@ -721,7 +722,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_MAKE(ushort)
 CTR_CT_SIMPLE_TYPE_FUNC_SET(ushort)
 {
     *(unsigned short*)(myself->value.rvalue->ptr) = (unsigned short)(ctr_internal_cast2number(argumentList->object)
-                                                                         ->value.nvalue);
+            ->value.nvalue);
     return myself;
 }
 
@@ -794,7 +795,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_MAKE(uint)
 CTR_CT_SIMPLE_TYPE_FUNC_SET(uint)
 {
     *(unsigned int*)(myself->value.rvalue->ptr) = (unsigned int)(ctr_internal_cast2number(argumentList->object)
-                                                                     ->value.nvalue);
+            ->value.nvalue);
     return myself;
 }
 
@@ -867,7 +868,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_MAKE(ulong)
 CTR_CT_SIMPLE_TYPE_FUNC_SET(ulong)
 {
     *(unsigned long*)(myself->value.rvalue->ptr) = (unsigned long)(ctr_internal_cast2number(argumentList->object)
-                                                                       ->value.nvalue);
+            ->value.nvalue);
     return myself;
 }
 
@@ -941,7 +942,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_MAKE(longdouble)
 CTR_CT_SIMPLE_TYPE_FUNC_SET(longdouble)
 {
     *(long double*)(myself->value.rvalue->ptr) = (long double)(ctr_internal_cast2number(argumentList->object)
-                                                                   ->value.nvalue);
+            ->value.nvalue);
     return myself;
 }
 
@@ -949,7 +950,7 @@ CTR_CT_SIMPLE_TYPE_FUNC_GET(longdouble)
 {
     return ctr_build_number_from_float((double)(*(
         (long double*)(myself->value.rvalue
-                           ->ptr)))); // Actual downcast, will lose accuracy
+                ->ptr)))); // Actual downcast, will lose accuracy
 }
 
 // Citron object Pointer
@@ -1060,7 +1061,7 @@ ctr_object* ctr_ctypes_make_packed(
         break;
     case 5:
         size = sizeof(int32_t);
-        type_ =(ffi_type*) &wrapped_ffi_type_sint32;
+        type_ = (ffi_type*)&wrapped_ffi_type_sint32;
         break;
     case 6:
         size = sizeof(uint64_t);
@@ -1501,7 +1502,7 @@ ctr_object* ctr_ctypes_deref_pointer(ctr_object* myself,
     ssize_t csize = ctr_ctype_get_c_size(argumentList->object);
     if (csize == -1)
         csize = ((ctr_ctypes_ffi_struct_value*)(argumentList->object->value.rvalue
-                                                    ->ptr))
+                         ->ptr))
                     ->size;
     if (!isstruct)
         memcpy(&new_obj->value.rvalue->ptr, ptr, csize);
@@ -1525,7 +1526,7 @@ ctr_object* ctr_ctypes_set_internal_pointer(ctr_object* myself,
     ssize_t csize = ctr_ctype_get_c_size(argumentList->object);
     if (csize == -1)
         csize = ((ctr_ctypes_ffi_struct_value*)(argumentList->object->value.rvalue
-                                                    ->ptr))
+                         ->ptr))
                     ->size;
     memcpy(ptr, res, csize);
 
@@ -2303,6 +2304,7 @@ CTR_CT_FFI_BIND(
     void** aval_fnptrs = ctr_heap_allocate(sizeof(void*) * asize);
     for (int i = 0; i < asize; i++) {
         aval_fnptrs[i] = NULL;
+        buffers[i] = NULL;
         args->object = ctr_build_number_from_float(i);
         ctr_object* obj = ctr_array_get(avals_, args);
         ffi_type* type = cif->arg_types[i];
@@ -2344,7 +2346,43 @@ CTR_CT_FFI_BIND(
             avals[i] = (void*)buf;
         }
     }
-    ffi_call(cif, FFI_FN(fn), result, avals);
+    if (ctr_cinterp_is_function_pointer((void*)fn)) {
+        ctr_cinterp_value* iargs = ctr_heap_allocate(sizeof(ctr_cinterp_value) * (asize ? asize : 1));
+        ctr_cinterp_value iret;
+        memset(&iret, 0, sizeof(iret));
+        for (int i = 0; i < asize; i++) {
+            memset(&iargs[i], 0, sizeof(iargs[i]));
+            ffi_type* type = cif->arg_types[i];
+            if (type == &ffi_type_float)
+                iargs[i].f = *(float*)avals[i];
+            else if (type == &ffi_type_double)
+                iargs[i].f = *(double*)avals[i];
+            else if (type == &ffi_type_pointer || type == (ffi_type*)&wrapped_ffi_type_pointer)
+                iargs[i].p = *(void**)avals[i];
+            else if (type->size <= 4)
+                iargs[i].i = *(int*)avals[i];
+            else
+                iargs[i].i = *(int64_t*)avals[i];
+        }
+        if (!ctr_cinterp_call_function_pointer((void*)fn, iargs, asize, &iret)) {
+            ctr_heap_free(iargs);
+            CtrStdFlow = ctr_build_string_from_cstring("Could not call interpreted C function");
+            return CtrStdNil;
+        }
+        ctr_heap_free(iargs);
+        if (cif->rtype == &ffi_type_float) {
+            float fret = (float)iret.f;
+            memcpy(result, &fret, sizeof(fret));
+        } else if (cif->rtype == &ffi_type_double) {
+            memcpy(result, &iret.f, sizeof(iret.f));
+        } else if (cif->rtype == &ffi_type_pointer || cif->rtype == (ffi_type*)&wrapped_ffi_type_pointer) {
+            memcpy(result, &iret.p, sizeof(iret.p));
+        } else {
+            memcpy(result, &iret.i, sizeof(iret.i));
+        }
+    } else {
+        ffi_call(cif, FFI_FN(fn), result, avals);
+    }
     for (int j = 0; j < asize; j++) {
         if (aval_fnptrs[j])
             ffi_closure_free(aval_fnptrs[j]);

@@ -721,7 +721,6 @@ static ctr_proto* finalize(bcgen* b)
 
     p->n_args   = (uint16_t)0; // set by caller
     p->n_locals = (uint16_t)b->n_locals;
-    p->n_upvars = 0;
     p->n_regs   = b->reg_high;
     p->local_base = (uint16_t)(1 + p->n_args);
     p->reg_base   = (uint16_t)(p->local_base + p->n_locals);

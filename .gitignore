@@ -9,6 +9,7 @@
 ctr
 *.js
 *.yml
+!.github/workflows/*.yml
 plg.ctr
 namedstruct.ctr
 docs

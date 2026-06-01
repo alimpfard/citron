@@ -50,10 +50,15 @@ typedef enum ctr_cinterp_op {
     CI_OP_RET,
     CI_OP_POP,
     CI_OP_DUP,
+    CI_OP_SWAP,
     CI_OP_CAST,
     CI_OP_PTR_ADD,
     CI_OP_MEMCPY,
-    CI_OP_MEMSET
+    CI_OP_MEMSET,
+    CI_OP_FRAME_ADDR,
+    CI_OP_STORE_R,
+    CI_OP_FUNC_ADDR,
+    CI_OP_CALL_PTR
 } ctr_cinterp_op;
 
 typedef struct ctr_cinterp_instr {
@@ -67,6 +72,29 @@ typedef struct ctr_cinterp_instr {
     ctr_cinterp_type* arg_types;
 } ctr_cinterp_instr;
 
+typedef struct ci_dtype {
+    ctr_cinterp_type prim;
+    ctr_cinterp_type pointee;
+    char* tag;
+    int is_array;
+    size_t array_len;
+} ci_dtype;
+
+typedef struct ci_struct_member {
+    char* name;
+    ci_dtype type;
+    size_t offset;
+    size_t size;
+} ci_struct_member;
+
+typedef struct ci_struct_def {
+    char* name;
+    ci_struct_member* members;
+    size_t member_count;
+    size_t size;
+    size_t align;
+} ci_struct_def;
+
 struct ctr_cinterp_function {
     uint64_t magic;
     ctr_cinterp* owner;
@@ -77,6 +105,11 @@ struct ctr_cinterp_function {
     ctr_cinterp_instr* code;
     size_t code_count;
     size_t code_cap;
+    size_t frame_size;
+    size_t* arg_offset;
+    ctr_cinterp_type* arg_slot_type;
+    size_t* arg_copy_size;
+    void* closure_code;
 };
 
 #define CTR_CINTERP_FUNCTION_MAGIC UINT64_C(0x4354524349464e31)
@@ -97,6 +130,7 @@ typedef struct ctr_cinterp_global {
     char* name;
     void* data;
     size_t size;
+    ci_dtype dtype;
 } ctr_cinterp_global;
 
 typedef struct ctr_cinterp_macro {
@@ -133,6 +167,30 @@ struct ctr_cinterp {
     ctr_cinterp_ctype* ctypes;
     size_t ctype_count;
     size_t ctype_cap;
+    ci_struct_def* structs;
+    size_t struct_count;
+    size_t struct_cap;
+    struct ci_typedef_entry {
+        char* name;
+        ci_dtype type;
+    }* typedefs;
+    size_t typedef_count;
+    size_t typedef_cap;
+    struct ci_enumconst_entry {
+        char* name;
+        int64_t value;
+    }* enum_consts;
+    size_t enum_const_count;
+    size_t enum_const_cap;
+    struct ci_closure_entry {
+        void* code;
+        ctr_cinterp_function* fn;
+        ffi_closure* closure;
+        ffi_type** atypes;
+        ffi_cif cif;
+    }* closures;
+    size_t closure_count;
+    size_t closure_cap;
     char** library_paths;
     size_t library_path_count;
     size_t library_path_cap;
@@ -273,9 +331,14 @@ int ctr_cinterp_parse_type(char const* name, ctr_cinterp_type* out)
     return 0;
 }
 
+static void ci_seed_base_types(ctr_cinterp* interp);
+
 ctr_cinterp* ctr_cinterp_new(void)
 {
-    return calloc(1, sizeof(ctr_cinterp));
+    ctr_cinterp* interp = calloc(1, sizeof(ctr_cinterp));
+    if (interp)
+        ci_seed_base_types(interp);
+    return interp;
 }
 
 void ctr_cinterp_set_error_handler(ctr_cinterp* interp, ctr_cinterp_error_fn fn, void* userdata)
@@ -296,6 +359,9 @@ static void ci_free_function(ctr_cinterp_function* fn)
         free(fn->code[i].arg_types);
     }
     free(fn->code);
+    free(fn->arg_offset);
+    free(fn->arg_slot_type);
+    free(fn->arg_copy_size);
 }
 
 static void ci_free_external(ctr_cinterp_external* ext)
@@ -316,6 +382,7 @@ void ctr_cinterp_free(ctr_cinterp* interp)
     for (size_t i = 0; i < interp->global_count; i++) {
         free(interp->globals[i].name);
         free(interp->globals[i].data);
+        free(interp->globals[i].dtype.tag);
     }
     for (size_t i = 0; i < interp->macro_count; i++) {
         free(interp->macros[i].name);
@@ -329,6 +396,26 @@ void ctr_cinterp_free(ctr_cinterp* interp)
             free(interp->ctypes[i].field_names[j]);
         free(interp->ctypes[i].field_names);
     }
+    for (size_t i = 0; i < interp->struct_count; i++) {
+        free(interp->structs[i].name);
+        for (size_t j = 0; j < interp->structs[i].member_count; j++) {
+            free(interp->structs[i].members[j].name);
+            free(interp->structs[i].members[j].type.tag);
+        }
+        free(interp->structs[i].members);
+    }
+    for (size_t i = 0; i < interp->typedef_count; i++) {
+        free(interp->typedefs[i].name);
+        free(interp->typedefs[i].type.tag);
+    }
+    for (size_t i = 0; i < interp->enum_const_count; i++)
+        free(interp->enum_consts[i].name);
+    for (size_t i = 0; i < interp->closure_count; i++) {
+        if (interp->closures[i].closure)
+            ffi_closure_free(interp->closures[i].closure);
+        free(interp->closures[i].atypes);
+    }
+    free(interp->closures);
     for (size_t i = 0; i < interp->library_path_count; i++)
         free(interp->library_paths[i]);
     for (size_t i = 0; i < interp->library_handle_count; i++)
@@ -338,6 +425,9 @@ void ctr_cinterp_free(ctr_cinterp* interp)
     free(interp->globals);
     free(interp->macros);
     free(interp->ctypes);
+    free(interp->structs);
+    free(interp->typedefs);
+    free(interp->enum_consts);
     free(interp->library_paths);
     free(interp->library_handles);
     free(interp->last_error);
@@ -423,6 +513,121 @@ static ctr_cinterp_ctype* ci_find_ctype(ctr_cinterp* interp, char const* name)
             return &interp->ctypes[i - 1];
     }
     return NULL;
+}
+
+static ci_struct_def* ci_find_struct(ctr_cinterp* interp, char const* name)
+{
+    if (!name)
+        return NULL;
+    for (size_t i = interp->struct_count; i > 0; i--) {
+        if (strcmp(interp->structs[i - 1].name, name) == 0)
+            return &interp->structs[i - 1];
+    }
+    return NULL;
+}
+
+static ci_struct_def* ci_add_struct(ctr_cinterp* interp, char const* name)
+{
+    if (!ci_grow((void**)&interp->structs, &interp->struct_cap, interp->struct_count, sizeof(ci_struct_def)))
+        return NULL;
+    ci_struct_def* def = &interp->structs[interp->struct_count++];
+    memset(def, 0, sizeof(*def));
+    def->name = ci_strdup(name);
+    def->align = 1;
+    return def;
+}
+
+static int ci_find_typedef(ctr_cinterp* interp, char const* name, ci_dtype* out)
+{
+    if (!name)
+        return 0;
+    for (size_t i = interp->typedef_count; i > 0; i--) {
+        if (strcmp(interp->typedefs[i - 1].name, name) == 0) {
+            *out = interp->typedefs[i - 1].type;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static void ci_add_typedef(ctr_cinterp* interp, char const* name, ci_dtype type)
+{
+    for (size_t i = 0; i < interp->typedef_count; i++) {
+        if (strcmp(interp->typedefs[i].name, name) == 0)
+            return;
+    }
+    if (!ci_grow((void**)&interp->typedefs, &interp->typedef_cap, interp->typedef_count, sizeof(*interp->typedefs)))
+        return;
+    interp->typedefs[interp->typedef_count].name = ci_strdup(name);
+    interp->typedefs[interp->typedef_count].type = type;
+    interp->typedefs[interp->typedef_count].type.tag = type.tag ? ci_strdup(type.tag) : NULL;
+    interp->typedef_count++;
+}
+
+/* These match the LP64 ABI used by the headers this frontend scans. */
+static void ci_seed_base_types(ctr_cinterp* interp)
+{
+    struct {
+        char const* name;
+        ctr_cinterp_type prim;
+    } base[] = {
+        { "size_t", CTR_CINTERP_T_U64 },
+        { "ssize_t", CTR_CINTERP_T_I64 },
+        { "ptrdiff_t", CTR_CINTERP_T_I64 },
+        { "intptr_t", CTR_CINTERP_T_I64 },
+        { "uintptr_t", CTR_CINTERP_T_U64 },
+        { "wchar_t", CTR_CINTERP_T_I32 },
+        { "wint_t", CTR_CINTERP_T_I32 },
+        { "int8_t", CTR_CINTERP_T_I8 },
+        { "uint8_t", CTR_CINTERP_T_U8 },
+        { "int16_t", CTR_CINTERP_T_I16 },
+        { "uint16_t", CTR_CINTERP_T_U16 },
+        { "int32_t", CTR_CINTERP_T_I32 },
+        { "uint32_t", CTR_CINTERP_T_U32 },
+        { "int64_t", CTR_CINTERP_T_I64 },
+        { "uint64_t", CTR_CINTERP_T_U64 },
+        { "intmax_t", CTR_CINTERP_T_I64 },
+        { "uintmax_t", CTR_CINTERP_T_U64 },
+        { "off_t", CTR_CINTERP_T_I64 },
+        { "mode_t", CTR_CINTERP_T_U32 },
+        { "pid_t", CTR_CINTERP_T_I32 },
+        { "uid_t", CTR_CINTERP_T_U32 },
+        { "gid_t", CTR_CINTERP_T_U32 },
+        { "time_t", CTR_CINTERP_T_I64 },
+        { "clock_t", CTR_CINTERP_T_I64 },
+        { "useconds_t", CTR_CINTERP_T_U32 },
+        { "socklen_t", CTR_CINTERP_T_U32 },
+        { "FILE", CTR_CINTERP_T_I32 },
+        { "va_list", CTR_CINTERP_T_PTR },
+        { "_Bool", CTR_CINTERP_T_U8 },
+        { "bool", CTR_CINTERP_T_U8 },
+    };
+    for (size_t i = 0; i < sizeof(base) / sizeof(base[0]); i++) {
+        ci_dtype dt;
+        memset(&dt, 0, sizeof(dt));
+        dt.prim = base[i].prim;
+        ci_add_typedef(interp, base[i].name, dt);
+    }
+}
+
+static int ci_find_enum_const(ctr_cinterp* interp, char const* name, int64_t* out)
+{
+    for (size_t i = interp->enum_const_count; i > 0; i--) {
+        if (strcmp(interp->enum_consts[i - 1].name, name) == 0) {
+            *out = interp->enum_consts[i - 1].value;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static void ci_add_enum_const(ctr_cinterp* interp, char const* name, int64_t value)
+{
+    if (!ci_grow((void**)&interp->enum_consts, &interp->enum_const_cap, interp->enum_const_count, sizeof(*interp->enum_consts)))
+        return;
+    interp->enum_consts[interp->enum_const_count].name = ci_strdup(name);
+    interp->enum_consts[interp->enum_const_count].value = value;
+    interp->enum_const_count++;
 }
 
 static int ci_type_format(ctr_cinterp_type type, char* out, size_t out_size)
@@ -1017,76 +1222,6 @@ static char const* ci_expand_macro(ctr_cinterp* interp, char const* name, char* 
     return out;
 }
 
-static void ci_preprocess_directives(ctr_cinterp* interp, char const* source, int depth)
-{
-    if (depth > 16)
-        return;
-    char* copy = ci_join_line_continuations(source);
-    if (!copy)
-        return;
-    char* saveptr = NULL;
-    for (char* line = strtok_r(copy, "\n", &saveptr); line; line = strtok_r(NULL, "\n", &saveptr)) {
-        char* s = ci_trim(line);
-        char* directive = NULL;
-        char* rest = NULL;
-        if (ci_parse_directive(s, &directive, &rest) && strcmp(directive, "define") == 0) {
-            s = rest;
-            char* name = s;
-            while (*s && !isspace((unsigned char)*s) && *s != '(')
-                s++;
-            char saved = *s;
-            *s = 0;
-            if (*name && saved == '(') {
-                char* param = s + 1;
-                char* end = strchr(param, ')');
-                if (end) {
-                    *end = 0;
-                    ci_set_macro_ex(interp, name, ci_trim(end + 1), ci_trim(param), 1);
-                    *end = ')';
-                }
-            } else {
-                char* value = saved ? ci_trim(s + 1) : "";
-                char const* expanded = ci_find_macro(interp, value);
-                ci_set_macro(interp, name, expanded ? expanded : value);
-            }
-            *s = saved;
-        } else if (directive && strcmp(directive, "undef") == 0) {
-            ci_remove_macro(interp, rest);
-        } else if (directive && (strcmp(directive, "include") == 0 || strcmp(directive, "include_next") == 0)) {
-            s = rest;
-            char end = *s == '<' ? '>' : *s == '"' ? '"' : 0;
-            if (!end)
-                continue;
-            s++;
-            char* e = strchr(s, end);
-            if (!e)
-                continue;
-            *e = 0;
-            char full[4096];
-            char* contents = NULL;
-            if (end == '"')
-                contents = ci_read_file(s);
-            for (size_t i = 0; i < interp->library_path_count && !contents; i++) {
-                snprintf(full, sizeof(full), "%s/%s", interp->library_paths[i], s);
-                contents = ci_read_file(full);
-            }
-            if (!contents && end == '>')
-                contents = ci_read_file((snprintf(full, sizeof(full), "/usr/include/%s", s), full));
-            if (contents) {
-                ci_collect_typedefs(interp, contents);
-                ci_collect_function_declarations(interp, contents);
-                ci_preprocess_directives(interp, contents, depth + 1);
-                free(contents);
-            }
-        } else if (!directive && strchr(s, '(') && strchr(s, ')')) {
-            char expanded[16384];
-            if (ci_expand_macro_text(interp, s, expanded, sizeof(expanded), 0))
-                ci_collect_function_declarations(interp, expanded);
-        }
-    }
-    free(copy);
-}
-
 static int ci_source_is_preprocessor_only(char const* source)
 {
     char* copy = ci_strdup(source);
@@ -1105,10 +1240,386 @@ static int ci_source_is_preprocessor_only(char const* source)
     return only_directives;
 }
 
-static int ci_collect_include_only_macros(ctr_cinterp* interp, char const* source)
+static void ci_pp_skip(char const** s)
 {
-    ci_preprocess_directives(interp, source, 0);
-    return ci_source_is_preprocessor_only(source);
+    while (isspace((unsigned char)**s))
+        (*s)++;
+}
+
+static long ci_pp_expr(char const** s, int min_prec);
+
+static long ci_pp_unary(char const** s)
+{
+    ci_pp_skip(s);
+    char c = **s;
+    if (c == '(') {
+        (*s)++;
+        long v = ci_pp_expr(s, 0);
+        ci_pp_skip(s);
+        if (**s == ')')
+            (*s)++;
+        return v;
+    }
+    if (c == '!') {
+        (*s)++;
+        return !ci_pp_unary(s);
+    }
+    if (c == '~') {
+        (*s)++;
+        return ~ci_pp_unary(s);
+    }
+    if (c == '-') {
+        (*s)++;
+        return -ci_pp_unary(s);
+    }
+    if (c == '+') {
+        (*s)++;
+        return ci_pp_unary(s);
+    }
+    if (isdigit((unsigned char)c)) {
+        char* e = NULL;
+        long v = strtol(*s, &e, 0);
+        *s = e;
+        while (**s == 'u' || **s == 'U' || **s == 'l' || **s == 'L')
+            (*s)++;
+        return v;
+    }
+    if (isalpha((unsigned char)c) || c == '_') {
+        while (isalnum((unsigned char)**s) || **s == '_')
+            (*s)++;
+        return 0;
+    }
+    if (c)
+        (*s)++;
+    return 0;
+}
+
+static int ci_pp_binop(char const* s, int* len)
+{
+    if (s[0] == '|' && s[1] == '|') {
+        *len = 2;
+        return 1;
+    }
+    if (s[0] == '&' && s[1] == '&') {
+        *len = 2;
+        return 2;
+    }
+    if (s[0] == '|') {
+        *len = 1;
+        return 3;
+    }
+    if (s[0] == '^') {
+        *len = 1;
+        return 4;
+    }
+    if (s[0] == '&') {
+        *len = 1;
+        return 5;
+    }
+    if (s[0] == '=' && s[1] == '=') {
+        *len = 2;
+        return 6;
+    }
+    if (s[0] == '!' && s[1] == '=') {
+        *len = 2;
+        return 6;
+    }
+    if (s[0] == '<' && s[1] == '=') {
+        *len = 2;
+        return 7;
+    }
+    if (s[0] == '>' && s[1] == '=') {
+        *len = 2;
+        return 7;
+    }
+    if (s[0] == '<' && s[1] == '<') {
+        *len = 2;
+        return 8;
+    }
+    if (s[0] == '>' && s[1] == '>') {
+        *len = 2;
+        return 8;
+    }
+    if (s[0] == '<') {
+        *len = 1;
+        return 7;
+    }
+    if (s[0] == '>') {
+        *len = 1;
+        return 7;
+    }
+    if (s[0] == '+') {
+        *len = 1;
+        return 9;
+    }
+    if (s[0] == '-') {
+        *len = 1;
+        return 9;
+    }
+    if (s[0] == '*') {
+        *len = 1;
+        return 10;
+    }
+    if (s[0] == '/') {
+        *len = 1;
+        return 10;
+    }
+    if (s[0] == '%') {
+        *len = 1;
+        return 10;
+    }
+    return 0;
+}
+
+static long ci_pp_apply(long a, long b, char const* op, int len)
+{
+    if (len == 2) {
+        if (op[0] == '|' && op[1] == '|')
+            return a || b;
+        if (op[0] == '&' && op[1] == '&')
+            return a && b;
+        if (op[0] == '=' && op[1] == '=')
+            return a == b;
+        if (op[0] == '!' && op[1] == '=')
+            return a != b;
+        if (op[0] == '<' && op[1] == '=')
+            return a <= b;
+        if (op[0] == '>' && op[1] == '=')
+            return a >= b;
+        if (op[0] == '<' && op[1] == '<')
+            return a << b;
+        if (op[0] == '>' && op[1] == '>')
+            return a >> b;
+    }
+    switch (op[0]) {
+    case '|':
+        return a | b;
+    case '^':
+        return a ^ b;
+    case '&':
+        return a & b;
+    case '<':
+        return a < b;
+    case '>':
+        return a > b;
+    case '+':
+        return a + b;
+    case '-':
+        return a - b;
+    case '*':
+        return a * b;
+    case '/':
+        return b ? a / b : 0;
+    case '%':
+        return b ? a % b : 0;
+    }
+    return 0;
+}
+
+static long ci_pp_expr(char const** s, int min_prec)
+{
+    long lhs = ci_pp_unary(s);
+    for (;;) {
+        ci_pp_skip(s);
+        int len = 0;
+        int prec = ci_pp_binop(*s, &len);
+        if (!prec || prec < min_prec)
+            break;
+        char op[3] = { (*s)[0], len == 2 ? (*s)[1] : (char)0, 0 };
+        *s += len;
+        long rhs = ci_pp_expr(s, prec + 1);
+        lhs = ci_pp_apply(lhs, rhs, op, len);
+    }
+    return lhs;
+}
+
+static int ci_pp_eval(ctr_cinterp* interp, char const* expr)
+{
+    char resolved[8192];
+    size_t o = 0;
+    for (char const* s = expr; *s && o + 2 < sizeof(resolved);) {
+        if (strncmp(s, "defined", 7) == 0 && !(isalnum((unsigned char)s[7]) || s[7] == '_')) {
+            s += 7;
+            while (isspace((unsigned char)*s))
+                s++;
+            int paren = 0;
+            if (*s == '(') {
+                paren = 1;
+                s++;
+                while (isspace((unsigned char)*s))
+                    s++;
+            }
+            char nm[256];
+            size_t n = 0;
+            while ((isalnum((unsigned char)*s) || *s == '_') && n + 1 < sizeof(nm))
+                nm[n++] = *s++;
+            nm[n] = 0;
+            if (paren) {
+                while (isspace((unsigned char)*s))
+                    s++;
+                if (*s == ')')
+                    s++;
+            }
+            resolved[o++] = ci_find_macro_entry(interp, nm) ? '1' : '0';
+            continue;
+        }
+        resolved[o++] = *s++;
+    }
+    resolved[o] = 0;
+    char expanded[16384];
+    if (!ci_expand_macro_text(interp, resolved, expanded, sizeof(expanded), 0))
+        snprintf(expanded, sizeof(expanded), "%s", resolved);
+    char const* cur = expanded;
+    return ci_pp_expr(&cur, 0) != 0;
+}
+
+typedef struct ci_strbuf {
+    char* data;
+    size_t len;
+    size_t cap;
+} ci_strbuf;
+
+static void ci_sb_append(ci_strbuf* b, char const* s, size_t n)
+{
+    if (b->len + n + 1 > b->cap) {
+        size_t nc = b->cap ? b->cap * 2 : 1024;
+        while (nc < b->len + n + 1)
+            nc *= 2;
+        char* nd = realloc(b->data, nc);
+        if (!nd)
+            return;
+        b->data = nd;
+        b->cap = nc;
+    }
+    memcpy(b->data + b->len, s, n);
+    b->len += n;
+    b->data[b->len] = 0;
+}
+
+static void ci_preprocess(ctr_cinterp* interp, char const* source, ci_strbuf* out, int depth)
+{
+    if (depth > 24)
+        return;
+    char* copy = ci_join_line_continuations(source);
+    if (!copy)
+        return;
+    struct {
+        int parent_emit;
+        int active;
+        int taken;
+    } cond[64];
+    int ctop = 0;
+    char* saveptr = NULL;
+    for (char* line = strtok_r(copy, "\n", &saveptr); line; line = strtok_r(NULL, "\n", &saveptr)) {
+        int emit = ctop == 0 ? 1 : cond[ctop - 1].active;
+        char* s = ci_trim(line);
+        char* directive = NULL;
+        char* rest = NULL;
+        char tmp[8192];
+        snprintf(tmp, sizeof(tmp), "%s", s);
+        if (ci_parse_directive(tmp, &directive, &rest)) {
+            if (strcmp(directive, "if") == 0 || strcmp(directive, "ifdef") == 0 || strcmp(directive, "ifndef") == 0) {
+                int cond_val = 0;
+                if (emit) {
+                    if (strcmp(directive, "if") == 0)
+                        cond_val = ci_pp_eval(interp, rest);
+                    else {
+                        char nm[256];
+                        sscanf(rest, "%255s", nm);
+                        int def = ci_find_macro_entry(interp, nm) != NULL;
+                        cond_val = strcmp(directive, "ifdef") == 0 ? def : !def;
+                    }
+                }
+                if (ctop < 64) {
+                    cond[ctop].parent_emit = emit;
+                    cond[ctop].active = emit && cond_val;
+                    cond[ctop].taken = emit && cond_val;
+                    ctop++;
+                }
+            } else if (strcmp(directive, "elif") == 0) {
+                if (ctop > 0) {
+                    int pe = cond[ctop - 1].parent_emit;
+                    if (!pe || cond[ctop - 1].taken) {
+                        cond[ctop - 1].active = 0;
+                    } else {
+                        int cv = ci_pp_eval(interp, rest);
+                        cond[ctop - 1].active = cv;
+                        cond[ctop - 1].taken = cv;
+                    }
+                }
+            } else if (strcmp(directive, "else") == 0) {
+                if (ctop > 0) {
+                    cond[ctop - 1].active = cond[ctop - 1].parent_emit && !cond[ctop - 1].taken;
+                    cond[ctop - 1].taken = 1;
+                }
+            } else if (strcmp(directive, "endif") == 0) {
+                if (ctop > 0)
+                    ctop--;
+            } else if (!emit) {
+            } else if (strcmp(directive, "define") == 0) {
+                char* d = rest;
+                char* name = d;
+                while (*d && !isspace((unsigned char)*d) && *d != '(')
+                    d++;
+                char saved = *d;
+                *d = 0;
+                if (*name && saved == '(') {
+                    char* param = d + 1;
+                    char* end = strchr(param, ')');
+                    if (end) {
+                        *end = 0;
+                        ci_set_macro_ex(interp, name, ci_trim(end + 1), ci_trim(param), 1);
+                    }
+                } else {
+                    char* value = saved ? ci_trim(d + 1) : "";
+                    ci_set_macro(interp, name, value);
+                }
+            } else if (strcmp(directive, "undef") == 0) {
+                char nm[256];
+                sscanf(rest, "%255s", nm);
+                ci_remove_macro(interp, nm);
+            } else if (strcmp(directive, "include") == 0 || strcmp(directive, "include_next") == 0) {
+                char* inc = rest;
+                char end = *inc == '<' ? '>' : *inc == '"' ? '"'
+                                                           : 0;
+                if (end) {
+                    inc++;
+                    char* e = strchr(inc, end);
+                    if (e) {
+                        *e = 0;
+                        char full[4096];
+                        char* contents = NULL;
+                        if (end == '"')
+                            contents = ci_read_file(inc);
+                        for (size_t i = 0; i < interp->library_path_count && !contents; i++) {
+                            snprintf(full, sizeof(full), "%s/%s", interp->library_paths[i], inc);
+                            contents = ci_read_file(full);
+                        }
+                        if (!contents && end == '>')
+                            contents = ci_read_file((snprintf(full, sizeof(full), "/usr/include/%s", inc), full));
+                        if (contents) {
+                            ci_collect_typedefs(interp, contents);
+                            ci_collect_function_declarations(interp, contents);
+                            ci_strbuf sink = { 0 };
+                            ci_preprocess(interp, contents, &sink, depth + 1);
+                            free(sink.data);
+                            free(contents);
+                        }
+                    }
+                }
+            }
+            continue;
+        }
+        if (!emit)
+            continue;
+        char expanded[16384];
+        if (ci_expand_macro_text(interp, s, expanded, sizeof(expanded), 0))
+            ci_sb_append(out, expanded, strlen(expanded));
+        else
+            ci_sb_append(out, s, strlen(s));
+        ci_sb_append(out, "\n", 1);
+    }
+    free(copy);
 }
 
 static int ci_typedef_base_format(ctr_cinterp* interp, char const* base, char* out, size_t out_size)
@@ -1561,6 +2072,7 @@ typedef enum ci_ctok_kind {
     CI_CTOK_EOF = 0,
     CI_CTOK_IDENT,
     CI_CTOK_NUM,
+    CI_CTOK_FNUM,
     CI_CTOK_STR,
     CI_CTOK_PUNCT,
     CI_CTOK_RETURN,
@@ -1580,21 +2092,34 @@ typedef enum ci_ctok_kind {
     CI_CTOK_CONST,
     CI_CTOK_EXTERN,
     CI_CTOK_STATIC,
-    CI_CTOK_STRUCT
+    CI_CTOK_STRUCT,
+    CI_CTOK_UNION,
+    CI_CTOK_ENUM,
+    CI_CTOK_TYPEDEF,
+    CI_CTOK_DO,
+    CI_CTOK_SWITCH,
+    CI_CTOK_CASE,
+    CI_CTOK_DEFAULT,
+    CI_CTOK_BREAK,
+    CI_CTOK_CONTINUE,
+    CI_CTOK_GOTO,
+    CI_CTOK_SIZEOF
 } ci_ctok_kind;
 
 typedef struct ci_ctok {
     ci_ctok_kind kind;
     char* text;
     int64_t num;
+    double fnum;
     int line;
 } ci_ctok;
 
 typedef struct ci_cvar {
     char* name;
-    int index;
-    int is_arg;
-    ctr_cinterp_type type;
+    size_t offset;
+    ci_dtype type;
+    int is_global;
+    char* global_name;
 } ci_cvar;
 
 typedef struct ci_cparser {
@@ -1608,8 +2133,45 @@ typedef struct ci_cparser {
     size_t var_cap;
     int string_id;
     ctr_cinterp_type last_type;
+    ctr_cinterp_type last_pointee;
+    char* last_tag;
+    int last_is_array;
+    size_t last_array_len;
+    struct ci_jlist* brk_ctx;
+    struct ci_jlist* cont_ctx;
+    struct ci_swctx* sw_ctx;
+    int anon_struct_id;
+    struct ci_label {
+        char* name;
+        size_t pos;
+    }* labels;
+    size_t label_count;
+    size_t label_cap;
+    struct ci_goto {
+        char* name;
+        size_t at;
+        int line;
+    }* gotos;
+    size_t goto_count;
+    size_t goto_cap;
     int ok;
 } ci_cparser;
+
+typedef struct ci_jlist {
+    size_t* items;
+    size_t count;
+    size_t cap;
+} ci_jlist;
+
+typedef struct ci_swctx {
+    struct {
+        int64_t v;
+        size_t pos;
+    } cases[256];
+    size_t ncase;
+    size_t default_pos;
+    int has_default;
+} ci_swctx;
 
 static void ci_free_tokens(ci_ctok* toks, size_t count)
 {
@@ -1664,6 +2226,28 @@ static ci_ctok_kind ci_keyword_kind(char const* text)
         return CI_CTOK_STATIC;
     if (strcmp(text, "struct") == 0)
         return CI_CTOK_STRUCT;
+    if (strcmp(text, "union") == 0)
+        return CI_CTOK_UNION;
+    if (strcmp(text, "enum") == 0)
+        return CI_CTOK_ENUM;
+    if (strcmp(text, "typedef") == 0)
+        return CI_CTOK_TYPEDEF;
+    if (strcmp(text, "do") == 0)
+        return CI_CTOK_DO;
+    if (strcmp(text, "switch") == 0)
+        return CI_CTOK_SWITCH;
+    if (strcmp(text, "case") == 0)
+        return CI_CTOK_CASE;
+    if (strcmp(text, "default") == 0)
+        return CI_CTOK_DEFAULT;
+    if (strcmp(text, "break") == 0)
+        return CI_CTOK_BREAK;
+    if (strcmp(text, "continue") == 0)
+        return CI_CTOK_CONTINUE;
+    if (strcmp(text, "goto") == 0)
+        return CI_CTOK_GOTO;
+    if (strcmp(text, "sizeof") == 0)
+        return CI_CTOK_SIZEOF;
     return CI_CTOK_IDENT;
 }
 
@@ -1718,12 +2302,89 @@ static int ci_lex_c(ctr_cinterp* interp, char const* source, ci_ctok** out, size
                 goto oom;
             continue;
         }
-        if (isdigit((unsigned char)*p)) {
-            char* end = NULL;
-            tok.kind = CI_CTOK_NUM;
-            tok.num = strtoll(p, &end, 0);
+        if (isdigit((unsigned char)*p) || (p[0] == '.' && isdigit((unsigned char)p[1]))) {
+            char const* start = p;
+            int is_float = 0;
+            if (p[0] == '0' && (p[1] == 'x' || p[1] == 'X')) {
+                p += 2;
+                while (isxdigit((unsigned char)*p))
+                    p++;
+            } else {
+                while (isdigit((unsigned char)*p))
+                    p++;
+                if (*p == '.') {
+                    is_float = 1;
+                    p++;
+                    while (isdigit((unsigned char)*p))
+                        p++;
+                }
+                if (*p == 'e' || *p == 'E') {
+                    is_float = 1;
+                    p++;
+                    if (*p == '+' || *p == '-')
+                        p++;
+                    while (isdigit((unsigned char)*p))
+                        p++;
+                }
+            }
+            if (is_float) {
+                tok.kind = CI_CTOK_FNUM;
+                tok.fnum = strtod(start, NULL);
+            } else {
+                tok.kind = CI_CTOK_NUM;
+                tok.num = (int64_t)strtoull(start, NULL, 0);
+            }
+            while (*p == 'u' || *p == 'U' || *p == 'l' || *p == 'L' || *p == 'f' || *p == 'F')
+                p++;
             tok.text = ci_strdup("");
-            p = end;
+            if (!ci_tok_push(&toks, &count, &cap, tok))
+                goto oom;
+            continue;
+        }
+        if (*p == '\'') {
+            p++;
+            int64_t value = 0;
+            if (*p == '\\') {
+                p++;
+                switch (*p) {
+                case 'n':
+                    value = '\n';
+                    break;
+                case 't':
+                    value = '\t';
+                    break;
+                case 'r':
+                    value = '\r';
+                    break;
+                case '0':
+                    value = '\0';
+                    break;
+                case 'b':
+                    value = '\b';
+                    break;
+                case 'f':
+                    value = '\f';
+                    break;
+                case 'v':
+                    value = '\v';
+                    break;
+                case 'a':
+                    value = '\a';
+                    break;
+                default:
+                    value = (unsigned char)*p;
+                    break;
+                }
+                if (*p)
+                    p++;
+            } else if (*p) {
+                value = (unsigned char)*p++;
+            }
+            if (*p == '\'')
+                p++;
+            tok.kind = CI_CTOK_NUM;
+            tok.num = value;
+            tok.text = ci_strdup("");
             if (!ci_tok_push(&toks, &count, &cap, tok))
                 goto oom;
             continue;
@@ -1761,21 +2422,33 @@ static int ci_lex_c(ctr_cinterp* interp, char const* source, ci_ctok** out, size
                 goto oom;
             continue;
         }
-        if (p[0] == '.' && p[1] == '.' && p[2] == '.') {
+        {
+            static char const* const three[] = { "<<=", ">>=", "...", NULL };
+            static char const* const two[] = { "==", "!=", "<=", ">=", "&&", "||",
+                "<<", ">>", "->", "++", "--", "+=", "-=", "*=", "/=", "%=",
+                "&=", "|=", "^=", NULL };
+            char const* matched = NULL;
+            for (size_t i = 0; three[i]; i++) {
+                if (p[0] == three[i][0] && p[1] == three[i][1] && p[2] == three[i][2]) {
+                    matched = three[i];
+                    p += 3;
+                    break;
+                }
+            }
+            for (size_t i = 0; !matched && two[i]; i++) {
+                if (p[0] == two[i][0] && p[1] == two[i][1]) {
+                    matched = two[i];
+                    p += 2;
+                    break;
+                }
+            }
             tok.kind = CI_CTOK_PUNCT;
-            tok.text = ci_strdup("...");
-            p += 3;
-        } else {
-        char two[3] = { p[0], p[1], 0 };
-        if (strcmp(two, "==") == 0 || strcmp(two, "!=") == 0 || strcmp(two, "<=") == 0 || strcmp(two, ">=") == 0 || strcmp(two, "&&") == 0 || strcmp(two, "||") == 0 || strcmp(two, "<<") == 0 || strcmp(two, ">>") == 0) {
-            tok.kind = CI_CTOK_PUNCT;
-            tok.text = ci_strdup(two);
-            p += 2;
-        } else {
-            char one[2] = { *p++, 0 };
-            tok.kind = CI_CTOK_PUNCT;
-            tok.text = ci_strdup(one);
-        }
+            if (matched) {
+                tok.text = ci_strdup(matched);
+            } else {
+                char one[2] = { *p++, 0 };
+                tok.text = ci_strdup(one);
+            }
         }
         if (!ci_tok_push(&toks, &count, &cap, tok))
             goto oom;
@@ -1847,6 +2520,11 @@ static char* cp_expect_ident(ci_cparser* p)
     return ci_strdup(p->toks[p->pos++].text);
 }
 
+static char* cp_parse_declarator(ci_cparser* p, ci_dtype base, ci_dtype* out);
+static void cp_define_struct_body(ci_cparser* p, char const* name, int is_union);
+static int64_t cp_eval_const(ci_cparser* p);
+static void cp_parse_enum_body(ci_cparser* p);
+
 static int cp_is_type_start(ci_cparser* p)
 {
     switch (cp_peek(p)->kind) {
@@ -1863,71 +2541,150 @@ static int cp_is_type_start(ci_cparser* p)
     case CI_CTOK_EXTERN:
     case CI_CTOK_STATIC:
     case CI_CTOK_STRUCT:
+    case CI_CTOK_UNION:
+    case CI_CTOK_ENUM:
+    case CI_CTOK_TYPEDEF:
         return 1;
+    case CI_CTOK_IDENT: {
+        ci_dtype td;
+        return ci_find_typedef(p->interp, cp_peek(p)->text, &td);
+    }
     default:
         return 0;
     }
 }
 
-static int cp_parse_type(ci_cparser* p, ctr_cinterp_type* out, int* storage_extern)
+static void cp_apply_stars(ci_cparser* p, ci_dtype* dt)
 {
-    int is_unsigned = 0;
-    int saw = 0;
-    int pointer = 0;
-    ctr_cinterp_type type = CTR_CINTERP_T_I64;
-    if (storage_extern)
-        *storage_extern = 0;
-    while (cp_match_kind(p, CI_CTOK_CONST) || cp_match_kind(p, CI_CTOK_STATIC))
-        ;
-    if (cp_match_kind(p, CI_CTOK_EXTERN) && storage_extern)
-        *storage_extern = 1;
-    while (cp_match_kind(p, CI_CTOK_CONST))
-        ;
-    if (cp_match_kind(p, CI_CTOK_STRUCT)) {
-        if (cp_peek(p)->kind == CI_CTOK_IDENT)
-            p->pos++;
-        type = CTR_CINTERP_T_PTR;
-        saw = 1;
-    } else
-    if (cp_match_kind(p, CI_CTOK_UNSIGNED))
-        is_unsigned = 1;
-    else
-        cp_match_kind(p, CI_CTOK_SIGNED);
-    if (cp_match_kind(p, CI_CTOK_VOID)) {
-        type = CTR_CINTERP_T_VOID;
-        saw = 1;
-    } else if (cp_match_kind(p, CI_CTOK_CHAR)) {
-        type = is_unsigned ? CTR_CINTERP_T_U8 : CTR_CINTERP_T_I8;
-        saw = 1;
-    } else if (cp_match_kind(p, CI_CTOK_SHORT)) {
-        type = is_unsigned ? CTR_CINTERP_T_U32 : CTR_CINTERP_T_I32;
-        saw = 1;
-    } else if (cp_match_kind(p, CI_CTOK_INT)) {
-        type = is_unsigned ? CTR_CINTERP_T_U64 : CTR_CINTERP_T_I64;
-        saw = 1;
-    } else if (cp_match_kind(p, CI_CTOK_LONG)) {
-        cp_match_kind(p, CI_CTOK_LONG);
-        type = is_unsigned ? CTR_CINTERP_T_U64 : CTR_CINTERP_T_I64;
-        saw = 1;
-    } else if (cp_match_kind(p, CI_CTOK_FLOAT)) {
-        type = CTR_CINTERP_T_F32;
-        saw = 1;
-    } else if (cp_match_kind(p, CI_CTOK_DOUBLE)) {
-        type = CTR_CINTERP_T_F64;
-        saw = 1;
-    }
     while (cp_match_kind(p, CI_CTOK_CONST))
         ;
     while (cp_match_punct(p, "*")) {
-        pointer = 1;
+        if (dt->prim != CTR_CINTERP_T_PTR)
+            dt->pointee = dt->prim;
+        else
+            dt->pointee = CTR_CINTERP_T_VOID;
+        dt->prim = CTR_CINTERP_T_PTR;
+        dt->is_array = 0;
         while (cp_match_kind(p, CI_CTOK_CONST))
             ;
     }
+}
+
+static int cp_parse_dtype_ex(ci_cparser* p, ci_dtype* out, int* storage_extern, int consume_stars)
+{
+    int is_unsigned = 0;
+    int saw = 0;
+    ci_dtype dt;
+    memset(&dt, 0, sizeof(dt));
+    dt.prim = CTR_CINTERP_T_I32;
+    if (storage_extern)
+        *storage_extern = 0;
+    for (;;) {
+        if (cp_match_kind(p, CI_CTOK_CONST) || cp_match_kind(p, CI_CTOK_STATIC))
+            continue;
+        if (cp_match_kind(p, CI_CTOK_EXTERN)) {
+            if (storage_extern)
+                *storage_extern = 1;
+            continue;
+        }
+        if (cp_match_kind(p, CI_CTOK_TYPEDEF)) {
+            if (storage_extern)
+                *storage_extern = 2;
+            continue;
+        }
+        break;
+    }
+    int is_union_kw = cp_peek(p)->kind == CI_CTOK_UNION;
+    if (cp_match_kind(p, CI_CTOK_STRUCT) || cp_match_kind(p, CI_CTOK_UNION)) {
+        if (cp_peek(p)->kind == CI_CTOK_IDENT) {
+            free(dt.tag);
+            dt.tag = ci_strdup(cp_peek(p)->text);
+            p->pos++;
+        }
+        if (cp_is_punct(p, "{")) {
+            if (!dt.tag) {
+                char anon[64];
+                snprintf(anon, sizeof(anon), ".anon%d", p->anon_struct_id++);
+                dt.tag = ci_strdup(anon);
+            }
+            cp_define_struct_body(p, dt.tag, is_union_kw);
+        }
+        dt.prim = CTR_CINTERP_T_VOID;
+        saw = 1;
+    } else if (cp_match_kind(p, CI_CTOK_ENUM)) {
+        if (cp_peek(p)->kind == CI_CTOK_IDENT)
+            p->pos++;
+        if (cp_is_punct(p, "{"))
+            cp_parse_enum_body(p);
+        dt.prim = CTR_CINTERP_T_I32;
+        saw = 1;
+    } else {
+        if (cp_match_kind(p, CI_CTOK_UNSIGNED))
+            is_unsigned = 1;
+        else if (cp_match_kind(p, CI_CTOK_SIGNED))
+            is_unsigned = 0;
+        if (cp_match_kind(p, CI_CTOK_VOID)) {
+            dt.prim = CTR_CINTERP_T_VOID;
+            saw = 1;
+        } else if (cp_match_kind(p, CI_CTOK_CHAR)) {
+            dt.prim = is_unsigned ? CTR_CINTERP_T_U8 : CTR_CINTERP_T_I8;
+            saw = 1;
+        } else if (cp_match_kind(p, CI_CTOK_SHORT)) {
+            cp_match_kind(p, CI_CTOK_INT);
+            dt.prim = is_unsigned ? CTR_CINTERP_T_U16 : CTR_CINTERP_T_I16;
+            saw = 1;
+        } else if (cp_match_kind(p, CI_CTOK_LONG)) {
+            cp_match_kind(p, CI_CTOK_LONG);
+            cp_match_kind(p, CI_CTOK_INT);
+            dt.prim = is_unsigned ? CTR_CINTERP_T_U64 : CTR_CINTERP_T_I64;
+            saw = 1;
+        } else if (cp_match_kind(p, CI_CTOK_INT)) {
+            dt.prim = is_unsigned ? CTR_CINTERP_T_U32 : CTR_CINTERP_T_I32;
+            saw = 1;
+        } else if (cp_match_kind(p, CI_CTOK_FLOAT)) {
+            dt.prim = CTR_CINTERP_T_F32;
+            saw = 1;
+        } else if (cp_match_kind(p, CI_CTOK_DOUBLE)) {
+            dt.prim = CTR_CINTERP_T_F64;
+            saw = 1;
+        } else if (is_unsigned) {
+            dt.prim = CTR_CINTERP_T_U32;
+            saw = 1;
+        } else if (cp_peek(p)->kind == CI_CTOK_IDENT) {
+            ci_dtype td;
+            if (ci_find_typedef(p->interp, cp_peek(p)->text, &td)) {
+                free(dt.tag);
+                dt = td;
+                dt.tag = td.tag ? ci_strdup(td.tag) : NULL;
+                p->pos++;
+                saw = 1;
+            }
+        }
+    }
     if (!saw) {
+        free(dt.tag);
         cp_error(p, "expected C type");
         return 0;
     }
-    *out = pointer ? CTR_CINTERP_T_PTR : type;
+    if (consume_stars)
+        cp_apply_stars(p, &dt);
+    *out = dt;
+    return 1;
+}
+
+static int cp_parse_dtype(ci_cparser* p, ci_dtype* out, int* storage_extern)
+{
+    return cp_parse_dtype_ex(p, out, storage_extern, 1);
+}
+
+static int cp_parse_type(ci_cparser* p, ctr_cinterp_type* out, int* storage_extern)
+{
+    ci_dtype dt;
+    if (!cp_parse_dtype(p, &dt, storage_extern))
+        return 0;
+    ctr_cinterp_type t = (dt.prim == CTR_CINTERP_T_VOID && dt.tag) ? CTR_CINTERP_T_PTR : dt.prim;
+    free(dt.tag);
+    *out = t;
     return 1;
 }
 
@@ -2088,47 +2845,200 @@ static ci_cvar* cp_find_var(ci_cparser* p, char const* name)
     return NULL;
 }
 
-static ci_cvar* cp_add_var(ci_cparser* p, char const* name, ctr_cinterp_type type, int is_arg, int index)
+static size_t ci_align_up(size_t v, size_t a)
+{
+    if (a < 1)
+        a = 1;
+    return (v + a - 1) / a * a;
+}
+
+static size_t ci_prim_size(ctr_cinterp_type t)
+{
+    size_t s = ctr_cinterp_type_size(t);
+    return s ? s : 1;
+}
+
+static int ci_type_is_float(ctr_cinterp_type t)
+{
+    return t == CTR_CINTERP_T_F32 || t == CTR_CINTERP_T_F64;
+}
+
+static size_t ci_struct_size_of(ctr_cinterp* interp, char const* tag)
+{
+    ci_struct_def* def = ci_find_struct(interp, tag);
+    return def ? def->size : 0;
+}
+
+static size_t ci_elem_size(ctr_cinterp* interp, ci_dtype dt)
+{
+    if (dt.pointee == CTR_CINTERP_T_VOID && dt.tag)
+        return ci_struct_size_of(interp, dt.tag);
+    if (dt.pointee == CTR_CINTERP_T_VOID)
+        return 1;
+    return ci_prim_size(dt.pointee);
+}
+
+static size_t ci_storage_size(ctr_cinterp* interp, ci_dtype dt)
+{
+    if (dt.is_array)
+        return dt.array_len * ci_elem_size(interp, dt);
+    if (dt.prim == CTR_CINTERP_T_VOID && dt.tag)
+        return ci_struct_size_of(interp, dt.tag);
+    return ci_prim_size(dt.prim);
+}
+
+static size_t ci_storage_align(ctr_cinterp* interp, ci_dtype dt)
+{
+    if (dt.is_array || (dt.prim == CTR_CINTERP_T_PTR)) {
+        if (dt.is_array)
+            return ci_elem_size(interp, dt) > 8 ? 8 : ci_elem_size(interp, dt);
+        return sizeof(void*);
+    }
+    if (dt.prim == CTR_CINTERP_T_VOID && dt.tag) {
+        ci_struct_def* def = ci_find_struct(interp, dt.tag);
+        return def && def->align ? def->align : 1;
+    }
+    return ci_prim_size(dt.prim);
+}
+
+static int ci_dt_is_struct(ci_dtype dt)
+{
+    return dt.prim == CTR_CINTERP_T_VOID && dt.tag && !dt.is_array;
+}
+
+static void cp_set_scalar(ci_cparser* p, ctr_cinterp_type prim)
+{
+    p->last_type = prim;
+    p->last_pointee = CTR_CINTERP_T_VOID;
+    p->last_tag = NULL;
+    p->last_is_array = 0;
+    p->last_array_len = 0;
+}
+
+static void cp_set_dtype(ci_cparser* p, ci_dtype dt)
+{
+    p->last_type = dt.prim;
+    p->last_pointee = dt.pointee;
+    p->last_tag = dt.tag;
+    p->last_is_array = dt.is_array;
+    p->last_array_len = dt.array_len;
+}
+
+static ci_dtype cp_get_dtype(ci_cparser* p)
+{
+    ci_dtype dt;
+    memset(&dt, 0, sizeof(dt));
+    dt.prim = p->last_type;
+    dt.pointee = p->last_pointee;
+    dt.tag = p->last_tag;
+    dt.is_array = p->last_is_array;
+    dt.array_len = p->last_array_len;
+    return dt;
+}
+
+static ci_cvar* cp_add_var(ci_cparser* p, char const* name, ci_dtype type)
 {
     if (!ci_grow((void**)&p->vars, &p->var_cap, p->var_count, sizeof(ci_cvar)))
         return NULL;
     ci_cvar* var = &p->vars[p->var_count++];
+    memset(var, 0, sizeof(*var));
     var->name = ci_strdup(name);
     var->type = type;
-    var->is_arg = is_arg;
-    var->index = index;
+    var->type.tag = type.tag ? ci_strdup(type.tag) : NULL;
+    if (p->fn) {
+        size_t sz = ci_storage_size(p->interp, type);
+        size_t al = ci_storage_align(p->interp, type);
+        size_t off = ci_align_up(p->fn->frame_size, al ? al : 1);
+        var->offset = off;
+        p->fn->frame_size = off + (sz ? sz : 1);
+    }
     return var;
 }
 
 static void cp_free_vars(ci_cparser* p)
 {
-    for (size_t i = 0; i < p->var_count; i++)
+    for (size_t i = 0; i < p->var_count; i++) {
         free(p->vars[i].name);
+        free(p->vars[i].global_name);
+        free(p->vars[i].type.tag);
+    }
     free(p->vars);
     p->vars = NULL;
     p->var_count = 0;
     p->var_cap = 0;
 }
 
-static void cp_emit_load_var(ci_cparser* p, ci_cvar* var)
+static void cp_emit_var_addr(ci_cparser* p, ci_cvar* var)
 {
     ctr_cinterp_instr ins;
     memset(&ins, 0, sizeof(ins));
-    ins.op = var->is_arg ? CI_OP_ARG : CI_OP_LOCAL;
-    ins.a = var->index;
+    if (var->is_global) {
+        ins.op = CI_OP_GLOBAL_ADDR;
+        ins.name = ci_strdup(var->global_name);
+    } else {
+        ins.op = CI_OP_FRAME_ADDR;
+        ins.a = (int)var->offset;
+    }
     cp_emit(p, ins);
 }
 
-static void cp_emit_store_var(ci_cparser* p, ci_cvar* var)
+static void cp_emit_load(ci_cparser* p, ci_dtype dt)
+{
+    if (dt.is_array) {
+        ci_dtype res;
+        memset(&res, 0, sizeof(res));
+        res.prim = CTR_CINTERP_T_PTR;
+        res.pointee = dt.pointee;
+        res.tag = dt.tag;
+        cp_set_dtype(p, res);
+        return;
+    }
+    if (ci_dt_is_struct(dt)) {
+        cp_set_dtype(p, dt);
+        return;
+    }
+    ctr_cinterp_instr ins;
+    memset(&ins, 0, sizeof(ins));
+    ins.op = CI_OP_LOAD;
+    ins.type = dt.prim;
+    cp_emit(p, ins);
+    cp_set_dtype(p, dt);
+}
+
+static void cp_emit_store(ci_cparser* p, ctr_cinterp_type prim, int keep_value)
 {
     ctr_cinterp_instr ins;
     memset(&ins, 0, sizeof(ins));
-    ins.op = CI_OP_STORE_LOCAL;
-    ins.a = var->index;
-    if (var->is_arg)
-        cp_error(p, "assignment to function arguments is not supported yet");
-    else
+    ins.op = keep_value ? CI_OP_STORE_R : CI_OP_STORE;
+    ins.type = prim;
+    cp_emit(p, ins);
+}
+
+static void cp_emit_const_i64(ci_cparser* p, int64_t v)
+{
+    ctr_cinterp_instr ins;
+    memset(&ins, 0, sizeof(ins));
+    ins.op = CI_OP_CONST;
+    ins.type = CTR_CINTERP_T_I64;
+    ins.imm.i = v;
+    cp_emit(p, ins);
+}
+
+static void cp_coerce(ci_cparser* p, ctr_cinterp_type target)
+{
+    if (target == CTR_CINTERP_T_VOID || target == p->last_type)
+        return;
+    int tf = ci_type_is_float(target);
+    int sf = ci_type_is_float(p->last_type);
+    if (tf || sf) {
+        ctr_cinterp_instr ins;
+        memset(&ins, 0, sizeof(ins));
+        ins.op = CI_OP_CAST;
+        ins.type = target;
+        ins.type2 = p->last_type;
         cp_emit(p, ins);
+        cp_set_scalar(p, target);
+    }
 }
 
 static ctr_cinterp_type ci_promote_binary_type(ctr_cinterp_type a, ctr_cinterp_type b)
@@ -2161,7 +3071,136 @@ static int cp_add_string_global(ci_cparser* p, char const* value)
 }
 
 static void cp_parse_expr(ci_cparser* p);
+static void cp_parse_assign(ci_cparser* p);
+static void cp_parse_cond(ci_cparser* p);
+static void cp_parse_unary(ci_cparser* p);
 static void cp_parse_stmt(ci_cparser* p);
+static int cp_parse_lvalue_addr(ci_cparser* p);
+static int64_t cp_eval_const(ci_cparser* p);
+
+static void cp_truncate_code(ci_cparser* p, size_t n)
+{
+    if (!p->fn)
+        return;
+    for (size_t i = n; i < p->fn->code_count; i++) {
+        free(p->fn->code[i].name);
+        free(p->fn->code[i].arg_types);
+    }
+    if (n < p->fn->code_count)
+        p->fn->code_count = n;
+}
+
+static ci_dtype ci_pointee_object(ci_dtype ptr)
+{
+    ci_dtype obj;
+    memset(&obj, 0, sizeof(obj));
+    if (ptr.pointee == CTR_CINTERP_T_VOID && ptr.tag) {
+        obj.prim = CTR_CINTERP_T_VOID;
+        obj.tag = ptr.tag;
+    } else {
+        obj.prim = ptr.pointee ? ptr.pointee : CTR_CINTERP_T_I64;
+    }
+    return obj;
+}
+
+static ci_dtype ci_pointer_to(ci_dtype obj)
+{
+    ci_dtype ptr;
+    memset(&ptr, 0, sizeof(ptr));
+    ptr.prim = CTR_CINTERP_T_PTR;
+    if (ci_dt_is_struct(obj)) {
+        ptr.pointee = CTR_CINTERP_T_VOID;
+        ptr.tag = obj.tag;
+    } else if (obj.is_array) {
+        ptr.pointee = obj.pointee;
+        ptr.tag = obj.tag;
+    } else {
+        ptr.pointee = obj.prim;
+    }
+    return ptr;
+}
+
+static void cp_emit_call(ci_cparser* p, char* name)
+{
+    ctr_cinterp_function* declfn = ctr_cinterp_find_function(p->interp, name);
+    ctr_cinterp_external* declext = ci_find_external(p->interp, name);
+    ci_cvar* fpvar = (!declfn && !declext) ? cp_find_var(p, name) : NULL;
+    ctr_cinterp_global* fpglobal = (!declfn && !declext && !fpvar) ? ci_find_global(p->interp, name) : NULL;
+    int indirect = fpvar || fpglobal;
+    ctr_cinterp_type const* param_types = declfn ? NULL : (declext ? declext->arg_types : NULL);
+    size_t param_count = declfn ? declfn->argc : (declext ? declext->argc : 0);
+    int variadic = declext ? declext->variadic : 0;
+    ctr_cinterp_type arg_types[128];
+    size_t argc = 0;
+    if (!cp_is_punct(p, ")")) {
+        do {
+            if (argc >= 128) {
+                cp_error(p, "too many function call arguments");
+                break;
+            }
+            cp_parse_assign(p);
+            if (param_types && argc < param_count && !(variadic && argc >= param_count))
+                cp_coerce(p, param_types[argc]);
+            arg_types[argc] = p->last_type;
+            argc++;
+        } while (cp_match_punct(p, ","));
+    }
+    cp_expect_punct(p, ")");
+    if (indirect) {
+        if (fpvar)
+            cp_emit_var_addr(p, fpvar);
+        else {
+            ctr_cinterp_instr g;
+            memset(&g, 0, sizeof(g));
+            g.op = CI_OP_GLOBAL_ADDR;
+            g.name = ci_strdup(name);
+            cp_emit(p, g);
+        }
+        cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_LOAD, .type = CTR_CINTERP_T_PTR });
+        ctr_cinterp_instr ci;
+        memset(&ci, 0, sizeof(ci));
+        ci.op = CI_OP_CALL_PTR;
+        ci.a = (int)argc;
+        if (argc) {
+            ci.arg_types = calloc(argc, sizeof(ctr_cinterp_type));
+            if (ci.arg_types)
+                memcpy(ci.arg_types, arg_types, argc * sizeof(ctr_cinterp_type));
+        }
+        cp_emit(p, ci);
+        cp_set_scalar(p, CTR_CINTERP_T_I64);
+        free(name);
+        return;
+    }
+    ctr_cinterp_instr ins;
+    memset(&ins, 0, sizeof(ins));
+    ctr_cinterp_function* fn = declfn;
+    ctr_cinterp_external* ext = declext;
+    ctr_cinterp_type ret = CTR_CINTERP_T_I64;
+    if (fn) {
+        ins.op = CI_OP_CALL;
+        ret = fn->ret_type;
+    } else if (ext) {
+        ins.op = CI_OP_CALL_EXT;
+        ret = ext->ret_type;
+    } else {
+        cp_error(p, "call to unknown C function `%s' (include or declare it first)", name);
+        free(name);
+        return;
+    }
+    ins.name = name;
+    ins.a = (int)argc;
+    if (argc) {
+        ins.arg_types = calloc(argc, sizeof(ctr_cinterp_type));
+        if (!ins.arg_types) {
+            cp_error(p, "out of memory recording call argument types");
+            free(name);
+            return;
+        }
+        memcpy(ins.arg_types, arg_types, argc * sizeof(ctr_cinterp_type));
+    }
+    cp_emit(p, ins);
+    cp_set_scalar(p, ret);
+}
 
 static void cp_parse_primary(ci_cparser* p)
 {
@@ -2171,145 +3210,347 @@ static void cp_parse_primary(ci_cparser* p)
         return;
     }
     if (cp_peek(p)->kind == CI_CTOK_NUM) {
+        int64_t n = p->toks[p->pos++].num;
+        cp_emit_const_i64(p, n);
+        cp_set_scalar(p, (n > INT32_MAX || n < INT32_MIN) ? CTR_CINTERP_T_I64 : CTR_CINTERP_T_I32);
+        return;
+    }
+    if (cp_peek(p)->kind == CI_CTOK_FNUM) {
         ctr_cinterp_instr ins;
         memset(&ins, 0, sizeof(ins));
         ins.op = CI_OP_CONST;
-        ins.type = CTR_CINTERP_T_I64;
-        ins.imm.i = p->toks[p->pos++].num;
+        ins.type = CTR_CINTERP_T_F64;
+        ins.imm.f = p->toks[p->pos++].fnum;
         cp_emit(p, ins);
-        p->last_type = CTR_CINTERP_T_I64;
+        cp_set_scalar(p, CTR_CINTERP_T_F64);
         return;
     }
     if (cp_peek(p)->kind == CI_CTOK_STR) {
         cp_add_string_global(p, p->toks[p->pos++].text);
-        p->last_type = CTR_CINTERP_T_PTR;
+        ci_dtype d;
+        memset(&d, 0, sizeof(d));
+        d.prim = CTR_CINTERP_T_PTR;
+        d.pointee = CTR_CINTERP_T_I8;
+        cp_set_dtype(p, d);
         return;
     }
     if (cp_peek(p)->kind == CI_CTOK_IDENT) {
         char* name = ci_strdup(cp_peek(p)->text);
         p->pos++;
         if (cp_match_punct(p, "(")) {
-            ctr_cinterp_type arg_types[128];
-            size_t argc = 0;
-            if (!cp_is_punct(p, ")")) {
-                do {
-                    if (argc >= 128) {
-                        cp_error(p, "too many function call arguments");
-                        break;
-                    }
-                    cp_parse_expr(p);
-                    arg_types[argc] = p->last_type;
-                    argc++;
-                } while (cp_match_punct(p, ","));
-            }
-            cp_expect_punct(p, ")");
-            ctr_cinterp_instr ins;
-            memset(&ins, 0, sizeof(ins));
-            ctr_cinterp_function* fn = ctr_cinterp_find_function(p->interp, name);
-            ctr_cinterp_external* ext = ci_find_external(p->interp, name);
-            if (fn) {
-                ins.op = CI_OP_CALL;
-                p->last_type = fn->ret_type;
-            } else if (ext) {
-                ins.op = CI_OP_CALL_EXT;
-                p->last_type = ext->ret_type;
-            } else {
-                cp_error(p, "call to unknown C function `%s' (include or declare it first)", name);
-                free(name);
-                return;
-            }
-            ins.name = name;
-            ins.a = (int)argc;
-            if (argc) {
-                ins.arg_types = calloc(argc, sizeof(ctr_cinterp_type));
-                if (!ins.arg_types) {
-                    cp_error(p, "out of memory recording call argument types");
-                    free(name);
-                    return;
-                }
-                memcpy(ins.arg_types, arg_types, argc * sizeof(ctr_cinterp_type));
-            }
-            cp_emit(p, ins);
+            cp_emit_call(p, name);
             return;
         }
-        ci_cvar* var = cp_find_var(p, name);
-        if (var) {
-            cp_emit_load_var(p, var);
-            p->last_type = var->type;
-        } else {
-            ctr_cinterp_instr ins;
-            memset(&ins, 0, sizeof(ins));
+        int64_t ev;
+        if (ci_find_enum_const(p->interp, name, &ev)) {
+            cp_emit_const_i64(p, ev);
+            cp_set_scalar(p, CTR_CINTERP_T_I32);
+            free(name);
+            return;
+        }
+        ctr_cinterp_instr ins;
+        memset(&ins, 0, sizeof(ins));
+        if (ctr_cinterp_find_function(p->interp, name) || ci_find_external(p->interp, name))
+            ins.op = CI_OP_FUNC_ADDR;
+        else
             ins.op = CI_OP_GLOBAL_ADDR;
-            ins.name = name;
-            cp_emit(p, ins);
-            p->last_type = CTR_CINTERP_T_PTR;
-            return;
-        }
-        free(name);
+        ins.name = name;
+        cp_emit(p, ins);
+        cp_set_scalar(p, CTR_CINTERP_T_PTR);
         return;
     }
     cp_error(p, "expected expression");
+}
+
+static int cp_resolve_ident_addr(ci_cparser* p, char const* name, ci_dtype* out)
+{
+    ci_cvar* var = cp_find_var(p, name);
+    if (var) {
+        cp_emit_var_addr(p, var);
+        *out = var->type;
+        return 1;
+    }
+    ctr_cinterp_global* g = ci_find_global(p->interp, name);
+    if (g) {
+        ctr_cinterp_instr ins;
+        memset(&ins, 0, sizeof(ins));
+        ins.op = CI_OP_GLOBAL_ADDR;
+        ins.name = ci_strdup(name);
+        cp_emit(p, ins);
+        *out = g->dtype;
+        if (out->prim == CTR_CINTERP_T_VOID && !out->tag)
+            out->prim = CTR_CINTERP_T_I64;
+        return 1;
+    }
+    return 0;
+}
+
+static int cp_lvalue_postfix(ci_cparser* p)
+{
+    for (;;) {
+        if (cp_match_punct(p, "[")) {
+            ci_dtype base = cp_get_dtype(p);
+            ci_dtype elem;
+            size_t esz;
+            if (base.is_array) {
+                elem = ci_pointee_object(base);
+                esz = ci_elem_size(p->interp, base);
+            } else if (base.prim == CTR_CINTERP_T_PTR) {
+                cp_emit_load(p, base);
+                base = cp_get_dtype(p);
+                elem = ci_pointee_object(base);
+                esz = ci_elem_size(p->interp, base);
+            } else {
+                cp_error(p, "subscripted value is not an array or pointer");
+                return 1;
+            }
+            cp_parse_expr(p);
+            cp_expect_punct(p, "]");
+            if (esz != 1) {
+                cp_emit_const_i64(p, (int64_t)esz);
+                ctr_cinterp_instr mul = { .op = CI_OP_MUL, .type = CTR_CINTERP_T_I64 };
+                cp_emit(p, mul);
+            }
+            ctr_cinterp_instr add = { .op = CI_OP_PTR_ADD };
+            cp_emit(p, add);
+            cp_set_dtype(p, elem);
+        } else if (cp_match_punct(p, ".") || cp_match_punct(p, "->")) {
+            int arrow = strcmp(p->toks[p->pos - 1].text, "->") == 0;
+            ci_dtype base = cp_get_dtype(p);
+            char const* tag = base.tag;
+            if (arrow) {
+                if (base.prim != CTR_CINTERP_T_PTR || !base.tag) {
+                    cp_error(p, "`->' used on non-pointer-to-struct");
+                    return 1;
+                }
+                cp_emit_load(p, base);
+            } else if (!ci_dt_is_struct(base)) {
+                cp_error(p, "`.' used on non-struct value");
+                return 1;
+            }
+            char* field = cp_expect_ident(p);
+            if (!field)
+                return 1;
+            ci_struct_def* def = ci_find_struct(p->interp, tag);
+            ci_struct_member* m = NULL;
+            for (size_t i = 0; def && i < def->member_count; i++) {
+                if (strcmp(def->members[i].name, field) == 0) {
+                    m = &def->members[i];
+                    break;
+                }
+            }
+            if (!m) {
+                cp_error(p, "no member `%s' in struct `%s'", field, tag ? tag : "?");
+                free(field);
+                return 1;
+            }
+            if (m->offset) {
+                cp_emit_const_i64(p, (int64_t)m->offset);
+                ctr_cinterp_instr add = { .op = CI_OP_PTR_ADD };
+                cp_emit(p, add);
+            }
+            cp_set_dtype(p, m->type);
+            free(field);
+        } else {
+            break;
+        }
+    }
+    return 1;
+}
+
+static int cp_parse_lvalue_addr(ci_cparser* p)
+{
+    if (cp_match_punct(p, "*")) {
+        cp_parse_unary(p);
+        ci_dtype ptr = cp_get_dtype(p);
+        cp_set_dtype(p, ci_pointee_object(ptr));
+        return cp_lvalue_postfix(p);
+    }
+    if (cp_is_punct(p, "(")) {
+        size_t spos = p->pos;
+        size_t scode = p->fn->code_count;
+        p->pos++;
+        if (cp_parse_lvalue_addr(p) && cp_match_punct(p, ")"))
+            return cp_lvalue_postfix(p);
+        cp_truncate_code(p, scode);
+        p->pos = spos;
+        return 0;
+    }
+    if (cp_peek(p)->kind == CI_CTOK_IDENT
+        && !(p->toks[p->pos + 1].kind == CI_CTOK_PUNCT && strcmp(p->toks[p->pos + 1].text, "(") == 0)) {
+        char* name = ci_strdup(cp_peek(p)->text);
+        ci_dtype dt;
+        if (!cp_resolve_ident_addr(p, name, &dt)) {
+            free(name);
+            return 0;
+        }
+        free(name);
+        p->pos++;
+        cp_set_dtype(p, dt);
+        return cp_lvalue_postfix(p);
+    }
+    return 0;
+}
+
+static void cp_emit_incdec(ci_cparser* p, ci_dtype lvt, int delta, int is_postfix)
+{
+    int isf = lvt.prim == CTR_CINTERP_T_F32 || lvt.prim == CTR_CINTERP_T_F64;
+    size_t esz = lvt.prim == CTR_CINTERP_T_PTR ? ci_elem_size(p->interp, lvt) : 1;
+    int64_t step = (int64_t)esz * delta;
+    ctr_cinterp_instr add = { .op = CI_OP_ADD,
+        .type = isf ? lvt.prim : CTR_CINTERP_T_I64,
+        .a = isf ? (int)lvt.prim : CTR_CINTERP_T_I64,
+        .b = CTR_CINTERP_T_I64 };
+    if (is_postfix) {
+        cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_DUP });
+        cp_emit_load(p, lvt);
+        cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_SWAP });
+        cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_DUP });
+        cp_emit_load(p, lvt);
+        cp_emit_const_i64(p, step);
+        cp_emit(p, add);
+        cp_emit_store(p, lvt.prim, 0);
+    } else {
+        cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_DUP });
+        cp_emit_load(p, lvt);
+        cp_emit_const_i64(p, step);
+        cp_emit(p, add);
+        cp_emit_store(p, lvt.prim, 1);
+    }
 }
 
 static void cp_parse_unary(ci_cparser* p)
 {
     if (cp_is_punct(p, "(") && cp_is_type_start(&(ci_cparser) { .toks = p->toks, .pos = p->pos + 1, .count = p->count, .interp = p->interp, .ok = p->ok })) {
         size_t save = p->pos;
-        ctr_cinterp_type cast_type;
+        ci_dtype cast_dt;
         int ignored_storage = 0;
         cp_match_punct(p, "(");
-        if (cp_parse_type(p, &cast_type, &ignored_storage) && cp_match_punct(p, ")")) {
+        if (cp_parse_dtype(p, &cast_dt, &ignored_storage) && cp_match_punct(p, ")")) {
             cp_parse_unary(p);
             ctr_cinterp_instr ins;
             memset(&ins, 0, sizeof(ins));
             ins.op = CI_OP_CAST;
-            ins.type = cast_type;
+            ins.type = cast_dt.prim;
+            ins.type2 = p->last_type;
             cp_emit(p, ins);
-            p->last_type = cast_type;
+            cp_set_dtype(p, cast_dt);
+            free(cast_dt.tag);
             return;
         }
+        free(cast_dt.tag);
         p->pos = save;
+    }
+    if (cp_match_kind(p, CI_CTOK_SIZEOF)) {
+        size_t scode = p->fn->code_count;
+        size_t spos = p->pos;
+        ci_dtype dt;
+        memset(&dt, 0, sizeof(dt));
+        int got = 0;
+        if (cp_is_punct(p, "(") && cp_is_type_start(&(ci_cparser) { .toks = p->toks, .pos = p->pos + 1, .count = p->count, .interp = p->interp, .ok = p->ok })) {
+            cp_match_punct(p, "(");
+            int ig = 0;
+            if (cp_parse_dtype(p, &dt, &ig)) {
+                while (cp_match_punct(p, "[")) {
+                    if (cp_peek(p)->kind == CI_CTOK_NUM) {
+                        dt.is_array = 1;
+                        dt.pointee = dt.prim;
+                        dt.array_len = (size_t)p->toks[p->pos++].num;
+                    }
+                    cp_expect_punct(p, "]");
+                }
+                cp_expect_punct(p, ")");
+                got = 1;
+            }
+        }
+        if (!got) {
+            free(dt.tag);
+            memset(&dt, 0, sizeof(dt));
+            p->pos = spos;
+            if (cp_parse_lvalue_addr(p))
+                dt = cp_get_dtype(p);
+            else {
+                cp_truncate_code(p, scode);
+                p->pos = spos;
+                cp_parse_unary(p);
+                dt = cp_get_dtype(p);
+            }
+        }
+        size_t sz = ci_storage_size(p->interp, dt);
+        if (got)
+            free(dt.tag);
+        cp_truncate_code(p, scode);
+        cp_emit_const_i64(p, (int64_t)(sz ? sz : 1));
+        cp_set_scalar(p, CTR_CINTERP_T_U64);
+        return;
+    }
+    if (cp_is_punct(p, "++") || cp_is_punct(p, "--")) {
+        int delta = cp_is_punct(p, "++") ? 1 : -1;
+        p->pos++;
+        if (!cp_parse_lvalue_addr(p)) {
+            cp_error(p, "operand of prefix ++/-- is not an lvalue");
+            return;
+        }
+        ci_dtype lvt = cp_get_dtype(p);
+        cp_emit_incdec(p, lvt, delta, 0);
+        cp_set_dtype(p, lvt);
+        return;
     }
     if (cp_match_punct(p, "-")) {
         cp_parse_unary(p);
-        ctr_cinterp_instr ins = { .op = CI_OP_NEG };
+        ctr_cinterp_instr ins = { .op = CI_OP_NEG, .type = p->last_type };
         cp_emit(p, ins);
+    } else if (cp_match_punct(p, "+")) {
+        cp_parse_unary(p);
+    } else if (cp_match_punct(p, "~")) {
+        cp_parse_unary(p);
+        ctr_cinterp_instr ins = { .op = CI_OP_NOT };
+        cp_emit(p, ins);
+        cp_set_scalar(p, CTR_CINTERP_T_I64);
     } else if (cp_match_punct(p, "!")) {
         cp_parse_unary(p);
-        ctr_cinterp_instr zero;
-        memset(&zero, 0, sizeof(zero));
-        zero.op = CI_OP_CONST;
-        zero.imm.i = 0;
-        cp_emit(p, zero);
-        ctr_cinterp_instr eq = { .op = CI_OP_EQ };
+        cp_emit_const_i64(p, 0);
+        ctr_cinterp_instr eq = { .op = CI_OP_EQ, .type = p->last_type, .a = p->last_type, .b = CTR_CINTERP_T_I64 };
         cp_emit(p, eq);
-        p->last_type = CTR_CINTERP_T_I64;
+        cp_set_scalar(p, CTR_CINTERP_T_I64);
     } else if (cp_match_punct(p, "&")) {
-        if (cp_peek(p)->kind != CI_CTOK_IDENT) {
-            cp_error(p, "address-of currently expects a local/global name");
-            return;
-        }
-        char* name = ci_strdup(cp_peek(p)->text);
-        p->pos++;
-        ci_cvar* var = cp_find_var(p, name);
-        if (var)
-            cp_error(p, "address-of locals is not supported by this bytecode layout yet");
-        else {
+        if (cp_peek(p)->kind == CI_CTOK_IDENT && !cp_find_var(p, cp_peek(p)->text)
+            && (ctr_cinterp_find_function(p->interp, cp_peek(p)->text) || ci_find_external(p->interp, cp_peek(p)->text))) {
             ctr_cinterp_instr ins;
             memset(&ins, 0, sizeof(ins));
-            ins.op = CI_OP_GLOBAL_ADDR;
-            ins.name = name;
+            ins.op = CI_OP_FUNC_ADDR;
+            ins.name = ci_strdup(cp_peek(p)->text);
+            p->pos++;
             cp_emit(p, ins);
-            p->last_type = CTR_CINTERP_T_PTR;
+            cp_set_scalar(p, CTR_CINTERP_T_PTR);
             return;
         }
-        free(name);
+        if (!cp_parse_lvalue_addr(p)) {
+            cp_error(p, "operand of unary `&' is not an lvalue");
+            return;
+        }
+        cp_set_dtype(p, ci_pointer_to(cp_get_dtype(p)));
     } else if (cp_match_punct(p, "*")) {
         cp_parse_unary(p);
-        ctr_cinterp_instr ins = { .op = CI_OP_LOAD, .type = CTR_CINTERP_T_I64 };
-        cp_emit(p, ins);
-        p->last_type = CTR_CINTERP_T_I64;
+        ci_dtype obj = ci_pointee_object(cp_get_dtype(p));
+        cp_emit_load(p, obj);
     } else {
+        size_t spos = p->pos;
+        size_t scode = p->fn->code_count;
+        if (cp_parse_lvalue_addr(p)) {
+            ci_dtype dt = cp_get_dtype(p);
+            if (cp_is_punct(p, "++") || cp_is_punct(p, "--")) {
+                int delta = cp_is_punct(p, "++") ? 1 : -1;
+                p->pos++;
+                cp_emit_incdec(p, dt, delta, 1);
+                cp_set_dtype(p, dt);
+                return;
+            }
+            cp_emit_load(p, dt);
+            return;
+        }
+        cp_truncate_code(p, scode);
+        p->pos = spos;
         cp_parse_primary(p);
     }
 }
@@ -2327,8 +3568,11 @@ static void cp_parse_mul(ci_cparser* p)
         memset(&ins, 0, sizeof(ins));
         ins.op = op == '*' ? CI_OP_MUL : op == '/' ? CI_OP_DIV
                                                    : CI_OP_MOD;
+        ins.type = ci_promote_binary_type(lhs_type, rhs_type);
+        ins.a = lhs_type;
+        ins.b = rhs_type;
         cp_emit(p, ins);
-        p->last_type = op == '%' ? CTR_CINTERP_T_I64 : ci_promote_binary_type(lhs_type, rhs_type);
+        cp_set_scalar(p, op == '%' ? CTR_CINTERP_T_I64 : ins.type);
     }
 }
 
@@ -2336,16 +3580,52 @@ static void cp_parse_add(ci_cparser* p)
 {
     cp_parse_mul(p);
     while (cp_is_punct(p, "+") || cp_is_punct(p, "-")) {
-        ctr_cinterp_type lhs_type = p->last_type;
-        char op = cp_peek(p)->text[0];
+        ci_dtype lt = cp_get_dtype(p);
+        int sub = cp_is_punct(p, "-");
         p->pos++;
         cp_parse_mul(p);
-        ctr_cinterp_type rhs_type = p->last_type;
-        ctr_cinterp_instr ins;
-        memset(&ins, 0, sizeof(ins));
-        ins.op = op == '+' ? CI_OP_ADD : CI_OP_SUB;
-        cp_emit(p, ins);
-        p->last_type = ci_promote_binary_type(lhs_type, rhs_type);
+        ci_dtype rt = cp_get_dtype(p);
+        int lptr = lt.prim == CTR_CINTERP_T_PTR;
+        int rptr = rt.prim == CTR_CINTERP_T_PTR;
+        if (lptr && rptr && sub) {
+            ctr_cinterp_instr s = { .op = CI_OP_SUB, .type = CTR_CINTERP_T_I64, .a = CTR_CINTERP_T_I64, .b = CTR_CINTERP_T_I64 };
+            cp_emit(p, s);
+            size_t esz = ci_elem_size(p->interp, lt);
+            if (esz > 1) {
+                cp_emit_const_i64(p, (int64_t)esz);
+                ctr_cinterp_instr d = { .op = CI_OP_DIV, .type = CTR_CINTERP_T_I64, .a = CTR_CINTERP_T_I64, .b = CTR_CINTERP_T_I64 };
+                cp_emit(p, d);
+            }
+            cp_set_scalar(p, CTR_CINTERP_T_I64);
+        } else if (lptr || rptr) {
+            ci_dtype pt = lptr ? lt : rt;
+            size_t esz = ci_elem_size(p->interp, pt);
+            if (!lptr) {
+                ctr_cinterp_instr sw = { .op = CI_OP_SWAP };
+                cp_emit(p, sw);
+            }
+            if (esz > 1) {
+                cp_emit_const_i64(p, (int64_t)esz);
+                ctr_cinterp_instr m = { .op = CI_OP_MUL, .type = CTR_CINTERP_T_I64, .a = CTR_CINTERP_T_I64, .b = CTR_CINTERP_T_I64 };
+                cp_emit(p, m);
+            }
+            if (sub) {
+                ctr_cinterp_instr neg = { .op = CI_OP_NEG, .type = CTR_CINTERP_T_I64 };
+                cp_emit(p, neg);
+            }
+            ctr_cinterp_instr add = { .op = CI_OP_PTR_ADD };
+            cp_emit(p, add);
+            cp_set_dtype(p, pt);
+        } else {
+            ctr_cinterp_instr ins;
+            memset(&ins, 0, sizeof(ins));
+            ins.op = sub ? CI_OP_SUB : CI_OP_ADD;
+            ins.type = ci_promote_binary_type(lt.prim, rt.prim);
+            ins.a = lt.prim;
+            ins.b = rt.prim;
+            cp_emit(p, ins);
+            cp_set_scalar(p, ins.type);
+        }
     }
 }
 
@@ -2358,7 +3638,7 @@ static void cp_parse_shift(ci_cparser* p)
         cp_parse_add(p);
         ctr_cinterp_instr ins = { .op = left ? CI_OP_SHL : CI_OP_SHR };
         cp_emit(p, ins);
-        p->last_type = CTR_CINTERP_T_I64;
+        cp_set_scalar(p, CTR_CINTERP_T_I64);
     }
 }
 
@@ -2366,6 +3646,7 @@ static void cp_parse_rel(ci_cparser* p)
 {
     cp_parse_shift(p);
     while (cp_is_punct(p, "<") || cp_is_punct(p, "<=") || cp_is_punct(p, ">") || cp_is_punct(p, ">=")) {
+        ctr_cinterp_type lhs_type = p->last_type;
         char const* op = cp_peek(p)->text;
         p->pos++;
         cp_parse_shift(p);
@@ -2374,8 +3655,11 @@ static void cp_parse_rel(ci_cparser* p)
         ins.op = strcmp(op, "<") == 0 ? CI_OP_LT : strcmp(op, "<=") == 0 ? CI_OP_LE
             : strcmp(op, ">") == 0                                       ? CI_OP_GT
                                                                          : CI_OP_GE;
+        ins.type = ci_promote_binary_type(lhs_type, p->last_type);
+        ins.a = lhs_type;
+        ins.b = p->last_type;
         cp_emit(p, ins);
-        p->last_type = CTR_CINTERP_T_I64;
+        cp_set_scalar(p, CTR_CINTERP_T_I64);
     }
 }
 
@@ -2383,12 +3667,13 @@ static void cp_parse_eq(ci_cparser* p)
 {
     cp_parse_rel(p);
     while (cp_is_punct(p, "==") || cp_is_punct(p, "!=")) {
+        ctr_cinterp_type lhs_type = p->last_type;
         int eq = cp_is_punct(p, "==");
         p->pos++;
         cp_parse_rel(p);
-        ctr_cinterp_instr ins = { .op = eq ? CI_OP_EQ : CI_OP_NE };
+        ctr_cinterp_instr ins = { .op = eq ? CI_OP_EQ : CI_OP_NE, .type = ci_promote_binary_type(lhs_type, p->last_type), .a = lhs_type, .b = p->last_type };
         cp_emit(p, ins);
-        p->last_type = CTR_CINTERP_T_I64;
+        cp_set_scalar(p, CTR_CINTERP_T_I64);
     }
 }
 
@@ -2399,7 +3684,7 @@ static void cp_parse_bitand(ci_cparser* p)
         cp_parse_eq(p);
         ctr_cinterp_instr ins = { .op = CI_OP_AND };
         cp_emit(p, ins);
-        p->last_type = CTR_CINTERP_T_I64;
+        cp_set_scalar(p, CTR_CINTERP_T_I64);
     }
 }
 
@@ -2410,7 +3695,7 @@ static void cp_parse_bitxor(ci_cparser* p)
         cp_parse_bitand(p);
         ctr_cinterp_instr ins = { .op = CI_OP_XOR };
         cp_emit(p, ins);
-        p->last_type = CTR_CINTERP_T_I64;
+        cp_set_scalar(p, CTR_CINTERP_T_I64);
     }
 }
 
@@ -2421,106 +3706,513 @@ static void cp_parse_bitor(ci_cparser* p)
         cp_parse_bitxor(p);
         ctr_cinterp_instr ins = { .op = CI_OP_OR };
         cp_emit(p, ins);
-        p->last_type = CTR_CINTERP_T_I64;
+        cp_set_scalar(p, CTR_CINTERP_T_I64);
     }
 }
 
 static void cp_parse_logand(ci_cparser* p)
 {
     cp_parse_bitor(p);
+    if (!cp_is_punct(p, "&&"))
+        return;
+    size_t false_jumps[64];
+    size_t nfalse = 0;
     while (cp_match_punct(p, "&&")) {
+        if (nfalse < 64)
+            false_jumps[nfalse++] = cp_emit_jump(p, CI_OP_JZ);
         cp_parse_bitor(p);
-        ctr_cinterp_instr ins = { .op = CI_OP_AND };
-        cp_emit(p, ins);
-        p->last_type = CTR_CINTERP_T_I64;
     }
+    if (nfalse < 64)
+        false_jumps[nfalse++] = cp_emit_jump(p, CI_OP_JZ);
+    cp_emit_const_i64(p, 1);
+    size_t end = cp_emit_jump(p, CI_OP_JMP);
+    for (size_t i = 0; i < nfalse; i++)
+        cp_patch_jump(p, false_jumps[i], p->fn->code_count);
+    cp_emit_const_i64(p, 0);
+    cp_patch_jump(p, end, p->fn->code_count);
+    cp_set_scalar(p, CTR_CINTERP_T_I64);
 }
 
 static void cp_parse_logor(ci_cparser* p)
 {
     cp_parse_logand(p);
+    if (!cp_is_punct(p, "||"))
+        return;
+    size_t true_jumps[64];
+    size_t ntrue = 0;
     while (cp_match_punct(p, "||")) {
+        if (ntrue < 64)
+            true_jumps[ntrue++] = cp_emit_jump(p, CI_OP_JNZ);
         cp_parse_logand(p);
-        ctr_cinterp_instr ins = { .op = CI_OP_OR };
-        cp_emit(p, ins);
-        p->last_type = CTR_CINTERP_T_I64;
     }
+    if (ntrue < 64)
+        true_jumps[ntrue++] = cp_emit_jump(p, CI_OP_JNZ);
+    cp_emit_const_i64(p, 0);
+    size_t end = cp_emit_jump(p, CI_OP_JMP);
+    for (size_t i = 0; i < ntrue; i++)
+        cp_patch_jump(p, true_jumps[i], p->fn->code_count);
+    cp_emit_const_i64(p, 1);
+    cp_patch_jump(p, end, p->fn->code_count);
+    cp_set_scalar(p, CTR_CINTERP_T_I64);
+}
+
+static void cp_parse_cond(ci_cparser* p)
+{
+    cp_parse_logor(p);
+    if (!cp_match_punct(p, "?"))
+        return;
+    size_t else_jmp = cp_emit_jump(p, CI_OP_JZ);
+    cp_parse_assign(p);
+    ci_dtype tt = cp_get_dtype(p);
+    size_t end_jmp = cp_emit_jump(p, CI_OP_JMP);
+    cp_patch_jump(p, else_jmp, p->fn->code_count);
+    cp_expect_punct(p, ":");
+    cp_parse_cond(p);
+    cp_patch_jump(p, end_jmp, p->fn->code_count);
+    if (tt.prim == CTR_CINTERP_T_PTR || tt.prim == CTR_CINTERP_T_F64 || tt.prim == CTR_CINTERP_T_F32)
+        cp_set_dtype(p, tt);
+}
+
+static int cp_assign_op(ci_cparser* p, ctr_cinterp_op* compound)
+{
+    static const struct {
+        char const* tok;
+        ctr_cinterp_op op;
+    } ops[] = {
+        { "+=", CI_OP_ADD }, { "-=", CI_OP_SUB }, { "*=", CI_OP_MUL },
+        { "/=", CI_OP_DIV }, { "%=", CI_OP_MOD }, { "&=", CI_OP_AND },
+        { "|=", CI_OP_OR }, { "^=", CI_OP_XOR }, { "<<=", CI_OP_SHL },
+        { ">>=", CI_OP_SHR }
+    };
+    if (cp_is_punct(p, "=")) {
+        *compound = CI_OP_NOP;
+        return 1;
+    }
+    for (size_t i = 0; i < sizeof(ops) / sizeof(ops[0]); i++) {
+        if (cp_is_punct(p, ops[i].tok)) {
+            *compound = ops[i].op;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static void cp_parse_assign(ci_cparser* p)
+{
+    size_t spos = p->pos;
+    size_t scode = p->fn->code_count;
+    if (cp_parse_lvalue_addr(p)) {
+        ctr_cinterp_op compound;
+        if (cp_assign_op(p, &compound)) {
+            ci_dtype lvt = cp_get_dtype(p);
+            p->pos++;
+            if (compound == CI_OP_NOP && ci_dt_is_struct(lvt)) {
+                size_t sz = ci_storage_size(p->interp, lvt);
+                cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_DUP });
+                cp_parse_assign(p);
+                cp_emit_const_i64(p, (int64_t)sz);
+                cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_MEMCPY });
+                cp_set_dtype(p, lvt);
+                return;
+            }
+            if (compound == CI_OP_NOP) {
+                cp_parse_assign(p);
+                cp_coerce(p, lvt.prim);
+                cp_emit_store(p, lvt.prim, 1);
+            } else {
+                cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_DUP });
+                cp_emit_load(p, lvt);
+                ci_dtype old = cp_get_dtype(p);
+                cp_parse_assign(p);
+                ctr_cinterp_instr ins;
+                memset(&ins, 0, sizeof(ins));
+                ins.op = compound;
+                ins.type = old.prim;
+                ins.a = old.prim;
+                ins.b = p->last_type;
+                cp_emit(p, ins);
+                cp_set_scalar(p, old.prim);
+                cp_coerce(p, lvt.prim);
+                cp_emit_store(p, lvt.prim, 1);
+            }
+            cp_set_scalar(p, lvt.prim);
+            return;
+        }
+        cp_truncate_code(p, scode);
+        p->pos = spos;
+    } else {
+        cp_truncate_code(p, scode);
+        p->pos = spos;
+    }
+    cp_parse_cond(p);
 }
 
 static void cp_parse_expr(ci_cparser* p)
 {
-    if (cp_peek(p)->kind == CI_CTOK_IDENT && p->toks[p->pos + 1].kind == CI_CTOK_PUNCT && strcmp(p->toks[p->pos + 1].text, "=") == 0) {
-        char* name = ci_strdup(cp_peek(p)->text);
-        p->pos += 2;
-        cp_parse_expr(p);
-        ci_cvar* var = cp_find_var(p, name);
-        if (!var)
-            cp_error(p, "unknown assignment target `%s'", name);
-        else {
-            ctr_cinterp_instr dup = { .op = CI_OP_DUP };
-            cp_emit(p, dup);
-            cp_emit_store_var(p, var);
+    cp_parse_assign(p);
+    while (cp_is_punct(p, ",")) {
+        p->pos++;
+        ctr_cinterp_instr pop = { .op = CI_OP_POP };
+        cp_emit(p, pop);
+        cp_parse_assign(p);
+    }
+}
+
+static char* cp_parse_declarator(ci_cparser* p, ci_dtype base, ci_dtype* out)
+{
+    ci_dtype dt = base;
+    dt.tag = base.tag ? ci_strdup(base.tag) : NULL;
+    cp_apply_stars(p, &dt);
+    char* name = NULL;
+    int parenthesized = 0;
+    if (cp_is_punct(p, "(")) {
+        p->pos++;
+        ci_dtype inner;
+        name = cp_parse_declarator(p, dt, &inner);
+        cp_expect_punct(p, ")");
+        free(dt.tag);
+        dt = inner;
+        parenthesized = 1;
+    } else {
+        name = cp_expect_ident(p);
+    }
+    if (!name)
+        return NULL;
+    if (parenthesized && cp_is_punct(p, "(")) {
+        int depth = 0;
+        do {
+            if (cp_is_punct(p, "("))
+                depth++;
+            else if (cp_is_punct(p, ")"))
+                depth--;
+            p->pos++;
+        } while (depth && cp_peek(p)->kind != CI_CTOK_EOF);
+    }
+    size_t total_len = 1;
+    int saw_array = 0;
+    ctr_cinterp_type el_prim = dt.prim;
+    ctr_cinterp_type el_pointee = dt.pointee;
+    while (cp_match_punct(p, "[")) {
+        size_t len = 0;
+        if (cp_peek(p)->kind == CI_CTOK_NUM)
+            len = (size_t)p->toks[p->pos++].num;
+        cp_expect_punct(p, "]");
+        total_len = saw_array ? total_len * (len ? len : 1) : len;
+        saw_array = 1;
+    }
+    if (saw_array) {
+        dt.is_array = 1;
+        dt.array_len = total_len;
+        dt.pointee = (el_prim == CTR_CINTERP_T_VOID && dt.tag) ? CTR_CINTERP_T_VOID : el_prim;
+        if (el_prim == CTR_CINTERP_T_PTR)
+            dt.pointee = el_pointee;
+        dt.prim = CTR_CINTERP_T_PTR;
+    }
+    *out = dt;
+    return name;
+}
+
+static void cp_emit_init(ci_cparser* p, ci_dtype dt)
+{
+    if (cp_is_punct(p, "{")) {
+        p->pos++;
+        if (dt.is_array) {
+            ci_dtype el = ci_pointee_object(dt);
+            size_t esz = ci_elem_size(p->interp, dt);
+            size_t idx = 0;
+            while (p->ok && !cp_is_punct(p, "}") && cp_peek(p)->kind != CI_CTOK_EOF) {
+                if (cp_match_punct(p, "[")) {
+                    idx = (size_t)cp_eval_const(p);
+                    cp_expect_punct(p, "]");
+                    cp_match_punct(p, "=");
+                }
+                cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_DUP });
+                if (idx) {
+                    cp_emit_const_i64(p, (int64_t)(idx * esz));
+                    cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_PTR_ADD });
+                }
+                cp_emit_init(p, el);
+                idx++;
+                if (!cp_match_punct(p, ","))
+                    break;
+            }
+            cp_expect_punct(p, "}");
+            cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_POP });
+        } else if (ci_dt_is_struct(dt)) {
+            ci_struct_def* def = ci_find_struct(p->interp, dt.tag);
+            size_t i = 0;
+            while (p->ok && !cp_is_punct(p, "}") && cp_peek(p)->kind != CI_CTOK_EOF) {
+                if (cp_match_punct(p, ".")) {
+                    char* fn = cp_expect_ident(p);
+                    cp_match_punct(p, "=");
+                    for (size_t k = 0; def && fn && k < def->member_count; k++)
+                        if (strcmp(def->members[k].name, fn) == 0) {
+                            i = k;
+                            break;
+                        }
+                    free(fn);
+                }
+                if (!def || i >= def->member_count) {
+                    cp_error(p, "too many struct initializers");
+                    break;
+                }
+                cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_DUP });
+                if (def->members[i].offset) {
+                    cp_emit_const_i64(p, (int64_t)def->members[i].offset);
+                    cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_PTR_ADD });
+                }
+                cp_emit_init(p, def->members[i].type);
+                i++;
+                if (!cp_match_punct(p, ","))
+                    break;
+            }
+            cp_expect_punct(p, "}");
+            cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_POP });
+        } else {
+            cp_error(p, "brace initializer for scalar");
         }
-        free(name);
         return;
     }
-    cp_parse_logor(p);
+    if (dt.is_array && (dt.pointee == CTR_CINTERP_T_I8 || dt.pointee == CTR_CINTERP_T_U8)
+        && cp_peek(p)->kind == CI_CTOK_STR) {
+        char const* s = p->toks[p->pos++].text;
+        size_t len = strlen(s) + 1;
+        if (dt.array_len && len > dt.array_len)
+            len = dt.array_len;
+        cp_add_string_global(p, s);
+        cp_emit_const_i64(p, (int64_t)len);
+        cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_MEMCPY });
+        return;
+    }
+    cp_parse_assign(p);
+    cp_coerce(p, dt.prim);
+    cp_emit_store(p, dt.prim, 0);
 }
 
 static void cp_parse_decl_stmt(ci_cparser* p)
 {
-    ctr_cinterp_type type;
-    int storage_extern = 0;
-    if (!cp_parse_type(p, &type, &storage_extern))
+    ci_dtype base;
+    int storage = 0;
+    if (!cp_parse_dtype_ex(p, &base, &storage, 0))
         return;
-    char* name = cp_expect_ident(p);
-    if (!name)
+    if (cp_is_punct(p, ";")) {
+        p->pos++;
+        free(base.tag);
         return;
-    int local_index = (int)p->fn->nlocals++;
-    ci_cvar* var = cp_add_var(p, name, type, 0, local_index);
-    if (cp_match_punct(p, "=")) {
-        cp_parse_expr(p);
-        if (var)
-            cp_emit_store_var(p, var);
     }
-    while (cp_match_punct(p, ",")) {
-        char* extra = cp_expect_ident(p);
-        if (!extra)
+    if (storage == 2) {
+        do {
+            ci_dtype dt;
+            char* name = cp_parse_declarator(p, base, &dt);
+            if (!name)
+                break;
+            ci_add_typedef(p->interp, name, dt);
+            free(name);
+            free(dt.tag);
+        } while (cp_match_punct(p, ","));
+        cp_expect_punct(p, ";");
+        free(base.tag);
+        return;
+    }
+    do {
+        ci_dtype dt;
+        char* name = cp_parse_declarator(p, base, &dt);
+        if (!name)
             break;
-        local_index = (int)p->fn->nlocals++;
-        var = cp_add_var(p, extra, type, 0, local_index);
-        if (cp_match_punct(p, "=")) {
-            cp_parse_expr(p);
-            if (var)
-                cp_emit_store_var(p, var);
+        ci_cvar* var = cp_add_var(p, name, dt);
+        free(name);
+        if (cp_match_punct(p, "=") && var) {
+            cp_emit_var_addr(p, var);
+            cp_emit_init(p, var->type);
         }
-        free(extra);
-    }
-    free(name);
+        free(dt.tag);
+    } while (cp_match_punct(p, ","));
     cp_expect_punct(p, ";");
+    free(base.tag);
+}
+
+static void cp_jlist_add(ci_jlist* l, size_t at)
+{
+    if (ci_grow((void**)&l->items, &l->cap, l->count, sizeof(size_t)))
+        l->items[l->count++] = at;
+}
+
+static void cp_jlist_patch(ci_cparser* p, ci_jlist* l, size_t target)
+{
+    for (size_t i = 0; i < l->count; i++)
+        cp_patch_jump(p, l->items[i], target);
+}
+
+static int64_t cp_eval_const(ci_cparser* p);
+
+static int64_t cp_eval_const_primary(ci_cparser* p)
+{
+    if (cp_match_punct(p, "(")) {
+        int64_t v = cp_eval_const(p);
+        cp_expect_punct(p, ")");
+        return v;
+    }
+    if (cp_match_punct(p, "-"))
+        return -cp_eval_const_primary(p);
+    if (cp_match_punct(p, "+"))
+        return cp_eval_const_primary(p);
+    if (cp_match_punct(p, "~"))
+        return ~cp_eval_const_primary(p);
+    if (cp_match_punct(p, "!"))
+        return !cp_eval_const_primary(p);
+    if (cp_peek(p)->kind == CI_CTOK_NUM)
+        return p->toks[p->pos++].num;
+    if (cp_peek(p)->kind == CI_CTOK_IDENT) {
+        int64_t v = 0;
+        ci_find_enum_const(p->interp, cp_peek(p)->text, &v);
+        p->pos++;
+        return v;
+    }
+    cp_error(p, "expected integer constant");
+    return 0;
+}
+
+static int64_t cp_eval_const(ci_cparser* p)
+{
+    int64_t v = cp_eval_const_primary(p);
+    for (;;) {
+        if (cp_match_punct(p, "+"))
+            v += cp_eval_const_primary(p);
+        else if (cp_match_punct(p, "-"))
+            v -= cp_eval_const_primary(p);
+        else if (cp_match_punct(p, "*"))
+            v *= cp_eval_const_primary(p);
+        else if (cp_match_punct(p, "/")) {
+            int64_t d = cp_eval_const_primary(p);
+            v = d ? v / d : 0;
+        } else if (cp_match_punct(p, "<<"))
+            v <<= cp_eval_const_primary(p);
+        else if (cp_match_punct(p, ">>"))
+            v >>= cp_eval_const_primary(p);
+        else if (cp_match_punct(p, "|"))
+            v |= cp_eval_const_primary(p);
+        else
+            break;
+    }
+    return v;
 }
 
 static void cp_parse_block(ci_cparser* p)
 {
+    size_t sstruct = p->interp->struct_count;
+    size_t stypedef = p->interp->typedef_count;
+    size_t senum = p->interp->enum_const_count;
+    size_t svar = p->var_count;
     cp_expect_punct(p, "{");
     while (p->ok && !cp_is_punct(p, "}") && cp_peek(p)->kind != CI_CTOK_EOF)
         cp_parse_stmt(p);
     cp_expect_punct(p, "}");
+    for (size_t i = svar; i < p->var_count; i++) {
+        free(p->vars[i].name);
+        free(p->vars[i].global_name);
+        free(p->vars[i].type.tag);
+    }
+    p->var_count = svar;
+    for (size_t i = sstruct; i < p->interp->struct_count; i++) {
+        free(p->interp->structs[i].name);
+        for (size_t j = 0; j < p->interp->structs[i].member_count; j++) {
+            free(p->interp->structs[i].members[j].name);
+            free(p->interp->structs[i].members[j].type.tag);
+        }
+        free(p->interp->structs[i].members);
+    }
+    p->interp->struct_count = sstruct;
+    for (size_t i = stypedef; i < p->interp->typedef_count; i++) {
+        free(p->interp->typedefs[i].name);
+        free(p->interp->typedefs[i].type.tag);
+    }
+    p->interp->typedef_count = stypedef;
+    for (size_t i = senum; i < p->interp->enum_const_count; i++)
+        free(p->interp->enum_consts[i].name);
+    p->interp->enum_const_count = senum;
 }
 
 static void cp_parse_stmt(ci_cparser* p)
 {
     if (!p->ok)
         return;
+    if (cp_peek(p)->kind == CI_CTOK_IDENT && p->toks[p->pos + 1].kind == CI_CTOK_PUNCT
+        && strcmp(p->toks[p->pos + 1].text, ":") == 0) {
+        if (ci_grow((void**)&p->labels, &p->label_cap, p->label_count, sizeof(*p->labels))) {
+            p->labels[p->label_count].name = ci_strdup(cp_peek(p)->text);
+            p->labels[p->label_count].pos = p->fn->code_count;
+            p->label_count++;
+        }
+        p->pos += 2;
+        if (!cp_is_punct(p, "}"))
+            cp_parse_stmt(p);
+        return;
+    }
+    if (cp_match_kind(p, CI_CTOK_CASE)) {
+        int64_t v = cp_eval_const(p);
+        cp_expect_punct(p, ":");
+        if (p->sw_ctx && p->sw_ctx->ncase < 256) {
+            p->sw_ctx->cases[p->sw_ctx->ncase].v = v;
+            p->sw_ctx->cases[p->sw_ctx->ncase].pos = p->fn->code_count;
+            p->sw_ctx->ncase++;
+        }
+        if (!cp_is_punct(p, "}"))
+            cp_parse_stmt(p);
+        return;
+    }
+    if (cp_match_kind(p, CI_CTOK_DEFAULT)) {
+        cp_expect_punct(p, ":");
+        if (p->sw_ctx) {
+            p->sw_ctx->default_pos = p->fn->code_count;
+            p->sw_ctx->has_default = 1;
+        }
+        if (!cp_is_punct(p, "}"))
+            cp_parse_stmt(p);
+        return;
+    }
     if (cp_is_punct(p, "{")) {
         cp_parse_block(p);
         return;
     }
     if (cp_match_kind(p, CI_CTOK_RETURN)) {
-        if (!cp_is_punct(p, ";"))
+        if (!cp_is_punct(p, ";")) {
             cp_parse_expr(p);
+            cp_coerce(p, p->fn->ret_type);
+        } else {
+            cp_emit_const_i64(p, 0);
+        }
         ctr_cinterp_instr ins = { .op = CI_OP_RET };
         cp_emit(p, ins);
+        cp_expect_punct(p, ";");
+        return;
+    }
+    if (cp_match_kind(p, CI_CTOK_BREAK)) {
+        if (p->brk_ctx)
+            cp_jlist_add(p->brk_ctx, cp_emit_jump(p, CI_OP_JMP));
+        else
+            cp_error(p, "`break' outside loop or switch");
+        cp_expect_punct(p, ";");
+        return;
+    }
+    if (cp_match_kind(p, CI_CTOK_CONTINUE)) {
+        if (p->cont_ctx)
+            cp_jlist_add(p->cont_ctx, cp_emit_jump(p, CI_OP_JMP));
+        else
+            cp_error(p, "`continue' outside loop");
+        cp_expect_punct(p, ";");
+        return;
+    }
+    if (cp_match_kind(p, CI_CTOK_GOTO)) {
+        char* name = cp_expect_ident(p);
+        size_t at = cp_emit_jump(p, CI_OP_JMP);
+        if (name && ci_grow((void**)&p->gotos, &p->goto_cap, p->goto_count, sizeof(*p->gotos))) {
+            p->gotos[p->goto_count].name = name;
+            p->gotos[p->goto_count].at = at;
+            p->gotos[p->goto_count].line = cp_peek(p)->line;
+            p->goto_count++;
+        } else {
+            free(name);
+        }
         cp_expect_punct(p, ";");
         return;
     }
@@ -2541,6 +4233,11 @@ static void cp_parse_stmt(ci_cparser* p)
         return;
     }
     if (cp_match_kind(p, CI_CTOK_WHILE)) {
+        ci_jlist brk = { 0 }, cont = { 0 };
+        ci_jlist* sb = p->brk_ctx;
+        ci_jlist* sc = p->cont_ctx;
+        p->brk_ctx = &brk;
+        p->cont_ctx = &cont;
         size_t start = p->fn->code_count;
         cp_expect_punct(p, "(");
         cp_parse_expr(p);
@@ -2550,37 +4247,126 @@ static void cp_parse_stmt(ci_cparser* p)
         ctr_cinterp_instr back = { .op = CI_OP_JMP, .a = (int)start };
         cp_emit(p, back);
         cp_patch_jump(p, jz, p->fn->code_count);
+        cp_jlist_patch(p, &cont, start);
+        cp_jlist_patch(p, &brk, p->fn->code_count);
+        free(brk.items);
+        free(cont.items);
+        p->brk_ctx = sb;
+        p->cont_ctx = sc;
+        return;
+    }
+    if (cp_match_kind(p, CI_CTOK_DO)) {
+        ci_jlist brk = { 0 }, cont = { 0 };
+        ci_jlist* sb = p->brk_ctx;
+        ci_jlist* sc = p->cont_ctx;
+        p->brk_ctx = &brk;
+        p->cont_ctx = &cont;
+        size_t start = p->fn->code_count;
+        cp_parse_stmt(p);
+        cp_jlist_patch(p, &cont, p->fn->code_count);
+        if (!cp_match_kind(p, CI_CTOK_WHILE))
+            cp_error(p, "expected `while' after do-body");
+        cp_expect_punct(p, "(");
+        cp_parse_expr(p);
+        cp_expect_punct(p, ")");
+        cp_expect_punct(p, ";");
+        ctr_cinterp_instr jnz = { .op = CI_OP_JNZ, .a = (int)start };
+        cp_emit(p, jnz);
+        cp_jlist_patch(p, &brk, p->fn->code_count);
+        free(brk.items);
+        free(cont.items);
+        p->brk_ctx = sb;
+        p->cont_ctx = sc;
         return;
     }
     if (cp_match_kind(p, CI_CTOK_FOR)) {
+        ci_jlist brk = { 0 }, cont = { 0 };
+        ci_jlist* sb = p->brk_ctx;
+        ci_jlist* sc = p->cont_ctx;
         cp_expect_punct(p, "(");
-        if (!cp_is_punct(p, ";"))
-            cp_parse_expr(p);
-        cp_expect_punct(p, ";");
+        if (!cp_is_punct(p, ";")) {
+            if (cp_is_type_start(p)) {
+                cp_parse_decl_stmt(p);
+            } else {
+                cp_parse_expr(p);
+                cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_POP });
+                cp_expect_punct(p, ";");
+            }
+        } else {
+            cp_expect_punct(p, ";");
+        }
         size_t start = p->fn->code_count;
         if (!cp_is_punct(p, ";"))
             cp_parse_expr(p);
-        else {
-            ctr_cinterp_instr one = { .op = CI_OP_CONST, .imm.i = 1 };
-            cp_emit(p, one);
-        }
+        else
+            cp_emit_const_i64(p, 1);
         cp_expect_punct(p, ";");
         size_t jz = cp_emit_jump(p, CI_OP_JZ);
         size_t iter_start = p->pos;
-        while (!cp_is_punct(p, ")") && cp_peek(p)->kind != CI_CTOK_EOF)
+        int depth = 0;
+        while ((depth || !cp_is_punct(p, ")")) && cp_peek(p)->kind != CI_CTOK_EOF) {
+            if (cp_is_punct(p, "("))
+                depth++;
+            else if (cp_is_punct(p, ")"))
+                depth--;
             p->pos++;
+        }
         size_t iter_end = p->pos;
         cp_expect_punct(p, ")");
+        p->brk_ctx = &brk;
+        p->cont_ctx = &cont;
         cp_parse_stmt(p);
+        cp_jlist_patch(p, &cont, p->fn->code_count);
         if (iter_end > iter_start) {
             size_t save = p->pos;
             p->pos = iter_start;
             cp_parse_expr(p);
+            cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_POP });
             p->pos = save;
         }
         ctr_cinterp_instr back = { .op = CI_OP_JMP, .a = (int)start };
         cp_emit(p, back);
         cp_patch_jump(p, jz, p->fn->code_count);
+        cp_jlist_patch(p, &brk, p->fn->code_count);
+        free(brk.items);
+        free(cont.items);
+        p->brk_ctx = sb;
+        p->cont_ctx = sc;
+        return;
+    }
+    if (cp_match_kind(p, CI_CTOK_SWITCH)) {
+        cp_expect_punct(p, "(");
+        cp_parse_expr(p);
+        cp_expect_punct(p, ")");
+        size_t tmp_off = ci_align_up(p->fn->frame_size, 8);
+        p->fn->frame_size = tmp_off + 8;
+        cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_FRAME_ADDR, .a = (int)tmp_off });
+        cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_SWAP });
+        cp_emit_store(p, CTR_CINTERP_T_I64, 0);
+        size_t dispatch_jmp = cp_emit_jump(p, CI_OP_JMP);
+        ci_jlist brk = { 0 };
+        ci_swctx sw = { 0 };
+        ci_jlist* sb = p->brk_ctx;
+        ci_swctx* ss = p->sw_ctx;
+        p->brk_ctx = &brk;
+        p->sw_ctx = &sw;
+        cp_parse_stmt(p);
+        p->sw_ctx = ss;
+        size_t body_end = cp_emit_jump(p, CI_OP_JMP);
+        cp_patch_jump(p, dispatch_jmp, p->fn->code_count);
+        for (size_t i = 0; i < sw.ncase; i++) {
+            cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_FRAME_ADDR, .a = (int)tmp_off });
+            cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_LOAD, .type = CTR_CINTERP_T_I64 });
+            cp_emit_const_i64(p, sw.cases[i].v);
+            cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_EQ, .type = CTR_CINTERP_T_I64, .a = CTR_CINTERP_T_I64, .b = CTR_CINTERP_T_I64 });
+            cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_JNZ, .a = (int)sw.cases[i].pos });
+        }
+        if (sw.has_default)
+            cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_JMP, .a = (int)sw.default_pos });
+        cp_patch_jump(p, body_end, p->fn->code_count);
+        cp_jlist_patch(p, &brk, p->fn->code_count);
+        free(brk.items);
+        p->brk_ctx = sb;
         return;
     }
     if (cp_is_type_start(p)) {
@@ -2595,113 +4381,393 @@ static void cp_parse_stmt(ci_cparser* p)
     cp_expect_punct(p, ";");
 }
 
-static int cp_parse_struct_decl(ci_cparser* p)
+static void cp_define_struct_body(ci_cparser* p, char const* name, int is_union)
 {
-    if (!cp_match_kind(p, CI_CTOK_STRUCT))
-        return 0;
-    char* name = cp_expect_ident(p);
-    if (!name)
-        return 0;
-    if (!cp_expect_punct(p, "{")) {
-        free(name);
-        return 0;
-    }
     char format[4096] = "";
     size_t format_len = 0;
     char** names = NULL;
     size_t name_count = 0;
     size_t name_cap = 0;
+    ci_struct_member* mem = NULL;
+    size_t nmem = 0;
+    size_t mem_cap = 0;
+    size_t offset = 0;
+    size_t max_align = 1;
+    cp_expect_punct(p, "{");
     while (p->ok && !cp_is_punct(p, "}") && cp_peek(p)->kind != CI_CTOK_EOF) {
-        ctr_cinterp_type type;
+        ci_dtype base;
         int ignored_storage = 0;
-        if (!cp_parse_type(p, &type, &ignored_storage))
+        if (!cp_parse_dtype_ex(p, &base, &ignored_storage, 0))
             break;
-        char* field = cp_expect_ident(p);
-        if (!field)
-            break;
-        while (cp_match_punct(p, "[")) {
-            if (cp_peek(p)->kind == CI_CTOK_NUM)
-                p->pos++;
-            else
-                cp_error(p, "array member length must be numeric");
-            cp_expect_punct(p, "]");
-            type = CTR_CINTERP_T_PTR;
+        if (cp_is_punct(p, ";") && ci_dt_is_struct(base)) {
+            ci_struct_def* inner = ci_find_struct(p->interp, base.tag);
+            size_t al = inner && inner->align ? inner->align : 1;
+            size_t off = is_union ? 0 : ci_align_up(offset, al);
+            size_t sz = inner ? inner->size : 0;
+            for (size_t i = 0; inner && i < inner->member_count; i++) {
+                if (!ci_grow((void**)&mem, &mem_cap, nmem, sizeof(ci_struct_member)))
+                    break;
+                ci_struct_member* m = &mem[nmem++];
+                memset(m, 0, sizeof(*m));
+                m->name = ci_strdup(inner->members[i].name);
+                m->type = inner->members[i].type;
+                m->type.tag = inner->members[i].type.tag ? ci_strdup(inner->members[i].type.tag) : NULL;
+                m->offset = off + inner->members[i].offset;
+                m->size = inner->members[i].size;
+            }
+            if (is_union) {
+                if (sz > offset)
+                    offset = sz;
+            } else
+                offset = off + sz;
+            if (al > max_align)
+                max_align = al;
+            cp_expect_punct(p, ";");
+            free(base.tag);
+            continue;
         }
-        char tfmt[16];
-        if (!ci_type_format(type, tfmt, sizeof(tfmt))) {
-            cp_error(p, "could not encode struct member type");
+        do {
+            ci_dtype mt;
+            char* field = cp_parse_declarator(p, base, &mt);
+            if (!field)
+                break;
+            size_t sz = ci_storage_size(p->interp, mt);
+            size_t al = ci_storage_align(p->interp, mt);
+            if (al < 1)
+                al = 1;
+            size_t off = is_union ? 0 : ci_align_up(offset, al);
+            if (ci_grow((void**)&mem, &mem_cap, nmem, sizeof(ci_struct_member))) {
+                ci_struct_member* m = &mem[nmem++];
+                memset(m, 0, sizeof(*m));
+                m->name = ci_strdup(field);
+                m->type = mt;
+                m->type.tag = mt.tag ? ci_strdup(mt.tag) : NULL;
+                m->offset = off;
+                m->size = sz;
+            }
+            if (is_union) {
+                if (sz > offset)
+                    offset = sz;
+            } else {
+                offset = off + sz;
+            }
+            if (al > max_align)
+                max_align = al;
+            char tfmt[16];
+            ctr_cinterp_type ftype = mt.is_array ? CTR_CINTERP_T_PTR : mt.prim;
+            if (ftype == CTR_CINTERP_T_VOID && mt.tag)
+                ftype = CTR_CINTERP_T_PTR;
+            if (ci_type_format(ftype, tfmt, sizeof(tfmt))) {
+                size_t tl = strlen(tfmt);
+                if (format_len + tl < sizeof(format)) {
+                    memcpy(format + format_len, tfmt, tl + 1);
+                    format_len += tl;
+                }
+            }
+            if (ci_grow((void**)&names, &name_cap, name_count, sizeof(char*)))
+                names[name_count++] = ci_strdup(field);
+            free(mt.tag);
             free(field);
-            break;
-        }
-        size_t tfmt_len = strlen(tfmt);
-        if (format_len + tfmt_len >= sizeof(format)) {
-            cp_error(p, "struct format too large");
-            free(field);
-            break;
-        }
-        memcpy(format + format_len, tfmt, tfmt_len + 1);
-        format_len += tfmt_len;
-        if (!ci_grow((void**)&names, &name_cap, name_count, sizeof(char*))) {
-            free(field);
-            p->ok = 0;
-            break;
-        }
-        names[name_count++] = field;
+        } while (cp_match_punct(p, ","));
         cp_expect_punct(p, ";");
+        free(base.tag);
     }
     cp_expect_punct(p, "}");
-    cp_expect_punct(p, ";");
+    ci_struct_def* def = ci_add_struct(p->interp, name);
+    if (def) {
+        def->members = mem;
+        def->member_count = nmem;
+        def->align = max_align;
+        def->size = ci_align_up(offset ? offset : 1, max_align);
+    } else {
+        for (size_t i = 0; i < nmem; i++) {
+            free(mem[i].name);
+            free(mem[i].type.tag);
+        }
+        free(mem);
+    }
     if (p->ok)
-        p->ok = ci_add_ctype(p->interp, name, format, names, name_count);
+        ci_add_ctype(p->interp, name, format, names, name_count);
     for (size_t i = 0; i < name_count; i++)
         free(names[i]);
     free(names);
-    free(name);
-    return p->ok;
+}
+
+static void cp_parse_enum_body(ci_cparser* p)
+{
+    cp_expect_punct(p, "{");
+    int64_t next = 0;
+    while (p->ok && !cp_is_punct(p, "}") && cp_peek(p)->kind != CI_CTOK_EOF) {
+        char* cname = cp_expect_ident(p);
+        if (!cname)
+            break;
+        if (cp_match_punct(p, "="))
+            next = cp_eval_const(p);
+        ci_add_enum_const(p->interp, cname, next);
+        free(cname);
+        next++;
+        if (!cp_match_punct(p, ","))
+            break;
+    }
+    cp_expect_punct(p, "}");
+}
+
+static void cp_write_global_init(ci_cparser* p, void* data, ci_dtype dt);
+
+static ctr_cinterp_global* cp_new_anon_global(ci_cparser* p, ci_dtype dt)
+{
+    if (!ci_grow((void**)&p->interp->globals, &p->interp->global_cap, p->interp->global_count, sizeof(ctr_cinterp_global)))
+        return NULL;
+    ctr_cinterp_global* g = &p->interp->globals[p->interp->global_count++];
+    memset(g, 0, sizeof(*g));
+    char nm[64];
+    snprintf(nm, sizeof(nm), ".cl%d", p->string_id++);
+    g->name = ci_strdup(nm);
+    g->size = ci_storage_size(p->interp, dt);
+    if (!g->size)
+        g->size = 1;
+    g->data = calloc(1, g->size);
+    g->dtype = dt;
+    g->dtype.tag = dt.tag ? ci_strdup(dt.tag) : NULL;
+    return g;
+}
+
+static void cp_write_global_init(ci_cparser* p, void* data, ci_dtype dt)
+{
+    if (cp_is_punct(p, "(") && cp_is_type_start(&(ci_cparser) { .toks = p->toks, .pos = p->pos + 1, .count = p->count, .interp = p->interp, .ok = p->ok })) {
+        p->pos++;
+        ci_dtype lt;
+        int ig = 0;
+        if (cp_parse_dtype(p, &lt, &ig) && cp_match_punct(p, ")") && cp_is_punct(p, "{")) {
+            cp_write_global_init(p, data, lt);
+            free(lt.tag);
+            return;
+        }
+        free(lt.tag);
+    }
+    if (cp_is_punct(p, "{")) {
+        p->pos++;
+        if (dt.is_array) {
+            size_t esz = ci_elem_size(p->interp, dt);
+            ci_dtype el = ci_pointee_object(dt);
+            size_t idx = 0;
+            while (p->ok && !cp_is_punct(p, "}") && cp_peek(p)->kind != CI_CTOK_EOF) {
+                if (cp_match_punct(p, "[")) {
+                    idx = (size_t)cp_eval_const(p);
+                    cp_expect_punct(p, "]");
+                    cp_match_punct(p, "=");
+                }
+                cp_write_global_init(p, (char*)data + idx * esz, el);
+                idx++;
+                if (!cp_match_punct(p, ","))
+                    break;
+            }
+            cp_expect_punct(p, "}");
+        } else if (ci_dt_is_struct(dt)) {
+            ci_struct_def* def = ci_find_struct(p->interp, dt.tag);
+            size_t i = 0;
+            while (p->ok && !cp_is_punct(p, "}") && cp_peek(p)->kind != CI_CTOK_EOF) {
+                if (cp_match_punct(p, ".")) {
+                    char* fn = cp_expect_ident(p);
+                    cp_match_punct(p, "=");
+                    for (size_t k = 0; def && fn && k < def->member_count; k++)
+                        if (strcmp(def->members[k].name, fn) == 0) {
+                            i = k;
+                            break;
+                        }
+                    free(fn);
+                }
+                if (!def || i >= def->member_count)
+                    break;
+                cp_write_global_init(p, (char*)data + def->members[i].offset, def->members[i].type);
+                i++;
+                if (!cp_match_punct(p, ","))
+                    break;
+            }
+            cp_expect_punct(p, "}");
+        } else {
+            cp_expect_punct(p, "}");
+        }
+        return;
+    }
+    if (dt.is_array && (dt.pointee == CTR_CINTERP_T_I8 || dt.pointee == CTR_CINTERP_T_U8)
+        && cp_peek(p)->kind == CI_CTOK_STR) {
+        char const* s = p->toks[p->pos++].text;
+        size_t len = strlen(s) + 1;
+        if (dt.array_len && len > dt.array_len)
+            len = dt.array_len;
+        memcpy(data, s, len);
+        return;
+    }
+    if (dt.prim == CTR_CINTERP_T_PTR && cp_is_punct(p, "&")) {
+        p->pos++;
+        if (cp_is_punct(p, "(") && cp_is_type_start(&(ci_cparser) { .toks = p->toks, .pos = p->pos + 1, .count = p->count, .interp = p->interp, .ok = p->ok })) {
+            p->pos++;
+            ci_dtype lt;
+            int ig = 0;
+            if (cp_parse_dtype(p, &lt, &ig) && cp_match_punct(p, ")")) {
+                ctr_cinterp_global* g = cp_new_anon_global(p, lt);
+                if (g) {
+                    void* addr = g->data; /* capture before recursion may grow globals */
+                    cp_write_global_init(p, addr, lt);
+                    memcpy(data, &addr, sizeof(void*));
+                }
+            }
+            free(lt.tag);
+            return;
+        }
+        char* id = cp_expect_ident(p);
+        ctr_cinterp_global* g = id ? ci_find_global(p->interp, id) : NULL;
+        if (g) {
+            void* addr = g->data;
+            memcpy(data, &addr, sizeof(void*));
+        }
+        free(id);
+        return;
+    }
+    if (dt.prim == CTR_CINTERP_T_PTR && cp_peek(p)->kind == CI_CTOK_STR) {
+        char const* s = p->toks[p->pos++].text;
+        size_t n = strlen(s) + 1;
+        char* buf = malloc(n);
+        if (buf) {
+            memcpy(buf, s, n);
+            memcpy(data, &buf, sizeof(char*)); /* leaked intentionally for program lifetime */
+        }
+        return;
+    }
+    if (ci_type_is_float(dt.prim)) {
+        double v = 0;
+        if (cp_peek(p)->kind == CI_CTOK_FNUM)
+            v = p->toks[p->pos++].fnum;
+        else if (cp_peek(p)->kind == CI_CTOK_NUM)
+            v = (double)p->toks[p->pos++].num;
+        else
+            v = (double)cp_eval_const(p);
+        if (dt.prim == CTR_CINTERP_T_F32) {
+            float f = (float)v;
+            memcpy(data, &f, sizeof(f));
+        } else {
+            memcpy(data, &v, sizeof(v));
+        }
+        return;
+    }
+    int64_t value = cp_eval_const(p);
+    size_t sz = ci_prim_size(dt.prim);
+    memcpy(data, &value, sz < sizeof(value) ? sz : sizeof(value));
+}
+
+static ctr_cinterp_global* cp_define_global(ci_cparser* p, char const* name, ci_dtype dt)
+{
+    ctr_cinterp_global* g = ci_find_global(p->interp, name);
+    if (!g) {
+        if (!ci_grow((void**)&p->interp->globals, &p->interp->global_cap, p->interp->global_count, sizeof(ctr_cinterp_global)))
+            return NULL;
+        g = &p->interp->globals[p->interp->global_count++];
+        memset(g, 0, sizeof(*g));
+        g->name = ci_strdup(name);
+        g->size = ci_storage_size(p->interp, dt);
+        if (!g->size)
+            g->size = 1;
+        g->data = calloc(1, g->size);
+    }
+    free(g->dtype.tag);
+    g->dtype = dt;
+    g->dtype.tag = dt.tag ? ci_strdup(dt.tag) : NULL;
+    return g;
 }
 
 static int cp_parse_toplevel(ci_cparser* p)
 {
-    if (cp_peek(p)->kind == CI_CTOK_STRUCT && p->toks[p->pos + 2].kind == CI_CTOK_PUNCT && strcmp(p->toks[p->pos + 2].text, "{") == 0)
-        return cp_parse_struct_decl(p);
-    int storage_extern = 0;
-    ctr_cinterp_type ret_type;
-    if (!cp_parse_type(p, &ret_type, &storage_extern))
-        return 0;
-    char* name = cp_expect_ident(p);
-    if (!name)
-        return 0;
-    if (!cp_match_punct(p, "(")) {
-        size_t size = ctr_cinterp_type_size(ret_type);
-        if (!ci_grow((void**)&p->interp->globals, &p->interp->global_cap, p->interp->global_count, sizeof(ctr_cinterp_global))) {
-            free(name);
-            return 0;
-        }
-        ctr_cinterp_global* global = &p->interp->globals[p->interp->global_count++];
-        global->name = name;
-        global->size = size ? size : 1;
-        global->data = calloc(1, global->size);
-        if (cp_match_punct(p, "=")) {
-            if (cp_peek(p)->kind == CI_CTOK_NUM) {
-                int64_t value = p->toks[p->pos++].num;
-                memcpy(global->data, &value, global->size < sizeof(value) ? global->size : sizeof(value));
-            } else if (cp_peek(p)->kind == CI_CTOK_STR && ret_type == CTR_CINTERP_T_PTR) {
-                char* dup = ci_strdup(cp_peek(p)->text);
-                p->pos++;
-                memcpy(global->data, &dup, sizeof(dup));
-            } else {
-                cp_error(p, "global initializers currently support numbers and pointer strings");
-            }
+    int is_typedef = 0;
+    if (cp_peek(p)->kind == CI_CTOK_TYPEDEF && p->toks[p->pos + 1].kind == CI_CTOK_ENUM) {
+        is_typedef = 1;
+        p->pos++;
+    }
+    if (cp_peek(p)->kind == CI_CTOK_ENUM
+        && (p->toks[p->pos + 1].kind == CI_CTOK_PUNCT
+            || (p->toks[p->pos + 1].kind == CI_CTOK_IDENT && p->toks[p->pos + 2].kind == CI_CTOK_PUNCT))) {
+        p->pos++;
+        if (cp_peek(p)->kind == CI_CTOK_IDENT)
+            p->pos++;
+        if (cp_is_punct(p, "{"))
+            cp_parse_enum_body(p);
+        ci_dtype edt;
+        memset(&edt, 0, sizeof(edt));
+        edt.prim = CTR_CINTERP_T_I32;
+        if (cp_peek(p)->kind == CI_CTOK_IDENT) {
+            char* tn = cp_expect_ident(p);
+            if (is_typedef)
+                ci_add_typedef(p->interp, tn, edt);
+            else
+                cp_define_global(p, tn, edt);
+            free(tn);
         }
         cp_expect_punct(p, ";");
         return p->ok;
     }
-    if (!p->ok) {
-        free(name);
+
+    int storage = 0;
+    ci_dtype base;
+    if (!cp_parse_dtype_ex(p, &base, &storage, 0))
+        return 0;
+    is_typedef = is_typedef || storage == 2;
+
+    if (cp_is_punct(p, ";")) {
+        p->pos++;
+        free(base.tag);
+        return p->ok;
+    }
+
+    ci_dtype dt;
+    char* name = cp_parse_declarator(p, base, &dt);
+    if (!name) {
+        free(base.tag);
         return 0;
     }
-    ctr_cinterp_type arg_types[128];
+
+    if (is_typedef) {
+        ci_add_typedef(p->interp, name, dt);
+        while (cp_match_punct(p, ",")) {
+            ci_dtype dt2;
+            char* n2 = cp_parse_declarator(p, base, &dt2);
+            if (!n2)
+                break;
+            ci_add_typedef(p->interp, n2, dt2);
+            free(dt2.tag);
+            free(n2);
+        }
+        cp_expect_punct(p, ";");
+        free(name);
+        free(dt.tag);
+        free(base.tag);
+        return p->ok;
+    }
+
+    if (!cp_is_punct(p, "(")) {
+        for (;;) {
+            ctr_cinterp_global* g = cp_define_global(p, name, dt);
+            if (g && cp_match_punct(p, "="))
+                cp_write_global_init(p, g->data, dt);
+            free(name);
+            free(dt.tag);
+            if (!cp_match_punct(p, ","))
+                break;
+            name = cp_parse_declarator(p, base, &dt);
+            if (!name)
+                break;
+        }
+        cp_expect_punct(p, ";");
+        free(base.tag);
+        return p->ok;
+    }
+    free(base.tag);
+
+    p->pos++;
+    ctr_cinterp_type ret_type = (dt.prim == CTR_CINTERP_T_VOID && dt.tag) ? CTR_CINTERP_T_PTR : dt.prim;
+    free(dt.tag);
+    ci_dtype arg_dtypes[128];
     char* arg_names[128];
+    ctr_cinterp_type arg_prims[128];
     size_t argc = 0;
     int variadic = 0;
     memset(arg_names, 0, sizeof(arg_names));
@@ -2719,28 +4785,43 @@ static int cp_parse_toplevel(ci_cparser* p)
                 cp_error(p, "too many function arguments");
                 break;
             }
-            int ignored_storage = 0;
-            if (!cp_parse_type(p, &arg_types[argc], &ignored_storage))
+            ci_dtype abase;
+            int ig = 0;
+            if (!cp_parse_dtype_ex(p, &abase, &ig, 0))
                 break;
-            if (cp_peek(p)->kind == CI_CTOK_IDENT)
-                arg_names[argc] = cp_expect_ident(p);
-            else
-                arg_names[argc] = ci_strdup("");
+            ci_dtype adt;
+            char* aname = NULL;
+            if (cp_peek(p)->kind == CI_CTOK_IDENT
+                || cp_is_punct(p, "*") || cp_is_punct(p, "[")) {
+                aname = cp_parse_declarator(p, abase, &adt);
+            } else {
+                adt = abase;
+                adt.tag = abase.tag ? ci_strdup(abase.tag) : NULL;
+            }
+            free(abase.tag);
+            arg_dtypes[argc] = adt;
+            arg_prims[argc] = (adt.prim == CTR_CINTERP_T_VOID && adt.tag) ? CTR_CINTERP_T_PTR : adt.prim;
+            arg_names[argc] = aname ? aname : ci_strdup("");
             argc++;
         } while (cp_match_punct(p, ","));
     }
     cp_expect_punct(p, ")");
+
     if (cp_match_punct(p, ";")) {
-        ci_add_external_ex(p->interp, name, ret_type, arg_types, argc, variadic);
-        for (size_t i = 0; i < argc; i++)
+        ci_add_external_ex(p->interp, name, ret_type, arg_prims, argc, variadic);
+        for (size_t i = 0; i < argc; i++) {
             free(arg_names[i]);
+            free(arg_dtypes[i].tag);
+        }
         free(name);
         return p->ok;
     }
     if (variadic) {
         cp_error(p, "interpreted C function definitions cannot be variadic");
-        for (size_t i = 0; i < argc; i++)
+        for (size_t i = 0; i < argc; i++) {
             free(arg_names[i]);
+            free(arg_dtypes[i].tag);
+        }
         free(name);
         return 0;
     }
@@ -2755,21 +4836,53 @@ static int cp_parse_toplevel(ci_cparser* p)
     p->fn->name = name;
     p->fn->argc = argc;
     p->fn->ret_type = ret_type;
+    p->fn->arg_offset = calloc(argc ? argc : 1, sizeof(size_t));
+    p->fn->arg_slot_type = calloc(argc ? argc : 1, sizeof(ctr_cinterp_type));
+    p->fn->arg_copy_size = calloc(argc ? argc : 1, sizeof(size_t));
+    p->label_count = 0;
+    p->goto_count = 0;
     for (size_t i = 0; i < argc; i++) {
-        if (arg_names[i] && *arg_names[i])
-            cp_add_var(p, arg_names[i], arg_types[i], 1, (int)i);
+        char tmpname[32];
+        char const* vn = arg_names[i] && *arg_names[i] ? arg_names[i] : (snprintf(tmpname, sizeof(tmpname), ".arg%zu", i), tmpname);
+        ci_cvar* v = cp_add_var(p, vn, arg_dtypes[i]);
+        if (v && p->fn->arg_offset) {
+            p->fn->arg_offset[i] = v->offset;
+            if (ci_dt_is_struct(arg_dtypes[i])) {
+                p->fn->arg_slot_type[i] = CTR_CINTERP_T_VOID;
+                p->fn->arg_copy_size[i] = ci_storage_size(p->interp, arg_dtypes[i]);
+            } else {
+                p->fn->arg_slot_type[i] = arg_prims[i];
+            }
+        }
         free(arg_names[i]);
+        free(arg_dtypes[i].tag);
     }
     cp_parse_block(p);
     if (p->ok && (p->fn->code_count == 0 || p->fn->code[p->fn->code_count - 1].op != CI_OP_RET)) {
-        ctr_cinterp_instr zero;
-        memset(&zero, 0, sizeof(zero));
-        zero.op = CI_OP_CONST;
-        zero.imm.i = 0;
-        cp_emit(p, zero);
+        cp_emit_const_i64(p, 0);
         ctr_cinterp_instr ret = { .op = CI_OP_RET };
         cp_emit(p, ret);
     }
+    for (size_t i = 0; i < p->goto_count; i++) {
+        size_t target = 0;
+        int found = 0;
+        for (size_t j = 0; j < p->label_count; j++) {
+            if (strcmp(p->labels[j].name, p->gotos[i].name) == 0) {
+                target = p->labels[j].pos;
+                found = 1;
+                break;
+            }
+        }
+        if (found)
+            cp_patch_jump(p, p->gotos[i].at, target);
+        else
+            cp_error(p, "goto to undefined label `%s'", p->gotos[i].name);
+        free(p->gotos[i].name);
+    }
+    for (size_t j = 0; j < p->label_count; j++)
+        free(p->labels[j].name);
+    p->goto_count = 0;
+    p->label_count = 0;
     p->fn = NULL;
     cp_free_vars(p);
     return p->ok;
@@ -2786,6 +4899,12 @@ int ctr_cinterp_compile_c(ctr_cinterp* interp, char const* source)
     while (p.ok && cp_peek(&p)->kind != CI_CTOK_EOF)
         cp_parse_toplevel(&p);
     cp_free_vars(&p);
+    for (size_t i = 0; i < p.goto_count; i++)
+        free(p.gotos[i].name);
+    for (size_t j = 0; j < p.label_count; j++)
+        free(p.labels[j].name);
+    free(p.gotos);
+    free(p.labels);
     ci_free_tokens(p.toks, p.count);
     return p.ok;
 }
@@ -2806,23 +4925,160 @@ static int ci_push(ctr_cinterp_value* stack, size_t* sp, size_t cap, ctr_cinterp
     return 1;
 }
 
-static ctr_cinterp_value ci_cast_value(ctr_cinterp_value v, ctr_cinterp_type type)
+static ctr_cinterp_value ci_cast_value(ctr_cinterp_value v, ctr_cinterp_type target, ctr_cinterp_type source)
+{
+    int src_float = ci_type_is_float(source);
+    int dst_float = ci_type_is_float(target);
+    ctr_cinterp_value out;
+    memset(&out, 0, sizeof(out));
+    if (dst_float) {
+        out.f = src_float ? v.f : (double)v.i;
+        if (target == CTR_CINTERP_T_F32)
+            out.f = (float)out.f;
+        return out;
+    }
+    int64_t iv = src_float ? (int64_t)v.f : v.i;
+    switch (target) {
+    case CTR_CINTERP_T_I8:
+        out.i = (int8_t)iv;
+        break;
+    case CTR_CINTERP_T_U8:
+        out.u = (uint8_t)iv;
+        break;
+    case CTR_CINTERP_T_I16:
+        out.i = (int16_t)iv;
+        break;
+    case CTR_CINTERP_T_U16:
+        out.u = (uint16_t)iv;
+        break;
+    case CTR_CINTERP_T_I32:
+        out.i = (int32_t)iv;
+        break;
+    case CTR_CINTERP_T_U32:
+        out.u = (uint32_t)iv;
+        break;
+    case CTR_CINTERP_T_PTR:
+        out.p = (void*)(uintptr_t)iv;
+        break;
+    default:
+        out.i = iv;
+        break;
+    }
+    return out;
+}
+
+static void ci_store_value(void* ptr, ctr_cinterp_type type, ctr_cinterp_value a)
 {
     switch (type) {
+    case CTR_CINTERP_T_I8:
+    case CTR_CINTERP_T_U8:
+        *(uint8_t*)ptr = (uint8_t)a.u;
+        break;
+    case CTR_CINTERP_T_I16:
+    case CTR_CINTERP_T_U16:
+        *(uint16_t*)ptr = (uint16_t)a.u;
+        break;
+    case CTR_CINTERP_T_I32:
+    case CTR_CINTERP_T_U32:
+        *(uint32_t*)ptr = (uint32_t)a.u;
+        break;
     case CTR_CINTERP_T_F32:
+        *(float*)ptr = (float)a.f;
+        break;
     case CTR_CINTERP_T_F64:
-        v.f = v.f;
-        return v;
+        *(double*)ptr = a.f;
+        break;
     case CTR_CINTERP_T_PTR:
-        v.p = (void*)(uintptr_t)v.u;
-        return v;
+        *(void**)ptr = a.p;
+        break;
     default:
-        v.i = (int64_t)v.u;
-        return v;
+        *(uint64_t*)ptr = a.u;
+        break;
     }
 }
 
 static int ci_call_function(ctr_cinterp* interp, ctr_cinterp_function* fn, ctr_cinterp_value* argv, size_t argc, ctr_cinterp_value* ret, unsigned depth);
+
+static void ci_closure_handler(ffi_cif* cif, void* ret, void** args, void* user)
+{
+    ctr_cinterp_function* fn = user;
+    size_t argc = cif->nargs;
+    ctr_cinterp_value stackv[16];
+    ctr_cinterp_value* iargs = argc <= 16 ? stackv : calloc(argc ? argc : 1, sizeof(ctr_cinterp_value));
+    for (size_t i = 0; i < argc; i++) {
+        ffi_type* t = cif->arg_types[i];
+        memset(&iargs[i], 0, sizeof(iargs[i]));
+        if (t == &ffi_type_float)
+            iargs[i].f = *(float*)args[i];
+        else if (t == &ffi_type_double)
+            iargs[i].f = *(double*)args[i];
+        else if (t == &ffi_type_pointer)
+            iargs[i].p = *(void**)args[i];
+        else if (t->size <= 4)
+            iargs[i].i = *(int32_t*)args[i];
+        else
+            iargs[i].i = *(int64_t*)args[i];
+    }
+    ctr_cinterp_value iret;
+    memset(&iret, 0, sizeof(iret));
+    ctr_cinterp_call_function_pointer(fn, iargs, argc, &iret);
+    if (cif->rtype == &ffi_type_float)
+        *(float*)ret = (float)iret.f;
+    else if (cif->rtype == &ffi_type_double)
+        *(double*)ret = iret.f;
+    else if (cif->rtype == &ffi_type_pointer)
+        *(void**)ret = iret.p;
+    else if (cif->rtype != &ffi_type_void)
+        *(ffi_arg*)ret = (ffi_arg)iret.i;
+    if (iargs != stackv)
+        free(iargs);
+}
+
+static void* ci_function_code(ctr_cinterp* interp, ctr_cinterp_function* fn)
+{
+    if (!fn)
+        return NULL;
+    if (fn->closure_code)
+        return fn->closure_code;
+    if (!ci_grow((void**)&interp->closures, &interp->closure_cap, interp->closure_count, sizeof(*interp->closures)))
+        return NULL;
+    struct ci_closure_entry* e = &interp->closures[interp->closure_count];
+    memset(e, 0, sizeof(*e));
+    e->atypes = calloc(fn->argc ? fn->argc : 1, sizeof(ffi_type*));
+    if (!e->atypes)
+        return NULL;
+    for (size_t i = 0; i < fn->argc; i++) {
+        ctr_cinterp_type t = fn->arg_slot_type ? fn->arg_slot_type[i] : CTR_CINTERP_T_I64;
+        if (t == CTR_CINTERP_T_VOID)
+            t = CTR_CINTERP_T_PTR;
+        e->atypes[i] = ctr_cinterp_ffi_type(t);
+    }
+    void* code = NULL;
+    e->closure = ffi_closure_alloc(sizeof(ffi_closure), &code);
+    if (!e->closure) {
+        free(e->atypes);
+        return NULL;
+    }
+    if (ffi_prep_cif(&e->cif, FFI_DEFAULT_ABI, fn->argc, ctr_cinterp_ffi_type(fn->ret_type), e->atypes) != FFI_OK
+        || ffi_prep_closure_loc(e->closure, &e->cif, ci_closure_handler, fn, code) != FFI_OK) {
+        ffi_closure_free(e->closure);
+        free(e->atypes);
+        return NULL;
+    }
+    e->code = code;
+    e->fn = fn;
+    interp->closure_count++;
+    fn->closure_code = code;
+    return code;
+}
+
+static ctr_cinterp_function* ci_function_from_code(ctr_cinterp* interp, void* code)
+{
+    for (size_t i = 0; i < interp->closure_count; i++)
+        if (interp->closures[i].code == code)
+            return interp->closures[i].fn;
+    return NULL;
+}
 
 static int ci_call_external(ctr_cinterp* interp, ctr_cinterp_external* ext, ctr_cinterp_value* args, size_t argc, ctr_cinterp_type* arg_types, ctr_cinterp_value* ret)
 {
@@ -2874,6 +5130,53 @@ static int ci_call_function(ctr_cinterp* interp, ctr_cinterp_function* fn, ctr_c
     ctr_cinterp_value stack[STACK_MAX];
     ctr_cinterp_value locals_stack[256];
     ctr_cinterp_value* locals = fn->nlocals <= 256 ? locals_stack : calloc(fn->nlocals, sizeof(ctr_cinterp_value));
+    unsigned char frame_stack[2048];
+    unsigned char* frame = NULL;
+    int frame_heap = 0;
+    if (fn->frame_size) {
+        if (fn->frame_size <= sizeof(frame_stack)) {
+            frame = frame_stack;
+            memset(frame, 0, fn->frame_size);
+        } else {
+            frame = calloc(1, fn->frame_size);
+            frame_heap = 1;
+        }
+        for (size_t i = 0; i < argc && fn->arg_offset; i++) {
+            unsigned char* dst = frame + fn->arg_offset[i];
+            ctr_cinterp_value av = argv[i];
+            if (fn->arg_copy_size && fn->arg_copy_size[i]) {
+                if (av.p)
+                    memcpy(dst, av.p, fn->arg_copy_size[i]);
+                continue;
+            }
+            switch (fn->arg_slot_type[i]) {
+            case CTR_CINTERP_T_I8:
+            case CTR_CINTERP_T_U8:
+                *(uint8_t*)dst = (uint8_t)av.u;
+                break;
+            case CTR_CINTERP_T_I16:
+            case CTR_CINTERP_T_U16:
+                *(uint16_t*)dst = (uint16_t)av.u;
+                break;
+            case CTR_CINTERP_T_I32:
+            case CTR_CINTERP_T_U32:
+                *(uint32_t*)dst = (uint32_t)av.u;
+                break;
+            case CTR_CINTERP_T_F32:
+                *(float*)dst = (float)av.f;
+                break;
+            case CTR_CINTERP_T_F64:
+                *(double*)dst = av.f;
+                break;
+            case CTR_CINTERP_T_PTR:
+                *(void**)dst = av.p;
+                break;
+            default:
+                *(uint64_t*)dst = av.u;
+                break;
+            }
+        }
+    }
     size_t sp = 0;
     size_t pc = 0;
     memset(stack, 0, sizeof(stack));
@@ -2908,6 +5211,12 @@ static int ci_call_function(ctr_cinterp* interp, ctr_cinterp_function* fn, ctr_c
             } else {
                 ci_error(interp, "Unknown C global `%s'", ins->name);
             }
+            break;
+        }
+        case CI_OP_FUNC_ADDR: {
+            ctr_cinterp_function* tf = ctr_cinterp_find_function(interp, ins->name);
+            v.p = tf ? ci_function_code(interp, tf) : ctr_cinterp_get_symbol(interp, ins->name);
+            ok = ci_push(stack, &sp, STACK_MAX, v);
             break;
         }
         case CI_OP_LOAD:
@@ -2950,34 +5259,23 @@ static int ci_call_function(ctr_cinterp* interp, ctr_cinterp_function* fn, ctr_c
             break;
         case CI_OP_STORE:
             ok = ci_pop(stack, &sp, &a) && ci_pop(stack, &sp, &b);
+            if (ok)
+                ci_store_value(b.p, ins->type, a);
+            break;
+        case CI_OP_STORE_R:
+            ok = ci_pop(stack, &sp, &a) && ci_pop(stack, &sp, &b);
             if (ok) {
-                switch (ins->type) {
-                case CTR_CINTERP_T_I8:
-                case CTR_CINTERP_T_U8:
-                    *(uint8_t*)b.p = (uint8_t)a.u;
-                    break;
-                case CTR_CINTERP_T_I16:
-                case CTR_CINTERP_T_U16:
-                    *(uint16_t*)b.p = (uint16_t)a.u;
-                    break;
-                case CTR_CINTERP_T_I32:
-                case CTR_CINTERP_T_U32:
-                    *(uint32_t*)b.p = (uint32_t)a.u;
-                    break;
-                case CTR_CINTERP_T_F32:
-                    *(float*)b.p = (float)a.f;
-                    break;
-                case CTR_CINTERP_T_F64:
-                    *(double*)b.p = a.f;
-                    break;
-                case CTR_CINTERP_T_PTR:
-                    *(void**)b.p = a.p;
-                    break;
-                default:
-                    *(uint64_t*)b.p = a.u;
-                    break;
-                }
+                ci_store_value(b.p, ins->type, a);
+                ok = ci_push(stack, &sp, STACK_MAX, a);
             }
+            break;
+        case CI_OP_SWAP:
+            ok = ci_pop(stack, &sp, &a) && ci_pop(stack, &sp, &b);
+            ok = ok && ci_push(stack, &sp, STACK_MAX, a) && ci_push(stack, &sp, STACK_MAX, b);
+            break;
+        case CI_OP_FRAME_ADDR:
+            v.p = frame + ins->a;
+            ok = ci_push(stack, &sp, STACK_MAX, v);
             break;
         case CI_OP_ADD:
         case CI_OP_SUB:
@@ -2986,25 +5284,38 @@ static int ci_call_function(ctr_cinterp* interp, ctr_cinterp_function* fn, ctr_c
             ok = ci_pop(stack, &sp, &b) && ci_pop(stack, &sp, &a);
             if (ok) {
                 if (ins->type == CTR_CINTERP_T_F32 || ins->type == CTR_CINTERP_T_F64) {
-                    v.f = ins->op == CI_OP_ADD ? a.f + b.f : ins->op == CI_OP_SUB ? a.f - b.f
-                        : ins->op == CI_OP_MUL                                    ? a.f * b.f
-                                                                                  : a.f / b.f;
+                    double af = ci_type_is_float((ctr_cinterp_type)ins->a) ? a.f : (double)a.i;
+                    double bf = ci_type_is_float((ctr_cinterp_type)ins->b) ? b.f : (double)b.i;
+                    v.f = ins->op == CI_OP_ADD ? af + bf : ins->op == CI_OP_SUB ? af - bf
+                        : ins->op == CI_OP_MUL                                  ? af * bf
+                                                                                : af / bf;
+                } else if (ins->op == CI_OP_DIV && b.i == 0) {
+                    ci_error(interp, "Integer division by zero in `%s'", fn->name);
+                    ok = 0;
                 } else {
                     v.i = ins->op == CI_OP_ADD ? a.i + b.i : ins->op == CI_OP_SUB ? a.i - b.i
                         : ins->op == CI_OP_MUL                                    ? a.i * b.i
                                                                                   : a.i / b.i;
                 }
-                ok = ci_push(stack, &sp, STACK_MAX, v);
+                ok = ok && ci_push(stack, &sp, STACK_MAX, v);
             }
             break;
         case CI_OP_MOD:
             ok = ci_pop(stack, &sp, &b) && ci_pop(stack, &sp, &a);
-            v.i = a.i % b.i;
-            ok = ok && ci_push(stack, &sp, STACK_MAX, v);
+            if (ok && b.i == 0) {
+                ci_error(interp, "Integer modulo by zero in `%s'", fn->name);
+                ok = 0;
+            } else if (ok) {
+                v.i = a.i % b.i;
+                ok = ci_push(stack, &sp, STACK_MAX, v);
+            }
             break;
         case CI_OP_NEG:
             ok = ci_pop(stack, &sp, &a);
-            v.i = -a.i;
+            if (ins->type == CTR_CINTERP_T_F32 || ins->type == CTR_CINTERP_T_F64)
+                v.f = -a.f;
+            else
+                v.i = -a.i;
             ok = ok && ci_push(stack, &sp, STACK_MAX, v);
             break;
         case CI_OP_EQ:
@@ -3014,11 +5325,21 @@ static int ci_call_function(ctr_cinterp* interp, ctr_cinterp_function* fn, ctr_c
         case CI_OP_GT:
         case CI_OP_GE:
             ok = ci_pop(stack, &sp, &b) && ci_pop(stack, &sp, &a);
-            v.i = ins->op == CI_OP_EQ ? a.i == b.i : ins->op == CI_OP_NE ? a.i != b.i
-                : ins->op == CI_OP_LT                                    ? a.i < b.i
-                : ins->op == CI_OP_LE                                    ? a.i <= b.i
-                : ins->op == CI_OP_GT                                    ? a.i > b.i
-                                                                         : a.i >= b.i;
+            if (ins->type == CTR_CINTERP_T_F32 || ins->type == CTR_CINTERP_T_F64) {
+                double af = ci_type_is_float((ctr_cinterp_type)ins->a) ? a.f : (double)a.i;
+                double bf = ci_type_is_float((ctr_cinterp_type)ins->b) ? b.f : (double)b.i;
+                v.i = ins->op == CI_OP_EQ ? af == bf : ins->op == CI_OP_NE ? af != bf
+                    : ins->op == CI_OP_LT                                  ? af < bf
+                    : ins->op == CI_OP_LE                                  ? af <= bf
+                    : ins->op == CI_OP_GT                                  ? af > bf
+                                                                           : af >= bf;
+            } else {
+                v.i = ins->op == CI_OP_EQ ? a.i == b.i : ins->op == CI_OP_NE ? a.i != b.i
+                    : ins->op == CI_OP_LT                                    ? a.i < b.i
+                    : ins->op == CI_OP_LE                                    ? a.i <= b.i
+                    : ins->op == CI_OP_GT                                    ? a.i > b.i
+                                                                             : a.i >= b.i;
+            }
             ok = ok && ci_push(stack, &sp, STACK_MAX, v);
             break;
         case CI_OP_AND:
@@ -3080,6 +5401,46 @@ static int ci_call_function(ctr_cinterp* interp, ctr_cinterp_function* fn, ctr_c
             ok = ok && ci_push(stack, &sp, STACK_MAX, v);
             break;
         }
+        case CI_OP_CALL_PTR: {
+            size_t call_argc = (size_t)ins->a;
+            ctr_cinterp_value fp;
+            ok = ci_pop(stack, &sp, &fp);
+            ctr_cinterp_value* call_args = calloc(call_argc ? call_argc : 1, sizeof(ctr_cinterp_value));
+            ok = ok && call_args != NULL && sp >= call_argc;
+            for (size_t i = call_argc; ok && i > 0; i--)
+                ok = ci_pop(stack, &sp, &call_args[i - 1]);
+            memset(&v, 0, sizeof(v));
+            ctr_cinterp_function* target = ok ? ci_function_from_code(interp, fp.p) : NULL;
+            if (ok && !target && ctr_cinterp_is_function_pointer(fp.p))
+                target = (ctr_cinterp_function*)fp.p;
+            if (ok && target) {
+                ok = ci_call_function(interp, target, call_args, call_argc, &v, depth + 1);
+            } else if (ok && fp.p) {
+                ffi_cif cif;
+                ffi_type** at = calloc(call_argc ? call_argc : 1, sizeof(ffi_type*));
+                void** av = calloc(call_argc ? call_argc : 1, sizeof(void*));
+                if (at && av) {
+                    for (size_t i = 0; i < call_argc; i++) {
+                        at[i] = ctr_cinterp_ffi_type(ins->arg_types ? ins->arg_types[i] : CTR_CINTERP_T_I64);
+                        av[i] = &call_args[i];
+                    }
+                    if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, call_argc, &ffi_type_pointer, at) == FFI_OK)
+                        ffi_call(&cif, FFI_FN(fp.p), &v, av);
+                    else
+                        ok = 0;
+                } else {
+                    ok = 0;
+                }
+                free(at);
+                free(av);
+            } else if (ok) {
+                ci_error(interp, "Indirect call through a null function pointer");
+                ok = 0;
+            }
+            free(call_args);
+            ok = ok && ci_push(stack, &sp, STACK_MAX, v);
+            break;
+        }
         case CI_OP_RET:
             if (ret) {
                 if (fn->ret_type == CTR_CINTERP_T_VOID)
@@ -3096,7 +5457,7 @@ static int ci_call_function(ctr_cinterp* interp, ctr_cinterp_function* fn, ctr_c
             break;
         case CI_OP_CAST:
             ok = ci_pop(stack, &sp, &a);
-            v = ci_cast_value(a, ins->type);
+            v = ci_cast_value(a, ins->type, ins->type2);
             ok = ok && ci_push(stack, &sp, STACK_MAX, v);
             break;
         case CI_OP_PTR_ADD:
@@ -3121,6 +5482,8 @@ done:
         ci_error(interp, "Runtime error in bytecode function `%s'", fn->name);
     if (locals != locals_stack)
         free(locals);
+    if (frame_heap)
+        free(frame);
     return ok;
 }
 
@@ -3198,11 +5561,19 @@ ctr_object* ctr_cinterp_compile(ctr_object* myself, ctr_argument* argumentList)
     char* program = ctr_heap_allocate_cstring(prg);
     char* trimmed = ci_trim(program);
     ci_clear_error(interp);
-    int preprocessor_only = ci_collect_include_only_macros(interp, trimmed);
-    int ok = preprocessor_only ? 1
-        : (strncmp(trimmed, ".function", 9) == 0 || strncmp(trimmed, ".extern", 7) == 0 || strncmp(trimmed, ".global", 7) == 0
-                ? ctr_cinterp_compile_text(interp, trimmed)
-                : ctr_cinterp_compile_c(interp, trimmed));
+    int is_asm = strncmp(trimmed, ".function", 9) == 0 || strncmp(trimmed, ".extern", 7) == 0 || strncmp(trimmed, ".global", 7) == 0;
+    int ok;
+    if (is_asm) {
+        ok = ctr_cinterp_compile_text(interp, trimmed);
+    } else {
+        ci_strbuf pp = { 0 };
+        ci_preprocess(interp, trimmed, &pp, 0);
+        if (pp.data)
+            ci_collect_function_declarations(interp, pp.data);
+        int preprocessor_only = ci_source_is_preprocessor_only(trimmed);
+        ok = preprocessor_only ? 1 : ctr_cinterp_compile_c(interp, pp.data ? pp.data : "");
+        free(pp.data);
+    }
     ctr_heap_free(program);
     if (!ok) {
         char const* reason = ctr_cinterp_last_error(interp);

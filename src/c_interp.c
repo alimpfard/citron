@@ -2494,6 +2494,8 @@ static int cp_match_kind(ci_cparser* p, ci_ctok_kind kind)
 
 static void cp_error(ci_cparser* p, char const* fmt, ...)
 {
+    if (!p->ok)
+        return;
     char detail[512];
     va_list ap;
     va_start(ap, fmt);
@@ -3902,6 +3904,7 @@ static char* cp_parse_declarator(ci_cparser* p, ci_dtype base, ci_dtype* out)
     }
     size_t total_len = 1;
     int saw_array = 0;
+    int unsupported_array = 0;
     ctr_cinterp_type el_prim = dt.prim;
     ctr_cinterp_type el_pointee = dt.pointee;
     while (cp_match_punct(p, "[")) {
@@ -3909,8 +3912,17 @@ static char* cp_parse_declarator(ci_cparser* p, ci_dtype base, ci_dtype* out)
         if (cp_peek(p)->kind == CI_CTOK_NUM)
             len = (size_t)p->toks[p->pos++].num;
         cp_expect_punct(p, "]");
+        if (saw_array) {
+            cp_error(p, "multidimensional arrays are not supported");
+            unsupported_array = 1;
+        }
         total_len = saw_array ? total_len * (len ? len : 1) : len;
         saw_array = 1;
+    }
+    if (unsupported_array) {
+        free(dt.tag);
+        free(name);
+        return NULL;
     }
     if (saw_array) {
         dt.is_array = 1;

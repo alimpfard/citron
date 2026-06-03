@@ -2863,6 +2863,11 @@ static int ci_type_is_float(ctr_cinterp_type t)
     return t == CTR_CINTERP_T_F32 || t == CTR_CINTERP_T_F64;
 }
 
+static int ci_type_is_void(ctr_cinterp_type t)
+{
+    return t == CTR_CINTERP_T_VOID;
+}
+
 static size_t ci_struct_size_of(ctr_cinterp* interp, char const* tag)
 {
     ci_struct_def* def = ci_find_struct(interp, tag);
@@ -3022,6 +3027,14 @@ static void cp_emit_const_i64(ci_cparser* p, int64_t v)
     ins.type = CTR_CINTERP_T_I64;
     ins.imm.i = v;
     cp_emit(p, ins);
+}
+
+static void cp_emit_pop_if_value(ci_cparser* p)
+{
+    if (ci_type_is_void(p->last_type))
+        return;
+    ctr_cinterp_instr pop = { .op = CI_OP_POP };
+    cp_emit(p, pop);
 }
 
 static void cp_coerce(ci_cparser* p, ctr_cinterp_type target)
@@ -3852,8 +3865,7 @@ static void cp_parse_expr(ci_cparser* p)
     cp_parse_assign(p);
     while (cp_is_punct(p, ",")) {
         p->pos++;
-        ctr_cinterp_instr pop = { .op = CI_OP_POP };
-        cp_emit(p, pop);
+        cp_emit_pop_if_value(p);
         cp_parse_assign(p);
     }
 }
@@ -4289,7 +4301,7 @@ static void cp_parse_stmt(ci_cparser* p)
                 cp_parse_decl_stmt(p);
             } else {
                 cp_parse_expr(p);
-                cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_POP });
+                cp_emit_pop_if_value(p);
                 cp_expect_punct(p, ";");
             }
         } else {
@@ -4321,7 +4333,7 @@ static void cp_parse_stmt(ci_cparser* p)
             size_t save = p->pos;
             p->pos = iter_start;
             cp_parse_expr(p);
-            cp_emit(p, (ctr_cinterp_instr) { .op = CI_OP_POP });
+            cp_emit_pop_if_value(p);
             p->pos = save;
         }
         ctr_cinterp_instr back = { .op = CI_OP_JMP, .a = (int)start };
@@ -4375,8 +4387,7 @@ static void cp_parse_stmt(ci_cparser* p)
     }
     if (!cp_is_punct(p, ";")) {
         cp_parse_expr(p);
-        ctr_cinterp_instr pop = { .op = CI_OP_POP };
-        cp_emit(p, pop);
+        cp_emit_pop_if_value(p);
     }
     cp_expect_punct(p, ";");
 }
@@ -5080,6 +5091,106 @@ static ctr_cinterp_function* ci_function_from_code(ctr_cinterp* interp, void* co
     return NULL;
 }
 
+typedef union ci_ffi_value {
+    int8_t i8;
+    uint8_t u8;
+    int16_t i16;
+    uint16_t u16;
+    int32_t i32;
+    uint32_t u32;
+    int64_t i64;
+    uint64_t u64;
+    float f32;
+    double f64;
+    void* ptr;
+    ffi_arg ffi;
+} ci_ffi_value;
+
+static void* ci_ffi_arg_ptr(ci_ffi_value* storage, ctr_cinterp_type type, ctr_cinterp_value value)
+{
+    memset(storage, 0, sizeof(*storage));
+    switch (type) {
+    case CTR_CINTERP_T_I8:
+        storage->i8 = (int8_t)value.i;
+        return &storage->i8;
+    case CTR_CINTERP_T_U8:
+        storage->u8 = (uint8_t)value.u;
+        return &storage->u8;
+    case CTR_CINTERP_T_I16:
+        storage->i16 = (int16_t)value.i;
+        return &storage->i16;
+    case CTR_CINTERP_T_U16:
+        storage->u16 = (uint16_t)value.u;
+        return &storage->u16;
+    case CTR_CINTERP_T_I32:
+        storage->i32 = (int32_t)value.i;
+        return &storage->i32;
+    case CTR_CINTERP_T_U32:
+        storage->u32 = (uint32_t)value.u;
+        return &storage->u32;
+    case CTR_CINTERP_T_F32:
+        storage->f32 = (float)value.f;
+        return &storage->f32;
+    case CTR_CINTERP_T_F64:
+        storage->f64 = value.f;
+        return &storage->f64;
+    case CTR_CINTERP_T_PTR:
+        storage->ptr = value.p;
+        return &storage->ptr;
+    case CTR_CINTERP_T_U64:
+        storage->u64 = value.u;
+        return &storage->u64;
+    case CTR_CINTERP_T_I64:
+    default:
+        storage->i64 = value.i;
+        return &storage->i64;
+    }
+}
+
+static void ci_ffi_read_ret(ci_ffi_value* storage, ctr_cinterp_type type, ctr_cinterp_value* ret)
+{
+    if (!ret)
+        return;
+    memset(ret, 0, sizeof(*ret));
+    switch (type) {
+    case CTR_CINTERP_T_VOID:
+        break;
+    case CTR_CINTERP_T_I8:
+        ret->i = storage->i8;
+        break;
+    case CTR_CINTERP_T_U8:
+        ret->u = storage->u8;
+        break;
+    case CTR_CINTERP_T_I16:
+        ret->i = storage->i16;
+        break;
+    case CTR_CINTERP_T_U16:
+        ret->u = storage->u16;
+        break;
+    case CTR_CINTERP_T_I32:
+        ret->i = storage->i32;
+        break;
+    case CTR_CINTERP_T_U32:
+        ret->u = storage->u32;
+        break;
+    case CTR_CINTERP_T_I64:
+        ret->i = storage->i64;
+        break;
+    case CTR_CINTERP_T_U64:
+        ret->u = storage->u64;
+        break;
+    case CTR_CINTERP_T_F32:
+        ret->f = storage->f32;
+        break;
+    case CTR_CINTERP_T_F64:
+        ret->f = storage->f64;
+        break;
+    case CTR_CINTERP_T_PTR:
+        ret->p = storage->ptr;
+        break;
+    }
+}
+
 static int ci_call_external(ctr_cinterp* interp, ctr_cinterp_external* ext, ctr_cinterp_value* args, size_t argc, ctr_cinterp_type* arg_types, ctr_cinterp_value* ret)
 {
     if (!ext->ptr)
@@ -5104,9 +5215,23 @@ static int ci_call_external(ctr_cinterp* interp, ctr_cinterp_external* ext, ctr_
         free(var_arg_types);
         return 0;
     }
-    for (size_t i = 0; i < argc; i++)
-        ffi_args[i] = &args[i];
-    ffi_call(cif, FFI_FN(ext->ptr), ret, ffi_args);
+    ci_ffi_value* ffi_values = calloc(argc ? argc : 1, sizeof(ci_ffi_value));
+    if (!ffi_values) {
+        free(ffi_args);
+        free(var_arg_types);
+        return 0;
+    }
+    for (size_t i = 0; i < argc; i++) {
+        ctr_cinterp_type type = i < ext->argc ? ext->arg_types[i] : (arg_types ? arg_types[i] : CTR_CINTERP_T_I64);
+        if (ext->variadic && i >= ext->argc && type == CTR_CINTERP_T_F32)
+            type = CTR_CINTERP_T_F64;
+        ffi_args[i] = ci_ffi_arg_ptr(&ffi_values[i], type, args[i]);
+    }
+    ci_ffi_value ret_storage;
+    memset(&ret_storage, 0, sizeof(ret_storage));
+    ffi_call(cif, FFI_FN(ext->ptr), &ret_storage, ffi_args);
+    ci_ffi_read_ret(&ret_storage, ext->ret_type, ret);
+    free(ffi_values);
     free(ffi_args);
     free(var_arg_types);
     return 1;
@@ -5388,17 +5513,22 @@ static int ci_call_function(ctr_cinterp* interp, ctr_cinterp_function* fn, ctr_c
             if (ok && ins->op == CI_OP_CALL) {
                 ctr_cinterp_function* callee = ctr_cinterp_find_function(interp, ins->name);
                 ok = ci_call_function(interp, callee, call_args, call_argc, &v, depth + 1);
+                if (ok && callee && ci_type_is_void(callee->ret_type))
+                    goto call_done;
             } else if (ok) {
                 ctr_cinterp_external* ext = ci_find_external(interp, ins->name);
-                if (ext)
+                if (ext) {
                     ok = ci_call_external(interp, ext, call_args, call_argc, ins->arg_types, &v);
-                else {
+                    if (ok && ci_type_is_void(ext->ret_type))
+                        goto call_done;
+                } else {
                     ci_error(interp, "Call to external `%s' has no declaration", ins->name);
                     ok = 0;
                 }
             }
-            free(call_args);
             ok = ok && ci_push(stack, &sp, STACK_MAX, v);
+call_done:
+            free(call_args);
             break;
         }
         case CI_OP_CALL_PTR: {
@@ -5416,29 +5546,14 @@ static int ci_call_function(ctr_cinterp* interp, ctr_cinterp_function* fn, ctr_c
             if (ok && target) {
                 ok = ci_call_function(interp, target, call_args, call_argc, &v, depth + 1);
             } else if (ok && fp.p) {
-                ffi_cif cif;
-                ffi_type** at = calloc(call_argc ? call_argc : 1, sizeof(ffi_type*));
-                void** av = calloc(call_argc ? call_argc : 1, sizeof(void*));
-                if (at && av) {
-                    for (size_t i = 0; i < call_argc; i++) {
-                        at[i] = ctr_cinterp_ffi_type(ins->arg_types ? ins->arg_types[i] : CTR_CINTERP_T_I64);
-                        av[i] = &call_args[i];
-                    }
-                    if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, call_argc, &ffi_type_pointer, at) == FFI_OK)
-                        ffi_call(&cif, FFI_FN(fp.p), &v, av);
-                    else
-                        ok = 0;
-                } else {
-                    ok = 0;
-                }
-                free(at);
-                free(av);
+                ci_error(interp, "Indirect native function pointer calls require a declared signature and are not supported yet");
+                ok = 0;
             } else if (ok) {
                 ci_error(interp, "Indirect call through a null function pointer");
                 ok = 0;
             }
-            free(call_args);
             ok = ok && ci_push(stack, &sp, STACK_MAX, v);
+            free(call_args);
             break;
         }
         case CI_OP_RET:
